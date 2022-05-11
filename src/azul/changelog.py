@@ -3,9 +3,6 @@ from collections import (
 )
 import os.path
 import sys
-from typing import (
-    List,
-)
 
 from azul import (
     config,
@@ -21,7 +18,7 @@ module_name = 'azul_changes'
 variable_name = 'changes'
 
 
-def changes() -> List[JSON]:
+def changes() -> list[JSON]:
     from importlib import (
         import_module,
     )
@@ -29,7 +26,7 @@ def changes() -> List[JSON]:
     return getattr(changelog_module, variable_name)
 
 
-def compact_changes(limit=None) -> List[JSON]:
+def compact_changes(limit=None) -> list[JSON]:
     def title_first(item):
         k, v = item
         try:

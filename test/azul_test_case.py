@@ -5,7 +5,6 @@ from re import (
 from typing import (
     AbstractSet,
     ContextManager,
-    List,
     Optional,
 )
 from unittest import (
@@ -46,7 +45,7 @@ def setupModule():
 
 class AzulTestCase(TestCase):
     _catch_warnings: Optional[ContextManager]
-    _caught_warnings: List[warnings.WarningMessage]
+    _caught_warnings: list[warnings.WarningMessage]
 
     @classmethod
     def setUpClass(cls) -> None:

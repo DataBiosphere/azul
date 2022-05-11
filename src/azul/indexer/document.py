@@ -14,7 +14,6 @@ import sys
 from typing import (
     ClassVar,
     Generic,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -535,7 +534,7 @@ class Document(Generic[C]):
         return self
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
+    def mandatory_source_fields(cls) -> list[str]:
         """
         A list of dot-separated field paths into the source of each document
         that :meth:`from_json` expects to be present. Subclasses that override
@@ -693,7 +692,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
         return self
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
+    def mandatory_source_fields(cls) -> list[str]:
         return super().mandatory_source_fields() + [
             'document_id',
             'source',
@@ -715,7 +714,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
     sources: Set[DocumentSource]
-    bundles: Optional[List[JSON]]
+    bundles: Optional[list[JSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
 
@@ -731,7 +730,7 @@ class Aggregate(Document[AggregateCoordinates]):
                  version: Optional[int],
                  sources: Set[SourceRef[SimpleSourceSpec, SourceRef]],
                  contents: Optional[JSON],
-                 bundles: Optional[List[JSON]],
+                 bundles: Optional[list[JSON]],
                  num_contributions: int) -> None: ...
 
     def __attrs_post_init__(self):
@@ -771,7 +770,7 @@ class Aggregate(Document[AggregateCoordinates]):
         return self
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
+    def mandatory_source_fields(cls) -> list[str]:
         return super().mandatory_source_fields() + [
             'num_contributions',
             'sources.id',

@@ -16,7 +16,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    List,
     Mapping,
     Set,
     Tuple,
@@ -49,7 +48,7 @@ K = TypeVar('K')
 V = TypeVar('V')
 
 
-def explode_dict(d: Mapping[K, Union[V, List[V], Set[V], Tuple[V]]]) -> Iterable[Dict[K, V]]:
+def explode_dict(d: Mapping[K, Union[V, list[V], Set[V], Tuple[V]]]) -> Iterable[Dict[K, V]]:
     """
     An iterable of dictionaries, one dictionary for every possible combination
     of items from iterable values in the argument dictionary. Only instances of
@@ -225,7 +224,7 @@ def atuple(*args: V) -> Tuple[V, ...]:
     return tuple(arg for arg in args if arg is not None)
 
 
-def alist(*args: V) -> List[V]:
+def alist(*args: V) -> list[V]:
     """
     >>> alist()
     []

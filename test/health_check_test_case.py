@@ -5,7 +5,6 @@ from abc import (
 import os
 import time
 from typing import (
-    List,
     Mapping,
     Tuple,
 )
@@ -237,7 +236,7 @@ class HealthCheckTestCase(LocalAppTestCase,
     def _endpoint(self, relative_url: str) -> str:
         return str(config.service_endpoint.join(furl(relative_url)))
 
-    def _other_lambda_names(self) -> List[str]:
+    def _other_lambda_names(self) -> list[str]:
         return [
             lambda_name
             for lambda_name in config.lambda_names()

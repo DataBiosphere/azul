@@ -7,7 +7,6 @@ from itertools import (
 import json
 from typing import (
     Dict,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -90,7 +89,7 @@ class TestResponse(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
                             version='2019-02-14T19:24:38.034764Z'),
@@ -2154,7 +2153,7 @@ class TestResponse(WebServiceTestCase):
 class TestFileTypeSummaries(WebServiceTestCase):
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             cls.bundle_fqid(uuid='fce68057-b0f0-5d11-b9a7-30e8fa3259a8',
                             version='2021-02-09T01:30:00.000000Z'),
@@ -2237,7 +2236,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             # A bundle with 1 specimen and 1 cell line sample entities
             cls.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
@@ -2366,7 +2365,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return [
             # Bundles for project 90bf705c
             # https://github.com/HumanCellAtlas/schema-test-data/tree/2a62a7f4
@@ -2499,7 +2498,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return [
             # Two bundles for the same project with 7738 total cell suspension cells
             # project=4e6f083b, cs-cells=3869, p-cells=None
@@ -2650,7 +2649,7 @@ class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             # A hacky CGM subgraph (project 8185730f)
             # 8 supplementary file CGMs each with a 'submitter_id'
@@ -3132,7 +3131,7 @@ class TestResponseFields(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return [
             # An imaging bundle with no cell suspension
             # files=227, donors=1, cs-cells=0, p-cells=0, organ=brain, labs=None
@@ -3341,7 +3340,7 @@ class TestResponseFields(WebServiceTestCase):
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return []
 
     @classmethod
@@ -3363,7 +3362,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def field_mapping(self) -> Mapping[str, FieldPath]:
         return self.app_module.app.metadata_plugin.field_mapping
 
-    def entity_types(self) -> List[str]:
+    def entity_types(self) -> list[str]:
         return [
             entity_type
             for entity_type in self.index_service.entity_types(self.catalog)

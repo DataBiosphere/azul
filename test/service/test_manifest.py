@@ -23,7 +23,6 @@ from tempfile import (
 )
 from typing import (
     Dict,
-    List,
     Mapping,
     Optional,
     Tuple,
@@ -909,7 +908,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # we do comparison here that's insensitive of the row ordering.
         # We'll assert the column ordering independently below.
 
-        def sort_rows(rows: List[Dict[str, str]]) -> List[List[Tuple[str, str]]]:
+        def sort_rows(rows: list[Dict[str, str]]) -> list[list[Tuple[str, str]]]:
             return sorted(map(sorted, map(dict.items, rows)))
 
         self.assertEqual(sort_rows(expected_rows), sort_rows(rows))
@@ -1012,7 +1011,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters: FiltersJSON) -> Tuple[List[Dict[str, str]], List[str]]:
+    def _extract_bdbag_response(self, filters: FiltersJSON) -> Tuple[list[Dict[str, str]], list[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code)
@@ -1233,7 +1232,7 @@ class TestManifestCache(ManifestTestCase):
 
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
+        def log_messages_from_manifest_request(seconds_until_expire: int) -> list[str]:
             get_seconds.return_value = seconds_until_expire
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
             from azul.service.manifest_service import (

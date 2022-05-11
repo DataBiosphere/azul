@@ -25,7 +25,6 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
-    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -1355,7 +1354,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
         return api.not_stitched(self.api_bundle.files.values())
 
     def _transform(self, files: Iterable[api.File]) -> Iterable[Contribution]:
-        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(files)
+        zarr_stores: Mapping[str, list[api.File]] = self.group_zarrs(files)
         for file in files:
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
@@ -1438,7 +1437,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     )
         return contents
 
-    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, List[api.File]]:
+    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, list[api.File]]:
         zarr_stores = defaultdict(list)
         for file in files:
             file_name = file.manifest_entry.name

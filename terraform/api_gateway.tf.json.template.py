@@ -4,9 +4,6 @@ from dataclasses import (
 import importlib
 import json
 import shlex
-from typing import (
-    List,
-)
 
 from azul import (
     config,
@@ -31,7 +28,7 @@ class Lambda:
     Represents a AWS Lambda function fronted by an AWS API Gateway.
     """
     name: str  # the name of the Lambda, e.g. 'service'
-    domains: List[str]  # a list of public domain names that the Lambda should be exposed at
+    domains: list[str]  # a list of public domain names that the Lambda should be exposed at
     policy: str  # AWS Policy for the lambda function
 
     @classmethod

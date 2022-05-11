@@ -19,7 +19,6 @@ from pprint import (
 from typing import (
     AbstractSet,
     Iterable,
-    List,
     Union,
 )
 import uuid
@@ -216,7 +215,7 @@ class AzulClient(object):
                      catalog: CatalogName,
                      source: Union[str, SourceRef],
                      prefix: str
-                     ) -> List[SourcedBundleFQID]:
+                     ) -> list[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
         plugin = self.repository_plugin(catalog)
         if isinstance(source, str):
@@ -290,7 +289,7 @@ class AzulClient(object):
     @classmethod
     def filter_obsolete_bundle_versions(cls,
                                         bundle_fqids: Iterable[SourcedBundleFQID]
-                                        ) -> List[SourcedBundleFQID]:
+                                        ) -> list[SourcedBundleFQID]:
         """
         Suppress obsolete bundle versions by only taking the latest version for
         each bundle UUID.

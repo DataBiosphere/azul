@@ -14,7 +14,6 @@ from typing import (
     BinaryIO,
     ClassVar,
     Dict,
-    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -309,7 +308,7 @@ class Config:
         return int(self.environ['AZUL_TDR_WORKERS'])
 
     @property
-    def external_lambda_role_assumptors(self) -> MutableMapping[str, List[str]]:
+    def external_lambda_role_assumptors(self) -> MutableMapping[str, list[str]]:
         try:
             accounts = self.environ['AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS']
         except KeyError:
@@ -317,7 +316,7 @@ class Config:
         else:
             return self._parse_principals(accounts)
 
-    def _parse_principals(self, accounts) -> MutableMapping[str, List[str]]:
+    def _parse_principals(self, accounts) -> MutableMapping[str, list[str]]:
         # noinspection PyProtectedMember
         """
         >>> from azul import config  # Without this import, these doctests fail
@@ -457,7 +456,7 @@ class Config:
         else:
             return self.service_endpoint
 
-    def lambda_names(self) -> List[str]:
+    def lambda_names(self) -> list[str]:
         return ['indexer', 'service']
 
     @property
@@ -967,18 +966,18 @@ class Config:
         return '_'.join(parts)
 
     @property
-    def all_queue_names(self) -> List[str]:
+    def all_queue_names(self) -> list[str]:
         return self.work_queue_names + self.fail_queue_names
 
     @property
-    def fail_queue_names(self) -> List[str]:
+    def fail_queue_names(self) -> list[str]:
         return [
             self.tallies_queue_name(fail=True),
             self.notifications_queue_name(fail=True)
         ]
 
     @property
-    def work_queue_names(self) -> List[str]:
+    def work_queue_names(self) -> list[str]:
         return [
             queue_name(retry=retry)
             for queue_name in (self.notifications_queue_name, self.tallies_queue_name)
@@ -1048,7 +1047,7 @@ class Config:
         return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
-    def reindex_sources(self) -> List[str]:
+    def reindex_sources(self) -> list[str]:
         sources = shlex.split(self.environ.get('azul_reindex_sources', '*'))
         require(bool(sources), 'Sources cannot be empty', sources)
         return sources

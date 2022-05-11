@@ -31,7 +31,6 @@ import logging
 import sys
 from typing import (
     Any,
-    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -111,7 +110,7 @@ class File:
             lines.append(line)
         self.description = '\n'.join(lines)
 
-    def parse_values(self, values: str) -> Mapping[Optional[str], List[str]]:
+    def parse_values(self, values: str) -> Mapping[Optional[str], list[str]]:
         """
         >>> file = File(name='foo.txt', source='', project_id='1234', row_num=1)
         >>> file.parse_values('human: adult, human: child, mouse: juvenile')
@@ -135,7 +134,7 @@ class File:
             parsed[parent].append(value)
         return parsed
 
-    def parse_stratification(self, points: JSON) -> List[Mapping[str, List[str]]]:
+    def parse_stratification(self, points: JSON) -> list[Mapping[str, list[str]]]:
         """
         >>> file = File(name='foo.txt', source='', project_id='1234', row_num=1)
         >>> file.parse_stratification({'species': 'human', 'organ': 'blood'})
@@ -263,11 +262,11 @@ class CGMAdapter:
     # TODO: parametrize `generation` variable
     generation = 0
 
-    def __init__(self, argv: List[str]) -> None:
+    def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
         self.file_errors: MutableMapping[str, str] = {}
-        self.rows_completed: List[int] = []
+        self.rows_completed: list[int] = []
         self.validation_exceptions: MutableMapping[str, BaseException] = {}
         if self.args.version is None:
             self.timestamp = format_dcp2_datetime(datetime.now(timezone.utc))

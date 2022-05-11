@@ -11,7 +11,6 @@ from datetime import (
 )
 import time
 from typing import (
-    List,
     Mapping,
     Optional,
     Tuple,
@@ -237,7 +236,7 @@ class DRSObject:
     """
     uuid: str
     version: Optional[str] = None
-    access_methods: List[MutableJSON] = field(default_factory=list)
+    access_methods: list[MutableJSON] = field(default_factory=list)
 
     def add_access_method(self,
                           access_method: AccessMethod, *,
