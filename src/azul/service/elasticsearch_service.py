@@ -610,9 +610,10 @@ class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
                                              search_after=search_after)
 
         def page_link(*, previous):
-            return pagination.link(previous=previous,
-                                   catalog=self.catalog,
-                                   filters=json.dumps(self.filters.explicit))
+            url = pagination.link(previous=previous,
+                                  catalog=self.catalog,
+                                  filters=json.dumps(self.filters.explicit))
+            return None if url is None else str(url)
 
         return ResponsePagination(count=count,
                                   total=total['value'],

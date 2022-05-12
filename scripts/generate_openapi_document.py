@@ -5,6 +5,10 @@ from unittest.mock import (
     patch,
 )
 
+from furl import (
+    furl,
+)
+
 from azul import (
     config,
 )
@@ -37,10 +41,11 @@ def main():
                           attribute='service_function_name',
                           return_value='azul_service'):
             assert config.service_name == 'azul_service'
-            with patch.object(target=config,
+            service_endpoint = furl('http://localhost')
+            with patch.object(target=type(config),
                               attribute='service_endpoint',
-                              return_value='localhost'):
-                assert config.service_endpoint() == 'localhost'
+                              new=service_endpoint):
+                assert config.service_endpoint == service_endpoint
                 app_module = load_app_module('service')
                 app_spec = app_module.app.spec()
                 doc_path = os.path.join(config.project_root, 'lambdas/service/openapi.json')

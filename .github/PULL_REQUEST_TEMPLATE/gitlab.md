@@ -48,7 +48,7 @@ Connected issue: #4014
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Shortened the PR chain                                        <sub>or this PR is not labeled `chain`</sub>
+- [ ] Shortened the PR chain                                        <sub>or this PR is not labeled `base`</sub>
 - [ ] Deleted PR branch from GitHub
 
 

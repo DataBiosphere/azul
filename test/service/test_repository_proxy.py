@@ -149,20 +149,19 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                     gs_drs_id = 'some_dataset_id/some_object_id'
                     gs_file_url = f'gs://{gs_bucket_name}/{gs_drs_id}/{file_name}'
 
-                    pre_signed_gs = furl(
-                        url=gs_file_url,
-                        args={
-                            'X-Goog-Algorithm': 'SOMEALGORITHM',
-                            'X-Goog-Credential': 'SOMECREDENTIAL',
-                            'X-Goog-Date': 'CURRENTDATE',
-                            'X-Goog-Expires': '900',
-                            'X-Goog-SignedHeaders': 'host',
-                            'X-Goog-Signature': 'SOMESIGNATURE',
-                        })
+                    pre_signed_gs = furl(url=gs_file_url,
+                                         args={
+                                             'X-Goog-Algorithm': 'SOMEALGORITHM',
+                                             'X-Goog-Credential': 'SOMECREDENTIAL',
+                                             'X-Goog-Date': 'CURRENTDATE',
+                                             'X-Goog-Expires': '900',
+                                             'X-Goog-SignedHeaders': 'host',
+                                             'X-Goog-Signature': 'SOMESIGNATURE',
+                                         })
                     with mock.patch.object(DRSClient,
                                            'get_object',
                                            return_value=Access(method=AccessMethod.https,
-                                                               url=str(pre_signed_gs))):
+                                                               url=pre_signed_gs)):
                         response = client.request('GET', str(azul_url), redirect=False)
                         self.assertEqual(200 if fetch else 302, response.status)
                         if fetch:
@@ -200,7 +199,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
             if name not in extra_sources
         ]
         client = http_client()
-        azul_url = furl(self.base_url,
+        azul_url = furl(url=self.base_url,
                         path='/repository/sources',
                         query_params=dict(catalog=self.catalog))
 
@@ -284,13 +283,13 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
             'size': 3,
         }
         with mock.patch.object(RepositoryService, 'get_data_file', return_value=file_doc):
-            dss_url = furl(
-                url=config.dss_endpoint,
-                path='/v1/files',
-                args={
-                    'replica': 'aws',
-                    'version': file_version
-                }).add(path=file_uuid)
+            args = {
+                'replica': 'aws',
+                'version': file_version
+            }
+            dss_url = furl(url=config.dss_endpoint,
+                           path=('v1', 'files', file_uuid),
+                           args=args)
             dss_token = 'some_token'
             dss_url_with_token = dss_url.copy().add(args={'token': dss_token})
             for fetch in True, False:
@@ -304,15 +303,14 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                 helper.add_passthru(str(self.base_url))
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
-                                s3_url = furl(
-                                    url=f'https://{bucket_name}.s3.amazonaws.com',
-                                    path=key,
-                                    args={
-                                        'AWSAccessKeyId': 'SOMEACCESSKEY',
-                                        'Signature': 'SOMESIGNATURE=',
-                                        'x-amz-security-token': 'SOMETOKEN',
-                                        'Expires': expires
-                                    })
+                                s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
+                                              path=key,
+                                              args={
+                                                  'AWSAccessKeyId': 'SOMEACCESSKEY',
+                                                  'Signature': 'SOMESIGNATURE=',
+                                                  'x-amz-security-token': 'SOMETOKEN',
+                                                  'Expires': expires
+                                              })
                                 helper.add(responses.Response(method='GET',
                                                               url=str(dss_url),
                                                               status=301,
@@ -374,14 +372,14 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
 
                                 location = request_azul(url=location, expect_status=302)
 
-                                re_pre_signed_s3_url = furl(
-                                    url=f'https://{bucket_name}.s3.amazonaws.com',
-                                    path=key,
-                                    args={
-                                        'response-content-disposition': f'attachment;filename={file_name}',
-                                        'AWSAccessKeyId': self.mock_access_key_id,
-                                        'Signature': signature,
-                                        'Expires': expires,
-                                        'x-amz-security-token': self.mock_session_token
-                                    })
+                                args = {
+                                    'response-content-disposition': f'attachment;filename={file_name}',
+                                    'AWSAccessKeyId': self.mock_access_key_id,
+                                    'Signature': signature,
+                                    'Expires': expires,
+                                    'x-amz-security-token': self.mock_session_token
+                                }
+                                re_pre_signed_s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
+                                                            path=key,
+                                                            args=args)
                                 self.assertUrlEqual(re_pre_signed_s3_url, location)

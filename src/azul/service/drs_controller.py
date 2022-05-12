@@ -38,6 +38,8 @@ from azul import (
     cached_property,
     config,
     dss,
+    mutable_furl,
+    require,
 )
 from azul.drs import (
     AccessMethod,
@@ -161,8 +163,8 @@ class DRSController(SourceController):
             return Response({'msg': "Data object not found."}, status_code=404)
 
     @deprecated('DOS support will be removed')
-    def _dos_gs_url(self, file_uuid, version):
-        url = config.dss_endpoint + '/files/' + urllib.parse.quote(file_uuid, safe='')
+    def _dos_gs_url(self, file_uuid, version) -> mutable_furl:
+        url = furl(url=config.dss_endpoint, path=('files', file_uuid))
         params = dict({'file_version': version} if version else {},
                       directurl=True,
                       replica='gcp')
@@ -170,8 +172,8 @@ class DRSController(SourceController):
             if self.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
                 dss_response = requests.get(url, params=params, allow_redirects=False)
                 if dss_response.status_code == 302:
-                    url = dss_response.next.url
-                    assert url.startswith('gs')
+                    url = furl(dss_response.next.url)
+                    require(url.scheme == 'gs', url)
                     return url
                 elif dss_response.status_code == 301:
                     url = dss_response.next.url
@@ -207,7 +209,7 @@ class DRSController(SourceController):
             'id': file['uuid'],
             'urls': [
                 {
-                    'url': url
+                    'url': str(url)
                 }
                 for url in urls
             ],
@@ -259,6 +261,7 @@ class DRSObject:
         version = headers['x-dss-version']
         if self.version is not None:
             assert version == self.version
+        uri = dss_drs_object_uri(file_uuid=self.uuid, file_version=version)
         return {
             **{
                 'checksums': [
@@ -267,7 +270,7 @@ class DRSObject:
                 ],
                 'created_time': timestamp(version),
                 'id': self.uuid,
-                'self_uri': dss_drs_object_uri(self.uuid, version),
+                'self_uri': str(uri),
                 'size': headers['x-dss-size'],
                 'version': version
             },
@@ -334,9 +337,11 @@ def decode_access_id(access_id: str) -> Tuple[str, str]:
     return token, replica
 
 
-def dss_drs_object_uri(file_uuid: str,
+def dss_drs_object_uri(*,
+                       file_uuid: str,
                        file_version: Optional[str] = None,
-                       base_url: Optional[str] = None) -> str:
+                       base_url: Optional[furl] = None
+                       ) -> mutable_furl:
     """
     The drs:// URL for a given DSS file UUID and version. The return value will
     point at the bare-bones DRS data object endpoint in the web service.
@@ -349,14 +354,17 @@ def dss_drs_object_uri(file_uuid: str,
                      If absent, the service endpoint for the current deployment
                      will be used.
     """
-    _, netloc = _endpoint(base_url)
-    return drs_object_uri(netloc, file_uuid, **_url_query(file_version))
+    return drs_object_uri(base_url=_base_url(base_url),
+                          path=(file_uuid,),
+                          params=_url_query(file_version))
 
 
-def dss_dos_object_url(catalog: CatalogName,
+def dss_dos_object_url(*,
+                       catalog: CatalogName,
                        file_uuid: str,
                        file_version: Optional[str] = None,
-                       base_url: Optional[str] = None) -> str:
+                       base_url: Optional[furl] = None
+                       ) -> mutable_furl:
     """
     The http:// or https:// URL for a given DSS file UUID and version. The
     return value will point at the bare-bones DOS data object endpoint in the
@@ -372,17 +380,17 @@ def dss_dos_object_url(catalog: CatalogName,
                      If absent, the service endpoint for the current deployment
                      will be used.
     """
-    scheme, netloc = _endpoint(base_url)
-    return str(furl(scheme=scheme,
-                    netloc=netloc,
-                    path=dos_object_url_path(file_uuid),
-                    query_params=dict(_url_query(file_version), catalog=catalog)))
+    return furl(url=_base_url(base_url),
+                path=dos_object_url_path(file_uuid),
+                query_params=dict(_url_query(file_version), catalog=catalog))
 
 
-def dss_drs_object_url(file_uuid: str,
+def dss_drs_object_url(*,
+                       file_uuid: str,
                        file_version: Optional[str] = None,
-                       base_url: Optional[str] = None,
-                       access_id: Optional[str] = None) -> str:
+                       base_url: Optional[furl] = None,
+                       access_id: Optional[str] = None
+                       ) -> mutable_furl:
     """
     The http:// or https:// URL for a given DSS file UUID and version. The
     return value will point at the bare-bones DRS data object endpoint in the
@@ -399,18 +407,13 @@ def dss_drs_object_url(file_uuid: str,
     :param access_id: access id will be included in the URL if this parameter is
                       supplied
     """
-    scheme, netloc = _endpoint(base_url)
-    return str(furl(scheme=scheme,
-                    netloc=netloc,
-                    path=drs_object_url_path(file_uuid, access_id=access_id),
-                    args=_url_query(file_version)))
+    return furl(url=_base_url(base_url),
+                path=drs_object_url_path(object_id=file_uuid, access_id=access_id),
+                args=_url_query(file_version))
 
 
-def _endpoint(base_url: Optional[str]) -> Tuple[str, str]:
-    if base_url is None:
-        base_url = config.drs_endpoint()
-    base_url = furl(base_url)
-    return base_url.scheme, base_url.netloc
+def _base_url(base_url: Optional[furl]) -> furl:
+    return config.drs_endpoint if base_url is None else base_url
 
 
 def _url_query(file_version: Optional[str]) -> Mapping[str, str]:

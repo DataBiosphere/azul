@@ -42,6 +42,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    mutable_furl,
     require,
 )
 from azul.auth import (
@@ -348,9 +349,9 @@ class ServiceApp(AzulChaliceApp):
 
     @attr.s(kw_only=True, auto_attribs=True, frozen=True)
     class Pagination(Pagination):
-        self_url: str
+        self_url: furl
 
-        def link(self, *, previous: bool, **params: str) -> Optional[str]:
+        def link(self, *, previous: bool, **params: str) -> Optional[furl]:
             search_key = self.search_before if previous else self.search_after
             if search_key is None:
                 return None
@@ -363,7 +364,7 @@ class ServiceApp(AzulChaliceApp):
                     'order': self.order,
                     'size': self.size
                 }
-            return self.self_url + '?' + urllib.parse.urlencode(params)
+            return furl(url=self.self_url, args=params)
 
     def get_pagination(self, entity_type: str) -> Pagination:
         default_sort, default_order = sort_defaults[entity_type]
@@ -383,24 +384,22 @@ class ServiceApp(AzulChaliceApp):
                                    sort=params.get('sort', default_sort),
                                    search_before=sb,
                                    search_after=sa,
-                                   self_url=self.self_url())
+                                   self_url=self.self_url)
         except RequirementError as e:
             raise ChaliceViewError(repr(e.args))
 
-    # FIXME: Return furl instance
-    #        https://github.com/DataBiosphere/azul/issues/3398
     def file_url(self,
                  *,
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
-                 **params: str) -> str:
+                 **params: str
+                 ) -> mutable_furl:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        return str(furl(url=self.self_url(path.format(file_uuid=file_uuid)),
-                        args=dict(catalog=catalog,
-                                  **params)))
+        return self.base_url.set(path=path.format(file_uuid=file_uuid),
+                                 args=dict(catalog=catalog, **params))
 
     def _authenticate(self) -> Optional[OAuth2]:
         try:
@@ -418,18 +417,19 @@ class ServiceApp(AzulChaliceApp):
                 else:
                     raise UnauthorizedError(header)
 
-    # FIXME: Return furl instance
-    #        https://github.com/DataBiosphere/azul/issues/3398
     def manifest_url(self,
+                     *,
                      fetch: bool,
                      catalog: CatalogName,
                      format_: ManifestFormat,
-                     **params: str) -> str:
+                     **params: str
+                     ) -> mutable_furl:
         view_function = fetch_file_manifest if fetch else file_manifest
-        return str(furl(url=self.self_url(one(view_function.path)),
-                        args=dict(catalog=catalog,
-                                  format=format_.value,
-                                  **params)))
+        path = one(view_function.path)
+        return self.base_url.set(path=path,
+                                 args=dict(catalog=catalog,
+                                           format=format_.value,
+                                           **params))
 
 
 app = ServiceApp()
@@ -446,9 +446,10 @@ sort_defaults = {
 @app.route('/', cors=True)
 def swagger_ui():
     swagger_ui_template = app.load_static_resource('swagger-ui.html.template.mustache')
+    redirect_url = app.base_url.set(path='/oauth2_redirect')
     swagger_ui_html = chevron.render(swagger_ui_template, {
         'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
-        'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect')),
+        'OAUTH2_REDIRECT_URL': json.dumps(str(redirect_url)),
         'NON_INTERACTIVE_METHODS': json.dumps([
             f'{path}/{method.lower()}'
             for path, method in app.non_interactive_routes
@@ -716,15 +717,15 @@ def validate_size(size):
     >>> validate_size('1001')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
+    chalice.app.BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
     >>> validate_size('0')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must be greater than 0
+    chalice.app.BadRequestError: Invalid value for parameter `size`, must be greater than 0
     >>> validate_size('foo')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`
+    chalice.app.BadRequestError: Invalid value for parameter `size`
     """
     try:
         size = int(size)
@@ -745,21 +746,21 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The `filters` parameter is not valid JSON
 
     >>> validate_filters('""')
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The `filters` parameter must be a dictionary
 
     >>> validate_filters('{"sampleDisease": ["H syndrome"]}')
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The `filters` parameter entry for `sampleDisease`
     must be a single-item dictionary
 
@@ -767,7 +768,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for `sampleDisease`
     is not a list
@@ -776,7 +777,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The relation in the `filters` parameter entry
     for `sampleDisease` must be one of
     ('is', 'contains', 'within', 'intersects')
@@ -785,7 +786,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for
     `fileSource` is invalid
@@ -794,7 +795,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The field `accessions`
     can only be filtered by the `is` relation
 
@@ -802,7 +803,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry
     for `accessions` is not a single-item list
@@ -811,7 +812,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry
     for `accessions` must contain a dictionary
@@ -820,7 +821,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for `accessions`
     has invalid properties `{'foo'}`
@@ -829,7 +830,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for `accessions`
     has invalid properties `{'foo'}`
@@ -902,7 +903,7 @@ def validate_field(field: str):
     >>> validate_field('fooBar')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Unknown field `fooBar`
+    chalice.app.BadRequestError: Unknown field `fooBar`
     """
     if field not in app.metadata_plugin.field_mapping:
         raise BRE(f'Unknown field `{field}`')
@@ -953,12 +954,12 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({'size': 'foo'}, size=int)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for `size`
+    chalice.app.BadRequestError: Invalid value for `size`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Unknown query parameter `foo`
+    chalice.app.BadRequestError: Unknown query parameter `foo`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
 
@@ -967,7 +968,7 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({}, foo=Mandatory(str))
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Missing required query parameter `foo`
+    chalice.app.BadRequestError: Missing required query parameter `foo`
 
     """
 
@@ -1073,7 +1074,6 @@ def repository_search(entity_type: str,
     validate_repository_search(query_params)
     return app.repository_controller.search(catalog=app.catalog,
                                             entity_type=entity_type,
-                                            file_url_func=app.file_url,
                                             item_id=item_id,
                                             filters=query_params.get('filters'),
                                             pagination=app.get_pagination(entity_type),
@@ -1532,7 +1532,7 @@ def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.command_lines(url='',
+keys = CurlManifestGenerator.command_lines(url=furl(''),
                                            file_name='',
                                            authentication=None).keys()
 command_line_spec = schema.object(**{key: str for key in keys})
@@ -1597,7 +1597,7 @@ def _file_manifest(fetch: bool):
                     token=str,
                     **object_key)
     validate_filters(query_params['filters'])
-    return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
+    return app.manifest_controller.get_manifest_async(self_url=app.self_url,
                                                       catalog=catalog,
                                                       query_params=query_params,
                                                       fetch=fetch,
@@ -1927,7 +1927,7 @@ drs_spec_description = format_description('''
 
 
 @app.route(
-    drs.drs_object_url_path('{file_uuid}'),
+    drs.drs_object_url_path(object_id='{file_uuid}'),
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
@@ -1970,7 +1970,7 @@ def get_data_object(file_uuid):
 
 
 @app.route(
-    drs.drs_object_url_path('{file_uuid}', access_id='{access_id}'),
+    drs.drs_object_url_path(object_id='{file_uuid}', access_id='{access_id}'),
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
