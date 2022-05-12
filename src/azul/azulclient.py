@@ -152,8 +152,8 @@ class AzulClient(object):
         missing = []
         indexed = 0
         total = 0
-        indexer_url = furl(url=config.indexer_endpoint(),
-                           path=(catalog, 'delete' if delete else 'add'))
+        path = (catalog, 'delete' if delete else 'add')
+        indexer_url = config.indexer_endpoint.set(path=path)
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 

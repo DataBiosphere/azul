@@ -26,6 +26,9 @@ from typing import (
 )
 
 import attr
+from furl import (
+    furl,
+)
 from more_itertools import (
     first,
 )
@@ -69,6 +72,12 @@ if TYPE_CHECKING:
 else:
     def cache_per_thread(f, /):
         return lru_cache_per_thread(maxsize=None)(f)
+
+#: A type alias for annotating the return value of methods that return a
+#: ``furl`` instance that can be modified without side effects in the object
+#: whose method returned it.
+#
+mutable_furl = furl
 
 
 class Config:
@@ -234,12 +243,12 @@ class Config:
         return location
 
     @property
-    def tdr_service_url(self) -> str:
-        return self.environ['AZUL_TDR_SERVICE_URL']
+    def tdr_service_url(self) -> mutable_furl:
+        return furl(self.environ['AZUL_TDR_SERVICE_URL'])
 
     @property
-    def sam_service_url(self):
-        return self.environ['AZUL_SAM_SERVICE_URL']
+    def sam_service_url(self) -> mutable_furl:
+        return furl(self.environ['AZUL_SAM_SERVICE_URL'])
 
     @property
     def dss_query_prefix(self) -> str:
@@ -435,20 +444,23 @@ class Config:
         """
         return [self.drs_domain] if lambda_name == 'service' and self.drs_domain else []
 
-    def lambda_endpoint(self, lambda_name: str) -> str:
-        return "https://" + self.api_lambda_domain(lambda_name)
+    def lambda_endpoint(self, lambda_name: str) -> mutable_furl:
+        return furl(scheme='https', netloc=self.api_lambda_domain(lambda_name))
 
-    def indexer_endpoint(self) -> str:
+    @property
+    def indexer_endpoint(self) -> mutable_furl:
         return self.lambda_endpoint('indexer')
 
-    def service_endpoint(self) -> str:
+    @property
+    def service_endpoint(self) -> mutable_furl:
         return self.lambda_endpoint('service')
 
-    def drs_endpoint(self):
+    @property
+    def drs_endpoint(self) -> mutable_furl:
         if self.drs_domain:
-            return "https://" + self.drs_domain
+            return furl(scheme='https', netloc=self.drs_domain)
         else:
-            return self.service_endpoint()
+            return self.service_endpoint
 
     def lambda_names(self) -> List[str]:
         return ['indexer', 'service']

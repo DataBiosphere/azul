@@ -30,6 +30,9 @@ from azul.service.drs_controller import (
     dss_drs_object_uri,
     dss_drs_object_url,
 )
+from azul.types import (
+    MutableJSON,
+)
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
@@ -77,7 +80,7 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
                                               url=dss_url,
                                               status=302,
                                               headers={'location': 'gs://foo/bar'}))
-                drs_response = requests.get(drs_url)
+                drs_response = requests.get(str(drs_url))
             drs_response.raise_for_status()
             drs_response_json = drs_response.json()
             data_object = drs_response_json['data_object']
@@ -149,21 +152,22 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                     helper.add_passthru(str(self.base_url))
                     self._mock_responses(helper, redirects, file_uuid, file_version=file_version)
                     # Make first client request
-                    drs_response = requests.get(
-                        dss_drs_object_url(file_uuid,
-                                           file_version=file_version,
-                                           base_url=str(self.base_url)))
+                    url = dss_drs_object_url(file_uuid=file_uuid,
+                                             file_version=file_version,
+                                             base_url=self.base_url)
+                    drs_response = requests.get(str(url))
                     drs_response.raise_for_status()
                     drs_object = drs_response.json()
-                    expected = {
+                    uri = dss_drs_object_uri(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                                             file_version='2018-11-02T113344.698028Z')
+                    expected: MutableJSON = {
                         'checksums': [
                             {'sha1': '7ad306f154ce7de1a9a333cfd9100fc26ef652b4'},
                             {'sha-256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'}
                         ],
                         'created_time': '2018-11-02T11:33:44.698028Z',
                         'id': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                        'self_uri': dss_drs_object_uri(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                                                       file_version='2018-11-02T113344.698028Z'),
+                        'self_uri': str(uri),
                         'size': '195142097',
                         'version': '2018-11-02T113344.698028Z',
                     }
@@ -206,19 +210,19 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                             access_id = method['access_id']
                             for _ in range(redirects - 1):
                                 # The first redirect gave us the access ID, the rest are retries on 202
-                                drs_access_url = dss_drs_object_url(file_uuid,
+                                drs_access_url = dss_drs_object_url(file_uuid=file_uuid,
                                                                     file_version=file_version,
-                                                                    base_url=str(self.base_url),
+                                                                    base_url=self.base_url,
                                                                     access_id=access_id)
-                                drs_response = requests.get(drs_access_url)
+                                drs_response = requests.get(str(drs_access_url))
                                 self.assertEqual(drs_response.status_code, 202)
                                 self.assertEqual(drs_response.text, '')
                             # The final request should give us just the access URL
-                            drs_access_url = dss_drs_object_url(file_uuid,
+                            drs_access_url = dss_drs_object_url(file_uuid=file_uuid,
                                                                 file_version=file_version,
-                                                                base_url=str(self.base_url),
+                                                                base_url=self.base_url,
                                                                 access_id=access_id)
-                            drs_response = requests.get(drs_access_url)
+                            drs_response = requests.get(str(drs_access_url))
                             self.assertEqual(drs_response.status_code, 200)
                             if method['type'] == AccessMethod.https.scheme:
                                 self.assertEqual(drs_response.json(), {'url': self.signed_url})
@@ -285,8 +289,8 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                                           body=error_body,
                                           url=url,
                                           status=404))
-            drs_response = requests.get(
-                dss_drs_object_url(file_uuid, base_url=str(self.base_url)))
+            url = dss_drs_object_url(file_uuid=file_uuid, base_url=self.base_url)
+            drs_response = requests.get(str(url))
             self.assertEqual(drs_response.status_code, 404)
             self.assertEqual(drs_response.text, error_body)
 

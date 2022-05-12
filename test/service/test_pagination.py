@@ -185,7 +185,7 @@ class PaginationTestCase(WebServiceTestCase):
             return value
 
         def fetch(url):
-            response = requests.get(url)
+            response = requests.get(str(url))
             response.raise_for_status()
             response = response.json()
             values = tuple(map(sort_field_value, response['hits']))
@@ -204,7 +204,7 @@ class PaginationTestCase(WebServiceTestCase):
             return self.Page(previous=previous, values=values, next=next)
 
         args = dict(catalog=self.catalog, sort=sort_field, size=page_size, order=order)
-        url = str(self.base_url.set(path='/index/files', args=args))
+        url = self.base_url.set(path='/index/files', args=args)
 
         pages = []
         while url is not None:

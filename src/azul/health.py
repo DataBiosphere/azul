@@ -20,6 +20,9 @@ from chalice import (
     ChaliceViewError,
     Response,
 )
+from furl import (
+    furl,
+)
 import requests
 
 from azul import (
@@ -137,8 +140,8 @@ class HealthController:
             ))
         }
 
-    def _api_endpoint(self, path: str) -> Tuple[str, JSON]:
-        url = config.service_endpoint() + path
+    def _api_endpoint(self, relative_url: furl) -> Tuple[str, JSON]:
+        url = str(config.service_endpoint.join(relative_url))
         response = requests.head(url)
         try:
             response.raise_for_status()
@@ -153,7 +156,7 @@ class HealthController:
         Indicates whether important service API endpoints are operational.
         """
         endpoints = [
-            f'/index/{entity_type}?size=1'
+            furl(path=('index', entity_type), args={'size': '1'})
             for entity_type in ('projects', 'samples', 'files', 'bundles')
         ]
         with ThreadPoolExecutor(len(endpoints)) as tpe:
@@ -173,7 +176,8 @@ class HealthController:
     @lru_cache
     def _lambda(self, lambda_name) -> JSON:
         try:
-            response = requests.get(config.lambda_endpoint(lambda_name) + '/health/basic')
+            url = config.lambda_endpoint(lambda_name).set(path='/health/basic')
+            response = requests.get(str(url))
             response.raise_for_status()
             up = response.json()['up']
         except Exception as e:

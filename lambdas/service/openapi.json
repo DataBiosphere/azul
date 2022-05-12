@@ -39939,7 +39939,7 @@
     },
     "servers": [
         {
-            "url": "/"
+            "url": "http://localhost/"
         }
     ],
     "components": {

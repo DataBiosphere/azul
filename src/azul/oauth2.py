@@ -74,7 +74,7 @@ class OAuth2Client:
         invalid or missing token, an expired token, or a token whose scopes do
         not satisfy the required scopes.
         """
-        url = furl('https://www.googleapis.com/oauth2/v3/tokeninfo',
+        url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args={'access_token': self.credentials.token})
         # This endpoint ignores the authorization header, so we'll get a
         # meaningful response even with invalid credentials.

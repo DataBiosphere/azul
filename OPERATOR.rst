@@ -232,8 +232,9 @@ For an example of how to document failures within a PR `click here`_.
 Chain shortening
 ^^^^^^^^^^^^^^^^
 
-For the blocked PR, change the target branch to develop. Remove the chain
-label from blocking PR. Last, remove the blocking relationship.
+Change the target branch of the blocked PR to ``develop`` and remove the ``chained``
+label from that PR. Remove the ``base`` label from the blocking PR. Lastly, remove the blocking
+relationship.
 
 Upgrading GitLab
 ^^^^^^^^^^^^^^^^
