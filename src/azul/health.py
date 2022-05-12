@@ -1,3 +1,8 @@
+from collections.abc import (
+    Iterable,
+    Mapping,
+    Set,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -6,12 +11,6 @@ from itertools import (
 )
 import json
 import time
-from typing import (
-    AbstractSet,
-    Iterable,
-    Mapping,
-    Tuple,
-)
 
 from botocore.exceptions import (
     ClientError,
@@ -140,7 +139,7 @@ class HealthController:
             ))
         }
 
-    def _api_endpoint(self, relative_url: furl) -> Tuple[str, JSON]:
+    def _api_endpoint(self, relative_url: furl) -> tuple[str, JSON]:
         url = str(config.service_endpoint.join(relative_url))
         response = requests.head(url)
         try:
@@ -260,5 +259,5 @@ class HealthController:
     )
 
     @classmethod
-    def all_keys(cls) -> AbstractSet[str]:
+    def all_keys(cls) -> Set[str]:
         return frozenset(p.key for p in cls.all_properties)

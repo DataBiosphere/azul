@@ -1,6 +1,11 @@
 from collections import (
     ChainMap,
 )
+from collections.abc import (
+    Mapping,
+    Sequence,
+    Set,
+)
 from enum import (
     Enum,
 )
@@ -10,18 +15,11 @@ import os
 import re
 import shlex
 from typing import (
-    AbstractSet,
     BinaryIO,
     ClassVar,
-    Dict,
-    List,
-    Mapping,
-    MutableMapping,
     Optional,
-    Sequence,
     TYPE_CHECKING,
     TextIO,
-    Tuple,
     Union,
 )
 
@@ -47,7 +45,7 @@ from azul.types import (
 
 log = logging.getLogger(__name__)
 
-Netloc = Tuple[str, int]
+Netloc = tuple[str, int]
 
 CatalogName = str
 
@@ -59,12 +57,7 @@ if TYPE_CHECKING:
     def cache(f, /):
         return f
 else:
-    def cache(f, /):
-        """
-        This is anticipating the addition of functools.cache in 3.9
-        (https://github.com/python/cpython/blob/3.9/Lib/functools.py#L650)
-        """
-        return lru_cache(maxsize=None)(f)
+    cache = functools.cache
 
 if TYPE_CHECKING:
     def cache_per_thread(f, /):
@@ -224,11 +217,11 @@ class Config:
     def dss_source(self) -> Optional[str]:
         return self.environ.get('AZUL_DSS_SOURCE')
 
-    def sources(self, catalog: CatalogName) -> AbstractSet[str]:
+    def sources(self, catalog: CatalogName) -> Set[str]:
         return config.catalogs[catalog].sources
 
     @property
-    def tdr_allowed_source_locations(self) -> AbstractSet[str]:
+    def tdr_allowed_source_locations(self) -> Set[str]:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
@@ -314,7 +307,7 @@ class Config:
         return int(self.environ['AZUL_TDR_WORKERS'])
 
     @property
-    def external_lambda_role_assumptors(self) -> MutableMapping[str, List[str]]:
+    def external_lambda_role_assumptors(self) -> dict[str, list[str]]:
         try:
             accounts = self.environ['AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS']
         except KeyError:
@@ -322,7 +315,7 @@ class Config:
         else:
             return self._parse_principals(accounts)
 
-    def _parse_principals(self, accounts) -> MutableMapping[str, List[str]]:
+    def _parse_principals(self, accounts) -> dict[str, list[str]]:
         # noinspection PyProtectedMember
         """
         >>> from azul import config  # Without this import, these doctests fail
@@ -399,7 +392,7 @@ class Config:
     def unqualified_resource_name(self,
                                   qualified_resource_name: str,
                                   suffix: str = ''
-                                  ) -> Tuple[str, str]:
+                                  ) -> tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
         ('foo', 'dev')
@@ -462,7 +455,7 @@ class Config:
         else:
             return self.service_endpoint
 
-    def lambda_names(self) -> List[str]:
+    def lambda_names(self) -> list[str]:
         return ['indexer', 'service']
 
     @property
@@ -594,7 +587,7 @@ class Config:
         atlas: str
         internal: bool
         plugins: Mapping[str, Plugin]
-        sources: AbstractSet[str]
+        sources: Set[str]
 
         _catalog_re = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
         _catalog_re = r'(?=.{1,64}$)' + _catalog_re
@@ -769,7 +762,7 @@ class Config:
         }
 
     @property
-    def lambda_env(self) -> Dict[str, str]:
+    def lambda_env(self) -> dict[str, str]:
         """
         A dictionary with the environment variables to be used by a deployed AWS
         Lambda function or `chalice local`. Only includes those variables that
@@ -781,14 +774,14 @@ class Config:
         }
 
     @property
-    def lambda_env_for_outsourcing(self) -> Dict[str, str]:
+    def lambda_env_for_outsourcing(self) -> dict[str, str]:
         """
         Same as :meth:`lambda_env` but only for variables that need to be
         outsourced.
         """
         return self._lambda_env(outsource=True)
 
-    def _lambda_env(self, *, outsource: bool) -> Dict[str, str]:
+    def _lambda_env(self, *, outsource: bool) -> dict[str, str]:
         return {
             k: v
             for k, v in os.environ.items()
@@ -796,7 +789,7 @@ class Config:
         }
 
     @cached_property
-    def _outsourced_environ(self) -> Dict[str, str]:
+    def _outsourced_environ(self) -> dict[str, str]:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
@@ -972,18 +965,18 @@ class Config:
         return '_'.join(parts)
 
     @property
-    def all_queue_names(self) -> List[str]:
+    def all_queue_names(self) -> list[str]:
         return self.work_queue_names + self.fail_queue_names
 
     @property
-    def fail_queue_names(self) -> List[str]:
+    def fail_queue_names(self) -> list[str]:
         return [
             self.tallies_queue_name(fail=True),
             self.notifications_queue_name(fail=True)
         ]
 
     @property
-    def work_queue_names(self) -> List[str]:
+    def work_queue_names(self) -> list[str]:
         return [
             queue_name(retry=retry)
             for queue_name in (self.notifications_queue_name, self.tallies_queue_name)
@@ -1053,7 +1046,7 @@ class Config:
         return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
-    def reindex_sources(self) -> List[str]:
+    def reindex_sources(self) -> list[str]:
         sources = shlex.split(self.environ.get('azul_reindex_sources', '*'))
         require(bool(sources), 'Sources cannot be empty', sources)
         return sources

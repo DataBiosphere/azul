@@ -1,6 +1,8 @@
+from collections.abc import (
+    Mapping,
+)
 import re
 from typing import (
-    Mapping,
     NamedTuple,
     Optional,
     Type,

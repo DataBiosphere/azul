@@ -2,6 +2,9 @@ from ast import (
     literal_eval,
 )
 import base64
+from collections.abc import (
+    Mapping,
+)
 from dataclasses import (
     dataclass,
     field,
@@ -11,10 +14,7 @@ from datetime import (
 )
 import time
 from typing import (
-    List,
-    Mapping,
     Optional,
-    Tuple,
 )
 import urllib.parse
 
@@ -237,7 +237,7 @@ class DRSObject:
     """
     uuid: str
     version: Optional[str] = None
-    access_methods: List[MutableJSON] = field(default_factory=list)
+    access_methods: list[MutableJSON] = field(default_factory=list)
 
     def add_access_method(self,
                           access_method: AccessMethod, *,
@@ -327,7 +327,7 @@ def encode_access_id(token_str: str, replica: str) -> str:
     return access_id.rstrip(b'=').decode()
 
 
-def decode_access_id(access_id: str) -> Tuple[str, str]:
+def decode_access_id(access_id: str) -> tuple[str, str]:
     token = access_id.encode('ascii')  # Base64 is a subset of ASCII
     padding = b'=' * (-len(token) % 4)
     token = base64.urlsafe_b64decode(token + padding)

@@ -9,9 +9,6 @@ from collections import (
 import fnmatch
 import logging
 import sys
-from typing import (
-    List,
-)
 
 from azul import (
     config,
@@ -119,7 +116,7 @@ parser.add_argument('--no-slots',
                     help='Suppress management of BigQuery slot commitments.')
 
 
-def main(argv: List[str]):
+def main(argv: list[str]):
     args = parser.parse_args(argv)
 
     if args.verbose:

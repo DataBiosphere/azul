@@ -6,6 +6,9 @@ and example how the Azul service (https://service.azul.data.humancellatlas.org/)
 might be used to programmatically list and download project data matrices.
 """
 import argparse
+from collections.abc import (
+    Mapping,
+)
 import json
 import os
 import sys
@@ -15,7 +18,6 @@ from time import (
 from typing import (
     Any,
     List,
-    Mapping,
     MutableMapping,
     Optional,
 )

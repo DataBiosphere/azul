@@ -9,10 +9,6 @@ from datetime import (
 )
 import sys
 import time
-from typing import (
-    Dict,
-    List,
-)
 
 import attr
 
@@ -69,7 +65,7 @@ class ReindexDetector:
 
     @classmethod
     @cache
-    def _list_contribution_lambda_functions(cls) -> List[Lambda]:
+    def _list_contribution_lambda_functions(cls) -> list[Lambda]:
         """
         Search Lambda functions for the names of contribution Lambdas.
         """
@@ -79,7 +75,7 @@ class ReindexDetector:
             if lambda_.is_contribution_lambda
         ]
 
-    def _lambda_invocation_counts(self) -> Dict[Lambda, int]:
+    def _lambda_invocation_counts(self) -> dict[Lambda, int]:
         end = datetime.utcnow()
         start = end - timedelta(minutes=self.interval)
         lambdas_by_name = {

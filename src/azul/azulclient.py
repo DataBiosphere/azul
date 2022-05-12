@@ -1,6 +1,10 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+    Set,
+)
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor,
@@ -17,9 +21,6 @@ from pprint import (
     PrettyPrinter,
 )
 from typing import (
-    AbstractSet,
-    Iterable,
-    List,
     Union,
 )
 import uuid
@@ -209,14 +210,14 @@ class AzulClient(object):
         if errors or missing:
             raise AzulClientNotificationError
 
-    def catalog_sources(self, catalog: CatalogName) -> AbstractSet[str]:
+    def catalog_sources(self, catalog: CatalogName) -> Set[str]:
         return set(map(str, self.repository_plugin(catalog).sources))
 
     def list_bundles(self,
                      catalog: CatalogName,
                      source: Union[str, SourceRef],
                      prefix: str
-                     ) -> List[SourcedBundleFQID]:
+                     ) -> list[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
         plugin = self.repository_plugin(catalog)
         if isinstance(source, str):
@@ -238,7 +239,7 @@ class AzulClient(object):
 
     def remote_reindex(self,
                        catalog: CatalogName,
-                       sources: AbstractSet[str]):
+                       sources: Set[str]):
 
         plugin = self.repository_plugin(catalog)
         for source in sources:
@@ -290,7 +291,7 @@ class AzulClient(object):
     @classmethod
     def filter_obsolete_bundle_versions(cls,
                                         bundle_fqids: Iterable[SourcedBundleFQID]
-                                        ) -> List[SourcedBundleFQID]:
+                                        ) -> list[SourcedBundleFQID]:
         """
         Suppress obsolete bundle versions by only taking the latest version for
         each bundle UUID.

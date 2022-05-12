@@ -1,14 +1,13 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from itertools import (
     chain,
     product,
-)
-from typing import (
-    Mapping,
-    Sequence,
-    Tuple,
 )
 
 from azul.collections import (
@@ -328,7 +327,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
         for file in files
     ]
 
-    def dimension_placement(dimension: str) -> Tuple[int, int]:
+    def dimension_placement(dimension: str) -> tuple[int, int]:
         dimension_index = default_order_of_matrix_dimensions.index(dimension)
         return len(distinct_values[dimension]), dimension_index
 

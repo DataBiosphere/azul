@@ -2,6 +2,10 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from datetime import (
     datetime,
     timezone,
@@ -14,12 +18,7 @@ import sys
 from typing import (
     ClassVar,
     Generic,
-    List,
-    Mapping,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
     TypeVar,
     Union,
 )
@@ -395,7 +394,7 @@ class VersionType(Enum):
     internal = auto()
 
 
-InternalVersion = Tuple[int, int]
+InternalVersion = tuple[int, int]
 
 C = TypeVar('C', bound=DocumentCoordinates)
 
@@ -433,7 +432,7 @@ class Document(Generic[C]):
                          field_types: Union[FieldType, FieldTypes],
                          *,
                          forward: bool,
-                         path: Tuple[str, ...] = ()
+                         path: tuple[str, ...] = ()
                          ) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into
@@ -535,7 +534,7 @@ class Document(Generic[C]):
         return self
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
+    def mandatory_source_fields(cls) -> list[str]:
         """
         A list of dot-separated field paths into the source of each document
         that :meth:`from_json` expects to be present. Subclasses that override
@@ -693,7 +692,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
         return self
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
+    def mandatory_source_fields(cls) -> list[str]:
         return super().mandatory_source_fields() + [
             'document_id',
             'source',
@@ -714,8 +713,8 @@ class Contribution(Document[ContributionCoordinates[E]]):
 @document_class
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
-    sources: Set[DocumentSource]
-    bundles: Optional[List[JSON]]
+    sources: set[DocumentSource]
+    bundles: Optional[list[JSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
 
@@ -729,9 +728,9 @@ class Aggregate(Document[AggregateCoordinates]):
     def __init__(self,
                  coordinates: AggregateCoordinates,
                  version: Optional[int],
-                 sources: Set[SourceRef[SimpleSourceSpec, SourceRef]],
+                 sources: set[SourceRef[SimpleSourceSpec, SourceRef]],
                  contents: Optional[JSON],
-                 bundles: Optional[List[JSON]],
+                 bundles: Optional[list[JSON]],
                  num_contributions: int) -> None: ...
 
     def __attrs_post_init__(self):
@@ -771,7 +770,7 @@ class Aggregate(Document[AggregateCoordinates]):
         return self
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
+    def mandatory_source_fields(cls) -> list[str]:
         return super().mandatory_source_fields() + [
             'num_contributions',
             'sources.id',

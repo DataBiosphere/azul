@@ -1,11 +1,12 @@
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 import json
 import logging
 from typing import (
-    Mapping,
     Optional,
     Protocol,
-    Sequence,
-    Set,
 )
 
 import attr
@@ -35,7 +36,7 @@ FiltersJSON = Mapping[str, Mapping[str, Sequence[PrimitiveJSON]]]
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Filters:
     explicit: FiltersJSON
-    source_ids: Set[str]
+    source_ids: set[str]
 
     @classmethod
     def from_json(cls, json: JSON) -> 'Filters':
