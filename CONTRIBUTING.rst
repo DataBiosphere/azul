@@ -580,26 +580,40 @@ Type hints
 * When defining type hints for a function or method, we do so for all its
   parameters and the return value.
   
-* We prefer the generic types from ``typing`` over non-generic ones from the
-  ``collections`` module e.g., ``MutableMapping[K,V]`` or ``Dict[K,V]`` over
-  ``dict``.
+* Now that `PEP-585`_ has arrived in Python 3.9, we prefer the generic built-in
+  types over the deprecated aliases from ``typing`` e.g., ``dict[K,V]`` over
+  ``Dict[K,V]``. The one exception to this rule is that due to a bug in PyCharm
+  we still have to employ ``typing.Type`` instead of the recommended generic
+  use of ``type``.
+
+.. _PEP-585: https://peps.python.org/pep-0585/
+
+..
+  FIXME: Remove above exception
+         https://github.com/DataBiosphere/azul/issues/4184
+
+  In the same vein, we avoid any of the aliases in ``typing`` and prefer their
+  primary definitions instead. For example, we prefer ``collections.abc.Set``
+  over ``typing.AbstractSet`` Note that the deprecated ``typing.Set`` (an alias
+  of ``set``) is mutable while ``collections.abc.Set`` is not, so be sure to
+  import ``Set`` from ``collections.abc``.
 
 * For method/function *arguments* we prefer the least specific type
-  possible e.g., ``Mapping`` over ``MutableMapping`` or ``Sequence`` over
-  ``List``. For example, we don't use ``Dict`` for an argument unless it is
-  actually modified by the function/method. When the choice is between ``Dict``
-  or ``MutableMapping`` we use ``Dict`` for arguments even though ``Dict`` is
-  actually more restrictive. The reason is that there doesn't seem to be any
-  class that implements ``MutableMapping`` while not also being a subclass of
-  ``Dict``. The longer-named ``MutableMapping`` does not actually result in more
-  options for the caller.
+  possible e.g., ``Mapping`` over ``dict`` or ``MutableMapping`` and
+  ``Sequence`` over ``List`` or ``list``. For example, we don't use ``dict`` for
+  an argument unless it is actually modified by the function/method.
+
+* Unless code should truly support multiple implementations of mutable mappings,
+  we prefer ``dict[K,V]`` over ``MutableMapping[K,V]``. In the rare occasions
+  that we pick the latter, we use the definition from ``abc.collections``
+  instead of the alias in ``typing``.
 
 * For method and function return values we specify the type that we anticipate
   to be useful to the caller without being overly specific. For example, we
-  prefer ``Dict`` for the return type because ``Mapping`` would prevent the
+  prefer ``dict`` for the return type because ``Mapping`` would prevent the
   caller from modifying the returned dictionary, something that's typically not
-  desirable. If we do want to prevent modification we would return a
-  ``frozendict`` or equivalent and declare the return value as ``Mapping``.
+  desirable. If we do want to prevent modification, we would return a
+  ``frozendict`` or equivalent and declare the return value to be ``Mapping``.
 
 * Owing to the prominence of JSON in the project we annotate variables
   containing deserialized JSON as such, using the ``JSON`` and ``MutableJSON``
