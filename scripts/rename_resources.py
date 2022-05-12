@@ -17,6 +17,8 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 renamed = {
+    'aws_cloudwatch_log_metric_filter.azul-service-5xx': 'aws_cloudwatch_log_metric_filter.service_5xx',
+    'aws_cloudwatch_log_metric_filter.azul-indexer-5xx': 'aws_cloudwatch_log_metric_filter.indexer_5xx',
 }
 
 

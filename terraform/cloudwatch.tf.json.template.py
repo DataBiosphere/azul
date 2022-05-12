@@ -9,7 +9,7 @@ emit_tf(None if config.disable_monitoring else {
     "resource": [
         {
             "aws_cloudwatch_log_metric_filter": {
-                f"azul-{lambda_}-5xx": {
+                f"{lambda_}_5xx": {
                     "name": config.qualified_resource_name(lambda_ + '_5xx'),
                     "pattern": "{ $.status = 5* }",
                     "log_group_name": "${aws_cloudwatch_log_group.%s.name}" % lambda_,
