@@ -2,6 +2,9 @@ import argparse
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
     timezone,
@@ -14,8 +17,6 @@ from operator import (
 import os
 import sys
 from typing import (
-    Dict,
-    Mapping,
     Optional,
 )
 import uuid
@@ -75,7 +76,7 @@ log = logging.getLogger(__name__)
 
 def file_paths(parent_dir: str,
                bundle_uuid: str
-               ) -> Dict[str, Dict[str, str]]:
+               ) -> dict[str, dict[str, str]]:
     def paths(*parts: str, ext: str = ''):
         return {
             part: os.path.join(parent_dir, f'{bundle_uuid}.{part}{ext}.json')

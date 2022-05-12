@@ -2,13 +2,11 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Mapping,
+)
 import os
 import time
-from typing import (
-    List,
-    Mapping,
-    Tuple,
-)
 from unittest import (
     TestSuite,
 )
@@ -237,7 +235,7 @@ class HealthCheckTestCase(LocalAppTestCase,
     def _endpoint(self, relative_url: str) -> str:
         return str(config.service_endpoint.join(furl(relative_url)))
 
-    def _other_lambda_names(self) -> List[str]:
+    def _other_lambda_names(self) -> list[str]:
         return [
             lambda_name
             for lambda_name in config.lambda_names()
@@ -312,8 +310,8 @@ class HealthCheckTestCase(LocalAppTestCase,
             sqs.create_queue(QueueName=queue_name)
 
     def _endpoint_states(self,
-                         up_endpoints: Tuple[str, ...] = endpoints,
-                         down_endpoints: Tuple[str, ...] = ()
+                         up_endpoints: tuple[str, ...] = endpoints,
+                         down_endpoints: tuple[str, ...] = ()
                          ) -> Mapping[str, bool]:
         return {
             **{endpoint: True for endpoint in up_endpoints},

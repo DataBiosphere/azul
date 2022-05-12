@@ -1,3 +1,6 @@
+from collections.abc import (
+    Iterable,
+)
 import gzip
 from itertools import (
     chain,
@@ -8,10 +11,6 @@ from textwrap import (
     dedent,
 )
 from typing import (
-    Iterable,
-    List,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -246,7 +245,7 @@ def iam() -> JSON:
         return json.load(f)
 
 
-def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_global: bool = None) -> List[str]:
+def aws_service_actions(service: str, types: set[ServiceActionType] = None, is_global: bool = None) -> list[str]:
     if types is None and is_global is None:
         return [iam()['services'][service]['serviceName'] + ':*']
     else:
@@ -261,7 +260,7 @@ def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_g
         ]
 
 
-def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> List[str]:
+def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> list[str]:
     resources = iam()['resources'].get(service, {})
     resource_names = set(resource_names)
     all_names = resources.keys()
@@ -296,7 +295,7 @@ def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
     return sorted(set(chain(*sets)))
 
 
-def allow_global_actions(service, types: Set[ServiceActionType] = None) -> JSON:
+def allow_global_actions(service, types: set[ServiceActionType] = None) -> JSON:
     return {
         'actions': aws_service_actions(service, types=types, is_global=True),
         'resources': ['*']
@@ -305,9 +304,9 @@ def allow_global_actions(service, types: Set[ServiceActionType] = None) -> JSON:
 
 def allow_service(service: str,
                   *resource_names: str,
-                  action_types: Set[ServiceActionType] = None,
-                  global_action_types: Set[ServiceActionType] = None,
-                  **arn_fields: Union[str, List[str], Set[str], Tuple[str, ...]]) -> List[JSON]:
+                  action_types: set[ServiceActionType] = None,
+                  global_action_types: set[ServiceActionType] = None,
+                  **arn_fields: Union[str, list[str], set[str], tuple[str, ...]]) -> list[JSON]:
     if global_action_types is None:
         global_action_types = action_types
     return remove_inconsequential_statements([
@@ -319,7 +318,7 @@ def allow_service(service: str,
     ])
 
 
-def remove_inconsequential_statements(statements: List[JSON]) -> List[JSON]:
+def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 

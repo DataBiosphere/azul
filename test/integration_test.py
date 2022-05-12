@@ -1,10 +1,18 @@
 from abc import (
     ABCMeta,
 )
+from collections.abc import (
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+    Set,
+)
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
 from contextlib import (
+    AbstractContextManager,
     contextmanager,
 )
 import csv
@@ -31,21 +39,11 @@ import tempfile
 import threading
 import time
 from typing import (
-    AbstractSet,
     Any,
     Callable,
-    ContextManager,
-    Dict,
     IO,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
     Optional,
     Protocol,
-    Sequence,
-    Set,
-    Tuple,
     Union,
     cast,
 )
@@ -224,8 +222,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         return tdr
 
     @cached_property
-    def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
-                                                        Set[TDRSourceRef]]:
+    def managed_access_sources_by_catalog(self) -> dict[CatalogName,
+                                                        set[TDRSourceRef]]:
         public_sources = self._public_tdr_client.snapshot_names_by_id()
         all_sources = self._tdr_client.snapshot_names_by_id()
         configured_sources = {
@@ -245,7 +243,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def _list_partition_bundles(self,
                                 catalog: CatalogName,
                                 source: str
-                                ) -> Tuple[SourceRef, str, List[SourcedBundleFQID]]:
+                                ) -> tuple[SourceRef, str, list[SourcedBundleFQID]]:
         """
         Randomly select a partition of bundles from the specified source, check that
         it isn't empty, and return the FQIDs of the bundles in that partition.
@@ -307,7 +305,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                       *,
                       min_bundles: int,
                       check_all: bool
-                      ) -> Iterator[Tuple[SourceRef, str, List[SourcedBundleFQID]]]:
+                      ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
@@ -328,7 +326,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     def _list_managed_access_bundles(self,
                                      catalog: CatalogName
-                                     ) -> Iterator[Tuple[SourceRef, str, List[SourcedBundleFQID]]]:
+                                     ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         sources = self.azul_client.catalog_sources(catalog)
         # We need at least one managed_access bundle per IT. To index them with
         # remote_reindex and avoid collateral bundles, we use as specific a
@@ -398,8 +396,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
             name: CatalogName
-            bundles: Set[SourcedBundleFQID]
-            notifications: List[JSON]
+            bundles: set[SourcedBundleFQID]
+            notifications: list[JSON]
             random: Random = self.random
 
         def _wait_for_indexer():
@@ -414,7 +412,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if index:
             self._reset_indexer()
 
-        catalogs: List[Catalog] = []
+        catalogs: list[Catalog] = []
         for catalog in config.integration_test_catalogs:
             if index:
                 notifications, fqids = self._prepare_notifications(catalog)
@@ -548,19 +546,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._test_drs(catalog, file_uuid, file_ext)
 
     @property
-    def _service_account_credentials(self) -> ContextManager:
+    def _service_account_credentials(self) -> AbstractContextManager:
         return self._authorization_context(self._tdr_client)
 
     @property
-    def _public_service_account_credentials(self) -> ContextManager:
+    def _public_service_account_credentials(self) -> AbstractContextManager:
         return self._authorization_context(self._public_tdr_client)
 
     @property
-    def _unregistered_service_account_credentials(self) -> ContextManager:
+    def _unregistered_service_account_credentials(self) -> AbstractContextManager:
         return self._authorization_context(self._unregistered_tdr_client)
 
     @contextmanager
-    def _authorization_context(self, tdr: TDRClient) -> ContextManager:
+    def _authorization_context(self, tdr: TDRClient) -> AbstractContextManager:
         old_http = self._http
         try:
             self._http = tdr._http_client
@@ -617,7 +615,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _assertResponseStatus(self,
                               response: urllib3.HTTPResponse,
-                              expected_statuses: Tuple[int, ...] = (200,)):
+                              expected_statuses: tuple[int, ...] = (200,)):
         # Using assert to avoid tampering with response content prematurely
         # (in case the response is streamed)
         assert response.status in expected_statuses, (
@@ -703,7 +701,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def __check_manifest(self,
                          file: IO[bytes],
                          uuid_field_name: str
-                         ) -> List[Mapping[str, str]]:
+                         ) -> list[Mapping[str, str]]:
         reader = self._read_manifest(file)
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')
@@ -842,8 +840,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def _prepare_notifications(self, catalog: CatalogName) -> Tuple[JSONs,
-                                                                    Set[SourcedBundleFQID]]:
+    def _prepare_notifications(self, catalog: CatalogName) -> tuple[JSONs,
+                                                                    set[SourcedBundleFQID]]:
         bundle_fqids = set()
         notifications = []
 
@@ -877,7 +875,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
                                  entity_type: str,
-                                 bundle_fqids: AbstractSet[SourcedBundleFQID]) -> None:
+                                 bundle_fqids: Set[SourcedBundleFQID]) -> None:
         fqid_by_uuid: Mapping[str, SourcedBundleFQID] = {
             fqid.uuid: fqid for fqid in bundle_fqids
         }
@@ -961,7 +959,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
-    def _list_indexed_bundles(self, catalog: CatalogName) -> Set[SourcedBundleFQID]:
+    def _list_indexed_bundles(self, catalog: CatalogName) -> set[SourcedBundleFQID]:
         bundle_fqids = set()
         plugin = self.azul_client.repository_plugin(catalog)
         with self._service_account_credentials:
@@ -981,7 +979,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access(self,
                              catalog: CatalogName,
-                             bundle_fqids: AbstractSet[SourcedBundleFQID]
+                             bundle_fqids: Set[SourcedBundleFQID]
                              ) -> None:
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
@@ -1013,9 +1011,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_repository_sources(self,
                                                 catalog: CatalogName,
-                                                indexed_source_ids: AbstractSet[str],
-                                                managed_access_source_ids: AbstractSet[str]
-                                                ) -> Set[str]:
+                                                indexed_source_ids: Set[str],
+                                                managed_access_source_ids: Set[str]
+                                                ) -> set[str]:
         """
         Test the managed access controls for the /repository/sources endpoint
         :return: the set of public sources
@@ -1023,7 +1021,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         url = config.service_endpoint.set(path='/repository/sources',
                                           query={'catalog': catalog})
 
-        def list_source_ids() -> Set[str]:
+        def list_source_ids() -> set[str]:
             response = self._get_url_json(url)
             return {source['sourceId'] for source in cast(JSONs, response['sources'])}
 
@@ -1041,7 +1039,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_indices(self,
                                      catalog: CatalogName,
-                                     managed_access_source_ids: AbstractSet[str]
+                                     managed_access_source_ids: Set[str]
                                      ) -> JSONs:
         """
         Test the managed access controls for the /index/bundles and
@@ -1077,7 +1075,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(managed_access_source_ids, hit_source_ids)
         return hits
 
-    def _test_managed_access_repository_files(self, bundles: JSONs) -> Set[str]:
+    def _test_managed_access_repository_files(self, bundles: JSONs) -> set[str]:
         """
         Test the managed access controls for the /repository/files endpoint
         :return: download URLs for the managed access files
@@ -1097,7 +1095,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_summary(self,
                                      catalog: CatalogName,
-                                     managed_access_files: AbstractSet[str]
+                                     managed_access_files: Set[str]
                                      ) -> None:
         """
         Test the managed access controls for the /index/summary endpoint

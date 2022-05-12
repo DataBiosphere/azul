@@ -2,9 +2,11 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import (
+    Sequence,
+)
 import json
 from typing import (
-    Sequence,
     Union,
 )
 

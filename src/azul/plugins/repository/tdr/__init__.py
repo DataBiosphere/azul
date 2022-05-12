@@ -1,6 +1,12 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+    Mapping,
+    Sequence,
+    Set,
+)
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
@@ -16,17 +22,9 @@ from operator import (
 )
 import time
 from typing import (
-    AbstractSet,
     Any,
     ClassVar,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
     Type,
     Union,
     cast,
@@ -96,8 +94,8 @@ from azul.uuids import (
 
 log = logging.getLogger(__name__)
 
-Entities = Set[EntityReference]
-EntitiesByType = Dict[EntityType, Set[EntityID]]
+Entities = set[EntityReference]
+EntitiesByType = dict[EntityType, set[EntityID]]
 
 
 @attr.s(frozen=True, auto_attribs=True)
@@ -170,7 +168,7 @@ TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
-    _sources: AbstractSet[TDRSourceSpec]
+    _sources: Set[TDRSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
@@ -180,7 +178,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         )
 
     @property
-    def sources(self) -> AbstractSet[TDRSourceSpec]:
+    def sources(self) -> Set[TDRSourceSpec]:
         return self._sources
 
     def _user_authenticated_tdr(self,
@@ -197,7 +195,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def list_sources(self,
                      authentication: Optional[Authentication]
-                     ) -> List[TDRSourceRef]:
+                     ) -> list[TDRSourceRef]:
         tdr = self._user_authenticated_tdr(authentication)
         try:
             snapshots = tdr.snapshot_names_by_id()
@@ -245,7 +243,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id
 
-    def list_bundles(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
+    def list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
         self._assert_source(source)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = self._list_links_ids(source, prefix)
@@ -299,7 +297,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.qualify_table(table_name)
 
-    def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
+    def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
 
         source_prefix = source.spec.prefix.common
         validate_uuid_prefix(source_prefix + prefix)
@@ -315,7 +313,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             for row in current_bundles
         ]
 
-    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> List[BigQueryRow]:
+    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> list[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
         groups = groupby(sorted(iter_rows, key=key), key=key)
@@ -367,7 +365,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _stitch_bundles(self,
                         root_bundle: 'TDRBundle'
-                        ) -> Tuple[EntitiesByType, Entities, List[JSON]]:
+                        ) -> tuple[EntitiesByType, Entities, list[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
@@ -375,9 +373,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         source = root_bundle.fqid.source
         entities: EntitiesByType = defaultdict(set)
         root_entities = None
-        unprocessed: Set[SourcedBundleFQID] = {root_bundle.fqid}
-        processed: Set[SourcedBundleFQID] = set()
-        stitched_links: List[JSON] = []
+        unprocessed: set[SourcedBundleFQID] = {root_bundle.fqid}
+        processed: set[SourcedBundleFQID] = set()
+        stitched_links: list[JSON] = []
         # Retrieving links in batches eliminates the risk of exceeding
         # BigQuery's maximum query size. Using a batches size 1000 appears to be
         # equally performant as retrieving the links without batching.
@@ -388,7 +386,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             processed.update(batch)
             unprocessed -= batch
             stitched_links.extend(links.values())
-            all_dangling_inputs: Set[EntityReference] = set()
+            all_dangling_inputs: set[EntityReference] = set()
             for links_id, links_json in links.items():
                 project = EntityReference(entity_type='project',
                                           entity_id=links_json['project_id'])
@@ -418,8 +416,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         return entities, root_entities, stitched_links
 
     def _retrieve_links(self,
-                        links_ids: Set[SourcedBundleFQID]
-                        ) -> Dict[SourcedBundleFQID, JSON]:
+                        links_ids: set[SourcedBundleFQID]
+                        ) -> dict[SourcedBundleFQID, JSON]:
         """
         Retrieve links entities from BigQuery and parse the `content` column.
         :param links_ids: Which links entities to retrieve.
@@ -440,8 +438,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def _retrieve_entities(self,
                            source: TDRSourceSpec,
                            entity_type: EntityType,
-                           entity_ids: Union[Set[EntityID], Set[BundleFQID]],
-                           ) -> List[BigQueryRow]:
+                           entity_ids: Union[set[EntityID], set[BundleFQID]],
+                           ) -> list[BigQueryRow]:
         """
         Efficiently retrieve multiple entities from BigQuery in a single query.
 
@@ -468,7 +466,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
         if entity_type == 'links':
             assert issubclass(entity_id_type, BundleFQID), entity_id_type
-            entity_ids = cast(Set[BundleFQID], entity_ids)
+            entity_ids = cast(set[BundleFQID], entity_ids)
             where_columns = (pk_column, version_column)
             where_values = (
                 (quote(fqid.uuid), f'TIMESTAMP({quote(fqid.version)})')
@@ -494,8 +492,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         return rows
 
     def _in(self,
-            columns: Tuple[str, ...],
-            values: Iterable[Tuple[str, ...]]
+            columns: tuple[str, ...],
+            values: Iterable[tuple[str, ...]]
             ) -> str:
         """
         >>> plugin = Plugin(sources=set())
@@ -510,7 +508,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _find_upstream_bundles(self,
                                source: TDRSourceRef,
-                               outputs: Entities) -> Set[SourcedBundleFQID]:
+                               outputs: Entities) -> set[SourcedBundleFQID]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
@@ -624,7 +622,7 @@ class Checksums:
     sha256: str
     s3_etag: Optional[str] = None
 
-    def to_json(self) -> Dict[str, str]:
+    def to_json(self) -> dict[str, str]:
         """
         >>> Checksums(crc32c='a', sha1='b', sha256='c', s3_etag=None).to_json()
         {'crc32c': 'a', 'sha1': 'b', 'sha256': 'c'}
@@ -646,7 +644,7 @@ class Checksums:
         ValueError: ('JSON property cannot be absent or null', 'sha256')
         """
 
-        def extract_field(field: attr.Attribute) -> Tuple[str, Any]:
+        def extract_field(field: attr.Attribute) -> tuple[str, Any]:
             value = json.get(field.name)
             if value is None and not is_optional(field.type):
                 raise ValueError('JSON property cannot be absent or null', field.name)
@@ -688,14 +686,14 @@ class TDRBundle(Bundle[TDRSourceRef]):
                                            if isinstance(content, str)
                                            else content)
 
-    metadata_columns: ClassVar[Set[str]] = {
+    metadata_columns: ClassVar[set[str]] = {
         'version',
         'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
         'BYTE_LENGTH(content) AS content_size',
         'content'
     }
 
-    data_columns: ClassVar[Set[str]] = metadata_columns | {
+    data_columns: ClassVar[set[str]] = metadata_columns | {
         'descriptor',
         'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
         'file_id'
@@ -703,7 +701,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
 
     # `links_id` is omitted for consistency since the other sets do not include
     # the primary key
-    links_columns: ClassVar[Set[str]] = metadata_columns | {
+    links_columns: ClassVar[set[str]] = metadata_columns | {
         'project_id'
     }
 

@@ -19,13 +19,6 @@ from threading import (
     RLock,
 )
 import time
-from typing import (
-    Dict,
-    List,
-    MutableMapping,
-    Set,
-    Tuple,
-)
 from urllib import (
     parse,
 )
@@ -135,12 +128,12 @@ class DSSv2Adapter:
 
     dss_src_replica = 'aws'
 
-    def __init__(self, argv: List[str]) -> None:
+    def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
-        self.skipped_bundles: Set[BundleFQID] = set()
-        self.invalid_bundles: Dict[BundleFQID, BaseException] = {}
-        self.errors: Dict[BundleFQID, BaseException] = {}
+        self.skipped_bundles: set[BundleFQID] = set()
+        self.invalid_bundles: dict[BundleFQID, BaseException] = {}
+        self.errors: dict[BundleFQID, BaseException] = {}
 
         self._mini_dss = None
         self._mini_dss_expiration = None
@@ -164,7 +157,7 @@ class DSSv2Adapter:
                 self._mini_dss_expiration = time.time() + dss_client_timeout
             return self._mini_dss
 
-    def _parse_staging_area(self) -> Tuple[str, str]:
+    def _parse_staging_area(self) -> tuple[str, str]:
         """
         Validate and parse the given staging area URL into bucket and path values.
         Path value will not have a prefix '/' and will have a postfix '/' if not empty.
@@ -207,7 +200,7 @@ class DSSv2Adapter:
         url_base = self.args.dss_endpoint + '/bundles/all'
         url = url_base + '?' + parse.urlencode(params)
 
-        future_to_bundle: MutableMapping[Future, BundleFQID] = {}
+        future_to_bundle: dict[Future, BundleFQID] = {}
         with ThreadPoolExecutor(max_workers=self.args.num_workers) as tpe:
             while True:
                 log.info('Requesting list of bundles: %s', url)
@@ -402,7 +395,7 @@ class BundleConverter:
                  validate_output: bool):
         self.bundle_fqid = bundle_fqid
         self.project_uuid: str = ''
-        self.schema_types: MutableMapping[str, str] = {}  # Mapping of file uuid to schema type
+        self.schema_types: dict[str, str] = {}  # Mapping of file uuid to schema type
         self.indexed_files = indexed_files
         self.new_links_json: MutableJSON = {}
         self.manifest_entries: MutableJSON = {}  # Mapping of file names to manifest entry

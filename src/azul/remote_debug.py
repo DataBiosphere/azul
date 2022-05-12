@@ -38,13 +38,13 @@ class RemoteDebugSession(ContextDecorator):
        | ``<absolute project root>/src/azul``  | ``/var/task/azul``          |
        +---------------------------------------+-----------------------------+
        | ``<absolute project root>/.venv/      | ``/var/task/chalice``       |
-       | lib/python3.8/site-packages/chalice`` |                             |
+       | lib/python3.9/site-packages/chalice`` |                             |
        +---------------------------------------+-----------------------------+
        | ``<absolute project root              | ``/opt/python``             |
-       | >/.venv/lib/python3.8/site-packages`` |                             |
+       | >/.venv/lib/python3.9/site-packages`` |                             |
        +---------------------------------------+-----------------------------+
-       | ``<home directory>/                   | ``/var/lang/lib/python3.8`` |
-       | .pyenv/versions/3.8.3/lib/python3.8`` |                             |
+       | ``<home directory>/                   | ``/var/lang/lib/python3.9`` |
+       | .pyenv/versions/3.8.3/lib/python3.9`` |                             |
        +---------------------------------------+-----------------------------+
 
        Depending on which lambda you're debugging, add **one** of the

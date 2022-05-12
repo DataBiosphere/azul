@@ -9,10 +9,6 @@ import logging
 import os
 import sys
 import tempfile
-from typing import (
-    List,
-    Tuple,
-)
 from urllib import (
     parse,
 )
@@ -61,13 +57,13 @@ class WriteCustomMetadata:
         args = parser.parse_args(argv)
         return args
 
-    def __init__(self, argv: List[str]) -> None:
+    def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
         self.gcs = gcs.Client()
         self.src_bucket, self.src_path = self._parse_gcs_url(self.args.source_area)
 
-    def _parse_gcs_url(self, gcs_url: str) -> Tuple[gcs.Bucket, str]:
+    def _parse_gcs_url(self, gcs_url: str) -> tuple[gcs.Bucket, str]:
         """
         Parse a GCS URL into its Bucket and path components
         """

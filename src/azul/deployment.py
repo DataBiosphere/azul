@@ -1,3 +1,6 @@
+from collections.abc import (
+    Mapping,
+)
 from contextlib import (
     contextmanager,
 )
@@ -13,7 +16,6 @@ import tempfile
 import threading
 from typing import (
     Callable,
-    Mapping,
     Optional,
     TypeVar,
     cast,

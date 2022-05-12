@@ -1,3 +1,7 @@
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from itertools import (
     permutations,
     product,
@@ -5,11 +9,7 @@ from itertools import (
 import logging
 from typing import (
     Callable,
-    Dict,
-    List,
-    Mapping,
     Optional,
-    Sequence,
     TypeVar,
     TypedDict,
     Union,
@@ -57,11 +57,11 @@ class Term(TypedDict):
 
 
 class ProjectTerm(Term):
-    projectId: List[str]
+    projectId: list[str]
 
 
 class Terms(TypedDict):
-    terms: List[Term]
+    terms: list[Term]
     total: int
     # FIXME: Remove type from termsFacets in /index responses
     #        https://github.com/DataBiosphere/azul/issues/2460
@@ -76,13 +76,13 @@ class FileTypeSummary(TypedDict):
 
 
 class FileTypeSummaryForHit(FileTypeSummary):
-    fileSource: List[Optional[str]]
+    fileSource: list[Optional[str]]
     isIntermediate: bool
-    contentDescription: List[Optional[str]]
+    contentDescription: list[Optional[str]]
 
 
 class OrganCellCountSummary(TypedDict):
-    organType: List[Optional[str]]
+    organType: list[Optional[str]]
     countOfDocsWithOrganType: int
     totalCellCountByOrgan: float
 
@@ -107,13 +107,13 @@ class CompleteHit(Hit):
 
 
 class SummarizedHit(Hit):
-    fileTypeSummaries: List[FileTypeSummary]
+    fileTypeSummaries: list[FileTypeSummary]
 
 
 class SearchResponse(TypedDict):
-    hits: List[Union[SummarizedHit, CompleteHit]]
+    hits: list[Union[SummarizedHit, CompleteHit]]
     pagination: ResponsePagination
-    termFacets: Dict[str, Terms]
+    termFacets: dict[str, Terms]
 
 
 class SummaryResponse(TypedDict):
@@ -124,9 +124,9 @@ class SummaryResponse(TypedDict):
     totalFileSize: float
     donorCount: int
     labCount: int
-    organTypes: List[str]
-    fileTypeSummaries: List[FileTypeSummary]
-    cellCountSummaries: List[OrganCellCountSummary]
+    organTypes: list[str]
+    fileTypeSummaries: list[FileTypeSummary]
+    cellCountSummaries: list[OrganCellCountSummary]
     projects: JSONs
 
 
@@ -192,7 +192,7 @@ class SummaryResponseFactory:
                 agg = agg[name]
             return agg
 
-        def agg_values(function: Callable[[JSON], T], *path: str) -> List[T]:
+        def agg_values(function: Callable[[JSON], T], *path: str) -> list[T]:
             values = agg_value(*path)
             assert isinstance(values, list)
             return list(map(function, values))
@@ -525,12 +525,12 @@ class SearchResponseFactory:
             def file_type_summary(aggregate_file: JSON) -> FileTypeSummaryForHit:
                 summary = FileTypeSummaryForHit(
                     count=aggregate_file['count'],
-                    fileSource=cast(List, aggregate_file['file_source']),
+                    fileSource=cast(list, aggregate_file['file_source']),
                     totalSize=aggregate_file['size'],
                     matrixCellCount=aggregate_file['matrix_cell_count'],
                     format=aggregate_file['file_format'],
                     isIntermediate=aggregate_file['is_intermediate'],
-                    contentDescription=cast(List, aggregate_file['content_description'])
+                    contentDescription=cast(list, aggregate_file['content_description'])
                 )
                 assert isinstance(summary['format'], str), type(str)
                 # FIXME: Remove workaround
@@ -558,7 +558,7 @@ class SearchResponseFactory:
             else:
                 return str(term_key)
 
-        terms: List[Term] = []
+        terms: list[Term] = []
         for bucket in agg['myTerms']['buckets']:
             term = Term(term=choose_entry(bucket),
                         count=bucket['doc_count'])

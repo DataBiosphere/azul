@@ -2,17 +2,17 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Iterable,
+    Mapping,
+    Sequence,
+)
 import json
 import logging
 from typing import (
     Any,
-    Dict,
     Generic,
-    Iterable,
-    Mapping,
     Optional,
-    Sequence,
-    Tuple,
     TypeVar,
     TypedDict,
 )
@@ -224,7 +224,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                 }
         return translated_filters
 
-    def prepare_query(self, skip_field_paths: Tuple[FieldPath] = ()) -> Query:
+    def prepare_query(self, skip_field_paths: tuple[FieldPath] = ()) -> Query:
         """
         Converts the given filters into an Elasticsearch DSL Query object.
         """
@@ -367,7 +367,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
                 buckets = v['buckets']
             except KeyError:
                 for k, v in v.items():
-                    if isinstance(v, Dict):
+                    if isinstance(v, dict):
                         translate(k, v)
             else:
                 try:
@@ -423,7 +423,7 @@ class ToDictStage(_ElasticsearchStage[Response, MutableJSON]):
         return response.to_dict()
 
 
-SortKey = Tuple[Any, str]
+SortKey = tuple[Any, str]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -477,7 +477,7 @@ class ResponsePagination(TypedDict):
     order: str
 
 
-ResponseTriple = Tuple[JSONs, ResponsePagination, JSON]
+ResponseTriple = tuple[JSONs, ResponsePagination, JSON]
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)

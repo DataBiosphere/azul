@@ -1,5 +1,7 @@
-from typing import (
+from collections.abc import (
     Mapping,
+)
+from typing import (
     Optional,
 )
 
@@ -11,7 +13,7 @@ def env() -> Mapping[str, Optional[str]]:
     other environment variables in the form `{FOO}` where FOO is the name of an
     environment variable. See
 
-    https://docs.python.org/3.8/library/string.html#format-string-syntax
+    https://docs.python.org/3.9/library/string.html#format-string-syntax
 
     for the concrete syntax. These references will be resolved *after* the
     overall environment has been compiled by merging all relevant

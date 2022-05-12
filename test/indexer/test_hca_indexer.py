@@ -5,6 +5,9 @@ from collections import (
     Counter,
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -13,12 +16,6 @@ from itertools import (
     chain,
 )
 import re
-from typing import (
-    Dict,
-    List,
-    Mapping,
-    Tuple,
-)
 import unittest
 from unittest.mock import (
     patch,
@@ -203,7 +200,7 @@ class TestHCAIndexer(IndexerTestCase):
                     hits = self._get_all_hits()
                     # Twice the size because deletions create new contribution
                     self.assertEqual(len(hits), 2 * size)
-                    docs_by_entity: Dict[EntityReference, List[Contribution]] = defaultdict(list)
+                    docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         doc = Contribution.from_index(field_types, hit)
                         docs_by_entity[doc.entity].append(doc)
@@ -218,7 +215,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self.index_service.delete_indices(self.catalog)
                     self.index_service.create_indices(self.catalog)
 
-    def _parse_index_name(self, hit) -> Tuple[str, bool]:
+    def _parse_index_name(self, hit) -> tuple[str, bool]:
         index_name = config.parse_es_index_name(hit['_index'])
         return index_name.entity_type, index_name.aggregate
 
@@ -416,7 +413,7 @@ class TestHCAIndexer(IndexerTestCase):
         bundle.metadata_files = _walkthrough(bundle.metadata_files)
         return old_file_uuid
 
-    def _num_docs_by_index(self, hits) -> Mapping[Tuple[str, bool], int]:
+    def _num_docs_by_index(self, hits) -> Mapping[tuple[str, bool], int]:
         counter = Counter()
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
@@ -1477,7 +1474,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(expected.to_dict(), actual.to_dict())
 
     def test_no_cell_count_contributions(self):
-        def assert_cell_suspension(expected: JSON, hits: List[JSON]):
+        def assert_cell_suspension(expected: JSON, hits: list[JSON]):
             project_hit = one(hit
                               for hit in hits
                               if ('projects', True) == self._parse_index_name(hit))
