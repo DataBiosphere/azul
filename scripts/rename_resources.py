@@ -17,20 +17,6 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 renamed = {
-    'aws_cloudwatch_log_group.azul_error_log': 'aws_cloudwatch_log_group.error_log',
-    'aws_cloudwatch_log_group.azul_index_log': 'aws_cloudwatch_log_group.index_log',
-    'aws_cloudwatch_log_group.azul_search_log': 'aws_cloudwatch_log_group.search_log',
-    'aws_cloudwatch_log_resource_policy.azul_es_cloudwatch_policy': 'aws_cloudwatch_log_resource_policy.index',
-    'aws_dynamodb_table.versions_table': 'aws_dynamodb_table.object_versions',
-    'aws_elasticsearch_domain.elasticsearch[0]': 'aws_elasticsearch_domain.index',
-    'aws_iam_role.state_machine_iam_role': 'aws_iam_role.states',
-    'aws_iam_role_policy.state_machine_iam_policy': 'aws_iam_role_policy.states',
-    'aws_s3_bucket.bucket': 'aws_s3_bucket.storage',
-    'aws_s3_bucket.url_bucket': 'aws_s3_bucket.urls',
-    'aws_sfn_state_machine.manifest_state_machine': 'aws_sfn_state_machine.manifest',
-    'google_service_account.indexer': 'google_service_account.serviceaccount',
-    'google_service_account.serviceaccount': 'google_service_account.azul',
-    'null_resource.hmac-secret': 'null_resource.hmac_secret'
 }
 
 
