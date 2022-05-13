@@ -2571,8 +2571,8 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
             'effectiveCellCount': [
                 CellCounts(None, {'Brain': 6210}),
                 CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
-                CellCounts(None, {'brain': 10_001}),
                 CellCounts(10_000, {'blood': 20_000}),
+                CellCounts(None, {'brain': 10_001}),
                 CellCounts(88_000, {'mouth mucosa': None}),
             ]
         }
@@ -2631,8 +2631,8 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
                 (5000, 11_000): [
                     CellCounts(None, {'Brain': 6210}),
                     CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
+                    CellCounts(10_000, {'blood': 20_000}),
                     CellCounts(None, {'brain': 10_001}),
-
                 ],
             },
         }
