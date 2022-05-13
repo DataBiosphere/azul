@@ -41,6 +41,12 @@ from more_itertools import (
     one,
 )
 import urllib3
+from urllib3.exceptions import (
+    TimeoutError,
+)
+from urllib3.response import (
+    HTTPResponse,
+)
 
 from azul import (
     RequirementError,
@@ -280,6 +286,30 @@ class UserCredentialsProvider(TerraCredentialsProvider):
         )
 
 
+class TerraClientException(Exception):
+    pass
+
+
+class TerraTimeoutException(TerraClientException):
+
+    def __init__(self, url: furl, timeout: float):
+        super().__init__(f'No response from {url} within {timeout} seconds')
+
+
+class TerraStatusException(TerraClientException):
+
+    def __init__(self, url: furl, response: HTTPResponse):
+        super().__init__(f'Unexpected response from {url}',
+                         response.status, response.data)
+
+
+class TerraNameConflictException(TerraClientException):
+
+    def __int__(self, url: furl, source_name: str, response_json: JSON):
+        super().__init__(f'More than one source named {source_name!r}',
+                         str(url), response_json)
+
+
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class TerraClient(OAuth2Client):
     """
@@ -291,22 +321,24 @@ class TerraClient(OAuth2Client):
                  method: str,
                  url: furl,
                  *,
-                 fields=None,
                  headers=None,
                  body=None
                  ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
-        log.debug('_request(%r, %r, fields=%r, headers=%r, timeout=%r, body=%r)',
-                  method, url, fields, headers, timeout, body)
-        response = self._http_client.request(method,
-                                             str(url),
-                                             fields=fields,
-                                             headers=headers,
-                                             # FIXME: Service should return 503 response when Terra client times out
-                                             #        https://github.com/DataBiosphere/azul/issues/3968
-                                             timeout=timeout,
-                                             retries=False,
-                                             body=body)
+        log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
+                  method, url, headers, timeout, body)
+        try:
+            response = self._http_client.request(method,
+                                                 str(url),
+                                                 headers=headers,
+                                                 # FIXME: Service should return 503 response when Terra client times out
+                                                 #        https://github.com/DataBiosphere/azul/issues/3968
+                                                 timeout=timeout,
+                                                 retries=False,
+                                                 body=body)
+        except TimeoutError:
+            raise TerraTimeoutException(url, timeout)
+
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
@@ -334,9 +366,8 @@ class SAMClient(TerraClient):
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
         email = self.credentials.service_account_email
-        response = self._request('POST',
-                                 config.sam_service_url.set(path='/register/user/v1'),
-                                 body='')
+        url = config.sam_service_url.set(path='/register/user/v1')
+        response = self._request('POST', url, body='')
         if response.status == 201:
             log.info('Google service account %r successfully registered with SAM.', email)
         elif response.status == 409:
@@ -349,7 +380,7 @@ class SAMClient(TerraClient):
                 email
             )
         else:
-            raise RuntimeError('Unexpected response during SAM registration', response.data)
+            raise TerraStatusException(url, response)
 
     def is_registered(self) -> bool:
         """
@@ -363,9 +394,7 @@ class SAMClient(TerraClient):
         elif response.status == 404:
             return False
         else:
-            raise RuntimeError('Unexpected response from SAM',
-                               response.status,
-                               response.data)
+            raise TerraStatusException(endpoint, response)
 
     def _insufficient_access(self, resource: str) -> Exception:
         return self.credentials_provider.insufficient_access(resource)
@@ -403,25 +432,25 @@ class TDRClient(SAMClient):
         log.info('TDR client is authorized for API access to %s.', source)
 
     def _lookup_source(self, source: TDRSourceSpec) -> JSON:
-        resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
-        params = dict(filter=source.bq_name, limit='2')
-        response = self._request('GET', endpoint, fields=params)
+        endpoint.set(args=dict(filter=source.bq_name, limit='2'))
+        response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
         total = response['filteredTotal']
         if total == 0:
-            raise self._insufficient_access(resource)
+            raise self._insufficient_access(str(endpoint))
         elif total == 1:
             snapshot_id = one(response['items'])['id']
             endpoint = self._repository_endpoint(tdr_path, snapshot_id)
             response = self._request('GET', endpoint)
             require(response.status == 200,
-                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}',
-                    response.status, response.data)
+                    endpoint,
+                    response,
+                    exception=TerraStatusException)
             return json.loads(response.data)
         else:
-            raise RequirementError('Ambiguous response from TDR API', endpoint, response)
+            raise TerraNameConflictException(endpoint, source.bq_name, response)
 
     def check_bigquery_access(self, source: TDRSourceSpec):
         """
@@ -503,7 +532,7 @@ class TDRClient(SAMClient):
         elif response.status == 401:
             raise self._insufficient_access(str(endpoint))
         else:
-            raise RequirementError('Unexpected response from TDR API', response.status)
+            raise TerraStatusException(endpoint, response)
 
     page_size: ClassVar[int] = 200
 
@@ -516,12 +545,13 @@ class TDRClient(SAMClient):
         # FIXME: Defend against concurrent changes while listing snapshots
         #        https://github.com/DataBiosphere/azul/issues/3979
         while True:
-            response = self._request('GET', endpoint, fields={
+            endpoint.set(args={
                 'offset': len(snapshots),
                 'limit': self.page_size,
                 'sort': 'created_date',
                 'direction': 'asc'
             })
+            response = self._request('GET', endpoint)
             response = self._check_response(endpoint, response)
             new_snapshots = response['items']
             if new_snapshots:
