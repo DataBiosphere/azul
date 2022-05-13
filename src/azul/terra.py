@@ -441,7 +441,7 @@ class TDRClient(SAMClient):
         self._lookup_source(source)
         log.info('TDR client is authorized for API access to %s.', source)
 
-    def _lookup_source(self, source: TDRSourceSpec) -> JSON:
+    def _lookup_source(self, source: TDRSourceSpec) -> MutableJSON:
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
         endpoint.set(args=dict(filter=source.bq_name, limit='2'))
