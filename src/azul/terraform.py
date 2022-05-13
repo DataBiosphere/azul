@@ -390,3 +390,37 @@ class Chalice:
 
 
 chalice = Chalice()
+
+
+class VPC:
+    num_zones = 2  # An ALB needs at least two availability zones
+
+    @classmethod
+    def subnet_name(cls, public: bool) -> str:
+        return 'public' if public else 'private'
+
+    @classmethod
+    def subnet_number(cls, zone: int, public: bool) -> int:
+        # Returns even numbers for private subnets, odd numbers for public
+        # subnets. The advantage of this numbering scheme is that it won't be
+        # perturbed by adding zones.
+        return 2 * zone + int(public)
+
+    @classmethod
+    def security_rule(cls, **rule):
+        return {
+            'cidr_blocks': None,
+            'ipv6_cidr_blocks': None,
+            'prefix_list_ids': None,
+            'from_port': None,
+            'protocol': None,
+            'security_groups': None,
+            'self': None,
+            'to_port': None,
+            'description': None,
+            **rule
+        }
+
+
+vpc = VPC()
+del VPC
