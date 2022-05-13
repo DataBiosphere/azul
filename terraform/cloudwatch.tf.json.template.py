@@ -26,7 +26,8 @@ emit_tf(None if config.disable_monitoring else {
                         'dimensions': {
                             'ApiName': config.qualified_resource_name(lambda_),
                             'Stage': config.deployment_stage,
-                        }
+                        },
+                        'alarm_actions': ['${aws_sns_topic.azul_monitoring.arn}']
                     }
                 }
             }
