@@ -64,7 +64,6 @@ from azul.drs import (
 from azul.indexer import (
     Bundle,
     BundleFQID,
-    SourceRef,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -77,6 +76,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.terra import (
+    SourceRef as TDRSourceRef,
     TDRClient,
     TDRSourceSpec,
 )
@@ -157,10 +157,6 @@ class Links:
                 input_ in self.supplementary_files
             )
         }
-
-
-class TDRSourceRef(SourceRef[TDRSourceSpec, 'TDRSourceRef']):
-    pass
 
 
 TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
