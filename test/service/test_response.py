@@ -731,7 +731,7 @@ class TestResponse(WebServiceTestCase):
                         "organ": ["brain"],
                         "organPart": ["amygdala"],
                         "selectedCellType": [None],
-                        "totalCells": 10000,
+                        "totalCells": 10001,
                     }
                 ],
                 "donorOrganisms": [
@@ -2519,7 +2519,9 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
             cls.bundle_fqid(uuid='8c90d4fe-9a5d-4e3d-ada2-0414b666b880',
                             version='2019-10-14T19:54:15.397546Z'),
             # A bundle with cell suspension cell counts
-            # project=627cb0ba, cs-cells=10000, p-cells=None
+            # project=627cb0ba, cs-cells=10001, p-cells=None
+            # The cell suspension cell count was incremented in this canned bundle
+            # to avoid matching the effectiveCellCount from bundle d7b8cbff.
             cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
                             version='2019-02-14T19:24:38.034764Z'),
             # A bundle with cell suspension cell counts
@@ -2557,20 +2559,20 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
                 CellCounts(3589, {'brain': 1}),
                 CellCounts(None, {'Brain': 6210}),
                 CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
-                CellCounts(None, {'brain': 10_000}),
+                CellCounts(None, {'brain': 10_001}),
             ],
             'projectEstimatedCellCount': [
                 CellCounts(3589, {'brain': 1}),
                 CellCounts(88_000, {'mouth mucosa': None}),
                 CellCounts(None, {'Brain': 6210}),
                 CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
-                CellCounts(None, {'brain': 10_000}),
+                CellCounts(None, {'brain': 10_001}),
             ],
             'effectiveCellCount': [
                 CellCounts(3589, {'brain': 1}),
                 CellCounts(None, {'Brain': 6210}),
                 CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
-                CellCounts(None, {'brain': 10_000}),
+                CellCounts(None, {'brain': 10_001}),
                 CellCounts(88_000, {'mouth mucosa': None}),
             ]
         }
@@ -2611,7 +2613,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
                 None: [
                     CellCounts(None, {'Brain': 6210}),
                     CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
-                    CellCounts(None, {'brain': 10_000})
+                    CellCounts(None, {'brain': 10_001})
                 ],
                 3589: [
                     CellCounts(3589, {'brain': 1}),
@@ -2622,8 +2624,8 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
             },
             'effectiveCellCount': {
                 None: [],
-                10_000: [
-                    CellCounts(None, {'brain': 10_000})
+                10_001: [
+                    CellCounts(None, {'brain': 10_001})
                 ],
                 (3000, 7000): [
                     CellCounts(3589, {'brain': 1}),
