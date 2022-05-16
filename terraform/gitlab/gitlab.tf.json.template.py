@@ -867,6 +867,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 })
             }
         },
+        'aws_cloudwatch_log_group': {
+            'gitlab_vpn': {
+                'name': '/aws/vpn/azul-gitlab',
+                'retention_in_days': 1827,
+            }
+        },
         'aws_ec2_client_vpn_endpoint': {
             'gitlab': {
                 'client_cidr_block': vpn_subnet,
@@ -881,9 +887,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'session_timeout_hours': 8,
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'connection_log_options': {
-                    'enabled': False,
-                    # 'cloudwatch_log_group': '',
-                    # 'cloudwatch_log_stream': ''
+                    'enabled': True,
+                    'cloudwatch_log_group': '${aws_cloudwatch_log_group.gitlab_vpn.name}'
                 },
                 'tags': {
                     'Name': 'azul-gitlab'
