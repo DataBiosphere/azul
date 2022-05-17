@@ -106,14 +106,17 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     mock_sources = set(map(make_mock_source_spec, mock_source_names))
 
     catalog = 'testtdr'
-    catalog_config = {
-        catalog: config.Catalog(name=catalog,
-                                atlas='hca',
-                                internal=False,
-                                plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                             repository=config.Catalog.Plugin(name='tdr')),
-                                sources=mock_sources)
-    }
+
+    @classmethod
+    def catalog_config(cls):
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='tdr')),
+                                        sources=cls.mock_sources)
+        }
 
     @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
     @mock.patch.object(TerraClient,

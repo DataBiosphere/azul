@@ -218,14 +218,18 @@ class AzulUnitTestCase(AzulTestCase):
                 backend.reset()
 
     catalog: CatalogName = 'test'
-    catalog_config = {
-        catalog: config.Catalog(name=catalog,
-                                atlas='hca',
-                                internal=False,
-                                plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                             repository=config.Catalog.Plugin(name='dss')),
-                                sources=set('test:/2'))
-    }
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='dss')),
+                                        sources=set('test:/2'))
+        }
+
     _catalog_mock = None
 
     @classmethod
@@ -250,9 +254,9 @@ class AzulUnitTestCase(AzulTestCase):
         cls._catalog_mock = patch.object(target=type(config),
                                          attribute='catalogs',
                                          new_callable=PropertyMock,
-                                         return_value=cls.catalog_config)
+                                         return_value=cls.catalog_config())
         cls._catalog_mock.start()
-        assert cls.catalog_config[cls.catalog]
+        assert cls.catalog_config()[cls.catalog]
         # Ensure that derived cached properties are affected
         assert config.default_catalog == cls.catalog
         assert config.integration_test_catalogs == {}
