@@ -45,8 +45,6 @@ from azul import (
     RequirementError,
     cache,
     cached_property,
-    config,
-    lru_cache,
 )
 from azul.auth import (
     OAuth2,
@@ -83,16 +81,31 @@ from indexer import (
 )
 
 
-class TestTDRPlugin(CannedBundleTestCase):
-    snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
+class TDRPluginTestCase(CannedBundleTestCase):
 
-    bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
+    @classmethod
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> TDRBundle:
+        canned_result = cls._load_canned_file_version(uuid=bundle.uuid,
+                                                      version=None,
+                                                      extension='result.tdr')
+        manifest, metadata = canned_result['manifest'], canned_result['metadata']
+        version = one(e['version'] for e in manifest if e['name'] == 'links.json')
+        assert bundle.version == version, (bundle, version)
+        return TDRBundle(fqid=bundle,
+                         manifest=manifest,
+                         metadata_files=metadata)
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
     partition_prefix_length = 2
     source = f'tdr:test_project:snapshot/snapshot:/{partition_prefix_length}'
-    source = TDRSourceRef(id='test_id',
+    source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
                           spec=TDRSourceSpec.parse(source))
+
+
+class TestTDRPlugin(TDRPluginTestCase):
+    bundle_fqid = SourcedBundleFQID(source=TDRPluginTestCase.source,
+                                    uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
+                                    version='2019-09-24T09:35:06.958773Z')
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -123,20 +136,6 @@ class TestTDRPlugin(CannedBundleTestCase):
             TDRBundleFQID(source=source, uuid='42-ghi', version=current_version)
         ])
 
-    @lru_cache
-    def _canned_bundle(self, source: TDRSourceRef, uuid: str) -> TDRBundle:
-        canned_result = self._load_canned_file_version(uuid=uuid,
-                                                       version=None,
-                                                       extension='result.tdr')
-        manifest, metadata = canned_result['manifest'], canned_result['metadata']
-        version = one(e['version'] for e in manifest if e['name'] == 'links.json')
-        fqid = TDRBundleFQID(source=source,
-                             uuid=uuid,
-                             version=version)
-        return TDRBundle(fqid=fqid,
-                         manifest=manifest,
-                         metadata_files=metadata)
-
     def _make_mock_tdr_tables(self,
                               bundle_fqid: SourcedBundleFQID) -> None:
         tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
@@ -148,7 +147,7 @@ class TestTDRPlugin(CannedBundleTestCase):
                                          table_rows['rows'])
 
     def test_fetch_bundle(self):
-        bundle = self._canned_bundle(self.source, self.bundle_uuid)
+        bundle = self._load_canned_bundle(self.bundle_fqid)
         # Test valid links
         self._test_fetch_bundle(bundle, load_tables=True)
 
@@ -196,14 +195,16 @@ class TestTDRPlugin(CannedBundleTestCase):
                                version='2020-08-10T21:24:26.174274Z')}
             for uuid in upstream_uuids
         ]
-        bundle = self._canned_bundle(self.source, downstream_uuid)
+        bundle = self._load_canned_bundle(SourcedBundleFQID(source=self.source,
+                                                            uuid=downstream_uuid,
+                                                            version='2020-08-10T21:24:26.174274Z'))
         assert any(e['is_stitched'] for e in bundle.manifest)
         self._test_fetch_bundle(bundle, load_tables=True)
         self.assertEqual(_mock_find_upstream_bundles.call_count,
                          len(upstream_uuids))
 
     @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=mock_service_url))
+           new=PropertyMock(return_value=TDRPluginTestCase.mock_service_url))
     def _test_fetch_bundle(self,
                            test_bundle: TDRBundle,
                            *,
@@ -251,10 +252,6 @@ class TestTDRPlugin(CannedBundleTestCase):
                  mode='NULLABLE')
             for k, v in row.items()
         ]
-
-    def _drs_file_id(self, file_id):
-        netloc = config.tdr_service_url.netloc
-        return f'drs://{netloc}/v1_{self.snapshot_id}_{file_id}'
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)

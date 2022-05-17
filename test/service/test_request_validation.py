@@ -26,7 +26,6 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_source
 class RequestParameterValidationTest(WebServiceTestCase):
     expected_response = {
         'Code': 'BadRequestError',

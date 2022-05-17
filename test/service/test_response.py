@@ -41,6 +41,7 @@ from azul.collections import (
 )
 from azul.indexer import (
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     null_str,
@@ -57,12 +58,21 @@ from azul.plugins import (
 from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
 )
+from azul.plugins.repository.tdr import (
+    TDRSourceRef,
+)
 from azul.service.elasticsearch_service import (
     ResponsePagination,
+)
+from azul.terra import (
+    TDRSourceSpec,
 )
 from azul.types import (
     JSON,
     JSONs,
+)
+from indexer.test_tdr import (
+    TDRPluginTestCase,
 )
 from service import (
     DSSUnitTestCase,
@@ -3617,6 +3627,50 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                 }
             }
         }, response.json())
+
+
+@patch_source_cache([TDRPluginTestCase.source.to_json()])
+class TestTDRIndexer(WebServiceTestCase, TDRPluginTestCase):
+
+    @classmethod
+    def catalog_config(cls):
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='tdr')),
+                                        sources=set())
+        }
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.source = TDRPluginTestCase.source
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    @classmethod
+    def bundles(cls) -> list[SourcedBundleFQID]:
+        return [
+            cls.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
+                            version='2019-09-24T09:35:06.958773Z')
+        ]
+
+    def test_tdr_sources(self):
+        url = self.base_url.set(path='/index/projects')
+        response = requests.get(str(url))
+        response.raise_for_status()
+        response_json = response.json()
+        for hit in response_json['hits']:
+            source = one(hit['sources'])
+            source = TDRSourceRef(id=source['sourceId'],
+                                  spec=TDRSourceSpec.parse(source['sourceSpec']))
+            self.assertEqual(self.source, source)
 
 
 if __name__ == '__main__':

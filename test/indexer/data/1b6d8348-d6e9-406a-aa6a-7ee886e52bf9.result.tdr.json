@@ -5,8 +5,8 @@
             "uuid": "046a88ef-d19f-51ed-9003-14847dffc820",
             "size": 1024,
             "indexed": false,
-            "content-type": "whatever format there are in; dcp-type=data",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "content-type": "whatever format these are in; dcp-type=data",
+            "version": "2019-09-24T09:35:06.958773Z",
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
@@ -75,8 +75,8 @@
             "uuid": "19617367-cda8-54e0-8296-84623ef58c3f",
             "size": 1024,
             "indexed": false,
-            "content-type": "whatever format there are in; dcp-type=data",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "content-type": "whatever format these are in; dcp-type=data",
+            "version": "2019-09-24T09:35:06.958773Z",
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
@@ -124,8 +124,8 @@
         {
             "name": "supplementary_file_0.json",
             "uuid": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
-            "version": "2021-01-17T00:00:00.000000Z",
-            "size": 282,
+            "version": "2019-09-24T09:35:06.958773Z",
+            "size": 353,
             "indexed": true,
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "crc32c": "",
@@ -248,8 +248,8 @@
         {
             "name": "supplementary_file_1.json",
             "uuid": "507d2814-1688-54e7-b73e-2f831aa34368",
-            "version": "2021-01-17T00:00:00.000000Z",
-            "size": 282,
+            "version": "2019-09-24T09:35:06.958773Z",
+            "size": 353,
             "indexed": true,
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "crc32c": "",
@@ -261,8 +261,8 @@
             "uuid": "519ee493-0984-5b54-95ec-85452d506b00",
             "size": 1024,
             "indexed": false,
-            "content-type": "whatever format there are in; dcp-type=data",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "content-type": "whatever format these are in; dcp-type=data",
+            "version": "2019-09-24T09:35:06.958773Z",
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
@@ -387,8 +387,8 @@
         {
             "name": "supplementary_file_2.json",
             "uuid": "c343a47d-683f-571d-99c4-1331841b4e63",
-            "version": "2021-01-17T00:00:00.000000Z",
-            "size": 282,
+            "version": "2019-09-24T09:35:06.958773Z",
+            "size": 353,
             "indexed": true,
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "crc32c": "",
@@ -1344,7 +1344,7 @@
         "links.json": {
             "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
             "schema_type": "links",
-            "schema_version": "1.1.5",
+            "schema_version": "2.0.0",
             "links": [
                 {
                     "inputs": [
@@ -1539,30 +1539,36 @@
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
             "schema_type": "file",
             "provenance": {
-                "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234"
+                "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
+                "submission_date": "2019-09-24T09:35:06.958773Z"
             },
             "file_core": {
-                "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt"
+                "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
+                "format": "unknown"
             }
         },
         "supplementary_file_1.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
             "schema_type": "file",
             "provenance": {
-                "document_id": "507d2814-1688-54e7-b73e-2f831aa34368"
+                "document_id": "507d2814-1688-54e7-b73e-2f831aa34368",
+                "submission_date": "2019-09-24T09:35:06.958773Z"
             },
             "file_core": {
-                "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt"
+                "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
+                "format": "unknown"
             }
         },
         "supplementary_file_2.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
             "schema_type": "file",
             "provenance": {
-                "document_id": "c343a47d-683f-571d-99c4-1331841b4e63"
+                "document_id": "c343a47d-683f-571d-99c4-1331841b4e63",
+                "submission_date": "2019-09-24T09:35:06.958773Z"
             },
             "file_core": {
-                "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt"
+                "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
+                "format": "unknown"
             }
         }
     }
