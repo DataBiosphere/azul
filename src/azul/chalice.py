@@ -185,7 +185,7 @@ class AzulChaliceApp(Chalice):
                 tag for tag in self._specs.get('tags', [])
                 if tag['name'] in used_tags
             ],
-            'servers': [{'url': str(self.base_url.set(path='/'))}]
+            'servers': [{'url': str(self.base_url.add(path='/'))}]
         }
 
     @property
@@ -195,13 +195,14 @@ class AzulChaliceApp(Chalice):
         arguments. Callers can safely modify the returned `furl` instance.
         """
         path = self.current_request.context['path']
-        return self.base_url.set(path=path)
+        return self.base_url.add(path=path)
 
     @property
     def base_url(self) -> mutable_furl:
         """
-        Returns the base URL of this application. The base URL has an empty path.
-        Callers can safely modify the returned `furl` instance.
+        Returns the base URL of this application. Callers can safely modify the
+        returned `furl` instance. The base URL may or may not have a path and
+        callers should always append to it.
         """
         if self.current_request is None:
             # Invocation via AWS StepFunctions
@@ -222,7 +223,6 @@ class AzulChaliceApp(Chalice):
             self_url = furl(scheme=scheme, netloc=self.current_request.headers['host'])
         else:
             assert False, self.current_request
-        assert self_url.path == ''
         return self_url
 
     def _register_spec(self,
