@@ -1,8 +1,8 @@
-import json
-from typing import (
+from collections.abc import (
     Mapping,
     Sequence,
 )
+import json
 import unittest
 
 import attr

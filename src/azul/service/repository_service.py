@@ -2,15 +2,17 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
 import json
 import logging
 from typing import (
-    Mapping,
     Optional,
-    Sequence,
 )
 
 import elasticsearch

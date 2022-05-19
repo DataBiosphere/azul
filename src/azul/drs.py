@@ -1,6 +1,10 @@
 from collections import (
     namedtuple,
 )
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from enum import (
     Enum,
 )
@@ -8,9 +12,7 @@ import json
 import logging
 import time
 from typing import (
-    Mapping,
     Optional,
-    Sequence,
 )
 
 import attr

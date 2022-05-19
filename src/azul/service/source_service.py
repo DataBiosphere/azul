@@ -4,7 +4,6 @@ from time import (
     time,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -58,7 +57,7 @@ class SourceService:
     def list_sources(self,
                      catalog: CatalogName,
                      authentication: Optional[Authentication]
-                     ) -> List[SourceRef]:
+                     ) -> list[SourceRef]:
         plugin = self._repository_plugin(catalog)
 
         cache_key = (

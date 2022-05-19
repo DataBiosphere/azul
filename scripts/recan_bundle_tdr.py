@@ -2,6 +2,9 @@ import argparse
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
     timezone,
@@ -14,8 +17,6 @@ from operator import (
 import os
 import sys
 from typing import (
-    Dict,
-    Mapping,
     Optional,
 )
 import uuid
@@ -75,7 +76,7 @@ log = logging.getLogger(__name__)
 
 def file_paths(parent_dir: str,
                bundle_uuid: str
-               ) -> Dict[str, Dict[str, str]]:
+               ) -> dict[str, dict[str, str]]:
     def paths(*parts: str, ext: str = ''):
         return {
             part: os.path.join(parent_dir, f'{bundle_uuid}.{part}{ext}.json')
@@ -152,6 +153,7 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
 
     links_json = metadata['links.json']
     links_json['schema_type'] = 'links'  # DCP/1 uses 'link_bundle'
+    links_json['schema_version'] = '2.0.0'
     for link in links_json['links']:
         process_id = link.pop('process')
         link['process_id'] = process_id
@@ -304,10 +306,12 @@ def add_supp_files(bundle: TDRBundle,
             'describedBy': 'https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file',
             'schema_type': 'file',
             'provenance': {
-                'document_id': metadata_id
+                'document_id': metadata_id,
+                'submission_date': version
             },
             'file_core': {
-                'file_name': file_name
+                'file_name': file_name,
+                'format': 'unknown'
             }
         }
         bundle.metadata_files[document_name] = content
@@ -326,7 +330,7 @@ def add_supp_files(bundle: TDRBundle,
             'uuid': data_id,
             'size': 1024,
             'indexed': False,
-            'content-type': 'whatever format there are in; dcp-type=data',
+            'content-type': 'whatever format these are in; dcp-type=data',
             'version': version,
             'crc32c': '',
             'sha256': '',
@@ -354,22 +358,16 @@ def main(argv):
     Load a canned bundle from DCP/1 and write *.manifest.tdr and *.metadata.tdr
     files showing the desired output for DCP/2.
     """
-    default_version = datetime(year=2021,
-                               month=1,
-                               day=17,
-                               hour=0,
-                               tzinfo=timezone.utc)
-
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--bundle-uuid', '-b',
-                        default=TestTDRPlugin.bundle_uuid,
+                        default=TestTDRPlugin.bundle_fqid.uuid,
                         help='The UUID of the existing DCP/1 canned bundle.')
     parser.add_argument('--source-id', '-s',
-                        default=TestTDRPlugin.snapshot_id,
+                        default=TestTDRPlugin.source.id,
                         help='The UUID of the snapshot/dataset to contain the canned DCP/2 bundle.')
     parser.add_argument('--version', '-v',
-                        default=tdr.Plugin.format_version(default_version),
+                        default=TestTDRPlugin.bundle_fqid.version,
                         help='The version for any mock entities synthesized by the script.')
     parser.add_argument('--input-dir', '-I',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),

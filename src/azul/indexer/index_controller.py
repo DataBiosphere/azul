@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+)
 from dataclasses import (
     dataclass,
     replace,
@@ -13,11 +16,6 @@ import http
 import json
 import logging
 import time
-from typing import (
-    Iterable,
-    List,
-    MutableMapping,
-)
 import uuid
 
 import chalice
@@ -189,7 +187,7 @@ class IndexController:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
 
-    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> List[Contribution]:
+    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> list[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document
@@ -243,7 +241,7 @@ class IndexController:
         # contributions is a costly operation for any entity with many
         # contributions e.g., a large project.
         #
-        tallies_by_entity: MutableMapping[CataloguedEntityReference, List[DocumentTally]] = defaultdict(list)
+        tallies_by_entity: dict[CataloguedEntityReference, list[DocumentTally]] = defaultdict(list)
         for record in event:
             tally = DocumentTally.from_sqs_record(record)
             log.info('Attempt %i of handling %i contribution(s) for entity %s',
@@ -345,7 +343,7 @@ class DocumentTally:
                     MessageGroupId=str(self.entity),
                     MessageDeduplicationId=str(uuid.uuid4()))
 
-    def consolidate(self, others: List['DocumentTally']) -> 'DocumentTally':
+    def consolidate(self, others: list['DocumentTally']) -> 'DocumentTally':
         assert all(
             self.entity == other.entity
             for other in others

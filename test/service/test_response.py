@@ -1,16 +1,16 @@
 from collections import (
     Counter,
 )
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from itertools import (
     product,
 )
 import json
 from typing import (
-    Dict,
-    List,
-    Mapping,
     Optional,
-    Sequence,
     cast,
 )
 import unittest
@@ -41,6 +41,7 @@ from azul.collections import (
 )
 from azul.indexer import (
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     null_str,
@@ -57,12 +58,21 @@ from azul.plugins import (
 from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
 )
+from azul.plugins.repository.tdr import (
+    TDRSourceRef,
+)
 from azul.service.elasticsearch_service import (
     ResponsePagination,
+)
+from azul.terra import (
+    TDRSourceSpec,
 )
 from azul.types import (
     JSON,
     JSONs,
+)
+from indexer.test_tdr import (
+    TDRPluginTestCase,
 )
 from service import (
     DSSUnitTestCase,
@@ -77,11 +87,11 @@ def setUpModule():
     configure_test_logging()
 
 
-def parse_url_qs(url) -> Dict[str, str]:
+def parse_url_qs(url) -> dict[str, str]:
     url_parts = urlparse(url)
     query_dict = dict(parse_qsl(url_parts.query, keep_blank_values=True))
     # some PyCharm stub gets in the way, making the cast necessary
-    return cast(Dict[str, str], query_dict)
+    return cast(dict[str, str], query_dict)
 
 
 @patch_dss_source
@@ -90,7 +100,7 @@ class TestResponse(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
                             version='2019-02-14T19:24:38.034764Z'),
@@ -2154,7 +2164,7 @@ class TestResponse(WebServiceTestCase):
 class TestFileTypeSummaries(WebServiceTestCase):
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             cls.bundle_fqid(uuid='fce68057-b0f0-5d11-b9a7-30e8fa3259a8',
                             version='2021-02-09T01:30:00.000000Z'),
@@ -2237,7 +2247,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             # A bundle with 1 specimen and 1 cell line sample entities
             cls.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
@@ -2366,7 +2376,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return [
             # Bundles for project 90bf705c
             # https://github.com/HumanCellAtlas/schema-test-data/tree/2a62a7f4
@@ -2482,7 +2492,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
 @attr.s(auto_attribs=True, frozen=True)
 class CellCounts:
     estimated_cell_count: Optional[int]
-    total_cells: Dict[str, Optional[int]]
+    total_cells: dict[str, Optional[int]]
 
     @classmethod
     def from_response(cls, hit: JSON) -> 'CellCounts':
@@ -2499,7 +2509,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return [
             # Two bundles for the same project with 7738 total cell suspension cells
             # project=4e6f083b, cs-cells=3869, p-cells=None
@@ -2650,7 +2660,7 @@ class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return super().bundles() + [
             # A hacky CGM subgraph (project 8185730f)
             # 8 supplementary file CGMs each with a 'submitter_id'
@@ -3132,7 +3142,7 @@ class TestResponseFields(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return [
             # An imaging bundle with no cell suspension
             # files=227, donors=1, cs-cells=0, p-cells=0, organ=brain, labs=None
@@ -3341,7 +3351,7 @@ class TestResponseFields(WebServiceTestCase):
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> list[BundleFQID]:
         return []
 
     @classmethod
@@ -3363,7 +3373,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def field_mapping(self) -> Mapping[str, FieldPath]:
         return self.app_module.app.metadata_plugin.field_mapping
 
-    def entity_types(self) -> List[str]:
+    def entity_types(self) -> list[str]:
         return [
             entity_type
             for entity_type in self.index_service.entity_types(self.catalog)
@@ -3617,6 +3627,50 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                 }
             }
         }, response.json())
+
+
+@patch_source_cache([TDRPluginTestCase.source.to_json()])
+class TestTDRIndexer(WebServiceTestCase, TDRPluginTestCase):
+
+    @classmethod
+    def catalog_config(cls):
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='tdr')),
+                                        sources=set())
+        }
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.source = TDRPluginTestCase.source
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    @classmethod
+    def bundles(cls) -> list[SourcedBundleFQID]:
+        return [
+            cls.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
+                            version='2019-09-24T09:35:06.958773Z')
+        ]
+
+    def test_tdr_sources(self):
+        url = self.base_url.set(path='/index/projects')
+        response = requests.get(str(url))
+        response.raise_for_status()
+        response_json = response.json()
+        for hit in response_json['hits']:
+            source = one(hit['sources'])
+            source = TDRSourceRef(id=source['sourceId'],
+                                  spec=TDRSourceSpec.parse(source['sourceSpec']))
+            self.assertEqual(self.source, source)
 
 
 if __name__ == '__main__':

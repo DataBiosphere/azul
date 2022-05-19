@@ -7,8 +7,6 @@ from io import (
 )
 import json
 from typing import (
-    Dict,
-    List,
     Union,
     cast,
 )
@@ -148,11 +146,11 @@ def copy_composite_json(tree: CompositeJSON,
         tree = node = copy(tree)
         for element in path:
             _check_node(node, element)
-            assert isinstance(node, (Dict, List))
+            assert isinstance(node, (dict, list))
             node[element] = copy(node[element])
             node = node[element]
         _check_node(node, last)
-        assert isinstance(node, (Dict, List))
+        assert isinstance(node, (dict, list))
         node[last] = deepcopy(node[last])
     else:
         tree = deepcopy(tree)
@@ -161,8 +159,8 @@ def copy_composite_json(tree: CompositeJSON,
 
 def _check_node(node, path_element):
     if not (
-        isinstance(node, Dict) and isinstance(path_element, str)
-        or isinstance(node, List) and isinstance(path_element, int)
+        isinstance(node, dict) and isinstance(path_element, str)
+        or isinstance(node, list) and isinstance(path_element, int)
     ):
         raise TypeError(f'Path element {path_element!r} cannot be used '
                         f'to traverse a value of {type(node)}')

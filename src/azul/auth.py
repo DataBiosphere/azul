@@ -4,7 +4,6 @@ from inspect import (
 )
 from typing import (
     ClassVar,
-    Dict,
     Type,
 )
 
@@ -68,7 +67,7 @@ class Authentication(abc.ABC):
         cls_name = json.pop(cls._cls_field)
         return cls._cls_for_name[cls_name](**json)
 
-    _cls_for_name: ClassVar[Dict[str, Type['Authentication']]] = {}
+    _cls_for_name: ClassVar[dict[str, Type['Authentication']]] = {}
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()

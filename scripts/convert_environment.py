@@ -9,11 +9,8 @@ from textwrap import (
     dedent,
 )
 from typing import (
-    List,
-    Match,
     NamedTuple,
     Optional,
-    Tuple,
 )
 
 """
@@ -31,7 +28,7 @@ from azul.files import (
 class Variable(NamedTuple):
     name: str
     value: str
-    comments: List[str]
+    comments: list[str]
 
 
 def convert(path: Path):
@@ -56,9 +53,9 @@ def convert_path(path: Path):
     return Path(path + '.py')
 
 
-def read(path: Path) -> Tuple[List[Variable], List[str]]:
-    comments: List[str] = []
-    variables: List[Variable] = []
+def read(path: Path) -> tuple[list[Variable], list[str]]:
+    comments: list[str] = []
+    variables: list[Variable] = []
     with open(str(path), 'r') as input_:
         for line in input_:
             try:
@@ -91,10 +88,15 @@ def read(path: Path) -> Tuple[List[Variable], List[str]]:
     return variables, comments
 
 
-def write(output_path: Path, variables: List[Variable], comments: List[str]):
+def write(output_path: Path, variables: list[Variable], comments: list[str]):
     with write_file_atomically(output_path) as output:
         output.write(dedent('''
-            from typing import Optional, Mapping
+            from collections.abc import (
+                Mapping
+            )
+            from typing import (
+                Optional,
+            )
 
 
             def env() -> Mapping[str, Optional[str]]:
@@ -104,7 +106,7 @@ def write(output_path: Path, variables: List[Variable], comments: List[str]):
                 other environment variables in the form `{FOO}` where FOO is the name of an
                 environment variable. See
 
-                https://docs.python.org/3.8/library/string.html#format-string-syntax
+                https://docs.python.org/3.9/library/string.html#format-string-syntax
 
                 for the concrete syntax. These references will be resolved *after* the
                 overall environment has been compiled by merging all relevant
@@ -134,7 +136,7 @@ def convert_value(value: str) -> Optional[str]:
     else:
         # Convert shell-style interpolations to Python str.format() templates.
         # Translate `$foo` and `${foo}` to `{foo}`. Quote `{foo}` as `{{foo}}`.
-        def sub(m: Match):
+        def sub(m: re.Match):
             if m.group().startswith('$'):
                 variable_name = m[1] or m[2]
                 return '{' + variable_name + '}'

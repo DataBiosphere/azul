@@ -1,11 +1,12 @@
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 import json
 import logging
 import time
 from typing import (
-    Mapping,
     Optional,
-    Sequence,
-    Tuple,
     cast,
 )
 
@@ -103,7 +104,7 @@ class RepositoryController(SourceController):
 
     def _parse_range_request_header(self,
                                     range_specifier: str
-                                    ) -> Sequence[Tuple[Optional[int], Optional[int]]]:
+                                    ) -> Sequence[tuple[Optional[int], Optional[int]]]:
         """
         >>> # noinspection PyTypeChecker
         >>> rc = RepositoryController(lambda_context=None, file_url_func=None)

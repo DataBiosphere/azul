@@ -1,11 +1,14 @@
+from collections.abc import (
+    Set,
+)
+from contextlib import (
+    AbstractContextManager,
+)
 import os
 from re import (
     escape,
 )
 from typing import (
-    AbstractSet,
-    ContextManager,
-    List,
     Optional,
 )
 from unittest import (
@@ -45,8 +48,8 @@ def setupModule():
 
 
 class AzulTestCase(TestCase):
-    _catch_warnings: Optional[ContextManager]
-    _caught_warnings: List[warnings.WarningMessage]
+    _catch_warnings: Optional[AbstractContextManager]
+    _caught_warnings: list[warnings.WarningMessage]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -128,7 +131,7 @@ class AzulTestCase(TestCase):
                 assert False, list(map(str, caught_warnings))
         super().tearDownClass()
 
-    def assertIsSubset(self, subset: AbstractSet, superset: AbstractSet):
+    def assertIsSubset(self, subset: Set, superset: Set):
         """
         More useful than using :meth:`assertTrue` and :meth:`set.issubset`
         because the offending elements are shown.
@@ -215,14 +218,18 @@ class AzulUnitTestCase(AzulTestCase):
                 backend.reset()
 
     catalog: CatalogName = 'test'
-    catalog_config = {
-        catalog: config.Catalog(name=catalog,
-                                atlas='hca',
-                                internal=False,
-                                plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                             repository=config.Catalog.Plugin(name='dss')),
-                                sources=set('test:/2'))
-    }
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='dss')),
+                                        sources=set('test:/2'))
+        }
+
     _catalog_mock = None
 
     @classmethod
@@ -247,9 +254,9 @@ class AzulUnitTestCase(AzulTestCase):
         cls._catalog_mock = patch.object(target=type(config),
                                          attribute='catalogs',
                                          new_callable=PropertyMock,
-                                         return_value=cls.catalog_config)
+                                         return_value=cls.catalog_config())
         cls._catalog_mock.start()
-        assert cls.catalog_config[cls.catalog]
+        assert cls.catalog_config()[cls.catalog]
         # Ensure that derived cached properties are affected
         assert config.default_catalog == cls.catalog
         assert config.integration_test_catalogs == {}

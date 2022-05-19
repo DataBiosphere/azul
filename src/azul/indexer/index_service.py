@@ -2,6 +2,12 @@ from collections import (
     Counter,
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from itertools import (
     groupby,
 )
@@ -10,17 +16,8 @@ from operator import (
     attrgetter,
 )
 from typing import (
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    MutableMapping,
     MutableSet,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
     Type,
     Union,
 )
@@ -101,9 +98,9 @@ Tallies = Mapping[EntityReference, int]
 
 CataloguedTallies = Mapping[CataloguedEntityReference, int]
 
-MutableCataloguedTallies = MutableMapping[CataloguedEntityReference, int]
+MutableCataloguedTallies = dict[CataloguedEntityReference, int]
 
-CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSON]]
+CollatedEntities = dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]
 
 
 class IndexExistsAndDiffersException(Exception):
@@ -159,7 +156,7 @@ class IndexService(DocumentService):
             }
         }
 
-    def index_names(self, catalog: CatalogName) -> List[str]:
+    def index_names(self, catalog: CatalogName) -> list[str]:
         return [
             config.es_index_name(catalog=catalog,
                                  entity_type=entity_type,
@@ -220,7 +217,7 @@ class IndexService(DocumentService):
                        partition: BundlePartition = BundlePartition.root,
                        *,
                        delete: bool
-                       ) -> Iterator[List[Contribution]]:
+                       ) -> Iterator[list[Contribution]]:
         """
         Recursively transform the given partition of the specified bundle and
         any divisions of that partition. This should be used by synchronous
@@ -246,7 +243,7 @@ class IndexService(DocumentService):
                   partition: BundlePartition = BundlePartition.root,
                   *,
                   delete: bool,
-                  ) -> Union[List[BundlePartition], List[Contribution]]:
+                  ) -> Union[list[BundlePartition], list[Contribution]]:
         """
         Return a list of contributions for the entities in the given partition
         of the specified bundle or a set of divisions of the given partition if
@@ -317,7 +314,7 @@ class IndexService(DocumentService):
                 str(value)
             )
 
-        def setify(value: CompositeJSON) -> Union[Set[Tuple[str, AnyJSON]], Set[AnyJSON]]:
+        def setify(value: CompositeJSON) -> Union[set[tuple[str, AnyJSON]], set[AnyJSON]]:
             value = freeze(value)
             return set(
                 value.items()
@@ -325,7 +322,7 @@ class IndexService(DocumentService):
                 value
             )
 
-        def flatten(value: JSON, *path) -> Iterable[Tuple[Tuple[str, ...], AnyJSON]]:
+        def flatten(value: JSON, *path) -> Iterable[tuple[tuple[str, ...], AnyJSON]]:
             for k, v in value.items():
                 if isinstance(v, Mapping):
                     yield from flatten(v, *path, k)
@@ -376,7 +373,7 @@ class IndexService(DocumentService):
             if es_client.indices.exists(index_name):
                 es_client.indices.delete(index=index_name)
 
-    def contribute(self, catalog: CatalogName, contributions: List[Contribution]) -> CataloguedTallies:
+    def contribute(self, catalog: CatalogName, contributions: list[Contribution]) -> CataloguedTallies:
         """
         Write the given entity contributions to the index and return tallies, a
         dictionary tracking the number of contributions made to each entity.
@@ -460,7 +457,7 @@ class IndexService(DocumentService):
             }
         writer.raise_on_errors()
 
-    def _read_aggregates(self, entities: CataloguedTallies) -> Dict[CataloguedEntityReference, Aggregate]:
+    def _read_aggregates(self, entities: CataloguedTallies) -> dict[CataloguedEntityReference, Aggregate]:
         coordinates = [
             AggregateCoordinates(entity=entity)
             for entity in entities
@@ -499,10 +496,10 @@ class IndexService(DocumentService):
 
         return {a.coordinates.entity: a for a in aggregates()}
 
-    def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
+    def _read_contributions(self, tallies: CataloguedTallies) -> list[CataloguedContribution]:
         es_client = ESClientFactory.get()
 
-        entity_ids_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
+        entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
             index = config.es_index_name(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
@@ -571,11 +568,11 @@ class IndexService(DocumentService):
             )
         return contributions
 
-    def _aggregate(self, contributions: List[CataloguedContribution]) -> List[Aggregate]:
+    def _aggregate(self, contributions: list[CataloguedContribution]) -> list[Aggregate]:
         # Group contributions by entity and bundle UUID
         contributions_by_bundle: Mapping[
-            Tuple[CataloguedEntityReference, BundleUUID],
-            List[CataloguedContribution]
+            tuple[CataloguedEntityReference, BundleUUID],
+            list[CataloguedContribution]
         ] = defaultdict(list)
         tallies: MutableCataloguedTallies = Counter()
         for contribution in contributions:
@@ -587,8 +584,8 @@ class IndexService(DocumentService):
             tallies[contribution.coordinates.entity] += 1
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
-        contributions_by_entity: MutableMapping[
-            CataloguedEntityReference, List[CataloguedContribution]] = defaultdict(list)
+        contributions_by_entity: dict[
+            CataloguedEntityReference, list[CataloguedContribution]] = defaultdict(list)
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
             contributions = sorted(contributions,
                                    key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
@@ -613,7 +610,7 @@ class IndexService(DocumentService):
             )
 
         # Create lookup for transformer by entity type
-        transformers: Dict[Tuple[CatalogName, str], Type[Transformer]] = {
+        transformers: dict[tuple[CatalogName, str], Type[Transformer]] = {
             (catalog, transformer_cls.entity_type()): transformer_cls
             for catalog in config.catalogs
             for transformer_cls in self.transformer_types(catalog)
@@ -646,7 +643,7 @@ class IndexService(DocumentService):
 
     def _aggregate_entity(self,
                           transformer: Type[Transformer],
-                          contributions: List[Contribution]) -> MutableJSON:
+                          contributions: list[Contribution]) -> MutableJSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
@@ -665,7 +662,7 @@ class IndexService(DocumentService):
             assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
-    def _select_latest(self, contributions: Sequence[Contribution]) -> MutableMapping[EntityType, Entities]:
+    def _select_latest(self, contributions: Sequence[Contribution]) -> dict[EntityType, Entities]:
         """
         Collect the latest version of each inner entity from multiple given documents.
 
@@ -675,7 +672,7 @@ class IndexService(DocumentService):
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
+            contents: dict[EntityType, CollatedEntities] = defaultdict(dict)
             for contribution in contributions:
                 for entity_type, entities in contribution.contents.items():
                     collated_entities = contents[entity_type]
@@ -747,13 +744,13 @@ class IndexWriter:
         self.conflict_retry_limit = conflict_retry_limit
         self.error_retry_limit = error_retry_limit
         self.es_client = ESClientFactory.get()
-        self.errors: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
-        self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
+        self.errors: dict[DocumentCoordinates, int] = defaultdict(int)
+        self.conflicts: dict[DocumentCoordinates, int] = defaultdict(int)
         self.retries: Optional[MutableSet[DocumentCoordinates]] = None
 
     bulk_threshold = 32
 
-    def write(self, documents: List[Document]):
+    def write(self, documents: list[Document]):
         """
         Make an attempt to write the documents into the index, updating local
         state with failures and conflicts
@@ -781,7 +778,7 @@ class IndexWriter:
 
     def _write_bulk(self, documents: Iterable[Document]):
         # FIXME: document this quirk
-        documents: Dict[DocumentCoordinates, Document] = {
+        documents: dict[DocumentCoordinates, Document] = {
             doc.coordinates.with_catalog(self.catalog): doc
             for doc in documents
         } if self.catalog is not None else {

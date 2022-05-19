@@ -1,10 +1,10 @@
+from collections.abc import (
+    Mapping,
+)
 import datetime
 import logging
 from time import (
     sleep,
-)
-from typing import (
-    Mapping,
 )
 
 from more_itertools import (
