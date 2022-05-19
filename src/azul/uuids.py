@@ -2,7 +2,6 @@ import math
 from typing import (
     ClassVar,
     Generic,
-    List,
     TypeVar,
 )
 from uuid import (
@@ -159,7 +158,7 @@ class UUIDPartition(Generic[UUID_PARTITION]):
         shift = 128 - self.prefix_length
         return member.int >> shift == self.prefix
 
-    def divide(self, num_divisions: int) -> List[UUID_PARTITION]:
+    def divide(self, num_divisions: int) -> list[UUID_PARTITION]:
         """
         Divide this partition into a set of at least the given number of
         sub-partitions. The length of the return value will always be the

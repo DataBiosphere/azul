@@ -10,10 +10,7 @@ import logging
 from typing import (
     Any,
     Callable,
-    List,
-    MutableMapping,
     Optional,
-    Tuple,
 )
 
 from azul import (
@@ -129,7 +126,7 @@ class SetAccumulator(Accumulator):
         else:
             return False
 
-    def get(self) -> List[Any]:
+    def get(self) -> list[Any]:
         return sorted(self.value, key=self.key)
 
 
@@ -151,7 +148,7 @@ class ListAccumulator(Accumulator):
             else:
                 self.value.append(value)
 
-    def get(self) -> List[Any]:
+    def get(self) -> list[Any]:
         return sorted(self.value)
 
 
@@ -229,7 +226,7 @@ class FrequencySetAccumulator(Accumulator):
         else:
             self.value[value] += 1
 
-    def get(self) -> List[Any]:
+    def get(self) -> list[Any]:
         return [item for item, count in self.value.most_common(self.max_size)]
 
 
@@ -419,7 +416,7 @@ class SimpleAggregator(EntityAggregator):
             }
         ] if aggregate else []
 
-    def _accumulate(self, aggregate: MutableMapping[str, Optional[Accumulator]], entity: JSON):
+    def _accumulate(self, aggregate: dict[str, Optional[Accumulator]], entity: JSON):
         entity = self._transform_entity(entity)
         for field_, value in entity.items():
             try:
@@ -434,7 +431,7 @@ class SimpleAggregator(EntityAggregator):
 class GroupingAggregator(SimpleAggregator):
 
     def aggregate(self, entities: Entities) -> Entities:
-        aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
+        aggregates: dict[Any, dict[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
             group_keys = self._group_keys(entity)
             aggregate = aggregates[group_keys]
@@ -449,5 +446,5 @@ class GroupingAggregator(SimpleAggregator):
         ]
 
     @abstractmethod
-    def _group_keys(self, entity) -> Tuple[Any, ...]:
+    def _group_keys(self, entity) -> tuple[Any, ...]:
         raise NotImplementedError

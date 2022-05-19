@@ -2,6 +2,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import (
+    Iterator,
+)
 from itertools import (
     product,
 )
@@ -13,13 +16,10 @@ from threading import (
 from typing import (
     Any,
     ClassVar,
-    Dict,
     Generic,
-    Iterator,
     Optional,
     Protocol,
     TYPE_CHECKING,
-    Tuple,
     Type,
     TypeVar,
     get_args,
@@ -182,7 +182,7 @@ class SourceSpec(ABC, Generic[SOURCE_SPEC]):
         raise NotImplementedError
 
     @classmethod
-    def _parse(cls, spec: str) -> Tuple[str, Prefix]:
+    def _parse(cls, spec: str) -> tuple[str, Prefix]:
         rest, sep, prefix = spec.rpartition(':')
         reject(sep == '', 'Invalid source specification', spec)
         prefix = Prefix.parse(prefix)
@@ -306,7 +306,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     id: str
     spec: SOURCE_SPEC
 
-    _lookup: ClassVar[Dict[Tuple[Type['SourceRef'], str], 'SourceRef']] = {}
+    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
     def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:

@@ -2,9 +2,6 @@ from enum import (
     Enum,
     auto,
 )
-from typing import (
-    Set,
-)
 
 
 class ServiceActionType(Enum):
@@ -18,7 +15,7 @@ class ServiceActionType(Enum):
     permissions = auto()
 
     @classmethod
-    def for_action_groups(cls, groups: Set[str]) -> 'ServiceActionType':
+    def for_action_groups(cls, groups: set[str]) -> 'ServiceActionType':
         if groups == {'ReadWrite', 'ReadOnly'}:
             return cls.read
         elif groups == {'ReadWrite'}:

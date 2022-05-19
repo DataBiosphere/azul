@@ -13,7 +13,6 @@ from random import (
 from typing import (
     Any,
     Optional,
-    Tuple,
 )
 import unittest
 import uuid
@@ -162,7 +161,7 @@ class PaginationTestCase(WebServiceTestCase):
         #: The link to the previous page
         previous: Optional[str]
         #: The value of the sort field in each hit on the page
-        values: Tuple[str, ...]
+        values: tuple[str, ...]
         #: The link to the next page
         next: Optional[str]
 
@@ -171,7 +170,7 @@ class PaginationTestCase(WebServiceTestCase):
                          index_size: int,
                          page_size: int,
                          sort_field: str,
-                         sort_path: Tuple[Any, ...],
+                         sort_path: tuple[Any, ...],
                          sort_unique: bool,
                          reverse: bool):
         num_pages = (index_size + page_size - 1) // page_size

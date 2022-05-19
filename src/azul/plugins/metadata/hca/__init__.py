@@ -1,7 +1,9 @@
-from typing import (
+from collections.abc import (
     Iterable,
-    Optional,
     Sequence,
+)
+from typing import (
+    Optional,
     Type,
 )
 

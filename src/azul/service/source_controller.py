@@ -1,6 +1,5 @@
 from typing import (
     Optional,
-    Set,
 )
 
 from chalice import (
@@ -48,7 +47,7 @@ class SourceController(Controller):
     def _list_source_ids(self,
                          catalog: CatalogName,
                          authentication: Optional[Authentication]
-                         ) -> Set[str]:
+                         ) -> set[str]:
         sources = self.list_sources(catalog, authentication)
         return {source['sourceId'] for source in sources}
 

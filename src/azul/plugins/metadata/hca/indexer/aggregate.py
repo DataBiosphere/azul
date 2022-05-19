@@ -4,7 +4,6 @@ from operator import (
 from typing import (
     Any,
     Optional,
-    Tuple,
 )
 
 from more_itertools import (
@@ -87,7 +86,7 @@ class FileAggregator(GroupingAggregator):
                     content_description=entity['content_description'],
                     matrix_cell_count=(fqid, entity.get('matrix_cell_count')))
 
-    def _group_keys(self, entity) -> Tuple[Any, ...]:
+    def _group_keys(self, entity) -> tuple[Any, ...]:
         return (
             frozenset(entity['content_description']),
             entity['file_format'],
@@ -124,7 +123,7 @@ class CellSuspensionAggregator(GroupingAggregator):
             'total_estimated_cells': (entity['document_id'], entity['total_estimated_cells']),
         }
 
-    def _group_keys(self, entity) -> Tuple[Any, ...]:
+    def _group_keys(self, entity) -> tuple[Any, ...]:
         return frozenset(entity['organ']),
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:

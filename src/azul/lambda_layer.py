@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+)
 import hashlib
 import logging
 from pathlib import (
@@ -9,9 +12,6 @@ from pathlib import (
 import re
 import shutil
 import subprocess
-from typing import (
-    Iterable,
-)
 from zipfile import (
     ZipFile,
     ZipInfo,

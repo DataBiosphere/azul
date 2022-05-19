@@ -1,6 +1,13 @@
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 from importlib.abc import (
     Loader,
     MetaPathFinder,
+)
+from importlib.machinery import (
+    ModuleSpec,
 )
 import importlib.util
 from itertools import (
@@ -9,10 +16,11 @@ from itertools import (
 import os
 import pathlib
 import sys
+from types import (
+    ModuleType,
+)
 from typing import (
-    Mapping,
-    MutableMapping,
-    Tuple,
+    Optional,
     TypeVar,
 )
 
@@ -136,7 +144,7 @@ OV = TypeVar('OV')
 NV = TypeVar('NV')
 
 
-def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableMapping[K, Tuple[OV, NV]]:
+def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> dict[K, tuple[OV, NV]]:
     """
     Merge two dictionaries. The resulting dictionary contains an entry for every
     key in either `old` or `new`. Each entry in the result associates a key to
@@ -170,7 +178,7 @@ def _print(msg):
     print(Path(__file__).resolve().name + ':', msg, file=sys.stderr)
 
 
-def _parse(env: str) -> MutableMapping[str, str]:
+def _parse(env: str) -> dict[str, str]:
     return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
 
 
@@ -184,7 +192,11 @@ class SanitizingFinder(MetaPathFinder):
         envhook_py = sitecustomize_py.follow()
         self.bad_path = str(envhook_py.parent.parent / 'src' / 'azul')
 
-    def find_spec(self, *_args, **_kwargs):
+    def find_spec(self,
+                  fullname: str,
+                  path: Optional[Sequence[str]],
+                  target: Optional[ModuleType] = None
+                  ) -> Optional[ModuleSpec]:
         sys_path = sys.path
         while True:
             try:
@@ -202,7 +214,7 @@ def sanitize_sys_path():
     containing a module to `sys.path`, presumably with the intent to emulate
     Python behavior for scripts run from the command line:
 
-    https://docs.python.org/3.8/using/cmdline.html#cmdoption-c
+    https://docs.python.org/3.9/using/cmdline.html#cmdoption-c
 
     This has negative consequences when the module resides in the `src/azul`
     directory of this project because that directory also contains modules
@@ -253,18 +265,6 @@ def share_aws_cli_credential_cache():
 
 class Path(pathlib.PosixPath):
 
-    # Work around https://bugs.python.org/issue30618, fixed on 3.7+
-
-    # noinspection PyProtectedMember,PyUnresolvedReferences
-    def readlink(self) -> 'Path':
-        """
-        Return the path to which the symbolic link points.
-        """
-        path = self._accessor.readlink(self)
-        obj = self._from_parts((path,), init=False)
-        obj._init(template=self)
-        return obj
-
     def follow(self) -> 'Path':
         """
         This methods performs one level of symbolic link resolution. For paths
@@ -281,17 +281,6 @@ class Path(pathlib.PosixPath):
             return target
         else:
             return (self.parent / target).absolute()
-
-    # Sorely needed, added in 3.8
-
-    # noinspection PyProtectedMember,PyUnresolvedReferences
-    def link_to(self, target: 'Path'):
-        """
-        Create a hard link pointing to a path named target.
-        """
-        if self._closed:
-            self._raise_closed()
-        os.link(str(self), str(target))
 
     def is_relative(self):
         return not self.is_absolute()

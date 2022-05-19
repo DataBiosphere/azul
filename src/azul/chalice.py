@@ -1,3 +1,6 @@
+from collections.abc import (
+    Iterable,
+)
 import json
 from json import (
     JSONEncoder,
@@ -6,10 +9,7 @@ import logging
 import os
 from typing import (
     Any,
-    Iterable,
     Optional,
-    Set,
-    Tuple,
 )
 
 from chalice import (
@@ -70,7 +70,7 @@ class AzulChaliceApp(Chalice):
         assert app_module_path.endswith('/app.py'), app_module_path
         self.app_module_path = app_module_path
         self.unit_test = unit_test
-        self.non_interactive_routes: Set[Tuple[str, str]] = set()
+        self.non_interactive_routes: set[tuple[str, str]] = set()
         if spec is not None:
             assert 'paths' not in spec, 'The top-level spec must not define paths'
             self._specs: Optional[MutableJSON] = copy_json(spec)

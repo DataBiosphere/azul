@@ -2,7 +2,6 @@ import json
 import os
 from typing import (
     Any,
-    Tuple,
     cast,
 )
 from unittest import (
@@ -155,7 +154,7 @@ class TestUnexpectedWarnings(TestCase):
                 suite.run(result)
 
                 self.assertEqual(1, result.testsRun)
-                failed_test, trace_back = cast(Tuple[Any, str], one(result.errors))
+                failed_test, trace_back = cast(tuple[Any, str], one(result.errors))
                 self.assertEqual(f'tearDownClass ({__name__}.{Test.__qualname__})', str(failed_test))
                 error_line = trace_back.splitlines()[-1]
                 self.assertRegex(error_line, '^AssertionError')

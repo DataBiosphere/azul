@@ -1,10 +1,11 @@
+from collections.abc import (
+    Sequence,
+    Set,
+)
 import logging
 import time
 from typing import (
-    AbstractSet,
-    List,
     Optional,
-    Sequence,
     Type,
     cast,
 )
@@ -99,7 +100,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
         return cls()
 
     @property
-    def sources(self) -> AbstractSet[SimpleSourceSpec]:
+    def sources(self) -> Set[SimpleSourceSpec]:
         assert config.dss_source is not None
         return {
             SimpleSourceSpec.parse(config.dss_source)
@@ -110,7 +111,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
 
     def list_sources(self,
                      authentication: Optional[Authentication]
-                     ) -> List[DSSSourceRef]:
+                     ) -> list[DSSSourceRef]:
         return [
             DSSSourceRef(id=self.lookup_source_id(spec), spec=spec)
             for spec in self.sources
@@ -120,7 +121,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
 
-    def list_bundles(self, source: DSSSourceRef, prefix: str) -> List[DSSBundleFQID]:
+    def list_bundles(self, source: DSSSourceRef, prefix: str) -> list[DSSBundleFQID]:
         self._assert_source(source)
         prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)

@@ -1,4 +1,8 @@
 import base64
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
 import hashlib
 from inspect import (
     signature,
@@ -9,9 +13,7 @@ import re
 from typing import (
     Any,
     Callable,
-    Mapping,
     Optional,
-    Sequence,
     Union,
 )
 import urllib.parse

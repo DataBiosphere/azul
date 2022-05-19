@@ -6,6 +6,10 @@ import base64
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+    Mapping,
+)
 from copy import (
     copy,
     deepcopy,
@@ -46,13 +50,8 @@ import time
 from typing import (
     Any,
     IO,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
     Optional,
     Protocol,
-    Tuple,
     Type,
     Union,
     cast,
@@ -248,7 +247,7 @@ class ManifestPartition:
     multipart_upload_id: Optional[str] = None
 
     #: The S3 ETag of each partition; the current one and all the ones before it
-    part_etags: Optional[Tuple[str, ...]] = attr.ib(converter=tuple_or_none,
+    part_etags: Optional[tuple[str, ...]] = attr.ib(converter=tuple_or_none,
                                                     default=None)
 
     #: The index of the current page. The index is zero-based and global. For
@@ -263,7 +262,7 @@ class ManifestPartition:
 
     #: The `sort` value of the first hit of the current page in this partition,
     #: or None if there is no current page.
-    search_after: Optional[Tuple[str, str]] = None
+    search_after: Optional[tuple[str, str]] = None
 
     @classmethod
     def from_json(cls, partition: JSON) -> 'ManifestPartition':
@@ -296,7 +295,7 @@ class ManifestPartition:
 
     def next_page(self,
                   file_name: Optional[str],
-                  search_after: Tuple[str, str]
+                  search_after: tuple[str, str]
                   ) -> 'ManifestPartition':
         assert self.page_index is not None, self
         # If different pages yield different file names, use default file name
@@ -425,7 +424,7 @@ class ManifestService(ElasticsearchService):
                             catalog: CatalogName,
                             filters: Filters,
                             authentication: Optional[Authentication]
-                            ) -> Tuple[str, Optional[Manifest]]:
+                            ) -> tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_,
                                                  self,
                                                  catalog,
@@ -563,7 +562,7 @@ class ManifestService(ElasticsearchService):
         return generator_cls.command_lines(url, file_name, authentication)
 
 
-Cells = MutableMapping[str, str]
+Cells = dict[str, str]
 
 
 class ManifestGenerator(metaclass=ABCMeta):
@@ -678,7 +677,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         sub_cls = cls._cls_for_format[format_]
         return sub_cls(service, catalog, filters, authentication)
 
-    _cls_for_format: MutableMapping[ManifestFormat, Type['ManifestGenerator']] = {}
+    _cls_for_format: dict[ManifestFormat, Type['ManifestGenerator']] = {}
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -820,7 +819,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _extract_fields(self,
                         *,
                         field_path: FieldPath,
-                        entities: List[JSON],
+                        entities: list[JSON],
                         column_mapping: ColumnMapping,
                         row: Cells) -> None:
         """
@@ -878,7 +877,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             column_value = self.column_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
-    def _get_entities(self, field_path: FieldPath, doc: JSON) -> List[JSON]:
+    def _get_entities(self, field_path: FieldPath, doc: JSON) -> list[JSON]:
         """
         Given a document and a dotted path into that document, return the list
         of entities designated by that path.
@@ -1117,7 +1116,7 @@ class FileBasedManifestGenerator(ManifestGenerator):
     """
 
     @abstractmethod
-    def create_file(self) -> Tuple[str, Optional[str]]:
+    def create_file(self) -> tuple[str, Optional[str]]:
         raise NotImplementedError
 
     def write(self,
@@ -1474,13 +1473,13 @@ class CompactManifestGenerator(PagedManifestGenerator):
             return partition.last_page()
 
 
-FQID = Tuple[str, str]
+FQID = tuple[str, str]
 Qualifier = str
 
 Group = Mapping[str, Cells]
-Groups = List[Group]
-Bundle = MutableMapping[Qualifier, Groups]
-Bundles = MutableMapping[FQID, Bundle]
+Groups = list[Group]
+Bundle = dict[Qualifier, Groups]
+Bundles = dict[FQID, Bundle]
 
 
 class PFBManifestGenerator(FileBasedManifestGenerator):
@@ -1516,7 +1515,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             doc = self._hit_to_doc(hit)
             yield doc
 
-    def create_file(self) -> Tuple[str, Optional[str]]:
+    def create_file(self) -> tuple[str, Optional[str]]:
         transformers = self.service.transformer_types(self.catalog)
         transformer = one(t for t in transformers if t.entity_type() == 'files')
         field_types = transformer.field_types()
@@ -1575,7 +1574,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             for field_path, column_mapping in super().manifest_config.items()
         }
 
-    def create_file(self) -> Tuple[str, Optional[str]]:
+    def create_file(self) -> tuple[str, Optional[str]]:
         with TemporaryDirectory() as temp_path:
             bag_path = os.path.join(temp_path, 'manifest')
             os.makedirs(bag_path)

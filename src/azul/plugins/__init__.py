@@ -2,22 +2,21 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import (
+    Iterable,
+    Mapping,
+    Sequence,
+    Set,
+)
 import importlib
 from inspect import (
     isabstract,
 )
 from typing import (
-    AbstractSet,
     ClassVar,
     Generic,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
     Optional,
-    Sequence,
     TYPE_CHECKING,
-    Tuple,
     Type,
     TypeVar,
     TypedDict,
@@ -81,17 +80,17 @@ if TYPE_CHECKING:
 
 FieldName = str
 FieldPathElement = str
-FieldPath = Tuple[FieldPathElement, ...]
+FieldPath = tuple[FieldPathElement, ...]
 
 FieldMapping = Mapping[FieldName, FieldPath]
 
 ColumnMapping = Mapping[FieldPathElement, FieldName]
 ManifestConfig = Mapping[FieldPath, ColumnMapping]
-MutableColumnMapping = MutableMapping[FieldPathElement, FieldName]
-MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
+MutableColumnMapping = dict[FieldPathElement, FieldName]
+MutableManifestConfig = dict[FieldPath, MutableColumnMapping]
 
 DottedFieldPath = str
-FieldGlobs = List[DottedFieldPath]
+FieldGlobs = list[DottedFieldPath]
 
 
 def dotted(path_or_element: Union[FieldPathElement, FieldPath],
@@ -235,7 +234,7 @@ class MetadataPlugin(Plugin):
 
         def invert(v: MetadataPlugin._FieldMapping,
                    *path: FieldPathElement
-                   ) -> Iterable[Tuple[FieldName, FieldPath]]:
+                   ) -> Iterable[tuple[FieldName, FieldPath]]:
             if isinstance(v, dict):
                 for k, v in v.items():
                     assert isinstance(k, FieldPathElement)
@@ -319,7 +318,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
 
     @property
     @abstractmethod
-    def sources(self) -> AbstractSet[SOURCE_SPEC]:
+    def sources(self) -> Set[SOURCE_SPEC]:
         """
         The names of the sources the plugin is configured to read metadata from.
         """
@@ -388,7 +387,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
     def list_bundles(self,
                      source: SOURCE_REF,
                      prefix: str
-                     ) -> List[SourcedBundleFQID[SOURCE_REF]]:
+                     ) -> list[SourcedBundleFQID[SOURCE_REF]]:
         """
         List the bundles in the given source whose UUID starts with the given
         prefix.

@@ -1,4 +1,7 @@
 import argparse
+from collections.abc import (
+    Iterable,
+)
 from dataclasses import (
     dataclass,
 )
@@ -8,9 +11,7 @@ from pathlib import (
 )
 from typing import (
     Any,
-    FrozenSet,
     IO,
-    Iterable,
     NamedTuple,
     Optional,
     Union,
@@ -41,7 +42,7 @@ log = logging.getLogger(__name__)
 Version = str
 
 
-class Versions(FrozenSet[Version]):
+class Versions(frozenset[Version]):
 
     def __new__(cls, *versions: Version) -> Any:
         return super().__new__(cls, versions)

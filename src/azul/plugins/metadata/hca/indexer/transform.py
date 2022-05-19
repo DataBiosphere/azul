@@ -6,6 +6,11 @@ from collections import (
     Counter,
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+    Iterator,
+    Mapping,
+)
 from datetime import (
     datetime,
 )
@@ -20,18 +25,9 @@ from operator import (
 import re
 from typing import (
     Callable,
-    Dict,
-    FrozenSet,
     Generic,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    MutableMapping,
     Optional,
     Protocol,
-    Set,
-    Tuple,
     Type,
     TypeVar,
     Union,
@@ -294,8 +290,8 @@ class SubmitterCategory(Enum):
 class SubmitterBase:
     # These class attributes must be defined in a superclass because Enum and
     # EnumMeta would get confused if they were defined in the Enum subclass.
-    by_id: Dict[str, 'Submitter'] = {}
-    by_title: Dict[str, 'Submitter'] = {}
+    by_id: dict[str, 'Submitter'] = {}
+    by_title: dict[str, 'Submitter'] = {}
     id_namespace = UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
 
 
@@ -493,7 +489,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,
-                               samples: MutableMapping[str, Sample]
+                               samples: dict[str, Sample]
                                ):
         """
         Populate the `samples` argument with the sample ancestors of the given
@@ -515,7 +511,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         visitor = TransformerVisitor()
         file.accept(visitor)
         file.ancestors(visitor)
-        samples: MutableMapping[str, Sample] = dict()
+        samples: dict[str, Sample] = dict()
         self._find_ancestor_samples(file, samples)
         return visitor, samples
 
@@ -656,10 +652,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _project(self, project: api.Project) -> MutableJSON:
         # Store lists of all values of each of these facets to allow facet filtering
         # and term counting on the webservice
-        laboratories: Set[str] = set()
-        institutions: Set[str] = set()
-        contact_names: Set[str] = set()
-        publication_titles: Set[str] = set()
+        laboratories: set[str] = set()
+        institutions: set[str] = set()
+        contact_names: set[str] = set()
+        publication_titles: set[str] = set()
 
         for contributor in project.contributors:
             if contributor.laboratory:
@@ -735,7 +731,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _cell_suspension(self, cell_suspension: api.CellSuspension) -> MutableJSON:
         organs = set()
         organ_parts = set()
-        samples: MutableMapping[str, Sample] = dict()
+        samples: dict[str, Sample] = dict()
         self._find_ancestor_samples(cell_suspension, samples)
         for sample in samples.values():
             if isinstance(sample, api.SpecimenFromOrganism):
@@ -1246,7 +1242,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 BaseTransformer.validate_class()
 
 
-def _parse_zarr_file_name(file_name: str) -> Tuple[bool, Optional[str], Optional[str]]:
+def _parse_zarr_file_name(file_name: str) -> tuple[bool, Optional[str], Optional[str]]:
     file_name = file_name.split('.zarr/')
     if len(file_name) == 1:
         return False, None, None
@@ -1259,17 +1255,17 @@ def _parse_zarr_file_name(file_name: str) -> Tuple[bool, Optional[str], Optional
 
 class TransformerVisitor(api.EntityVisitor):
     # Entities are tracked by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
-    specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
-    cell_suspensions: MutableMapping[api.UUID4, api.CellSuspension]
-    cell_lines: MutableMapping[api.UUID4, api.CellLine]
-    donors: MutableMapping[api.UUID4, api.DonorOrganism]
-    organoids: MutableMapping[api.UUID4, api.Organoid]
-    analysis_protocols: MutableMapping[api.UUID4, api.AnalysisProtocol]
-    imaging_protocols: MutableMapping[api.UUID4, api.ImagingProtocol]
-    library_preparation_protocols: MutableMapping[api.UUID4, api.LibraryPreparationProtocol]
-    sequencing_protocols: MutableMapping[api.UUID4, api.SequencingProtocol]
-    sequencing_processes: MutableMapping[api.UUID4, api.Process]
-    files: MutableMapping[api.UUID4, api.File]
+    specimens: dict[api.UUID4, api.SpecimenFromOrganism]
+    cell_suspensions: dict[api.UUID4, api.CellSuspension]
+    cell_lines: dict[api.UUID4, api.CellLine]
+    donors: dict[api.UUID4, api.DonorOrganism]
+    organoids: dict[api.UUID4, api.Organoid]
+    analysis_protocols: dict[api.UUID4, api.AnalysisProtocol]
+    imaging_protocols: dict[api.UUID4, api.ImagingProtocol]
+    library_preparation_protocols: dict[api.UUID4, api.LibraryPreparationProtocol]
+    sequencing_protocols: dict[api.UUID4, api.SequencingProtocol]
+    sequencing_processes: dict[api.UUID4, api.Process]
+    files: dict[api.UUID4, api.File]
 
     def __init__(self) -> None:
         self.specimens = {}
@@ -1355,7 +1351,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
         return api.not_stitched(self.api_bundle.files.values())
 
     def _transform(self, files: Iterable[api.File]) -> Iterable[Contribution]:
-        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(files)
+        zarr_stores: Mapping[str, list[api.File]] = self.group_zarrs(files)
         for file in files:
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
@@ -1438,7 +1434,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     )
         return contents
 
-    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, List[api.File]]:
+    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, list[api.File]]:
         zarr_stores = defaultdict(list)
         for file in files:
             file_name = file.manifest_entry.name
@@ -1463,7 +1459,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
 
     def _transform(self, cell_suspensions: Iterable[api.CellSuspension]) -> Iterable[Contribution]:
         for cell_suspension in cell_suspensions:
-            samples: MutableMapping[str, Sample] = dict()
+            samples: dict[str, Sample] = dict()
             self._find_ancestor_samples(cell_suspension, samples)
             visitor = TransformerVisitor()
             cell_suspension.accept(visitor)
@@ -1494,7 +1490,7 @@ class SampleTransformer(PartitionedTransformer):
         return 'samples'
 
     @classmethod
-    def inner_entity_types(cls) -> FrozenSet[str]:
+    def inner_entity_types(cls) -> frozenset[str]:
         return frozenset(
             [
                 cls.entity_type(),
@@ -1505,7 +1501,7 @@ class SampleTransformer(PartitionedTransformer):
         )
 
     def _entities(self) -> Iterable[Sample]:
-        samples: MutableMapping[str, Sample] = dict()
+        samples: dict[str, Sample] = dict()
         for file in api.not_stitched(self.api_bundle.files.values()):
             self._find_ancestor_samples(file, samples)
         return samples.values()
@@ -1586,7 +1582,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
         for specimen in self.api_bundle.specimens:
             specimen.accept(visitor)
             specimen.ancestors(visitor)
-        samples: MutableMapping[str, Sample] = dict()
+        samples: dict[str, Sample] = dict()
         for file in self.api_bundle.files.values():
             file.accept(visitor)
             file.ancestors(visitor)

@@ -2,6 +2,9 @@ import ast
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+)
 import enum
 from enum import (
     Enum,
@@ -14,10 +17,7 @@ from tokenize import (
     TokenInfo,
 )
 from typing import (
-    Iterable,
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -125,7 +125,7 @@ class ModuleOrderInfo:
     is_from_import: bool
 
     @classmethod
-    def normalize_module(cls, node: EitherImport) -> Tuple[str, bool]:
+    def normalize_module(cls, node: EitherImport) -> tuple[str, bool]:
         if isinstance(node, ast.Import):
             module_name = one(node.names).name
             is_from_import = False
@@ -218,8 +218,8 @@ class ImportVisitor(ast.NodeVisitor):
             self.line_tokens[token_info.start[0]].append(token_info)
         for line_tokens in self.line_tokens.values():
             line_tokens.sort(key=lambda token_info: token_info.start[1])
-        self.errors: List[ErrorInfo] = []
-        self.visited_order_info: List[OrderedImport] = []
+        self.errors: list[ErrorInfo] = []
+        self.visited_order_info: list[OrderedImport] = []
 
     def visit_Import(self, node: ast.Import) -> None:
         self.check_split_import(node)
@@ -354,10 +354,10 @@ class AzulImports:
         self.tokens = file_tokens
         self.file_name = filename
 
-    def _run(self) -> List[ErrorInfo]:
+    def _run(self) -> list[ErrorInfo]:
         visitor = ImportVisitor(self.file_name, self.tokens)
         visitor.visit(self.tree)
         return visitor.errors
 
-    def run(self) -> List[tuple]:
+    def run(self) -> list[tuple]:
         return [err.to_flake8_tuple() for err in self._run()]

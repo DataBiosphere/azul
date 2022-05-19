@@ -1,3 +1,7 @@
+from collections.abc import (
+    Iterable,
+    Iterator,
+)
 from functools import (
     partial,
 )
@@ -7,9 +11,6 @@ from itertools import (
 import random as _random
 from typing import (
     Callable,
-    Iterable,
-    Iterator,
-    List,
     TypeVar,
 )
 
@@ -62,7 +63,7 @@ def reservoir_sample(k: int,
                      it: Iterable[T],
                      *,
                      random: _random.Random = _random
-                     ) -> List[T]:
+                     ) -> list[T]:
     """
     Return a random choice of a given size from an iterable.
 
