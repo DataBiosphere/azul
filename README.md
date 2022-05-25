@@ -705,6 +705,22 @@ the resource` is encountered, ask an administrator of the Terra group `azul-dev`
 to add the service account as specified in the error messaged to that group. See
 [2.3.4 Google Cloud, TDR, and SAM](#234-google-cloud-tdr-and-sam) for details.
 
+[KMSAccessDeniedException]: https://aws.amazon.com/premiumsupport/knowledge-center/lambda-kmsaccessdeniedexception-errors/
+
+After a successful invocation of `make deploy`, if the deployment is unresponsive
+and CloudWatch shows logs entries in the `/aws/apigateway/…` log group but not in
+`/aws/lambda/…`, first confirm whether the issue is the known
+[KMSAccessDeniedException] error. In the AWS Console, go to the Lambda function
+details page, click on the `Test` tab, and click on the `Test` buttton. 
+
+Note that it is normal for some Lambda functions to fail the test due to the
+parameters of the test event. Examine the error message to determine if the
+failure is due to a `KMSAccessDeniedException` which would be explicitly
+specified.
+
+To resolve a `KMSAccessDeniedException` run the `reset_lambda_role.py` script to
+reset all the Lambda functions in the selected deployment.
+
 ## 3.7 Reindexing
 
 The DSS instance used by a deployment is likely to contain existing bundles. To
