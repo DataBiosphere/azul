@@ -502,28 +502,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'resources': ['*']
                     },
 
-                    allow_global_actions('CloudWatch Logs'),
+                    # CloudWatch Logs
+                    # FIXME: Tighten GitLab security boundary
+                    #        https://github.com/DataBiosphere/azul/issues/4207
                     {
-                        'actions': aws_service_actions('CloudWatch Logs',
-                                                       types={ServiceActionType.list}),
-                        'resources': aws_service_arns('CloudWatch Logs',
-                                                      LogGroupName='*',
-                                                      LogStream='*',
-                                                      LogStreamName='*')
+                        'actions': ['logs:*'],
+                        'resources': ['*']
                     },
+
+                    # WAFv2
                     {
-                        'actions': aws_service_actions('CloudWatch Logs'),
-                        'resources': merge(
-                            aws_service_arns('CloudWatch Logs',
-                                             LogGroupName=log_group_name,
-                                             LogStream='*',
-                                             LogStreamName='*')
-                            for log_group_name in [
-                                '/aws/apigateway/azul-*',
-                                '/aws/lambda/azul-*',
-                                '/aws/aes/domains/azul-*'
-                            ]
-                        )
+                        'actions': ['wafv2:*'],
+                        'resources': ['*']
                     }
                 ]
             },

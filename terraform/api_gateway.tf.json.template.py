@@ -250,6 +250,32 @@ emit_tf({
                     "policy": lambda_.policy,
                     "role": "${aws_iam_role.%s.id}" % lambda_.name
                 },
+            },
+            "aws_wafv2_web_acl_association": {
+                lambda_.name: {
+                    # Chalice doesn't expose the ARN of the API Gateway stages, so we
+                    # construct the ARN manually using this workaround.
+                    # https://github.com/aws/chalice/issues/1816#issuecomment-1012231084
+                    "resource_arn": f"${{module.chalice_{lambda_.name}.rest_api_arn}}"
+                                    f"/stages/${{module.chalice_{lambda_.name}.stage_name}}",
+                    "web_acl_arn": f"${{aws_wafv2_web_acl.{lambda_.name}.arn}}"
+                }
+            },
+            "aws_wafv2_web_acl": {
+                lambda_.name: {
+                    "name": config.qualified_resource_name(lambda_.name),
+                    "default_action": {
+                        "allow": {}
+                    },
+                    "rule": [
+                    ],
+                    "scope": "REGIONAL",
+                    "visibility_config": {
+                        "cloudwatch_metrics_enabled": True,
+                        "metric_name": "WebACL",
+                        "sampled_requests_enabled": True,
+                    }
+                }
             }
         } for lambda_ in lambdas
     ]
