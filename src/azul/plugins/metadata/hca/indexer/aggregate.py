@@ -57,8 +57,11 @@ class HCAAggregate(Aggregate):
     def effective_cell_count(self) -> int:
         if self.entity.entity_type == 'projects':
             project = one(self.contents['projects'])
-            project_cells = project['estimated_cell_count'] or 0
-            return max(project_cells, self.cell_count)
+            project_cells = project['estimated_cell_count']
+            if project_cells is None:
+                return self.cell_count
+            else:
+                return project_cells
         else:
             return self.cell_count
 
