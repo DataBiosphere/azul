@@ -39,6 +39,9 @@ def transform_tf(input_json):
     input_json['output']['stage_name'] = {
         'value': '${aws_api_gateway_deployment.rest_api.stage_name}'
     }
+    input_json['output']['rest_api_arn'] = {
+        'value': '${aws_api_gateway_rest_api.rest_api.arn}'
+    }
 
     for func in input_json['resource']['aws_lambda_function'].values():
         assert 'layers' not in func
