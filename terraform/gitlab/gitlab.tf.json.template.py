@@ -743,14 +743,24 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                   cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
                     security_rule(description='Any traffic from the VPC',
                                   cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'tags': {
                     'Name': 'azul-gitlab-vpn'
@@ -764,14 +774,25 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                   cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
                     security_rule(description='HTTPS from the VPC',
                                   cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
                                   from_port=443,
-                                  to_port=443)
+                                  to_port=443),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
+
                 ],
                 'tags': {
                     'Name': 'azul-gitlab-alb'
@@ -785,7 +806,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                   cidr_blocks=['0.0.0.0/0'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
                     security_rule(description='HTTP from VPC',
@@ -800,7 +826,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       from_port=int_port,
                                       to_port=int_port)
                         for ext_port, int_port, name in nlb_ports
-                    )
+                    ),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'tags': {
                     'Name': 'azul-gitlab'
