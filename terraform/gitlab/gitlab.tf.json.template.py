@@ -739,15 +739,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-vpn',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    # Any traffic to the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='Any traffic to the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0)
                 ],
                 'ingress': [
-                    # Any traffic from the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='Any traffic from the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0)
@@ -760,15 +760,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-alb',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    # Any traffic to the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='Any traffic to the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0)
                 ],
                 'ingress': [
-                    # HTTPS from the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='HTTPS from the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
                                   from_port=443,
                                   to_port=443)
@@ -781,21 +781,21 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    # Any traffic to anywhere (to be routed by NAT Gateway)
-                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                    security_rule(description='Any traffic to anywhere (to be routed by NAT Gateway)',
+                                  cidr_blocks=['0.0.0.0/0'],
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0)
                 ],
                 'ingress': [
-                    # HTTP from VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='HTTP from VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
                                   from_port=80,
                                   to_port=80),
-                    # SSH from VPC
                     *(
-                        security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                        security_rule(description=f'SSH for {name} from VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                       protocol='tcp',
                                       from_port=int_port,
                                       to_port=int_port)
