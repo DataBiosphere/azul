@@ -370,7 +370,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'filter': [
                     {
                         'name': 'name',
-                        'values': ['rancheros-v1.4.2-hvm-1']
+                        'values': ['rancheros-v1.5.8-hvm-1']
                     }
                 ]
             }
@@ -1220,9 +1220,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --privileged \
                                --restart always \
                                --network gitlab-runner-net \
+                               --env DOCKER_TLS_CERTDIR="" \
                                --volume /mnt/gitlab/docker:/var/lib/docker \
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
-                               docker:18.03.1-ce-dind
+                               docker:19.03.15-dind
                         docker run \
                                --detach \
                                --name gitlab \
