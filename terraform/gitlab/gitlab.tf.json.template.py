@@ -807,6 +807,20 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0),
+                    # VXLAN for AWS Traffic Capture to a target in the same SG
+                    # In a nutshell, start target instance in this SG, set up
+                    # mirroring target for instance, set up mirroring session
+                    # for source. Then on target instance:
+                    # sudo ip link add vxlan0 type vxlan id <VNI from session> dev eth0 local 10.0.0.207 dstport 4789
+                    # sudo sysctl net.ipv6.conf.vxlan0.disable_ipv6=1
+                    # sudo ip link set vxlan0 up
+                    # sudo tcpdump -i vxlan0 -w /tmp/gitlab.pcap
+                    # OR sudo tcpdump -i vxlan0 -w - | tee /tmp/gitlab.pcap | tcpdump -r -
+                    security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
+                                  self=True,
+                                  protocol='udp',
+                                  from_port=4789,
+                                  to_port=4789),
                     security_rule(description='ICMP for PMTUD',
                                   cidr_blocks=['0.0.0.0/0'],
                                   protocol='icmp',
@@ -827,6 +841,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       to_port=int_port)
                         for ext_port, int_port, name in nlb_ports
                     ),
+                    security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
+                                  self=True,
+                                  protocol='udp',
+                                  from_port=4789,
+                                  to_port=4789),
                     security_rule(description='ICMP for PMTUD',
                                   cidr_blocks=['0.0.0.0/0'],
                                   protocol='icmp',
