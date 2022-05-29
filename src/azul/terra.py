@@ -328,13 +328,22 @@ class TerraClient(OAuth2Client):
         log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
         try:
+            # Limited retries on I/O errors such as refused or dropped
+            # connections. The latter are actually very likely if connections
+            # from the pool are reused after a long periods idleness.
+            retry = urllib3.Retry(total=None,
+                                  connect=2,
+                                  read=2,
+                                  redirect=0,
+                                  status=0,
+                                  other=2)
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
                                                  # FIXME: Service should return 503 response when Terra client times out
                                                  #        https://github.com/DataBiosphere/azul/issues/3968
                                                  timeout=timeout,
-                                                 retries=False,
+                                                 retries=retry,
                                                  body=body)
         except TimeoutError:
             raise TerraTimeoutException(url, timeout)
