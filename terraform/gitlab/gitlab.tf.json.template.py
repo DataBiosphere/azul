@@ -370,7 +370,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'filter': [
                     {
                         'name': 'name',
-                        'values': ['rancheros-v1.4.2-hvm-1']
+                        'values': ['rancheros-v1.5.8-hvm-1']
                     }
                 ]
             }
@@ -739,18 +739,28 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-vpn',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    # Any traffic to the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='Any traffic to the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    # Any traffic from the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='Any traffic from the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'tags': {
                     'Name': 'azul-gitlab-vpn'
@@ -760,18 +770,29 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-alb',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    # Any traffic to the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='Any traffic to the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    # HTTPS from the VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='HTTPS from the VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
                                   from_port=443,
-                                  to_port=443)
+                                  to_port=443),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
+
                 ],
                 'tags': {
                     'Name': 'azul-gitlab-alb'
@@ -781,26 +802,55 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    # Any traffic to anywhere (to be routed by NAT Gateway)
-                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                    security_rule(description='Any traffic to anywhere (to be routed by NAT Gateway)',
+                                  cidr_blocks=['0.0.0.0/0'],
                                   protocol=-1,
                                   from_port=0,
-                                  to_port=0)
+                                  to_port=0),
+                    # VXLAN for AWS Traffic Capture to a target in the same SG
+                    # In a nutshell, start target instance in this SG, set up
+                    # mirroring target for instance, set up mirroring session
+                    # for source. Then on target instance:
+                    # sudo ip link add vxlan0 type vxlan id <VNI from session> dev eth0 local 10.0.0.207 dstport 4789
+                    # sudo sysctl net.ipv6.conf.vxlan0.disable_ipv6=1
+                    # sudo ip link set vxlan0 up
+                    # sudo tcpdump -i vxlan0 -w /tmp/gitlab.pcap
+                    # OR sudo tcpdump -i vxlan0 -w - | tee /tmp/gitlab.pcap | tcpdump -r -
+                    security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
+                                  self=True,
+                                  protocol='udp',
+                                  from_port=4789,
+                                  to_port=4789),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    # HTTP from VPC
-                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    security_rule(description='HTTP from VPC',
+                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
                                   from_port=80,
                                   to_port=80),
-                    # SSH from VPC
                     *(
-                        security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                        security_rule(description=f'SSH for {name} from VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                       protocol='tcp',
                                       from_port=int_port,
                                       to_port=int_port)
                         for ext_port, int_port, name in nlb_ports
-                    )
+                    ),
+                    security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
+                                  self=True,
+                                  protocol='udp',
+                                  from_port=4789,
+                                  to_port=4789),
+                    security_rule(description='ICMP for PMTUD',
+                                  cidr_blocks=['0.0.0.0/0'],
+                                  protocol='icmp',
+                                  from_port=3,  # Destination Unreachable
+                                  to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'tags': {
                     'Name': 'azul-gitlab'
@@ -1220,9 +1270,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --privileged \
                                --restart always \
                                --network gitlab-runner-net \
+                               --env DOCKER_TLS_CERTDIR="" \
                                --volume /mnt/gitlab/docker:/var/lib/docker \
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
-                               docker:18.03.1-ce-dind
+                               docker:19.03.15-dind
                         docker run \
                                --detach \
                                --name gitlab \
