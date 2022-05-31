@@ -38,6 +38,9 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
 )
+from azul.openapi import (
+    format_description,
+)
 from azul.plugins.repository.tdr import (
     TDRBundleFQID,
     TDRPlugin,
@@ -213,6 +216,8 @@ class Plugin(TDRPlugin):
         self._simplify_links(links)
         result = TDRAnvilBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
         result.add_links(bundle_fqid, links)
+        dataset_ref, dataset_metadata = self._synthesize_dataset()
+        result.add_entity(dataset_ref, self._version, dataset_metadata)
         for entity_type, typed_keys in keys_by_type.items():
             pk_column = entity_type + '_id'
             for row in self._retrieve_entities(source.spec, entity_type, typed_keys):
@@ -533,6 +538,33 @@ class Plugin(TDRPlugin):
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
         return rows
+
+    def _synthesize_dataset(self) -> tuple[KeyReference, MutableJSON]:
+        dataset = {
+            'dataset_id': 'ENCODE',
+            'title': 'AnVIL ENCODE Pre-Release Dataset',
+            'description': format_description('''
+                The Encyclopedia of DNA Elements (ENCODE) Consortium is an
+                international collaboration of research groups funded by the
+                National Human Genome Research Institute (NHGRI). The goal of
+                ENCODE is to build a comprehensive parts list of functional
+                elements in the human genome, including elements that act at the
+                protein and RNA levels, and regulatory elements that control
+                cells and circumstances in which a gene is active.
+
+                NHGRI's AnVIL provides access to a restructured view of
+                "released" ENCODE data modeled to facilitate search and
+                interoperability for researchers.
+
+                ENCODE integrative analysis (PMID: 22955616; PMCID: PMC3439153)
+                ENCODE portal (PMID: 31713622 ; PMCID: PMC7061942)
+            '''),
+            'date_issued': None,
+            'last_modified_date': None,
+            'xref': 'https://www.encodeproject.org/'
+        }
+        key = KeyReference(entity_type='dataset', key=dataset['dataset_id'])
+        return key, dataset
 
     # This could be consolidated with similar info from the metadata plugin?
     indexed_columns_by_entity_type = {
