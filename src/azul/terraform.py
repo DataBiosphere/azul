@@ -149,6 +149,9 @@ def _normalize_tf(tf_config: Union[JSON, JSONs]) -> Iterable[tuple[str, AnyJSON]
     make parsing Terraform configuration simpler. It returns an iterator of the
     dictionary entries in the argument, regardless which form is used.
 
+    >>> list(_normalize_tf({}))
+    []
+
     >>> list(_normalize_tf({'foo': 'bar'}))
     [('foo', 'bar')]
 
@@ -185,7 +188,7 @@ def populate_tags(tf_config: JSON) -> JSON:
     else:
         return {
             k: v if k != 'resource' else [
-                {
+                _sanitize_tf({
                     resource_type: [
                         {
                             resource_name: {
@@ -196,7 +199,7 @@ def populate_tags(tf_config: JSON) -> JSON:
                         }
                         for resource_name, arguments in _normalize_tf(resource)
                     ]
-                }
+                })
                 for resource_type, resource in _normalize_tf(resources)
             ]
             for k, v in tf_config.items()
