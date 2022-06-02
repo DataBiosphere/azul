@@ -116,5 +116,7 @@ def azul_log_level():
     return [logging.INFO, logging.DEBUG, logging.DEBUG][azul.config.debug]
 
 
+# FIXME: ElasticSearch logs are excessive during reindex
+#        https://github.com/DataBiosphere/azul/issues/4233
 def es_log_level():
     return root_log_level()
