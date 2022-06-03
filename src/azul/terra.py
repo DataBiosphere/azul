@@ -42,6 +42,7 @@ from more_itertools import (
 )
 import urllib3
 from urllib3.exceptions import (
+    MaxRetryError,
     TimeoutError,
 )
 from urllib3.response import (
@@ -345,7 +346,7 @@ class TerraClient(OAuth2Client):
                                                  timeout=timeout,
                                                  retries=retry,
                                                  body=body)
-        except TimeoutError:
+        except (TimeoutError, MaxRetryError):
             raise TerraTimeoutException(url, timeout)
 
         assert isinstance(response, urllib3.HTTPResponse)
