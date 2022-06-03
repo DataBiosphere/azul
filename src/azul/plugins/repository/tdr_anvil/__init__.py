@@ -389,7 +389,7 @@ class Plugin(TDRPlugin):
                   exa.library_id
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                ON f.file_id IN UNNEST(exa.generated_file_id)
+                ON {self._dirty_foreign_key('f.file_id', 'file')} IN UNNEST(exa.generated_file_id)
         ''')
         return {
             Link.create(
@@ -399,7 +399,8 @@ class Plugin(TDRPlugin):
                 # that are not ancestors of the downstream file
                 outputs=KeyReference(entity_type='file', key=row['generated_file_id']),
                 inputs=[
-                    KeyReference(entity_type=entity_type, key=key)
+                    KeyReference(entity_type=entity_type,
+                                 key=self._clean_foreign_key(key, entity_type))
                     for entity_type, column in [('file', 'uses_file_id'),
                                                 ('biosample', 'uses_biosample_id'),
                                                 ('library', 'library_id')]
@@ -449,7 +450,7 @@ class Plugin(TDRPlugin):
         return {
             Link.create(inputs=KeyReference(key=row['library_id'], entity_type='library'),
                         outputs=[
-                            KeyReference(key=file_id, entity_type='file')
+                            KeyReference(key=self._clean_foreign_key(file_id, 'file'), entity_type='file')
                             for file_id in row['file_ids']
                         ],
                         activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
@@ -492,12 +493,13 @@ class Plugin(TDRPlugin):
                 a.activity_type
             FROM activities AS a, UNNEST(a.used_file_ids) AS used_file_id
             WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
+               OR {self._dirty_foreign_key('used_file_id', 'file')} IN ({', '.join(map(repr, file_ids))})
         ''')
         return {
-            Link.create(inputs=KeyReference(key=row['used_file_id'],
+            Link.create(inputs=KeyReference(key=self._clean_foreign_key(row['used_file_id'], 'file'),
                                             entity_type='file'),
                         outputs=[
-                            KeyReference(key=file_id,
+                            KeyReference(key=self._clean_foreign_key(file_id, 'file'),
                                          entity_type='file')
                             for file_id in row['generated_file_ids']
                         ],
@@ -538,6 +540,19 @@ class Plugin(TDRPlugin):
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
         return rows
+
+    def _dirty_foreign_key(self, column: str, entity_type: str) -> str:
+        return f"('/{entity_type}s/' || {column} || '/')"
+
+    def _clean_foreign_key(self, key: Key, entity_type: EntityType) -> Key:
+        key = key.split('/')
+        try:
+            return one(key)
+        except ValueError:
+            prefix, actual_entity_type, clean_key, suffix = key
+            assert prefix == suffix == '', key
+            assert actual_entity_type == pluralize(entity_type), key
+            return clean_key
 
     def _synthesize_dataset(self) -> tuple[KeyReference, MutableJSON]:
         dataset = {
