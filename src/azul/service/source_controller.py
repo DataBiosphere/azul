@@ -37,12 +37,13 @@ class SourceController(Controller):
                      ) -> JSONs:
         try:
             sources = self._source_service.list_sources(catalog, authentication)
+        except PermissionError:
+            raise UnauthorizedError
+        else:
             return [
                 {'sourceId': source.id, 'sourceSpec': str(source.spec)}
                 for source in sources
             ]
-        except PermissionError:
-            raise UnauthorizedError
 
     def _list_source_ids(self,
                          catalog: CatalogName,
