@@ -330,7 +330,7 @@ class TerraClient(OAuth2Client):
         try:
             # Limited retries on I/O errors such as refused or dropped
             # connections. The latter are actually very likely if connections
-            # from the pool are reused after a long periods idleness.
+            # from the pool are reused after a long period of idleness.
             retry = urllib3.Retry(total=None,
                                   connect=2,
                                   read=2,
