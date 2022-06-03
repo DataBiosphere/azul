@@ -13,12 +13,18 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.chalice import (
+    ServiceUnavailableError,
+)
 from azul.service import (
     Controller,
     Filters,
 )
 from azul.service.source_service import (
     SourceService,
+)
+from azul.terra import (
+    TerraTimeoutException,
 )
 from azul.types import (
     JSONs,
@@ -39,6 +45,8 @@ class SourceController(Controller):
             sources = self._source_service.list_sources(catalog, authentication)
         except PermissionError:
             raise UnauthorizedError
+        except TerraTimeoutException as e:
+            raise ServiceUnavailableError(*e.args)
         else:
             return [
                 {'sourceId': source.id, 'sourceSpec': str(source.spec)}
