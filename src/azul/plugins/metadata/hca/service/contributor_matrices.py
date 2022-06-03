@@ -111,7 +111,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                                     "name": "n",
                                     "size": 1,
                                     "source": "s",
-                                    "url": null
+                                    "drs_path": null
                                 }
                             ]
                         }
@@ -152,7 +152,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n1",
                             "size": 1,
                             "source": "s1",
-                            "url": null
+                            "drs_path": null
                         },
                         {
                             "uuid": "u2",
@@ -160,7 +160,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n2",
                             "size": 2,
                             "source": "s2",
-                            "url": null
+                            "drs_path": null
                         }
                     ]
                 }
@@ -199,7 +199,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n1",
                             "size": 1,
                             "source": "s1",
-                            "url": null
+                            "drs_path": null
                         }
                     ],
                     "f": [
@@ -209,7 +209,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n2",
                             "size": 2,
                             "source": "s2",
-                            "url": null
+                            "drs_path": null
                         }
                     ]
                 }
@@ -223,7 +223,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n1",
                             "size": 1,
                             "source": "s1",
-                            "url": null
+                            "drs_path": null
                         }
                     ]
                 }
@@ -237,7 +237,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n2",
                             "size": 2,
                             "source": "s2",
-                            "url": null
+                            "drs_path": null
                         }
                     ]
                 }
@@ -268,7 +268,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n",
                             "size": 1,
                             "source": "s",
-                            "url": null
+                            "drs_path": null
                         }
                     ],
                     "Unspecified": [
@@ -278,7 +278,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "name": "n",
                             "size": 1,
                             "source": "s",
-                            "url": null
+                            "drs_path": null
                         }
                     ]
                 }
@@ -322,7 +322,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                 )))
                 for stratum in parse_strata(file['strata'])
             )),
-            'url': None,  # to be injected later in post-processing
+            # to be replaced with `drs_uri` and `url` in post-processing
+            'drs_path': file.get('drs_path')
         }
         for file in files
     ]
