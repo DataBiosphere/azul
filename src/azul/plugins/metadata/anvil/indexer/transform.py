@@ -13,6 +13,7 @@ from functools import (
 from itertools import (
     chain,
 )
+import logging
 from typing import (
     Callable,
     Iterable,
@@ -70,6 +71,8 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+
+log = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -315,8 +318,12 @@ class BaseTransformer(Transformer, ABC):
                   ) -> MutableJSONs:
         entities = []
         for entity_id in sorted(entity_ids):
-            manifest_entry = self._entries_by_entity_id[entity_id]
-            entities.append(factory(manifest_entry))
+            try:
+                manifest_entry = self._entries_by_entity_id[entity_id]
+            except KeyError:
+                log.warning('Missing entity from dangling reference: %r', entity_id)
+            else:
+                entities.append(factory(manifest_entry))
         return entities
 
     def _activity(self, manifest_entry: JSON) -> MutableJSON:
