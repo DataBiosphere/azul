@@ -196,7 +196,7 @@ def env() -> Mapping[str, Optional[str]]:
             f'{catalog}{suffix}': dict(atlas=atlas,
                                        internal=internal,
                                        plugins=dict(metadata=dict(name='hca'),
-                                                    repository=dict(name='tdr')),
+                                                    repository=dict(name='tdr_hca')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp2', dcp2_sources),

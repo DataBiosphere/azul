@@ -117,7 +117,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                                         atlas='hca',
                                         internal=False,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                                     repository=config.Catalog.Plugin(name='tdr')),
+                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
                                         sources=cls.mock_sources)
         }
 
