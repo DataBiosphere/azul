@@ -69,6 +69,11 @@ class EntityReference:
     def __str__(self) -> str:
         return f'{self.entity_type}/{self.entity_id}'
 
+    @classmethod
+    def parse(cls, s: str) -> 'EntityReference':
+        entity_type, entity_id = s.split('/')
+        return cls(entity_type=entity_type, entity_id=entity_id)
+
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class CataloguedEntityReference(EntityReference):

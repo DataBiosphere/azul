@@ -683,6 +683,12 @@ class Config:
     def is_tdr_enabled(self, catalog: Optional[str] = None) -> bool:
         return self._is_plugin_enabled('tdr', catalog)
 
+    def is_hca_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('hca', catalog)
+
+    def is_anvil_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('anvil', catalog)
+
     def _is_plugin_enabled(self, plugin_prefix: str, catalog: Optional[str]) -> bool:
         def predicate(catalog):
             return any(
