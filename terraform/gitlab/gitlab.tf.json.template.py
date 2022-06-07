@@ -332,6 +332,8 @@ dss_direct_access_policy_statement = {
     ]
 }
 
+clamav_image = 'clamav/clamav:0.104'
+
 emit_tf({} if config.terraform_component != 'gitlab' else {
     'data': {
         'aws_availability_zones': {
@@ -1254,6 +1256,40 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     mounts:
                     - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
+                      services:
+                        user-cron:
+                          image: rancher/container-crontab:v0.4.0
+                          restart: always
+                          volumes:
+                            - /var/run/docker.sock:/var/run/docker.sock
+                          labels:
+                            io.rancher.os.scope: "user"
+                        clamscan:
+                          image: {clamav_image}
+                          command: >
+                              /bin/sh -c "freshclam
+                              && echo freshclam succeeded
+                              || echo freshclam failed
+                              && clamscan --infected
+                              --exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/sys
+                              --exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/proc
+                              --exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/dev
+                              --exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/sys
+                              --exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/proc
+                              --exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/dev
+                              --exclude-dir=^/scan/sys
+                              --exclude-dir=^/scan/proc
+                              --exclude-dir=^/scan/dev
+                              -rz /scan
+                              && echo clamscan succeeded
+                              || echo clamscan failed"
+                          volumes:
+                            - /:/scan:ro
+                            - /mnt/gitlab/clamav:/var/lib/clamav:rw
+                          labels:
+                            io.rancher.os.scope: "user"
+                            io.rancher.os.createonly: "true"
+                            cron.schedule: "0 0 8 ? * SUN"
                     ssh_authorized_keys: {other_public_keys.get(config.deployment_stage, [])}
                     write_files:
                     - path: /etc/rc.local
