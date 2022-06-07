@@ -46,6 +46,7 @@ from azul import (
     RequirementError,
     cache_per_thread,
     config,
+    disallow_joiner,
     require,
 )
 from azul.auth import (
@@ -432,7 +433,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             for fqid in links_ids
         }
         for links_json in links.values():
-            links_json['content'] = json.loads(links_json['content'])
+            links_json['content'] = json.loads(disallow_joiner(links_json['content']))
         return links
 
     def _retrieve_entities(self,
@@ -681,7 +682,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
                                      is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
                                      drs_path=self._parse_drs_uri(entity_row['file_id'], descriptor))
-        content = entity_row['content']
+        content = disallow_joiner(entity_row['content'])
         self.metadata_files[entity_key] = (json.loads(content)
                                            if isinstance(content, str)
                                            else content)
