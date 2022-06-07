@@ -60,6 +60,11 @@ class GoneError(ChaliceViewError):
     STATUS_CODE = 410
 
 
+# Chalice does not define any exceptions for 5xx status codes besides 500
+class ServiceUnavailableError(ChaliceViewError):
+    STATUS_CODE = 503
+
+
 class AzulChaliceApp(Chalice):
 
     def __init__(self,
