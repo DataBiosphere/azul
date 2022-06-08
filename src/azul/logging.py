@@ -103,7 +103,8 @@ def _configure_log_levels(*loggers):
     root_level = root_log_level()
     logging.getLogger().setLevel(root_level)
     es_logger = logging.getLogger('elasticsearch')
-    for logger in {*loggers, azul.log, es_logger}:
+    es_logger.setLevel(es_log_level())
+    for logger in {*loggers, azul.log}:
         logger.setLevel(azul_level_)
 
 
@@ -113,3 +114,9 @@ def root_log_level():
 
 def azul_log_level():
     return [logging.INFO, logging.DEBUG, logging.DEBUG][azul.config.debug]
+
+
+# FIXME: ElasticSearch logs are excessive during reindex
+#        https://github.com/DataBiosphere/azul/issues/4233
+def es_log_level():
+    return root_log_level()
