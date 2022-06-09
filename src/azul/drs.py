@@ -169,8 +169,10 @@ class DRSClient:
                 raise DRSError(response)
 
     def _request(self, url: str) -> urllib3.HTTPResponse:
-        log.info('GET %s', url)
-        return self.http_client.request('GET', url, redirect=False)
+        log.info('GET %s ...', url)
+        response = self.http_client.request('GET', url, redirect=False)
+        log.info('-> %r %r %r', response.status, response.data, response.headers)
+        return response
 
 
 class DRSError(Exception):
