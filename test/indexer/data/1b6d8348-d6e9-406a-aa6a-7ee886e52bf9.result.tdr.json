@@ -80,7 +80,7 @@
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_01adf6c2-747a-5790-ae0c-8504c40fa25a"
+            "drs_path": null
         },
         {
             "name": "IDC9_L004_R1.fastq.gz",
