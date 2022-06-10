@@ -17,6 +17,10 @@ import unittest
 from unittest import (
     mock,
 )
+from unittest.mock import (
+    PropertyMock,
+    patch,
+)
 from urllib.parse import (
     parse_qs,
     parse_qsl,
@@ -24,6 +28,9 @@ from urllib.parse import (
 )
 
 import attr
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -223,7 +230,7 @@ class TestResponse(WebServiceTestCase):
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "fileSource": None,
-                        "url": None,
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
                     }
@@ -995,7 +1002,7 @@ class TestResponse(WebServiceTestCase):
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'fileSource': None,
-            'url': None,
+            'drs_path': 'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T172251.560099Z',
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
         }
@@ -2827,6 +2834,7 @@ class TestProjectMatrices(WebServiceTestCase):
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/projects', args=params)
+        drs_uri = furl(scheme='drs', netloc=config.drs_domain)
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
@@ -2854,6 +2862,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '6a6483c2e78da77017e912a4d350f141'
                                                           'bda1ec7b269f20ca718b55145ee5c83c',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='bd98f428-881e-501a-ac16-24f27a68ce2f',
+                                                    args=dict(version='2021-02-11T23:11:45.000000Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                     args=dict(catalog='test', version='2021-02-11T23:11:45.000000Z')
@@ -2882,6 +2894,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': 'edb8e0139fece9702d89ae5fe7f761c4'
                                                           '1c291ef6a71129c6420857e025228a24',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='538faa28-3235-5e4b-a998-5672e2d964e8',
+                                                    args=dict(version='2020-12-03T10:39:17.144517Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/538faa28-3235-5e4b-a998-5672e2d964e8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2900,6 +2916,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': 'cb1467f4d23a2429b4928943b51652b3'
                                                           '2edb949099250d28cf400d13074f5440',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='6c142250-567c-5b63-bd4f-0d78499863f8',
+                                                    args=dict(version='2020-12-03T10:39:17.144517Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/6c142250-567c-5b63-bd4f-0d78499863f8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2918,6 +2938,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '724b2c0ddf33c662b362179bc6ca90cd'
                                                           '866b99b340d061463c35d27cfd5a23c5',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
+                                                    args=dict(version='2020-12-03T10:39:17.144517Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2955,6 +2979,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '331bd925c08539194eb06e197a1238e1'
                                                           '306c3b7876b6fe13548d03824cc4b68b',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='87f31102-ebbc-5875-abdf-4fa5cea48e8d',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2973,6 +3001,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': 'cb7beb6f4e8c684e41d25aa4dc1294dc'
                                                           'b1e070e87f9ed852463bf651d511a36b',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='733318e0-19c2-51e8-9ad6-d94ad562dd46',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2991,6 +3023,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '6372732e9fe9b8d58c8be8df88ea439d'
                                                           '5c68ee9bb02e3d472c94633fadf782a1',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='c59e2de5-01fe-56eb-be56-679ed14161bf',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3009,6 +3045,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': 'f1458913c223553d09966ff94f0ed3d8'
                                                           '7e7cdfce21904f32943d70f691d8f7a0',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='68bda896-3b3e-5f2a-9212-f4030a0f37e2',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3027,6 +3067,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '053074e25a96a463c081e38bcd02662b'
                                                           'a1536dd0cb71411bd111b8a2086a03e1',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='0c5ab869-da2d-5c11-b4ae-f978a052899f',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3045,6 +3089,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '1c57cba1ade259fc9ec56b914b507507'
                                                           'd75ccbf6ddeebf03ba00c922c30e0c6e',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='cade4593-bfba-56ed-80ab-080d0de7d5a4',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3063,6 +3111,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': 'af3ea779ca01a2ba65f9415720a44648'
                                                           'ef28a6ed73c9ec30e54ed4ba9895f590',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='5b465aad-0981-5152-b468-e615e20f5884',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/5b465aad-0981-5152-b468-e615e20f5884',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3081,6 +3133,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'isIntermediate': False,
                                                 'sha256': '4f515b8fbbec8bfbc72c8c0d656897ee'
                                                           '37bfa30bab6eb50fdc641924227be674',
+                                                'drs_uri': str(drs_uri.set(
+                                                    path='b905c8be-2e2d-592c-8481-3eb7a87c6484',
+                                                    args=dict(version='2021-02-10T16:56:40.419579Z')
+                                                )),
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3676,6 +3732,32 @@ class TestTDRIndexer(WebServiceTestCase, TDRPluginTestCase):
             source = TDRSourceRef(id=source['sourceId'],
                                   spec=TDRSourceSpec.parse(source['sourceSpec']))
             self.assertEqual(self.source, source)
+
+    def get_file(self, entry_id: str) -> JSON:
+        url = self.base_url.set(path=('index', 'files', entry_id))
+        response = requests.get(str(url))
+        response.raise_for_status()
+        return one(response.json()['files'])
+
+    @patch('azul.Config.tdr_service_url',
+           new=PropertyMock(return_value=TDRPluginTestCase.mock_service_url))
+    def test_file_urls(self):
+        with self.subTest(phantom=False):
+            file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')
+            expected_url = str(self.base_url.set(path='/repository/files/519ee493-0984-5b54-95ec-85452d506b00',
+                                                 args=dict(catalog=self.catalog,
+                                                           version='2019-09-24T09:35:06.958773Z')))
+            expected_drs_uri = str(furl(scheme='drs',
+                                        netloc=furl(self.mock_service_url).netloc,
+                                        path=f'v1_{self.source.id}_9d6f268f-f484-5381-9095-f0998fa0c961'))
+
+            self.assertEqual(expected_url, file['url'])
+            self.assertEqual(expected_drs_uri, file['drs_uri'])
+
+        with self.subTest(phantom=True):
+            file = self.get_file('c343a47d-683f-571d-99c4-1331841b4e63')
+            self.assertIsNone(file['url'])
+            self.assertIsNone(file['drs_uri'])
 
 
 if __name__ == '__main__':

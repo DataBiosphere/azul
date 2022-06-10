@@ -1,4 +1,4 @@
-FROM docker:18.03.1-ce
+FROM docker:19.03.15
 RUN apk -U add make bash
 
 # This is the image for the Gitlab runner for Azul builds. It needs to be

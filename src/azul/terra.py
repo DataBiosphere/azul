@@ -42,6 +42,7 @@ from more_itertools import (
 )
 import urllib3
 from urllib3.exceptions import (
+    MaxRetryError,
     TimeoutError,
 )
 from urllib3.response import (
@@ -328,7 +329,15 @@ class TerraClient(OAuth2Client):
         log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
         try:
-            retry = urllib3.Retry(total=None, connect=2, read=2, redirect=0, status=0, other=2)
+            # Limited retries on I/O errors such as refused or dropped
+            # connections. The latter are actually very likely if connections
+            # from the pool are reused after a long period of idleness.
+            retry = urllib3.Retry(total=None,
+                                  connect=2,
+                                  read=2,
+                                  redirect=0,
+                                  status=0,
+                                  other=2)
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
@@ -337,7 +346,7 @@ class TerraClient(OAuth2Client):
                                                  timeout=timeout,
                                                  retries=retry,
                                                  body=body)
-        except TimeoutError:
+        except (TimeoutError, MaxRetryError):
             raise TerraTimeoutException(url, timeout)
 
         assert isinstance(response, urllib3.HTTPResponse)
