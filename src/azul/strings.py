@@ -28,10 +28,16 @@ def departition(before, sep, after):
         return before + sep + after
 
 
-def pluralize(word: str, count: int) -> str:
+def pluralize(word: str, count: int = 0) -> str:
     """
     Appends 's' or 'es' to `word` following common patterns in English spelling
     if `count` indicates that the word should be pluralized.
+
+    >>> pluralize('foo')
+    'foos'
+
+    >>> pluralize('foo', 0)
+    'foos'
 
     >>> pluralize('foo', 1)
     'foo'
@@ -42,16 +48,26 @@ def pluralize(word: str, count: int) -> str:
     >>> pluralize('baz', 2)
     'bazes'
 
+    >>> pluralize('huh')
+    'huhs'
+
+    >>> pluralize('hush', 2)
+    'hushes'
+
+    >>> pluralize('worry', 2)
+    'worries'
+
     >>> pluralize('woman', 2)
     'womans'
     """
-    result = word
-    if count != 1:
-        if word[-1] in 'sxz' or word[-2:] in ['sh', 'ch']:
-            result += 'es'
-        else:
-            result += 's'
-    return result
+    if count == 1:
+        return word
+    elif word[-1] in 'sxz' or word[-2:] in ['sh', 'ch']:
+        return word + 'es'
+    elif word[-1] == 'y':
+        return word[:-1] + 'ies'
+    else:
+        return word + 's'
 
 
 def splitter(sep: Optional[str] = None, maxsplit: int = -1):
