@@ -260,11 +260,15 @@ class RequestParameterValidationTest(WebServiceTestCase):
                  message='Missing required query parameters `entity_type`, `integration_type`')
 
     def test_bad_catalog_param(self):
-        for catalog, error in [
-            ('foo', "Catalog name 'foo' is invalid."),
-            ('foo ', "('Catalog name is invalid', 'foo ')")
-        ]:
-            url = self.base_url.set(path='/index/files', args=dict(catalog=catalog))
-            response = requests.get(str(url))
-            self.assertEqual(400, response.status_code, response.json())
-            self.assertIn(error, response.json()['Message'])
+        for path in (*('/index/' + e for e in ('summary', 'files')),
+                     '/manifest/files',
+                     '/repository/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b'):
+            for catalog, status, error in [
+                ('foo', 404, "Catalog name 'foo' does not exist."),
+                ('foo ', 400, "('Catalog name is invalid', 'foo ')")
+            ]:
+                with self.subTest(path=path, catalog=catalog):
+                    url = self.base_url.set(path=path, args=dict(catalog=catalog))
+                    response = requests.get(str(url))
+                    self.assertEqual(status, response.status_code, response.json())
+                    self.assertIn(error, response.json()['Message'])
