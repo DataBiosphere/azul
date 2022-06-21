@@ -2834,7 +2834,8 @@ class TestProjectMatrices(WebServiceTestCase):
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/projects', args=params)
-        drs_uri = furl(scheme='drs', netloc=config.drs_domain)
+        drs_uri = furl(scheme='drs',
+                       netloc=config.drs_domain or config.api_lambda_domain('service'))
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
