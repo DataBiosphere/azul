@@ -26,6 +26,7 @@ import chalice
 from chalice import (
     BadRequestError as BRE,
     ChaliceViewError,
+    NotFoundError,
     Response,
     UnauthorizedError,
 )
@@ -708,8 +709,8 @@ def validate_catalog(catalog):
         raise BRE(e)
     else:
         if catalog not in config.catalogs:
-            raise BRE(f'Catalog name {catalog!r} is invalid. '
-                      f'Must be one of {set(config.catalogs)}.')
+            raise NotFoundError(f'Catalog name {catalog!r} does not exist. '
+                                f'Must be one of {set(config.catalogs)}.')
 
 
 def validate_size(size):
@@ -1396,7 +1397,7 @@ def get_summary():
     query_params = request.query_params or {}
     validate_params(query_params,
                     filters=str,
-                    catalog=config.Catalog.validate_name)
+                    catalog=validate_catalog)
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
     return app.repository_controller.summary(catalog=app.catalog,
@@ -1594,7 +1595,7 @@ def _file_manifest(fetch: bool):
     object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
                     format=ManifestFormat,
-                    catalog=config.Catalog.validate_name,
+                    catalog=validate_catalog,
                     filters=str,
                     token=str,
                     **object_key)
@@ -1798,7 +1799,7 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
             raise ValueError
 
     validate_params(query_params,
-                    catalog=str,
+                    catalog=validate_catalog,
                     version=str,
                     fileName=str,
                     wait=validate_wait,
@@ -2036,7 +2037,7 @@ def dos_get_data_object(file_uuid):
     query_params = request.query_params or {}
     validate_params(query_params,
                     version=str,
-                    catalog=config.Catalog.validate_name)
+                    catalog=validate_catalog)
     catalog = app.catalog
     file_version = query_params.get('version')
     return app.drs_controller.dos_get_object(catalog,
