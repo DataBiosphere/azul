@@ -220,9 +220,15 @@ class Queues:
         Wait for the work queues to reach a steady state.
         """
         sleep_time = 10
+        # Indexing can still succeed after a transient stall. A stall's
+        # transience cannot be proven until all lambdas and their respective
+        # retries repeatedly time out, but this would result in an unreasonably
+        # long wait time. Waiting for just one retry is sufficient to
+        # accommodate the most probable scenarios for transient stalls.
+        timeout = max(config.contribution_lambda_timeout(retry=True),
+                      config.aggregation_lambda_timeout(retry=True))
         queues = self.get_queues(config.work_queue_names)
-        # A generous 10 minutes to accommodate transient stalls
-        total_lengths = deque(maxlen=ceil(10 * 60 / sleep_time))
+        total_lengths = deque(maxlen=ceil(timeout / sleep_time))
         # Two minutes to safely accommodate SQS eventual consistency window of
         # one minute. For more info, read WARNING section on
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
