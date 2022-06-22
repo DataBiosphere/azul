@@ -180,6 +180,23 @@ class TestTDRPlugin(TDRPluginTestCase):
         with self.assertRaises(RequirementError):
             self._test_fetch_bundle(bundle, load_tables=False)
 
+    def test_disallow_manifest_column_joiner(self):
+        bundle = self._load_canned_bundle(self.bundle_fqid)
+        self._make_mock_tdr_tables(bundle.fqid)
+
+        dataset = self.source.spec.bq_name
+        project_table = self.tinyquery.tables_by_name[dataset + '.project']
+        project_content_column = project_table.columns['content'].values
+        project_content = json.loads(one(project_content_column))
+        project = first(project_content['contributors'])
+
+        assert project['institution'] == 'Lund University'
+        project['institution'] += ' || LabMED'
+        project_content_column[0] = json.dumps(project_content)
+
+        with self.assertRaisesRegex(RequirementError, r"'\|\|' is disallowed"):
+            self._test_fetch_bundle(bundle, load_tables=False)
+
     @patch('azul.plugins.repository.tdr.Plugin._find_upstream_bundles')
     def test_subgraph_stitching(self, _mock_find_upstream_bundles):
         downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
