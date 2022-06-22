@@ -1,6 +1,8 @@
 import attr
 
 from azul import (
+    CatalogName,
+    JSON,
     cache,
     config,
 )
@@ -8,6 +10,7 @@ from azul.openapi import (
     schema,
 )
 from azul.plugins import (
+    MetadataPlugin,
     Plugin,
     RepositoryPlugin,
 )
@@ -31,6 +34,11 @@ class CatalogController(Controller):
                     additional_properties=schema.object(
                         name=str,
                         sources=schema.optional(schema.array(str)),
+                        entity_types=schema.optional(schema.array(schema.object(
+                            entity_type=str,
+                            default_sort=str,
+                            default_order=str
+                        ))),
                     ),
                 )
             )
@@ -55,13 +63,24 @@ class CatalogController(Controller):
         }
 
     @cache
-    def _plugin_config(self, plugin_base_cls: str, catalog: str):
+    def _plugin_config(self, plugin_base_cls: str, catalog: CatalogName) -> JSON:
         plugin_base_cls = Plugin.type_for_name(plugin_base_cls)
+        plugin_cls = plugin_base_cls.load(catalog)
         if issubclass(plugin_base_cls, RepositoryPlugin):
-            plugin_cls = plugin_base_cls.load(catalog)
             plugin = plugin_cls.create(catalog)
             return {
                 'sources': list(map(str, plugin.sources))
             }
+        elif issubclass(plugin_base_cls, MetadataPlugin):
+            plugin = plugin_cls.create()
+            return {
+                'entity_types': {
+                    entity_type: {
+                        'default_sort': sorting.sort,
+                        'default_order': sorting.order
+                    }
+                    for entity_type, sorting in plugin.entity_sorting.items()
+                }
+            }
         else:
-            return {}
+            assert False, plugin_base_cls

@@ -117,6 +117,12 @@ class DocumentSlice(TypedDict, total=False):
     excludes: FieldGlobs
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class Sorting:
+    sort: str
+    order: str
+
+
 T = TypeVar('T', bound='Plugin')
 
 
@@ -189,6 +195,11 @@ class MetadataPlugin(Plugin):
     @classmethod
     def create(cls) -> 'MetadataPlugin':
         return cls()
+
+    @property
+    @abstractmethod
+    def entity_sorting(self) -> Mapping[str, Sorting]:
+        raise NotImplementedError
 
     @abstractmethod
     def transformer_types(self) -> Iterable[Type[Transformer]]:
