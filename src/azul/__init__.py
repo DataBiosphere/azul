@@ -158,8 +158,6 @@ class Config:
     def s3_bucket(self) -> str:
         return self.environ['AZUL_S3_BUCKET']
 
-    manifest_column_joiner = '||'
-
     @property
     def manifest_expiration(self) -> int:
         """
@@ -1396,10 +1394,3 @@ def str_to_bool(string: str):
         return False
     else:
         raise ValueError(string)
-
-
-def disallow_joiner(content: str) -> str:
-    reject(config.manifest_column_joiner in content,
-           f'{config.manifest_column_joiner!r} is disallowed',
-           content)
-    return content
