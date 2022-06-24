@@ -154,7 +154,7 @@ spec = {
             parameter. Metadata from different catalogs is completely
             independent: a response obtained by querying one catalog does not
             necessarily correlate to a response obtained by querying another
-            one. Two catalogs can  contain metadata from the same source or
+            one. Two catalogs can contain metadata from the same source or
             different sources. It is only guaranteed that the body of a
             response by any given endpoint adheres to one schema,
             independently of what catalog was specified in the request.
@@ -1053,7 +1053,7 @@ def get_integrations():
                     whether the catalog is for internal use only as well as the
                     names and types of plugins currently active for the catalog.
                     For some plugins, the response includes additional
-                    configuration properties, such as the source used by the
+                    configuration properties, such as the sources used by the
                     repository plugin to populate the catalog.
                 '''),
                 **responses.json_content(
