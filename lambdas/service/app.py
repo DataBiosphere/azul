@@ -132,7 +132,7 @@ spec = {
             cases, the set of metadata properties that it exposes for sorting,
             filtering, and aggregation is limited. Azul provides a uniform view
             of the metadata over a range of diverse schemas, effectively
-            shielding clients from changes in the schema as they occur over
+            shielding clients from changes in the schemas as they occur over
             time. It does so, however, at the expense of detail in the set of
             metadata properties it exposes and in the accuracy with which it
             aggregates them.
@@ -154,10 +154,10 @@ spec = {
             parameter. Metadata from different catalogs is completely
             independent: a response obtained by querying one catalog does not
             necessarily correlate to a response obtained by querying another
-            one. Two catalogs can  contain metadata from the same source or
+            one. Two catalogs can contain metadata from the same sources or
             different sources. It is only guaranteed that the body of a
             response by any given endpoint adheres to one schema,
-            independently of what catalog was specified in the request.
+            independently of which catalog was specified in the request.
 
             Azul provides the ability to download data and metadata via the
             [Manifests](#operations-tag-Manifests) endpoints. The
@@ -294,7 +294,7 @@ class ServiceApp(AzulChaliceApp):
     @property
     def health_controller(self) -> HealthController:
         # Don't cache. Health controller is meant to be short-lived since it
-        # applies it's own caching. If we cached the controller, we'd never
+        # applies its own caching. If we cached the controller, we'd never
         # observe any changes in health.
         return HealthController(lambda_name='service')
 
@@ -1042,7 +1042,7 @@ def get_integrations():
     methods=['GET'],
     cors=True,
     method_spec={
-        'summary': 'List all available catalogs',
+        'summary': 'List all available catalogs.',
         'tags': ['Index'],
         'responses': {
             '200': {
@@ -1053,7 +1053,7 @@ def get_integrations():
                     whether the catalog is for internal use only as well as the
                     names and types of plugins currently active for the catalog.
                     For some plugins, the response includes additional
-                    configuration properties, such as the source used by the
+                    configuration properties, such as the sources used by the
                     repository plugin to populate the catalog.
                 '''),
                 **responses.json_content(
