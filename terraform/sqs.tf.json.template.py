@@ -16,7 +16,7 @@ emit_tf(
                         config.unqual_notifications_queue_name(retry=retry): {
                             "name": config.notifications_queue_name(retry=retry),
                             "visibility_timeout_seconds": config.contribution_lambda_timeout(retry=retry) + 10,
-                            "message_retention_seconds": 24 * 60 * 60,
+                            "message_retention_seconds": 7 * 24 * 60 * 60,
                             "redrive_policy": json.dumps({
                                 "maxReceiveCount": 9 if retry else 1,
                                 "deadLetterTargetArn": "${aws_sqs_queue.%s.arn}"
@@ -32,7 +32,7 @@ emit_tf(
                             "fifo_queue": True,
                             "delay_seconds": config.es_refresh_interval + 9,
                             "visibility_timeout_seconds": config.aggregation_lambda_timeout(retry=retry) + 10,
-                            "message_retention_seconds": 24 * 60 * 60,
+                            "message_retention_seconds": 7 * 24 * 60 * 60,
                             "redrive_policy": json.dumps({
                                 "maxReceiveCount": 9 if retry else 1,
                                 "deadLetterTargetArn": "${aws_sqs_queue.%s.arn}"
