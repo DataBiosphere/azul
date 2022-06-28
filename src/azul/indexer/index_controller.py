@@ -256,6 +256,7 @@ class IndexController:
                     deferrals.append(tallies[0].consolidate(tallies[1:]))
                 else:
                     assert False
+
             if referrals:
                 for i, tally in enumerate(referrals):
                     if tally.attempts > self.num_batched_aggregation_attempts:
@@ -265,13 +266,23 @@ class IndexController:
                         deferrals.extend(referrals)
                         referrals = [tally]
                         break
+
+                log.info('Referring %i tallies', len(referrals))
                 tallies = {}
                 for tally in referrals:
                     log.info('Aggregating %i contribution(s) to entity %s',
                              tally.num_contributions, tally.entity)
                     tallies[tally.entity] = tally.num_contributions
+
                 self.index_service.aggregate(tallies)
+
+                for tally in referrals:
+                    log.info('Successfully aggregated %i contribution(s) to entity %s',
+                             tally.num_contributions, tally.entity)
+                log.info('Successfully referred %i tallies', len(referrals))
+
             if deferrals:
+                log.info('Deferring %i tallies', len(deferrals))
                 for tally in deferrals:
                     log.info('Deferring aggregation of %i contribution(s) to entity %s',
                              tally.num_contributions, tally.entity)
@@ -280,7 +291,10 @@ class IndexController:
                 # tallies will be inflated because some or all deferrals have
                 # been sent and the original tallies will be returned.
                 self._tallies_queue(retry=retry).send_messages(Entries=entries)
+
         except BaseException:
+            # Note that another problematic outcome is for the Lambda invocation
+            # to time out, in which case this log message will not be written.
             log.warning('Failed to aggregate tallies: %r', tallies_by_entity.values(), exc_info=True)
             raise
 
