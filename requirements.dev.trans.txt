@@ -1,5 +1,5 @@
 argh==0.26.2
-arrow==0.12.1
+arrow==0.15.1
 blessed==1.19.1
 brotli==1.0.9
 click==8.1.3
