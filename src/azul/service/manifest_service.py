@@ -810,8 +810,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
 
-    bare_column_joiner = config.manifest_column_joiner
-    column_joiner = f' {bare_column_joiner} '
+    column_joiner = ' || '
 
     @cached_property
     def _field_types(self) -> FieldTypes:
@@ -831,6 +830,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         for field in field_path:
             field_types = field_types[field]
 
+        stripped_joiner = self.column_joiner.strip()
+
         def convert(field_name, field_value):
             try:
                 field_type = field_types[field_name]
@@ -848,7 +849,10 @@ class ManifestGenerator(metaclass=ABCMeta):
             return field_type.to_tsv(field_value)
 
         def validate(field_value: str) -> str:
-            assert self.bare_column_joiner not in field_value
+            # FIXME: Re-enable, once indexer rejects joiners in metadata
+            #        https://github.com/DataBiosphere/azul/issues/3911
+            if False:
+                assert stripped_joiner not in field_value
             return field_value
 
         for field_name, column_name in column_mapping.items():
