@@ -48,9 +48,9 @@ Connected issue: #0000
 
 - [ ] Made announcement requested by author                         <sub>or PR description does not contain an announcement</sub>
 - [ ] Shortened the PR chain                                        <sub>or this PR is not the base of another PR</sub>
-- [ ] Pushed merge commit to GitLab                                 <sub>or merge commit can be pushed later, with another PR</sub>
-- [ ] Deleted PR branch from GitHub and GitLab
-- [ ] Build passes on GitLab
+- [ ] Pushed merge commit to GitLab `prod`
+- [ ] Deleted PR branch from GitHub and GitLab `prod`
+- [ ] Build passes on GitLab `prod`
 - [ ] Moved connected issue to *Merged prod* column on ZenHub
 - [ ] Moved promoted issues from *Merged* to *Merged prod* column  <sub>or this PR does not represent a promotion</sub>
 - [ ] Moved promoted issues from *dev* to *prod* column            <sub>or this PR does not represent a promotion</sub>
