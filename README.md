@@ -1644,8 +1644,8 @@ FIXME: Automate the revocation of VPN client certificates
        https://github.com/DataBiosphere/azul/issues/3929
 -->
 
-When a developer is leaves the team, either the entire CA muste be
-reinitialized and all remaining client certificates reissued or the retring
+When a developer with VPN access departs the team, either the entire CA must be
+reinitialized and all remaining client certificates reissued or the departing
 developer's certificates must be revoked by adding it to the list of revoked
 client certificates on the AWS Client VPN instance. The VPN's server's
 certificate and private key is stored in ACM so that AWS Client VPN can

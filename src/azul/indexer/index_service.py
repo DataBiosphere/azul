@@ -128,25 +128,30 @@ class IndexService(DocumentService):
             num_nodes = aws.es_instance_count
             num_workers = config.contribution_concurrency(retry=False)
 
-            # Put a primary aggregate shard on every node. Linearly scale the number
-            # of contribution shards with the number of indexer workers i.e.,
-            # writers. There was no notable difference in speed between factors 1
-            # and 1/4 but the memory pressure was unsustainably high with factor 1.
+            # Put the sole primary aggregate shard on one node and a replica
+            # on all others. The reason for just one primary shard is that
+            # aggregate indices are small and don't need to be sharded. Each
+            # shard incurs a significant overhead in ES so we want to
+            # minimize their number in the absence of overriding concerns
+            # like optimization for write concurrency. The reason for putting
+            # a replica on all other nodes is that we do want a full copy of
+            # each aggregate index on every node so that every node can
+            # answer client requests without coordinating with other nodes.
+            #
+            # Linearly scale the number of contribution shards with the number
+            # of contribution writers. There was no notable difference in
+            # speed between factors 1 and 1/4 but the memory pressure was
+            # unsustainably high with factor 1. In later experiments a factor
+            # of 1/8 was determined to be preferential, but I don't recall
+            # the details. We neglected to document our process at the time.
+            #
+            # There is no need to replicate the contribution indices because
+            # their durability does not matter to us as much. If a node goes
+            # down, we'll just reindex. Since service requests only hit the
+            # aggregate indices, we can loose all but one node before
+            # customers are affected.
             #
             num_shards = 1 if aggregate else max(num_nodes, num_workers // 8)
-
-            # Replicate aggregate shards over the entire cluster, every node should
-            # store the complete aggregate index to avoid intra-cluster talk when
-            # responding to client queries, hopefully accelerating them. Aggregate
-            # indices are small so distributing them fully makes sense.
-            #
-            # No replication for contribution indices because durability does not
-            # matter to us as much. If a node goes down, we'll just have to reindex.
-            # I have yet to perform a successful replacement of a cluster node.
-            # With bigger cluster sizes this may become an issue again but I simply
-            # don't sufficiently understand that scenario to be able to prepare for
-            # it with confidence.
-            #
             num_replicas = (num_nodes - 1) if aggregate else 0
         return {
             'index': {
