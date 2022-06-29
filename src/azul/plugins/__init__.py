@@ -25,9 +25,6 @@ from typing import (
 )
 
 import attr
-from furl import (
-    furl,
-)
 from more_itertools import (
     one,
 )
@@ -526,7 +523,7 @@ class RepositoryFileDownload(ABC):
 
     @property
     @abstractmethod
-    def location(self) -> Optional[furl]:
+    def location(self) -> Optional[str]:
         """
         The final URL from which the file contents can be downloaded.
         """

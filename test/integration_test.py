@@ -585,7 +585,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return self._get_url(url).data
 
     def _get_url(self,
-                 url: furl,
+                 url: Union[furl, str],
                  allow_redirects: bool = True,
                  stream: bool = False
                  ) -> urllib3.HTTPResponse:
@@ -598,14 +598,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return response
 
     def _get_url_unchecked(self,
-                           url: furl,
+                           url: Union[furl, str],
                            *,
                            retries: Optional[Union[urllib3.util.retry.Retry, bool, int]] = None,
                            redirect: bool = True,
                            preload_content: bool = True) -> urllib3.HTTPResponse:
-        log.info('GET %s ...', str(url))
+        url = str(url)
+        log.info('GET %s ...', url)
         response = self._http.request('GET',
-                                      str(url),
+                                      url,
                                       retries=retries,
                                       redirect=redirect,
                                       preload_content=preload_content)
@@ -669,13 +670,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # https://github.com/ga4gh/data-repository-service-schemas/issues/360
         # https://github.com/ga4gh/data-repository-service-schemas/issues/361
         self.assertIsNone(access.headers)
-        self.assertEqual('https', access.url.scheme)
+        self.assertEqual('https', furl(access.url).scheme)
         # Try HEAD first because it's more efficient, fall back to GET if the
         # DRS implementations prohibits it, like Azul's DRS proxy of DSS.
         for method in ('HEAD', 'GET'):
             log.info('%s %s', method, access.url)
             # The signed access URL shouldn't require any authentication
-            response = self._http.request(method, str(access.url))
+            response = self._http.request(method, access.url)
             if response.status != 403:
                 break
         self.assertEqual(200, response.status, response.data)
@@ -753,7 +754,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertEqual(301, response['Status'])
                     response = self._get_url_json(furl(response['Location']))
 
-                response = self._get_url(furl(response['Location']), stream=True)
+                response = self._get_url(response['Location'], stream=True)
                 self._validate_file_response(response, self._file_ext(file))
 
     def _file_ext(self, file: JSON) -> str:
@@ -823,13 +824,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._assertResponseStatus(response)
             self._validate_file_content(response, file_ext)
 
-    def _get_gs_url_content(self, url: furl, size: Optional[int] = None) -> BytesIO:
+    def _get_gs_url_content(self,
+                            url: Union[furl, str],
+                            size: Optional[int] = None
+                            ) -> BytesIO:
+        url = str(url)
         self.assertTrue(url.startswith('gs://'))
         path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
         credentials = service_account.Credentials.from_service_account_file(path)
         storage_client = storage.Client(credentials=credentials)
         content = BytesIO()
-        storage_client.download_blob_to_file(str(url), content, start=0, end=size)
+        storage_client.download_blob_to_file(url, content, start=0, end=size)
         return content
 
     def _validate_fastq_content(self, content: ReadableFileObject):
