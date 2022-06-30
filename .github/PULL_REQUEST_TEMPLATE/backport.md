@@ -49,10 +49,13 @@ checklists.
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Pushed merge commit to GitLab                                 <sub>or merge commit can be pushed later, with another PR</sub>
+- [ ] Pushed merge commit to GitLab                                 <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted PR branch from GitHub and GitLab
-- [ ] Build passes on GitLab
+- [ ] Build passes on GitLab<sup>1</sup>
 
+<sup>1</sup> When pushing the merge commit is skipped due to the PR being
+labelled `no sandbox`, the next build triggered by a PR whose merge commit *is* 
+pushed determines this checklist item.
 
 ### Operator
 

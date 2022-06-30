@@ -60,7 +60,7 @@ Connected issue: #0000
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Pushed merge commit to GitLab                                 <sub>or merge commit can be pushed later, with another PR</sub>
+- [ ] Pushed merge commit to GitLab `prod`
 - [ ] Deleted PR branch from GitHub and GitLab
 - [ ] Build passes on GitLab
 
