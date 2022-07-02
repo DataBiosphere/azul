@@ -19,6 +19,37 @@ sandbox deployment's ``environment.py`` as a model when upgrading personal
 deployments.
 
 
+#4197 Manage CloudTrail trail in 'shared' TF component
+======================================================
+
+This change adds a ``shared`` terraform component to allow Terraform to manage
+the existing CloudTrail resources on `develop` and `prod`. To import these
+resources into Terraform, the operator must run the following steps after the
+change has been merged into the respective branches.
+
+For `develop` ::
+
+    git checkout develop
+    _select dev.shared
+    cd $project_root/terraform/shared
+    make config
+    terraform import aws_s3_bucket.cloudtrail_shared "edu-ucsc-gi-platform-hca-dev-cloudtrail"
+    terraform import aws_s3_bucket_policy.cloudtrail_shared "edu-ucsc-gi-platform-hca-dev-cloudtrail"
+    aws cloudtrail delete-trail --name Default
+    make apply
+
+For `prod` ::
+
+    git checkout prod
+    _select prod.shared
+    cd $project_root/terraform/shared
+    make config
+    terraform import aws_s3_bucket.cloudtrail_shared "edu-ucsc-gi-platform-hca-prod-cloudtrail"
+    terraform import aws_s3_bucket_policy.cloudtrail_shared "edu-ucsc-gi-platform-hca-prod-cloudtrail"
+    aws cloudtrail delete-trail --name platform-hca-cloudtrail
+    make apply
+
+
 #4001 Put API Gateway behind GitLab VPC
 =======================================
 
