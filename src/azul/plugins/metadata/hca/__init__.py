@@ -3,6 +3,7 @@ from collections.abc import (
     Sequence,
 )
 from typing import (
+    Mapping,
     Optional,
     Type,
 )
@@ -21,6 +22,7 @@ from azul.plugins import (
     DocumentSlice,
     ManifestConfig,
     MetadataPlugin,
+    Sorting,
 )
 from azul.plugins.metadata.hca.indexer.aggregate import (
     HCAAggregate,
@@ -50,6 +52,15 @@ from azul.types import (
 
 
 class Plugin(MetadataPlugin):
+
+    @property
+    def entity_sorting(self) -> Mapping[str, Sorting]:
+        return dict(
+            bundles=Sorting(sort='bundleVersion', order='desc'),
+            files=Sorting(sort='fileName', order='asc'),
+            projects=Sorting(sort='projectTitle', order='asc'),
+            samples=Sorting(sort='sampleId', order='asc')
+        )
 
     def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
         return (
