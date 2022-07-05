@@ -439,6 +439,19 @@ dcp17_sources = dict(dcp16_sources, **mkdict([
     mksrc('datarepo-a09e8946', 'hca_prod_fccd3f50cde247bf8972a293b5928aea__20220606_dcp2_20220607_dcp17', 108),
 ]))
 
+dcp18_sources = dict(dcp17_sources, **mkdict([
+    mksrc('datarepo-3fa8ab06', 'hca_prod_1538d572bcb7426b8d2c84f3a7f87bb0__20220630_dcp2_20220630_dcp18', 11),
+    mksrc('datarepo-7a96c98c', 'hca_prod_8a666b76daaf4b1f9414e4807a1d1e8b__20220630_dcp2_20220630_dcp18', 42),
+    mksrc('datarepo-65814a19', 'hca_prod_9833669bd6944b93a3d06b6f9dbcfc10__20220630_dcp2_20220630_dcp18', 54),
+    mksrc('datarepo-935adc8a', 'hca_prod_9fc0064b84ce40a5a768e6eb3d364ee0__20220630_dcp2_20220630_dcp18', 270),
+    mksrc('datarepo-38233156', 'hca_prod_a27dd61925ad46a0ae0c5c4940a1139b__20220606_dcp2_20220630_dcp18', 4),
+    mksrc('datarepo-57050405', 'hca_prod_a62dae2ecd694d5cb5f84f7e8abdbafa__20220606_dcp2_20220630_dcp18', 68),
+    mksrc('datarepo-99178745', 'hca_prod_b4a7d12f6c2f40a39e359756997857e3__20220118_dcp2_20220630_dcp18', 24),
+    mksrc('datarepo-38191a90', 'hca_prod_b51f49b40d2e4cbdbbd504cd171fc2fa__20220118_dcp2_20220630_dcp18', 193),
+    mksrc('datarepo-0e7c311b', 'hca_prod_c4e1136978d44d29ba8eb67907c4c65c__20220630_dcp2_20220630_dcp18', 80),
+    mksrc('datarepo-21969ae7', 'hca_prod_e9f36305d85744a393f0df4e6007dc97__20220519_dcp2_20220630_dcp18', 479),
+]))
+
 lungmap_sources = mkdict([
     mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
     mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
@@ -494,6 +507,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp17', dcp17_sources),
+                ('hca', 'dcp18', dcp18_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources)
             ] for suffix, internal in [
