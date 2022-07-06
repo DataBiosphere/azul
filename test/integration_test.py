@@ -1221,6 +1221,9 @@ class PortalExpirationIntegrationTest(PortalTestCase):
         self.assertIn(self.portal_service._expiration_tag, tags)
 
 
+# FIXME: Re-enable when SlowDown error can be avoided
+#        https://github.com/DataBiosphere/azul/issues/4285
+@unittest.skip('Test disabled. FIXME #4285')
 @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
 class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 
