@@ -457,8 +457,7 @@ class TestResponse(WebServiceTestCase):
                 response.raise_for_status()
                 response_json = response.json()
                 # Verify default sort field is set correctly
-                self.assertEqual(response_json['pagination']['sort'],
-                                 self.app_module.app.metadata_plugin.entity_sorting[entity_type].sort)
+                self.assertEqual(response_json['pagination']["sort"], self.app_module.sort_defaults[entity_type][0])
                 # Verify all fields in the response that are lists of primitives are sorted
                 for hit in response_json['hits']:
                     self._verify_sorted_lists(hit)
@@ -3450,7 +3449,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                                         args=dict(order='asc'))
                 response = requests.get(str(url))
                 response.raise_for_status()
-                sort_field = self.app_module.app.metadata_plugin.entity_sorting[entity_type].sort
+                sort_field, _ = self.app_module.sort_defaults[entity_type]
                 expected_response = {
                     'hits': [],
                     'pagination': {
@@ -3679,24 +3678,6 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                     'plugins': {
                         'metadata': {
                             'name': 'hca',
-                            'entity_types': {
-                                'bundles': {
-                                    'default_sort': 'bundleVersion',
-                                    'default_order': 'desc'
-                                },
-                                'files': {
-                                    'default_sort': 'fileName',
-                                    'default_order': 'asc'
-                                },
-                                'projects': {
-                                    'default_sort': 'projectTitle',
-                                    'default_order': 'asc'
-                                },
-                                'samples': {
-                                    'default_sort': 'sampleId',
-                                    'default_order': 'asc'
-                                }
-                            }
                         },
                         'repository': {
                             'name': 'dss',

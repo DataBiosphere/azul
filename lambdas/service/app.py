@@ -138,8 +138,15 @@ spec = {
             aggregates them.
 
             Azul denormalizes and aggregates metadata into several different
-            indices for selected entity types. Metadata entities can be queried
-            using the [`index`](#operations-tag-Index) endpoints.
+            indices for selected entity types:
+
+             - [projects](#operations-Index-get_index_projects)
+
+             - [samples](#operations-Index-get_index_samples)
+
+             - [files](#operations-Index-get_index_files)
+
+             - [bundles](#operations-Index-get_index_bundles)
 
             This set of indexes forms a catalog. There is a default catalog
             called `{config.default_catalog}` which will be used unless a
@@ -147,7 +154,7 @@ spec = {
             parameter. Metadata from different catalogs is completely
             independent: a response obtained by querying one catalog does not
             necessarily correlate to a response obtained by querying another
-            one. Two catalogs can contain metadata from the same source or
+            one. Two catalogs can  contain metadata from the same source or
             different sources. It is only guaranteed that the body of a
             response by any given endpoint adheres to one schema,
             independently of what catalog was specified in the request.
@@ -158,7 +165,7 @@ spec = {
             download data files. Other formats provide various views of the
             metadata. Manifests can be generated for a selection of files using
             filters. These filters are interchangeable with the filters used by
-            the index endpoints.
+            the [Index](#operations-tag-Index) endpoints.
 
             Azul also provides a
             [summary](#operations-Index-get_index_summary) view of
@@ -363,7 +370,7 @@ class ServiceApp(AzulChaliceApp):
             return furl(url=self.self_url, args=params)
 
     def get_pagination(self, entity_type: str) -> Pagination:
-        default_sorting = self.metadata_plugin.entity_sorting[entity_type]
+        default_sort, default_order = sort_defaults[entity_type]
         params = self.current_request.query_params or {}
         sb, sa = params.get('search_before'), params.get('search_after')
         if sb is None:
@@ -375,9 +382,9 @@ class ServiceApp(AzulChaliceApp):
             else:
                 raise ChaliceViewError('Only one of search_after or search_before may be set')
         try:
-            return self.Pagination(order=params.get('order', default_sorting.order),
+            return self.Pagination(order=params.get('order', default_order),
                                    size=int(params.get('size', '10')),
-                                   sort=params.get('sort', default_sorting.sort),
+                                   sort=params.get('sort', default_sort),
                                    search_before=sb,
                                    search_after=sa,
                                    self_url=self.self_url)
@@ -430,6 +437,13 @@ class ServiceApp(AzulChaliceApp):
 
 app = ServiceApp()
 configure_app_logging(app, log)
+
+sort_defaults = {
+    'files': ('fileName', 'asc'),
+    'samples': ('sampleId', 'asc'),
+    'projects': ('projectTitle', 'asc'),
+    'bundles': ('bundleVersion', 'desc')
+}
 
 
 @app.route('/', cors=True)
@@ -682,13 +696,6 @@ def validate_repository_search(params, **validators):
         'sort': validate_field,
         **validators
     })
-
-
-def validate_entity_type(entity_type: str):
-    entity_types = app.metadata_plugin.entity_sorting
-    if entity_type not in entity_types:
-        raise BRE(f'Entity type {entity_type!r} is invalid for catalog '
-                  f'{app.catalog!r}. Must be one of {set(entity_types)}.')
 
 
 min_page_size = 1
@@ -1046,9 +1053,8 @@ def get_integrations():
                     whether the catalog is for internal use only as well as the
                     names and types of plugins currently active for the catalog.
                     For some plugins, the response includes additional
-                    configuration properties, such as the sources used by the
-                    repository plugin to populate the catalog or the set of
-                    available [indices](#operations-Index-get_index__entity_type_).
+                    configuration properties, such as the source used by the
+                    repository plugin to populate the catalog.
                 '''),
                 **responses.json_content(
                     # The custom return type annotation is an experiment. Please
@@ -1061,6 +1067,20 @@ def get_integrations():
 )
 def list_catalogs():
     return app.catalog_controller.list_catalogs()
+
+
+def repository_search(entity_type: str,
+                      item_id: Optional[str],
+                      ) -> JSON:
+    request = app.current_request
+    query_params = request.query_params or {}
+    validate_repository_search(query_params)
+    return app.repository_controller.search(catalog=app.catalog,
+                                            entity_type=entity_type,
+                                            item_id=item_id,
+                                            filters=query_params.get('filters'),
+                                            pagination=app.get_pagination(entity_type),
+                                            authentication=request.authentication)
 
 
 generic_object_spec = schema.object(additional_properties=True)
@@ -1151,32 +1171,25 @@ catalog_param_spec = params.query(
     description='The name of the catalog to query.')
 
 
-def repository_search_params_spec():
-    catalog_spec_link = '#operations-Index-get_index_catalogs'
+def repository_search_params_spec(index_name):
+    sort_default, order_default = sort_defaults[index_name]
     return [
         catalog_param_spec,
         filters_param_spec,
-        params.path(
-            'entity_type',
-            str,
-            description=f'Which type of entities to search for. The set of '
-                        f'available entity types depends on the current '
-                        f'[catalog]({catalog_spec_link}).'),
         params.query(
             'size',
             schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, max_page_size))),
             description='The number of hits included per page.'),
         params.query(
             'sort',
-            schema.optional(schema.enum(*app.fields)),
-            description='The field to sort the hits by. '
-                        'The default value depends on the entity type.'),
+            schema.optional(schema.with_default(sort_default, type_=schema.enum(*app.fields))),
+            description='The field to sort the hits by.'),
         params.query(
             'order',
-            schema.optional(schema.enum('asc', 'desc')),
+            schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),
             description=format_description('''
                 The ordering of the sorted hits, either ascending
-                or descending. The default value depends on the entity type.
+                or descending.
             ''')
         ),
         *[
@@ -1198,16 +1211,16 @@ def repository_search_params_spec():
     ]
 
 
-def repository_search_spec():
-    id_spec_link = '#operations-Index-get_index__entity_type___entity_id_'
+def repository_search_spec(index_name):
+    id_spec_link = f'#operations-Index-get_index_{index_name}__{index_name.rstrip("s")}_id_'
     return {
-        'summary': 'Search an index for entities of interest.',
+        'summary': f'Search the {index_name} index for entities of interest.',
         'tags': ['Index'],
-        'parameters': repository_search_params_spec(),
+        'parameters': repository_search_params_spec(index_name),
         'responses': {
             '200': {
                 'description': format_description(f'''
-                    Paginated list of entities that meet the search
+                    Paginated list of {index_name} that meet the search
                     criteria ("hits"). The structure of these hits is documented
                     under the [corresponding endpoint for a specific entity]({id_spec_link}).
 
@@ -1231,28 +1244,28 @@ def repository_search_spec():
     }
 
 
-def repository_id_spec():
-    search_spec_link = '#operations-Index-get_index__entity_type_'
+def repository_id_spec(index_name_singular: str):
+    search_spec_link = f'#operations-Index-get_index_{index_name_singular}s'
     return {
-        'summary': 'Detailed information on a particular entity.',
+        'summary': f'Detailed information on a particular {index_name_singular} entity.',
         'tags': ['Index'],
         'parameters': [
             catalog_param_spec,
-            params.path('entity_type', str, description='The type of the desired entity'),
-            params.path('entity_id', str, description='The UUID of the desired entity')
+            params.path(f'{index_name_singular}_id', str, description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
             '200': {
                 'description': format_description(f'''
-                    This response describes a single entity. To
+                    This response describes a single {index_name_singular} entity. To
                     search the index for multiple entities, see the
                     [corresponding search endpoint]({search_spec_link}).
 
                     The properties that are common to all entity types are
                     listed in the schema below; however, additional properties
                     may be present for certain entity types. With the exception
-                    of the entity's unique identifier, all properties are
-                    arrays, even in cases where only one value is present.
+                    of the {index_name_singular}'s unique identifier, all
+                    properties are arrays, even in cases where only one value is
+                    present.
 
                     The structures of the objects within these arrays are not
                     perfectly consistent, since they may represent either
@@ -1271,27 +1284,28 @@ def repository_id_spec():
     }
 
 
-def repository_head_spec(for_summary: bool = False):
-    search_spec_link = f'#operations-Index-get_index_{"summary" if for_summary else "_entity_type_"}'
+def repository_head_spec(index_name):
+    search_spec_link = f'#operations-Index-get_index_{index_name}'
     return {
         'summary': 'Perform a query without returning its result.',
         'tags': ['Index'],
         'responses': {
             '200': {
                 'description': format_description(f'''
-                    The HEAD method can be used to test whether an index is
-                    operational, or to check the validity of query parameters
-                    for the [GET method]({search_spec_link}).
+                    The HEAD method can be used to test whether the
+                    {index_name} index is operational, or to check the validity
+                    of query parameters for the
+                    [GET method]({search_spec_link}).
                 ''')
             }
         }
     }
 
 
-def repository_head_search_spec():
+def repository_head_search_spec(index_name):
     return {
-        **repository_head_spec(),
-        'parameters': repository_search_params_spec()
+        **repository_head_spec(index_name),
+        'parameters': repository_search_params_spec(index_name)
     }
 
 
@@ -1301,20 +1315,32 @@ repository_summary_spec = {
 }
 
 
-@app.route('/index/{entity_type}', methods=['GET'], method_spec=repository_search_spec(), cors=True)
-@app.route('/index/{entity_type}', methods=['HEAD'], method_spec=repository_head_search_spec(), cors=True)
-@app.route('/index/{entity_type}/{entity_id}', methods=['GET'], method_spec=repository_id_spec(), cors=True)
-def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON:
-    request = app.current_request
-    query_params = request.query_params or {}
-    validate_repository_search(query_params)
-    validate_entity_type(entity_type)
-    return app.repository_controller.search(catalog=app.catalog,
-                                            entity_type=entity_type,
-                                            item_id=entity_id,
-                                            filters=query_params.get('filters'),
-                                            pagination=app.get_pagination(entity_type),
-                                            authentication=request.authentication)
+@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True)
+@app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
+@app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
+def get_data(file_id: Optional[str] = None) -> JSON:
+    return repository_search('files', file_id)
+
+
+@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
+@app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
+@app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
+def get_sample_data(sample_id: Optional[str] = None) -> JSON:
+    return repository_search('samples', sample_id)
+
+
+@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
+@app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
+@app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
+def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
+    return repository_search('bundles', bundle_id)
+
+
+@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
+@app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
+@app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
+def get_project_data(project_id: Optional[str] = None) -> JSON:
+    return repository_search('projects', project_id)
 
 
 @app.route('/index/summary', methods=['GET'], method_spec={
@@ -1358,7 +1384,7 @@ def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON
     **repository_summary_spec
 }, cors=True)
 @app.route('/index/summary', methods=['HEAD'], method_spec={
-    **repository_head_spec(for_summary=True),
+    **repository_head_spec('summary'),
     **repository_summary_spec
 })
 def get_summary():
