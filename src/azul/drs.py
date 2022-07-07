@@ -70,7 +70,7 @@ class AccessMethod(namedtuple('AccessMethod', 'scheme replica'), Enum):
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Access:
     method: AccessMethod
-    url: furl
+    url: str
     headers: Optional[Mapping[str, str]] = None
 
 
@@ -138,8 +138,10 @@ class DRSClient:
                     return self._get_object_access(drs_uri, access_id, access_method)
                 elif access_url is not None:
                     require(furl(access_url['url']).scheme == access_method.scheme)
+                    # We can't convert the signed URL into a furl object since
+                    # the path can contain `%3A` which furl converts to `:`
                     return Access(method=access_method,
-                                  url=furl(access_url['url']))
+                                  url=access_url['url'])
                 else:
                     raise RequirementError("'access_url' and 'access_id' are both missing")
             elif response.status == 202:
@@ -160,7 +162,7 @@ class DRSClient:
                 response = json.loads(response.data)
                 require(furl(response['url']).scheme == access_method.scheme)
                 return Access(method=access_method,
-                              url=furl(response['url']),
+                              url=response['url'],
                               headers=response.get('headers'))
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])

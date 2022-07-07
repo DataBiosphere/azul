@@ -583,7 +583,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
 
 class TDRFileDownload(RepositoryFileDownload):
-    _location: Optional[furl] = None
+    _location: Optional[str] = None
 
     needs_drs_path = True
 
@@ -602,12 +602,12 @@ class TDRFileDownload(RepositoryFileDownload):
             require(access.method is AccessMethod.https, access.method)
             require(access.headers is None, access.headers)
             signed_url = access.url
-            args = signed_url.args
+            args = furl(signed_url).args
             require('X-Goog-Signature' in args, args)
             self._location = signed_url
 
     @property
-    def location(self) -> Optional[furl]:
+    def location(self) -> Optional[str]:
         return self._location
 
     @property

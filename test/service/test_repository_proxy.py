@@ -2,6 +2,9 @@ import io
 import json
 import os
 import time
+from typing import (
+    Union,
+)
 from unittest import (
     mock,
 )
@@ -83,7 +86,7 @@ class RepositoryPluginTestCase(LocalAppTestCase):
     def chalice_config(self):
         return ChaliceConfig.create(lambda_timeout=15)
 
-    def assertUrlEqual(self, a: furl, b: furl):
+    def assertUrlEqual(self, a: Union[str, furl], b: Union[str, furl]):
         if isinstance(a, str):
             a = furl(a)
         if isinstance(b, str):
@@ -164,7 +167,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                     with mock.patch.object(DRSClient,
                                            'get_object',
                                            return_value=Access(method=AccessMethod.https,
-                                                               url=pre_signed_gs)):
+                                                               url=str(pre_signed_gs))):
                         response = client.request('GET', str(azul_url), redirect=False)
                         self.assertEqual(200 if fetch else 302, response.status)
                         if fetch:
