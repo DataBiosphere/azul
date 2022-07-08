@@ -88,7 +88,7 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
 
     def test_get_data_object(self):
         file_uuid = '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
-        file_version = '2018-11-02T113344.698028Z'
+        file_version = '2018-11-02T11:33:44.698028Z'
         data_object = self._get_data_object(file_uuid, file_version)
         self.assertEqual({
             'id': file_uuid,

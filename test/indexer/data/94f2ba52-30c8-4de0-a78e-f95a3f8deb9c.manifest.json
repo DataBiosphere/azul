@@ -9,7 +9,7 @@
         "sha256": "dcabfb5b083bb3ec5ef482c6266aa46617da50712520f911542d7428228e315d",
         "size": 896,
         "uuid": "87f58f88-ef8b-4323-bd19-cde1a2497b59",
-        "version": "2019-04-03T101350.866000Z"
+        "version": "2019-04-03T10:13:50.866000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -21,7 +21,7 @@
         "sha256": "86b0f47a079ed4226c6297c02196c0d9ac3b75666790a0bfa2aed117c158883c",
         "size": 1006,
         "uuid": "edd1d525-a6ae-4658-a6bf-6c31d7ab6948",
-        "version": "2019-04-03T101345.512000Z"
+        "version": "2019-04-03T10:13:45.512000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -33,7 +33,7 @@
         "sha256": "3bcd6249e1982a1400a67330c8eb6c72c1c2a6bb94e3f27df9abbd75a2cd4fca",
         "size": 1461,
         "uuid": "6cb9fc09-7755-4a35-b6b1-0d6fe696b2d4",
-        "version": "2019-04-03T101345.427000Z"
+        "version": "2019-04-03T10:13:45.427000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -45,7 +45,7 @@
         "sha256": "39477700ca5e11cf9d50e14e734e8b84b9767260f293bfce799fc24cae174953",
         "size": 414,
         "uuid": "6baa3aff-b2a5-4e49-82f7-25c108a6107a",
-        "version": "2019-04-03T101544.995000Z"
+        "version": "2019-04-03T10:15:44.995000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -57,7 +57,7 @@
         "sha256": "fd9e953ea6a0e58915541e4831e77908b2bbb7fe75f8f434bac1f0cc888f71a4",
         "size": 416,
         "uuid": "06dcfc33-21da-485f-8e50-49d294713a9e",
-        "version": "2019-04-03T101544.993000Z"
+        "version": "2019-04-03T10:15:44.993000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -69,7 +69,7 @@
         "sha256": "8668a42e2f5e3b222e5c4b9dacf966d4c3a8f9dccd78cb9ca9e6f5ec6204be4e",
         "size": 429,
         "uuid": "404dd50b-4bc9-4c82-8c18-f53c68eed2fc",
-        "version": "2019-04-03T101551.032000Z"
+        "version": "2019-04-03T10:15:51.032000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -81,7 +81,7 @@
         "sha256": "cd07df0ccb235bed07bc0e721465c24ccf4c06d71c5757c63a385be396b4c513",
         "size": 429,
         "uuid": "5ceb5dc3-9194-494a-b1df-42bb75ab1a04",
-        "version": "2019-04-03T101547.812000Z"
+        "version": "2019-04-03T10:15:47.812000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -93,7 +93,7 @@
         "sha256": "634269e93a580aa1c58159983acff3cff9d8b0324260ca91932bf600c1441916",
         "size": 430,
         "uuid": "76e52f76-ede7-4088-b7f6-d6e5f6152292",
-        "version": "2019-04-03T101551.115000Z"
+        "version": "2019-04-03T10:15:51.115000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -105,7 +105,7 @@
         "sha256": "6aebe94fb11a4fa44e63d0ee0018938e2051608093e22674a66fe6d9fa35d704",
         "size": 430,
         "uuid": "2e496fe6-f500-4e27-b7f5-3c87fe43bbe5",
-        "version": "2019-04-03T101554.073000Z"
+        "version": "2019-04-03T10:15:54.073000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -117,7 +117,7 @@
         "sha256": "4f4a790c166529d6fc9621fcbe38e81258e81626dcc46cc9e22f79a0008cbdc4",
         "size": 430,
         "uuid": "be66141d-84a3-457d-a8d2-2f0da8c91dff",
-        "version": "2019-04-03T101551.125000Z"
+        "version": "2019-04-03T10:15:51.125000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -129,7 +129,7 @@
         "sha256": "5e519556738cf22b5e064429fd20f14218cddd0bc07fabcd249373ced79ba62d",
         "size": 430,
         "uuid": "680cf532-ef0c-4155-b44d-a6ec3920743a",
-        "version": "2019-04-03T101550.982000Z"
+        "version": "2019-04-03T10:15:50.982000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -141,7 +141,7 @@
         "sha256": "f18c6fab1c9b5e27c8e5e653e7299cb59801e8d5fd8220d9c9d0afc86d7d7ff1",
         "size": 430,
         "uuid": "08609f14-cf43-4188-b743-4a0b55b17347",
-        "version": "2019-04-03T101547.817000Z"
+        "version": "2019-04-03T10:15:47.817000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -153,7 +153,7 @@
         "sha256": "afaf14187b58ad4f3e74329550b4b4163f85a5a9e7cdf36c82735094502c8291",
         "size": 430,
         "uuid": "d10827a1-38f7-457d-9c9f-695f2fc7689c",
-        "version": "2019-04-03T101544.996000Z"
+        "version": "2019-04-03T10:15:44.996000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -165,7 +165,7 @@
         "sha256": "0a30e13100abf47ee849ee3f62c11dc9409f90cd631f3f584d46d8623bcd6d71",
         "size": 430,
         "uuid": "6f8eb2e5-7a0c-4c98-8da0-276457357071",
-        "version": "2019-04-03T101547.821000Z"
+        "version": "2019-04-03T10:15:47.821000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -177,7 +177,7 @@
         "sha256": "9ca32bea5e4ca1fa061592be5f4d390aed852c383253f6c019db8b58dc5ec85e",
         "size": 429,
         "uuid": "ca480df3-71bb-4634-8f71-b6a75aeb9f05",
-        "version": "2019-04-03T101547.796000Z"
+        "version": "2019-04-03T10:15:47.796000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -189,7 +189,7 @@
         "sha256": "a14886279ea8319351bc1da333bf3c087eebbf10b170d9ff9f557293b845b5cb",
         "size": 429,
         "uuid": "03ae5f5e-65ac-4491-b0ce-eefc940e0224",
-        "version": "2019-04-03T101548.018000Z"
+        "version": "2019-04-03T10:15:48.018000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -201,7 +201,7 @@
         "sha256": "9e14b02fb42e2e6d7b4b408274b8262ac8438065e3a368ad483e8ae731907705",
         "size": 429,
         "uuid": "ff117ecb-767e-4e72-baa9-2bda4fcd3e62",
-        "version": "2019-04-03T101551.040000Z"
+        "version": "2019-04-03T10:15:51.040000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -213,7 +213,7 @@
         "sha256": "29963b642a9e628b630d9591a078c138ff62ed23ecb1d0f0601be29f9c4d6b24",
         "size": 429,
         "uuid": "887f3d73-94d2-44ac-9047-67aca5225882",
-        "version": "2019-04-03T101551.029000Z"
+        "version": "2019-04-03T10:15:51.029000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -225,7 +225,7 @@
         "sha256": "0b9a89e36e3690da9259e43290fe70b60603009d00fe39452ba0bbf4dfbb9418",
         "size": 429,
         "uuid": "896dfacd-206b-4e4f-a846-ba5b070060d9",
-        "version": "2019-04-03T101547.819000Z"
+        "version": "2019-04-03T10:15:47.819000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -237,7 +237,7 @@
         "sha256": "24073054e30b0de495c92dcc02391d8b8c8b1422a655c8bb5f132941c3233319",
         "size": 429,
         "uuid": "23303c88-01b1-47d0-b770-dca6802caa13",
-        "version": "2019-04-03T101547.812000Z"
+        "version": "2019-04-03T10:15:47.812000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -249,7 +249,7 @@
         "sha256": "5318ef81c7636ad059452277bbaa1b15b120d489a355d221ee58216818405641",
         "size": 429,
         "uuid": "3c1a388d-0577-4417-9cd2-ff33bfed9140",
-        "version": "2019-04-03T101547.821000Z"
+        "version": "2019-04-03T10:15:47.821000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -261,7 +261,7 @@
         "sha256": "f0cd2b5a3ff27f319d78edcb6ae8649768810273a759af44ef249f04d2b4df13",
         "size": 429,
         "uuid": "67e71b34-7157-4a37-b495-0d740772b480",
-        "version": "2019-04-03T101551.111000Z"
+        "version": "2019-04-03T10:15:51.111000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -273,7 +273,7 @@
         "sha256": "610fa9de68fc0c392e981e7ed61bcab9c656aae9debf6067cc6a5eca7a31150c",
         "size": 420,
         "uuid": "cd3e5e62-6145-42d9-9a5b-046e1b49cf26",
-        "version": "2019-04-03T101551.054000Z"
+        "version": "2019-04-03T10:15:51.054000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -285,7 +285,7 @@
         "sha256": "5415fddfae88e6ad9a1248b52f041c541a91568bdd528a729cf296a66e07990f",
         "size": 412,
         "uuid": "5fbcb75e-3ee3-4429-8ede-b243afa0789f",
-        "version": "2019-04-03T101551.028000Z"
+        "version": "2019-04-03T10:15:51.028000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -297,7 +297,7 @@
         "sha256": "517eef28842bbdedb80bafbd691dbbc9218a14a197ba1d094b293cd1f3aa5d6b",
         "size": 436,
         "uuid": "09226b24-6b11-4e4f-8052-2b544be461aa",
-        "version": "2019-04-03T101551.126000Z"
+        "version": "2019-04-03T10:15:51.126000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -309,7 +309,7 @@
         "sha256": "0bb8b449b7c18075f3f157facd415fef08888124bbdac344873a8887d66a2a50",
         "size": 436,
         "uuid": "f67473fd-fbf8-4d69-9db1-556938ab5b87",
-        "version": "2019-04-03T101554.317000Z"
+        "version": "2019-04-03T10:15:54.317000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -321,7 +321,7 @@
         "sha256": "fb46973e9398e82e5e842bab20db97b5e7464a14c8ef8e0bca8ac8b90b1d1215",
         "size": 436,
         "uuid": "16acc1f2-9f1c-43c8-8ffe-4a9ea674e6ff",
-        "version": "2019-04-03T101550.940000Z"
+        "version": "2019-04-03T10:15:50.940000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -333,7 +333,7 @@
         "sha256": "1d2b9a93a4188ddec501b996fde7ec2fc38f060ed0c2cb82b30e1584353bb44a",
         "size": 436,
         "uuid": "017a2c88-4f6e-418e-bb96-f42f3a220f87",
-        "version": "2019-04-03T101550.977000Z"
+        "version": "2019-04-03T10:15:50.977000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -345,7 +345,7 @@
         "sha256": "6989e2d3d621b3f9fcb307bd7905c745cf36fba395e6a061e3681e7fe31097f1",
         "size": 436,
         "uuid": "30305240-004d-4632-84d4-37d7e7378782",
-        "version": "2019-04-03T101551.136000Z"
+        "version": "2019-04-03T10:15:51.136000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -357,7 +357,7 @@
         "sha256": "28393237e14ce9891dbc646df4a7c562333f925cdc3189184893b630b7678048",
         "size": 436,
         "uuid": "20c5a14a-aaf3-40e1-9ab7-f95c06ea4200",
-        "version": "2019-04-03T101551.052000Z"
+        "version": "2019-04-03T10:15:51.052000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -369,7 +369,7 @@
         "sha256": "afd4ea38d62c45ff93a5abfe15d892a54c5fe188347e1c5bf7595c2d4a814748",
         "size": 436,
         "uuid": "3fd2781b-6855-4eaa-b2fb-81db386adb18",
-        "version": "2019-04-03T101551.027000Z"
+        "version": "2019-04-03T10:15:51.027000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -381,7 +381,7 @@
         "sha256": "f00fb2b5d6da250b1d50d35f447d0cbd4ed99b3d2e3acccd9b4a0ae22e8bc56f",
         "size": 436,
         "uuid": "40474d53-44a4-4ab2-9f20-61b71291f8aa",
-        "version": "2019-04-03T101547.810000Z"
+        "version": "2019-04-03T10:15:47.810000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -393,7 +393,7 @@
         "sha256": "ccd379770ac524045e495ea08411378a90e6c2970dd329c391da22bb842cb681",
         "size": 436,
         "uuid": "aaa97d47-7124-4763-a3fc-f6d66eb6d990",
-        "version": "2019-04-03T101550.958000Z"
+        "version": "2019-04-03T10:15:50.958000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -405,7 +405,7 @@
         "sha256": "472be58ecb075755d87eb778b337c7697d8885ea6d97c7f48b3b1266c14d60a0",
         "size": 436,
         "uuid": "4adbed13-1cb6-4405-b892-fe8165050691",
-        "version": "2019-04-03T101551.040000Z"
+        "version": "2019-04-03T10:15:51.040000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -417,7 +417,7 @@
         "sha256": "b12f58e60c5d2e30be93e6fa39ae8f8b73781f07722b24158a36dc19893bb1f2",
         "size": 436,
         "uuid": "2bbf0125-b9cc-4413-8dd7-78ea72beaa17",
-        "version": "2019-04-03T101551.020000Z"
+        "version": "2019-04-03T10:15:51.020000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -429,7 +429,7 @@
         "sha256": "cea402f913566a622705f61d4b339bbf4ca6b9b0a0ba60122c742dfc41f8bb6f",
         "size": 436,
         "uuid": "5402916f-6de1-4842-8585-fc25c153992b",
-        "version": "2019-04-03T101551.039000Z"
+        "version": "2019-04-03T10:15:51.039000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -441,7 +441,7 @@
         "sha256": "e28f94fdbab9f4cc65e509289c0ed8175c2fe6a74e4180c7f22759619e206abd",
         "size": 436,
         "uuid": "75b78bfc-8d15-4a07-a07a-c62ae6d656b5",
-        "version": "2019-04-03T101600.740000Z"
+        "version": "2019-04-03T10:16:00.740000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -453,7 +453,7 @@
         "sha256": "1834e21010a32a18fbaa3b0414efb7c6ae7e159d3333df54bb678f24881aff95",
         "size": 436,
         "uuid": "8a78224e-4106-41d4-96cb-4d9a8b9ecad2",
-        "version": "2019-04-03T101600.295000Z"
+        "version": "2019-04-03T10:16:00.295000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -465,7 +465,7 @@
         "sha256": "205f951bbc20d1c1ca49520908cf7d655478db083dd96d62f176979454893392",
         "size": 436,
         "uuid": "cb92dd92-570c-4075-8893-eb19dbd837b8",
-        "version": "2019-04-03T101600.289000Z"
+        "version": "2019-04-03T10:16:00.289000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -477,7 +477,7 @@
         "sha256": "552fe82b645d82a4ab8dec0f3e975b585a471b6ec71dad714d19d37a619295f8",
         "size": 436,
         "uuid": "b36948c4-0646-42be-9db2-16626a757343",
-        "version": "2019-04-03T101557.643000Z"
+        "version": "2019-04-03T10:15:57.643000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -489,7 +489,7 @@
         "sha256": "d4296b9d358855fe9af556d6aee1d8ccd13901e4276c3b8e174ba9db65df7a73",
         "size": 436,
         "uuid": "c974f4eb-27b8-4ec3-913e-a6eb19572a51",
-        "version": "2019-04-03T101557.265000Z"
+        "version": "2019-04-03T10:15:57.265000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -501,7 +501,7 @@
         "sha256": "8e16a4bfe71a99a57492f2de4d6a462713d5c5a90bd8ec67008a5bc69f18e31a",
         "size": 436,
         "uuid": "febb760d-1e9e-4432-9b88-ce2869a43c44",
-        "version": "2019-04-03T101603.118000Z"
+        "version": "2019-04-03T10:16:03.118000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -513,7 +513,7 @@
         "sha256": "c333fe3b4e6856c7e0f45e61b44dc2aad0a819d3a446e2f1ebde6451c4673418",
         "size": 436,
         "uuid": "054f40a4-68d0-41db-81e9-00239042d9fa",
-        "version": "2019-04-03T101554.056000Z"
+        "version": "2019-04-03T10:15:54.056000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -525,7 +525,7 @@
         "sha256": "f57b95d9d82aa33c9b1ff61c4b4c8471e243b1e190dee06fdc46bc82a9840ddc",
         "size": 436,
         "uuid": "ec7f06aa-e4f9-4f4f-afd1-0ecd39b2e3f5",
-        "version": "2019-04-03T101557.262000Z"
+        "version": "2019-04-03T10:15:57.262000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -537,7 +537,7 @@
         "sha256": "1b65fa5a886865bc8323393642034c144e9af72f295f44a5bf0d00b1a1fe0fed",
         "size": 436,
         "uuid": "819e3227-cc54-4919-95af-c1f8194bf729",
-        "version": "2019-04-03T101600.245000Z"
+        "version": "2019-04-03T10:16:00.245000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -549,7 +549,7 @@
         "sha256": "2403b7b6306342055a0da03f1598da76a6602912a7db0ed480a9ec8ba058edf6",
         "size": 436,
         "uuid": "b1e2b9d1-6973-41dc-acdf-95474303561f",
-        "version": "2019-04-03T101600.392000Z"
+        "version": "2019-04-03T10:16:00.392000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -561,7 +561,7 @@
         "sha256": "6400cd38b14ef3a2ed4259d63836e6a5ccb62c4b65a7a8568dbc5201024f0219",
         "size": 436,
         "uuid": "41ffc783-5ad4-4197-8fd1-c029903c43c0",
-        "version": "2019-04-03T101600.242000Z"
+        "version": "2019-04-03T10:16:00.242000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -573,7 +573,7 @@
         "sha256": "69541c6253b9cb9fd37845812eacf0d6ca58ebf0294837f2c02e30fb0c03157b",
         "size": 436,
         "uuid": "ec9c70f0-3ed8-461c-ad0b-2475bd48ac8f",
-        "version": "2019-04-03T101554.163000Z"
+        "version": "2019-04-03T10:15:54.163000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -585,7 +585,7 @@
         "sha256": "770b880f656b6aa00efdf008791444c126efe1fd297efca8c5a7c7097ea900dd",
         "size": 437,
         "uuid": "9014bbaf-a047-4b69-8e28-8356cc99f84e",
-        "version": "2019-04-03T101554.097000Z"
+        "version": "2019-04-03T10:15:54.097000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -597,7 +597,7 @@
         "sha256": "2bd3f30fd85544254ba37fe941a8328ab3fae7e66fe53f69c48f2b6d9e262421",
         "size": 437,
         "uuid": "f7acf90c-2b32-463b-b832-8daa8529f727",
-        "version": "2019-04-03T101551.110000Z"
+        "version": "2019-04-03T10:15:51.110000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -609,7 +609,7 @@
         "sha256": "5bc6eb1cb42a02ced63e8a010cde537c78b3ff34c68ec1d178fd227248a7cd41",
         "size": 437,
         "uuid": "fae4f8b8-e6ad-4c1f-8126-e03ba8aca46e",
-        "version": "2019-04-03T101554.068000Z"
+        "version": "2019-04-03T10:15:54.068000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -621,7 +621,7 @@
         "sha256": "e4c440e517c39a6c3f0ad820f97fda13929d46868355988673c2713eaaa0db5f",
         "size": 437,
         "uuid": "db22deab-498a-409c-8386-5bf4e60a080c",
-        "version": "2019-04-03T101554.171000Z"
+        "version": "2019-04-03T10:15:54.171000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -633,7 +633,7 @@
         "sha256": "602346da07c3d1d779290fd3fbdcb9046a2929a8bacc384a9b252e70a0a5aacf",
         "size": 437,
         "uuid": "07d600bc-0d55-4a8d-9a48-390fc4169845",
-        "version": "2019-04-03T101554.155000Z"
+        "version": "2019-04-03T10:15:54.155000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -645,7 +645,7 @@
         "sha256": "cd289cc2db430f92925bc05e40dd5cb1c6ee7c2a3f9c55a3c1f36fbeeb46580a",
         "size": 437,
         "uuid": "d0a032bb-cd0e-4873-b346-5cb19e45c202",
-        "version": "2019-04-03T101554.147000Z"
+        "version": "2019-04-03T10:15:54.147000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -657,7 +657,7 @@
         "sha256": "4870a840ce29281fa93e8e6a7c8bbde6f78e9c0832e6067432333c00b7e75f60",
         "size": 437,
         "uuid": "a161f60f-af92-4b09-9df0-dd7ff2bf571a",
-        "version": "2019-04-03T101554.146000Z"
+        "version": "2019-04-03T10:15:54.146000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -669,7 +669,7 @@
         "sha256": "bd3c7aea6543616f7861d9ab086c8147df04f39d64b824a4a2696922faac606d",
         "size": 437,
         "uuid": "25c6b755-7f62-49a3-a1b5-aafbc772b5dd",
-        "version": "2019-04-03T101557.073000Z"
+        "version": "2019-04-03T10:15:57.073000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -681,7 +681,7 @@
         "sha256": "b64c80ab42af729c766d7057252b4792d81976491eaeef548f5d2e5e22f1592a",
         "size": 437,
         "uuid": "f10fd9e2-5747-4d7a-8c0c-beba81749011",
-        "version": "2019-04-03T101554.011000Z"
+        "version": "2019-04-03T10:15:54.011000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -693,7 +693,7 @@
         "sha256": "f530d71a7102885e24310411cff4052f2ed8c26377f49debd65443c824b0d9b2",
         "size": 437,
         "uuid": "553b6aab-4745-45f8-98ab-de6aadbf48e4",
-        "version": "2019-04-03T101554.255000Z"
+        "version": "2019-04-03T10:15:54.255000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -705,7 +705,7 @@
         "sha256": "77bfaab517f05ded0d779f672033b4fe36a53d8a34d67431b227632c520a58ad",
         "size": 437,
         "uuid": "3572abe9-6e42-4266-8671-ff24b592065c",
-        "version": "2019-04-03T101554.233000Z"
+        "version": "2019-04-03T10:15:54.233000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -717,7 +717,7 @@
         "sha256": "244c172dc730e03c4775435ca9d8d6209ae6561d1fa244557e72650d76ec68d4",
         "size": 437,
         "uuid": "6882abf6-c247-4167-a18d-e3fec24bcba2",
-        "version": "2019-04-03T101554.124000Z"
+        "version": "2019-04-03T10:15:54.124000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -729,7 +729,7 @@
         "sha256": "09ee934bb00c75597a81e8619f1bf36a37d0bfd4a120a4a38b8ccdfe4ee49f62",
         "size": 437,
         "uuid": "15f8b73e-937c-444d-8362-fdf458abb651",
-        "version": "2019-04-03T101554.117000Z"
+        "version": "2019-04-03T10:15:54.117000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -741,7 +741,7 @@
         "sha256": "b492fc206e7af25ad25cd703477562e33f6b55a8d729f554762707d47518520f",
         "size": 437,
         "uuid": "33b4e374-20ad-4fee-b682-aaa4fc12bec2",
-        "version": "2019-04-03T101554.178000Z"
+        "version": "2019-04-03T10:15:54.178000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -753,7 +753,7 @@
         "sha256": "9c59cb6b48fe2f9c2e2dc1af39c963fa08d04d62db044e25343c91002c18dd74",
         "size": 437,
         "uuid": "0e83c507-2211-4561-b75a-92326fb2d4fd",
-        "version": "2019-04-03T101554.229000Z"
+        "version": "2019-04-03T10:15:54.229000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -765,7 +765,7 @@
         "sha256": "264ba999cd45d6439826e2627a2b09c39e6b15e68efc3891f2daff7185b4ce16",
         "size": 437,
         "uuid": "912c55cf-0774-4838-8874-352766984715",
-        "version": "2019-04-03T101554.213000Z"
+        "version": "2019-04-03T10:15:54.213000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -777,7 +777,7 @@
         "sha256": "07c595226f8dff95523046921d22c770ef035dc177670deaff09efec9b9a5bc2",
         "size": 437,
         "uuid": "b2f32e7c-fea2-44c2-a6ae-832c1c7b9e37",
-        "version": "2019-04-03T101550.981000Z"
+        "version": "2019-04-03T10:15:50.981000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -789,7 +789,7 @@
         "sha256": "c8e688f4d5792c15eff9b60c17e7cb11eb5b9fc22df4b8686da5462ef6c3ebf8",
         "size": 437,
         "uuid": "5b8e3d96-e625-46b6-9689-110fa84fd721",
-        "version": "2019-04-03T101554.097000Z"
+        "version": "2019-04-03T10:15:54.097000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -801,7 +801,7 @@
         "sha256": "1a437156830c17b703cf0ab7b86263a941cb6163eebc323ce1a0986d9b6ee86d",
         "size": 437,
         "uuid": "de43f9bc-ddec-4326-9cb1-7b9c5f76a84f",
-        "version": "2019-04-03T101557.225000Z"
+        "version": "2019-04-03T10:15:57.225000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -813,7 +813,7 @@
         "sha256": "f80c0c38eba9dc34691c3eb73b7992d6133164b99b36fa1ada3fedfffc7a3db2",
         "size": 437,
         "uuid": "6f3272d7-4a62-4a3c-8c44-11dda8756956",
-        "version": "2019-04-03T101553.957000Z"
+        "version": "2019-04-03T10:15:53.957000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -825,7 +825,7 @@
         "sha256": "c68187461c589cf329d0388cec56220dccdbc18f731cae340afe945332e3f390",
         "size": 437,
         "uuid": "168422c5-e89d-466c-9085-f29c02160143",
-        "version": "2019-04-03T101554.119000Z"
+        "version": "2019-04-03T10:15:54.119000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -837,7 +837,7 @@
         "sha256": "3e78b422abd43d4b98ac9fc7c1e194f0bd3bbba37d0dc85059045d02ee677922",
         "size": 437,
         "uuid": "7331367a-cc43-4af0-8750-a2921d513f97",
-        "version": "2019-04-03T101557.287000Z"
+        "version": "2019-04-03T10:15:57.287000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -849,7 +849,7 @@
         "sha256": "22d6abeef0ef609847afe1ab25316816f47b37e191303574780496bc6def3513",
         "size": 437,
         "uuid": "edf83a09-2e60-4571-b650-abf4c7ff757b",
-        "version": "2019-04-03T101554.149000Z"
+        "version": "2019-04-03T10:15:54.149000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -861,7 +861,7 @@
         "sha256": "49fd51fabce4301c831e6ecbf82108fb0e7a8ee70e549b2d87e47ce111690a90",
         "size": 437,
         "uuid": "24bdb70c-4bd1-41e0-b5c2-a3a2e0e4ce5b",
-        "version": "2019-04-03T101554.166000Z"
+        "version": "2019-04-03T10:15:54.166000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -873,7 +873,7 @@
         "sha256": "dc427510fa0620ad3eb272fe4e81e0a23e8eef322edf52b38cca3799f6049045",
         "size": 437,
         "uuid": "be9d12b6-f8dd-407c-b1d7-844deb6a5023",
-        "version": "2019-04-03T101554.168000Z"
+        "version": "2019-04-03T10:15:54.168000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -885,7 +885,7 @@
         "sha256": "3e0af88cb3304fa3f4aa2118d2a94cc8576deb86564146d2022ab0d6453a6173",
         "size": 437,
         "uuid": "e3e59792-61e3-4bf0-a985-2acec75acafd",
-        "version": "2019-04-03T101557.350000Z"
+        "version": "2019-04-03T10:15:57.350000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -897,7 +897,7 @@
         "sha256": "e42e317ce059afd91d7365c52ed2baad3120380b354b1cb9d493a9433b7e10a5",
         "size": 437,
         "uuid": "095ee09c-1605-4c07-9324-b5382f20b78e",
-        "version": "2019-04-03T101551.023000Z"
+        "version": "2019-04-03T10:15:51.023000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -909,7 +909,7 @@
         "sha256": "dade5e214dbc78247a89a7d6ef9d1008fb951858e4267208a2d598c94b295fd1",
         "size": 437,
         "uuid": "77b96424-accb-4c6b-884c-756f2bb40929",
-        "version": "2019-04-03T101554.145000Z"
+        "version": "2019-04-03T10:15:54.145000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -921,7 +921,7 @@
         "sha256": "df4d56cef909e3c2ce9d4c336fd753c47a1731fbf1c2058b0c8aa4f79c6890a1",
         "size": 437,
         "uuid": "a0c2a5b4-7cc2-47f5-97a7-6b59019155da",
-        "version": "2019-04-03T101557.414000Z"
+        "version": "2019-04-03T10:15:57.414000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -933,7 +933,7 @@
         "sha256": "8d6cda07d844c1d5c022954b2431a60b2fcba5d7233da6adfc211117c5e5badd",
         "size": 437,
         "uuid": "78518dc1-d38e-4230-88b8-887bdd83f965",
-        "version": "2019-04-03T101554.195000Z"
+        "version": "2019-04-03T10:15:54.195000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -945,7 +945,7 @@
         "sha256": "793bc7b3b9e4a543a458c3f68bb5827beddd934c102e87be93945190950e3453",
         "size": 437,
         "uuid": "652dd3c5-6467-41ee-89b3-e4b3361fb533",
-        "version": "2019-04-03T101554.138000Z"
+        "version": "2019-04-03T10:15:54.138000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -957,7 +957,7 @@
         "sha256": "df2b61efc26152c558cb2943696d322091109587591c61b7408890f35a2fd646",
         "size": 437,
         "uuid": "cae3d214-d485-4350-8cd2-f4142aca4aef",
-        "version": "2019-04-03T101554.152000Z"
+        "version": "2019-04-03T10:15:54.152000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -969,7 +969,7 @@
         "sha256": "eb94a6d41ccab3e1c1f7dbecdd96ce2c82cd1fd789359f8e05645f4b66e6fec0",
         "size": 437,
         "uuid": "2ab7ea06-08e0-4669-88e0-23c1e74a3b49",
-        "version": "2019-04-03T101554.144000Z"
+        "version": "2019-04-03T10:15:54.144000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -981,7 +981,7 @@
         "sha256": "67fb4687262d1951b1b876e13877bac009c1306f3d6a993a3a74afe873faf5be",
         "size": 437,
         "uuid": "de282263-0944-48d4-9819-6182636c76bd",
-        "version": "2019-04-03T101550.968000Z"
+        "version": "2019-04-03T10:15:50.968000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -993,7 +993,7 @@
         "sha256": "60578d0981d6c0a835df6e917ff9d0d297c62a6e97e36666bbf2640f6b82d123",
         "size": 437,
         "uuid": "bfdbe9b5-42ac-419a-b297-843095de2cc2",
-        "version": "2019-04-03T101557.263000Z"
+        "version": "2019-04-03T10:15:57.263000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1005,7 +1005,7 @@
         "sha256": "30b856dbc8c2a79fef91e6e8e124674843238a2aa7c078fbd8c779881b7c1e7f",
         "size": 437,
         "uuid": "0ef6ffa4-e40f-476c-8ac9-10732ef6e42d",
-        "version": "2019-04-03T101557.144000Z"
+        "version": "2019-04-03T10:15:57.144000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1017,7 +1017,7 @@
         "sha256": "6c43740b4d9754cab558430310c8cb4ac1c32a59802eb4fc8198e238fdada39c",
         "size": 437,
         "uuid": "e2763cda-3236-487e-9944-5169c0cb8856",
-        "version": "2019-04-03T101557.230000Z"
+        "version": "2019-04-03T10:15:57.230000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1029,7 +1029,7 @@
         "sha256": "34f70ea5ffd42361331bd21ad3e39868bca7162f0d32f83c7d11753b3a20caa2",
         "size": 437,
         "uuid": "37018bd8-8537-47c3-a5a9-efb43552f30c",
-        "version": "2019-04-03T101557.364000Z"
+        "version": "2019-04-03T10:15:57.364000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1041,7 +1041,7 @@
         "sha256": "1929e1c99a24ccf2931c086fd3d8746449a7e2eb18805090d3fb06efd94631f2",
         "size": 437,
         "uuid": "a6c9b1ce-2054-4a48-b262-bb0723b8a567",
-        "version": "2019-04-03T101557.302000Z"
+        "version": "2019-04-03T10:15:57.302000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1053,7 +1053,7 @@
         "sha256": "2c31cc1a1ebed37153f365b27d4deb9abc4119c3e283348c8873d96b12e5a921",
         "size": 437,
         "uuid": "8319ee38-f199-49d7-989a-25b451656b38",
-        "version": "2019-04-03T101554.124000Z"
+        "version": "2019-04-03T10:15:54.124000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1065,7 +1065,7 @@
         "sha256": "7e31d64e42873ab36812aa6ce79dae2b44b0e2312174c5f951893b23d40584c1",
         "size": 437,
         "uuid": "022841b6-8b7c-4d0c-b65f-06ba14253540",
-        "version": "2019-04-03T101554.250000Z"
+        "version": "2019-04-03T10:15:54.250000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1077,7 +1077,7 @@
         "sha256": "709a2c0bb5fd2c33aeb0a48a93b24b7947a89989db89c8bd26cc5a0a7f410cd9",
         "size": 437,
         "uuid": "299dfbe5-05f5-48a7-816b-61036f0e435a",
-        "version": "2019-04-03T101554.232000Z"
+        "version": "2019-04-03T10:15:54.232000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1089,7 +1089,7 @@
         "sha256": "8c07684be9327c97b8f4260d5b8653a25b0961f75f639a2dd400bc29b931d5f3",
         "size": 437,
         "uuid": "6b8b11aa-3600-4a63-a980-93465e681c9c",
-        "version": "2019-04-03T101550.951000Z"
+        "version": "2019-04-03T10:15:50.951000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1101,7 +1101,7 @@
         "sha256": "c6dc86adf9e12786e038487f201109cc48bd03828ef5bf1ba603db9657ac4359",
         "size": 437,
         "uuid": "35716168-df43-4273-b52f-72e3d18a47bc",
-        "version": "2019-04-03T101557.202000Z"
+        "version": "2019-04-03T10:15:57.202000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1113,7 +1113,7 @@
         "sha256": "b3a6e0d610ad5c171130df88cc1df675ec51ffec48781ef25f00e3bb96a9015f",
         "size": 437,
         "uuid": "6be783ec-c132-4e09-90e0-0958efaf6619",
-        "version": "2019-04-03T101557.305000Z"
+        "version": "2019-04-03T10:15:57.305000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1125,7 +1125,7 @@
         "sha256": "8bb1b6b4470029750f1387f4c9e66a939ed3f6c4ecbadebb40601d354ce34e00",
         "size": 437,
         "uuid": "a11956c9-c24e-4efb-8af8-1167b3081e70",
-        "version": "2019-04-03T101557.283000Z"
+        "version": "2019-04-03T10:15:57.283000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1137,7 +1137,7 @@
         "sha256": "492b495aa8b0722ab69598f15f24324e7627415a77fe26ec382cba71a7fe75cf",
         "size": 437,
         "uuid": "b69a349b-0e07-4fbe-9e3b-9f2cea828b96",
-        "version": "2019-04-03T101551.102000Z"
+        "version": "2019-04-03T10:15:51.102000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1149,7 +1149,7 @@
         "sha256": "52b880a8c81b99983c728c7c2c0866ba96e8148402ffbc13b694f867ba27a7e6",
         "size": 437,
         "uuid": "753c2a57-b5f1-4984-b874-b2b10d582847",
-        "version": "2019-04-03T101600.454000Z"
+        "version": "2019-04-03T10:16:00.454000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1161,7 +1161,7 @@
         "sha256": "8a7603ecc0ff0b6b717477aa5d5afbd3df097137983e8e1f5adaba919a560842",
         "size": 437,
         "uuid": "e0b93b3d-075b-482b-838a-e36d8849607b",
-        "version": "2019-04-03T101557.655000Z"
+        "version": "2019-04-03T10:15:57.655000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1173,7 +1173,7 @@
         "sha256": "3399cd5ce881ad41a2c66de6a2eb9beec34607c9a23e055aa033a7cc2f812c55",
         "size": 437,
         "uuid": "96c8ed8d-8bd6-49f3-b97b-025b0d6bc9ec",
-        "version": "2019-04-03T101557.378000Z"
+        "version": "2019-04-03T10:15:57.378000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1185,7 +1185,7 @@
         "sha256": "cf8e194170ee6776493818ba0565a0801d2b857072aa7f03764309ab3db3a116",
         "size": 437,
         "uuid": "c647964a-7796-4dd2-9fa8-b23f012ac14e",
-        "version": "2019-04-03T101554.078000Z"
+        "version": "2019-04-03T10:15:54.078000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1197,7 +1197,7 @@
         "sha256": "8a74efabad603cbe62ae6711c2777020934ff877be26bd854748aa9b4d6d2857",
         "size": 437,
         "uuid": "87a63649-9834-49b8-89a0-310211c1b5b3",
-        "version": "2019-04-03T101557.378000Z"
+        "version": "2019-04-03T10:15:57.378000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1209,7 +1209,7 @@
         "sha256": "f9d96e64d719a40319b77c2f25b2b0d57729005c589da7caedb8750f063333f0",
         "size": 437,
         "uuid": "b2eb5b20-fd1a-403c-8b55-9eec5972d482",
-        "version": "2019-04-03T101554.167000Z"
+        "version": "2019-04-03T10:15:54.167000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1221,7 +1221,7 @@
         "sha256": "86f486d31d468286eea367872038a8f9a6cd7cb92120a2e84e0afda813f3dcee",
         "size": 437,
         "uuid": "4b3b36cb-cd90-4526-978d-2e7e8f7add39",
-        "version": "2019-04-03T101557.225000Z"
+        "version": "2019-04-03T10:15:57.225000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1233,7 +1233,7 @@
         "sha256": "181f6ed90801bdd3f19172909a54eec5964520a6f1883f80b0407bb674c76662",
         "size": 437,
         "uuid": "cdc774f8-3310-4f1f-8c67-03579c253640",
-        "version": "2019-04-03T101557.258000Z"
+        "version": "2019-04-03T10:15:57.258000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1245,7 +1245,7 @@
         "sha256": "ac1e8d1a0b4b81f2f04392c43c65f80b658830eed5f9a82be8c37966e211f352",
         "size": 437,
         "uuid": "607370e0-7e7e-4d25-ba5c-957c00a73ac1",
-        "version": "2019-04-03T101600.280000Z"
+        "version": "2019-04-03T10:16:00.280000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1257,7 +1257,7 @@
         "sha256": "a75773e2cb876338fa609bedd525a3bd19a8ba2f130326e9ed1a4f10af45b39a",
         "size": 437,
         "uuid": "3240d7ab-568b-4be5-adba-3178b3e8f85e",
-        "version": "2019-04-03T101600.280000Z"
+        "version": "2019-04-03T10:16:00.280000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1269,7 +1269,7 @@
         "sha256": "6cb57b49802a50e4dddeb57588ea5186e0377e89f623a77c65fbf1fe27571ae6",
         "size": 437,
         "uuid": "c0b6ee98-677a-41d9-9d80-9ac63d251b08",
-        "version": "2019-04-03T101557.303000Z"
+        "version": "2019-04-03T10:15:57.303000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1281,7 +1281,7 @@
         "sha256": "a5c98779f87e59fa7376751b9ce911a4a2b478d0da157ff9d1471b3e97222d1c",
         "size": 437,
         "uuid": "f34c01ec-06df-49e6-bc2f-c50c7f398851",
-        "version": "2019-04-03T101600.436000Z"
+        "version": "2019-04-03T10:16:00.436000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1293,7 +1293,7 @@
         "sha256": "f6c5e6e0dbd6fef34c139a9435403c39f7de7c0fababdc5f4d8bbb4f9b8b66ed",
         "size": 437,
         "uuid": "2047311b-f3ee-4137-8338-a45166e01d53",
-        "version": "2019-04-03T101550.968000Z"
+        "version": "2019-04-03T10:15:50.968000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1305,7 +1305,7 @@
         "sha256": "15e24fe5fc4b6cf2ca9ed30d1268221ae111280b6ccff9683d16d196d36a4d3d",
         "size": 437,
         "uuid": "44ea335a-1991-4504-be12-04f1a332ddfb",
-        "version": "2019-04-03T101600.403000Z"
+        "version": "2019-04-03T10:16:00.403000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1317,7 +1317,7 @@
         "sha256": "0e02dcf31f407949507893d0a21d3ca9b4b9a179a7acdf9f787ed8fe920a738e",
         "size": 437,
         "uuid": "59f3d0ab-1fe1-4cc8-b343-c12b520d769d",
-        "version": "2019-04-03T101554.147000Z"
+        "version": "2019-04-03T10:15:54.147000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1329,7 +1329,7 @@
         "sha256": "235200c223615ab1193535c564f774895e405aa2e9546759f2dab55aa5ce2451",
         "size": 437,
         "uuid": "58f9fb1a-b6be-42c4-98ed-a5c091a3c716",
-        "version": "2019-04-03T101600.681000Z"
+        "version": "2019-04-03T10:16:00.681000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1341,7 +1341,7 @@
         "sha256": "8fba1891ad6b9df93f54b549089db335e7e30f54887f530ac21b9277457e9d18",
         "size": 437,
         "uuid": "6af3cb41-9e64-4b11-b272-be87adf0fa94",
-        "version": "2019-04-03T101557.097000Z"
+        "version": "2019-04-03T10:15:57.097000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1353,7 +1353,7 @@
         "sha256": "bf4ccbd57c8ab29598df6db62c0242c59cf9497d68523d7d34cd27dfd4e1534c",
         "size": 437,
         "uuid": "7541d176-dfba-4e05-ba45-0c6964271dff",
-        "version": "2019-04-03T101557.397000Z"
+        "version": "2019-04-03T10:15:57.397000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1365,7 +1365,7 @@
         "sha256": "9697819224a07cc6cacd817a072d1ea331692b8c2de7c80d21883d8e2c5502ae",
         "size": 437,
         "uuid": "8ee1e829-a507-40a5-87ac-7fd8379b87ce",
-        "version": "2019-04-03T101557.618000Z"
+        "version": "2019-04-03T10:15:57.618000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1377,7 +1377,7 @@
         "sha256": "17d7e6629a107f8cd2513a9b54ed787786842ed61bff2f0ee99a816572922417",
         "size": 437,
         "uuid": "8e57554a-abb2-4664-87b6-a397f4da6555",
-        "version": "2019-04-03T101600.218000Z"
+        "version": "2019-04-03T10:16:00.218000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1389,7 +1389,7 @@
         "sha256": "1f3ea4e1d4dbb998ea75391d51abd0bce2110c13dd8364ba8a37391dc92761a0",
         "size": 437,
         "uuid": "88fa5ec5-db7d-49bf-8c7e-86f348fbc84c",
-        "version": "2019-04-03T101557.372000Z"
+        "version": "2019-04-03T10:15:57.372000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1401,7 +1401,7 @@
         "sha256": "cc69be74713fbfc1bb0b5a0acad1c8836c9b2147fe007457f90272266f70cf39",
         "size": 437,
         "uuid": "a2b4ab97-84bd-4808-884d-bd8cc5e7b922",
-        "version": "2019-04-03T101557.219000Z"
+        "version": "2019-04-03T10:15:57.219000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1413,7 +1413,7 @@
         "sha256": "b32d18b2ef17e125b656df0e09afc7cf6f21ea3009dd79f73f3ab7d291b9a5be",
         "size": 437,
         "uuid": "56c83f8e-3ef2-4a3a-b808-52cc1e96ac8e",
-        "version": "2019-04-03T101600.319000Z"
+        "version": "2019-04-03T10:16:00.319000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1425,7 +1425,7 @@
         "sha256": "405bc8dee78ba33131c71b2a894d10b7a4a49b5adc97b82b3642e27713592b38",
         "size": 437,
         "uuid": "8af22b64-2c3f-4aad-a2d5-5d9b122a7b1c",
-        "version": "2019-04-03T101600.829000Z"
+        "version": "2019-04-03T10:16:00.829000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1437,7 +1437,7 @@
         "sha256": "475bff5a0b66a5cd85554951a3da5cf9ae03e1d56df2a4fdd8ddec885ea90c02",
         "size": 437,
         "uuid": "f0cb4244-e19a-46a0-89f1-04143548872d",
-        "version": "2019-04-03T101600.414000Z"
+        "version": "2019-04-03T10:16:00.414000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1449,7 +1449,7 @@
         "sha256": "67d977bcfb8d491d430f00162f53ceba85b02a95b71cc5b2dea4fd1ce8d6d511",
         "size": 437,
         "uuid": "73074f55-d009-41a2-929e-6fd9949bb1dd",
-        "version": "2019-04-03T101557.285000Z"
+        "version": "2019-04-03T10:15:57.285000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1461,7 +1461,7 @@
         "sha256": "209e942d61b826433bb3b4cc931166a73c5901c3746d35d590e554fad83f436c",
         "size": 437,
         "uuid": "0c2a3965-fbd7-4dc2-bcf0-9c51650a7331",
-        "version": "2019-04-03T101603.247000Z"
+        "version": "2019-04-03T10:16:03.247000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1473,7 +1473,7 @@
         "sha256": "f440dd4a87df90e9bfcddf95095a240ea0de8a20288355eab70bba407296df4d",
         "size": 437,
         "uuid": "3774ecbd-d397-4b46-ba08-a7cbc6da0c07",
-        "version": "2019-04-03T101551.101000Z"
+        "version": "2019-04-03T10:15:51.101000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1485,7 +1485,7 @@
         "sha256": "0d2fa638787455be594ff8c3eba9a1731854eb5224f3b836619ef99ca11aebf0",
         "size": 437,
         "uuid": "146231bb-1b13-4db5-8157-9d9962cc3a3a",
-        "version": "2019-04-03T101600.042000Z"
+        "version": "2019-04-03T10:16:00.042000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1497,7 +1497,7 @@
         "sha256": "de0ea21220a12139e499c35acd5b4a5a3000e638835fdc772745d3f54fdc2d9f",
         "size": 437,
         "uuid": "1d1b3f27-4f67-4338-bb36-173fd6ecf14b",
-        "version": "2019-04-03T101557.650000Z"
+        "version": "2019-04-03T10:15:57.650000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1509,7 +1509,7 @@
         "sha256": "0ff933b23d7d629e121ed1cf845eee404eea6d8322d609b5b7d16149eaf17229",
         "size": 437,
         "uuid": "7fe17380-3090-4fc3-9504-02b3f8ed95b6",
-        "version": "2019-04-03T101600.270000Z"
+        "version": "2019-04-03T10:16:00.270000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1521,7 +1521,7 @@
         "sha256": "6b2ae2280f5ff317272091022d49e24e0f82522f85e99f42bba4d5b250645aa8",
         "size": 437,
         "uuid": "fc405b01-60ca-436f-a06c-2f38f7156a87",
-        "version": "2019-04-03T101600.160000Z"
+        "version": "2019-04-03T10:16:00.160000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1533,7 +1533,7 @@
         "sha256": "ca52cb02fea907aeaf355786658202edf0d186fb1a2accd5ab7b90db40052469",
         "size": 437,
         "uuid": "bae92b53-c6c7-4712-865e-6cff3cba506e",
-        "version": "2019-04-03T101600.763000Z"
+        "version": "2019-04-03T10:16:00.763000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1545,7 +1545,7 @@
         "sha256": "5d17f983241619d437110e0ab3cbd20cd4d0cabe26a27ce7695c88db17f6d239",
         "size": 437,
         "uuid": "83662ec5-a202-42ab-9a47-a701d4f19de3",
-        "version": "2019-04-03T101600.067000Z"
+        "version": "2019-04-03T10:16:00.067000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1557,7 +1557,7 @@
         "sha256": "0c2a898e93a79cd6f8f79523dd46fb0a31c01d628f9af9660bf0ef1846db4fba",
         "size": 437,
         "uuid": "a04957c6-8ce8-4fa6-950d-71812ff3d698",
-        "version": "2019-04-03T101557.271000Z"
+        "version": "2019-04-03T10:15:57.271000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1569,7 +1569,7 @@
         "sha256": "631ee2371f5ca8d15962b29394e5f532be94ebef0abf3fc0cf91e7408fd9dfb8",
         "size": 437,
         "uuid": "9284d3a4-73bd-4aa0-847c-ab273d14185a",
-        "version": "2019-04-03T101600.765000Z"
+        "version": "2019-04-03T10:16:00.765000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1581,7 +1581,7 @@
         "sha256": "c0267f598a6a8f796bc19637830c6464bc0f88164482408895d232ebffa74f64",
         "size": 437,
         "uuid": "4d664562-c333-4aaf-bb8b-641e0568733e",
-        "version": "2019-04-03T101600.166000Z"
+        "version": "2019-04-03T10:16:00.166000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1593,7 +1593,7 @@
         "sha256": "c97f7b03e607af29022647cb841f3eca29e09b23db9ee1d28bfa6e2e31833231",
         "size": 436,
         "uuid": "b533685d-3c60-4483-841b-a054f0a69fec",
-        "version": "2019-04-03T101554.188000Z"
+        "version": "2019-04-03T10:15:54.188000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1605,7 +1605,7 @@
         "sha256": "9916e0dee25d18f691fb03a0f86d11236a31751f74b7f3c012b8c041ccfe04e8",
         "size": 436,
         "uuid": "3f14c88e-58db-4f76-b6e0-4b483ded1ca3",
-        "version": "2019-04-03T101557.291000Z"
+        "version": "2019-04-03T10:15:57.291000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1617,7 +1617,7 @@
         "sha256": "c3cc6d03ace371186e69ea2415ea613995215b8aed9dc922dd95e1a35308efbe",
         "size": 436,
         "uuid": "32d0b267-f399-408a-b35f-f1ebc7d0fc1f",
-        "version": "2019-04-03T101600.394000Z"
+        "version": "2019-04-03T10:16:00.394000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1629,7 +1629,7 @@
         "sha256": "c7608f0bec65265bb64ca7ee2331f9ff640156687b1f01c027acd02aef2930b8",
         "size": 436,
         "uuid": "3e8510c9-7e31-49bd-bb90-cb55577c2f25",
-        "version": "2019-04-03T101600.298000Z"
+        "version": "2019-04-03T10:16:00.298000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1641,7 +1641,7 @@
         "sha256": "bb545cc8d1fe58ba58c817538725802ac30511b624eea797cd7c4a1d3ea1d2a0",
         "size": 436,
         "uuid": "463aff9a-ec7e-40d0-be42-c6686af9130d",
-        "version": "2019-04-03T101600.374000Z"
+        "version": "2019-04-03T10:16:00.374000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1653,7 +1653,7 @@
         "sha256": "03110bae90cfe1ee3c1ae30589bb0596a45c44e7b2dcc785fc8f1c9dd717bfef",
         "size": 436,
         "uuid": "02ddb50f-4a97-4fbc-ac08-32cd5f0fb319",
-        "version": "2019-04-03T101600.331000Z"
+        "version": "2019-04-03T10:16:00.331000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1665,7 +1665,7 @@
         "sha256": "e4d5b9e10d9be4235dde88a29f2c56c7d23bfa0f8a23c7d3cb13467f80c0f723",
         "size": 436,
         "uuid": "868efb99-df36-462b-91a2-bb6ca27e842a",
-        "version": "2019-04-03T101557.472000Z"
+        "version": "2019-04-03T10:15:57.472000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1677,7 +1677,7 @@
         "sha256": "455d6ba0201f4cc52da2c2c4c8e7b77ec1863ee9fdbf83e92fea1eba32de30f3",
         "size": 436,
         "uuid": "dd124d84-cb44-42e6-88d8-0d97fcb2c0f1",
-        "version": "2019-04-03T101557.134000Z"
+        "version": "2019-04-03T10:15:57.134000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1689,7 +1689,7 @@
         "sha256": "d0e1200160461dae6b9f135d8f3675db46bf9f793eff1a443f1580af484ebfce",
         "size": 436,
         "uuid": "36ded48a-869f-4fa8-971f-56bc28298276",
-        "version": "2019-04-03T101600.039000Z"
+        "version": "2019-04-03T10:16:00.039000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1701,7 +1701,7 @@
         "sha256": "bdaf3af322d92baff7b48b2857bd0b293932e415b28e7c0cb80b37cda4058b55",
         "size": 436,
         "uuid": "b62567c9-27d5-49b9-aa2e-7e9e1513dcb4",
-        "version": "2019-04-03T101557.347000Z"
+        "version": "2019-04-03T10:15:57.347000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1713,7 +1713,7 @@
         "sha256": "d845d457e3e3d5216e807c174e1b6c828785bee4c5caca5c1111f9a59531d040",
         "size": 436,
         "uuid": "e72742a4-23ba-4e5d-a29b-ad449abe8101",
-        "version": "2019-04-03T101557.374000Z"
+        "version": "2019-04-03T10:15:57.374000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1725,7 +1725,7 @@
         "sha256": "5df5e75dbb87f5f393c1849cf8bec18363833c36f17bd4734f3b528c2558dd5d",
         "size": 436,
         "uuid": "cd6e1096-f8c3-4eda-957d-b09741d60901",
-        "version": "2019-04-03T101600.117000Z"
+        "version": "2019-04-03T10:16:00.117000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1737,7 +1737,7 @@
         "sha256": "5e571a9b994680f3c22dc7602a6d1963968218df6dfe454d31ae7845f4b22bd5",
         "size": 436,
         "uuid": "903ea376-5153-4fb8-8ffa-e2948951409c",
-        "version": "2019-04-03T101557.150000Z"
+        "version": "2019-04-03T10:15:57.150000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1749,7 +1749,7 @@
         "sha256": "4bfe719bda36737bcfe027391ee51f71d255899c604fc0c7c564caeaa571b79a",
         "size": 436,
         "uuid": "89c5fc1e-9d18-4a6b-9025-ea0b75d01adb",
-        "version": "2019-04-03T101600.258000Z"
+        "version": "2019-04-03T10:16:00.258000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1761,7 +1761,7 @@
         "sha256": "761e759e7a00651aec0fac66bbd59ef0aeb36b2557dd1246eda36f8ed69c6250",
         "size": 436,
         "uuid": "8381d167-c4dd-49a2-b5df-1ae815bbe42e",
-        "version": "2019-04-03T101557.334000Z"
+        "version": "2019-04-03T10:15:57.334000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1773,7 +1773,7 @@
         "sha256": "f5a3b61de263bf318c23ab9f56037feb5789a168b8daf4ad3b1d1ae4ab0394f5",
         "size": 436,
         "uuid": "9be80be6-ee45-49d5-8d3d-a6df8f0383f6",
-        "version": "2019-04-03T101557.150000Z"
+        "version": "2019-04-03T10:15:57.150000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1785,7 +1785,7 @@
         "sha256": "830a39493a1edcdb9cdd7c760d17bcf246a6793e131700a5088751b9f83ddd6b",
         "size": 436,
         "uuid": "cf305c60-bb2c-41af-82bf-0631c2a7b0be",
-        "version": "2019-04-03T101557.290000Z"
+        "version": "2019-04-03T10:15:57.290000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1797,7 +1797,7 @@
         "sha256": "6a35e93e2b0ba923a92cb3feed491152de214cdb71b89481fa756153ad2e892b",
         "size": 436,
         "uuid": "074290a9-35e1-422f-a3af-e5ed58781b4d",
-        "version": "2019-04-03T101557.347000Z"
+        "version": "2019-04-03T10:15:57.347000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1809,7 +1809,7 @@
         "sha256": "3245c4b347e2614367a0c0e5be0af80e86d79eb25cbbdf3521528db34220faa7",
         "size": 436,
         "uuid": "0c49b3ca-bb47-41d9-a58c-e5ea79f673c3",
-        "version": "2019-04-03T101600.451000Z"
+        "version": "2019-04-03T10:16:00.451000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1821,7 +1821,7 @@
         "sha256": "35f0fe08eabe0511e110f9cde3fe8f56c038f14e3ec5f51b1c842c53b8b1a4c0",
         "size": 436,
         "uuid": "783c4def-7dc3-40a6-aa9e-a3f92a2dffba",
-        "version": "2019-04-03T101603.144000Z"
+        "version": "2019-04-03T10:16:03.144000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1833,7 +1833,7 @@
         "sha256": "15d1cbf4249524b751f63dd52d2c110c14634e4fbb88657bfaca27cdc6b97ca2",
         "size": 436,
         "uuid": "5165cc56-ff89-42bf-b000-fec4bd57176e",
-        "version": "2019-04-03T101600.708000Z"
+        "version": "2019-04-03T10:16:00.708000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1845,7 +1845,7 @@
         "sha256": "c5667a1a102c5a80d8b44ef82213da14d545942e30c735bf7dcfb67932384a3b",
         "size": 436,
         "uuid": "545be634-5893-45e0-93b2-dd4ea93e00db",
-        "version": "2019-04-03T101600.405000Z"
+        "version": "2019-04-03T10:16:00.405000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1857,7 +1857,7 @@
         "sha256": "8231bb5b5cb4c9817d3be93acda16e781368fc3925de5540b513c586094e4a9c",
         "size": 436,
         "uuid": "2d2e58c6-7c24-4089-bbe9-d47b7482be46",
-        "version": "2019-04-03T101600.253000Z"
+        "version": "2019-04-03T10:16:00.253000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1869,7 +1869,7 @@
         "sha256": "66b544e1348b06907777033d0c4d07af18e50bcde6420125f265bc6f197cb8ed",
         "size": 436,
         "uuid": "e4ce035a-f9e2-459f-8ecf-ce138ea00b34",
-        "version": "2019-04-03T101557.292000Z"
+        "version": "2019-04-03T10:15:57.292000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1881,7 +1881,7 @@
         "sha256": "38c9cc3471db114dc2be54d129a1190008513a77ca65804352efcfe9201cb08c",
         "size": 436,
         "uuid": "81214e49-318f-4221-bf2c-4ef00cfa916b",
-        "version": "2019-04-03T101600.761000Z"
+        "version": "2019-04-03T10:16:00.761000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1893,7 +1893,7 @@
         "sha256": "a8c965392de54d429232efdfed7d0107d7e7a7c6d0686d74b4cfcc0c6bafd90a",
         "size": 436,
         "uuid": "7fc97754-1121-468b-b1e4-839bde86b6c8",
-        "version": "2019-04-03T101557.316000Z"
+        "version": "2019-04-03T10:15:57.316000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1905,7 +1905,7 @@
         "sha256": "701ebd34ad74580573d6a298bca4519b8b292996ee5141ad602cf6126602a37e",
         "size": 436,
         "uuid": "7d70d44c-b5d7-47be-9687-e9a775e86251",
-        "version": "2019-04-03T101600.785000Z"
+        "version": "2019-04-03T10:16:00.785000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1917,7 +1917,7 @@
         "sha256": "be2350182247dc4e96357958ac29aad38fe7f1f5967e219c9bdf60a87d00d41a",
         "size": 436,
         "uuid": "ddb4f9d4-f2a1-42a5-87fa-e818071a5b33",
-        "version": "2019-04-03T101557.619000Z"
+        "version": "2019-04-03T10:15:57.619000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1929,7 +1929,7 @@
         "sha256": "34e8451f895b057d9eb9d78b052315727d0ca27824ce7b802924c14bb56d92d1",
         "size": 436,
         "uuid": "b7607809-e975-4c32-bff7-375cb2d8276f",
-        "version": "2019-04-03T101557.213000Z"
+        "version": "2019-04-03T10:15:57.213000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1941,7 +1941,7 @@
         "sha256": "61126f5fd54652044be1a6024516195d785bc5682f99619e646e75c8e9b4ca09",
         "size": 436,
         "uuid": "b8a6c863-626d-4fbf-863b-610cffaac37d",
-        "version": "2019-04-03T101600.707000Z"
+        "version": "2019-04-03T10:16:00.707000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1953,7 +1953,7 @@
         "sha256": "90c270bfa37cefaa0fcc7f60e4bd9cd96c5a7c7e59533cd5c89437e3d85e5ec0",
         "size": 436,
         "uuid": "45077a5c-ee96-47c0-a84f-9d46cf799338",
-        "version": "2019-04-03T101557.619000Z"
+        "version": "2019-04-03T10:15:57.619000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1965,7 +1965,7 @@
         "sha256": "c1e95db63a247249500612b3ac067bfe3fe990b92913a1ec51b9612dc6e4fec3",
         "size": 436,
         "uuid": "49d82b74-6f1a-415c-93ab-958c60f083b6",
-        "version": "2019-04-03T101557.323000Z"
+        "version": "2019-04-03T10:15:57.323000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1977,7 +1977,7 @@
         "sha256": "3366f748eaebf43ba8502f4c744a05fe4410b2b8a42b89484f2bf4e9604cf5c5",
         "size": 436,
         "uuid": "753b51b7-a909-44e7-bb21-cf2cd18328f8",
-        "version": "2019-04-03T101600.722000Z"
+        "version": "2019-04-03T10:16:00.722000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1989,7 +1989,7 @@
         "sha256": "369173be00544e7db713040ae411dcffc156ffff71ecce67c23b2d6cd76e4c3e",
         "size": 436,
         "uuid": "c7ab6349-b2bb-4ba3-9c9b-27d270550052",
-        "version": "2019-04-03T101600.390000Z"
+        "version": "2019-04-03T10:16:00.390000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2001,7 +2001,7 @@
         "sha256": "f68584cf5841a7423b2f39719f7bb250e509062572c116628a2cd764a2fb06ab",
         "size": 436,
         "uuid": "7be770fc-4a56-4f82-a4cf-3cf908d54dca",
-        "version": "2019-04-03T101600.789000Z"
+        "version": "2019-04-03T10:16:00.789000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2013,7 +2013,7 @@
         "sha256": "441ace0d1c8b13015277680fdfd7548dae8fd05393bb06be7627c2c5a29844b9",
         "size": 436,
         "uuid": "3f5f8537-c1af-4d2e-a732-53b6d4275588",
-        "version": "2019-04-03T101600.749000Z"
+        "version": "2019-04-03T10:16:00.749000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2025,7 +2025,7 @@
         "sha256": "0094cb6ffe96d5ee71480e8ea461c94058f9618c078888ccff23a1122cc61686",
         "size": 436,
         "uuid": "3820feac-72c4-49c5-a5a0-773f4e5ee3c1",
-        "version": "2019-04-03T101557.145000Z"
+        "version": "2019-04-03T10:15:57.145000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2037,7 +2037,7 @@
         "sha256": "24fe0898bd7fc8aaa554d7ba22ac6cafd74ee1bc3f0e1b81a77b46e2f24edf9f",
         "size": 436,
         "uuid": "f986c2c2-2823-45a0-80cf-5e6f67958afb",
-        "version": "2019-04-03T101600.833000Z"
+        "version": "2019-04-03T10:16:00.833000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2049,7 +2049,7 @@
         "sha256": "09c0968595187999bba9a8eca60c7853abc81a5a005d85ccfb48ccdf022fe3b6",
         "size": 436,
         "uuid": "7d17d6d6-d038-40c6-b965-6de41ce9c931",
-        "version": "2019-04-03T101557.652000Z"
+        "version": "2019-04-03T10:15:57.652000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2061,7 +2061,7 @@
         "sha256": "6f1db0bbaa75a5c7f8735d06835024fd9b32db984527f4923253aec9cac0ec32",
         "size": 436,
         "uuid": "3d208b38-62c8-492d-9434-21bb66ead16e",
-        "version": "2019-04-03T101603.214000Z"
+        "version": "2019-04-03T10:16:03.214000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2073,7 +2073,7 @@
         "sha256": "a674fdce30a1aab7bc45095518c3b14942bf60eeb6b7873ab5f2161bc014c21a",
         "size": 436,
         "uuid": "9a982898-77c6-4a56-8e54-9cb83ff0b235",
-        "version": "2019-04-03T101603.249000Z"
+        "version": "2019-04-03T10:16:03.249000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2085,7 +2085,7 @@
         "sha256": "9bbc3bf95a7e3c9e15b3204e247cc577c47c21d1ecffb0683878841b7986bbb3",
         "size": 436,
         "uuid": "1bdd91d7-0a1a-488d-ab9c-78eba7a6daa3",
-        "version": "2019-04-03T101600.293000Z"
+        "version": "2019-04-03T10:16:00.293000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2097,7 +2097,7 @@
         "sha256": "09c65df04747d7c47f3e2b9d2fdc4ac65cad2d5161628b3b4c778ab737a275ad",
         "size": 436,
         "uuid": "24b6366f-03ce-4e4d-b50f-90687f3e2b94",
-        "version": "2019-04-03T101600.295000Z"
+        "version": "2019-04-03T10:16:00.295000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2109,7 +2109,7 @@
         "sha256": "fe756824663266bf7ea44ccbfd6e6fc8453e890c7101fdd8e20dfd6b78c4fcd8",
         "size": 436,
         "uuid": "ec1d0987-fb49-48b8-aaeb-321c659fb67f",
-        "version": "2019-04-03T101603.247000Z"
+        "version": "2019-04-03T10:16:03.247000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2121,7 +2121,7 @@
         "sha256": "be299b783b326df47bad2a3888d2143787b66284e4551a8b4e60868e705e1bb3",
         "size": 436,
         "uuid": "e756ce65-ad72-42e6-a8cc-9c1bac781ce5",
-        "version": "2019-04-03T101603.243000Z"
+        "version": "2019-04-03T10:16:03.243000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2133,7 +2133,7 @@
         "sha256": "03b015063dcde1dacc16ffc3b07897c48b2f59a8d7b0c5f046687bfc27b5e380",
         "size": 436,
         "uuid": "6fbcb1c7-ce98-46db-8054-b451b6bca205",
-        "version": "2019-04-03T101603.126000Z"
+        "version": "2019-04-03T10:16:03.126000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2145,7 +2145,7 @@
         "sha256": "bbdf743a6e804d27b94cb33e8e6b59d6a3413e67559f643e403d411034da8c00",
         "size": 436,
         "uuid": "c225fa8c-e8c8-46a4-bf23-720e2cf1c9ac",
-        "version": "2019-04-03T101600.740000Z"
+        "version": "2019-04-03T10:16:00.740000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2157,7 +2157,7 @@
         "sha256": "4f619d3d55398b5a749affa5ae641328d59d1967944794b985a4657c9b2bf953",
         "size": 436,
         "uuid": "aa6fca0d-6a70-4016-a0e4-307878e9ff45",
-        "version": "2019-04-03T101600.704000Z"
+        "version": "2019-04-03T10:16:00.704000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2169,7 +2169,7 @@
         "sha256": "efc92103a7b664b3c6b02a7c17066ea9b18b216382c0822a22397d471886d0d6",
         "size": 436,
         "uuid": "ee62cd8d-fb93-4082-980b-213c7a8a0c47",
-        "version": "2019-04-03T101603.200000Z"
+        "version": "2019-04-03T10:16:03.200000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2181,7 +2181,7 @@
         "sha256": "0770fda7d1a5547dc66457035da318cc219c375a41f39ca46a96e7be9ff44cea",
         "size": 436,
         "uuid": "bbd60a79-3572-42c0-8e53-b0c566a72f06",
-        "version": "2019-04-03T101600.196000Z"
+        "version": "2019-04-03T10:16:00.196000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2193,7 +2193,7 @@
         "sha256": "e7747c7be140489f48c578f797c0dabd4d5e9c3910e3bc76a23c1e692689a232",
         "size": 436,
         "uuid": "bf585666-2fb4-4ad5-a9b3-b268a9953ed9",
-        "version": "2019-04-03T101603.144000Z"
+        "version": "2019-04-03T10:16:03.144000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2205,7 +2205,7 @@
         "sha256": "437a5501e4310cf20869d13dfc3a8cfddde42934d1bfa8cc0a4cb444ecf6ccec",
         "size": 436,
         "uuid": "52548ff8-5bbd-4b1c-9c52-4e5d82f846e2",
-        "version": "2019-04-03T101600.186000Z"
+        "version": "2019-04-03T10:16:00.186000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2217,7 +2217,7 @@
         "sha256": "d1d7ee9652037db25e4c2656e9a86ed0a760a847db8bf82ffccd4f2d17f9dbe9",
         "size": 436,
         "uuid": "240a67cc-e827-41bf-8ac8-a66bc2797f13",
-        "version": "2019-04-03T101600.772000Z"
+        "version": "2019-04-03T10:16:00.772000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2229,7 +2229,7 @@
         "sha256": "3b5b2116d087aa66be81e7a4cf01aa166b451059644666a5ee9de2853fd9429e",
         "size": 436,
         "uuid": "7a9b6534-fa1d-4282-a064-11e60e57a322",
-        "version": "2019-04-03T101557.638000Z"
+        "version": "2019-04-03T10:15:57.638000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2241,7 +2241,7 @@
         "sha256": "14cea205be35245bcff2ef4edc06477006e533f2373efea065b9cdcc31c21429",
         "size": 436,
         "uuid": "b0af6371-4379-45f0-8c09-f6610833fc46",
-        "version": "2019-04-03T101557.644000Z"
+        "version": "2019-04-03T10:15:57.644000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2253,7 +2253,7 @@
         "sha256": "dc39ccec6bd7573b1f78c794feaf9a56a6242c450a2cc98d5e2fdec9fcd0ed1e",
         "size": 436,
         "uuid": "f5ce7a96-cfc0-42c4-852b-386f9a27111d",
-        "version": "2019-04-03T101600.829000Z"
+        "version": "2019-04-03T10:16:00.829000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2265,7 +2265,7 @@
         "sha256": "a9d796b59974679d51b813ca6c2e08b5871b264c659fe31234a99905d6f317a9",
         "size": 436,
         "uuid": "8bc05db7-bd23-4a10-9761-96be7b8ef9ee",
-        "version": "2019-04-03T101600.329000Z"
+        "version": "2019-04-03T10:16:00.329000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2277,7 +2277,7 @@
         "sha256": "77437331eff788ff99d67b5804f15a4347ec9203e4d6f83dc1ff41b250ad5bfb",
         "size": 436,
         "uuid": "3dff4add-7d6f-418c-afba-e46864af51d2",
-        "version": "2019-04-03T101600.156000Z"
+        "version": "2019-04-03T10:16:00.156000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2289,7 +2289,7 @@
         "sha256": "a752ff9735b42b9c6b53933327b5e6bb3ffb5a206eec41359e3fbe673543b0be",
         "size": 436,
         "uuid": "ab2b7c67-8f13-4388-acd7-e2abb0091f30",
-        "version": "2019-04-03T101600.743000Z"
+        "version": "2019-04-03T10:16:00.743000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2301,7 +2301,7 @@
         "sha256": "eff85621d5f8a8c61d7ad52200b0fdad1012e96f95cb22f9306774f6f412814e",
         "size": 436,
         "uuid": "d9912d93-3d92-48d2-9f75-826fbba3d94e",
-        "version": "2019-04-03T101603.046000Z"
+        "version": "2019-04-03T10:16:03.046000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2313,7 +2313,7 @@
         "sha256": "4303ecc0597efcc9224f0284b47187457b1d22944dd0b9e017c06dfe7cd58524",
         "size": 436,
         "uuid": "8b37aba2-be5e-4963-8e6f-51a2df8e143e",
-        "version": "2019-04-03T101600.282000Z"
+        "version": "2019-04-03T10:16:00.282000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2325,7 +2325,7 @@
         "sha256": "10825c134cab0e3102cade1d845de5fddb61e752251230a8f908bb5aa6e1554e",
         "size": 436,
         "uuid": "81c0e4e2-9021-4c4d-9876-1ed5b78ca7a7",
-        "version": "2019-04-03T101600.805000Z"
+        "version": "2019-04-03T10:16:00.805000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2337,7 +2337,7 @@
         "sha256": "a15f99f58fa393134674a570f7f9456092547ad00b9462e6d3d448e67311fedf",
         "size": 436,
         "uuid": "2d7e88dd-bddd-4289-9556-27d301be0b83",
-        "version": "2019-04-03T101603.188000Z"
+        "version": "2019-04-03T10:16:03.188000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2349,7 +2349,7 @@
         "sha256": "43bfae4c58e8fdc505b85af39975ea3f7c907f8c1b3c8f83c9429f6902bf3644",
         "size": 436,
         "uuid": "0c1c578d-d4cc-40bb-a54d-d1d4d004373f",
-        "version": "2019-04-03T101603.221000Z"
+        "version": "2019-04-03T10:16:03.221000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2361,7 +2361,7 @@
         "sha256": "c0b6f1bb3710d53f0851e894bc72644f11b0b020038661a10522765f1d7753cc",
         "size": 436,
         "uuid": "9dc0ead3-f17a-4bb8-88e2-87f779029ff8",
-        "version": "2019-04-03T101600.822000Z"
+        "version": "2019-04-03T10:16:00.822000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2373,7 +2373,7 @@
         "sha256": "3540055a11816fa6f72725db6f5b57e1030229ef05011c8b612a3adb68122c50",
         "size": 436,
         "uuid": "f618a8bc-5e07-477f-a6d3-1b0af8c81ff0",
-        "version": "2019-04-03T101603.130000Z"
+        "version": "2019-04-03T10:16:03.130000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2385,7 +2385,7 @@
         "sha256": "2e9f75c40aba60a6adb0997169e35dce1849cb7aaddae973bb65fb873c6cceab",
         "size": 436,
         "uuid": "e834d3df-8432-40ba-b67d-c7cd0bd7328d",
-        "version": "2019-04-03T101603.234000Z"
+        "version": "2019-04-03T10:16:03.234000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2397,7 +2397,7 @@
         "sha256": "501e2e1a1370a0098b6d49bd30ea0412e409ee4e9c182f2a4d67bf608ec712a7",
         "size": 436,
         "uuid": "d8908d6d-5daa-454d-9082-726054cfddc1",
-        "version": "2019-04-03T101603.189000Z"
+        "version": "2019-04-03T10:16:03.189000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2409,7 +2409,7 @@
         "sha256": "159f167c8f2cff0867dfdec5309f600367c82068a6d5cde76382570f1a8b64a0",
         "size": 436,
         "uuid": "c5a7142e-4702-4e84-b7aa-239df2a71ba8",
-        "version": "2019-04-03T101600.189000Z"
+        "version": "2019-04-03T10:16:00.189000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2421,7 +2421,7 @@
         "sha256": "730abec4612c2615243543b5dd7da6343f525bde84a1ec985578cd4e107dd78d",
         "size": 436,
         "uuid": "f69e44ef-cf23-4571-8dad-e44222697974",
-        "version": "2019-04-03T101603.186000Z"
+        "version": "2019-04-03T10:16:03.186000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2433,7 +2433,7 @@
         "sha256": "f3627a523c3a78aa3c5f4ffa0ef0a10f30ff579886e86d072aa143cee8efcdcf",
         "size": 436,
         "uuid": "ea72f81c-2c58-43e2-acca-294254f470f7",
-        "version": "2019-04-03T101603.138000Z"
+        "version": "2019-04-03T10:16:03.138000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2445,7 +2445,7 @@
         "sha256": "2c63249c5f51b31921220d211469ef230bf17255f2a7b72393274dfb74310a55",
         "size": 436,
         "uuid": "89d1d2b5-81d3-487d-9fc1-d8b1d8ac34ab",
-        "version": "2019-04-03T101603.194000Z"
+        "version": "2019-04-03T10:16:03.194000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2457,7 +2457,7 @@
         "sha256": "8c398968ba0ec196d35e5810d2a3d6917cd3267df54753c32656df264f33e11a",
         "size": 436,
         "uuid": "6928ac1b-fd1d-436c-bfc6-4087c65809d7",
-        "version": "2019-04-03T101603.234000Z"
+        "version": "2019-04-03T10:16:03.234000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2469,7 +2469,7 @@
         "sha256": "65bdb91e69ce438a2619d7b9ada56b427ee9af08d11fd88f74f7eb2583211b04",
         "size": 436,
         "uuid": "07a7b938-435b-4804-b140-c255957b6532",
-        "version": "2019-04-03T101603.185000Z"
+        "version": "2019-04-03T10:16:03.185000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2481,7 +2481,7 @@
         "sha256": "10e080dccc25d94be0fe7c5965f6e2279f3d60dd418151c16be14893785c4b3c",
         "size": 436,
         "uuid": "3d532a7b-55e7-4461-afbc-65ef76403384",
-        "version": "2019-04-03T101600.225000Z"
+        "version": "2019-04-03T10:16:00.225000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2493,7 +2493,7 @@
         "sha256": "260fdb27cc3ea57d0bb08c40485463158f3013d01d871089b3c510875a810649",
         "size": 436,
         "uuid": "bab40245-28bd-49a2-8be0-ba109fe41c91",
-        "version": "2019-04-03T101603.171000Z"
+        "version": "2019-04-03T10:16:03.171000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2505,7 +2505,7 @@
         "sha256": "bd4382ac05f05d6808cbb00d20a73511fa28a78236e5a9a6bd1113bda3e128c0",
         "size": 436,
         "uuid": "9d577bd4-3a27-48be-ad7c-8c44cf803cda",
-        "version": "2019-04-03T101603.221000Z"
+        "version": "2019-04-03T10:16:03.221000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2517,7 +2517,7 @@
         "sha256": "70f034e93920e9e72e3c5160af51973ca06d56313aced23c6d07c9b8af0733b6",
         "size": 436,
         "uuid": "c4de7605-fec5-4389-bb9e-f2ea0c41cdef",
-        "version": "2019-04-03T101603.221000Z"
+        "version": "2019-04-03T10:16:03.221000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2529,7 +2529,7 @@
         "sha256": "6a65d8d223e8f5ddb9b72dbcbb39cdb41f7e334f85c7e80c84166e63265f72a9",
         "size": 436,
         "uuid": "21a043b6-6dde-41b9-b20e-74b961da8b88",
-        "version": "2019-04-03T101603.210000Z"
+        "version": "2019-04-03T10:16:03.210000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2541,7 +2541,7 @@
         "sha256": "dfb12987a66cbd856c6122ff9ffabc66b110bd3794447584b2e4e042f0439931",
         "size": 436,
         "uuid": "11280200-1803-4110-aa84-2808776c2d50",
-        "version": "2019-04-03T101603.231000Z"
+        "version": "2019-04-03T10:16:03.231000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2553,7 +2553,7 @@
         "sha256": "143846cd99c35193269dab6470281b9a54f5ba2e40abd20c91f355ccfa1cab0d",
         "size": 436,
         "uuid": "86df5269-576b-4d18-a0ce-6e2b2a36d51b",
-        "version": "2019-04-03T101603.201000Z"
+        "version": "2019-04-03T10:16:03.201000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2565,7 +2565,7 @@
         "sha256": "f27ec531816c73687775c4e23383360b391ebb49ad0c88744bbd223f3b1fd66d",
         "size": 436,
         "uuid": "e524ff4e-95fa-4561-bfd3-276cba79e664",
-        "version": "2019-04-03T101603.251000Z"
+        "version": "2019-04-03T10:16:03.251000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2577,7 +2577,7 @@
         "sha256": "7b748dc98d840bfd0a139c9f0de4a1a53f6f692d3f136578d03b78659a4f0320",
         "size": 436,
         "uuid": "3d5737da-b1ab-48cb-a26f-d420e53edccd",
-        "version": "2019-04-03T101603.057000Z"
+        "version": "2019-04-03T10:16:03.057000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2589,7 +2589,7 @@
         "sha256": "ed1cfc8d52b5c9fa19d2ea0531013c7e9d01f4bf9492687d53925255ea6dada8",
         "size": 436,
         "uuid": "44cf15ec-3d4e-4698-bb14-107c34891191",
-        "version": "2019-04-03T101603.206000Z"
+        "version": "2019-04-03T10:16:03.206000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2601,7 +2601,7 @@
         "sha256": "7a684c6ff1f586c22ddcc29274708e8dd39243cef585e7c23b6f3ea3b83e5d36",
         "size": 436,
         "uuid": "6242cdf3-fd6d-4479-a08a-1747818fd978",
-        "version": "2019-04-03T101603.054000Z"
+        "version": "2019-04-03T10:16:03.054000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2613,7 +2613,7 @@
         "sha256": "ff7884099be508aa2e7dd90e1f1ce1d5067281e4427e3c4a757b71f4f1f75eb2",
         "size": 436,
         "uuid": "bc60bbd4-8b09-425c-b507-9da24a84f412",
-        "version": "2019-04-03T101600.270000Z"
+        "version": "2019-04-03T10:16:00.270000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2625,7 +2625,7 @@
         "sha256": "2ef2610b443952e5efd36f3d9f3c818fa99d7a3517db805c96328764bd3a42fa",
         "size": 436,
         "uuid": "1f054ccf-f8dd-4127-a6f8-c577d7dd93dc",
-        "version": "2019-04-03T101603.187000Z"
+        "version": "2019-04-03T10:16:03.187000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2637,7 +2637,7 @@
         "sha256": "b42e6be60f48d35430fc399eb63b72c42f8f9ab11c079aea8bef9cabb1892167",
         "size": 436,
         "uuid": "9954cb4b-b0a4-4479-b31d-0bee1e75d9c7",
-        "version": "2019-04-03T101603.267000Z"
+        "version": "2019-04-03T10:16:03.267000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2649,7 +2649,7 @@
         "sha256": "50b685e95463faf94c400143815a574cc4aa9b984488ccd03cee33c755e02cc5",
         "size": 436,
         "uuid": "5f67c32c-a154-4620-8603-0b64979b04a4",
-        "version": "2019-04-03T101603.116000Z"
+        "version": "2019-04-03T10:16:03.116000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2661,7 +2661,7 @@
         "sha256": "d6447e02ee2ff36d7d42071b32ee1e814ec64c4335210fe48a1d36e2f29d7eb2",
         "size": 436,
         "uuid": "7d5bffb2-8bf9-4366-a8b2-762ebb4d6c5d",
-        "version": "2019-04-03T101600.148000Z"
+        "version": "2019-04-03T10:16:00.148000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2673,7 +2673,7 @@
         "sha256": "4aa21e087622ab8cbecb91e80202e0fe6eca02bc40114a7229847f6686a366e3",
         "size": 436,
         "uuid": "dcee6df0-9e87-4935-8873-f8d30d449d76",
-        "version": "2019-04-03T101603.250000Z"
+        "version": "2019-04-03T10:16:03.250000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2685,7 +2685,7 @@
         "sha256": "baa5d34971192d61678bdd15863c1bbcfd3ab80c0b9062b09a9f2308cac4602b",
         "size": 436,
         "uuid": "7d6bdde6-523f-46cb-bed5-d6cfa8fea80c",
-        "version": "2019-04-03T101603.126000Z"
+        "version": "2019-04-03T10:16:03.126000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2697,7 +2697,7 @@
         "sha256": "403dfcc537a0878b1ff87616de9a953e5abd92dff4b01ab36b43f9ce27aa1f85",
         "size": 436,
         "uuid": "e6d00b0c-3641-4ec4-a553-8fd742193dba",
-        "version": "2019-04-03T101603.321000Z"
+        "version": "2019-04-03T10:16:03.321000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2709,7 +2709,7 @@
         "sha256": "d60c19c0cff56667cd7db55fd969347184aec7d9e742727e2e1c92d6a8e9af94",
         "size": 436,
         "uuid": "e5034863-0528-4f55-be95-c8501c29f9fe",
-        "version": "2019-04-03T101603.187000Z"
+        "version": "2019-04-03T10:16:03.187000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2721,7 +2721,7 @@
         "sha256": "ef9b0b23c97b0a5845a9d70e823a131e5e13cb2f998ff2443c7b8b7c90eb57c9",
         "size": 436,
         "uuid": "cc61b14a-59d9-477b-8cb1-43c4ee4cf434",
-        "version": "2019-04-03T101603.190000Z"
+        "version": "2019-04-03T10:16:03.190000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2733,7 +2733,7 @@
         "sha256": "f31b35f3fd69b056e5a66d50f2e6fbf51ab9be28d420c8bdfe96a7ec013c26ba",
         "size": 436,
         "uuid": "33d332c9-aefe-4db5-8830-b8daddaed0d2",
-        "version": "2019-04-03T101603.189000Z"
+        "version": "2019-04-03T10:16:03.189000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2745,7 +2745,7 @@
         "sha256": "4feaddde2e62cd14f4a67dec0e6fcba07373c3fa2a3cf3466695d35b1c06b979",
         "size": 427,
         "uuid": "bb3b6fc7-0902-432d-bad1-6b3f61951314",
-        "version": "2019-04-03T101551.086000Z"
+        "version": "2019-04-03T10:15:51.086000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -2757,7 +2757,7 @@
         "sha256": "31a35a35da5f28cccd7ea6dd5a0e810235bbf3787a80965c7652e591513592ce",
         "size": 419,
         "uuid": "2b734e88-3a33-4c73-92bb-82e0b8f8c13b",
-        "version": "2019-04-03T101600.280000Z"
+        "version": "2019-04-03T10:16:00.280000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/project\"",
@@ -2769,7 +2769,7 @@
         "sha256": "7ae0b7e40be3a5cbd41ebebce232811ce29360d8407bfad4f9ae553e163a138d",
         "size": 756,
         "uuid": "ae5237b4-633f-403a-afc6-cb87e6f90db1",
-        "version": "2019-04-03T101345.439000Z"
+        "version": "2019-04-03T10:13:45.439000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -2781,7 +2781,7 @@
         "sha256": "9be854f39a2b314701c87a34d84f0cbf1f43c9af55a6e9eddd7364d7a4ec52e7",
         "size": 96127,
         "uuid": "96ecb94d-e848-4d7b-8df9-f19af6ab17b8",
-        "version": "2019-04-03T101345.902000Z"
+        "version": "2019-04-03T10:13:45.902000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -2793,7 +2793,7 @@
         "sha256": "57c5cb7e10be8475a6ae84669d6779d1943b35e8152a3e39caaeda5f1e412a7d",
         "size": 728,
         "uuid": "a6d431b0-4373-4eaf-a3af-8c3fe461ab38",
-        "version": "2019-04-03T101345.426000Z"
+        "version": "2019-04-03T10:13:45.426000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -2805,7 +2805,7 @@
         "sha256": "e1406be5355ccc4a2b7b083a4b30bd1ab5425e6eec14ebd74d16b336a1effd6b",
         "size": 754,
         "uuid": "caf94c25-8327-4379-b88e-2a6642cd7513",
-        "version": "2019-04-03T101345.505000Z"
+        "version": "2019-04-03T10:13:45.505000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -2817,7 +2817,7 @@
         "sha256": "4ef95348502eb3cc1dac9f871fc6923192e0bf24c794d5ff8173097b60951a4d",
         "size": 395,
         "uuid": "da265acd-5601-49c5-855e-d792d51b4042",
-        "version": "2019-04-03T101403.513000Z"
+        "version": "2019-04-03T10:14:03.513000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -2829,7 +2829,7 @@
         "sha256": "980ae82ccc6b879a6730b0196617611bc997446ec6d3153761e4d7a2b814f641",
         "size": 389,
         "uuid": "07acb7d0-3f1c-47f7-9ef9-851c4f1caaec",
-        "version": "2019-04-03T101353.863000Z"
+        "version": "2019-04-03T10:13:53.863000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -2841,7 +2841,7 @@
         "sha256": "c1bc257d37abcb9d1de6cee118cbb211e1dcddeb4c0ce88ef740b425fd873381",
         "size": 389,
         "uuid": "fee8a188-5783-44cd-a1c1-ed9d5d7c32a9",
-        "version": "2019-04-03T101353.834000Z"
+        "version": "2019-04-03T10:13:53.834000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/links\"",
@@ -2853,7 +2853,7 @@
         "sha256": "3cec4e10f26331a01ccea9741267a9d5a59a00a39b5a67059cd3f18eb3030663",
         "size": 14532,
         "uuid": "48f0d8a4-fd04-4fee-8301-7441b6efcf48",
-        "version": "2019-04-03T105534.952135Z"
+        "version": "2019-04-03T10:55:34.952135Z"
     },
     {
         "content-type": "application/json; dcp-type=data",
@@ -2865,7 +2865,7 @@
         "sha256": "87ca14c8e7dfe4dcce1ac4d8a14423babdb74763ce13c59a755da3f6719ce8e8",
         "size": 832,
         "uuid": "34d230e7-dd9f-4a47-8d5b-23043fe43bc0",
-        "version": "2019-04-03T105535.336469Z"
+        "version": "2019-04-03T10:55:35.336469Z"
     },
     {
         "content-type": "application/json; dcp-type=data",
@@ -2877,7 +2877,7 @@
         "sha256": "82464691f44b4f0cafdcd3e9854a03074432bb36547fcc7184b3810c644d8bcc",
         "size": 186,
         "uuid": "3db743f3-8235-4553-9a70-37dee987dd64",
-        "version": "2019-04-03T105535.723353Z"
+        "version": "2019-04-03T10:55:35.723353Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2889,7 +2889,7 @@
         "sha256": "0589dd5b928af541e1659017e95ba6d9785749a3f4f476d294f0c93df240b121",
         "size": 1600269,
         "uuid": "13ce8b32-13df-411e-8874-810de85a6d51",
-        "version": "2019-04-03T105536.220197Z"
+        "version": "2019-04-03T10:55:36.220197Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2901,7 +2901,7 @@
         "sha256": "1f5a3012c9ef4a4770308912f8f46607182e3c38a3ab8a3bacb22f292d1694e1",
         "size": 1600269,
         "uuid": "1eb42fec-c278-43a5-b3a3-b68d998b3a2a",
-        "version": "2019-04-03T105536.479486Z"
+        "version": "2019-04-03T10:55:36.479486Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2913,7 +2913,7 @@
         "sha256": "23e8f06cae4c966865c79a2191cd5a681ec2ed7b02f20e790b0c229c8d548465",
         "size": 1600269,
         "uuid": "fe9c7709-3a1c-4548-9578-01e4a63cc9d3",
-        "version": "2019-04-03T105536.745978Z"
+        "version": "2019-04-03T10:55:36.745978Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2925,7 +2925,7 @@
         "sha256": "07977366ff55e8863a6df4924d16d7cf9ae7f94b8cfc638ba004c5817b7ad22b",
         "size": 1600269,
         "uuid": "508e6ec1-6693-4ffb-aa0c-53940a9b1a30",
-        "version": "2019-04-03T105537.018211Z"
+        "version": "2019-04-03T10:55:37.018211Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2937,7 +2937,7 @@
         "sha256": "d8b766da53f216a594da6ba833c99bd8213bee52058cec0d48647602c97de377",
         "size": 1600269,
         "uuid": "9d66777d-7af9-4cf2-bcd7-6d4b0cba8fab",
-        "version": "2019-04-03T105537.249443Z"
+        "version": "2019-04-03T10:55:37.249443Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2949,7 +2949,7 @@
         "sha256": "0a4051c4b023501f0c82111379daa4b4763b7428f37ae0e609acfcfdca96dfd1",
         "size": 1600269,
         "uuid": "50b7b8e6-16fa-4e0c-999a-42cab234b1db",
-        "version": "2019-04-03T105537.599532Z"
+        "version": "2019-04-03T10:55:37.599532Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2961,7 +2961,7 @@
         "sha256": "80e1471ea76d4e4ef929130494ca206c1f3e42600936d65cfb4347d5764d1678",
         "size": 1600269,
         "uuid": "c4be485e-8f30-454c-a641-7d0ff3cafb4a",
-        "version": "2019-04-03T105537.940591Z"
+        "version": "2019-04-03T10:55:37.940591Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2973,7 +2973,7 @@
         "sha256": "934dc0c464a532d89bf0d5f29004466a64c648561ffe56945faba7f63bba0679",
         "size": 1600269,
         "uuid": "23fad5c1-d704-479d-b8cc-a629fee2b340",
-        "version": "2019-04-03T105538.199379Z"
+        "version": "2019-04-03T10:55:38.199379Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2985,7 +2985,7 @@
         "sha256": "822a57a48974c1f0fcaf5b0565652876ec1b4265558942222830ab9d246bfe26",
         "size": 1600269,
         "uuid": "4a9702b6-04e4-409b-a241-42540df7a07f",
-        "version": "2019-04-03T105538.500545Z"
+        "version": "2019-04-03T10:55:38.500545Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -2997,7 +2997,7 @@
         "sha256": "ab38699d9d1abe447b38225d70490aa0ba7a92cd02bffd4a3a18d8ac1bd13d5f",
         "size": 1600269,
         "uuid": "bb22c7d2-a22e-4e97-ab75-5bf44d95aa47",
-        "version": "2019-04-03T105538.750403Z"
+        "version": "2019-04-03T10:55:38.750403Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3009,7 +3009,7 @@
         "sha256": "e7ee71cf986302b3466c2c19d0a00403d381ded671bf3a8b631582d35a2177f0",
         "size": 1600269,
         "uuid": "3047eca0-886e-4989-a220-c35ee497ed62",
-        "version": "2019-04-03T105538.997194Z"
+        "version": "2019-04-03T10:55:38.997194Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3021,7 +3021,7 @@
         "sha256": "28a01a55f7889ff47606ac9c785092231908f3418c3821da3be58b03c410d7b3",
         "size": 1600269,
         "uuid": "86df917c-0969-4e27-8f29-ad2b73837818",
-        "version": "2019-04-03T105539.261002Z"
+        "version": "2019-04-03T10:55:39.261002Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3033,7 +3033,7 @@
         "sha256": "d8e7819f4dff7d2ef181c459f3ec538d38fe43a093706772e02c42d2aa28fb0f",
         "size": 1600269,
         "uuid": "25ce5f57-b9e8-4403-aa8d-6e0d69044683",
-        "version": "2019-04-03T105539.480189Z"
+        "version": "2019-04-03T10:55:39.480189Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3045,7 +3045,7 @@
         "sha256": "240f3bb6f1614280f772073723d721c4e92f379b7e1db3a866884c2ef32d8333",
         "size": 1600269,
         "uuid": "2f887578-9f16-4dcf-86ad-b8967c32b7a5",
-        "version": "2019-04-03T105539.720912Z"
+        "version": "2019-04-03T10:55:39.720912Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3057,7 +3057,7 @@
         "sha256": "7632def6e8897eea870cb47f2d1925bbe24ece886696c646dbec63835fe44636",
         "size": 1600269,
         "uuid": "275513cc-14aa-4ea8-9da8-f47ef8524e37",
-        "version": "2019-04-03T105539.960131Z"
+        "version": "2019-04-03T10:55:39.960131Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3069,7 +3069,7 @@
         "sha256": "d1a1c9dfd8422ac2c0dc965ac6ac44ed6c008b4529c4f11c61c54f2245aa1b76",
         "size": 1600269,
         "uuid": "1f9c2a23-a564-4fd5-9682-7c7d4a68b436",
-        "version": "2019-04-03T105540.220248Z"
+        "version": "2019-04-03T10:55:40.220248Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3081,7 +3081,7 @@
         "sha256": "43fee434f3dcadd88f911f64b64611f66e56ae4ba428827fded65babfdcf3ebb",
         "size": 1600269,
         "uuid": "6c37dc76-a843-4009-986e-90f28512e5ef",
-        "version": "2019-04-03T105540.469870Z"
+        "version": "2019-04-03T10:55:40.469870Z"
     },
     {
         "content-type": "application/json; dcp-type=data",
@@ -3093,7 +3093,7 @@
         "sha256": "648c306a1d4dfb9641f4def7efb3ad3fe299f0c459b83bdd6f88fbc9adc53219",
         "size": 4690,
         "uuid": "4ed6be97-90ba-4e59-b81f-6432a13ce7da",
-        "version": "2019-04-03T105540.859515Z"
+        "version": "2019-04-03T10:55:40.859515Z"
     },
     {
         "content-type": "application/json; dcp-type=data",
@@ -3105,7 +3105,7 @@
         "sha256": "fcd7959c7a5df652934f5866aaacb44675bd6bb643d2ce0dbe66139a50048b06",
         "size": 112,
         "uuid": "d79a3b8e-7031-43a3-9ac3-0f93dbd3228c",
-        "version": "2019-04-03T105541.199977Z"
+        "version": "2019-04-03T10:55:41.199977Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3117,7 +3117,7 @@
         "sha256": "85c5be8c3b6e4242837162f693f5d1bfce5300a32dc6ff5c30db24f1372e9c25",
         "size": 1600269,
         "uuid": "4777d5a6-1e0e-4041-8a30-b95a0e98d95c",
-        "version": "2019-04-03T105541.479157Z"
+        "version": "2019-04-03T10:55:41.479157Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3129,7 +3129,7 @@
         "sha256": "48c8b06f40fb077a3afe1089895fbda21ccca2111fe85c39b7b575fd39fa47f2",
         "size": 1600269,
         "uuid": "6309bae1-2138-4507-8a39-33bb19030090",
-        "version": "2019-04-03T105541.754003Z"
+        "version": "2019-04-03T10:55:41.754003Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3141,7 +3141,7 @@
         "sha256": "a540dc4a9ccdcfeb2b1ba4061f7735747e776c3b2d1f9bac758d13173a34315f",
         "size": 1600269,
         "uuid": "30263603-56cd-48da-9694-8b4bacaaf7bc",
-        "version": "2019-04-03T105542.029318Z"
+        "version": "2019-04-03T10:55:42.029318Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3153,7 +3153,7 @@
         "sha256": "27e04905020b0b33e62f0bee4e1ef338cf24c1114ca58a71af7444d41fe55a9f",
         "size": 1600269,
         "uuid": "516cc5f6-45ae-4b5a-94ca-bc8a6ece4510",
-        "version": "2019-04-03T105542.261771Z"
+        "version": "2019-04-03T10:55:42.261771Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3165,7 +3165,7 @@
         "sha256": "baad4bcb11c43438f20f8e478666e7ec40ccd74c0b8d37e7119acd7dabb4dab5",
         "size": 1600269,
         "uuid": "e9a2424f-12b0-4ce8-b61e-29d859a1af3c",
-        "version": "2019-04-03T105542.605503Z"
+        "version": "2019-04-03T10:55:42.605503Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3177,7 +3177,7 @@
         "sha256": "13232371857789fbb26be5f783f2df61e65064dad45d495e4c7c5eaf89f4a1ee",
         "size": 1600269,
         "uuid": "80269cb6-3de5-4818-97b2-fb3748d8facd",
-        "version": "2019-04-03T105543.080155Z"
+        "version": "2019-04-03T10:55:43.080155Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3189,7 +3189,7 @@
         "sha256": "6033c84accb8aeaa13c1d120e18f3250961eefd15501628893fe80eb60861c82",
         "size": 1600269,
         "uuid": "06862bf0-7add-4177-9d3f-d95aec58c436",
-        "version": "2019-04-03T105543.440368Z"
+        "version": "2019-04-03T10:55:43.440368Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3201,7 +3201,7 @@
         "sha256": "c8e712cb8d7c982fc222f4ebcda04a2f75f4dbc9808f77e71ee296ec8b900b47",
         "size": 1600269,
         "uuid": "9e9be46c-708f-4931-ad11-4fed782e3949",
-        "version": "2019-04-03T105543.739247Z"
+        "version": "2019-04-03T10:55:43.739247Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3213,7 +3213,7 @@
         "sha256": "5abe3360206c21d661aeeee347e1e9bf3a65218798986c50b52328bd5c218845",
         "size": 1600269,
         "uuid": "6bfdc846-e6f8-4786-ac75-9fb7ac241778",
-        "version": "2019-04-03T105544.019854Z"
+        "version": "2019-04-03T10:55:44.019854Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3225,7 +3225,7 @@
         "sha256": "f1d06980228acb649ce21b0ef38736ec78d04c4cbd07117f7d2c798633271cab",
         "size": 1600269,
         "uuid": "8d3f44f7-00a0-4fab-adec-401781b783e5",
-        "version": "2019-04-03T105544.392532Z"
+        "version": "2019-04-03T10:55:44.392532Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3237,7 +3237,7 @@
         "sha256": "a9200607a382651d0a0f8c74fe30b2c470f3004a6e3ccb7aa80394e905a89e17",
         "size": 1600269,
         "uuid": "b102d32f-1140-4ede-8813-8ed053f350df",
-        "version": "2019-04-03T105544.670961Z"
+        "version": "2019-04-03T10:55:44.670961Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3249,7 +3249,7 @@
         "sha256": "c9d2705aa363a24172108e1951134e8272d251ca1e3c82c9aef40e90f059c75e",
         "size": 1600269,
         "uuid": "e4ba18e1-b072-41cd-a091-32b51b5078f4",
-        "version": "2019-04-03T105544.961246Z"
+        "version": "2019-04-03T10:55:44.961246Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3261,7 +3261,7 @@
         "sha256": "c8ebf8c62c728145e8802ba9cf396ae5f5706ca1ca33602d2ea2287ad9df4988",
         "size": 1600269,
         "uuid": "c296fb80-3fb8-476b-b8ff-eae9e8c75388",
-        "version": "2019-04-03T105545.187187Z"
+        "version": "2019-04-03T10:55:45.187187Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3273,7 +3273,7 @@
         "sha256": "2eb6cb0132ea1571b590522a167bd60479c7bf52cd671b0763df3178e87853e3",
         "size": 1600269,
         "uuid": "399445e5-b4f6-4f3e-8b65-bfc76f0e078c",
-        "version": "2019-04-03T105545.522173Z"
+        "version": "2019-04-03T10:55:45.522173Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3285,7 +3285,7 @@
         "sha256": "ea883a274715c627c3a2615a1340c22d88f8c5417de3106a9aa666f0c02b851c",
         "size": 1600269,
         "uuid": "fbefb123-cf54-4eeb-9ec2-d826e44ad953",
-        "version": "2019-04-03T105545.766611Z"
+        "version": "2019-04-03T10:55:45.766611Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3297,7 +3297,7 @@
         "sha256": "7c1d52008fd944b34aa86fd0a5d56a2c0d0360bd6c7939fcc86a5ca28312c024",
         "size": 1600269,
         "uuid": "8bf3db8e-e9cf-40e8-916b-b1e24449d79d",
-        "version": "2019-04-03T105546.280407Z"
+        "version": "2019-04-03T10:55:46.280407Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3309,7 +3309,7 @@
         "sha256": "37665c56980c1c395bcf89548565b40d44bd1a6e84bc31ba101d2e83818fe89e",
         "size": 1600269,
         "uuid": "2207ffb3-4f5a-47ba-99c1-b7d81b56168b",
-        "version": "2019-04-03T105547.016718Z"
+        "version": "2019-04-03T10:55:47.016718Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3321,7 +3321,7 @@
         "sha256": "5eebc95b1f0daa116d73359a0c653759910a84e2a086239105fd31cc2c463d6e",
         "size": 1600269,
         "uuid": "6b04d393-7852-48b4-ae14-8cfa4543c5ca",
-        "version": "2019-04-03T105547.282294Z"
+        "version": "2019-04-03T10:55:47.282294Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3333,7 +3333,7 @@
         "sha256": "ab3b43d91b8106b24f550afb6b04e4ff06c29703b8b7c03b62b5ded3e3562bcf",
         "size": 1600269,
         "uuid": "d2859680-0fe8-400a-be0e-e04a3d832d1f",
-        "version": "2019-04-03T105547.626243Z"
+        "version": "2019-04-03T10:55:47.626243Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3345,7 +3345,7 @@
         "sha256": "51a22aa82eda457911b822c3a67a6c3d2169c54b7204b66711ff6113d45114e6",
         "size": 1600269,
         "uuid": "467e4b98-519f-430b-8c59-57270f0e1259",
-        "version": "2019-04-03T105547.939813Z"
+        "version": "2019-04-03T10:55:47.939813Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3357,7 +3357,7 @@
         "sha256": "2783f3179b06e80ae1b5a0f45c40afeae45b8da41930d0c1e3e050d7e9698344",
         "size": 1600269,
         "uuid": "f7f95a37-370c-459f-bf84-19691fb195a5",
-        "version": "2019-04-03T105548.236748Z"
+        "version": "2019-04-03T10:55:48.236748Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3369,7 +3369,7 @@
         "sha256": "9055d0b3f83ba41e98c9105cb806e216b0d14a24f50c88489fa06e207f046f3c",
         "size": 1600269,
         "uuid": "dbf2dbfb-2470-40db-96c8-eab439922ceb",
-        "version": "2019-04-03T105548.520165Z"
+        "version": "2019-04-03T10:55:48.520165Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3381,7 +3381,7 @@
         "sha256": "5e4028907526a099ee4b685a15a583e000c0164c14ecfcd41118b48cc3c05bc4",
         "size": 1600269,
         "uuid": "cbb74511-25d3-431a-83e5-96d8746b7b13",
-        "version": "2019-04-03T105548.859536Z"
+        "version": "2019-04-03T10:55:48.859536Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3393,7 +3393,7 @@
         "sha256": "c72b7a15560b7ab0419e223ad09ded3e3f182263c0c7ae4a6596246e8960b1c0",
         "size": 1600269,
         "uuid": "8feb1eb5-aae7-49f3-8a50-ca08fc6cd9ae",
-        "version": "2019-04-03T105549.143186Z"
+        "version": "2019-04-03T10:55:49.143186Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3405,7 +3405,7 @@
         "sha256": "148e60401f58fffa7ec7e17ef68b45e712114e52d1e33a79b849773f3a5cd5b3",
         "size": 1600269,
         "uuid": "c24714bc-d736-44b9-80f7-226178093cb0",
-        "version": "2019-04-03T105549.500027Z"
+        "version": "2019-04-03T10:55:49.500027Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3417,7 +3417,7 @@
         "sha256": "1abb6241a8357ff244d86c8352bd1e713ef343fbf15dec7157ac533152d92a0d",
         "size": 1600269,
         "uuid": "f2f917fb-0729-43a9-8b91-badc7768e23c",
-        "version": "2019-04-03T105549.865712Z"
+        "version": "2019-04-03T10:55:49.865712Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3429,7 +3429,7 @@
         "sha256": "499483d49cd71506c7095f30a39c64a556ce63902cdbf375b613c495de56e733",
         "size": 1600269,
         "uuid": "3b548656-b0e1-4fd0-8ed8-0002a5a618ba",
-        "version": "2019-04-03T105550.106030Z"
+        "version": "2019-04-03T10:55:50.106030Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3441,7 +3441,7 @@
         "sha256": "d2d0f8b5f1ae031f26adb3a579be5cf845b0c0a0468fe0f0f71ecfb8d3db7e28",
         "size": 1600269,
         "uuid": "07db36b4-87d4-4fa1-8a85-b85701d5a9f8",
-        "version": "2019-04-03T105550.478983Z"
+        "version": "2019-04-03T10:55:50.478983Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3453,7 +3453,7 @@
         "sha256": "4e13cfd76ea5e4b52c9316fbbd563e5bbd9673a708c71bbbfb45b789c6759cd0",
         "size": 1600269,
         "uuid": "49ada68a-c5b7-4e03-9449-3684e06db4fd",
-        "version": "2019-04-03T105550.739481Z"
+        "version": "2019-04-03T10:55:50.739481Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3465,7 +3465,7 @@
         "sha256": "e6bd3d5c56ed7b408a4096a224efd0f09a861674f14991f3c1fcee26aea63d5a",
         "size": 1600269,
         "uuid": "dc2076bd-19ec-47c7-8ac9-6c6503386cd6",
-        "version": "2019-04-03T105551.111778Z"
+        "version": "2019-04-03T10:55:51.111778Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3477,7 +3477,7 @@
         "sha256": "28a08c2edb7044af26e5732fe991643c1fb97851d35ad18658b6ff75e9a9e2e7",
         "size": 1600269,
         "uuid": "2f5d576a-9e48-4f98-b19b-11e0bbd86615",
-        "version": "2019-04-03T105551.335466Z"
+        "version": "2019-04-03T10:55:51.335466Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3489,7 +3489,7 @@
         "sha256": "621cd72144807a88513d47937d763ac4b665ae144f364f4c69ed0ab6802c9985",
         "size": 1600269,
         "uuid": "56a4a357-0c62-4058-9362-1ae9b928a38c",
-        "version": "2019-04-03T105551.680479Z"
+        "version": "2019-04-03T10:55:51.680479Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3501,7 +3501,7 @@
         "sha256": "e54c2e4b5a5d10ae3be6b91d08415b3fe463c3ccd9f86f7ebf9b2bf9617ffbdc",
         "size": 1600269,
         "uuid": "ab9c2448-9e9c-4847-ab2a-7e65333c7795",
-        "version": "2019-04-03T105552.080625Z"
+        "version": "2019-04-03T10:55:52.080625Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3513,7 +3513,7 @@
         "sha256": "02324cb2dc6975d11959c1694c534654ef48aeae1086128362bd554c92bd4a25",
         "size": 1600269,
         "uuid": "5b961510-975a-44ee-82c4-47fb7a1ef69f",
-        "version": "2019-04-03T105552.339328Z"
+        "version": "2019-04-03T10:55:52.339328Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3525,7 +3525,7 @@
         "sha256": "c48167caf74695965ea023cdb713253ea866d0970eb40c0fe23df266c7226917",
         "size": 1600269,
         "uuid": "db9d6d77-a51f-49ce-946f-21038694b549",
-        "version": "2019-04-03T105552.640285Z"
+        "version": "2019-04-03T10:55:52.640285Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3537,7 +3537,7 @@
         "sha256": "5a8338ac1fda0c1554f616d4501369f07f7de1d0ea4e3e17ab682e314dfcde98",
         "size": 1600269,
         "uuid": "5146d165-1eee-48ad-8327-174d1817dfac",
-        "version": "2019-04-03T105552.942022Z"
+        "version": "2019-04-03T10:55:52.942022Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3549,7 +3549,7 @@
         "sha256": "6dfdab9d07ef4c282a65d2e6f0f6b0b3f65993ad10100c7c4e92c1f6b5c8bc3f",
         "size": 1600269,
         "uuid": "78dc3350-0cb6-4731-b0fb-fa0088f7dac7",
-        "version": "2019-04-03T105553.200291Z"
+        "version": "2019-04-03T10:55:53.200291Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3561,7 +3561,7 @@
         "sha256": "755a673f5eac78d48792f777ab04e352814e75596625a9331b9e5af7c199d7a3",
         "size": 1600269,
         "uuid": "213981ed-c5de-40d6-8d09-ef4354fed57a",
-        "version": "2019-04-03T105553.480733Z"
+        "version": "2019-04-03T10:55:53.480733Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3573,7 +3573,7 @@
         "sha256": "840268313bf93809cf0f6d546a4d24152fe1514a472d4c2715df3904e397f835",
         "size": 1600269,
         "uuid": "4f19bb8b-95d6-4dfd-8c58-6bf557cf7e8e",
-        "version": "2019-04-03T105553.790586Z"
+        "version": "2019-04-03T10:55:53.790586Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3585,7 +3585,7 @@
         "sha256": "b6500f6c5ece4770f0299a3145253b99a012eeba9c451e68e1a887b8f454c2da",
         "size": 1600269,
         "uuid": "b735a8fe-4d8b-43dc-856b-5376aaf8e7f2",
-        "version": "2019-04-03T105554.038843Z"
+        "version": "2019-04-03T10:55:54.038843Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3597,7 +3597,7 @@
         "sha256": "d1ec35fd392cf3d718332fa54250ecf8efd284f3120a1c8d60074e15b84f5377",
         "size": 1600269,
         "uuid": "6465a79b-714e-4286-835c-f510fcc744e8",
-        "version": "2019-04-03T105554.264803Z"
+        "version": "2019-04-03T10:55:54.264803Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3609,7 +3609,7 @@
         "sha256": "3f952c140d5afa90976992b1a5c729b4603648bd12d19e601cdc91427d0cb49b",
         "size": 1600269,
         "uuid": "9a77ba3d-6773-4e07-ac91-61f0b9203183",
-        "version": "2019-04-03T105554.539793Z"
+        "version": "2019-04-03T10:55:54.539793Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3621,7 +3621,7 @@
         "sha256": "ac1ffe203eb3ec5c71c7b75ed3fd052a99d8d1161f7ace904b6860ad7c82b129",
         "size": 1600269,
         "uuid": "fc091e1c-afc8-46e4-b9d3-68341242512a",
-        "version": "2019-04-03T105554.778615Z"
+        "version": "2019-04-03T10:55:54.778615Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3633,7 +3633,7 @@
         "sha256": "8c06e4f22cbd47302f82585d2134b1230c4062e03215a7d83b801bbb72900e6d",
         "size": 1600269,
         "uuid": "e4021199-842a-489e-a65b-fc3160446904",
-        "version": "2019-04-03T105555.379342Z"
+        "version": "2019-04-03T10:55:55.379342Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3645,7 +3645,7 @@
         "sha256": "fdb06d5ef69715919d7ea4bdeeda0c7a81b838a0ef28268a87bf6abe4af8c898",
         "size": 1600269,
         "uuid": "1aa253f9-b137-4fd9-b65f-c307420bcfc4",
-        "version": "2019-04-03T105555.600718Z"
+        "version": "2019-04-03T10:55:55.600718Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3657,7 +3657,7 @@
         "sha256": "30f20720e23acf0caff1ff1bdbe582de254d3a8ab93188a44b63d5cdd597fc28",
         "size": 1600269,
         "uuid": "22be2eb0-32f3-4b49-884a-e2d28c01706d",
-        "version": "2019-04-03T105555.855632Z"
+        "version": "2019-04-03T10:55:55.855632Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3669,7 +3669,7 @@
         "sha256": "8c1bb26f1be6c9196ef0e074a968bfee34806079e57474577fd3ba8947a07173",
         "size": 1600269,
         "uuid": "c99e944a-475c-4df4-9e6d-9ea50057cfb6",
-        "version": "2019-04-03T105556.233992Z"
+        "version": "2019-04-03T10:55:56.233992Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3681,7 +3681,7 @@
         "sha256": "30b35d9ebce19e936ca156ccc1669700a28819a57082b28b9390e863c21b9f6f",
         "size": 1600269,
         "uuid": "2a5f4fda-058f-4478-94dc-c12130be8969",
-        "version": "2019-04-03T105556.579317Z"
+        "version": "2019-04-03T10:55:56.579317Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3693,7 +3693,7 @@
         "sha256": "616f5e816d18b75695af9ae3ca6bf250730ebaf7de10b43be96cdbb96d9c54c6",
         "size": 1600269,
         "uuid": "cca66a40-ea4e-4d2e-a9a5-084a9dd6241a",
-        "version": "2019-04-03T105556.968010Z"
+        "version": "2019-04-03T10:55:56.968010Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3705,7 +3705,7 @@
         "sha256": "add26fb8561728ddcc1da5b8019bf30c34a1a4724680eb8f4f297867123b6054",
         "size": 1600269,
         "uuid": "ab43f67c-1352-4344-9ab2-164ec39d5b23",
-        "version": "2019-04-03T105557.260494Z"
+        "version": "2019-04-03T10:55:57.260494Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3717,7 +3717,7 @@
         "sha256": "400a32e254cc7e8ff63c0f7ecbb06f46046180447674d1192404dab8d37a1202",
         "size": 1600269,
         "uuid": "78046a68-90a9-4761-85fe-bb8f1059a75e",
-        "version": "2019-04-03T105557.518156Z"
+        "version": "2019-04-03T10:55:57.518156Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3729,7 +3729,7 @@
         "sha256": "7bfd376a2be4d88c67c8d175c52423ea1391402a062b7a0392b0dc2dbfccfdb6",
         "size": 1600269,
         "uuid": "fbb1d9de-baca-44fd-82b4-1b5f9b76e126",
-        "version": "2019-04-03T105557.760815Z"
+        "version": "2019-04-03T10:55:57.760815Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3741,7 +3741,7 @@
         "sha256": "2202bb6788f971004969c17f5d5013579ac627048d6bd25ad7c63e671e3687f2",
         "size": 1600269,
         "uuid": "d33aac64-f261-46d0-8712-543ccdc219c0",
-        "version": "2019-04-03T105558.079130Z"
+        "version": "2019-04-03T10:55:58.079130Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3753,7 +3753,7 @@
         "sha256": "3e99efc1c84bdf4f3022a35b02d6a310924388f5a64d245322abbb39179bac14",
         "size": 1600269,
         "uuid": "ea165ff1-76d8-4fc4-b5b1-46e13a92d61a",
-        "version": "2019-04-03T105558.419178Z"
+        "version": "2019-04-03T10:55:58.419178Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3765,7 +3765,7 @@
         "sha256": "91d3a98042a86c79996b0cf5713812607de53519f3b9c7227fcb5667fba95831",
         "size": 1600269,
         "uuid": "fbfd8b5e-6818-4204-8a1d-af17f654c63e",
-        "version": "2019-04-03T105558.880203Z"
+        "version": "2019-04-03T10:55:58.880203Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3777,7 +3777,7 @@
         "sha256": "9ac81cb46bb7244b76dbec83afa406653bc80e5f50e8cec14bcf52da96f53a46",
         "size": 1600269,
         "uuid": "88045284-69d1-49a5-951a-ce861ed0dbee",
-        "version": "2019-04-03T105559.179305Z"
+        "version": "2019-04-03T10:55:59.179305Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3789,7 +3789,7 @@
         "sha256": "b0559f19893372f5d1e2eb022c8de33afab9460c5bfdc3fa43a1d132a553080c",
         "size": 1600269,
         "uuid": "29982631-185e-43c5-ae8c-daeba6e26c2b",
-        "version": "2019-04-03T105559.659913Z"
+        "version": "2019-04-03T10:55:59.659913Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3801,7 +3801,7 @@
         "sha256": "d18bcb7369e1a4c3fba02e006c593aeb12d3baf16115db0d5324404ee403db77",
         "size": 1600269,
         "uuid": "083944c0-37af-4c9c-80e1-2c101b95acc3",
-        "version": "2019-04-03T105559.998865Z"
+        "version": "2019-04-03T10:55:59.998865Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3813,7 +3813,7 @@
         "sha256": "f19fd7d959fb5c7a48fe8cd776a0e4d7706bde6f11d8fec837ced211b64eca29",
         "size": 1600269,
         "uuid": "40cbb7e6-b5f1-48ad-825a-5159197c6803",
-        "version": "2019-04-03T105600.308174Z"
+        "version": "2019-04-03T10:56:00.308174Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3825,7 +3825,7 @@
         "sha256": "88bd33e3488dffad8404a0dc27afaef8dbe5bada2d88ad5a59ddf43c3e8c0597",
         "size": 1600269,
         "uuid": "ebe33ee1-8e0b-4412-abb1-b26c5ead07e1",
-        "version": "2019-04-03T105600.586805Z"
+        "version": "2019-04-03T10:56:00.586805Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3837,7 +3837,7 @@
         "sha256": "2b078043f0c405d3cb989c43456e5b7ac835f416bb620ea3c85e16c8962b3433",
         "size": 1600269,
         "uuid": "a94e0444-861c-418a-a338-16ed56e9b430",
-        "version": "2019-04-03T105600.867025Z"
+        "version": "2019-04-03T10:56:00.867025Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3849,7 +3849,7 @@
         "sha256": "871f6921cdd3d12ec7b1670a59eb2c8e123a376e391e59f434efce751661da40",
         "size": 1600269,
         "uuid": "2e39b6d1-7755-4265-a044-f74cac9943a1",
-        "version": "2019-04-03T105601.179469Z"
+        "version": "2019-04-03T10:56:01.179469Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3861,7 +3861,7 @@
         "sha256": "dd7b8ec3c8a18855a787d282efaffe9b9c5927d29046b194bb405586fc0f4a6b",
         "size": 1600269,
         "uuid": "fcab0b60-14e5-441a-b5ab-492576785bfb",
-        "version": "2019-04-03T105601.420192Z"
+        "version": "2019-04-03T10:56:01.420192Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3873,7 +3873,7 @@
         "sha256": "7c822e36225c6ae1ae17eeae2c3d8d036386e57b7c4a096e2f5412af9441a227",
         "size": 1600269,
         "uuid": "45caa165-0ccb-424e-a454-da6ee8c3debb",
-        "version": "2019-04-03T105601.721498Z"
+        "version": "2019-04-03T10:56:01.721498Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3885,7 +3885,7 @@
         "sha256": "e2160976c70adaa0cbbe30ad556550978fb8e179c5c2c01d43e51eaf392fd8ec",
         "size": 1600269,
         "uuid": "cd27dad7-cd62-442b-ac93-1a492df1045e",
-        "version": "2019-04-03T105602.039781Z"
+        "version": "2019-04-03T10:56:02.039781Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3897,7 +3897,7 @@
         "sha256": "bef348b002b6d232a391fb0d3f9c31506dbb24eaca6a82ea255e8e362affc71a",
         "size": 1600269,
         "uuid": "60dd0c9f-00a5-4d05-9e03-d3d9ed094144",
-        "version": "2019-04-03T105602.303691Z"
+        "version": "2019-04-03T10:56:02.303691Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3909,7 +3909,7 @@
         "sha256": "d122a74a78ee74b8ec52ad8c0e8c91a0da215f9ccaa8997d97ac19312792f3ec",
         "size": 1600269,
         "uuid": "c6feee87-37de-465d-b860-b9bd70da69c9",
-        "version": "2019-04-03T105602.620006Z"
+        "version": "2019-04-03T10:56:02.620006Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3921,7 +3921,7 @@
         "sha256": "2170b2d5225a5c06b8e6a0d4c7baf98fedc829c55cf39384836319dde5cfd27b",
         "size": 1600269,
         "uuid": "bf2d918b-0a45-4f42-83b5-e38dd2c77084",
-        "version": "2019-04-03T105602.924316Z"
+        "version": "2019-04-03T10:56:02.924316Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3933,7 +3933,7 @@
         "sha256": "8c8299f5933f6546bbca375bdd0258ccf642bae8cbed6cbad569037a21477389",
         "size": 1600269,
         "uuid": "31896233-7b29-42a4-94b0-208095c99f5f",
-        "version": "2019-04-03T105603.161708Z"
+        "version": "2019-04-03T10:56:03.161708Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3945,7 +3945,7 @@
         "sha256": "cf7f002f384c6f5491b164dd7a571d9c768be9bf3e019401015b6dc69b957696",
         "size": 1600269,
         "uuid": "55001751-e224-4825-87c4-bd786345faef",
-        "version": "2019-04-03T105603.421325Z"
+        "version": "2019-04-03T10:56:03.421325Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3957,7 +3957,7 @@
         "sha256": "4de7ef1850de8d30f292f26d5df973c15a37d0f09fcec7e36206c1380e74abcb",
         "size": 1600269,
         "uuid": "9e4aa7a1-045c-448d-9506-9f180646f31e",
-        "version": "2019-04-03T105603.652981Z"
+        "version": "2019-04-03T10:56:03.652981Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3969,7 +3969,7 @@
         "sha256": "42173d6b156f00f205f92f20f694b7392ce3d7619033122df8388e1a45acdc73",
         "size": 1600269,
         "uuid": "54ddc5aa-4b48-48e5-a955-2f969478eb8d",
-        "version": "2019-04-03T105603.939697Z"
+        "version": "2019-04-03T10:56:03.939697Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3981,7 +3981,7 @@
         "sha256": "2c9e806302eecfe1fa003b8ed15beeed08d6cb6e93b2552c30c7d48a8253386b",
         "size": 1600269,
         "uuid": "9ab3b14e-52eb-45fe-8473-b166185732fa",
-        "version": "2019-04-03T105604.189833Z"
+        "version": "2019-04-03T10:56:04.189833Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -3993,7 +3993,7 @@
         "sha256": "c5554bc09b3722f4b63a015ccd5f952778d60b0e5c5b11e8e6850028cd41f4e6",
         "size": 1600269,
         "uuid": "e877a847-80aa-4d68-a069-6da3015bb19e",
-        "version": "2019-04-03T105604.480375Z"
+        "version": "2019-04-03T10:56:04.480375Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4005,7 +4005,7 @@
         "sha256": "8c77ea0a4a7e17738c3f1148a63b37d068acc1ffc8fc2d5c9e9f0dbcf88d02ce",
         "size": 1600269,
         "uuid": "f30fb34c-ea78-4c55-8342-666e028b1ec7",
-        "version": "2019-04-03T105604.725431Z"
+        "version": "2019-04-03T10:56:04.725431Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4017,7 +4017,7 @@
         "sha256": "a6d97e21fea1d3cc28be720bccb70f9f2a0e3fca6ffbce383ade7612ed90ea13",
         "size": 1600269,
         "uuid": "a800e1a6-58b9-48ea-b33b-b2c58627e5f0",
-        "version": "2019-04-03T105605.006005Z"
+        "version": "2019-04-03T10:56:05.006005Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4029,7 +4029,7 @@
         "sha256": "2f3af86421a5d9ec2101ff3943a8157d3ca2b257d04676bec5a1608241b9e93b",
         "size": 1600269,
         "uuid": "4971ef5d-cd50-48e1-a7f3-91e1ebf27dda",
-        "version": "2019-04-03T105605.420646Z"
+        "version": "2019-04-03T10:56:05.420646Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4041,7 +4041,7 @@
         "sha256": "c87288170e297bcacb92a8b685251eb3b8b5f61cd14cbf569ba7473e33bf289d",
         "size": 1600269,
         "uuid": "0fe0425a-1371-42d6-a6d2-36962c8a22f7",
-        "version": "2019-04-03T105605.641366Z"
+        "version": "2019-04-03T10:56:05.641366Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4053,7 +4053,7 @@
         "sha256": "9a1b23dff11928fe74e4779a3e9865b9cb732683a0bee85da64e5afb38959383",
         "size": 1600269,
         "uuid": "25ff77de-95eb-4737-9ba2-fff2969eca73",
-        "version": "2019-04-03T105605.904789Z"
+        "version": "2019-04-03T10:56:05.904789Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4065,7 +4065,7 @@
         "sha256": "3afe34c5645c4c6ed4e8fd71882f8e84d62544eea7b926de3eddc31a81084854",
         "size": 1600269,
         "uuid": "f1bdabbf-13ed-483c-8492-a6c9c2f65db6",
-        "version": "2019-04-03T105606.322160Z"
+        "version": "2019-04-03T10:56:06.322160Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4077,7 +4077,7 @@
         "sha256": "304439ad4583424ef116b6ac98a44c1d43a7622472b2a3a89677b54392acb577",
         "size": 1600269,
         "uuid": "5b57e6a7-e098-4605-b00a-d58652698580",
-        "version": "2019-04-03T105606.659307Z"
+        "version": "2019-04-03T10:56:06.659307Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4089,7 +4089,7 @@
         "sha256": "9158ddf94cd4395252a02c2f61a4e2f3b179593839a2c22a2c89066dc053e5de",
         "size": 1600269,
         "uuid": "5cadfa19-ed60-4ba2-b04c-c23b6c0495f7",
-        "version": "2019-04-03T105607.139632Z"
+        "version": "2019-04-03T10:56:07.139632Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4101,7 +4101,7 @@
         "sha256": "e49b7f981478d3e32fe3ffde7a952a2361d22a6df1cc55b8f6d364646149d425",
         "size": 1600269,
         "uuid": "f2fe8c9e-6ed6-4999-a98b-4fecf57da55a",
-        "version": "2019-04-03T105607.380785Z"
+        "version": "2019-04-03T10:56:07.380785Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4113,7 +4113,7 @@
         "sha256": "24612939c544d89c59e974d0283cafae98528f56a9e52d5761f70e7b8757a5fa",
         "size": 1600269,
         "uuid": "b8ab79bd-28c8-448b-9847-f8f10d3ccc45",
-        "version": "2019-04-03T105607.648634Z"
+        "version": "2019-04-03T10:56:07.648634Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4125,7 +4125,7 @@
         "sha256": "67b14eeac471ed074ca1063bbe78845143390c42914e8908ea4ef7341b10fb13",
         "size": 1600269,
         "uuid": "dcc63bdc-2c05-488c-98ce-905b6b1fcfe4",
-        "version": "2019-04-03T105607.955180Z"
+        "version": "2019-04-03T10:56:07.955180Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4137,7 +4137,7 @@
         "sha256": "7652e6b69da6660427c7a985344ed04eef6970f43ad69af6e52bd92d90cceec0",
         "size": 1600269,
         "uuid": "f3926330-cfa4-4f64-b12c-3e50e06a7153",
-        "version": "2019-04-03T105608.221439Z"
+        "version": "2019-04-03T10:56:08.221439Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4149,7 +4149,7 @@
         "sha256": "0551b9abc860383650a0fc551ee22f876d3041924377eeb5ec079917718fa75d",
         "size": 1600269,
         "uuid": "b134deb9-6a03-486f-a603-955348d1cb67",
-        "version": "2019-04-03T105608.540867Z"
+        "version": "2019-04-03T10:56:08.540867Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4161,7 +4161,7 @@
         "sha256": "0d40beb93999b640ac48a7aff74214eb0e17fd80e40303be16f0d04f232dfaef",
         "size": 1600269,
         "uuid": "b9aef9b6-f326-4d1a-b912-41030791bc78",
-        "version": "2019-04-03T105608.782580Z"
+        "version": "2019-04-03T10:56:08.782580Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4173,7 +4173,7 @@
         "sha256": "42ed249546e37d66f631498a848e02d183fa919bc242d810333ac5b2ca94e7e8",
         "size": 1600269,
         "uuid": "e9f28e2b-b63c-4819-8385-18062c5411aa",
-        "version": "2019-04-03T105609.057230Z"
+        "version": "2019-04-03T10:56:09.057230Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4185,7 +4185,7 @@
         "sha256": "4c9493782169ea02a632b1d911b9b026c680569c1d87cada888458f025962129",
         "size": 1600269,
         "uuid": "a7309326-5690-413e-8b73-1f33f8897dab",
-        "version": "2019-04-03T105609.289499Z"
+        "version": "2019-04-03T10:56:09.289499Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4197,7 +4197,7 @@
         "sha256": "dcdc7393bfb9721c8bb3062e1ddbfb6e5f6ea1108ebdca1afca0a797d05697c7",
         "size": 1600269,
         "uuid": "6bd9329f-5602-4c75-92c8-84882ba69685",
-        "version": "2019-04-03T105609.542553Z"
+        "version": "2019-04-03T10:56:09.542553Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4209,7 +4209,7 @@
         "sha256": "6b311490b4b187aa705716c5facca6e74d2248638d95af9be1b8fff6d0afccb4",
         "size": 1600269,
         "uuid": "0c9f682a-a5dd-45ed-bcaa-be4e5342771c",
-        "version": "2019-04-03T105609.824711Z"
+        "version": "2019-04-03T10:56:09.824711Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4221,7 +4221,7 @@
         "sha256": "2bd656d393d3d3337ed6258b1e5e61f799370f6a5958a9fc5f816f1407adca4f",
         "size": 1600269,
         "uuid": "36063754-9a8a-4815-9783-1508974a6ca3",
-        "version": "2019-04-03T105610.096845Z"
+        "version": "2019-04-03T10:56:10.096845Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4233,7 +4233,7 @@
         "sha256": "8597d134ccea0e906080b36f8717c8be936bf90b682434d23c9eca0649bea27f",
         "size": 1600269,
         "uuid": "a601ed00-aadd-4ac3-95ef-25fc052c37db",
-        "version": "2019-04-03T105610.401438Z"
+        "version": "2019-04-03T10:56:10.401438Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4245,7 +4245,7 @@
         "sha256": "da60f26d4165e3fa29819338ce470d2101c02df2657b8b1272fd56be0919c280",
         "size": 1600269,
         "uuid": "e9da4b39-a542-4f3a-85af-c9da97172715",
-        "version": "2019-04-03T105610.683603Z"
+        "version": "2019-04-03T10:56:10.683603Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4257,7 +4257,7 @@
         "sha256": "b80a54f1e3efafb5aa6de7d3f0d6e309dc3973c957c91245e790cc36c08482b9",
         "size": 1600269,
         "uuid": "215ebd60-69d7-4509-8575-301f28d841b0",
-        "version": "2019-04-03T105611.022078Z"
+        "version": "2019-04-03T10:56:11.022078Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4269,7 +4269,7 @@
         "sha256": "516ccfdda5551806152d5f3de11fc1f14ec21ca2b5452dc53e98416f5f47daea",
         "size": 1600269,
         "uuid": "47c1ab01-7bb9-4cc6-949e-aff889b78bc4",
-        "version": "2019-04-03T105611.559338Z"
+        "version": "2019-04-03T10:56:11.559338Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4281,7 +4281,7 @@
         "sha256": "68c9dfe824f02f572aa39d5dfc16d5cc92a0664ce4ec7fce21b513a5d5120400",
         "size": 1600269,
         "uuid": "bbaf020d-e851-4259-8784-832fc85b6c83",
-        "version": "2019-04-03T105611.801366Z"
+        "version": "2019-04-03T10:56:11.801366Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4293,7 +4293,7 @@
         "sha256": "1494d456f4a227f28525a90eaa34a68e76b852aee12b8e010331f6908dc73904",
         "size": 1600269,
         "uuid": "6c0ffe0f-19a5-4ed9-92e1-316f3d8cc1f9",
-        "version": "2019-04-03T105612.278469Z"
+        "version": "2019-04-03T10:56:12.278469Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4305,7 +4305,7 @@
         "sha256": "33a6cd371f88a33bf0f1daa0345e47f414af1636f420e4fb1a1edcdd6687563b",
         "size": 1600269,
         "uuid": "60edf99d-ab78-4bab-b3de-801fabbb7116",
-        "version": "2019-04-03T105612.622653Z"
+        "version": "2019-04-03T10:56:12.622653Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4317,7 +4317,7 @@
         "sha256": "061cb156a427a7277fe5bfdada22068981a75546e1cb8cda89b6259a359e4c8a",
         "size": 1600269,
         "uuid": "bbb92406-a0df-4de1-97fa-fa10457198d8",
-        "version": "2019-04-03T105612.859568Z"
+        "version": "2019-04-03T10:56:12.859568Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4329,7 +4329,7 @@
         "sha256": "bd0be59413d859115ff7f265726c32a303dacdd3660f5f70eecd9a9511db0ec1",
         "size": 1600269,
         "uuid": "0d38ed8b-ccdd-4a32-9be3-bfa62f535c5c",
-        "version": "2019-04-03T105613.080125Z"
+        "version": "2019-04-03T10:56:13.080125Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4341,7 +4341,7 @@
         "sha256": "7c9e194ae38ba112afb630d03d686135c13cedbd0dca0a6a287b91a82af1ad9e",
         "size": 1600269,
         "uuid": "0bdded17-864c-4c7a-a499-24a4267b4dc8",
-        "version": "2019-04-03T105613.344358Z"
+        "version": "2019-04-03T10:56:13.344358Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4353,7 +4353,7 @@
         "sha256": "f7833d340e6ba0fcfa3082241e16e54444576db840d73a911a2d40c62e6c7c42",
         "size": 1600269,
         "uuid": "e61824cb-b2e3-4131-a93c-0f809407e12a",
-        "version": "2019-04-03T105613.584363Z"
+        "version": "2019-04-03T10:56:13.584363Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4365,7 +4365,7 @@
         "sha256": "341648c0b44a819c34a6c27d213e5d252d5edcef5e88d842f817832b09bfbcba",
         "size": 1600269,
         "uuid": "1cab431e-680b-491e-9f8a-9503230a602c",
-        "version": "2019-04-03T105613.859236Z"
+        "version": "2019-04-03T10:56:13.859236Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4377,7 +4377,7 @@
         "sha256": "1360f3f3c583137c692923cc6b1fb416575482e6e248196a6bb1fecd5e27cd97",
         "size": 1600269,
         "uuid": "c8f06cec-ac9f-4241-8f0d-86daecbda3af",
-        "version": "2019-04-03T105614.120757Z"
+        "version": "2019-04-03T10:56:14.120757Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4389,7 +4389,7 @@
         "sha256": "144d25544bf2995a01f834cfe7e71f696d1cec67ff4ff355216189c25696301f",
         "size": 1600269,
         "uuid": "0fb666f0-0331-4532-8ed6-9ee27b383f96",
-        "version": "2019-04-03T105614.469912Z"
+        "version": "2019-04-03T10:56:14.469912Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4401,7 +4401,7 @@
         "sha256": "9c4ffe1988df43cf7718d61790392096a85d294aabf389c177a3caf31df8e8a0",
         "size": 1600269,
         "uuid": "ebcf808e-8039-4d0f-9c6a-82ddf9bd6dc0",
-        "version": "2019-04-03T105614.720103Z"
+        "version": "2019-04-03T10:56:14.720103Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4413,7 +4413,7 @@
         "sha256": "e4eb56824253d3871a1255644aacbc8a00214b68d774463d87a0a4913f61ac25",
         "size": 1600269,
         "uuid": "ae06e940-6a8d-44a1-9e5f-de404f802e0d",
-        "version": "2019-04-03T105614.967111Z"
+        "version": "2019-04-03T10:56:14.967111Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4425,7 +4425,7 @@
         "sha256": "cd54522df1f749716b726df51c45563c3d7be47d9bcce9b5ac97576062e9f720",
         "size": 1600269,
         "uuid": "a3001444-768b-45bd-82f8-ffd492f8a9ff",
-        "version": "2019-04-03T105615.221216Z"
+        "version": "2019-04-03T10:56:15.221216Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4437,7 +4437,7 @@
         "sha256": "f280463e13ed0c1804280dfe839aeafc31978f5aa22fef71f998c05fa3981e1a",
         "size": 1600269,
         "uuid": "fcf35fc4-c4da-4643-9b4c-46ae410160ea",
-        "version": "2019-04-03T105615.545209Z"
+        "version": "2019-04-03T10:56:15.545209Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4449,7 +4449,7 @@
         "sha256": "1bf0530559802b92677858e96a43be30c77ba94dd170630b3bb2702b740eb5e2",
         "size": 1600269,
         "uuid": "a454ef32-a818-48bb-8986-59c91a3582d6",
-        "version": "2019-04-03T105615.780166Z"
+        "version": "2019-04-03T10:56:15.780166Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4461,7 +4461,7 @@
         "sha256": "04733ed9c6df06e23b249b23f985e61c66927e8be780f691e87f23b5cb01ad66",
         "size": 1600269,
         "uuid": "514c1928-88b2-4ee4-9a36-6df3a1ea6ad6",
-        "version": "2019-04-03T105616.144108Z"
+        "version": "2019-04-03T10:56:16.144108Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4473,7 +4473,7 @@
         "sha256": "7300a8d3a2a5b2e2104979e3740320ee9595bba2483ef225e6d35134d1284d9f",
         "size": 1600269,
         "uuid": "7334d870-d87a-42c5-a56d-cad22755b2c4",
-        "version": "2019-04-03T105616.706622Z"
+        "version": "2019-04-03T10:56:16.706622Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4485,7 +4485,7 @@
         "sha256": "188f587144c32af04e345736189d8fe2ff0d937fcad34cd4245ab39df87f07d3",
         "size": 1600269,
         "uuid": "8f9a873c-db55-46f0-ac21-2675647a2553",
-        "version": "2019-04-03T105616.941310Z"
+        "version": "2019-04-03T10:56:16.941310Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4497,7 +4497,7 @@
         "sha256": "1fd2a0467af9e35362571370a84a6b64815813f78b265c2dd52f5def6d096f3d",
         "size": 1600269,
         "uuid": "6d2fd5c1-91d8-42b4-9958-41b9b7be2ee5",
-        "version": "2019-04-03T105617.319136Z"
+        "version": "2019-04-03T10:56:17.319136Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4509,7 +4509,7 @@
         "sha256": "b650b9e0da3106417bae5b48d9eb37eac1fce1448ec94f5c71be1ac7062fda2f",
         "size": 1600269,
         "uuid": "909dd3ed-d856-4a87-aa6a-7f5e0d390d2f",
-        "version": "2019-04-03T105617.543209Z"
+        "version": "2019-04-03T10:56:17.543209Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4521,7 +4521,7 @@
         "sha256": "d2b61894955a168fb0ac7829cc9ee733143524604b1e80530485ea8e5011360a",
         "size": 1600269,
         "uuid": "b70a3092-a8b6-40ae-9cbb-34cbcb5a2cf0",
-        "version": "2019-04-03T105617.821595Z"
+        "version": "2019-04-03T10:56:17.821595Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4533,7 +4533,7 @@
         "sha256": "650bf866b8fb87ab9cafe2bbfdee1efb65c72f63e95428af59c5e8c41d95ebac",
         "size": 1600269,
         "uuid": "b9efda80-7e16-4e5c-ba35-6129b824b553",
-        "version": "2019-04-03T105618.200496Z"
+        "version": "2019-04-03T10:56:18.200496Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4545,7 +4545,7 @@
         "sha256": "2386bc3553f1f52628afebecf6ea96b17f3312340de1a7b9386a4dcbb4d8fd10",
         "size": 1600269,
         "uuid": "8c4f42e5-8544-46a9-9744-7540c07e040e",
-        "version": "2019-04-03T105618.586702Z"
+        "version": "2019-04-03T10:56:18.586702Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4557,7 +4557,7 @@
         "sha256": "3d3c0fbe3d11decaacf6c24eed84bcf915c9cf6714962d290e12dbada9f3abd3",
         "size": 1600269,
         "uuid": "c9b04d1c-02ce-4db6-bfd5-b69edef36c55",
-        "version": "2019-04-03T105618.841432Z"
+        "version": "2019-04-03T10:56:18.841432Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4569,7 +4569,7 @@
         "sha256": "f53aff93086e8ff3abd65c5bdf385d44cda29bfd5cfb71bb2296a3e3bd0bc48c",
         "size": 1600269,
         "uuid": "70c7781a-b4b2-49db-b818-9582ae41c32f",
-        "version": "2019-04-03T105619.399696Z"
+        "version": "2019-04-03T10:56:19.399696Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4581,7 +4581,7 @@
         "sha256": "83a46a8f63f65099bb24b3a2ca046d0bb138915d48069cb1d598fb14418774ce",
         "size": 1600269,
         "uuid": "8a21baa6-cff7-4807-85f6-2815522f2305",
-        "version": "2019-04-03T105619.679038Z"
+        "version": "2019-04-03T10:56:19.679038Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4593,7 +4593,7 @@
         "sha256": "48ed76ac22ccd6d9b378b605a2e6fd92618d49c684b7ba4e5a656dc94b825aa4",
         "size": 1600269,
         "uuid": "8ddd205f-c13f-4001-93ae-c9b834c762bc",
-        "version": "2019-04-03T105619.959849Z"
+        "version": "2019-04-03T10:56:19.959849Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4605,7 +4605,7 @@
         "sha256": "862916d173844e00fa7c89f2f569127dc9b4ea40ffced0685ba1f6c0366b6ec1",
         "size": 1600269,
         "uuid": "318fcac8-e540-4c30-840c-9baf19dd8ac1",
-        "version": "2019-04-03T105620.515721Z"
+        "version": "2019-04-03T10:56:20.515721Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4617,7 +4617,7 @@
         "sha256": "2dcba4d4d5519f97c2eca00e9840d3e16a585760fa5768dff9aa464d1c70b025",
         "size": 1600269,
         "uuid": "76690f93-b774-4a5b-8e44-ed1a15463d28",
-        "version": "2019-04-03T105620.763724Z"
+        "version": "2019-04-03T10:56:20.763724Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4629,7 +4629,7 @@
         "sha256": "e3632c252f3e5ed30bb19bf77c1a9689e68d4e62749a22903eba05181f6b118b",
         "size": 1600269,
         "uuid": "a5c6ec42-6651-416f-8bf2-a75d19067701",
-        "version": "2019-04-03T105621.035316Z"
+        "version": "2019-04-03T10:56:21.035316Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4641,7 +4641,7 @@
         "sha256": "572b1a336be5579f17ba32ae2100148ac7375673f8e44b9d23e27fee815b861d",
         "size": 1600269,
         "uuid": "08360384-d64d-423c-b393-ac77e55f5b54",
-        "version": "2019-04-03T105621.335645Z"
+        "version": "2019-04-03T10:56:21.335645Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4653,7 +4653,7 @@
         "sha256": "5d614db01b19b9ca8cd948080d29026bfbdaa175e49cdf9e2f7462525b640d20",
         "size": 1600269,
         "uuid": "9fced6a6-70df-414b-ac73-dff271a5dbf5",
-        "version": "2019-04-03T105621.654577Z"
+        "version": "2019-04-03T10:56:21.654577Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4665,7 +4665,7 @@
         "sha256": "3ca858c6ec4f2703e14b6b32f8823c108155400b89ee6bed925a7ae8185ee2f3",
         "size": 1600269,
         "uuid": "a05d672e-b664-412e-a050-a57c205edabe",
-        "version": "2019-04-03T105621.895551Z"
+        "version": "2019-04-03T10:56:21.895551Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4677,7 +4677,7 @@
         "sha256": "a0529f39e6739c75a7967c08cf06f3368676fee4ad8608e7fb44807583116479",
         "size": 1600269,
         "uuid": "186d9626-1b8b-4bc2-ac7c-745ae7479019",
-        "version": "2019-04-03T105622.164338Z"
+        "version": "2019-04-03T10:56:22.164338Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4689,7 +4689,7 @@
         "sha256": "dcacf37924188294b6f2ec83cddb037ed8477a4500ac8ece18e1499863a3f87c",
         "size": 1600269,
         "uuid": "db870673-6390-488f-998f-c96d02a17238",
-        "version": "2019-04-03T105622.575382Z"
+        "version": "2019-04-03T10:56:22.575382Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4701,7 +4701,7 @@
         "sha256": "fbdbe7a0b4a3a51e684b5a1bacb0ac4a993133d784f9eebcdaf20643396a0142",
         "size": 1600269,
         "uuid": "56ecf18f-2cf1-4db1-8acf-a82a04b55ddd",
-        "version": "2019-04-03T105622.895893Z"
+        "version": "2019-04-03T10:56:22.895893Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4713,7 +4713,7 @@
         "sha256": "868c1a7e2880dfc0018ecd373afe8dbb4a7d99288abb66443153f49641c631b3",
         "size": 1600269,
         "uuid": "a79ce39b-a4ed-4b97-a047-afb96e4ce398",
-        "version": "2019-04-03T105623.199025Z"
+        "version": "2019-04-03T10:56:23.199025Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4725,7 +4725,7 @@
         "sha256": "1bd2f114e642e4fba400ed901f4a45bc6c7b4eff683a36f9ad66d693c5234385",
         "size": 1600269,
         "uuid": "4f29d438-3acb-4a71-af29-e3191f071a44",
-        "version": "2019-04-03T105623.525898Z"
+        "version": "2019-04-03T10:56:23.525898Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4737,7 +4737,7 @@
         "sha256": "236595504636b01cc3493f1191584b64b12b79f4471938f8b5da36aa41ce6048",
         "size": 1600269,
         "uuid": "9578fe1c-6623-49ee-afd7-8e6c4d85d8fd",
-        "version": "2019-04-03T105623.779296Z"
+        "version": "2019-04-03T10:56:23.779296Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4749,7 +4749,7 @@
         "sha256": "bb52f37c1253132ca1f2575e0dd3cbd445cfb2ae821967968de96530844dc17a",
         "size": 1600269,
         "uuid": "24fc3772-5e01-4a34-8bd8-98d745595571",
-        "version": "2019-04-03T105624.055806Z"
+        "version": "2019-04-03T10:56:24.055806Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4761,7 +4761,7 @@
         "sha256": "b46abde44f1fb374d8d796c7bf1e5ecd3f65b80eef3229107cfc975b60407c30",
         "size": 1600269,
         "uuid": "af10a2c0-5f84-448a-a429-7e88bcf8d2d4",
-        "version": "2019-04-03T105624.344848Z"
+        "version": "2019-04-03T10:56:24.344848Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4773,7 +4773,7 @@
         "sha256": "b39e60b7133221fbc35eff41ca912aaab4c7492bfe8197ada75fb5c5ae81ba8f",
         "size": 1600269,
         "uuid": "ceb1e477-69a0-4fa0-90c9-ee35e16c6d33",
-        "version": "2019-04-03T105624.610737Z"
+        "version": "2019-04-03T10:56:24.610737Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4785,7 +4785,7 @@
         "sha256": "bd1775fa1eaeab9ca466e3cdfc758760d43e3c1f866138f62965ab94a6f69725",
         "size": 1600269,
         "uuid": "be9b7636-fbb5-462b-af38-a351e006b334",
-        "version": "2019-04-03T105624.895931Z"
+        "version": "2019-04-03T10:56:24.895931Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4797,7 +4797,7 @@
         "sha256": "67f9709da7392cfcc65d8e6460d9b353617de5b56e3480573e5ca8c7bd582037",
         "size": 1600269,
         "uuid": "a01e972b-5d55-4816-9589-0c016a8eceef",
-        "version": "2019-04-03T105625.257370Z"
+        "version": "2019-04-03T10:56:25.257370Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4809,7 +4809,7 @@
         "sha256": "878d36ccf128a83cf8bba81022d55d30fc4781ab16f0c92952938dfd6eac5a54",
         "size": 1600269,
         "uuid": "e2ec1f14-7d7f-4693-bb0c-ec5a6f417803",
-        "version": "2019-04-03T105625.515250Z"
+        "version": "2019-04-03T10:56:25.515250Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4821,7 +4821,7 @@
         "sha256": "0e097b54b24ddce69cecd5b38e194c3b8bc501f7557b8641f90268b84711b109",
         "size": 1600269,
         "uuid": "707f043c-a115-45ee-8fad-2962f55ff58e",
-        "version": "2019-04-03T105626.011308Z"
+        "version": "2019-04-03T10:56:26.011308Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4833,7 +4833,7 @@
         "sha256": "5d7170e3cf1805663408e69eed861a2dd604cefe911cc1887575252210147770",
         "size": 1600269,
         "uuid": "0bf3e1df-6d4e-4fe2-b608-95a23ed4e5a0",
-        "version": "2019-04-03T105626.396309Z"
+        "version": "2019-04-03T10:56:26.396309Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4845,7 +4845,7 @@
         "sha256": "a0ce165b659ef69ad056ad76b6e93d3dfa999f7845762c3d6d305dcb835885ed",
         "size": 1600269,
         "uuid": "d90b7354-47b4-4aec-8d4c-ac8805467b6a",
-        "version": "2019-04-03T105626.655715Z"
+        "version": "2019-04-03T10:56:26.655715Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4857,7 +4857,7 @@
         "sha256": "0d77858e76d5a1f29df86674f4732744cd22ebe67739ee0f73430e15124e190c",
         "size": 1600269,
         "uuid": "dfb213e1-e9c1-4996-a0fb-1da6ea5e6992",
-        "version": "2019-04-03T105626.976077Z"
+        "version": "2019-04-03T10:56:26.976077Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4869,7 +4869,7 @@
         "sha256": "b06202c2da34f93e9888e7b227ec8bc955d0a7eb655f43605272fe8d3f76f8e9",
         "size": 1600269,
         "uuid": "58d7e9ca-9c4f-4a92-8335-d03a007b4b3a",
-        "version": "2019-04-03T105627.218596Z"
+        "version": "2019-04-03T10:56:27.218596Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4881,7 +4881,7 @@
         "sha256": "8f2919c5a7a173b660fdb1a268f6a8b501e725b1cc4014c46c17900a1c7b40ac",
         "size": 1600269,
         "uuid": "a7e2a1b2-a3b0-4c19-9baa-17da6bfc9c60",
-        "version": "2019-04-03T105627.502876Z"
+        "version": "2019-04-03T10:56:27.502876Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4893,7 +4893,7 @@
         "sha256": "10965856cd7ff817b66b2770367587844c69cf3897907c422b9285f5a5240b43",
         "size": 1600269,
         "uuid": "a2366fa7-fba6-4899-a2da-d297f781ed4a",
-        "version": "2019-04-03T105627.790236Z"
+        "version": "2019-04-03T10:56:27.790236Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4905,7 +4905,7 @@
         "sha256": "bf275b7057317795046a4371e0da5d060dd7db54b43f8af451b6f69dd6d9d179",
         "size": 1600269,
         "uuid": "3f058b01-c8fc-43e8-b4f9-9c10449bf12c",
-        "version": "2019-04-03T105628.115924Z"
+        "version": "2019-04-03T10:56:28.115924Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4917,7 +4917,7 @@
         "sha256": "95b7f3c4382bc8230e8e7497150cdabcdf6a979bf05e469ecdae77c6ce996d6e",
         "size": 1600269,
         "uuid": "b28492e5-5b71-4048-8261-82b20ef55540",
-        "version": "2019-04-03T105628.372925Z"
+        "version": "2019-04-03T10:56:28.372925Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4929,7 +4929,7 @@
         "sha256": "723f48bc1a4bac1847199bdd6709ea7531c0bf1d4f53d812923f3fe3ef56f0c2",
         "size": 1600269,
         "uuid": "c5684e6e-6461-4360-bae9-fab162dfe7da",
-        "version": "2019-04-03T105628.797211Z"
+        "version": "2019-04-03T10:56:28.797211Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4941,7 +4941,7 @@
         "sha256": "6de64340a14313461ca2cbe4a30c368cb82566f77909afd64beed0048c1aed87",
         "size": 1600269,
         "uuid": "97b5dded-4ea8-4404-8c9a-449ba9fb8269",
-        "version": "2019-04-03T105629.135928Z"
+        "version": "2019-04-03T10:56:29.135928Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4953,7 +4953,7 @@
         "sha256": "acb8c3fe3a17d12b5354c2ccb7625d132140a15af70dea14288e627d54ce2c96",
         "size": 1600269,
         "uuid": "e879b6b4-3fc2-4436-b8ff-eb9df73d3ed2",
-        "version": "2019-04-03T105629.377960Z"
+        "version": "2019-04-03T10:56:29.377960Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4965,7 +4965,7 @@
         "sha256": "11f0f0fc92c2d30e0c5f6113b542e2642f7311db72775ae75d9104e963f5bd7a",
         "size": 1600269,
         "uuid": "53781f5a-928a-451e-addf-57873b35b752",
-        "version": "2019-04-03T105629.795795Z"
+        "version": "2019-04-03T10:56:29.795795Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4977,7 +4977,7 @@
         "sha256": "f1e583acebdebb6c0fa20e100eb1cd5d6489c8aafd5e1090754dd45bd1dc6901",
         "size": 1600269,
         "uuid": "e6f008b0-bf18-46bb-be73-2705c748a25d",
-        "version": "2019-04-03T105630.050748Z"
+        "version": "2019-04-03T10:56:30.050748Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -4989,7 +4989,7 @@
         "sha256": "4f52e11e66b921de450714aa0091d3fec21f96fbc62dade12de2a69dd5438746",
         "size": 1600269,
         "uuid": "4f5e3c36-fd75-4ee0-8b18-cf54422d037b",
-        "version": "2019-04-03T105630.396132Z"
+        "version": "2019-04-03T10:56:30.396132Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5001,7 +5001,7 @@
         "sha256": "976128eba622c8b5f5ec780f37ae7ac1410f32130a518bbd1e595c2cfe5da14f",
         "size": 1600269,
         "uuid": "4ffb1482-0d3c-4796-9a4d-e714d6b943fb",
-        "version": "2019-04-03T105630.713724Z"
+        "version": "2019-04-03T10:56:30.713724Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5013,7 +5013,7 @@
         "sha256": "dc35f4a49dfcb2d1b8d1381612dd19651ceabca0b69f18279a96d8d40e76584e",
         "size": 1600269,
         "uuid": "a173a354-3997-4205-83f2-19e37e174996",
-        "version": "2019-04-03T105631.296167Z"
+        "version": "2019-04-03T10:56:31.296167Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5025,7 +5025,7 @@
         "sha256": "8e489fb561fbd17c7a72f577038dd2be247ec95e8d72dce76a3f59abe8e9ccc6",
         "size": 1600269,
         "uuid": "410082ea-b30c-410a-9aa1-9dc4d7c16346",
-        "version": "2019-04-03T105631.687118Z"
+        "version": "2019-04-03T10:56:31.687118Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5037,7 +5037,7 @@
         "sha256": "686dea8aa0155de53310fb9717465eb88f5435c676e2561bdb5bbd17f1ada351",
         "size": 1600269,
         "uuid": "ea4feacf-2273-4faa-bccb-16e694e14de0",
-        "version": "2019-04-03T105631.942387Z"
+        "version": "2019-04-03T10:56:31.942387Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5049,7 +5049,7 @@
         "sha256": "4c684d7b345db1d204134bd77a4b536134d3c2abcebe677e292c0a503d104bf9",
         "size": 1600269,
         "uuid": "7e6e78b0-a7a4-4b5d-9217-76780babe1dc",
-        "version": "2019-04-03T105632.208582Z"
+        "version": "2019-04-03T10:56:32.208582Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5061,7 +5061,7 @@
         "sha256": "1a4a4d532775f1fb0df3a7808db2fb297dce720e6fdbafcaa4e0ff382193c998",
         "size": 1600269,
         "uuid": "ef0dbdf9-5adf-4503-b48b-c59cf84f30f4",
-        "version": "2019-04-03T105632.536420Z"
+        "version": "2019-04-03T10:56:32.536420Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5073,7 +5073,7 @@
         "sha256": "c5d5c84a9c0efd4abf05b4dd557dae8cafe485608a1b62f3d565d772fd1158fc",
         "size": 1600269,
         "uuid": "4ad6424c-538b-4387-b54a-70aaac5e0a01",
-        "version": "2019-04-03T105632.798766Z"
+        "version": "2019-04-03T10:56:32.798766Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5085,7 +5085,7 @@
         "sha256": "37e84417d3876f66a9d669d401977fe0efd36d538b95047daa57ae3d88773593",
         "size": 1600269,
         "uuid": "e54926ec-cfc5-4a80-952a-961a98d01264",
-        "version": "2019-04-03T105633.035247Z"
+        "version": "2019-04-03T10:56:33.035247Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5097,7 +5097,7 @@
         "sha256": "72f7df5e3c5965bd88315189329887ba47bf8d51e3f9464646e5faebdab1b1a7",
         "size": 1600269,
         "uuid": "1a98673d-9d2d-4083-a0d5-b128c5d267de",
-        "version": "2019-04-03T105633.297846Z"
+        "version": "2019-04-03T10:56:33.297846Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5109,7 +5109,7 @@
         "sha256": "49b58722e29ddd4a2468439e672dccc23e171f283232e13f98ca5f1475f618eb",
         "size": 1600269,
         "uuid": "a9477ea9-35a8-449c-a157-4ec3b9057989",
-        "version": "2019-04-03T105633.619365Z"
+        "version": "2019-04-03T10:56:33.619365Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5121,7 +5121,7 @@
         "sha256": "bba29e16735e9620268b88bc2db40d656771c3b30948489e84add2bda58ce0a5",
         "size": 1600269,
         "uuid": "ca573914-fead-42c2-acc3-3a9536d720a4",
-        "version": "2019-04-03T105634.196322Z"
+        "version": "2019-04-03T10:56:34.196322Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5133,7 +5133,7 @@
         "sha256": "6e044a88160ce6f2480840525804b5fc7f115f3d787e15594ae2b9d3d635a354",
         "size": 1600269,
         "uuid": "03e3dcc3-d45a-4c83-bc0b-817e563e19a9",
-        "version": "2019-04-03T105634.597173Z"
+        "version": "2019-04-03T10:56:34.597173Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5145,7 +5145,7 @@
         "sha256": "9efe951da0f64c505dabcd815234e3960626ebc09bcbb31c26ae9885fd573892",
         "size": 1600269,
         "uuid": "202940df-87ab-4deb-9ee3-565408ba1316",
-        "version": "2019-04-03T105634.889498Z"
+        "version": "2019-04-03T10:56:34.889498Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5157,7 +5157,7 @@
         "sha256": "e9435a040e8d6a92506516e18edbf5017effc9e5d60358f0bf91fa7c9ad4a094",
         "size": 1600269,
         "uuid": "3a044d9b-72cf-4c00-a331-b920f8bbef8f",
-        "version": "2019-04-03T105635.152162Z"
+        "version": "2019-04-03T10:56:35.152162Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5169,7 +5169,7 @@
         "sha256": "bc27ec72db5a5da93908b49865f479cafdd06e54a5ea02145cf5fc437bcf8c1e",
         "size": 1600269,
         "uuid": "9ca4cd36-67c4-4a19-9e65-82b70a73f820",
-        "version": "2019-04-03T105635.416620Z"
+        "version": "2019-04-03T10:56:35.416620Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5181,7 +5181,7 @@
         "sha256": "d4700ed483bb7a10c940c309765d07f28e25897d67d9890636a0ed9a9b89ea11",
         "size": 1600269,
         "uuid": "62d38039-7672-472b-8847-c63bf52bfb6e",
-        "version": "2019-04-03T105635.669528Z"
+        "version": "2019-04-03T10:56:35.669528Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5193,7 +5193,7 @@
         "sha256": "a112cd97673c1085b02fe6a9efb24f643ee42cc12a5e6d226aac67531451ec1d",
         "size": 1600269,
         "uuid": "c0fe4ea4-1562-4402-80fb-78cec6415fb6",
-        "version": "2019-04-03T105636.216303Z"
+        "version": "2019-04-03T10:56:36.216303Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5205,7 +5205,7 @@
         "sha256": "552e403f54a98bb55ff0803f6b58ad6270ac38b7a39d1a0763bb2120b0b92985",
         "size": 1600269,
         "uuid": "92351261-9885-477b-8d2a-227901e6ffc7",
-        "version": "2019-04-03T105636.729218Z"
+        "version": "2019-04-03T10:56:36.729218Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5217,7 +5217,7 @@
         "sha256": "e3dc5487b384395b8f935206ed5b6a95afd4cc6e3c4815bf9483ed47c156a1b9",
         "size": 1600269,
         "uuid": "bdf53fbd-fb66-456a-976c-d97414d1ab3b",
-        "version": "2019-04-03T105637.056125Z"
+        "version": "2019-04-03T10:56:37.056125Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5229,7 +5229,7 @@
         "sha256": "3d7b47e0d89808e906e6fa93b41cddafa38a3b2886441a8bcda381f0f44d06e4",
         "size": 1600269,
         "uuid": "f76cf7a7-8ae0-4cc2-8c49-497d8eeb4bd5",
-        "version": "2019-04-03T105637.312587Z"
+        "version": "2019-04-03T10:56:37.312587Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5241,7 +5241,7 @@
         "sha256": "a62a5092a92c76327e49883c2652e3ebaea9953c2a48afca5c165a47b10e4f90",
         "size": 1600269,
         "uuid": "ccdd0669-ecf0-42d0-9eed-e6f32f4e2137",
-        "version": "2019-04-03T105637.562208Z"
+        "version": "2019-04-03T10:56:37.562208Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5253,7 +5253,7 @@
         "sha256": "fcefebbbbb13678824196b57eecdf5a290d936dc8809f8fbc1ccdd29d1b96e18",
         "size": 1600269,
         "uuid": "599e9909-55d0-4d43-bef2-c94997a9b5ed",
-        "version": "2019-04-03T105637.875619Z"
+        "version": "2019-04-03T10:56:37.875619Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5265,7 +5265,7 @@
         "sha256": "3a277e268ebdbd068dc4513ba21820455b81ba7c06a0172210a91706ddddf8c4",
         "size": 1600269,
         "uuid": "b6642034-460c-4628-8995-959aed6daf4c",
-        "version": "2019-04-03T105638.140553Z"
+        "version": "2019-04-03T10:56:38.140553Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5277,7 +5277,7 @@
         "sha256": "9788637a05eb6abaf9202ce9f80219686edb82669af2d5f53bee50b35f430126",
         "size": 1600269,
         "uuid": "43a3a428-155b-4174-b22e-8fa69be8d792",
-        "version": "2019-04-03T105638.472919Z"
+        "version": "2019-04-03T10:56:38.472919Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5289,7 +5289,7 @@
         "sha256": "7dc04a42f36d4535311bccefc01ac3c3993c52cd9fd900f556cf943705ed0e88",
         "size": 1600269,
         "uuid": "12b0c950-9687-4b28-979c-6b370ace1cd3",
-        "version": "2019-04-03T105638.747128Z"
+        "version": "2019-04-03T10:56:38.747128Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5301,7 +5301,7 @@
         "sha256": "39c47edd52b1c74758d90dbc21977a9fda7ae4de554cb9238e7bf0903b8fdea2",
         "size": 1600269,
         "uuid": "d0d46791-b50d-4622-a375-300d35ef1ba4",
-        "version": "2019-04-03T105638.999068Z"
+        "version": "2019-04-03T10:56:38.999068Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5313,7 +5313,7 @@
         "sha256": "5c86130e5dc26548c71301779426353401667b0b373fd5b2fa0886d8ecb54328",
         "size": 1600269,
         "uuid": "6cfbdd29-5799-40c9-9329-917cfe98fb3a",
-        "version": "2019-04-03T105639.334527Z"
+        "version": "2019-04-03T10:56:39.334527Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5325,7 +5325,7 @@
         "sha256": "56a67c43ffb995edaa30ce0ce151f0df38ea08827d93c1e57b902bebe78e1cc7",
         "size": 1600269,
         "uuid": "c665c520-397f-4410-abed-1cd9e23fe942",
-        "version": "2019-04-03T105639.905452Z"
+        "version": "2019-04-03T10:56:39.905452Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5337,7 +5337,7 @@
         "sha256": "49f068eaae48dbfa68b9f63876e10fa94a613115a7285dd0fad6ee7438d1624e",
         "size": 1600269,
         "uuid": "fdac5e58-f0bb-40b1-9a58-b49f43bc4238",
-        "version": "2019-04-03T105640.178722Z"
+        "version": "2019-04-03T10:56:40.178722Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5349,7 +5349,7 @@
         "sha256": "b16291cd500218be60bc2069d6e58dbe4f81cabb070f130aedb7ab04612a2465",
         "size": 1600269,
         "uuid": "bf5e1454-492c-4748-811b-b8ef68548d79",
-        "version": "2019-04-03T105640.476175Z"
+        "version": "2019-04-03T10:56:40.476175Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5361,7 +5361,7 @@
         "sha256": "ae4b6948a3008f08f364741085ad1cec433765c359e69736fc4097557d43edc7",
         "size": 1600269,
         "uuid": "37a2c628-29f7-4845-ace9-62ed637c7c74",
-        "version": "2019-04-03T105640.730992Z"
+        "version": "2019-04-03T10:56:40.730992Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5373,7 +5373,7 @@
         "sha256": "25aede1f80b6e87f0333cd85db66008ef1034eda88ca645fc15a4d0a6b00f675",
         "size": 1600269,
         "uuid": "1e18aaa0-df92-4bab-81dc-7e225e2c8a09",
-        "version": "2019-04-03T105641.356591Z"
+        "version": "2019-04-03T10:56:41.356591Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5385,7 +5385,7 @@
         "sha256": "f61291d855a579b62e4b92f6119c8682c2784bb5e60cddf3ddc016b1bf9c2543",
         "size": 1600269,
         "uuid": "682e7e32-5795-4fc3-ad31-5c5f5e737c55",
-        "version": "2019-04-03T105641.597762Z"
+        "version": "2019-04-03T10:56:41.597762Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5397,7 +5397,7 @@
         "sha256": "745c2423dd6f6a0c53b0be8b4d3f01fa4f52e09e499fb3400885ebe61562eb59",
         "size": 1600269,
         "uuid": "3b5bde9d-8af7-4253-9013-61bc6917eac4",
-        "version": "2019-04-03T105642.155558Z"
+        "version": "2019-04-03T10:56:42.155558Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5409,7 +5409,7 @@
         "sha256": "887cc80db875bf5d704c18bea2ecde0e311f94a1db43e96ad2b71fbae2228ba5",
         "size": 1600269,
         "uuid": "e6f193a6-c235-4357-b1c8-bd075e0be111",
-        "version": "2019-04-03T105642.455372Z"
+        "version": "2019-04-03T10:56:42.455372Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5421,7 +5421,7 @@
         "sha256": "33afd30928b802f9b37e1761eea55b04aa17d9c246bbf015174fc46e6ffbbc6d",
         "size": 1600269,
         "uuid": "33b9e890-93dd-46bf-a464-0b293605ca13",
-        "version": "2019-04-03T105642.695635Z"
+        "version": "2019-04-03T10:56:42.695635Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5433,7 +5433,7 @@
         "sha256": "5337ba319da091c05651d7da158e1cd3719f9befb1f2f6db1344338e0ac70449",
         "size": 1600269,
         "uuid": "1a57ba61-0aaa-4a98-8714-44ef51295163",
-        "version": "2019-04-03T105642.933998Z"
+        "version": "2019-04-03T10:56:42.933998Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5445,7 +5445,7 @@
         "sha256": "8e7b543d6baf164527bb6ec8b391acd79cd52d61a88ecba8b72db31ade03ff95",
         "size": 1600269,
         "uuid": "e1a484a8-5557-440d-8196-38a39c8acc3e",
-        "version": "2019-04-03T105643.266340Z"
+        "version": "2019-04-03T10:56:43.266340Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5457,7 +5457,7 @@
         "sha256": "3a328ccdc6f19fa663c1e703efe15cb80fd8f5c260eb679ac64222aead8fa19c",
         "size": 1600269,
         "uuid": "4a836a20-3f30-4e33-8374-c9837de94790",
-        "version": "2019-04-03T105643.598363Z"
+        "version": "2019-04-03T10:56:43.598363Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5469,7 +5469,7 @@
         "sha256": "89c07cd8d4d7a47f7d7c85c4e9918e937b9dd248275c3597b520bb29685fd275",
         "size": 1600269,
         "uuid": "fa8e2052-2f21-420b-84bb-dee4e2ce79ab",
-        "version": "2019-04-03T105643.915023Z"
+        "version": "2019-04-03T10:56:43.915023Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5481,7 +5481,7 @@
         "sha256": "3f15a6b5d60834705355dfe79c38f4a8cae0a1fcaf3dbf61bdd2be8eeadf213b",
         "size": 1600269,
         "uuid": "c605b91e-3b62-442d-bd3e-2d58a213a4bf",
-        "version": "2019-04-03T105644.156708Z"
+        "version": "2019-04-03T10:56:44.156708Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5493,7 +5493,7 @@
         "sha256": "ceb0e9ae90e00e9fe53a63807eac2bb319974203ac92a4ca7ebd9c3287de2284",
         "size": 1600269,
         "uuid": "d6621482-70a1-42ac-895d-8398aa0bb2b7",
-        "version": "2019-04-03T105644.436640Z"
+        "version": "2019-04-03T10:56:44.436640Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5505,7 +5505,7 @@
         "sha256": "4a722651fc388de26b1dbfcffa7be65c448b26a31d1738e5363857dfea81ea61",
         "size": 1600269,
         "uuid": "1d051231-9ed8-44fd-8086-93da3a04dd0b",
-        "version": "2019-04-03T105644.954210Z"
+        "version": "2019-04-03T10:56:44.954210Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5517,7 +5517,7 @@
         "sha256": "d19fd3d6fececce2aaa3877f38d1c775f76419ec07374b7cff010b9867a12854",
         "size": 1600269,
         "uuid": "bba231df-4b9b-44fe-a9e9-df314fc8f75d",
-        "version": "2019-04-03T105645.222571Z"
+        "version": "2019-04-03T10:56:45.222571Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5529,7 +5529,7 @@
         "sha256": "e1144263f89f3b3b2c4812ca0599274d78057636dcca1d09fdebc30e0d327ced",
         "size": 1600269,
         "uuid": "6c85c7e1-832c-476c-add9-e2cc509f8de0",
-        "version": "2019-04-03T105645.515825Z"
+        "version": "2019-04-03T10:56:45.515825Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5541,7 +5541,7 @@
         "sha256": "b66e916f703c1bccfccb6ad7fcc95fb3af42ac4e6868bbdcea424de9e40a12af",
         "size": 1600269,
         "uuid": "9a71aa79-aa5e-41ca-89ed-2d5eaea98840",
-        "version": "2019-04-03T105645.832519Z"
+        "version": "2019-04-03T10:56:45.832519Z"
     },
     {
         "content-type": "image/tiff; dcp-type=data",
@@ -5553,7 +5553,7 @@
         "sha256": "9f447baf510beb7f942054f980818c6819a12bf9b12e5cadc2cff30af37d9674",
         "size": 1600269,
         "uuid": "bec2697f-31b6-4db5-888a-024379f3d13f",
-        "version": "2019-04-03T105646.096587Z"
+        "version": "2019-04-03T10:56:46.096587Z"
     },
     {
         "content-type": "application/json; dcp-type=data",
@@ -5565,7 +5565,7 @@
         "sha256": "b7d0787c0f9b656331d4e56c4249dc2762ae8bd04f87995910e5ce3c30cde8d2",
         "size": 55640,
         "uuid": "194db0d1-dfca-44d7-9ad7-194a9e091d32",
-        "version": "2019-04-03T105646.365296Z"
+        "version": "2019-04-03T10:56:46.365296Z"
     },
     {
         "content-type": "application/json; dcp-type=data",
@@ -5577,6 +5577,6 @@
         "sha256": "23e8dbd4385ec7be7ce90ba0fdcd00f5357735e8dc77538caa993506e0ce0307",
         "size": 119,
         "uuid": "57e036f8-063a-47fe-b668-499222390e95",
-        "version": "2019-04-03T105646.657106Z"
+        "version": "2019-04-03T10:56:46.657106Z"
     }
 ]

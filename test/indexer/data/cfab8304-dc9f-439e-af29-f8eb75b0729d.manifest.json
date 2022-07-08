@@ -9,7 +9,7 @@
         "sha256": "0ff1e93e13de4b014f38f9d71fb8c30ff947e2a60b002696830b588822b841c4",
         "size": 1314,
         "uuid": "13eab62e-0038-4997-aeab-aa3192cc090e",
-        "version": "2019-07-18T211244.344000Z"
+        "version": "2019-07-18T21:12:44.344000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -21,7 +21,7 @@
         "sha256": "274d540fce9bf4ed8efcdb3665b99293f062a3e30fbee1ab894b49f89b94d529",
         "size": 1245,
         "uuid": "4ccd163e-a630-4ede-bc0c-336ba044b783",
-        "version": "2019-07-18T211244.526000Z"
+        "version": "2019-07-18T21:12:44.526000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -33,7 +33,7 @@
         "sha256": "53293d143e8a6f0d9f94cba8a3247389e8dc525393b1e84ada6895c506b828e7",
         "size": 1327,
         "uuid": "92254a9e-3a14-4760-b229-d914f3e8973f",
-        "version": "2019-07-18T211244.655000Z"
+        "version": "2019-07-18T21:12:44.655000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -45,7 +45,7 @@
         "sha256": "6e3dd41acc63a7b85607ff2a11d4eac58b6887fe5d843417ea04a532b1aa3afd",
         "size": 1699,
         "uuid": "39d1a24f-1785-476d-9c04-065be917e3ff",
-        "version": "2019-07-18T211244.591000Z"
+        "version": "2019-07-18T21:12:44.591000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -57,7 +57,7 @@
         "sha256": "026d78470b1118f486d5f7efc66c66a4f9b0e7b63382d74573ec03372a2f556e",
         "size": 607,
         "uuid": "3f193e72-8efe-4c2a-ace1-79140ca36477",
-        "version": "2019-07-18T212248.292000Z"
+        "version": "2019-07-18T21:22:48.292000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -69,7 +69,7 @@
         "sha256": "dfd9c0abbb9e5e7e2ab7bedfb21b756517348e2c0cbe69ef2138de7b2e517093",
         "size": 607,
         "uuid": "078b71eb-220a-43e5-a0fc-4f231e90f85f",
-        "version": "2019-07-18T212528.971000Z"
+        "version": "2019-07-18T21:25:28.971000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/project\"",
@@ -81,7 +81,7 @@
         "sha256": "c0e00a0eec11c46febbb483947262700bbf0e9f67ca15dce024933ff48536aba",
         "size": 4332,
         "uuid": "091cf39b-01bc-42e5-9437-f419a66c8a45",
-        "version": "2019-07-18T211244.350000Z"
+        "version": "2019-07-18T21:12:44.350000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -93,7 +93,7 @@
         "sha256": "57d2a545a8a8748bf46755518e04b201904e32ce480d97c301727bb5baa73186",
         "size": 1772,
         "uuid": "dc19bb22-ae7b-431b-9b8b-7b49799a8fcd",
-        "version": "2019-07-18T211244.269000Z"
+        "version": "2019-07-18T21:12:44.269000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -105,7 +105,7 @@
         "sha256": "3e8d00dc1f929937ab26cbbef2fa7b1f3f1a7b253dde79724fcdfabeca59e0d6",
         "size": 880,
         "uuid": "461851b8-55a5-4ae6-a52a-5bca71a00beb",
-        "version": "2019-07-18T211244.253000Z"
+        "version": "2019-07-18T21:12:44.253000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -117,7 +117,7 @@
         "sha256": "0018d939919b99a3babc277529f643a96f0469129c75dda17f346ddf2213cc48",
         "size": 653,
         "uuid": "79f7c6ac-ada8-4c17-86ec-e73e87b94374",
-        "version": "2019-07-18T211244.265000Z"
+        "version": "2019-07-18T21:12:44.265000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -129,7 +129,7 @@
         "sha256": "cd2254f05dc489f57bf4702a3d6e622e68fc06237893656bba981a2059922c14",
         "size": 767,
         "uuid": "5d9fc5a2-5516-4205-9d6e-8d0d674f146f",
-        "version": "2019-07-18T211244.344000Z"
+        "version": "2019-07-18T21:12:44.344000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -141,7 +141,7 @@
         "sha256": "0001f93a397a5ec70ca9ac55e0269ec5f7993f72c47afd66b223eb0aa5113302",
         "size": 546,
         "uuid": "f59c9106-16a8-47f8-b681-490d23ee09de",
-        "version": "2019-07-18T211244.356000Z"
+        "version": "2019-07-18T21:12:44.356000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -153,7 +153,7 @@
         "sha256": "a78ea460c1972372b4503d0eaf97dce4266762b1cbab945944df1d579d22b161",
         "size": 377,
         "uuid": "a03f7164-419b-4792-9a52-e6dda08b85bc",
-        "version": "2019-07-18T211244.410000Z"
+        "version": "2019-07-18T21:12:44.410000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -165,7 +165,7 @@
         "sha256": "f5438377520f62f5d8a0ff8a35bd4e57393fea257c39b45d360321eb9543832b",
         "size": 376,
         "uuid": "57d2c83d-cd8b-44c9-9644-c3475a44b0a7",
-        "version": "2019-07-18T211244.498000Z"
+        "version": "2019-07-18T21:12:44.498000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -177,7 +177,7 @@
         "sha256": "5c0a6f771685ae543c7656d39342054f0356d87743a612b4510cb51a8f6cc5f5",
         "size": 414,
         "uuid": "8b1f44be-7eaa-4030-b6c5-697c5fc388eb",
-        "version": "2019-07-18T211244.455000Z"
+        "version": "2019-07-18T21:12:44.455000Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/links\"",
@@ -189,7 +189,7 @@
         "sha256": "12f0d3f084cb9f87ba0f72b8923ea8fc4548808915a4d8ebf889d887f31065e5",
         "size": 2465,
         "uuid": "67d2808f-f774-4f00-96a9-9ef6d1ebb817",
-        "version": "2019-07-18T212949.279115Z"
+        "version": "2019-07-18T21:29:49.279115Z"
     },
     {
         "content-type": "application/gzip; dcp-type=data",
@@ -201,7 +201,7 @@
         "sha256": "8dc8186925bf0b0476978e65e5b25fe60a1ebaa6e0d5dd4f0213f66721c0af21",
         "size": 2700756088,
         "uuid": "d879f732-d8d4-4251-a2ca-a91a852a034b",
-        "version": "2019-07-18T212949.534039Z"
+        "version": "2019-07-18T21:29:49.534039Z"
     },
     {
         "content-type": "application/gzip; dcp-type=data",
@@ -213,6 +213,6 @@
         "sha256": "90d5bd195dbcdfb54a6b4eb42f4c3fce68ba235b53a0476526448d0867d18e5e",
         "size": 9569751310,
         "uuid": "1e14d503-31b1-4db6-82ba-f8d83bd85b9b",
-        "version": "2019-07-18T212949.697974Z"
+        "version": "2019-07-18T21:29:49.697974Z"
     }
 ]

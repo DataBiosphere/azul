@@ -9,7 +9,7 @@
         "sha256": "6c0599cb573d88d0f7d149d5ffc5b4e4d370904c1b421d2c729fcc4f4dd75c71",
         "size": 2377581,
         "uuid": "e080459e-e4ab-40ea-ab75-a2646b5fdd29",
-        "version": "2018-03-29T154313.328705Z"
+        "version": "2018-03-29T15:43:13.328705Z"
     },
     {
         "content-type": "application/gzip; dcp-type=data",
@@ -21,6 +21,6 @@
         "sha256": "853b9f75ff100ae1fd824d633ded540975e44dbc9643d4a3fbaffbed574e30b0",
         "size": 2363269,
         "uuid": "3417cdb5-5618-4c0c-bc27-62a4eb78916a",
-        "version": "2018-03-29T154314.679074Z"
+        "version": "2018-03-29T15:43:14.679074Z"
     }
 ]
