@@ -112,6 +112,46 @@ list: _admin
 	@cat $(EASYRSA_PKI)/index.txt
 	@echo
 
+revoke/%: _admin
+	$(easyrsa) revoke $*
+	$(easyrsa) gen-crl
+
+.PHONY: list_revocations
+list_revocations: _admin
+	$(easyrsa) gen-crl
+	openssl crl -in $(EASYRSA_PKI)/crl.pem -noout -text
+	@echo
+
+.PHONY: publish_revocations
+publish_revocations: _admin
+	$(easyrsa) gen-crl
+	@export endpoint_id=$$( \
+		aws ec2 describe-client-vpn-endpoints \
+			--filters Name=tag:Name,Values=azul-gitlab \
+			--query "ClientVpnEndpoints[0].ClientVpnEndpointId" \
+			--output text \
+	) \
+	&& aws ec2 import-client-vpn-client-certificate-revocation-list \
+		--certificate-revocation-list file://$(EASYRSA_PKI)/crl.pem \
+		--client-vpn-endpoint-id $${endpoint_id} \
+		--region $${AWS_DEFAULT_REGION}
+
+.PHONY: publish_revocations
+list_published_revocations: _admin
+	@export endpoint_id=$$( \
+		aws ec2 describe-client-vpn-endpoints \
+			--filters Name=tag:Name,Values=azul-gitlab \
+			--query "ClientVpnEndpoints[0].ClientVpnEndpointId" \
+			--output text \
+	) && ( \
+		aws ec2 export-client-vpn-client-certificate-revocation-list \
+			--client-vpn-endpoint-id $${endpoint_id} \
+			--region $${AWS_DEFAULT_REGION} \
+			--query CertificateRevocationList \
+			--output text \
+		| openssl crl -in /dev/stdin -noout -text \
+	)
+
 # Use this target in conjunction with either _admin or _client to run additional
 # EasyRSA commands. 'eval "`make _admin _env`"' for example would configure an
 # shell alias called 'easyrsa' pointing at the right executable and also set
