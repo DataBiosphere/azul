@@ -102,6 +102,11 @@ sign/%: _check/%
 	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
 	@echo
 
+renew/%: _admin
+	EASYRSA_CERT_EXPIRE=365 $(easyrsa) renew client $*
+	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
+	@echo
+
 # Use this target in conjunction with either _admin or _client to run additional
 # EasyRSA commands. 'eval "`make _admin _env`"' for example would configure an
 # shell alias called 'easyrsa' pointing at the right executable and also set
