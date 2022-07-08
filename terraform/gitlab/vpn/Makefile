@@ -107,6 +107,11 @@ renew/%: _admin
 	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
 	@echo
 
+.PHONY: list
+list: _admin
+	@cat $(EASYRSA_PKI)/index.txt
+	@echo
+
 # Use this target in conjunction with either _admin or _client to run additional
 # EasyRSA commands. 'eval "`make _admin _env`"' for example would configure an
 # shell alias called 'easyrsa' pointing at the right executable and also set
