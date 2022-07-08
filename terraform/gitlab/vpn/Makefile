@@ -4,7 +4,7 @@ all:
 include ../../../common.mk
 
 SHELL = /bin/bash
-easyrsa = easy-rsa/easyrsa3/easyrsa
+easyrsa = $(abspath easy-rsa/easyrsa3/easyrsa)
 
 client_cn = $(shell git config user.email)
 cn = azul-gitlab-vpn
