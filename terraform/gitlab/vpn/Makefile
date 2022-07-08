@@ -85,7 +85,11 @@ publish: _admin
 		--certificate-chain fileb://$(EASYRSA_PKI)/ca.crt
 	@echo "Now run 'make apply' in parent directory"
 
-import/%: _admin
+_check/%: _admin
+	@test ! -e $(EASYRSA_PKI)/issued/$*.crt \
+		|| (echo Certificate $* already exists, you must must revoke it first. ; false)
+
+import/%: _check/%
 	@echo "Paste the certificate request you received from the client and hit Ctrl-D"
 	@export request=$$(mktemp -u) \
 		&& (cat > $$request) \
@@ -93,7 +97,7 @@ import/%: _admin
 		&& $(easyrsa) import-req $$request $* \
 		&& rm $$request
 
-sign/%: _admin
+sign/%: _check/%
 	EASYRSA_CERT_EXPIRE=365 $(easyrsa) sign-req client $*
 	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
 	@echo
