@@ -2,7 +2,7 @@
     {
         "name": "cell_suspension_0.json",
         "uuid": "5ea17576-5f1d-4879-97a1-6a868ccb2b0b",
-        "version": "2019-10-14T192023.081000Z",
+        "version": "2019-10-14T19:20:23.081000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 921,
         "indexed": true,
@@ -14,7 +14,7 @@
     {
         "name": "specimen_from_organism_0.json",
         "uuid": "d9b27804-1763-410b-9f19-995a363fe488",
-        "version": "2019-10-14T192015.954000Z",
+        "version": "2019-10-14T19:20:15.954000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 1159,
         "indexed": true,
@@ -26,7 +26,7 @@
     {
         "name": "donor_organism_0.json",
         "uuid": "587d1170-aa27-4b06-9c15-b51846d14588",
-        "version": "2019-10-14T192015.371000Z",
+        "version": "2019-10-14T19:20:15.371000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 1577,
         "indexed": true,
@@ -38,7 +38,7 @@
     {
         "name": "sequence_file_0.json",
         "uuid": "430755e7-2263-4b5b-ad65-b3231c0eb61d",
-        "version": "2019-10-14T192528.591000Z",
+        "version": "2019-10-14T19:25:28.591000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 822,
         "indexed": true,
@@ -50,7 +50,7 @@
     {
         "name": "sequence_file_1.json",
         "uuid": "d53454df-9542-4c64-9f84-0d798d923777",
-        "version": "2019-10-14T193540.628000Z",
+        "version": "2019-10-14T19:35:40.628000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 821,
         "indexed": true,
@@ -62,7 +62,7 @@
     {
         "name": "project_0.json",
         "uuid": "4e6f083b-5b9a-4393-9890-2a83da8188f1",
-        "version": "2019-10-14T192015.147000Z",
+        "version": "2019-10-14T19:20:15.147000Z",
         "content-type": "application/json; dcp-type=\"metadata/project\"",
         "size": 13074,
         "indexed": true,
@@ -74,7 +74,7 @@
     {
         "name": "library_preparation_protocol_0.json",
         "uuid": "58df9607-ab66-48e0-a47b-1f897baae139",
-        "version": "2019-10-14T192014.102000Z",
+        "version": "2019-10-14T19:20:14.102000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 2584,
         "indexed": true,
@@ -86,7 +86,7 @@
     {
         "name": "sequencing_protocol_0.json",
         "uuid": "6282594c-1b9d-4f26-a4f3-a26066878740",
-        "version": "2019-10-14T192014.184000Z",
+        "version": "2019-10-14T19:20:14.184000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 2200,
         "indexed": true,
@@ -98,7 +98,7 @@
     {
         "name": "dissociation_protocol_0.json",
         "uuid": "3f9fda53-2b30-47bb-8c92-4e131920b2e3",
-        "version": "2019-10-14T192014.122000Z",
+        "version": "2019-10-14T19:20:14.122000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 1375,
         "indexed": true,
@@ -110,7 +110,7 @@
     {
         "name": "collection_protocol_0.json",
         "uuid": "e95ebc23-53b9-48a0-acd4-185969122f2d",
-        "version": "2019-10-14T192013.961000Z",
+        "version": "2019-10-14T19:20:13.961000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 1052,
         "indexed": true,
@@ -122,7 +122,7 @@
     {
         "name": "collection_protocol_1.json",
         "uuid": "4dfda495-6aeb-41d9-b995-04da33cd2810",
-        "version": "2019-10-14T192014.107000Z",
+        "version": "2019-10-14T19:20:14.107000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 813,
         "indexed": true,
@@ -134,7 +134,7 @@
     {
         "name": "process_0.json",
         "uuid": "bf65ea92-6949-491d-b25b-52d06045044a",
-        "version": "2019-10-14T192028.686000Z",
+        "version": "2019-10-14T19:20:28.686000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 453,
         "indexed": true,
@@ -146,7 +146,7 @@
     {
         "name": "process_1.json",
         "uuid": "11b9ffae-0643-425b-b120-85a7bd46c057",
-        "version": "2019-10-14T192028.290000Z",
+        "version": "2019-10-14T19:20:28.290000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 447,
         "indexed": true,
@@ -158,7 +158,7 @@
     {
         "name": "process_2.json",
         "uuid": "4c6d81f9-4f12-457e-89cd-6efb297ca848",
-        "version": "2019-10-14T192027.791000Z",
+        "version": "2019-10-14T19:20:27.791000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 447,
         "indexed": true,
@@ -170,7 +170,7 @@
     {
         "name": "links.json",
         "uuid": "63b2b373-b6e3-4553-a153-a262102f5739",
-        "version": "2019-10-14T195443.467042Z",
+        "version": "2019-10-14T19:54:43.467042Z",
         "content-type": "application/json; dcp-type=\"metadata/links\"",
         "size": 2266,
         "indexed": true,
@@ -182,7 +182,7 @@
     {
         "name": "E8.75_anterior_Rep1_barcodes.fastq.gz",
         "uuid": "1fdcd06c-ea5b-4e5a-b382-ae42dcfc8aca",
-        "version": "2019-10-14T195443.781599Z",
+        "version": "2019-10-14T19:54:43.781599Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 13821505999,
         "indexed": false,
@@ -194,7 +194,7 @@
     {
         "name": "E8.75_anterior_Rep1_genomic.fastq.gz",
         "uuid": "e8f4a1a6-bd63-49d8-848d-160782b33e4e",
-        "version": "2019-10-14T195443.923029Z",
+        "version": "2019-10-14T19:54:43.923029Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 51709440945,
         "indexed": false,

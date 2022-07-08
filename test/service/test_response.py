@@ -230,9 +230,9 @@ class TestResponse(WebServiceTestCase):
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "fileSource": None,
-                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
-                        "version": "2018-11-02T113344.698028Z"
+                        "version": "2018-11-02T11:33:44.698028Z"
                     }
                 ],
                 "organoids": [
@@ -1003,9 +1003,9 @@ class TestResponse(WebServiceTestCase):
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'fileSource': None,
-            'drs_path': 'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T172251.560099Z',
+            'drs_path': 'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T17%3A22%3A51.560099Z',
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
-            'version': '2019-10-09T172251.560099Z'
+            'version': '2019-10-09T17:22:51.560099Z'
         }
         file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
