@@ -99,16 +99,14 @@ sign/%: _admin
 	@echo
 
 # Use this target in conjunction with either _admin or _client to run additional
-# EasyRSA commands. 'eval `make _admin _env`' for example would configure an
+# EasyRSA commands. 'eval "`make _admin _env`"' for example would configure an
 # shell alias called 'easyrsa' pointing at the right executable and also set
 # EASYRSA_PKI to point at the PKI directory containing the CA and server certs.
 
 .PHONY: _env
 _env:
-	@echo
 	@echo "export EASYRSA_PKI='$(EASYRSA_PKI)'"
-	@echo "alias easyrsa=$(easyrsa)"
-	@echo
+	@echo "alias 'easyrsa=$(easyrsa)'"
 
 
 # Without this `make` would append a dot to $* in pattern rules
