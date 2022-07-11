@@ -272,3 +272,14 @@ class RequestParameterValidationTest(WebServiceTestCase):
                     response = requests.get(str(url))
                     self.assertEqual(status, response.status_code, response.json())
                     self.assertIn(error, response.json()['Message'])
+
+    def test_bad_entity_type(self):
+        bad_entity_type = 'spiders'
+        good_entity_types = set(self.app_module.app.metadata_plugin.exposed_indices)
+        assert bad_entity_type not in good_entity_types
+        url = self.base_url.set(path='/index/' + bad_entity_type)
+        response = requests.get(str(url))
+        self.assertEqual(response.status_code, 400, response.json())
+        expected = (f'Entity type {bad_entity_type!r} is invalid for catalog '
+                    f'{self.catalog!r}. Must be one of {good_entity_types}.')
+        self.assertEqual(expected, response.json()['Message'])
