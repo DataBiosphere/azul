@@ -1735,6 +1735,9 @@ cd ..
 make apply  # (re)deploy GitLab
 ```
 
+
+### 9.1.3 Issuing a certificate
+
 To issue a client certificate for a developer so that they can access the VPN,
 ask the developer to send you a certificate request as described in the previous 
 section . The request must be made under the developer's email address as the 
@@ -1753,6 +1756,33 @@ Send the resulting certificate back to the requesting developer.
 The communication channel through which requests and certificates are messaged
 does not need to be private but it needs to ensure the integrity of the
 messages.
+
+
+### 9.1.4 Revoking a certificate
+
+```
+_select dev.gitlab  # or prod.gitlab
+cd terraform/gitlab/vpn
+git submodule update --init easy-rsa
+make revoke/joe@foo.org
+make publish_revocations
+```
+
+To list all previously issued certificates, use `make list`. 
+
+There are now precautions in place to prevent this situation but I'll mention it 
+anyways. If this list contains more than one active certificate for the same CN, 
+all but the most recent one needs to be revoked by serial. Since `easyrsa` does
+not support this out of the box, we need to jump through some extra hoops:  
+
+```
+eval "`make _admin _env`"
+mv $EASYRSA_PKI/issued/joe@foo.org.crt $EASYRSA_PKI/issued/joe@foo.org.crt.orig
+cp $EASYRSA_PKI/certs_by_serial/<SERIAL_OF_CERT_TO_BE_REVOKED>.pem $EASYRSA_PKI/issued/joe@foo.org.crt
+make revoke/joe@foo.org
+make publish_revocations
+mv $EASYRSA_PKI/issued/joe@foo.org.crt.orig $EASYRSA_PKI/issued/joe@foo.org.crt
+```
 
 ## 9.2 The Sandbox Deployment
 
