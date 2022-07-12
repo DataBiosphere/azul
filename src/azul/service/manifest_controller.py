@@ -4,6 +4,7 @@ from collections.abc import (
 import json
 from typing import (
     Optional,
+    get_origin,
 )
 
 import attr
@@ -160,7 +161,7 @@ class ManifestController(SourceController):
             else:
                 if isinstance(token_or_state, Token):
                     token, manifest = token_or_state, None
-                elif isinstance(token_or_state, JSON.__origin__):
+                elif isinstance(token_or_state, get_origin(JSON)):
                     manifest = Manifest.from_json(token_or_state[self.manifest_state_key])
                 else:
                     assert False, token_or_state

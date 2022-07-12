@@ -6,6 +6,7 @@ from typing import (
     Optional,
     Type,
     Union,
+    get_origin,
 )
 from unittest import (
     TestCase,
@@ -190,7 +191,7 @@ def patch_source_cache(arg: Union[Type, Callable, JSONs]):
                                  new=MagicMock())
         return put_patch(get_patch(target))
 
-    if isinstance(arg, JSONs.__origin__):
+    if isinstance(arg, get_origin(JSONs)):
         get_mock.return_value = arg
         return nested_patch
     else:
