@@ -8,6 +8,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    get_origin,
 )
 
 from more_itertools import (
@@ -430,7 +431,7 @@ def make_type(t: TYPE) -> JSON:
     # but __origin__ yields the unparameterized generic type.
     elif isinstance(t, str):
         return {'type': t}
-    elif isinstance(t, JSON.__origin__):
+    elif isinstance(t, get_origin(JSON)):
         return t
     else:
         assert False, type(t)
