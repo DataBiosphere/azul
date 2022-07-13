@@ -10,7 +10,6 @@ from dataclasses import (
 )
 from enum import (
     Enum,
-    auto,
 )
 import http
 import json
@@ -41,6 +40,9 @@ from azul.chalice import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.enums import (
+    auto,
 )
 from azul.hmac import (
     HMACAuthentication,
