@@ -181,9 +181,10 @@ class PFBEntity:
         """
         cls._add_missing_fields(name, object_, schema)
         object_ = cls._replace_null_with_empty_string(object_)
-        # For files, document_id is not unique (because of related_files), but
-        # uuid is.
-        ids = [object_['uuid']] if name == 'files' else sorted(object_['document_id'])
+        ids = object_['document_id']
+        # document_id is an array unless the inner entity type matches the
+        # outer entity type
+        ids = sorted(ids) if isinstance(ids, list) else [ids]
         id_ = uuid5(cls.namespace_uuid, _reversible_join('_', ids))
         id_ = _reversible_join('.', map(str, (name, id_, len(ids))))
         return cls(id=id_, name=name, object=object_)
