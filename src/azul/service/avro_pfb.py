@@ -133,9 +133,6 @@ class PFBConverter:
         file_entity: MutableJSON = one(contents[self.entity_type])
         related_files = file_entity.pop('related_files', [])
         for entity in chain([file_entity], related_files):
-            if entity != file_entity:
-                # Replace the file entity with a related file
-                contents['files'][:] = entity
             entity['drs_uri'] = self.repository_plugin.drs_uri(entity.pop('drs_path'))
             # File entities are assumed to be unique
             pfb_entity = PFBEntity.from_json(name=self.entity_type,
