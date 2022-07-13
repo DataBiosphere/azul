@@ -16,7 +16,6 @@ from datetime import (
 )
 from enum import (
     Enum,
-    auto,
 )
 import logging
 from operator import (
@@ -55,6 +54,9 @@ from azul import (
 )
 from azul.collections import (
     none_safe_key,
+)
+from azul.enums import (
+    auto,
 )
 from azul.indexer import (
     Bundle,

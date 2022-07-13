@@ -12,7 +12,6 @@ from datetime import (
 )
 from enum import (
     Enum,
-    auto,
 )
 import sys
 from typing import (
@@ -32,6 +31,9 @@ from azul import (
     CatalogName,
     IndexName,
     config,
+)
+from azul.enums import (
+    auto,
 )
 from azul.indexer import (
     BundleFQID,
