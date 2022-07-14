@@ -1086,26 +1086,20 @@ page_spec = schema.object(
 )
 
 
-def generate_operator_spec(field_type: FieldType) -> Sequence[JSON]:
-    array_schema = schema.array({},
-                                items=schema.array(field_type.api_type,
-                                                   minItems=2,
-                                                   maxItems=2),
-                                minItems=1,
-                                maxItems=16)
-    operator_spec = []
-    for operator in field_type.operators:
-        if operator == 'is':
-            operator_spec.append(
-                schema.object(is_=schema.array(field_type.api_type))
+def _filter_schema(field_type: FieldType) -> JSON:
+    return {
+        'oneOf': [
+            schema.object_type(
+                properties={relation: schema.array(field_type.api_filter_schema(relation))},
+                required=[relation],
+                additionalProperties=False
             )
-        else:
-            operator_spec.append(
-                schema.object_type(additionalProperties=False,
-                                   properties={operator: array_schema})
-            )
-    return operator_spec
+            for relation in field_type.relations
+        ]
+    }
 
+
+types = app.repository_controller.field_types(app.catalog)
 
 filters_param_spec = params.query(
     'filters',
@@ -1113,28 +1107,25 @@ filters_param_spec = params.query(
         default='{}',
         example={'cellCount': {'within': [[10000, 1000000000]]}},
         properties={
-            field: {
-                'oneOf': generate_operator_spec(field_type)
-            }
-            for field, field_type
-            in app.repository_controller.field_types(app.catalog).items()
+            field: _filter_schema(types[field])
+            for field in app.fields
         }
     ))),
     description=format_description('''
         Criteria to filter entities from the search results.
 
-        Each filter consists of a field name, a relational operator, and an
-        array of field values. The available operators are "is", "within",
-        "contains", and "intersects". Multiple filters are combined using "and"
-        logic. An entity must match all filters to be included in the response.
-        How multiple field values within a single filter are combined depends
-        on the operator.
+        Each filter consists of a field name, a relation (relational operator),
+        and an array of field values. The available relations are "is",
+        "within", "contains", and "intersects". Multiple filters are combined
+        using "and" logic. An entity must match all filters to be included in
+        the response. How multiple field values within a single filter are
+        combined depends on the relation.
 
-        For the "is" operator, multiple values are combined using "or"
+        For the "is" relation, multiple values are combined using "or"
         logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
         selects entities where the file format is either "fastq" or
         "fastq.gz". For the "within", "intersects", and "contains"
-        operators, the field values must come in nested pairs specifying
+        relations, the field values must come in nested pairs specifying
         upper and lower bounds, and multiple pairs are combined using "and"
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both

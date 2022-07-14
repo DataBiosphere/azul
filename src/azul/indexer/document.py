@@ -247,7 +247,6 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     shadowed: bool = False
     es_sort_mode: str = 'min'
     allow_sorting_by_empty_lists: bool = True
-    operators: Tuple[str, ...] = ('is',)
 
     def __init__(self, native_type: Type[N], translated_type: Type[T]):
         self.native_type = native_type
@@ -270,8 +269,35 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
         return '' if value is None else str(value)
 
     @property
-    def api_type(self) -> JSON:
+    def api_schema(self) -> JSON:
+        """
+        The JSONSchema describing fields of this type in OpenAPI specifications.
+        """
         return schema.make_type(self.native_type)
+
+    @property
+    def relations(self) -> Tuple[str, ...]:
+        """
+        The filter relations in which fields of this type can be used as a
+        left-handside.
+        """
+        return 'is',
+
+    def api_filter_schema(self, relation: str) -> JSON:
+        """
+        The JSONSchema describing the right-handside operand of the given filter
+        relation in OpenAPI specifications when the left-handside operand is a
+        field of this type.
+        """
+        assert relation in self.relations, relation
+        api_type = self.api_schema
+        if relation == 'is':
+            return api_type
+        elif relation in ('within', 'contains', 'intersects'):
+            return self._api_range_schema(api_type)
+
+    def _api_range_schema(self, api_type: JSON) -> JSON:
+        return schema.array(api_type, minItems=2, maxItems=2)
 
 
 class PassThrough(Generic[T], FieldType[T, T]):
@@ -292,8 +318,8 @@ class PassThrough(Generic[T], FieldType[T, T]):
         return value
 
     @property
-    def operators(self) -> Tuple[str, ...]:
-        if self.native_type == int:
+    def relations(self) -> Tuple[str, ...]:
+        if self.native_type in (int, float):
             return 'is', 'within'
         else:
             return 'is',
@@ -308,11 +334,10 @@ pass_thru_json: PassThrough[JSON] = PassThrough(JSON, es_type=None)
 
 
 class ClosedRange(PassThrough[JSON]):
-    operators = ('is', 'within', 'contains', 'intersects')
     valid_keys = {'gte', 'lte'}
 
-    def __init__(self, translated_type):
-        super().__init__(translated_type, es_type=None)
+    def __init__(self):
+        super().__init__(JSON, es_type=None)
 
     def to_index(self, value: T) -> T:
         assert self.valid_keys == value.keys(), value
@@ -323,18 +348,33 @@ class ClosedRange(PassThrough[JSON]):
         return super().from_index(value)
 
     @property
-    def api_type(self) -> JSON:
-        return schema.make_type(int)
+    def api_schema(self):
+        return self._api_range_schema(schema.union(int, float))
+
+    @property
+    def relations(self) -> Tuple[str, ...]:
+        return 'is', 'within', 'contains', 'intersects'
+
+    def api_filter_schema(self, relation: str) -> JSON:
+        if relation == 'contains':
+            return schema.union(self.api_schema, int, float)
+        else:
+            return self.api_schema
 
 
-closed_range = ClosedRange(JSON)
+closed_range = ClosedRange()
 
 
 class Nullable(FieldType[Optional[N], T]):
 
-    def __init__(self, native_type_: Type[N], translated_type: Type[T]) -> None:
-        super().__init__(Optional[native_type_], translated_type)
-        self.native_type_ = native_type_
+    def __init__(self, native_type: Type[N], translated_type: Type[T]) -> None:
+        super().__init__(Optional[native_type], translated_type)
+
+    @property
+    def optional_type(self):
+        native_type, none_type = get_args(self.native_type)
+        assert none_type is type(None)  # noqa: E721
+        return native_type
 
     @property
     @abstractmethod
@@ -350,8 +390,16 @@ class Nullable(FieldType[Optional[N], T]):
         raise NotImplementedError
 
     @property
-    def api_type(self) -> JSON:
-        return schema.make_type(self.native_type_)
+    def api_schema(self) -> JSON:
+        return schema.nullable(schema.make_type(self.optional_type))
+
+    def api_filter_schema(self, relation: str) -> JSON:
+        if relation in ('within', 'contains', 'intersects'):
+            # The LHS operand of a range relation can't be null
+            api_type = schema.make_type(self.optional_type)
+            return self._api_range_schema(api_type)
+        else:
+            return super().api_filter_schema(relation)
 
 
 class NullableString(Nullable[str, str]):
@@ -388,7 +436,6 @@ class NullableNumber(Generic[N_], Nullable[N_, Number]):
     null_int = sys.maxsize - 1023
     assert null_int == int(float(null_int))
     es_type = 'long'
-    operators = ('is', 'within')
 
     def __init__(self, native_type_: Type[N_]) -> None:
         assert issubclass(native_type_, get_args(Number))
@@ -400,6 +447,10 @@ class NullableNumber(Generic[N_], Nullable[N_, Number]):
     def from_index(self, value: Number) -> Optional[N_]:
         return None if value == self.null_int else value
 
+    @property
+    def relations(self) -> Tuple[str, ...]:
+        return 'is', 'within'
+
 
 null_int = NullableNumber(int)
 
@@ -409,7 +460,6 @@ null_float = NullableNumber(float)
 class NullableBool(NullableNumber[bool]):
     shadowed = False
     es_type = 'boolean'
-    operators = ('is',)
 
     def __init__(self):
         super().__init__(bool)
@@ -421,6 +471,10 @@ class NullableBool(NullableNumber[bool]):
     def from_index(self, value: Number) -> Optional[bool]:
         value = super().from_index(value)
         return {0: False, 1: True, None: None}[value]
+
+    @property
+    def relations(self) -> Tuple[str, ...]:
+        return 'is',
 
 
 null_bool = NullableBool()
@@ -454,15 +508,17 @@ class Nested(PassThrough[JSON]):
         super().__init__(JSON, es_type='nested')
         self.properties = properties
 
-    @property
-    def api_type(self) -> JSON:
-        properties = dict()
+    def api_filter_schema(self, relation: str) -> JSON:
+        assert relation == 'is'
+        properties, required = {}, []
         for field, field_type in self.properties.items():
-            if isinstance(field_type, Nullable):
-                properties[field] = schema.optional(field_type.native_type_)
-            else:
-                properties[field] = field_type.native_type
-        return schema.object(**properties)
+            properties[field] = field_type.api_filter_schema(relation)
+            if not isinstance(field_type, Nullable):
+                required.append(field)
+        kwargs = dict(additionalProperties=False)
+        if required:
+            kwargs['required'] = required
+        return schema.object_type(properties, **kwargs)
 
 
 FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]
