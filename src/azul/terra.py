@@ -69,6 +69,7 @@ from azul.drs import (
     DRSClient,
 )
 from azul.indexer import (
+    SourceRef as BaseSourceRef,
     SourceSpec,
 )
 from azul.oauth2 import (
@@ -213,6 +214,10 @@ class TDRSourceSpec(SourceSpec):
             and self.project == other.project
             and self.name == other.name
         )
+
+
+class SourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
+    pass
 
 
 class TerraCredentialsProvider(CredentialsProvider, ABC):
@@ -434,6 +439,16 @@ class TDRClient(SAMClient):
                               id=source['id'],
                               location=storage['region'])
 
+    def verify_source(self, source: SourceRef):
+        actual_name = self._retrieve_source(source)['name']
+        require(source.spec.name == actual_name,
+                'Source name changed unexpectedly', source, actual_name)
+
+    def _retrieve_source(self, source: SourceRef) -> MutableJSON:
+        endpoint = self._repository_endpoint(source.spec.type_name + 's', source.id)
+        response = self._request('GET', endpoint)
+        return self._check_response(endpoint, response)
+
     def check_api_access(self, source: TDRSourceSpec) -> None:
         """
         Verify that the client is authorized to read from the TDR service API.
@@ -441,9 +456,8 @@ class TDRClient(SAMClient):
         self._lookup_source(source)
         log.info('TDR client is authorized for API access to %s.', source)
 
-    def _lookup_source(self, source: TDRSourceSpec) -> JSON:
-        tdr_path = source.type_name + 's'
-        endpoint = self._repository_endpoint(tdr_path)
+    def _lookup_source(self, source: TDRSourceSpec) -> MutableJSON:
+        endpoint = self._repository_endpoint(source.type_name + 's')
         endpoint.set(args=dict(filter=source.bq_name, limit='2'))
         response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
@@ -451,14 +465,8 @@ class TDRClient(SAMClient):
         if total == 0:
             raise self._insufficient_access(str(endpoint))
         elif total == 1:
-            snapshot_id = one(response['items'])['id']
-            endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-            response = self._request('GET', endpoint)
-            require(response.status == 200,
-                    endpoint,
-                    response,
-                    exception=TerraStatusException)
-            return json.loads(response.data)
+            source_id = one(response['items'])['id']
+            return self._retrieve_source(SourceRef(id=source_id, spec=source))
         else:
             raise TerraNameConflictException(endpoint, source.bq_name, response)
 

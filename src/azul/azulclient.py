@@ -244,7 +244,6 @@ class AzulClient(object):
         plugin = self.repository_plugin(catalog)
         for source in sources:
             source = plugin.resolve_source(source)
-            plugin.verify_source(source)
 
             def message(partition_prefix: str) -> JSON:
                 logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
