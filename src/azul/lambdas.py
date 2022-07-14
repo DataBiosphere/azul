@@ -1,10 +1,14 @@
 import ast
 import logging
+import time
 from typing import (
     Optional,
 )
 
 import attr
+from more_itertools import (
+    one,
+)
 
 from azul import (
     JSON,
@@ -25,6 +29,7 @@ logger = logging.getLogger(__name__)
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Lambda:
     name: str
+    role: str
     slot_location: Optional[str]
 
     @property
@@ -68,6 +73,7 @@ class Lambda:
     @classmethod
     def from_response(cls, response: JSON) -> 'Lambda':
         name = response['FunctionName']
+        role = response['Role']
         try:
             env = response['Environment']['Variables']
         except KeyError:
@@ -76,6 +82,7 @@ class Lambda:
         else:
             slot_location = env['AZUL_TDR_SOURCE_LOCATION']
         return cls(name=name,
+                   role=role,
                    slot_location=slot_location)
 
     def __attrs_post_init__(self):
@@ -147,3 +154,29 @@ class Lambdas:
                 self._lambda.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
             else:
                 logger.warning(f'{lambda_name} is already disabled.')
+
+    def reset_lambda_roles(self):
+        client = self._lambda
+        lambda_names = set(config.lambda_names())
+
+        for lambda_ in self.list_lambdas():
+            for lambda_name in lambda_names:
+                if lambda_.name.startswith(config.qualified_resource_name(lambda_name)):
+                    other_lambda_name = one(lambda_names - {lambda_name})
+                    temporary_role = lambda_.role.replace(
+                        config.qualified_resource_name(lambda_name),
+                        config.qualified_resource_name(other_lambda_name)
+                    )
+                    logger.info('Temporarily updating %r to role %r', lambda_.name, temporary_role)
+                    client.update_function_configuration(FunctionName=lambda_.name,
+                                                         Role=temporary_role)
+                    logger.info('Updating %r to role %r', lambda_.name, lambda_.role)
+                    while True:
+                        try:
+                            client.update_function_configuration(FunctionName=lambda_.name,
+                                                                 Role=lambda_.role)
+                        except client.exceptions.ResourceConflictException:
+                            logger.info('Function %r is being updated. Retrying ...', lambda_.name)
+                            time.sleep(1)
+                        else:
+                            break

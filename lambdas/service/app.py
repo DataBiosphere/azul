@@ -394,8 +394,8 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        return self.base_url.set(path=path.format(file_uuid=file_uuid),
-                                 args=dict(catalog=catalog, **params))
+        url = self.base_url.add(path=path.format(file_uuid=file_uuid))
+        return url.set(args=dict(catalog=catalog, **params))
 
     def _authenticate(self) -> Optional[OAuth2]:
         try:
@@ -422,10 +422,10 @@ class ServiceApp(AzulChaliceApp):
                      ) -> mutable_furl:
         view_function = fetch_file_manifest if fetch else file_manifest
         path = one(view_function.path)
-        return self.base_url.set(path=path,
-                                 args=dict(catalog=catalog,
-                                           format=format_.value,
-                                           **params))
+        url = self.base_url.add(path=path)
+        return url.set(args=dict(catalog=catalog,
+                                 format=format_.value,
+                                 **params))
 
 
 app = ServiceApp()
@@ -435,8 +435,11 @@ configure_app_logging(app, log)
 @app.route('/', cors=True)
 def swagger_ui():
     swagger_ui_template = app.load_static_resource('swagger-ui.html.template.mustache')
-    redirect_url = app.base_url.set(path='/oauth2_redirect')
+    base_url = app.base_url
+    redirect_url = furl(base_url).add(path='oauth2_redirect')
+    deployment_url = furl(base_url).add(path='openapi')
     swagger_ui_html = chevron.render(swagger_ui_template, {
+        'DEPLOYMENT_PATH': json.dumps(str(deployment_url.path)),
         'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
         'OAUTH2_REDIRECT_URL': json.dumps(str(redirect_url)),
         'NON_INTERACTIVE_METHODS': json.dumps([

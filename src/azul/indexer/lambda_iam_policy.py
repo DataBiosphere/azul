@@ -1,6 +1,9 @@
 from azul import (
     config,
 )
+from azul.chalice import (
+    private_api_policy,
+)
 from azul.deployment import (
     aws,
 )
@@ -121,6 +124,7 @@ policy = {
                 }
             ] if direct_access_role is not None else [
             ]
-        )
+        ),
+        *(private_api_policy() if config.private_api else [])
     ]
 }

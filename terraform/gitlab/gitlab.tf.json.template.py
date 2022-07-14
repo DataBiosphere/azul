@@ -21,6 +21,9 @@ from azul import (
 from azul.aws_service_model import (
     ServiceActionType,
 )
+from azul.chalice import (
+    private_api_policy,
+)
 from azul.collections import (
     dict_merge,
     explode_dict,
@@ -33,6 +36,7 @@ from azul.strings import (
 )
 from azul.terraform import (
     emit_tf,
+    vpc,
 )
 from azul.types import (
     JSON,
@@ -192,22 +196,6 @@ friend_accounts = {
     542754589326: 'platform-hca-prod'
 }
 
-
-def security_rule(**rule):
-    return {
-        'cidr_blocks': None,
-        'ipv6_cidr_blocks': None,
-        'prefix_list_ids': None,
-        'from_port': None,
-        'protocol': None,
-        'security_groups': None,
-        'self': None,
-        'to_port': None,
-        'description': None,
-        **rule
-    }
-
-
 logs_path_prefix = 'logs/alb'
 gitlab_logs_path = f'{logs_path_prefix}/AWSLogs/{aws.account}/*'
 
@@ -279,16 +267,6 @@ def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> l
                 arn = arn.format_map(arn_fields)
                 arns.append(arn)
     return arns
-
-
-def subnet_name(public):
-    return 'public' if public else 'private'
-
-
-def subnet_number(zone, public):
-    # Even numbers for private subnets, odd numbers for public subnets. The advantage of this numbering scheme is
-    # that it won't be perturbed by adding zones.
-    return 2 * zone + int(public)
 
 
 def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
@@ -449,6 +427,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    FunctionName='azul-*',
                                    UUID='*',
                                    LayerVersion='*'),
+
+                    *private_api_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level permissions
                     {
@@ -654,13 +634,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_subnet': {
             # A public and a private subnet per availability zone
-            f'gitlab_{subnet_name(public)}_{zone}': {
+            f'gitlab_{vpc.subnet_name(public)}_{zone}': {
                 'availability_zone': f'${{data.aws_availability_zones.available.names[{zone}]}}',
-                'cidr_block': f'${{cidrsubnet(aws_vpc.gitlab.cidr_block, 8, {subnet_number(zone, public)})}}',
+                'cidr_block': f'${{cidrsubnet(aws_vpc.gitlab.cidr_block, 8, {vpc.subnet_number(zone, public)})}}',
                 'map_public_ip_on_launch': public,
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'tags': {
-                    'Name': f'azul-gitlab-{subnet_name(public)}-{zone}'
+                    'Name': f'azul-gitlab-{vpc.subnet_name(public)}-{zone}'
                 }
             }
             for public in (False, True)
@@ -741,28 +721,28 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-vpn',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    security_rule(description='Any traffic to the VPC',
-                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
-                                  protocol=-1,
-                                  from_port=0,
-                                  to_port=0),
-                    security_rule(description='ICMP for PMTUD',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol='icmp',
-                                  from_port=3,  # Destination Unreachable
-                                  to_port=4)  # Fragmentation required DF-flag set
+                    vpc.security_rule(description='Any traffic to the VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                      protocol=-1,
+                                      from_port=0,
+                                      to_port=0),
+                    vpc.security_rule(description='ICMP for PMTUD',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol='icmp',
+                                      from_port=3,  # Destination Unreachable
+                                      to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    security_rule(description='Any traffic from the VPC',
-                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
-                                  protocol=-1,
-                                  from_port=0,
-                                  to_port=0),
-                    security_rule(description='ICMP for PMTUD',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol='icmp',
-                                  from_port=3,  # Destination Unreachable
-                                  to_port=4)  # Fragmentation required DF-flag set
+                    vpc.security_rule(description='Any traffic from the VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                      protocol=-1,
+                                      from_port=0,
+                                      to_port=0),
+                    vpc.security_rule(description='ICMP for PMTUD',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol='icmp',
+                                      from_port=3,  # Destination Unreachable
+                                      to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'tags': {
                     'Name': 'azul-gitlab-vpn'
@@ -772,28 +752,28 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-alb',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    security_rule(description='Any traffic to the VPC',
-                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
-                                  protocol=-1,
-                                  from_port=0,
-                                  to_port=0),
-                    security_rule(description='ICMP for PMTUD',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol='icmp',
-                                  from_port=3,  # Destination Unreachable
-                                  to_port=4)  # Fragmentation required DF-flag set
+                    vpc.security_rule(description='Any traffic to the VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                      protocol=-1,
+                                      from_port=0,
+                                      to_port=0),
+                    vpc.security_rule(description='ICMP for PMTUD',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol='icmp',
+                                      from_port=3,  # Destination Unreachable
+                                      to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    security_rule(description='HTTPS from the VPC',
-                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
-                                  protocol='tcp',
-                                  from_port=443,
-                                  to_port=443),
-                    security_rule(description='ICMP for PMTUD',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol='icmp',
-                                  from_port=3,  # Destination Unreachable
-                                  to_port=4)  # Fragmentation required DF-flag set
+                    vpc.security_rule(description='HTTPS from the VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                      protocol='tcp',
+                                      from_port=443,
+                                      to_port=443),
+                    vpc.security_rule(description='ICMP for PMTUD',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol='icmp',
+                                      from_port=3,  # Destination Unreachable
+                                      to_port=4)  # Fragmentation required DF-flag set
 
                 ],
                 'tags': {
@@ -804,11 +784,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    security_rule(description='Any traffic to anywhere (to be routed by NAT Gateway)',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol=-1,
-                                  from_port=0,
-                                  to_port=0),
+                    vpc.security_rule(description='Any traffic to anywhere (to be routed by NAT Gateway)',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol=-1,
+                                      from_port=0,
+                                      to_port=0),
                     # VXLAN for AWS Traffic Capture to a target in the same SG
                     # In a nutshell, start target instance in this SG, set up
                     # mirroring target for instance, set up mirroring session
@@ -818,41 +798,41 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # sudo ip link set vxlan0 up
                     # sudo tcpdump -i vxlan0 -w /tmp/gitlab.pcap
                     # OR sudo tcpdump -i vxlan0 -w - | tee /tmp/gitlab.pcap | tcpdump -r -
-                    security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
-                                  self=True,
-                                  protocol='udp',
-                                  from_port=4789,
-                                  to_port=4789),
-                    security_rule(description='ICMP for PMTUD',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol='icmp',
-                                  from_port=3,  # Destination Unreachable
-                                  to_port=4)  # Fragmentation required DF-flag set
+                    vpc.security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
+                                      self=True,
+                                      protocol='udp',
+                                      from_port=4789,
+                                      to_port=4789),
+                    vpc.security_rule(description='ICMP for PMTUD',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol='icmp',
+                                      from_port=3,  # Destination Unreachable
+                                      to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    security_rule(description='HTTP from VPC',
-                                  cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
-                                  protocol='tcp',
-                                  from_port=80,
-                                  to_port=80),
-                    *(
-                        security_rule(description=f'SSH for {name} from VPC',
+                    vpc.security_rule(description='HTTP from VPC',
                                       cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                       protocol='tcp',
-                                      from_port=int_port,
-                                      to_port=int_port)
+                                      from_port=80,
+                                      to_port=80),
+                    *(
+                        vpc.security_rule(description=f'SSH for {name} from VPC',
+                                          cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                          protocol='tcp',
+                                          from_port=int_port,
+                                          to_port=int_port)
                         for ext_port, int_port, name in nlb_ports
                     ),
-                    security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
-                                  self=True,
-                                  protocol='udp',
-                                  from_port=4789,
-                                  to_port=4789),
-                    security_rule(description='ICMP for PMTUD',
-                                  cidr_blocks=['0.0.0.0/0'],
-                                  protocol='icmp',
-                                  from_port=3,  # Destination Unreachable
-                                  to_port=4)  # Fragmentation required DF-flag set
+                    vpc.security_rule(description='VXLAN for AWS Traffic Capture to a target in the same SG',
+                                      self=True,
+                                      protocol='udp',
+                                      from_port=4789,
+                                      to_port=4789),
+                    vpc.security_rule(description='ICMP for PMTUD',
+                                      cidr_blocks=['0.0.0.0/0'],
+                                      protocol='icmp',
+                                      from_port=3,  # Destination Unreachable
+                                      to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'tags': {
                     'Name': 'azul-gitlab'
