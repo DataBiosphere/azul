@@ -33,7 +33,13 @@ def transform_tf(input_json):
         'layer_arn': {},
         'es_endpoint': {},
         'es_instance_count': {},
-        'cloudwatch_log_group_provisioner': {}
+        'cloudwatch_log_group_provisioner': {},
+        **({
+               config.var_vpc_endpoint_id: {},
+               config.var_vpc_subnet_ids: {},
+               config.var_vpc_security_group_id: {},
+           } if config.private_api else {
+        })
     }
 
     input_json['output']['stage_name'] = {
@@ -42,6 +48,14 @@ def transform_tf(input_json):
     input_json['output']['rest_api_arn'] = {
         'value': '${aws_api_gateway_rest_api.rest_api.arn}'
     }
+
+    if config.private_api:
+        # Hack to inject the VPC endpoint IDs that Chalice doesn't (but should)
+        # add when the `api_gateway_endpoint_vpce` config is used.
+        rest_api = input_json['resource']['aws_api_gateway_rest_api']['rest_api']
+        rest_api['endpoint_configuration']['vpc_endpoint_ids'] = [
+            '${var.%s}' % config.var_vpc_endpoint_id
+        ]
 
     for func in input_json['resource']['aws_lambda_function'].values():
         assert 'layers' not in func
