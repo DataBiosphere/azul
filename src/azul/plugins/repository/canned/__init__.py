@@ -99,6 +99,9 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return spec.name
 
+    def verify_source(self, ref: CannedSourceRef) -> None:
+        pass
+
     @lru_cache
     def staging_area(self, source_spec: SimpleSourceSpec) -> StagingArea:
         factory = GitHubStagingAreaFactory.from_url(source_spec.name)
