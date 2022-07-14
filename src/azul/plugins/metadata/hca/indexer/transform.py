@@ -279,7 +279,7 @@ class ValueAndUnit(FieldType[JSON, str]):
         return '' if value is None else self.to_index(value)
 
     @property
-    def api_type(self) -> JSON:
+    def api_schema(self) -> JSON:
         return schema.object(value=str, unit=str)
 
 
