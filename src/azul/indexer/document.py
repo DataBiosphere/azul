@@ -321,15 +321,6 @@ null_int: NullableNumber[int] = NullableNumber()
 null_float: NullableNumber[float] = NullableNumber()
 
 
-class SumSortedNullableNumber(NullableNumber[N_]):
-    es_sort_mode = 'sum'
-
-
-null_int_sum_sort: SumSortedNullableNumber[int] = SumSortedNullableNumber()
-
-null_float_sum_sort: SumSortedNullableNumber[float] = SumSortedNullableNumber()
-
-
 class NullableBool(NullableNumber[bool]):
     shadowed = False
     es_type = 'boolean'
