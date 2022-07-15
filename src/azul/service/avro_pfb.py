@@ -42,7 +42,6 @@ from azul.indexer.document import (
     null_datetime,
     null_float,
     null_int,
-    null_int_sum_sort,
     null_str,
     pass_thru_int,
     pass_thru_json,
@@ -485,7 +484,6 @@ _nullable_to_pfb_types = {
     null_float: ['string', 'double'],  # Not present in current field_types
     null_int: ['string', 'long'],
     null_str: ['string'],
-    null_int_sum_sort: ['string', 'long'],
     null_datetime: ['string'],
 }
 
