@@ -14,12 +14,9 @@ from threading import (
     RLock,
 )
 from typing import (
-    Any,
     ClassVar,
     Generic,
     Optional,
-    Protocol,
-    TYPE_CHECKING,
     Type,
     TypeVar,
     get_args,
@@ -37,22 +34,12 @@ from azul.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
+    SupportsLessThan,
 )
 from azul.uuids import (
     UUIDPartition,
     validate_uuid_prefix,
 )
-
-# FIXME: Remove hacky import of SupportsLessThan
-#        https://github.com/DataBiosphere/azul/issues/2783
-if TYPE_CHECKING:
-    from _typeshed import (
-        SupportsLessThan,
-    )
-else:
-    class SupportsLessThan(Protocol):
-
-        def __lt__(self, __other: Any) -> bool: ...
 
 log = logging.getLogger(__name__)
 
