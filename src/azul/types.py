@@ -5,6 +5,8 @@ from collections.abc import (
 from typing import (
     Any,
     Optional,
+    Protocol,
+    TYPE_CHECKING,
     Union,
     get_args,
     get_origin,
@@ -154,3 +156,15 @@ def reify(t):
                 yield a if o is None else o
 
     return tuple(set(f(t)))
+
+
+# FIXME: Remove hacky import of SupportsLessThan
+#        https://github.com/DataBiosphere/azul/issues/2783
+if TYPE_CHECKING:
+    from _typeshed import (
+        SupportsLessThan,
+    )
+else:
+    class SupportsLessThan(Protocol):
+
+        def __lt__(self, __other: Any) -> bool: ...
