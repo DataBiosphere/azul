@@ -1087,16 +1087,19 @@ page_spec = schema.object(
 
 
 def _filter_schema(field_type: FieldType) -> JSON:
-    return {
-        'oneOf': [
-            schema.object_type(
-                properties={relation: schema.array(field_type.api_filter_schema(relation))},
-                required=[relation],
-                additionalProperties=False
-            )
-            for relation in field_type.relations
-        ]
-    }
+    relations = field_type.supported_filter_relations
+
+    def filter_schema(relation: str) -> JSON:
+        return schema.object_type(
+            properties={relation: schema.array(field_type.api_filter_schema(relation))},
+            required=[relation],
+            additionalProperties=False
+        )
+
+    if len(relations) == 1:
+        return filter_schema(one(relations))
+    else:
+        return {'oneOf': list(map(filter_schema, relations))}
 
 
 types = app.repository_controller.field_types(app.catalog)

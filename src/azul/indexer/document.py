@@ -18,7 +18,6 @@ from typing import (
     Generic,
     Optional,
     Sequence,
-    Tuple,
     Type,
     TypeVar,
     Union,
@@ -54,6 +53,8 @@ from azul.types import (
     AnyJSON,
     AnyMutableJSON,
     JSON,
+    PrimitiveJSON,
+    reify,
 )
 
 EntityID = str
@@ -242,6 +243,10 @@ N = TypeVar('N')
 # index. Think "translated type".
 T = TypeVar('T', bound=AnyJSON)
 
+P = TypeVar('P', bound=PrimitiveJSON)
+
+Range = tuple[P, P]
+
 
 class FieldType(Generic[N, T], metaclass=ABCMeta):
     shadowed: bool = False
@@ -276,10 +281,11 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
         return schema.make_type(self.native_type)
 
     @property
-    def relations(self) -> Tuple[str, ...]:
+    def supported_filter_relations(self) -> tuple[str, ...]:
         """
         The filter relations in which fields of this type can be used as a
-        left-handside.
+        left-handside. By default, this class only supports equality. A scalar
+        field type would override this method to include the `within` relation.
         """
         return 'is',
 
@@ -289,21 +295,37 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
         relation in OpenAPI specifications when the left-handside operand is a
         field of this type.
         """
-        assert relation in self.relations, relation
+        assert relation in self.supported_filter_relations, relation
         api_type = self.api_schema
         if relation == 'is':
             return api_type
-        elif relation in ('within', 'contains', 'intersects'):
+        elif relation == 'within':
             return self._api_range_schema(api_type)
+        else:
+            assert False, relation
 
-    def _api_range_schema(self, api_type: JSON) -> JSON:
-        return schema.array(api_type, minItems=2, maxItems=2)
+    def _api_range_schema(self, api_schema: JSON) -> JSON:
+        return schema.array(api_schema, minItems=2, maxItems=2)
+
+    def _api_range_to_index(self, value: Range) -> JSON:
+        return {'gte': value[0], 'lte': value[1]}
+
+    def _cast_api_range(self, value: AnyJSON) -> Range:
+        assert isinstance(value, (list, tuple)) and len(value) == 2, value
+        assert all(isinstance(end, reify(PrimitiveJSON)) for end in value), value
+        return tuple(value)
+
+    def filter(self, relation: str, values: list[AnyJSON]) -> list[T]:
+        if relation == 'within':
+            return list(map(self._api_range_to_index, map(self._cast_api_range, values)))
+        else:
+            return list(map(self.to_index, values))
 
 
 class PassThrough(Generic[T], FieldType[T, T]):
     allow_sorting_by_empty_lists = False
 
-    def __init__(self, translated_type, *, es_type: Optional[str]):
+    def __init__(self, translated_type: Type[T], *, es_type: Optional[str]):
         super().__init__(translated_type, translated_type)
         self._es_type = es_type
 
@@ -317,52 +339,23 @@ class PassThrough(Generic[T], FieldType[T, T]):
     def from_index(self, value: T) -> T:
         return value
 
-    @property
-    def relations(self) -> Tuple[str, ...]:
-        if self.native_type in (int, float):
-            return 'is', 'within'
-        else:
-            return 'is',
 
-
-pass_thru_str: PassThrough[str] = PassThrough(str, es_type='keyword')
-pass_thru_int: PassThrough[int] = PassThrough(int, es_type='long')
-pass_thru_bool: PassThrough[bool] = PassThrough(bool, es_type='boolean')
 # FIXME: change the es_type for JSON to `nested`
 #        https://github.com/DataBiosphere/azul/issues/2621
 pass_thru_json: PassThrough[JSON] = PassThrough(JSON, es_type=None)
 
 
-class ClosedRange(PassThrough[JSON]):
-    valid_keys = {'gte', 'lte'}
-
-    def __init__(self):
-        super().__init__(JSON, es_type=None)
-
-    def to_index(self, value: T) -> T:
-        assert self.valid_keys == value.keys(), value
-        return super().to_index(value)
-
-    def from_index(self, value: T) -> T:
-        assert self.valid_keys == value.keys(), value
-        return super().from_index(value)
+class ScalarPassThrough(PassThrough[T]):
 
     @property
-    def api_schema(self):
-        return self._api_range_schema(schema.union(int, float))
-
-    @property
-    def relations(self) -> Tuple[str, ...]:
-        return 'is', 'within', 'contains', 'intersects'
-
-    def api_filter_schema(self, relation: str) -> JSON:
-        if relation == 'contains':
-            return schema.union(self.api_schema, int, float)
-        else:
-            return self.api_schema
+    def supported_filter_relations(self) -> tuple[str, ...]:
+        return *super().supported_filter_relations, 'within'
 
 
-closed_range = ClosedRange()
+pass_thru_str = PassThrough(str, es_type='keyword')
+pass_thru_int = ScalarPassThrough(int, es_type='long')
+pass_thru_float = ScalarPassThrough(float, es_type='double')
+pass_thru_bool = PassThrough(bool, es_type='boolean')
 
 
 class Nullable(FieldType[Optional[N], T]):
@@ -376,11 +369,6 @@ class Nullable(FieldType[Optional[N], T]):
         assert none_type is type(None)  # noqa: E721
         return native_type
 
-    @property
-    @abstractmethod
-    def es_type(self) -> Optional[str]:
-        raise NotImplementedError
-
     @abstractmethod
     def to_index(self, value: N) -> T:
         raise NotImplementedError
@@ -393,13 +381,20 @@ class Nullable(FieldType[Optional[N], T]):
     def api_schema(self) -> JSON:
         return schema.nullable(schema.make_type(self.optional_type))
 
+
+class NullableScalar(Nullable[N, T], metaclass=ABCMeta):
+
     def api_filter_schema(self, relation: str) -> JSON:
-        if relation in ('within', 'contains', 'intersects'):
+        if relation == 'within':
             # The LHS operand of a range relation can't be null
             api_type = schema.make_type(self.optional_type)
             return self._api_range_schema(api_type)
         else:
             return super().api_filter_schema(relation)
+
+    @property
+    def supported_filter_relations(self) -> tuple[str, ...]:
+        return *super().supported_filter_relations, 'within'
 
 
 class NullableString(Nullable[str, str]):
@@ -420,61 +415,67 @@ class NullableString(Nullable[str, str]):
 
 null_str = NullableString()
 
-Number = Union[float, int]
+# While Elasticsearch distinguishes between integers and floating point numbers
+# in its index, JSON does not. Since all payloads to and from Elasticsearch are
+# serialized as JSON we have to be prepared to get 1 back when we write 1.0.
 
-# `N_` is the same as `N`, except for numeric types. We would specify a bound
-# for this type variable if it weren't for a limitation of the PyCharm type
-# checker: with the bound set, PyCharm does not emit a warning when passing an
-# int to a method of NullableNumber(float).
-N_ = TypeVar('N_')
+JSONNumber = Union[int, float]
+
+U = TypeVar('U', bound=Union[bool, int, float])
 
 
-class NullableNumber(Generic[N_], Nullable[N_, Number]):
+class NullableNumber(Generic[U], NullableScalar[U, JSONNumber]):
     shadowed = True
     # Maximum int that can be represented as a 64-bit int and double IEEE
     # floating point number. This prevents loss when converting between the two.
-    null_int = sys.maxsize - 1023
-    assert null_int == int(float(null_int))
-    es_type = 'long'
+    null_value = sys.maxsize - 1023
+    assert null_value == int(float(null_value))
 
-    def __init__(self, native_type_: Type[N_]) -> None:
-        assert issubclass(native_type_, get_args(Number))
-        super().__init__(native_type_, Number)
-
-    def to_index(self, value: Optional[N_]) -> Number:
-        return self.null_int if value is None else value
-
-    def from_index(self, value: Number) -> Optional[N_]:
-        return None if value == self.null_int else value
+    def __init__(self, native_type: Type[U], es_type: str) -> None:
+        assert issubclass(native_type, get_args(JSONNumber))
+        super().__init__(native_type, JSONNumber)
+        self._es_type = es_type
 
     @property
-    def relations(self) -> Tuple[str, ...]:
-        return 'is', 'within'
+    def es_type(self) -> Optional[str]:
+        return self._es_type
+
+    def to_index(self, value: Optional[U]) -> JSONNumber:
+        if value is None:
+            return self.null_value
+        else:
+            assert value < self.null_value, (value, self.null_value)
+            return value
+
+    def from_index(self, value: JSONNumber) -> Optional[U]:
+        if value == self.null_value:
+            return None
+        else:
+            return self.optional_type(value)
 
 
-null_int = NullableNumber(int)
+null_int = NullableNumber(int, 'long')
 
-null_float = NullableNumber(float)
+null_float = NullableNumber(float, 'double')
 
 
 class NullableBool(NullableNumber[bool]):
     shadowed = False
-    es_type = 'boolean'
 
     def __init__(self):
-        super().__init__(bool)
+        super().__init__(bool, 'boolean')
 
-    def to_index(self, value: Optional[bool]) -> Number:
+    def to_index(self, value: Optional[bool]) -> JSONNumber:
         value = {False: 0, True: 1, None: None}[value]
         return super().to_index(value)
 
-    def from_index(self, value: Number) -> Optional[bool]:
+    def from_index(self, value: JSONNumber) -> Optional[bool]:
         value = super().from_index(value)
         return {0: False, 1: True, None: None}[value]
 
     @property
-    def relations(self) -> Tuple[str, ...]:
-        return 'is',
+    def supported_filter_relations(self) -> tuple[str, ...]:
+        return 'is',  # no point in supporting range relation
 
 
 null_bool = NullableBool()
@@ -519,6 +520,63 @@ class Nested(PassThrough[JSON]):
         if required:
             kwargs['required'] = required
         return schema.object_type(properties, **kwargs)
+
+    def filter(self, relation: str, values: list[AnyJSON]) -> list[JSON]:
+        nested_object = one(values)
+        assert isinstance(nested_object, dict)
+        query_filters = {}
+        for nested_field, nested_value in nested_object.items():
+            nested_type = self.properties[nested_field]
+            to_index = nested_type.to_index
+            value = one(values)[nested_field]
+            query_filters[nested_field] = to_index(value)
+        return [query_filters]
+
+
+class ClosedRange(Generic[P], FieldType[Range[P], JSON]):
+
+    def __init__(self, ends_type: FieldType[P, P]):
+        super().__init__(Range[P], JSON)
+        self.ends_type = ends_type
+
+    @property
+    def es_type(self) -> Optional[str]:
+        return None
+
+    def to_index(self, value: Range[P]) -> JSON:
+        return self._api_range_to_index(value)
+
+    def from_index(self, value: JSON) -> Range[P]:
+        return value['gte'], value['lte']
+
+    @property
+    def api_schema(self):
+        return self._api_range_schema(self.ends_type.api_schema)
+
+    @property
+    def supported_filter_relations(self) -> tuple[str, ...]:
+        return 'is', 'within', 'contains', 'intersects'
+
+    def api_filter_schema(self, relation: str) -> JSON:
+        if relation == 'contains':
+            # A range can contain a range or a value
+            return schema.union(self.ends_type.api_schema, self.api_schema)
+        else:
+            return self.api_schema
+
+    def filter(self, relation: str, values: list[AnyJSON]) -> list[JSON]:
+        result = []
+        for value in values:
+            if isinstance(value, list):
+                gte, lte = value
+            elif relation == 'contains' and isinstance(value, self.ends_type.native_type):
+                gte, lte = value, value
+            else:
+                assert False, (relation, value)
+            assert isinstance(gte, self.ends_type.native_type), gte
+            assert isinstance(lte, self.ends_type.native_type), lte
+            result.append(self.to_index((gte, lte)))
+        return result
 
 
 FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]
