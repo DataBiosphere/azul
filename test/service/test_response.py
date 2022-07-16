@@ -1151,6 +1151,10 @@ class TestResponse(WebServiceTestCase):
         self.assertSetEqual(indexed_bundles, actual_bundles)
 
     def test_ranged_values(self):
+        gte0, lte0 = 2049840000, 2175984000
+        gte1, lte1 = 1419120000, 1545264000
+        gte2, lte2 = 1734480000, 1860624000
+        gte3, lte3 = 1261440000, 1387584000
         test_hits = [
             [
                 {
@@ -1176,12 +1180,12 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "organismAgeRange": [
                         {
-                            "gte": 2049840000.0,
-                            "lte": 2175984000.0
+                            "gte": float(gte0),
+                            "lte": float(lte0)
                         },
                         {
-                            "gte": 1419120000.0,
-                            "lte": 1545264000.0
+                            "gte": float(gte1),
+                            "lte": float(lte1)
                         }
                     ],
                 }
@@ -1210,32 +1214,36 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "organismAgeRange": [
                         {
-                            "gte": 1734480000.0,
-                            "lte": 1860624000.0
+                            "gte": float(gte2),
+                            "lte": float(lte2)
                         },
                         {
-                            "gte": 1261440000.0,
-                            "lte": 1387584000.0
+                            "gte": float(gte3),
+                            "lte": float(lte3)
                         }
                     ],
                 }
             ]
         ]
 
-        for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
-                                                     ('within', (1261430000, 1545265000), test_hits),
-                                                     ('intersects', (1860623000, 1900000000), test_hits[1:]),
-                                                     ('contains', (1860624000, 2049641000), []),
-                                                     ('within', (1734490000, 1860623000), []),
-                                                     ('intersects', (1860624100, 2049641000), [])]:
-            with self.subTest(relation=relation, value=range_value):
-                params = self._params(filters={'organismAgeRange': {relation: [range_value]}},
+        test_cases = [
+            ('contains', (gte1 + 10000, lte1 - 1000), test_hits[:1]),
+            ('within', (gte3 - 10000, lte1 + 1000), test_hits),
+            ('intersects', (lte2 - 1000, 1900000000), test_hits[1:]),
+            ('contains', (lte2, gte0 - 199000.0), []),
+            ('within', (gte2 + 10000, lte2 - 1000), []),
+            ('intersects', (lte2 + 100, gte0 - 199000.0), [])
+        ]
+        for relation, value, expected_hits in test_cases:
+            with self.subTest(relation=relation, value=value):
+                params = self._params(filters={'organismAgeRange': {relation: [value]}},
                                       order='desc',
                                       sort='entryId')
                 url = self.base_url.set(path='/index/projects', args=params)
                 response = requests.get(str(url))
-                actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
-                self.assertElasticEqual(expected_hits, actual_value)
+                response.raise_for_status()
+                actual_hits = [hit['donorOrganisms'] for hit in response.json()['hits']]
+                self.assertElasticEqual(expected_hits, actual_hits)
 
     def test_ordering(self):
         sort_fields = [
