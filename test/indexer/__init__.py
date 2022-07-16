@@ -159,29 +159,27 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
         lists of primitives are sorted. Fails if no lists to check are found.
         """
 
-        def verify_sorted_lists(data_: AnyJSON, path: FieldPath = ()) -> int:
-            if isinstance(data_, dict):
+        def verify_sorted_lists(data: AnyJSON, path: FieldPath = ()) -> int:
+            if isinstance(data, dict):
                 return sum(verify_sorted_lists(val, (*path, key))
-                           for key, val in cast(JSON, data_).items())
-            elif isinstance(data_, list):
-                if data_:
-                    if isinstance(data_[0], dict):
+                           for key, val in cast(JSON, data).items())
+            elif isinstance(data, list):
+                if data:
+                    if isinstance(data[0], dict):
                         return sum(verify_sorted_lists(v, (*path, k))
-                                   for val in cast(JSONs, data_)
+                                   for val in cast(JSONs, data)
                                    for k, v in val.items())
-                    elif isinstance(data_[0], (type(None), bool, int, float, str)):
-                        self.assertEqual(data_,
-                                         sorted(data_, key=lambda x: (x is None, x)),
-                                         f'Value at {path!r} is not sorted: {data_!r}')
+                    elif isinstance(data[0], (type(None), bool, int, float, str)):
+                        self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
                         return 1
                     else:
-                        assert False, str(type(data_[0]))
+                        assert False, str(type(data[0]))
                 else:
                     return 0
-            elif isinstance(data_, (type(None), bool, int, float, str)):
+            elif isinstance(data, (type(None), bool, int, float, str)):
                 return 0
             else:
-                assert False, str(type(data_))
+                assert False, str(type(data))
 
         num_lists_counted = verify_sorted_lists(data)
         self.assertGreater(num_lists_counted, 0)
