@@ -172,6 +172,10 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
                     elif isinstance(data[0], (type(None), bool, int, float, str)):
                         self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
                         return 1
+                    elif isinstance(data[0], list):
+                        # In lieu of tuples, a range in JSON is a list of two values
+                        self.assertEqual(data, list(map(list, sorted(map(tuple, data)))))
+                        return 1
                     else:
                         assert False, str(type(data[0]))
                 else:

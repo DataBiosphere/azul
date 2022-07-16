@@ -1493,7 +1493,7 @@ class TestHCAIndexer(IndexerTestCase):
         no_cells_bundle = self._load_canned_bundle(no_cells_bundle)
         self._index_bundle(no_cells_bundle)
         expected = {
-            'total_estimated_cells': null_int.null_int,
+            'total_estimated_cells': null_int.null_value,
             'total_estimated_cells_': None,
             'organ_part': ['temporal lobe']
         }
