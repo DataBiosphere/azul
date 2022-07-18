@@ -201,29 +201,29 @@ class PFBEntity:
         else:
             assert False, schema
         for field in entity_schema['fields']:
-            field_name = field['name']
+            field_name, field_type = field['name'], field['type']
             if field_name not in object_:
-                if isinstance(field['type'], list):
+                if isinstance(field_type, list):
                     # FIXME: Change 'string' to 'null'
                     #        https://github.com/DataBiosphere/azul/issues/2462
-                    assert 'string' in field['type'] or 'null' in field['type'], field
+                    assert 'string' in field_type or 'null' in field_type, field
                     default_value = None
-                elif field['type']['type'] == 'array':
-                    if isinstance(field['type']['items'], dict):
-                        assert field['type']['items']['type'] == 'record', field
+                elif field_type['type'] == 'array':
+                    if isinstance(field_type['items'], dict):
+                        assert field_type']['items']['type'] == 'record', field
                         default_value = []
                     else:
                         # FIXME: Change 'string' to 'null'
                         #        https://github.com/DataBiosphere/azul/issues/2462
-                        assert 'string' in field['type']['items'], field
+                        assert 'string' in field_type['items'], field
                         default_value = [None]
                 else:
                     assert False, field
                 object_[field_name] = default_value
             if (
-                isinstance(field['type'], dict)
-                and field['type']['type'] == 'array'
-                and isinstance(field['type']['items'], dict)
+                isinstance(field_type, dict)
+                and field_type['type'] == 'array'
+                and isinstance(field_type['items'], dict)
             ):
                 for sub_object in object_[field_name]:
                     cls._add_missing_fields(name=field_name,
