@@ -203,25 +203,10 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         translated_filters = {}
         for field, filter in filters.items():
             field = field_mapping[field]
-            operator, values = one(filter.items())
+            relation, values = one(filter.items())
             field_type = self.service.field_type(catalog, field)
-            if isinstance(field_type, Nested):
-                nested_object = one(values)
-                assert isinstance(nested_object, dict)
-                query_filters = {}
-                for nested_field, nested_value in nested_object.items():
-                    nested_type = field_type.properties[nested_field]
-                    to_index = nested_type.to_index
-                    value = one(values)[nested_field]
-                    query_filters[nested_field] = to_index(value)
-                translated_filters[field] = {operator: [query_filters]}
-            else:
-                to_index = field_type.to_index
-                translated_filters[field] = {
-                    operator: [(to_index(start), to_index(end)) for start, end in values]
-                    if operator in ('contains', 'within', 'intersects') else
-                    list(map(to_index, values))
-                }
+            values = field_type.filter(relation, values)
+            translated_filters[field] = {relation: values}
         return translated_filters
 
     def prepare_query(self, skip_field_paths: tuple[FieldPath] = ()) -> Query:
@@ -229,21 +214,21 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         Converts the given filters into an Elasticsearch DSL Query object.
         """
         filter_list = []
-        for field_path, values in self.prepared_filters.items():
+        for field_path, relation_and_values in self.prepared_filters.items():
             if field_path not in skip_field_paths:
-                relation, value = one(values.items())
+                relation, values = one(relation_and_values.items())
                 if relation == 'is':
                     field_type = self.service.field_type(self.catalog, field_path)
                     if isinstance(field_type, Nested):
                         term_queries = []
-                        for nested_field, nested_value in one(value).items():
+                        for nested_field, nested_value in one(values).items():
                             nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
                             term_queries.append(Q('term', **nested_body))
                         query = Q('nested', path=dotted(field_path), query=Q('bool', must=term_queries))
                     else:
-                        query = Q('terms', **{dotted(field_path, 'keyword'): value})
+                        query = Q('terms', **{dotted(field_path, 'keyword'): values})
                         translated_none = field_type.to_index(None)
-                        if translated_none in value:
+                        if translated_none in values:
                             # Note that at this point None values in filters have already
                             # been translated eg. {'is': ['~null']} and if the filter has a
                             # None our query needs to find fields with None values as well
@@ -252,13 +237,9 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                             query = Q('bool', should=[query, absent_query])
                     filter_list.append(query)
                 elif relation in ('contains', 'within', 'intersects'):
-                    for min_value, max_value in value:
-                        range_value = {
-                            'gte': min_value,
-                            'lte': max_value,
-                            'relation': relation
-                        }
-                        filter_list.append(Q('range', **{dotted(field_path): range_value}))
+                    for value in values:
+                        value = value | {'relation': relation}
+                        filter_list.append(Q('range', **{dotted(field_path): value}))
                 else:
                     assert False
 

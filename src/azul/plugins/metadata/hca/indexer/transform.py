@@ -66,6 +66,7 @@ from azul.indexer.aggregate import (
     SimpleAggregator,
 )
 from azul.indexer.document import (
+    ClosedRange,
     Contribution,
     ContributionCoordinates,
     EntityReference,
@@ -74,11 +75,11 @@ from azul.indexer.document import (
     Nested,
     NullableString,
     PassThrough,
-    closed_range,
     null_bool,
     null_datetime,
     null_int,
     null_str,
+    pass_thru_float,
     pass_thru_int,
     pass_thru_json,
 )
@@ -279,13 +280,15 @@ class ValueAndUnit(FieldType[JSON, str]):
         return '' if value is None else self.to_index(value)
 
     @property
-    def api_type(self) -> JSON:
+    def api_schema(self) -> JSON:
         return schema.object(value=str, unit=str)
 
 
 value_and_unit: ValueAndUnit = ValueAndUnit(JSON, str)
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
+
+age_range = ClosedRange(pass_thru_float)
 
 
 class SubmitterCategory(Enum):
@@ -791,7 +794,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age': value_and_unit,
             'organism_age_unit': null_str,
             # Prevent problem due to shadow copies on numeric ranges
-            'organism_age_range': closed_range,
+            'organism_age_range': age_range,
             'donor_count': null_int
         }
 
@@ -814,10 +817,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age_unit': donor.organism_age_unit,
             **(
                 {
-                    'organism_age_range': {
-                        'gte': donor.organism_age_in_seconds.min,
-                        'lte': donor.organism_age_in_seconds.max
-                    }
+                    'organism_age_range': (
+                        donor.organism_age_in_seconds.min,
+                        donor.organism_age_in_seconds.max
+                    )
                 } if donor.organism_age_in_seconds else {
                 }
             )
