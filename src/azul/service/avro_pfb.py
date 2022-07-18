@@ -36,9 +36,9 @@ from azul import (
     reject,
 )
 from azul.indexer.document import (
+    ClosedRange,
     FieldTypes,
     Nested,
-    closed_range,
     null_bool,
     null_datetime,
     null_float,
@@ -214,7 +214,7 @@ class PFBEntity:
                     default_value = None
                 elif field_type['type'] == 'array':
                     if isinstance(field_type['items'], dict):
-                        assert field_type['items']['type'] == 'record', field
+                        assert field_type['items']['type'] in ('record', 'array'), field
                         default_value = []
                     else:
                         # FIXME: Change 'string' to 'null'
@@ -228,6 +228,7 @@ class PFBEntity:
                 isinstance(field_type, dict)
                 and field_type['type'] == 'array'
                 and isinstance(field_type['items'], dict)
+                and field_type['items']['type'] == 'record'
             ):
                 for sub_object in object_[field_name]:
                     cls._add_missing_fields(name=field_name,
@@ -482,7 +483,7 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
 
 _nullable_to_pfb_types = {
     null_bool: ['string', 'boolean'],
-    null_float: ['string', 'double'],  # Not present in current field_types
+    null_float: ['string', 'double'],
     null_int: ['string', 'long'],
     null_str: ['string'],
     null_datetime: ['string'],
@@ -505,8 +506,10 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 break  # to not include this field in the schema
             else:
                 field_name = new_field_name
+
         if isinstance(field_type, Nested):
             field_type = field_type.properties
+
         if isinstance(field_type, dict):
             yield {
                 "name": field_name,
@@ -554,6 +557,21 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 "type": ["string"],
                 "logicalType": "UUID"
             }
+        elif isinstance(field_type, ClosedRange):
+            yield {
+                "name": field_name,
+                "namespace": namespace,
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            int: "long",
+                            float: "double"
+                        }[field_type.ends_type.native_type]
+                    }
+                }
+            }
         # FIXME: Nested is handled so much more elegantly. See if we can have
         #        ValueAndUnit inherit Nested.
         #        https://github.com/DataBiosphere/azul/issues/4094
@@ -589,7 +607,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     ]
                 }
             }
-        elif field_type in (pass_thru_json, pass_thru_int, closed_range):
+        elif field_type in (pass_thru_json, pass_thru_int):
             # Pass thru types are used only for aggregation and are excluded
             # from actual hits
             pass
