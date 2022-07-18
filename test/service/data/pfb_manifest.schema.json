@@ -765,6 +765,17 @@
                             }
                         },
                         {
+                            "name": "organism_age_range",
+                            "namespace": "donors",
+                            "type": {
+                                "items": {
+                                    "items": "double",
+                                    "type": "array"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "donor_count",
                             "namespace": "donors",
                             "type": [
