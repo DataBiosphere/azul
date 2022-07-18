@@ -211,7 +211,7 @@ class PFBEntity:
                     default_value = None
                 elif field_type['type'] == 'array':
                     if isinstance(field_type['items'], dict):
-                        assert field_type']['items']['type'] == 'record', field
+                        assert field_type['items']['type'] in ('record', 'array'), field
                         default_value = []
                     else:
                         # FIXME: Change 'string' to 'null'
@@ -225,6 +225,7 @@ class PFBEntity:
                 isinstance(field_type, dict)
                 and field_type['type'] == 'array'
                 and isinstance(field_type['items'], dict)
+                and field_type['items']['type'] == 'record'
             ):
                 for sub_object in object_[field_name]:
                     cls._add_missing_fields(name=field_name,
@@ -557,8 +558,16 @@ def _entity_schema_recursive(field_types: FieldTypes,
             yield {
                 "name": field_name,
                 "namespace": namespace,
-                "type": "array",
-                "items": field_type.ends_type.api_schema
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            int: "long",
+                            float: "double"
+                        }[field_type.ends_type.native_type]
+                    }
+                }
             }
         # FIXME: Nested is handled so much more elegantly. See if we can have
         #        ValueAndUnit inherit Nested.
