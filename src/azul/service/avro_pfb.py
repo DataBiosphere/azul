@@ -534,7 +534,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 yield {
                     "name": field_name,
                     "namespace": namespace,
-                    "type": list(_nullable_to_pfb_types[field_type]),
+                    "type": _nullable_to_pfb_types[field_type],
                 }
             else:
                 yield {
@@ -542,7 +542,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     "namespace": namespace,
                     "type": {
                         "type": "array",
-                        "items": list(_nullable_to_pfb_types[field_type]),
+                        "items": _nullable_to_pfb_types[field_type],
                     }
                 }
         elif field_type is pass_thru_uuid4:
