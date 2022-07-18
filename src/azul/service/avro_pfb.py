@@ -97,6 +97,8 @@ class PFBConverter:
     Relations.
     """
 
+    entity_type = 'files'
+
     def __init__(self, schema: JSON, repository_plugin: RepositoryPlugin):
         self.schema = schema
         self.repository_plugin = repository_plugin
@@ -106,34 +108,34 @@ class PFBConverter:
         """
         Add an Elasticsearch document to be transformed.
         """
-        doc_copy = copy_json(doc, 'contents', 'files')
+        doc_copy = copy_json(doc, 'contents', self.entity_type)
         contents = doc_copy['contents']
-        assert contents['projects'] is doc['contents']['projects']
-        assert contents['files'] is not doc['contents']['files']
         file_relations = set()
         for entity_type, entities in contents.items():
+            # copy_json is expected to only deep copy a subset of the document
+            if entity_type == self.entity_type:
+                assert entities is not doc['contents'][entity_type]
+            else:
+                assert entities is doc['contents'][entity_type]
             entities = (e for e in entities if 'document_id' in e)
             # Sorting entities is required for deterministic output since
             # the order of the inner entities in an aggregate document is
             # tied to the order with which contributions are returned by ES
             # during aggregation, which happens to be non-deterministic.
             for entity in sorted(entities, key=itemgetter('document_id')):
-                if entity_type != 'files':
+                if entity_type != self.entity_type:
                     pfb_entity = PFBEntity.from_json(name=entity_type,
                                                      object_=entity,
                                                      schema=self.schema)
                     if pfb_entity not in self._entities:
                         self._entities[pfb_entity] = set()
                     file_relations.add(PFBRelation.to_entity(pfb_entity))
-        file_entity: MutableJSON = one(contents['files'])
+        file_entity: MutableJSON = one(contents[self.entity_type])
         related_files = file_entity.pop('related_files', [])
         for entity in chain([file_entity], related_files):
-            if entity != file_entity:
-                # Replace the file entity with a related file
-                contents['files'][:] = entity
             entity['drs_uri'] = self.repository_plugin.drs_uri(entity.pop('drs_path'))
             # File entities are assumed to be unique
-            pfb_entity = PFBEntity.from_json(name='files',
+            pfb_entity = PFBEntity.from_json(name=self.entity_type,
                                              object_=entity,
                                              schema=self.schema)
             assert pfb_entity not in self._entities
@@ -179,9 +181,10 @@ class PFBEntity:
         """
         cls._add_missing_fields(name, object_, schema)
         object_ = cls._replace_null_with_empty_string(object_)
-        # For files, document_id is not unique (because of related_files), but
-        # uuid is.
-        ids = [object_['uuid']] if name == 'files' else sorted(object_['document_id'])
+        ids = object_['document_id']
+        # document_id is an array unless the inner entity type matches the
+        # outer entity type
+        ids = sorted(ids) if isinstance(ids, list) else [ids]
         id_ = uuid5(cls.namespace_uuid, _reversible_join('_', ids))
         id_ = _reversible_join('.', map(str, (name, id_, len(ids))))
         return cls(id=id_, name=name, object=object_)
