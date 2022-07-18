@@ -51,7 +51,6 @@ from azul.es import (
     ESClientFactory,
 )
 from azul.indexer.document import (
-    ClosedRange,
     Nested,
 )
 from azul.indexer.document_service import (
