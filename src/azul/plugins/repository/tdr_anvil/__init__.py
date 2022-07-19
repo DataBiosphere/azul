@@ -135,6 +135,12 @@ class Plugin(TDRPlugin):
     def _bigquery_entity_id(self, key_str: str, entity_type: str) -> str:
         return f"CAST(LEFT(SHA1('{pluralize(entity_type)}:' || {key_str}), 16) AS STRING FORMAT 'hex')"
 
+    def validate_entity_id(self, entity_id: str) -> None:
+        # FIXME: Switch to using datarepo_row_id for partitioning and entity IDs
+        #        https://github.com/DataBiosphere/azul/issues/4341
+        require(len(entity_id) == 32 and set(entity_id) <= set('0123456789abcdef'),
+                'The entity ID must be a string of 32 hexademical characters')
+
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
@@ -220,6 +226,8 @@ class Plugin(TDRPlugin):
         source = bundle_fqid.source
         entity_type = TDRAnvilBundle.entity_type
         pk_column = entity_type + '_id'
+        # FIXME: Switch to using datarepo_row_id for partitioning and entity IDs
+        #        https://github.com/DataBiosphere/azul/issues/4341
         bundle_entity = one(self._run_sql(f'''
             SELECT {pk_column}
             FROM {backtick(self._full_table_name(source.spec, entity_type))}
