@@ -448,6 +448,49 @@ not, then the PR's original author should.
 Once the base branch is restored, the ``Reopen PR`` button should again be
 clickable on the chained PR.
 
+Integration test time out
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This can happen on the rare occasion that the IT's random selection of bundles
+happens to pick predominantly large bundles that need to be partitioned before
+they can be indexed. This process can divide bundles into partitions, and
+divide partitions into sub-partitions, since technically bundles are partitions
+with an empty prefix.
+
+In the AWS console, run the CloudWatch Insights query below with the indexer
+log groups selected to see how many divisions have occurred::
+
+    fields @timestamp, @log, @message
+    | filter @message like 'Dividing partition'
+    | parse 'Dividing partition * of bundle *, version *, with * entities into * sub-partitions.' as partition, bundle, version, enities, subpartitions
+    | display partition, bundle, version, enities, subpartitions
+    | stats count(@requestId) as total_count by bundle, partition
+    | sort total_count desc
+    | sort @timestamp desc
+    | limit 1000
+
+Note that when bundles are being partitioned, errors of exceeded rate & quota
+limits should be expected::
+
+    [ERROR] TransportError: TransportError(429, '429 Too Many Requests /azul_v2_prod_dcp17-it_cell_suspensions/_search')
+
+    [ERROR] Forbidden: 403 GET https://bigquery.googleapis.com/bigquery/v2/projects/...: Quota exceeded: Your project:XXXXXXXXXXXX exceeded quota for tabledata.list bytes per second per project. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas
+
+
+Follow these steps to retry the IT job:
+
+#. Cancel the ongoing IT job (if in progress)
+
+#. Comment on `issue #4299`_ with a link to the failed job
+
+#. Purge the queues::
+
+    python scripts/manage_queues.py purge_all
+
+#. Rerun the IT job
+
+.. _`issue #4299`: https://github.com/DataBiosphere/azul/issues/4299
+
 GitHub bot account
 ------------------
 
