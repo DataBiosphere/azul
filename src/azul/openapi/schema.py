@@ -8,6 +8,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    get_origin,
 )
 
 from more_itertools import (
@@ -336,6 +337,7 @@ _primitive_types: Mapping[Optional[type], JSON] = {
     bool: {'type': 'boolean'},
     int: {'type': 'integer', 'format': 'int64'},
     float: {'type': 'number', 'format': 'double'},
+    type(None): {'type': 'null'},
     None: {'type': 'null'}
 }
 
@@ -408,6 +410,9 @@ def make_type(t: TYPE) -> JSON:
     >>> make_type(str)
     {'type': 'string'}
 
+    >>> make_type(JSON)
+    {'type': 'object'}
+
     A JSON schema type name may be used instead:
 
     >>> make_type('string')
@@ -419,18 +424,95 @@ def make_type(t: TYPE) -> JSON:
     >>> make_type({'type': 'string'})
     {'type': 'string'}
 
-    For the JSON null schema, pass None:
+    For the JSON null schema, pass `type(None)` …
+
+    >>> make_type(type(None))
+    {'type': 'null'}
+
+    … or just `None`.
 
     >>> make_type(None)
     {'type': 'null'}
     """
-    if t is None or isinstance(t, type):
+    if t == JSON:
+        return {'type': 'object'}
+    elif t is None:
+        return _primitive_types[type(t)]
+    elif isinstance(t, type):
         return _primitive_types[t]
-    # We can't use `JSON` directly because it is generic and parameterized
-    # but __origin__ yields the unparameterized generic type.
     elif isinstance(t, str):
         return {'type': t}
-    elif isinstance(t, JSON.__origin__):
+    elif isinstance(t, get_origin(JSON)):
         return t
     else:
         assert False, type(t)
+
+
+def union(*ts: TYPE, for_openapi: bool = True):
+    """
+    The union of one or more types.
+
+    :param for_openapi: True to emit OpenAPI 3.0 flavor of JSONSchema, False
+                        for vanilla JSONSchema
+
+    >>> union(str, int)
+    {'anyOf': [{'type': 'string'}, {'type': 'integer', 'format': 'int64'}]}
+
+    >>> union(str, bool)
+    {'anyOf': [{'type': 'string'}, {'type': 'boolean'}]}
+
+    For vanilla JSONSchema a shorthand syntax is supported …
+
+    >>> union(str, bool, for_openapi=False)
+    {'type': ['string', 'boolean']}
+
+    … but only if all alternatives are simple types.
+
+    >>> union(str, int, for_openapi=False)
+    {'anyOf': [{'type': 'string'}, {'type': 'integer', 'format': 'int64'}]}
+    """
+    ts = list(map(make_type, ts))
+    # There are two ways to represent a union of types in JSONSchema, …
+    if not for_openapi and all(len(t) == 1 and isinstance(t.get('type'), str) for t in ts):
+        # … a shortcut for simple types …
+        return {'type': [t['type'] for t in ts]}
+    else:
+        # … and the general form. OpenAPI 3.0 only supports the latter.
+        return {'anyOf': ts}
+
+
+def nullable(t: TYPE, for_openapi: bool = True):
+    """
+    Given a schema, return a schema that additionally permits the `null` value.
+
+    This is similar to `Optional` from Python's `typing` module but different
+    to `optional` from this module, which is used to indicate that a property
+    may be absent from an object.
+
+    :param for_openapi: True to emit OpenAPI 3.0 flavor of JSONSchema, False
+                        for vanilla JSONSchema
+
+    >>> nullable(int)
+    {'type': 'integer', 'format': 'int64', 'nullable': True}
+
+    >>> nullable(str)
+    {'type': 'string', 'nullable': True}
+
+    OpenAPI does not support `null` but uses the `nullable` attribute.
+    https://swagger.io/docs/specification/data-models/data-types/#null
+
+    Vanilla JSONSchema would use a union …
+
+    >>> nullable(int, for_openapi=False)
+    {'anyOf': [{'type': 'null'}, {'type': 'integer', 'format': 'int64'}]}
+
+    … or the shorthand for the union, if possible.
+
+    >>> nullable(str, for_openapi=False)
+    {'type': ['null', 'string']}
+    """
+    require(t is not None or type(None))
+    if for_openapi:
+        return make_type(t) | {'nullable': True}
+    else:
+        return union(None, t, for_openapi=False)

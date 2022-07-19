@@ -150,9 +150,7 @@ class DonorOrganismAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
-            return SetOfDictAccumulator(max_size=100,
-                                        key=compose_keys(none_safe_tuple_key(none_last=True),
-                                                         itemgetter('lte', 'gte')))
+            return SetAccumulator(max_size=100)
         elif field == 'organism_age':
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
