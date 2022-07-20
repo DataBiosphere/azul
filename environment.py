@@ -237,6 +237,11 @@ def env() -> Mapping[str, Optional[str]]:
         # or `service`. May contain periods.
         'AZUL_SUBDOMAIN_TEMPLATE': '*',
 
+        # Boolean value, 0 to create public APIs, 1 to create private APIs that
+        # can only be accessed from within the VPC or through the VPN tunnel
+        # into the VPC.
+        'AZUL_PRIVATE_API': '0',
+
         # A prefix to be prepended to the names of AWS Lambda functions and
         # associated resources. Must not contain periods.
         'AZUL_RESOURCE_PREFIX': 'azul',

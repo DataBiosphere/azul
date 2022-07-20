@@ -722,6 +722,10 @@ class Config:
     def domain_name(self) -> str:
         return self.environ['AZUL_DOMAIN_NAME']
 
+    @property
+    def private_api(self) -> bool:
+        return self._boolean(self.environ['AZUL_PRIVATE_API'])
+
     main_deployments_by_branch: Mapping[str, Sequence[str]] = freeze({
         'develop': ['dev'],
         'integration': ['integration'],
@@ -1013,6 +1017,12 @@ class Config:
         return self._term_from_env('azul_terraform_component', optional=True)
 
     permissions_boundary_name = 'azul-boundary'
+
+    var_vpc_endpoint_id = 'vpc_endpoint_id'
+
+    var_vpc_subnet_ids = 'vpc_subnet_ids'
+
+    var_vpc_security_group_id = 'vpc_security_group_id'
 
     @property
     def github_project(self) -> str:
