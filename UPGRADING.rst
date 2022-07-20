@@ -11,6 +11,19 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4001 Put API Gateway behind GitLab VPC
+=======================================
+
+A new configuration variable has been added, ``AZUL_PRIVATE_API``. Set this
+variable's value to ``1`` to place the deployment's API Gateway in the
+GitLab VPC, thus requiring use of a VPN connection to access to the deployment.
+
+Note that when changing the variable's value from ``0`` to ``1`` or vice versa,
+the deployment must first be destroyed (``make -C terraform destroy``), and
+``AZUL_DEPLOYMENT_INCARNATION`` incremented before the change can be deployed.
+Refer to the `Private API` section of the README for more information.
+
+
 #4170 Update Python to 3.9.x
 ============================
 

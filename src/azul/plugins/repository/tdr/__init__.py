@@ -64,7 +64,6 @@ from azul.drs import (
 from azul.indexer import (
     Bundle,
     BundleFQID,
-    SourceRef,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -77,6 +76,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.terra import (
+    SourceRef as TDRSourceRef,
     TDRClient,
     TDRSourceSpec,
 )
@@ -159,10 +159,6 @@ class Links:
         }
 
 
-class TDRSourceRef(SourceRef[TDRSourceSpec, 'TDRSourceRef']):
-    pass
-
-
 TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
 
 
@@ -239,6 +235,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @cache_per_thread
     def _tdr(cls):
         return TDRClient.for_indexer()
+
+    def verify_source(self, ref: TDRSourceRef) -> None:
+        self.tdr.verify_source(ref)
 
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id

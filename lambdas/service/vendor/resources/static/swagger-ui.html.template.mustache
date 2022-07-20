@@ -48,7 +48,7 @@
       }
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
-        url: "/openapi",
+        url: {{{DEPLOYMENT_PATH}}},
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [

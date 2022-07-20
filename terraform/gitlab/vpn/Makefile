@@ -4,7 +4,7 @@ all:
 include ../../../common.mk
 
 SHELL = /bin/bash
-easyrsa = easy-rsa/easyrsa3/easyrsa
+easyrsa = $(abspath easy-rsa/easyrsa3/easyrsa)
 
 client_cn = $(shell git config user.email)
 cn = azul-gitlab-vpn
@@ -85,7 +85,11 @@ publish: _admin
 		--certificate-chain fileb://$(EASYRSA_PKI)/ca.crt
 	@echo "Now run 'make apply' in parent directory"
 
-import/%: _admin
+_check/%: _admin
+	@test ! -e $(EASYRSA_PKI)/issued/$*.crt \
+		|| (echo Certificate $* already exists, you must must revoke it first. ; false)
+
+import/%: _check/%
 	@echo "Paste the certificate request you received from the client and hit Ctrl-D"
 	@export request=$$(mktemp -u) \
 		&& (cat > $$request) \
@@ -93,22 +97,70 @@ import/%: _admin
 		&& $(easyrsa) import-req $$request $* \
 		&& rm $$request
 
-sign/%: _admin
+sign/%: _check/%
 	EASYRSA_CERT_EXPIRE=365 $(easyrsa) sign-req client $*
 	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
 	@echo
 
+renew/%: _admin
+	EASYRSA_CERT_EXPIRE=365 $(easyrsa) renew client $*
+	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
+	@echo
+
+.PHONY: list
+list: _admin
+	@cat $(EASYRSA_PKI)/index.txt
+	@echo
+
+revoke/%: _admin
+	$(easyrsa) revoke $*
+	$(easyrsa) gen-crl
+
+.PHONY: list_revocations
+list_revocations: _admin
+	$(easyrsa) gen-crl
+	openssl crl -in $(EASYRSA_PKI)/crl.pem -noout -text
+	@echo
+
+.PHONY: publish_revocations
+publish_revocations: _admin
+	$(easyrsa) gen-crl
+	@export endpoint_id=$$( \
+		aws ec2 describe-client-vpn-endpoints \
+			--filters Name=tag:Name,Values=azul-gitlab \
+			--query "ClientVpnEndpoints[0].ClientVpnEndpointId" \
+			--output text \
+	) \
+	&& aws ec2 import-client-vpn-client-certificate-revocation-list \
+		--certificate-revocation-list file://$(EASYRSA_PKI)/crl.pem \
+		--client-vpn-endpoint-id $${endpoint_id} \
+		--region $${AWS_DEFAULT_REGION}
+
+.PHONY: publish_revocations
+list_published_revocations: _admin
+	@export endpoint_id=$$( \
+		aws ec2 describe-client-vpn-endpoints \
+			--filters Name=tag:Name,Values=azul-gitlab \
+			--query "ClientVpnEndpoints[0].ClientVpnEndpointId" \
+			--output text \
+	) && ( \
+		aws ec2 export-client-vpn-client-certificate-revocation-list \
+			--client-vpn-endpoint-id $${endpoint_id} \
+			--region $${AWS_DEFAULT_REGION} \
+			--query CertificateRevocationList \
+			--output text \
+		| openssl crl -in /dev/stdin -noout -text \
+	)
+
 # Use this target in conjunction with either _admin or _client to run additional
-# EasyRSA commands. 'eval `make _admin _env`' for example would configure an
+# EasyRSA commands. 'eval "`make _admin _env`"' for example would configure an
 # shell alias called 'easyrsa' pointing at the right executable and also set
 # EASYRSA_PKI to point at the PKI directory containing the CA and server certs.
 
 .PHONY: _env
 _env:
-	@echo
 	@echo "export EASYRSA_PKI='$(EASYRSA_PKI)'"
-	@echo "alias easyrsa=$(easyrsa)"
-	@echo
+	@echo "alias 'easyrsa=$(easyrsa)'"
 
 
 # Without this `make` would append a dot to $* in pattern rules

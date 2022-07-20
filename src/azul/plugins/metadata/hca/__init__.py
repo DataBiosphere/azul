@@ -3,6 +3,7 @@ from collections.abc import (
     Sequence,
 )
 from typing import (
+    Mapping,
     Optional,
     Type,
 )
@@ -21,6 +22,7 @@ from azul.plugins import (
     DocumentSlice,
     ManifestConfig,
     MetadataPlugin,
+    Sorting,
 )
 from azul.plugins.metadata.hca.indexer.aggregate import (
     HCAAggregate,
@@ -182,6 +184,15 @@ class Plugin(MetadataPlugin):
                 }
             ]
         }
+
+    @property
+    def exposed_indices(self) -> Mapping[str, Sorting]:
+        return dict(
+            bundles=Sorting(field_name='bundleVersion', descending=True),
+            files=Sorting(field_name='fileName'),
+            projects=Sorting(field_name='projectTitle'),
+            samples=Sorting(field_name='sampleId')
+        )
 
     @property
     def _field_mapping(self) -> MetadataPlugin._FieldMapping:

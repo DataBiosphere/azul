@@ -114,6 +114,16 @@ class DocumentSlice(TypedDict, total=False):
     excludes: FieldGlobs
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class Sorting:
+    field_name: FieldName
+    descending: bool = attr.ib(default=False)
+
+    @property
+    def order(self) -> str:
+        return 'desc' if self.descending else 'asc'
+
+
 T = TypeVar('T', bound='Plugin')
 
 
@@ -215,6 +225,17 @@ class MetadataPlugin(Plugin):
 
     @abstractmethod
     def mapping(self) -> JSON:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def exposed_indices(self) -> Mapping[str, Sorting]:
+        """
+        The indices for which the service provides an `/index/…` endpoint.
+        The return value maps the outer entity type of each exposed index to the
+        default values of the request parameters that control the ordering of
+        hits returned by the corresponding endpoint.
+        """
         raise NotImplementedError
 
     #: See :meth:`_field_mapping`
@@ -369,8 +390,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         Verify that the source's ID matches that defined in the
         repository for the source's spec.
         """
-        actual_id = self.lookup_source_id(ref.spec)
-        require(ref.id == actual_id, 'Source ID changed unexpectedly', ref, actual_id)
+        raise NotImplementedError
 
     @abstractmethod
     def lookup_source_id(self, spec: SOURCE_SPEC) -> str:

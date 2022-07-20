@@ -1,6 +1,10 @@
 from azul import (
     config,
 )
+from azul.chalice import (
+    private_api_lambda_config,
+    private_api_stage_config,
+)
 from azul.modules import (
     load_app_module,
 )
@@ -25,7 +29,9 @@ emit({
     "lambda_memory_size": 2048,
     "stages": {
         config.deployment_stage: {
+            **private_api_stage_config(),
             "lambda_functions": {
+                "api_handler": private_api_lambda_config(),
                 service.generate_manifest.name: {
                     "lambda_timeout": config.service_lambda_timeout
                 },
