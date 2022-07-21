@@ -133,6 +133,24 @@ emit_tf({
     ],
     # Note that ${} references exist to interpolate a value AND express a dependency.
     "resource": [
+        {
+            "aws_wafv2_web_acl": {
+                "api_gateway": {
+                    "name": config.qualified_resource_name("api_gateway"),
+                    "default_action": {
+                        "allow": {}
+                    },
+                    "rule": [
+                    ],
+                    "scope": "REGIONAL",
+                    "visibility_config": {
+                        "cloudwatch_metrics_enabled": True,
+                        "metric_name": "WebACL",
+                        "sampled_requests_enabled": True,
+                    }
+                }
+            }
+        },
         *(
             {
                 "aws_api_gateway_base_path_mapping": {
@@ -317,23 +335,7 @@ emit_tf({
                         # https://github.com/aws/chalice/issues/1816#issuecomment-1012231084
                         "resource_arn": f"${{module.chalice_{lambda_.name}.rest_api_arn}}"
                                         f"/stages/${{module.chalice_{lambda_.name}.stage_name}}",
-                        "web_acl_arn": f"${{aws_wafv2_web_acl.{lambda_.name}.arn}}"
-                    }
-                },
-                "aws_wafv2_web_acl": {
-                    lambda_.name: {
-                        "name": config.qualified_resource_name(lambda_.name),
-                        "default_action": {
-                            "allow": {}
-                        },
-                        "rule": [
-                        ],
-                        "scope": "REGIONAL",
-                        "visibility_config": {
-                            "cloudwatch_metrics_enabled": True,
-                            "metric_name": "WebACL",
-                            "sampled_requests_enabled": True,
-                        }
+                        "web_acl_arn": "${aws_wafv2_web_acl.api_gateway.arn}"
                     }
                 },
                 **(
