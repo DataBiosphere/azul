@@ -280,6 +280,21 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
         """
         return schema.make_type(self.native_type)
 
+    def from_api(self, value: AnyJSON) -> N:
+        """
+        Convert a deserialized JSON value occurring as an input to a REST API
+        to the native representation of values of this field type.
+
+        The default implementation assumes that the REST API representation
+        of the value is already of the native type, and just returns the
+        argument. Subclasses must override this if the native and API
+        representaations differ. An API representation of a field only occurs
+        in inputs to a REST API. Outputs like the body of a response use the
+        native representation.
+        """
+        assert isinstance(value, reify(self.native_type))
+        return value
+
     @property
     def supported_filter_relations(self) -> tuple[str, ...]:
         """
@@ -307,17 +322,17 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     def _api_range_schema(self, api_schema: JSON) -> JSON:
         return schema.array(api_schema, minItems=2, maxItems=2)
 
-    def _api_range_to_index(self, value: Range) -> JSON:
+    def _api_range_to_index(self, value: Range[T]) -> JSON:
         return {'gte': value[0], 'lte': value[1]}
 
-    def _cast_api_range(self, value: AnyJSON) -> Range:
+    def _from_api_range(self, value: AnyJSON) -> Range[T]:
         assert isinstance(value, (list, tuple)) and len(value) == 2, value
-        assert all(isinstance(end, reify(PrimitiveJSON)) for end in value), value
-        return tuple(value)
+        gte, lte = value
+        return self.from_api(gte), self.from_api(lte)
 
     def filter(self, relation: str, values: list[AnyJSON]) -> list[T]:
         if relation == 'within':
-            return list(map(self._api_range_to_index, map(self._cast_api_range, values)))
+            return list(map(self._api_range_to_index, map(self._from_api_range, values)))
         else:
             return list(map(self.to_index, values))
 
@@ -345,16 +360,44 @@ class PassThrough(Generic[T], FieldType[T, T]):
 pass_thru_json: PassThrough[JSON] = PassThrough(JSON, es_type=None)
 
 
-class ScalarPassThrough(PassThrough[T]):
+class NumericPassThrough(PassThrough[T]):
 
     @property
     def supported_filter_relations(self) -> tuple[str, ...]:
         return *super().supported_filter_relations, 'within'
 
+    def from_api(self, value: AnyJSON) -> T:
+        """
+        1.0 is a valid JSONSchema `integer`
+
+        >>> pass_thru_int.from_api(1.0)
+        1
+
+        1 is a valid JSONSchema `number`
+
+        >>> pass_thru_float.from_api(1)
+        1.0
+
+        1.1 is not a valid JSONSchema `integer`
+
+        >>> pass_thru_int.from_api(1.1)
+        Traceback (most recent call last):
+            ...
+        AssertionError: 1.1
+
+        1.1 is a valid JSONSchema `float`
+
+        >>> pass_thru_float.from_api(1.1)
+        1.1
+        """
+        native_value = self.native_type(value)
+        assert native_value == value, value
+        return native_value
+
 
 pass_thru_str = PassThrough(str, es_type='keyword')
-pass_thru_int = ScalarPassThrough(int, es_type='long')
-pass_thru_float = ScalarPassThrough(float, es_type='double')
+pass_thru_int = NumericPassThrough(int, es_type='long')
+pass_thru_float = NumericPassThrough(float, es_type='double')
 pass_thru_bool = PassThrough(bool, es_type='boolean')
 
 
@@ -453,6 +496,34 @@ class NullableNumber(Generic[U], NullableScalar[U, JSONNumber]):
         else:
             return self.optional_type(value)
 
+    def from_api(self, value: AnyJSON) -> N:
+        """
+        1.0 is a valid JSONSchema `integer`
+
+        >>> null_int.from_api(1.0)
+        1
+
+        1 is a valid JSONSchema `number`
+
+        >>> pass_thru_float.from_api(1)
+        1.0
+
+        1.1 is not a valid JSONSchema `integer`
+
+        >>> null_int.from_api(1.1)
+        Traceback (most recent call last):
+            ...
+        AssertionError: 1.1
+
+        1.1 is a valid JSONSchema `float`
+
+        >>> pass_thru_float.from_api(1.1)
+        1.1
+        """
+        native_value = self.optional_type(value)
+        assert native_value == value, value
+        return native_value
+
 
 null_int = NullableNumber(int, 'long')
 
@@ -521,7 +592,7 @@ class Nested(PassThrough[JSON]):
             kwargs['required'] = required
         return schema.object_type(properties, **kwargs)
 
-    def filter(self, relation: str, values: list[AnyJSON]) -> list[JSON]:
+    def filter(self, relation: str, values: list[JSON]) -> list[JSON]:
         nested_object = one(values)
         assert isinstance(nested_object, dict)
         query_filters = {}
@@ -564,18 +635,19 @@ class ClosedRange(Generic[P], FieldType[Range[P], JSON]):
         else:
             return self.api_schema
 
+    def from_api(self, value: AnyJSON) -> Range[P]:
+        return self.ends_type._from_api_range(value)
+
     def filter(self, relation: str, values: list[AnyJSON]) -> list[JSON]:
         result = []
         for value in values:
             if isinstance(value, list):
-                gte, lte = value
-            elif relation == 'contains' and isinstance(value, self.ends_type.native_type):
-                gte, lte = value, value
+                pass
+            elif relation == 'contains' and isinstance(value, reify(PrimitiveJSON)):
+                value = [value, value]
             else:
                 assert False, (relation, value)
-            assert isinstance(gte, self.ends_type.native_type), gte
-            assert isinstance(lte, self.ends_type.native_type), lte
-            result.append(self.to_index((gte, lte)))
+            result.append(self.to_index(self.from_api(value)))
         return result
 
 

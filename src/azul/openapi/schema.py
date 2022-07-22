@@ -335,6 +335,15 @@ def in_range(minimum: Optional[N], maximum: Optional[N], type_: Optional[TYPE] =
 _primitive_types: Mapping[Optional[type], JSON] = {
     str: {'type': 'string'},
     bool: {'type': 'boolean'},
+    # Note that `format` on numeric types is an OpenAPI extension to JSONSchema
+    # that "serves as a hint for the tools to use a specific numeric type"
+    # https://swagger.io/docs/specification/data-models/data-types/#numbers
+    # I take this to mean that `1.0` is a valid `integer` in OpenAPI, just like
+    # it is a valid `integer` in JSONSchema. When we deserialize a JSON value
+    # that the schema declares to be `integer`, we need to be prepared to get an
+    # instance of `float`. Similarly, and less surprisingly, `1` is a valid
+    # `number`, so when we deserialize a JSON value that the schema declares to
+    # be `number`, we need to be prepared to get an instance of `int`.
     int: {'type': 'integer', 'format': 'int64'},
     float: {'type': 'number', 'format': 'double'},
     type(None): {'type': 'null'},
