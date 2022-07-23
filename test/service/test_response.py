@@ -1225,15 +1225,20 @@ class TestResponse(WebServiceTestCase):
             ('intersects', (lte2 + 100, gte0 - 199000), [])
         ]
         for relation, value, expected_hits in test_cases:
-            with self.subTest(relation=relation, value=value):
-                params = self._params(filters={'organismAgeRange': {relation: [value]}},
-                                      order='desc',
-                                      sort='entryId')
-                url = self.base_url.set(path='/index/projects', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
-                actual_hits = [hit['donorOrganisms'] for hit in response.json()['hits']]
-                self.assertElasticEqual(expected_hits, actual_hits)
+            for ends_type in int, float:
+                if isinstance(value, (tuple, list)):
+                    value = list(map(ends_type, value))
+                else:
+                    value = ends_type(value)
+                with self.subTest(relation=relation, value=value, ends_type=ends_type):
+                    params = self._params(filters={'organismAgeRange': {relation: [value]}},
+                                          order='desc',
+                                          sort='entryId')
+                    url = self.base_url.set(path='/index/projects', args=params)
+                    response = requests.get(str(url))
+                    response.raise_for_status()
+                    actual_hits = [hit['donorOrganisms'] for hit in response.json()['hits']]
+                    self.assertElasticEqual(expected_hits, actual_hits)
 
     def test_ordering(self):
         sort_fields = [
