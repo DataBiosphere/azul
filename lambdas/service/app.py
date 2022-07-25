@@ -909,6 +909,19 @@ def validate_field(field: str):
         raise BRE(f'Unknown field `{field}`')
 
 
+def validate_manifest_format(format_: str):
+    supported_formats = {f.value for f in app.metadata_plugin.manifest_formats}
+    try:
+        ManifestFormat(format_)
+    except ValueError:
+        raise BRE(f'Unknown manifest format `{format_}`. '
+                  f'Must be one of {supported_formats}')
+    else:
+        if format_ not in supported_formats:
+            raise BRE(f'Manifest format `{format_}` is not supported for '
+                      f'catalog {app.catalog}. Must be one of {supported_formats}')
+
+
 class Mandatory:
     """
     Validation wrapper signifying that a parameter is mandatory.
@@ -1403,7 +1416,8 @@ def manifest_path_spec(*, fetch: bool):
                 schema.optional(
                     schema.enum(
                         *[
-                            format_.value for format_ in ManifestFormat
+                            format_.value
+                            for format_ in app.metadata_plugin.manifest_formats
                         ],
                         type_=str
                     )
@@ -1571,17 +1585,19 @@ def _file_manifest(fetch: bool):
     request = app.current_request
     query_params = request.query_params or {}
     query_params.setdefault('filters', '{}')
-    query_params.setdefault('format', ManifestFormat.compact.value)
     # FIXME: Remove `object_key` when Swagger validation lands
     #        https://github.com/DataBiosphere/azul/issues/1465
     # The objectKey query parameter is not allowed in /fetch/manifest/files
     object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
-                    format=ManifestFormat,
+                    format=validate_manifest_format,
                     catalog=validate_catalog,
                     filters=str,
                     token=str,
                     **object_key)
+    # Wait to load metadata plugin until we've validated the catalog
+    default_format = app.metadata_plugin.manifest_formats[0].value
+    query_params.setdefault('format', default_format)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url,
                                                       catalog=catalog,

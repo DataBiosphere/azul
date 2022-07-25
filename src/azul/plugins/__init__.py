@@ -248,6 +248,15 @@ class MetadataPlugin(Plugin):
         """
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def manifest_formats(self) -> Sequence[ManifestFormat]:
+        """
+        The supported formats for generating a manifest. The first value will be
+        used as a default if no format is explicitly specified.
+        """
+        raise NotImplementedError
+
     #: See :meth:`_field_mapping`
     _FieldMapping2 = Mapping[FieldPathElement, FieldName]
     _FieldMapping1 = Mapping[FieldPathElement, Union[FieldName, _FieldMapping2]]

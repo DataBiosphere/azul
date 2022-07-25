@@ -1365,7 +1365,7 @@ class TestManifestResponse(ManifestTestCase):
         """
         Verify the response from manifest endpoints for all manifest formats
         """
-        for format_ in ManifestFormat:
+        for format_ in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
                 with self.subTest(format=format_, fetch=fetch):
                     object_url = 'https://url.to.manifest?foo=bar'
