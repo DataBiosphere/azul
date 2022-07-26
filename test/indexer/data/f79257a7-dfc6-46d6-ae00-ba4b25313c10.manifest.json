@@ -9,7 +9,7 @@
         "sha256": "4d55e7f9eebf0144e60fe7d6d3d3fa1503a19faa39340a8afe4ce0078781fb29",
         "size": 883,
         "uuid": "0037c9eb-8038-432f-8d9d-13ee094e54ab",
-        "version": "2018-09-14T123340.394297Z"
+        "version": "2018-09-14T12:33:40.394297Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -21,7 +21,7 @@
         "sha256": "0a5f00a7e9511a3fec719dab9b5f45ef3f51c8fce4d4b159c57e810e79da28cb",
         "size": 693,
         "uuid": "b4e55fe1-7bab-44ba-a81d-3d8cb3873244",
-        "version": "2018-09-14T123340.642412Z"
+        "version": "2018-09-14T12:33:40.642412Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -33,7 +33,7 @@
         "sha256": "1a5f00a7e9511a3fec719dab9b5f45ef3f51c8fce4d4b159c57e810e79da28cb",
         "size": 693,
         "uuid": "aaaaaaaa-7bab-44ba-a81d-3d8cb3873244",
-        "version": "2018-09-14T123340.642412Z"
+        "version": "2018-09-14T12:33:40.642412Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -45,7 +45,7 @@
         "sha256": "9f4f56750f7dc12ae9cf1eecfc4140786df49df51501ff6dd6d7ab1b3ba06f9a",
         "size": 1095,
         "uuid": "89b50434-f831-4e15-a8c0-0d57e6baa94c",
-        "version": "2018-09-14T123340.796575Z"
+        "version": "2018-09-14T12:33:40.796575Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -57,7 +57,7 @@
         "sha256": "2623b4322a52b76718f452d291ef1f75ff5ccb92965452106afceab85adef6d7",
         "size": 477,
         "uuid": "6c946b6c-040e-45cc-9114-a8b1454c8d20",
-        "version": "2018-09-14T123340.953322Z"
+        "version": "2018-09-14T12:33:40.953322Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -69,7 +69,7 @@
         "sha256": "9df90d861465dd2a63b303c1c1aa8797c83b448f2aaba5be81c4d90961e335c8",
         "size": 477,
         "uuid": "c86e42d7-854a-479b-a627-6be1b49c980c",
-        "version": "2018-09-14T123341.293390Z"
+        "version": "2018-09-14T12:33:41.293390Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -81,7 +81,7 @@
         "sha256": "876383ce5ac85641d6c2c027eedac5b7f0ecce811b9ca5084aa925b100345a19",
         "size": 498,
         "uuid": "eeea6514-bfdc-473b-a9ae-82b00ab30c38",
-        "version": "2018-09-14T123341.551590Z"
+        "version": "2018-09-14T12:33:41.551590Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -93,7 +93,7 @@
         "sha256": "03732e14ff1a333e631f20635aec820e72098ab59f6195245867fdfa0180550e",
         "size": 494,
         "uuid": "89e313db-4423-4d53-b17e-164949acfa8f",
-        "version": "2018-09-14T123341.692936Z"
+        "version": "2018-09-14T12:33:41.692936Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -105,7 +105,7 @@
         "sha256": "8f44ad4800fd49fc294c730cfc76dc8857dcbb24934a949b9b26b3a726c70b40",
         "size": 494,
         "uuid": "bf7df45c-c2d5-49a8-8110-7e1f17ed0094",
-        "version": "2018-09-14T123341.863817Z"
+        "version": "2018-09-14T12:33:41.863817Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/project\"",
@@ -117,7 +117,7 @@
         "sha256": "84125fa6898dbc4f97050a38339ce811c3cdda761b682c98008add9c5767db6b",
         "size": 5132,
         "uuid": "67bc798b-a34a-4104-8cab-cad648471f69",
-        "version": "2018-09-14T123342.018221Z"
+        "version": "2018-09-14T12:33:42.018221Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -129,7 +129,7 @@
         "sha256": "21c9b03fea1f3101c6de21073bf1c98fd6c02daa1130243ec53055a6bdcfe52b",
         "size": 1011,
         "uuid": "0076f0aa-14c6-4cb9-93f8-97229787be21",
-        "version": "2018-09-14T123342.213263Z"
+        "version": "2018-09-14T12:33:42.213263Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -141,7 +141,7 @@
         "sha256": "408c4fdd1f759b7f70cd4a9436ce9a2ee77388545ac4935acd4985f95e22bd7f",
         "size": 787,
         "uuid": "362d9c34-f5c0-4906-955b-61ba0aac58cc",
-        "version": "2018-09-14T123342.368325Z"
+        "version": "2018-09-14T12:33:42.368325Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -153,7 +153,7 @@
         "sha256": "af66dc8357e5237637afb8ce8d61f5939b283a876d69dee6d819dbed111c44b6",
         "size": 674,
         "uuid": "40056e47-131d-4c6e-a884-a927bfccf8ce",
-        "version": "2018-09-14T123342.514537Z"
+        "version": "2018-09-14T12:33:42.514537Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -165,7 +165,7 @@
         "sha256": "13ac75d0c6a58f291487ba32b00b18643c7a8d1834ece091640f4a2da2e16eaf",
         "size": 644,
         "uuid": "d3287615-b97a-4984-a8cf-30a1c30e4773",
-        "version": "2018-09-14T123342.650312Z"
+        "version": "2018-09-14T12:33:42.650312Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -177,7 +177,7 @@
         "sha256": "2699650c625de9359e154cec38cb25a0d8ed67412b5b54df291f6331336714ac",
         "size": 392,
         "uuid": "72732ed3-7b71-47df-bcec-c765ef7ea758",
-        "version": "2018-09-14T123342.809211Z"
+        "version": "2018-09-14T12:33:42.809211Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -189,7 +189,7 @@
         "sha256": "1807ed556123d47d2e764d1e9cf365972430cc2953e3cdbd90c0f613769f399a",
         "size": 391,
         "uuid": "6d77eef9-96cf-410e-8bbc-a83430267b61",
-        "version": "2018-09-14T123343.053952Z"
+        "version": "2018-09-14T12:33:43.053952Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -201,7 +201,7 @@
         "sha256": "729bcb6ca77424caa650441698708c12084fb5b24bf33420a5e9124da5030170",
         "size": 389,
         "uuid": "c0f05fdb-8375-4c39-adba-24a63c004b9d",
-        "version": "2018-09-14T123343.318246Z"
+        "version": "2018-09-14T12:33:43.318246Z"
     },
     {
         "content-type": "application/json; dcp-type=\"metadata/links\"",
@@ -213,7 +213,7 @@
         "sha256": "e228e25a5404cfb724b4804de5cecff96695a652dafd1c6abdaa32fa0207598a",
         "size": 2095,
         "uuid": "6db034c3-0060-4cb7-a86b-15545b7fef61",
-        "version": "2018-09-14T123343.485382Z"
+        "version": "2018-09-14T12:33:43.485382Z"
     },
     {
         "content-type": "application/gzip; dcp-type=data",
@@ -225,7 +225,7 @@
         "sha256": "3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582",
         "size": 64718465,
         "uuid": "f2b6c6f0-8d25-4aae-b255-1974cc110cfe",
-        "version": "2018-09-14T123343.720332Z"
+        "version": "2018-09-14T12:33:43.720332Z"
     },
     {
         "content-type": "application/gzip; dcp-type=data",
@@ -237,7 +237,7 @@
         "sha256": "1125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582",
         "size": 64718465,
         "uuid": "12b6c6f0-8d25-4aae-b255-1974cc110cfe",
-        "version": "1018-09-14T123343.720332Z"
+        "version": "1018-09-14T12:33:43.720332Z"
     },
     {
         "content-type": "application/gzip; dcp-type=data",
@@ -249,7 +249,7 @@
         "sha256": "cda141411815a9e8e4c3145f6b855a295352fd18f7db449d3797d8de38fb052a",
         "size": 65008198,
         "uuid": "f6608ce9-a570-4d5d-bd1f-407454958424",
-        "version": "2018-09-14T123345.304412Z"
+        "version": "2018-09-14T12:33:45.304412Z"
     },
     {
         "content-type": "application/pdf; dcp-type=data",
@@ -261,7 +261,7 @@
         "sha256": "6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779",
         "size": 32748,
         "uuid": "156c15a3-3406-45d3-a25e-27179baf0c59",
-        "version": "2018-09-14T123346.866929Z"
+        "version": "2018-09-14T12:33:46.866929Z"
     },
     {
         "content-type": "application/pdf; dcp-type=data",
@@ -273,7 +273,7 @@
         "sha256": "2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16",
         "size": 29230,
         "uuid": "5f9b45af-9a26-4b16-a785-7f2d1053dd7c",
-        "version": "2018-09-14T123347.012715Z"
+        "version": "2018-09-14T12:33:47.012715Z"
     },
     {
         "content-type": "application/pdf; dcp-type=data",
@@ -285,6 +285,6 @@
         "sha256": "9c93a354a8636c041a31ba6f3fb00ef20352e1b853d8080d63a654221cb35673",
         "size": 61134,
         "uuid": "0db87826-ea2d-422b-ba71-b15d0e4293ae",
-        "version": "2018-09-14T123347.221025Z"
+        "version": "2018-09-14T12:33:47.221025Z"
     }
 ]
