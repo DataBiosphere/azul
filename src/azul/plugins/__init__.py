@@ -260,7 +260,7 @@ class MetadataPlugin(Plugin):
             elif isinstance(v, FieldName):
                 yield v, path
             else:
-                assert False
+                assert False, v
 
         return dict(invert(self._field_mapping))
 

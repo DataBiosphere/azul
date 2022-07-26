@@ -762,7 +762,7 @@ class Document(Generic[C]):
                 # FIXME: Assert that a non-list field_type implies a non-list
                 #        doc (only possible for contributions).
                 #        https://github.com/DataBiosphere/azul/issues/2689
-                assert isinstance(doc, list)
+                assert isinstance(doc, list), (doc, path)
 
                 field_types = one(field_types)
             if isinstance(field_types, FieldType):
