@@ -273,9 +273,9 @@ create a properly tagged snapshot of the GitLab EBS volume. Run::
 
 ::
 
-	(cd terraform/gitlab && CI_COMMIT_REF_NAME=develop make validate && terraform destroy -target=aws_instance.gitlab)
+	(cd terraform/gitlab && CI_COMMIT_REF_NAME=develop make validate && terraform taint aws_instance.gitlab)
 
-Once the instance is destroyed, edit the `GitLab Terraform`_ file, updating the
+Once the instance is tainted, edit the `GitLab Terraform`_ file, updating the
 version of the Docker images for ``gitlab-ce`` and ``gitlab-runner``. Then run::
 
     CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
