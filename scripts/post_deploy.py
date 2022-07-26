@@ -14,9 +14,6 @@ from azul import (
 from azul.logging import (
     configure_script_logging,
 )
-from azul.plugins import (
-    RepositoryPlugin,
-)
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
@@ -37,7 +34,7 @@ def verify_sources():
     tdr_catalogs = {
         catalog.name
         for catalog in config.catalogs.values()
-        if catalog.plugins[RepositoryPlugin.type_name()].name == 'tdr'
+        if config.is_tdr_enabled(catalog.name)
     }
     assert tdr_catalogs, tdr_catalogs
     futures = []

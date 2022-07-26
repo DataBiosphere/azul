@@ -1,16 +1,9 @@
 from collections import (
     defaultdict,
 )
-from collections.abc import (
-    Iterable,
-    Mapping,
-    Sequence,
-    Set,
-)
-from concurrent.futures.thread import (
+from concurrent.futures import (
     ThreadPoolExecutor,
 )
-import datetime
 from itertools import (
     groupby,
     islice,
@@ -20,20 +13,17 @@ import logging
 from operator import (
     itemgetter,
 )
-import time
 from typing import (
     Any,
     ClassVar,
+    Iterable,
+    Mapping,
     Optional,
-    Type,
     Union,
     cast,
 )
 
 import attr
-from chalice import (
-    UnauthorizedError,
-)
 from furl import (
     furl,
 )
@@ -42,24 +32,15 @@ from more_itertools import (
 )
 
 from azul import (
-    CatalogName,
+    JSON,
     RequirementError,
-    cache_per_thread,
     config,
     require,
-)
-from azul.auth import (
-    Authentication,
-    OAuth2,
 )
 from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
     backtick,
-)
-from azul.drs import (
-    AccessMethod,
-    DRSClient,
 )
 from azul.indexer import (
     Bundle,
@@ -71,20 +52,15 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
 )
-from azul.plugins import (
-    RepositoryFileDownload,
-    RepositoryPlugin,
+from azul.plugins.repository.tdr import (
+    TDRBundleFQID,
+    TDRPlugin,
 )
 from azul.terra import (
     SourceRef as TDRSourceRef,
-    TDRClient,
     TDRSourceSpec,
 )
-from azul.time import (
-    format_dcp2_datetime,
-)
 from azul.types import (
-    JSON,
     JSONs,
     is_optional,
 )
@@ -159,96 +135,7 @@ class Links:
         }
 
 
-TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
-
-
-@attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
-    _sources: Set[TDRSourceSpec]
-
-    @classmethod
-    def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
-        return cls(sources=frozenset(
-            TDRSourceSpec.parse(spec)
-            for spec in config.sources(catalog))
-        )
-
-    @property
-    def sources(self) -> Set[TDRSourceSpec]:
-        return self._sources
-
-    def _user_authenticated_tdr(self,
-                                authentication: Optional[Authentication]
-                                ) -> TDRClient:
-        if authentication is None:
-            tdr = TDRClient.for_anonymous_user()
-        elif isinstance(authentication, OAuth2):
-            tdr = TDRClient.for_registered_user(authentication)
-        else:
-            raise PermissionError('Unsupported authentication format',
-                                  type(authentication))
-        return tdr
-
-    def list_sources(self,
-                     authentication: Optional[Authentication]
-                     ) -> list[TDRSourceRef]:
-        tdr = self._user_authenticated_tdr(authentication)
-        try:
-            snapshots = tdr.snapshot_names_by_id()
-        except UnauthorizedError:
-            if authentication is not None and tdr.token_is_valid():
-                # Fall back to anonymous access if the user-provided credentials
-                # are valid but lack authorization
-                return self.list_sources(None)
-            else:
-                raise
-
-        configured_specs_by_name = {spec.name: spec for spec in self.sources}
-        snapshot_ids_by_name = {
-            name: id
-            for id, name in snapshots.items()
-            if name in configured_specs_by_name
-        }
-        return [
-            TDRSourceRef(id=id,
-                         spec=configured_specs_by_name[name])
-            for name, id in snapshot_ids_by_name.items()
-        ]
-
-    @property
-    def tdr(self):
-        return self._tdr()
-
-    # To utilize the caching of certain TDR responses that's occurring within
-    # the client instance we need to cache client instances. If we cached the
-    # client instance within the plugin instance, we would get one client
-    # instance per plugin instance. The plugin is instantiated frequently and in
-    # a variety of contexts.
-    #
-    # Because of that, caching the plugin instances would be a more invasive
-    # change than simply caching the client instance per plugin class. That's
-    # why this is a class method. The client uses urllib3, whose thread-safety
-    # is disputed (https://github.com/urllib3/urllib3/issues/1252), so have to
-    # cache client instances per-class AND per-thread.
-
-    @classmethod
-    @cache_per_thread
-    def _tdr(cls):
-        return TDRClient.for_indexer()
-
-    def verify_source(self, ref: TDRSourceRef) -> None:
-        self.tdr.verify_source(ref)
-
-    def lookup_source_id(self, spec: TDRSourceSpec) -> str:
-        return self.tdr.lookup_source(spec).id
-
-    def list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
-        self._assert_source(source)
-        log.info('Listing bundles with prefix %r in source %r.', prefix, source)
-        bundle_fqids = self._list_links_ids(source, prefix)
-        log.info('There are %i bundle(s) with prefix %r in source %r.',
-                 len(bundle_fqids), prefix, source)
-        return bundle_fqids
+class Plugin(TDRPlugin):
 
     def list_partitions(self,
                         source: TDRSourceRef
@@ -268,36 +155,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> Bundle:
-        self._assert_source(bundle_fqid.source)
-        now = time.time()
-        bundle = self._emulate_bundle(bundle_fqid)
-        log.info("It took %.003fs to download bundle %s.%s",
-                 time.time() - now, bundle.uuid, bundle.version)
-        return bundle
-
-    def portal_db(self) -> Sequence[JSON]:
-        return []
-
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        if drs_path is None:
-            return None
-        else:
-            netloc = config.tdr_service_url.netloc
-            return f'drs://{netloc}/{drs_path}'
-
-    @classmethod
-    def format_version(cls, version: datetime.datetime) -> str:
-        return format_dcp2_datetime(version)
-
-    def _run_sql(self, query):
-        return self.tdr.run_sql(query)
-
-    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
-        return source.qualify_table(table_name)
-
-    def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
-
+    def _list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
         source_prefix = source.spec.prefix.common
         validate_uuid_prefix(source_prefix + prefix)
         current_bundles = self._query_latest_version(source.spec, f'''
@@ -325,9 +183,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             return max(versioned_items, key=itemgetter('version'))
 
     def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
-        bundle = TDRBundle(fqid=bundle_fqid,
-                           manifest=[],
-                           metadata_files={})
+        bundle = TDRHCABundle(fqid=bundle_fqid,
+                              manifest=[],
+                              metadata_files={})
         entities, root_entities, links_jsons = self._stitch_bundles(bundle)
         bundle.add_entity(entity_key='links.json',
                           entity_type='links',
@@ -363,7 +221,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         return bundle
 
     def _stitch_bundles(self,
-                        root_bundle: 'TDRBundle'
+                        root_bundle: 'TDRHCABundle'
                         ) -> tuple[EntitiesByType, Entities, list[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
@@ -452,9 +310,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         pk_column = entity_type + '_id'
         version_column = 'version'
         non_pk_columns = (
-            TDRBundle.links_columns if entity_type == 'links'
-            else TDRBundle.data_columns if entity_type.endswith('_file')
-            else TDRBundle.metadata_columns
+            TDRHCABundle.links_columns if entity_type == 'links'
+            else TDRHCABundle.data_columns if entity_type.endswith('_file')
+            else TDRHCABundle.metadata_columns
         )
         assert version_column in non_pk_columns
         table_name = backtick(self._full_table_name(source, entity_type))
@@ -572,47 +430,6 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         else:
             return root
 
-    def drs_client(self,
-                   authentication: Optional[Authentication] = None
-                   ) -> DRSClient:
-        return self._user_authenticated_tdr(authentication).drs_client()
-
-    def file_download_class(self) -> Type[RepositoryFileDownload]:
-        return TDRFileDownload
-
-
-class TDRFileDownload(RepositoryFileDownload):
-    _location: Optional[str] = None
-
-    needs_drs_path = True
-
-    def update(self,
-               plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
-               ) -> None:
-        require(self.replica is None or self.replica == 'gcp')
-        drs_uri = plugin.drs_uri(self.drs_path)
-        if drs_uri is None:
-            assert self.location is None, self
-            assert self.retry_after is None, self
-        else:
-            drs_client = plugin.drs_client(authentication)
-            access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
-            require(access.method is AccessMethod.https, access.method)
-            require(access.headers is None, access.headers)
-            signed_url = access.url
-            args = furl(signed_url).args
-            require('X-Goog-Signature' in args, args)
-            self._location = signed_url
-
-    @property
-    def location(self) -> Optional[str]:
-        return self._location
-
-    @property
-    def retry_after(self) -> Optional[int]:
-        return None
-
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Checksums:
@@ -652,7 +469,7 @@ class Checksums:
         return cls(**dict(map(extract_field, attr.fields(cls))))
 
 
-class TDRBundle(Bundle[TDRSourceRef]):
+class TDRHCABundle(Bundle[TDRSourceRef]):
 
     def add_entity(self,
                    *,
@@ -664,7 +481,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
         entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
                                  uuid=entity_id,
-                                 version=Plugin.format_version(entity_row['version']),
+                                 version=TDRPlugin.format_version(entity_row['version']),
                                  size=entity_row['content_size'],
                                  content_type='application/json',
                                  dcp_type=f'"metadata/{entity_row["schema_type"]}"',

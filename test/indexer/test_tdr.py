@@ -57,11 +57,11 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.plugins.repository import (
-    tdr,
+    tdr_hca,
 )
-from azul.plugins.repository.tdr import (
-    TDRBundle,
+from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
+    TDRHCABundle,
     TDRSourceRef,
 )
 from azul.terra import (
@@ -84,16 +84,16 @@ from indexer import (
 class TDRPluginTestCase(CannedBundleTestCase):
 
     @classmethod
-    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> TDRBundle:
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> TDRHCABundle:
         canned_result = cls._load_canned_file_version(uuid=bundle.uuid,
                                                       version=None,
                                                       extension='result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
         version = one(e['version'] for e in manifest if e['name'] == 'links.json')
         assert bundle.version == version, (bundle, version)
-        return TDRBundle(fqid=bundle,
-                         manifest=manifest,
-                         metadata_files=metadata)
+        return TDRHCABundle(fqid=bundle,
+                            manifest=manifest,
+                            metadata_files=metadata)
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
     partition_prefix_length = 2
@@ -112,7 +112,7 @@ class TestTDRPlugin(TDRPluginTestCase):
         return tinyquery.TinyQuery()
 
     @cache
-    def plugin_for_source_spec(self, source_spec) -> tdr.Plugin:
+    def plugin_for_source_spec(self, source_spec) -> tdr_hca.Plugin:
         return TestPlugin(sources={source_spec}, tinyquery=self.tinyquery)
 
     def test_list_bundles(self):
@@ -180,7 +180,7 @@ class TestTDRPlugin(TDRPluginTestCase):
         with self.assertRaises(RequirementError):
             self._test_fetch_bundle(bundle, load_tables=False)
 
-    @patch('azul.plugins.repository.tdr.Plugin._find_upstream_bundles')
+    @patch('azul.plugins.repository.tdr_hca.Plugin._find_upstream_bundles')
     def test_subgraph_stitching(self, _mock_find_upstream_bundles):
         downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
         upstream_uuids = [
@@ -206,7 +206,7 @@ class TestTDRPlugin(TDRPluginTestCase):
     @patch('azul.Config.tdr_service_url',
            new=PropertyMock(return_value=TDRPluginTestCase.mock_service_url))
     def _test_fetch_bundle(self,
-                           test_bundle: TDRBundle,
+                           test_bundle: TDRHCABundle,
                            *,
                            load_tables: bool):
         if load_tables:
@@ -255,7 +255,7 @@ class TestTDRPlugin(TDRPluginTestCase):
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TestPlugin(tdr.Plugin):
+class TestPlugin(tdr_hca.Plugin):
     tinyquery: tinyquery.TinyQuery
 
     def _run_sql(self, query: str) -> BigQueryRows:
