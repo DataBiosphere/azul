@@ -386,9 +386,10 @@ class Queues:
             time.sleep(3)
             mapping = lambda_.get_event_source_mapping(UUID=mapping['UUID'])
 
-    def manage_lambdas(self, queues: Mapping[str, Queue], enable: bool):
+    def functions_by_queue(self) -> Mapping[str, str]:
         """
-        Enable or disable the readers and writers of the given queues
+        Returns a dictionary that maps queues to the Lambda function triggered
+        by the queue. The keys and values are fully qualified resource names.
         """
         indexer = load_app_module('indexer', unit_test=True)
         functions_by_queue = {
@@ -396,6 +397,15 @@ class Queues:
             for handler in indexer.app.handler_map.values()
             if hasattr(handler, 'queue')
         }
+        invalid_queues = functions_by_queue.keys() - set(config.all_queue_names)
+        assert not invalid_queues, invalid_queues
+        return functions_by_queue
+
+    def manage_lambdas(self, queues: Mapping[str, Queue], enable: bool):
+        """
+        Enable or disable the readers and writers of the given queues.
+        """
+        functions_by_queue = self.functions_by_queue()
 
         with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
             futures = []

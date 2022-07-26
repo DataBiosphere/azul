@@ -325,7 +325,7 @@
                         "DomainName",
                         "azul-index-prod",
                         "NodeId",
-                        "8Nqtp8EvQH-leESDgVv80w",
+                        "${local.nodes[0]}",
                         "ClientId",
                         "542754589326",
                         {
@@ -353,7 +353,7 @@
                         ".",
                         ".",
                         ".",
-                        "suGLH0u0QyqddPNgHw_fgQ",
+                        "${local.nodes[1]}",
                         ".",
                         ".",
                         {
@@ -381,7 +381,7 @@
                         ".",
                         ".",
                         ".",
-                        "UiAwknCpRZq8ctyiDM4dBw",
+                        "${local.nodes[2]}",
                         ".",
                         ".",
                         {
@@ -409,7 +409,7 @@
                         ".",
                         ".",
                         ".",
-                        "L5UFJoa0RR2WWiLLHzqC8w",
+                        "${local.nodes[3]}",
                         ".",
                         ".",
                         {
@@ -470,25 +470,25 @@
                         "DomainName",
                         "azul-index-prod",
                         "NodeId",
-                        "8Nqtp8EvQH-leESDgVv80w",
+                        "${local.nodes[0]}",
                         "ClientId",
                         "542754589326"
                     ],
                     [
                         "...",
-                        "suGLH0u0QyqddPNgHw_fgQ",
+                        "${local.nodes[1]}",
                         ".",
                         "."
                     ],
                     [
                         "...",
-                        "UiAwknCpRZq8ctyiDM4dBw",
+                        "${local.nodes[2]}",
                         ".",
                         "."
                     ],
                     [
                         "...",
-                        "L5UFJoa0RR2WWiLLHzqC8w",
+                        "${local.nodes[3]}",
                         ".",
                         "."
                     ]
@@ -531,7 +531,7 @@
                         "DomainName",
                         "azul-index-prod",
                         "NodeId",
-                        "8Nqtp8EvQH-leESDgVv80w",
+                        "${local.nodes[0]}",
                         "ClientId",
                         "542754589326",
                         {
@@ -541,7 +541,7 @@
                     ],
                     [
                         "...",
-                        "suGLH0u0QyqddPNgHw_fgQ",
+                        "${local.nodes[1]}",
                         ".",
                         ".",
                         {
@@ -551,7 +551,7 @@
                     ],
                     [
                         "...",
-                        "UiAwknCpRZq8ctyiDM4dBw",
+                        "${local.nodes[2]}",
                         ".",
                         ".",
                         {
@@ -561,7 +561,7 @@
                     ],
                     [
                         "...",
-                        "L5UFJoa0RR2WWiLLHzqC8w",
+                        "${local.nodes[3]}",
                         ".",
                         ".",
                         {
@@ -575,7 +575,7 @@
                         ".",
                         ".",
                         ".",
-                        "8Nqtp8EvQH-leESDgVv80w",
+                        "${local.nodes[0]}",
                         ".",
                         ".",
                         {
@@ -585,7 +585,7 @@
                     ],
                     [
                         "...",
-                        "suGLH0u0QyqddPNgHw_fgQ",
+                        "${local.nodes[1]}",
                         ".",
                         ".",
                         {
@@ -595,7 +595,7 @@
                     ],
                     [
                         "...",
-                        "UiAwknCpRZq8ctyiDM4dBw",
+                        "${local.nodes[2]}",
                         ".",
                         ".",
                         {
@@ -605,7 +605,7 @@
                     ],
                     [
                         "...",
-                        "L5UFJoa0RR2WWiLLHzqC8w",
+                        "${local.nodes[3]}",
                         ".",
                         ".",
                         {

@@ -1,11 +1,73 @@
+import json
+
 from azul import (
     config,
+    require,
+)
+from azul.queues import (
+    Queues,
 )
 from azul.terraform import (
     emit_tf,
 )
 
+
+def dashboard_body() -> str:
+    # To minify the template and confirm it is valid JSON before deployment we
+    # parse the template file as JSON and then convert it back to a string.
+    with open(config.cloudwatch_dashboard_template) as f:
+        body = json.load(f)
+    body = json.dumps(body)
+
+    def prod_qualified_resource_name(name: str) -> str:
+        resource, _, suffix = config.unqualified_resource_name_and_suffix(name)
+        return config.qualified_resource_name(resource, suffix=suffix, stage='prod')
+
+    queues = Queues()
+    qualified_resource_names = [
+        *config.all_queue_names,
+        *queues.functions_by_queue().values()
+    ]
+    replacements = {
+        '542754589326': config.aws_account_id,
+        'us-east-1': config.region,
+        'azul-index-prod': config.es_domain,
+        **{
+            prod_qualified_resource_name(name): name
+            for name in qualified_resource_names
+        }
+    }
+    # Reverse sorted so that if any keys are substrings of other keys (e.g.
+    # 'foo' and 'foo_bar'), the longer string is processed before the substring.
+    replacements = dict(reversed(sorted(replacements.items())))
+
+    for old, new in replacements.items():
+        require(old in body,
+                'Missing placeholder', old, config.cloudwatch_dashboard_template)
+        body = body.replace(old, new)
+    return body
+
+
 emit_tf({
+    'data': [
+        {
+            'external': {
+                'elasticsearch_nodes': {
+                    'program': [
+                        'python',
+                        f'{config.project_root}/scripts/elasticsearch_nodes.py'
+                    ],
+                    'query': {},
+                    'depends_on': ([]
+                                   if config.share_es_domain else
+                                   ['aws_elasticsearch_domain.index'])
+                }
+            }
+        }
+    ],
+    'locals': {
+        'nodes': '${jsondecode(data.external.elasticsearch_nodes.result.nodes)}'
+    },
     'resource': [
         *(
             (
@@ -61,6 +123,14 @@ emit_tf({
             ]
             if config.enable_monitoring else
             []
-        )
+        ),
+        {
+            'aws_cloudwatch_dashboard': {
+                'dashboard': {
+                    'dashboard_name': config.qualified_resource_name('dashboard'),
+                    'dashboard_body': dashboard_body()
+                }
+            }
+        }
     ]
 })

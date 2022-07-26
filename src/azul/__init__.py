@@ -1289,6 +1289,10 @@ class Config:
     def monitoring_topic_name(self):
         return self.qualified_resource_name('monitoring')
 
+    @property
+    def cloudwatch_dashboard_template(self) -> str:
+        return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 
