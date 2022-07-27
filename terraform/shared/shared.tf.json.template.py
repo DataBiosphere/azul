@@ -21,6 +21,7 @@ emit_tf({
         },
         'aws_s3_bucket_policy': {
             'cloudtrail_shared': {
+                **provider_fragment(config.cloudtrail_s3_bucket_region),
                 'bucket': '${aws_s3_bucket.cloudtrail_shared.id}',
                 'policy': json.dumps({
                     'Version': '2012-10-17',
