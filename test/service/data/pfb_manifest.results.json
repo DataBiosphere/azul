@@ -446,6 +446,7 @@
             "organism_age": [
                 ""
             ],
+            "organism_age_range": [],
             "organism_age_unit": [
                 ""
             ]
@@ -546,7 +547,7 @@
             ],
             "crc32c": "e8b38826",
             "document_id": "0b34a80b-c818-4010-b193-e44a77036e27",
-            "drs_uri": "drs://drs-test.lan/2526ee96-c839-4d0e-869c-585fc9066cda?version=2018-10-10T031032.229536Z",
+            "drs_uri": "drs://drs-test.lan/2526ee96-c839-4d0e-869c-585fc9066cda?version=2018-10-10T03%3A10%3A32.229536Z",
             "file_format": "txt",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -559,7 +560,7 @@
             "sha256": "fb2c9cb1dd646e7941086b570df03fb5d6f8c539b0789a1ae1d18fa1129d0838",
             "size": 1490,
             "uuid": "2526ee96-c839-4d0e-869c-585fc9066cda",
-            "version": "2018-10-10T031032.229536Z"
+            "version": "2018-10-10T03:10:32.229536Z"
         },
         "relations": [
             {
@@ -777,6 +778,12 @@
                     "value": "38"
                 }
             ],
+            "organism_age_range": [
+                [
+                    1198368000.0,
+                    1198368000.0
+                ]
+            ],
             "organism_age_unit": [
                 "year"
             ]
@@ -878,7 +885,7 @@
             ],
             "crc32c": "1d998e49",
             "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-            "drs_uri": "drs://drs-test.lan/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+            "drs_uri": "drs://drs-test.lan/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z",
             "file_format": "fastq.gz",
             "file_source": "",
             "file_type": "sequence_file",
@@ -891,7 +898,7 @@
             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
             "size": 195142097,
             "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
-            "version": "2018-11-02T113344.698028Z"
+            "version": "2018-11-02T11:33:44.698028Z"
         },
         "relations": [
             {
@@ -947,7 +954,7 @@
             ],
             "crc32c": "3d94b063",
             "document_id": "14d63962-7cd3-43fc-a4d6-dc8f761c9ebd",
-            "drs_uri": "drs://drs-test.lan/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z",
+            "drs_uri": "drs://drs-test.lan/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T03%3A10%3A35.971561Z",
             "file_format": "bam",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -960,7 +967,7 @@
             "sha256": "f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4",
             "size": 3752733,
             "uuid": "b1c167da-0825-4c63-9cbc-2aada1ab367c",
-            "version": "2018-10-10T031035.971561Z"
+            "version": "2018-10-10T03:10:35.971561Z"
         },
         "relations": [
             {
@@ -1016,7 +1023,7 @@
             ],
             "crc32c": "8c75cbf7",
             "document_id": "18791e67-0c74-43e0-be28-f0c3cd78c7a4",
-            "drs_uri": "drs://drs-test.lan/35a4d374-9eb3-404b-8ef9-fa295062f969?version=2018-10-10T031033.293412Z",
+            "drs_uri": "drs://drs-test.lan/35a4d374-9eb3-404b-8ef9-fa295062f969?version=2018-10-10T03%3A10%3A33.293412Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1029,7 +1036,7 @@
             "sha256": "e6e979ccfbdbadff06e07596b8da15223aefd278552877a318a3b6ee9c6b9e41",
             "size": 29544,
             "uuid": "35a4d374-9eb3-404b-8ef9-fa295062f969",
-            "version": "2018-10-10T031033.293412Z"
+            "version": "2018-10-10T03:10:33.293412Z"
         },
         "relations": [
             {
@@ -1085,7 +1092,7 @@
             ],
             "crc32c": "062199a3",
             "document_id": "1d77c6c5-24b6-4d43-ad5d-b02fba050025",
-            "drs_uri": "drs://drs-test.lan/e399a1c6-f595-400b-b71b-ea95707fbf74?version=2018-10-10T031032.812584Z",
+            "drs_uri": "drs://drs-test.lan/e399a1c6-f595-400b-b71b-ea95707fbf74?version=2018-10-10T03%3A10%3A32.812584Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1098,7 +1105,7 @@
             "sha256": "796caeb3c67f0bbcca14aa76b556e9cbc1eb76c031ef1696799363325fdb4e92",
             "size": 7928,
             "uuid": "e399a1c6-f595-400b-b71b-ea95707fbf74",
-            "version": "2018-10-10T031032.812584Z"
+            "version": "2018-10-10T03:10:32.812584Z"
         },
         "relations": [
             {
@@ -1154,7 +1161,7 @@
             ],
             "crc32c": "ec79e888",
             "document_id": "21319798-fe9e-40a4-bcdb-a4c0780ee7bf",
-            "drs_uri": "drs://drs-test.lan/70367094-c901-4d72-a6b3-d2859729073a?version=2018-10-10T031034.734838Z",
+            "drs_uri": "drs://drs-test.lan/70367094-c901-4d72-a6b3-d2859729073a?version=2018-10-10T03%3A10%3A34.734838Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1167,7 +1174,7 @@
             "sha256": "674f7fc16bb8c8e4ac0fb03779045ed0c1fdbe8ac6523dcac9341f94a7e2313d",
             "size": 27293,
             "uuid": "70367094-c901-4d72-a6b3-d2859729073a",
-            "version": "2018-10-10T031034.734838Z"
+            "version": "2018-10-10T03:10:34.734838Z"
         },
         "relations": [
             {
@@ -1223,7 +1230,7 @@
             ],
             "crc32c": "38eadd82",
             "document_id": "28220905-f58d-48a1-9258-53f97dd9d388",
-            "drs_uri": "drs://drs-test.lan/4f53c7d8-13fd-4e60-8168-df2a26652d8f?version=2018-10-10T031034.363765Z",
+            "drs_uri": "drs://drs-test.lan/4f53c7d8-13fd-4e60-8168-df2a26652d8f?version=2018-10-10T03%3A10%3A34.363765Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1236,7 +1243,7 @@
             "sha256": "2d6b0ed81a78a2026739a7053ba8319d006a7b0d9e0f46adb010180d22c76b5e",
             "size": 8654,
             "uuid": "4f53c7d8-13fd-4e60-8168-df2a26652d8f",
-            "version": "2018-10-10T031034.363765Z"
+            "version": "2018-10-10T03:10:34.363765Z"
         },
         "relations": [
             {
@@ -1292,7 +1299,7 @@
             ],
             "crc32c": "a45828f5",
             "document_id": "416e31c0-b0ec-4674-ab37-ab8506a9f219",
-            "drs_uri": "drs://drs-test.lan/ee417573-2281-439a-98f9-05fcb5dd2faf?version=2018-10-10T031031.845129Z",
+            "drs_uri": "drs://drs-test.lan/ee417573-2281-439a-98f9-05fcb5dd2faf?version=2018-10-10T03%3A10%3A31.845129Z",
             "file_format": "txt",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1305,7 +1312,7 @@
             "sha256": "83ee700382b8abf0fd8f70a6d034e14e8387774aa9990cc9d9c4b89211197fca",
             "size": 1868,
             "uuid": "ee417573-2281-439a-98f9-05fcb5dd2faf",
-            "version": "2018-10-10T031031.845129Z"
+            "version": "2018-10-10T03:10:31.845129Z"
         },
         "relations": [
             {
@@ -1361,7 +1368,7 @@
             ],
             "crc32c": "074766b5",
             "document_id": "48e42fe3-41cd-49bd-b7f4-1e3c49682131",
-            "drs_uri": "drs://drs-test.lan/ac880333-cb92-4f55-971a-614bd065d8ef?version=2018-10-10T031031.316188Z",
+            "drs_uri": "drs://drs-test.lan/ac880333-cb92-4f55-971a-614bd065d8ef?version=2018-10-10T03%3A10%3A31.316188Z",
             "file_format": "txt",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1374,7 +1381,7 @@
             "sha256": "cb53289c95fd1030726cf93e509d4dc37461bc21b29ff8d2a4165b086dd75f50",
             "size": 2708,
             "uuid": "ac880333-cb92-4f55-971a-614bd065d8ef",
-            "version": "2018-10-10T031031.316188Z"
+            "version": "2018-10-10T03:10:31.316188Z"
         },
         "relations": [
             {
@@ -1430,7 +1437,7 @@
             ],
             "crc32c": "4ef74578",
             "document_id": "5f0cdf49-aabe-40f4-8af3-033115805bb0",
-            "drs_uri": "drs://drs-test.lan/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z",
+            "drs_uri": "drs://drs-test.lan/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T02%3A38%3A11.612423Z",
             "file_format": "fastq.gz",
             "file_source": "",
             "file_type": "sequence_file",
@@ -1443,7 +1450,7 @@
             "sha256": "fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29",
             "size": 125191,
             "uuid": "c005f647-b3fb-45a8-857a-8f5e6a878ccf",
-            "version": "2018-10-10T023811.612423Z"
+            "version": "2018-10-10T02:38:11.612423Z"
         },
         "relations": [
             {
@@ -1499,7 +1506,7 @@
             ],
             "crc32c": "54bb9c82",
             "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
-            "drs_uri": "drs://drs-test.lan/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+            "drs_uri": "drs://drs-test.lan/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T11%3A33%3A44.450442Z",
             "file_format": "fastq.gz",
             "file_source": "",
             "file_type": "sequence_file",
@@ -1512,7 +1519,7 @@
             "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
             "size": 190330156,
             "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
-            "version": "2018-11-02T113344.450442Z"
+            "version": "2018-11-02T11:33:44.450442Z"
         },
         "relations": [
             {
@@ -1568,7 +1575,7 @@
             ],
             "crc32c": "69987b3e",
             "document_id": "74c8c730-139e-40a5-b77e-f46088fa4d95",
-            "drs_uri": "drs://drs-test.lan/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z",
+            "drs_uri": "drs://drs-test.lan/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T02%3A38%3A11.851483Z",
             "file_format": "fastq.gz",
             "file_source": "",
             "file_type": "sequence_file",
@@ -1581,7 +1588,7 @@
             "sha256": "c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba",
             "size": 130024,
             "uuid": "b764ce7d-3938-4451-b68c-678feebc8f2a",
-            "version": "2018-10-10T023811.851483Z"
+            "version": "2018-10-10T02:38:11.851483Z"
         },
         "relations": [
             {
@@ -1637,7 +1644,7 @@
             ],
             "crc32c": "0d086593",
             "document_id": "8b4ed86d-99a8-4665-8f56-5a54fac6cb12",
-            "drs_uri": "drs://drs-test.lan/2866dfcd-6346-4db8-ad1c-36a50dd99f44?version=2018-10-10T031031.541754Z",
+            "drs_uri": "drs://drs-test.lan/2866dfcd-6346-4db8-ad1c-36a50dd99f44?version=2018-10-10T03%3A10%3A31.541754Z",
             "file_format": "txt",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1650,7 +1657,7 @@
             "sha256": "15c506c283d8b72c2a58fae1c8b58f525837e7e10adfa00080af72ea156fdaed",
             "size": 5005,
             "uuid": "2866dfcd-6346-4db8-ad1c-36a50dd99f44",
-            "version": "2018-10-10T031031.541754Z"
+            "version": "2018-10-10T03:10:31.541754Z"
         },
         "relations": [
             {
@@ -1706,7 +1713,7 @@
             ],
             "crc32c": "132739db",
             "document_id": "9a827f0b-d74a-436f-a39f-f8c8c9eadfa3",
-            "drs_uri": "drs://drs-test.lan/3a97e493-d758-4659-84f2-1c8060161459?version=2018-10-10T031032.503612Z",
+            "drs_uri": "drs://drs-test.lan/3a97e493-d758-4659-84f2-1c8060161459?version=2018-10-10T03%3A10%3A32.503612Z",
             "file_format": "txt",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1719,7 +1726,7 @@
             "sha256": "cb2373c6dc2048b583c624291f7d3e4690c23934805100af773aa78682543141",
             "size": 3218,
             "uuid": "3a97e493-d758-4659-84f2-1c8060161459",
-            "version": "2018-10-10T031032.503612Z"
+            "version": "2018-10-10T03:10:32.503612Z"
         },
         "relations": [
             {
@@ -1775,7 +1782,7 @@
             ],
             "crc32c": "d0ea20f5",
             "document_id": "9d88ec61-e189-4618-ac15-992a134749a8",
-            "drs_uri": "drs://drs-test.lan/f7cbd75f-abb1-4703-bf11-7d55a28ae5c0?version=2018-10-10T031033.596635Z",
+            "drs_uri": "drs://drs-test.lan/f7cbd75f-abb1-4703-bf11-7d55a28ae5c0?version=2018-10-10T03%3A10%3A33.596635Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1788,7 +1795,7 @@
             "sha256": "c910ece6155921d0ef500074db6e8c6b7bc53839a256bbb16eaf558b79583f5c",
             "size": 4341,
             "uuid": "f7cbd75f-abb1-4703-bf11-7d55a28ae5c0",
-            "version": "2018-10-10T031033.596635Z"
+            "version": "2018-10-10T03:10:33.596635Z"
         },
         "relations": [
             {
@@ -1844,7 +1851,7 @@
             ],
             "crc32c": "24b04481",
             "document_id": "a3b39c62-3dd8-48f9-bcba-08a16f43a40b",
-            "drs_uri": "drs://drs-test.lan/55878ed2-a7bf-423f-b6ee-97969e2e66ef?version=2018-10-10T031037.034867Z",
+            "drs_uri": "drs://drs-test.lan/55878ed2-a7bf-423f-b6ee-97969e2e66ef?version=2018-10-10T03%3A10%3A37.034867Z",
             "file_format": "results",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1857,7 +1864,7 @@
             "sha256": "abf4f12296e2e99fa153b63f920657bfa37718681111091d51c098207e7f6b41",
             "size": 18940597,
             "uuid": "55878ed2-a7bf-423f-b6ee-97969e2e66ef",
-            "version": "2018-10-10T031037.034867Z"
+            "version": "2018-10-10T03:10:37.034867Z"
         },
         "relations": [
             {
@@ -1913,7 +1920,7 @@
             ],
             "crc32c": "700bd519",
             "document_id": "a5acdc07-18bf-4c06-b212-2b36e52173ef",
-            "drs_uri": "drs://drs-test.lan/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z",
+            "drs_uri": "drs://drs-test.lan/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T03%3A10%3A35.284782Z",
             "file_format": "bam",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1926,7 +1933,7 @@
             "sha256": "e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c",
             "size": 550597,
             "uuid": "51c9ad31-5888-47eb-9e0c-02f042373c4e",
-            "version": "2018-10-10T031035.284782Z"
+            "version": "2018-10-10T03:10:35.284782Z"
         },
         "relations": [
             {
@@ -1982,7 +1989,7 @@
             ],
             "crc32c": "4e75003e",
             "document_id": "b4767274-c12b-401f-8bc1-9c9213149442",
-            "drs_uri": "drs://drs-test.lan/c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d?version=2018-10-10T031037.983672Z",
+            "drs_uri": "drs://drs-test.lan/c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d?version=2018-10-10T03%3A10%3A37.983672Z",
             "file_format": "matrix",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -1995,7 +2002,7 @@
             "sha256": "e9bf2c74bb562b91a45538bd74225edfd3a62bd8b74ab8c71b3c8f7295f3fcc6",
             "size": 144,
             "uuid": "c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d",
-            "version": "2018-10-10T031037.983672Z"
+            "version": "2018-10-10T03:10:37.983672Z"
         },
         "relations": [
             {
@@ -2051,7 +2058,7 @@
             ],
             "crc32c": "444a7707",
             "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
-            "drs_uri": "drs://drs-test.lan/54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+            "drs_uri": "drs://drs-test.lan/54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T03%3A10%3A38.239541Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2064,7 +2071,7 @@
             "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
             "size": 24,
             "uuid": "54541cc5-9010-425b-9037-22e43948c97c",
-            "version": "2018-10-10T031038.239541Z"
+            "version": "2018-10-10T03:10:38.239541Z"
         },
         "relations": [
             {
@@ -2120,7 +2127,7 @@
             ],
             "crc32c": "444a7707",
             "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
-            "drs_uri": "drs://drs-test.lan/66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+            "drs_uri": "drs://drs-test.lan/66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T03%3A10%3A38.474167Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2133,7 +2140,7 @@
             "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
             "size": 24,
             "uuid": "66b8f976-6f1e-45b3-bd97-069658c3c847",
-            "version": "2018-10-10T031038.474167Z"
+            "version": "2018-10-10T03:10:38.474167Z"
         },
         "relations": [
             {
@@ -2189,7 +2196,7 @@
             ],
             "crc32c": "c6ab0701",
             "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
-            "drs_uri": "drs://drs-test.lan/ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+            "drs_uri": "drs://drs-test.lan/ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T03%3A10%3A38.714461Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2202,7 +2209,7 @@
             "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
             "size": 333,
             "uuid": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62",
-            "version": "2018-10-10T031038.714461Z"
+            "version": "2018-10-10T03:10:38.714461Z"
         },
         "relations": [
             {
@@ -2258,7 +2265,7 @@
             ],
             "crc32c": "cd2fd51f",
             "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
-            "drs_uri": "drs://drs-test.lan/0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+            "drs_uri": "drs://drs-test.lan/0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T03%3A10%3A39.039270Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2271,7 +2278,7 @@
             "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
             "size": 153,
             "uuid": "0c518a52-f315-4ea2-beed-1c9d8f2d802b",
-            "version": "2018-10-10T031039.039270Z"
+            "version": "2018-10-10T03:10:39.039270Z"
         },
         "relations": [
             {
@@ -2327,7 +2334,7 @@
             ],
             "crc32c": "b89e6723",
             "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
-            "drs_uri": "drs://drs-test.lan/136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+            "drs_uri": "drs://drs-test.lan/136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T03%3A10%3A39.426609Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2340,7 +2347,7 @@
             "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
             "size": 341,
             "uuid": "136108ab-277e-47a4-acc3-1feed8fb2f25",
-            "version": "2018-10-10T031039.426609Z"
+            "version": "2018-10-10T03:10:39.426609Z"
         },
         "relations": [
             {
@@ -2396,7 +2403,7 @@
             ],
             "crc32c": "caaefa77",
             "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
-            "drs_uri": "drs://drs-test.lan/0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+            "drs_uri": "drs://drs-test.lan/0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T03%3A10%3A39.642846Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2409,7 +2416,7 @@
             "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
             "size": 3054,
             "uuid": "0bef5419-739c-4a2c-aedb-43754d55d51c",
-            "version": "2018-10-10T031039.642846Z"
+            "version": "2018-10-10T03:10:39.642846Z"
         },
         "relations": [
             {
@@ -2465,7 +2472,7 @@
             ],
             "crc32c": "f629ec34",
             "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
-            "drs_uri": "drs://drs-test.lan/3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+            "drs_uri": "drs://drs-test.lan/3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T03%3A10%3A39.899615Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2478,7 +2485,7 @@
             "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
             "size": 341,
             "uuid": "3a5f7299-1aa1-4060-9631-212c29b4d807",
-            "version": "2018-10-10T031039.899615Z"
+            "version": "2018-10-10T03:10:39.899615Z"
         },
         "relations": [
             {
@@ -2534,7 +2541,7 @@
             ],
             "crc32c": "59d86b68",
             "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
-            "drs_uri": "drs://drs-test.lan/a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+            "drs_uri": "drs://drs-test.lan/a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T03%3A10%3A40.113268Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2547,7 +2554,7 @@
             "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
             "size": 192191,
             "uuid": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5",
-            "version": "2018-10-10T031040.113268Z"
+            "version": "2018-10-10T03:10:40.113268Z"
         },
         "relations": [
             {
@@ -2603,7 +2610,7 @@
             ],
             "crc32c": "25d193cf",
             "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
-            "drs_uri": "drs://drs-test.lan/68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+            "drs_uri": "drs://drs-test.lan/68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T03%3A10%3A40.583439Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2616,7 +2623,7 @@
             "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
             "size": 337,
             "uuid": "68ba4711-1447-42ac-aa40-9c0e4cda1666",
-            "version": "2018-10-10T031040.583439Z"
+            "version": "2018-10-10T03:10:40.583439Z"
         },
         "relations": [
             {
@@ -2672,7 +2679,7 @@
             ],
             "crc32c": "17a84191",
             "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
-            "drs_uri": "drs://drs-test.lan/27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+            "drs_uri": "drs://drs-test.lan/27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T03%3A10%3A40.801631Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2685,7 +2692,7 @@
             "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
             "size": 4054,
             "uuid": "27e66328-e337-4bcd-ba15-7893ecaf841f",
-            "version": "2018-10-10T031040.801631Z"
+            "version": "2018-10-10T03:10:40.801631Z"
         },
         "relations": [
             {
@@ -2741,7 +2748,7 @@
             ],
             "crc32c": "25d193cf",
             "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
-            "drs_uri": "drs://drs-test.lan/2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+            "drs_uri": "drs://drs-test.lan/2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T03%3A10%3A40.958708Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2754,7 +2761,7 @@
             "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
             "size": 337,
             "uuid": "2ab1a516-ef36-41b6-a78f-513361658feb",
-            "version": "2018-10-10T031040.958708Z"
+            "version": "2018-10-10T03:10:40.958708Z"
         },
         "relations": [
             {
@@ -2810,7 +2817,7 @@
             ],
             "crc32c": "bdc30523",
             "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
-            "drs_uri": "drs://drs-test.lan/351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+            "drs_uri": "drs://drs-test.lan/351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T03%3A10%3A41.135992Z",
             "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2823,7 +2830,7 @@
             "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
             "size": 1257,
             "uuid": "351970aa-bc4c-405e-a274-be9e08e42e98",
-            "version": "2018-10-10T031041.135992Z"
+            "version": "2018-10-10T03:10:41.135992Z"
         },
         "relations": [
             {
@@ -2879,7 +2886,7 @@
             ],
             "crc32c": "7581baea",
             "document_id": "b7f69b47-cbdf-4ec9-be6e-d316827aad8e",
-            "drs_uri": "drs://drs-test.lan/cf859616-212d-4579-bd86-03c5f8e06ec0?version=2018-10-10T031036.453150Z",
+            "drs_uri": "drs://drs-test.lan/cf859616-212d-4579-bd86-03c5f8e06ec0?version=2018-10-10T03%3A10%3A36.453150Z",
             "file_format": "results",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2892,7 +2899,7 @@
             "sha256": "60462c3b1ccde59bbff0f3b62a4f8491d07a0d7a55abbb2df093f72aaadb77b5",
             "size": 7629174,
             "uuid": "cf859616-212d-4579-bd86-03c5f8e06ec0",
-            "version": "2018-10-10T031036.453150Z"
+            "version": "2018-10-10T03:10:36.453150Z"
         },
         "relations": [
             {
@@ -2948,7 +2955,7 @@
             ],
             "crc32c": "d5d1e302",
             "document_id": "c059ee58-fbea-40d9-b552-acc1285138a3",
-            "drs_uri": "drs://drs-test.lan/29466279-4d12-44dd-9f87-8429b61a9f13?version=2018-10-10T031033.862470Z",
+            "drs_uri": "drs://drs-test.lan/29466279-4d12-44dd-9f87-8429b61a9f13?version=2018-10-10T03%3A10%3A33.862470Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -2961,7 +2968,7 @@
             "sha256": "c691a24d6bd11b9b60b99efe4641e2392ff50ab518b6474b595e86610dfe9751",
             "size": 457,
             "uuid": "29466279-4d12-44dd-9f87-8429b61a9f13",
-            "version": "2018-10-10T031033.862470Z"
+            "version": "2018-10-10T03:10:33.862470Z"
         },
         "relations": [
             {
@@ -3195,6 +3202,12 @@
                 },
                 ""
             ],
+            "organism_age_range": [
+                [
+                    1766016000.0,
+                    1766016000.0
+                ]
+            ],
             "organism_age_unit": [
                 "year",
                 ""
@@ -3348,7 +3361,7 @@
             ],
             "crc32c": "6ce5efc2",
             "document_id": "da510e7a-5495-40c5-964d-b5291372102c",
-            "drs_uri": "drs://drs-test.lan/7eda54d3-3522-4079-9089-60839ee4d4f9?version=2018-10-10T031035.686843Z",
+            "drs_uri": "drs://drs-test.lan/7eda54d3-3522-4079-9089-60839ee4d4f9?version=2018-10-10T03%3A10%3A35.686843Z",
             "file_format": "bai",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -3361,7 +3374,7 @@
             "sha256": "d7dd835ba3e9cf56958976fc90267786233958c92d9dfcd5a6cb3c0ce95a52e2",
             "size": 1399032,
             "uuid": "7eda54d3-3522-4079-9089-60839ee4d4f9",
-            "version": "2018-10-10T031035.686843Z"
+            "version": "2018-10-10T03:10:35.686843Z"
         },
         "relations": [
             {
@@ -3417,7 +3430,7 @@
             ],
             "crc32c": "5191baeb",
             "document_id": "fd67cd38-2483-49ff-8a9b-0fe1f2607901",
-            "drs_uri": "drs://drs-test.lan/84985aaf-e397-45ee-8b96-37ed2cc650d4?version=2018-10-10T031035.017351Z",
+            "drs_uri": "drs://drs-test.lan/84985aaf-e397-45ee-8b96-37ed2cc650d4?version=2018-10-10T03%3A10%3A35.017351Z",
             "file_format": "csv",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
@@ -3430,7 +3443,7 @@
             "sha256": "8b90565cdda2daa693e74d5b9e7652eb4bb6aae91e6993b084f1103a9bfda23b",
             "size": 1899,
             "uuid": "84985aaf-e397-45ee-8b96-37ed2cc650d4",
-            "version": "2018-10-10T031035.017351Z"
+            "version": "2018-10-10T03:10:35.017351Z"
         },
         "relations": [
             {

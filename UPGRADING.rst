@@ -10,6 +10,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4224 Index ENCODE snapshot as PoC
+==================================
+
+Replace ``'tdr'`` with ``'tdr_hca'`` in the repository plugin configuration for
+the ``AZUL_CATALOGS`` variable in your personal deployments. As always, use the
+sandbox deployment's ``environment.py`` as a model when upgrading personal
+deployments.
+
 
 #4001 Put API Gateway behind GitLab VPC
 =======================================

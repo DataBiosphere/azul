@@ -1,5 +1,8 @@
 from enum import (
     Enum,
+)
+
+from azul.enums import (
     auto,
 )
 

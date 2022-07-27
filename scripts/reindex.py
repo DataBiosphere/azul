@@ -26,8 +26,8 @@ from azul.bigquery_reservation import (
 from azul.logging import (
     configure_script_logging,
 )
-from azul.plugins.repository import (
-    tdr,
+from azul.plugins.repository.tdr import (
+    TDRPlugin,
 )
 
 logger = logging.getLogger(__name__)
@@ -178,7 +178,7 @@ def main(argv: list[str]):
                 if (
                     args.manage_slots
                     and reservation is None
-                    and isinstance(azul.repository_plugin(catalog), tdr.Plugin)
+                    and isinstance(azul.repository_plugin(catalog), TDRPlugin)
                 ):
                     reservation = BigQueryReservation()
                     reservation.activate()

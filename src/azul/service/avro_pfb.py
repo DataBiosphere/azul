@@ -36,13 +36,13 @@ from azul import (
     reject,
 )
 from azul.indexer.document import (
+    ClosedRange,
     FieldTypes,
     Nested,
     null_bool,
     null_datetime,
     null_float,
     null_int,
-    null_int_sum_sort,
     null_str,
     pass_thru_int,
     pass_thru_json,
@@ -205,29 +205,30 @@ class PFBEntity:
         else:
             assert False, schema
         for field in entity_schema['fields']:
-            field_name = field['name']
+            field_name, field_type = field['name'], field['type']
             if field_name not in object_:
-                if isinstance(field['type'], list):
+                if isinstance(field_type, list):
                     # FIXME: Change 'string' to 'null'
                     #        https://github.com/DataBiosphere/azul/issues/2462
-                    assert 'string' in field['type'] or 'null' in field['type'], field
+                    assert 'string' in field_type or 'null' in field_type, field
                     default_value = None
-                elif field['type']['type'] == 'array':
-                    if isinstance(field['type']['items'], dict):
-                        assert field['type']['items']['type'] == 'record', field
+                elif field_type['type'] == 'array':
+                    if isinstance(field_type['items'], dict):
+                        assert field_type['items']['type'] in ('record', 'array'), field
                         default_value = []
                     else:
                         # FIXME: Change 'string' to 'null'
                         #        https://github.com/DataBiosphere/azul/issues/2462
-                        assert 'string' in field['type']['items'], field
+                        assert 'string' in field_type['items'], field
                         default_value = [None]
                 else:
                     assert False, field
                 object_[field_name] = default_value
             if (
-                isinstance(field['type'], dict)
-                and field['type']['type'] == 'array'
-                and isinstance(field['type']['items'], dict)
+                isinstance(field_type, dict)
+                and field_type['type'] == 'array'
+                and isinstance(field_type['items'], dict)
+                and field_type['items']['type'] == 'record'
             ):
                 for sub_object in object_[field_name]:
                     cls._add_missing_fields(name=field_name,
@@ -482,10 +483,9 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
 
 _nullable_to_pfb_types = {
     null_bool: ['string', 'boolean'],
-    null_float: ['string', 'double'],  # Not present in current field_types
+    null_float: ['string', 'double'],
     null_int: ['string', 'long'],
     null_str: ['string'],
-    null_int_sum_sort: ['string', 'long'],
     null_datetime: ['string'],
 }
 
@@ -506,8 +506,10 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 break  # to not include this field in the schema
             else:
                 field_name = new_field_name
+
         if isinstance(field_type, Nested):
             field_type = field_type.properties
+
         if isinstance(field_type, dict):
             yield {
                 "name": field_name,
@@ -536,7 +538,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 yield {
                     "name": field_name,
                     "namespace": namespace,
-                    "type": list(_nullable_to_pfb_types[field_type]),
+                    "type": _nullable_to_pfb_types[field_type],
                 }
             else:
                 yield {
@@ -544,7 +546,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     "namespace": namespace,
                     "type": {
                         "type": "array",
-                        "items": list(_nullable_to_pfb_types[field_type]),
+                        "items": _nullable_to_pfb_types[field_type],
                     }
                 }
         elif field_type is pass_thru_uuid4:
@@ -554,6 +556,21 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 "default": None,
                 "type": ["string"],
                 "logicalType": "UUID"
+            }
+        elif isinstance(field_type, ClosedRange):
+            yield {
+                "name": field_name,
+                "namespace": namespace,
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            int: "long",
+                            float: "double"
+                        }[field_type.ends_type.native_type]
+                    }
+                }
             }
         # FIXME: Nested is handled so much more elegantly. See if we can have
         #        ValueAndUnit inherit Nested.

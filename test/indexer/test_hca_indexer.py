@@ -1493,7 +1493,7 @@ class TestHCAIndexer(IndexerTestCase):
         no_cells_bundle = self._load_canned_bundle(no_cells_bundle)
         self._index_bundle(no_cells_bundle)
         expected = {
-            'total_estimated_cells': null_int.null_int,
+            'total_estimated_cells': null_int.null_value,
             'total_estimated_cells_': None,
             'organ_part': ['temporal lobe']
         }
@@ -1786,6 +1786,32 @@ class TestHCAIndexer(IndexerTestCase):
             inner = one(cell_suspension[entity_type])
             cell_count = field_type.from_index(inner[field_name])
             self.assertEqual(expected_cell_count, cell_count)
+
+    def test_mapper_parsing(self):
+        """
+        Verify that the tests are insensitive to whether a can from DSS or TDR
+        is indexed first. Especially the dynamic mapping could be sensitive to
+        subtle difference in the formatting of fields.
+        """
+        bundle_fqids = [
+            # A bundle from TDR
+            self.bundle_fqid(uuid='17a3d288-01a0-464a-9599-7375fda3353d',
+                             version='2018-03-28T15:10:23.074974Z'),
+            # A bundle from DSS
+            self.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
+                             version='2021-09-21T17:27:23.898000Z'),
+        ]
+
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse):
+                self.index_service.delete_indices(self.catalog)
+                self.index_service.create_indices(self.catalog)
+
+                for bundle_fqid in reversed(bundle_fqids) if reverse else bundle_fqids:
+                    self._index_canned_bundle(bundle_fqid)
+
+                hits = self._get_all_hits()
+                self.assertEqual(len(hits), 42)
 
 
 class TestIndexManagement(AzulUnitTestCase):
