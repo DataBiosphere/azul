@@ -16,7 +16,6 @@ from datetime import (
 )
 from enum import (
     Enum,
-    auto,
 )
 import logging
 from operator import (
@@ -56,6 +55,9 @@ from azul import (
 from azul.collections import (
     none_safe_key,
 )
+from azul.enums import (
+    auto,
+)
 from azul.indexer import (
     Bundle,
     BundlePartition,
@@ -64,6 +66,7 @@ from azul.indexer.aggregate import (
     SimpleAggregator,
 )
 from azul.indexer.document import (
+    ClosedRange,
     Contribution,
     ContributionCoordinates,
     EntityReference,
@@ -76,6 +79,7 @@ from azul.indexer.document import (
     null_datetime,
     null_int,
     null_str,
+    pass_thru_float,
     pass_thru_int,
     pass_thru_json,
 )
@@ -84,6 +88,9 @@ from azul.indexer.transform import (
 )
 from azul.iterators import (
     generable,
+)
+from azul.openapi import (
+    schema,
 )
 from azul.plugins.metadata.hca.indexer.aggregate import (
     CellLineAggregator,
@@ -119,7 +126,7 @@ Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
-pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='keyword')
+pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(str, es_type='keyword')
 
 
 def _format_dcp2_datetime(d: Optional[datetime]) -> Optional[str]:
@@ -133,7 +140,7 @@ class ValueAndUnit(FieldType[JSON, str]):
 
     def to_index(self, value_unit: Optional[JSON]) -> str:
         """
-        >>> a = ValueAndUnit()
+        >>> a = ValueAndUnit(JSON, str)
         >>> a.to_index({'value': '20', 'unit': 'year'})
         '20 year'
 
@@ -221,7 +228,7 @@ class ValueAndUnit(FieldType[JSON, str]):
 
     def from_index(self, value: str) -> Optional[JSON]:
         """
-        >>> a = ValueAndUnit()
+        >>> a = ValueAndUnit(JSON, str)
         >>> a.from_index('20 year')
         {'value': '20', 'unit': 'year'}
 
@@ -272,10 +279,16 @@ class ValueAndUnit(FieldType[JSON, str]):
     def to_tsv(self, value: Optional[JSON]) -> str:
         return '' if value is None else self.to_index(value)
 
+    @property
+    def api_schema(self) -> JSON:
+        return schema.object(value=str, unit=str)
 
-value_and_unit: ValueAndUnit = ValueAndUnit()
+
+value_and_unit: ValueAndUnit = ValueAndUnit(JSON, str)
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
+
+age_range = ClosedRange(pass_thru_float)
 
 
 class SubmitterCategory(Enum):
@@ -781,7 +794,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age': value_and_unit,
             'organism_age_unit': null_str,
             # Prevent problem due to shadow copies on numeric ranges
-            'organism_age_range': pass_thru_json,
+            'organism_age_range': age_range,
             'donor_count': null_int
         }
 
@@ -804,10 +817,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age_unit': donor.organism_age_unit,
             **(
                 {
-                    'organism_age_range': {
-                        'gte': donor.organism_age_in_seconds.min,
-                        'lte': donor.organism_age_in_seconds.max
-                    }
+                    'organism_age_range': (
+                        donor.organism_age_in_seconds.min,
+                        donor.organism_age_in_seconds.max
+                    )
                 } if donor.organism_age_in_seconds else {
                 }
             )

@@ -61,6 +61,7 @@ from azul.health import (
     HealthController,
 )
 from azul.indexer.document import (
+    FieldType,
     Nested,
 )
 from azul.logging import (
@@ -1087,43 +1088,50 @@ page_spec = schema.object(
     termFacets=generic_object_spec
 )
 
+
+def _filter_schema(field_type: FieldType) -> JSON:
+    relations = field_type.supported_filter_relations
+
+    def filter_schema(relation: str) -> JSON:
+        return schema.object_type(
+            properties={relation: schema.array(field_type.api_filter_schema(relation))},
+            required=[relation],
+            additionalProperties=False
+        )
+
+    if len(relations) == 1:
+        return filter_schema(one(relations))
+    else:
+        return {'oneOf': list(map(filter_schema, relations))}
+
+
+types = app.repository_controller.field_types(app.catalog)
+
 filters_param_spec = params.query(
     'filters',
     schema.optional(application_json(schema.object_type(
         default='{}',
         example={'cellCount': {'within': [[10000, 1000000000]]}},
         properties={
-            field: {
-                'oneOf': [
-                    schema.object(is_=schema.array({})),
-                    *(
-                        schema.object_type({
-                            op: schema.array({}, minItems=2, maxItems=2)
-                        })
-                        for op in ['contains', 'within', 'intersects']
-                    )
-                ]
-            }
+            field: _filter_schema(types[field])
             for field in app.fields
         }
     ))),
-    # FIXME: Spec for `filters` argument should be driven by field types
-    #        https://github.com/DataBiosphere/azul/issues/2254
     description=format_description('''
         Criteria to filter entities from the search results.
 
-        Each filter consists of a field name, a relational operator, and an
-        array of field values. The available operators are "is", "within",
-        "contains", and "intersects". Multiple filters are combined using "and"
-        logic. An entity must match all filters to be included in the response.
-        How multiple field values within a single filter are combined depends
-        on the operator.
+        Each filter consists of a field name, a relation (relational operator),
+        and an array of field values. The available relations are "is",
+        "within", "contains", and "intersects". Multiple filters are combined
+        using "and" logic. An entity must match all filters to be included in
+        the response. How multiple field values within a single filter are
+        combined depends on the relation.
 
-        For the "is" operator, multiple values are combined using "or"
+        For the "is" relation, multiple values are combined using "or"
         logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
         selects entities where the file format is either "fastq" or
         "fastq.gz". For the "within", "intersects", and "contains"
-        operators, the field values must come in nested pairs specifying
+        relations, the field values must come in nested pairs specifying
         upper and lower bounds, and multiple pairs are combined using "and"
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both

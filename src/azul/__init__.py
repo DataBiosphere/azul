@@ -548,7 +548,7 @@ class Config:
     @attr.s(frozen=True, kw_only=True, auto_attribs=True)
     class Catalog:
         """
-        >>> plugins = dict(metadata=dict(name='hca'), repository=dict(name='tdr'))
+        >>> plugins = dict(metadata=dict(name='hca'), repository=dict(name='tdr_hca'))
         >>> kwargs = dict(atlas='', plugins=plugins, sources='')
         >>> c = Config.Catalog
 
@@ -557,7 +557,7 @@ class Config:
                        atlas='',
                        internal=False,
                        plugins={'metadata': {'name': 'hca'},
-                                'repository': {'name': 'tdr'}},
+                                'repository': {'name': 'tdr_hca'}},
                        sources='')
 
         >>> c(name='dcp-it', internal=True, **kwargs).is_integration_test_catalog
@@ -674,7 +674,7 @@ class Config:
         return self._is_plugin_enabled('dss', catalog)
 
     def is_tdr_enabled(self, catalog: Optional[str] = None) -> bool:
-        return self._is_plugin_enabled('tdr', catalog)
+        return self._is_plugin_enabled('tdr_hca', catalog)
 
     def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
         def predicate(catalog):

@@ -216,7 +216,7 @@ class TestResponse(WebServiceTestCase):
                         "id": ["DID_scRSq06"],
                         "donorCount": 1,
                         "organismAge": [{"value": "38", "unit": "year"}],
-                        "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                        "organismAgeRange": [[1198368000.0, 1198368000.0]],
                     }
                 ],
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -230,9 +230,9 @@ class TestResponse(WebServiceTestCase):
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "fileSource": None,
-                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
-                        "version": "2018-11-02T113344.698028Z"
+                        "version": "2018-11-02T11:33:44.698028Z"
                     }
                 ],
                 "organoids": [
@@ -523,7 +523,7 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
                             "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                            "organismAgeRange": [[1198368000.0, 1198368000.0]],
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -751,7 +751,7 @@ class TestResponse(WebServiceTestCase):
                         "id": ["donor_ID_1"],
                         "donorCount": 1,
                         "organismAge": [{"value": "20", "unit": "year"}],
-                        "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}],
+                        "organismAgeRange": [[630720000.0, 630720000.0]],
                     }
                 ],
                 "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
@@ -1003,9 +1003,9 @@ class TestResponse(WebServiceTestCase):
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'fileSource': None,
-            'drs_path': 'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T172251.560099Z',
+            'drs_path': 'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T17%3A22%3A51.560099Z',
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
-            'version': '2019-10-09T172251.560099Z'
+            'version': '2019-10-09T17:22:51.560099Z'
         }
         file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
@@ -1151,6 +1151,10 @@ class TestResponse(WebServiceTestCase):
         self.assertSetEqual(indexed_bundles, actual_bundles)
 
     def test_ranged_values(self):
+        gte0, lte0 = 2049840000.0, 2175984000.0
+        gte1, lte1 = 1419120000.0, 1545264000.0
+        gte2, lte2 = 1734480000.0, 1860624000.0
+        gte3, lte3 = 1261440000.0, 1387584000.0
         test_hits = [
             [
                 {
@@ -1175,14 +1179,8 @@ class TestResponse(WebServiceTestCase):
                         {"value": "65-69", "unit": "year"}
                     ],
                     "organismAgeRange": [
-                        {
-                            "gte": 2049840000.0,
-                            "lte": 2175984000.0
-                        },
-                        {
-                            "gte": 1419120000.0,
-                            "lte": 1545264000.0
-                        }
+                        [gte0, lte0],
+                        [gte1, lte1]
                     ],
                 }
             ],
@@ -1209,33 +1207,38 @@ class TestResponse(WebServiceTestCase):
                         {"value": "55-59", "unit": "year"}
                     ],
                     "organismAgeRange": [
-                        {
-                            "gte": 1734480000.0,
-                            "lte": 1860624000.0
-                        },
-                        {
-                            "gte": 1261440000.0,
-                            "lte": 1387584000.0
-                        }
+                        [gte2, lte2],
+                        [gte3, lte3]
                     ],
                 }
             ]
         ]
 
-        for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
-                                                     ('within', (1261430000, 1545265000), test_hits),
-                                                     ('intersects', (1860623000, 1900000000), test_hits[1:]),
-                                                     ('contains', (1860624000, 2049641000), []),
-                                                     ('within', (1734490000, 1860623000), []),
-                                                     ('intersects', (1860624100, 2049641000), [])]:
-            with self.subTest(relation=relation, value=range_value):
-                params = self._params(filters={'organismAgeRange': {relation: [range_value]}},
-                                      order='desc',
-                                      sort='entryId')
-                url = self.base_url.set(path='/index/projects', args=params)
-                response = requests.get(str(url))
-                actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
-                self.assertElasticEqual(expected_hits, actual_value)
+        test_cases = [
+            ('contains', (gte1 + 10000, lte1 - 1000), test_hits[:1]),
+            ('contains', gte1 + 10000, test_hits[:1]),
+            ('contains', 0.0, []),
+            ('within', (gte3 - 10000, lte1 + 1000), test_hits),
+            ('intersects', (lte2 - 1000, 1900000000.0), test_hits[1:]),
+            ('contains', (lte2, gte0 - 199000), []),
+            ('within', (gte2 + 10000, lte2 - 1000), []),
+            ('intersects', (lte2 + 100, gte0 - 199000), [])
+        ]
+        for relation, value, expected_hits in test_cases:
+            for ends_type in int, float:
+                if isinstance(value, (tuple, list)):
+                    value = list(map(ends_type, value))
+                else:
+                    value = ends_type(value)
+                with self.subTest(relation=relation, value=value, ends_type=ends_type):
+                    params = self._params(filters={'organismAgeRange': {relation: [value]}},
+                                          order='desc',
+                                          sort='entryId')
+                    url = self.base_url.set(path='/index/projects', args=params)
+                    response = requests.get(str(url))
+                    response.raise_for_status()
+                    actual_hits = [hit['donorOrganisms'] for hit in response.json()['hits']]
+                    self.assertElasticEqual(expected_hits, actual_hits)
 
     def test_ordering(self):
         sort_fields = [
@@ -3720,7 +3723,7 @@ class TestTDRIndexer(WebServiceTestCase, TDRPluginTestCase):
                                         atlas='hca',
                                         internal=False,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                                     repository=config.Catalog.Plugin(name='tdr')),
+                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
                                         sources=set())
         }
 

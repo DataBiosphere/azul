@@ -477,8 +477,8 @@ class TDRClient(SAMClient):
         resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.project!r}'
         try:
             self.run_sql(f'''
-                SELECT links_id
-                FROM `{source.project}.{source.bq_name}.links`
+                SELECT *
+                FROM `{source.project}.{source.bq_name}.INFORMATION_SCHEMA.TABLES`
                 LIMIT 1
             ''')
         except Forbidden:

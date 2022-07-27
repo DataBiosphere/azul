@@ -7,7 +7,7 @@ colorama==0.4.3
 configargparse==1.5.3
 docker-pycreds==0.4.0
 flask-basicauth==0.2.0
-flask==2.1.2
+flask==2.1.3
 geventhttpclient==1.5.5
 google-auth-httplib2==0.1.0
 greenlet==1.1.2
@@ -29,13 +29,13 @@ pycodestyle==2.6.0
 pyflakes==2.2.0
 python-editor==1.0.4
 pyzmq==23.2.0
-readchar==3.0.5
+readchar==3.1.0
 smmap2==3.0.1
 smmap==5.0.0
 uritemplate==3.0.1
 wcwidth==0.2.5
 websocket-client==1.3.3
 xmltodict==0.13.0
-zipp==3.8.0
+zipp==3.8.1
 zope.event==4.5.0
 zope.interface==5.4.0

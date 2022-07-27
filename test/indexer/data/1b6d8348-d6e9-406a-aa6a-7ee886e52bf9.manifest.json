@@ -2,7 +2,7 @@
     {
         "name": "cell_suspension_0.json",
         "uuid": "906f8f09-deaa-40bb-bf50-27d2336b2dc4",
-        "version": "2019-09-20T134352.387000Z",
+        "version": "2019-09-20T13:43:52.387000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 1033,
         "indexed": true,
@@ -14,7 +14,7 @@
     {
         "name": "specimen_from_organism_0.json",
         "uuid": "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda",
-        "version": "2019-09-20T134352.654000Z",
+        "version": "2019-09-20T13:43:52.654000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 1300,
         "indexed": true,
@@ -26,7 +26,7 @@
     {
         "name": "cell_line_0.json",
         "uuid": "70054038-cb12-429d-bb37-69185ff1deee",
-        "version": "2019-09-20T134352.455000Z",
+        "version": "2019-09-20T13:43:52.455000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 1527,
         "indexed": true,
@@ -38,7 +38,7 @@
     {
         "name": "donor_organism_0.json",
         "uuid": "2b7adb0a-82a4-4319-80d1-4a73d879dec1",
-        "version": "2019-09-20T134352.612000Z",
+        "version": "2019-09-20T13:43:52.612000Z",
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "size": 1399,
         "indexed": true,
@@ -50,7 +50,7 @@
     {
         "name": "sequence_file_0.json",
         "uuid": "5f68ea73-350b-4d37-a341-3004139fb699",
-        "version": "2019-09-20T135035.660000Z",
+        "version": "2019-09-20T13:50:35.660000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -62,7 +62,7 @@
     {
         "name": "sequence_file_1.json",
         "uuid": "23f8e139-f4fa-4476-ba59-ff5d37003c34",
-        "version": "2019-09-20T135008.455000Z",
+        "version": "2019-09-20T13:50:08.455000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -74,7 +74,7 @@
     {
         "name": "sequence_file_2.json",
         "uuid": "3c3d882a-cc38-4eea-ac53-0885f906852e",
-        "version": "2019-09-20T135219.666000Z",
+        "version": "2019-09-20T13:52:19.666000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -86,7 +86,7 @@
     {
         "name": "sequence_file_3.json",
         "uuid": "35e07477-76cb-4a92-99b6-7b3bbb02ec06",
-        "version": "2019-09-20T134942.254000Z",
+        "version": "2019-09-20T13:49:42.254000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -98,7 +98,7 @@
     {
         "name": "sequence_file_4.json",
         "uuid": "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
-        "version": "2019-09-20T135059.836000Z",
+        "version": "2019-09-20T13:50:59.836000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -110,7 +110,7 @@
     {
         "name": "sequence_file_5.json",
         "uuid": "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
-        "version": "2019-09-20T135217.560000Z",
+        "version": "2019-09-20T13:52:17.560000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -122,7 +122,7 @@
     {
         "name": "sequence_file_6.json",
         "uuid": "3dffc456-caaf-4823-9f65-fc0db7abacbc",
-        "version": "2019-09-20T134942.771000Z",
+        "version": "2019-09-20T13:49:42.771000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -134,7 +134,7 @@
     {
         "name": "sequence_file_7.json",
         "uuid": "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
-        "version": "2019-09-20T135008.492000Z",
+        "version": "2019-09-20T13:50:08.492000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -146,7 +146,7 @@
     {
         "name": "sequence_file_8.json",
         "uuid": "98ee0901-d34c-48a5-915a-0511bac325ec",
-        "version": "2019-09-20T135316.941000Z",
+        "version": "2019-09-20T13:53:16.941000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -158,7 +158,7 @@
     {
         "name": "sequence_file_9.json",
         "uuid": "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
-        "version": "2019-09-20T135035.338000Z",
+        "version": "2019-09-20T13:50:35.338000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -170,7 +170,7 @@
     {
         "name": "sequence_file_10.json",
         "uuid": "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
-        "version": "2019-09-20T135128.379000Z",
+        "version": "2019-09-20T13:51:28.379000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -182,7 +182,7 @@
     {
         "name": "sequence_file_11.json",
         "uuid": "e46af70a-0396-41db-9b74-330cb8244124",
-        "version": "2019-09-20T135219.118000Z",
+        "version": "2019-09-20T13:52:19.118000Z",
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "size": 847,
         "indexed": true,
@@ -194,7 +194,7 @@
     {
         "name": "project_0.json",
         "uuid": "116965f3-f094-4769-9d28-ae675c1b569c",
-        "version": "2019-10-03T105438.894000Z",
+        "version": "2019-10-03T10:54:38.894000Z",
         "content-type": "application/json; dcp-type=\"metadata/project\"",
         "size": 5652,
         "indexed": true,
@@ -206,7 +206,7 @@
     {
         "name": "library_preparation_protocol_0.json",
         "uuid": "2945bb1f-90de-42a3-afa1-f57a62c853f0",
-        "version": "2019-09-20T134352.078000Z",
+        "version": "2019-09-20T13:43:52.078000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 1109,
         "indexed": true,
@@ -218,7 +218,7 @@
     {
         "name": "sequencing_protocol_0.json",
         "uuid": "08b09d15-ef99-4278-9b88-65127adb51b9",
-        "version": "2019-09-20T134351.921000Z",
+        "version": "2019-09-20T13:43:51.921000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 1240,
         "indexed": true,
@@ -230,7 +230,7 @@
     {
         "name": "dissociation_protocol_0.json",
         "uuid": "eaf15851-97e3-4e4b-b81b-0e625098f4d5",
-        "version": "2019-09-20T134352.077000Z",
+        "version": "2019-09-20T13:43:52.077000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 830,
         "indexed": true,
@@ -242,7 +242,7 @@
     {
         "name": "enrichment_protocol_0.json",
         "uuid": "345bcbd2-f3a7-4f57-a806-fbb0ce4a25da",
-        "version": "2019-09-20T134352.381000Z",
+        "version": "2019-09-20T13:43:52.381000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 947,
         "indexed": true,
@@ -254,7 +254,7 @@
     {
         "name": "collection_protocol_0.json",
         "uuid": "8612862e-beb1-416b-a807-0a83fae8d168",
-        "version": "2019-09-20T134352.146000Z",
+        "version": "2019-09-20T13:43:52.146000Z",
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "size": 1384,
         "indexed": true,
@@ -266,7 +266,7 @@
     {
         "name": "process_0.json",
         "uuid": "15de6ce1-c185-4852-ade4-43614c5d048b",
-        "version": "2019-09-20T134352.606000Z",
+        "version": "2019-09-20T13:43:52.606000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 470,
         "indexed": true,
@@ -278,7 +278,7 @@
     {
         "name": "process_1.json",
         "uuid": "47ca0565-ab7d-42bd-8731-ce5d30cfd6c7",
-        "version": "2019-09-20T134352.438000Z",
+        "version": "2019-09-20T13:43:52.438000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 446,
         "indexed": true,
@@ -290,7 +290,7 @@
     {
         "name": "process_2.json",
         "uuid": "df5114c9-9f52-451b-afde-3673392fc864",
-        "version": "2019-09-20T134352.607000Z",
+        "version": "2019-09-20T13:43:52.607000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 446,
         "indexed": true,
@@ -302,7 +302,7 @@
     {
         "name": "process_3.json",
         "uuid": "c5cf9180-535a-4d1c-bdee-4f6ce7845b1e",
-        "version": "2019-09-20T134352.368000Z",
+        "version": "2019-09-20T13:43:52.368000Z",
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "size": 446,
         "indexed": true,
@@ -314,7 +314,7 @@
     {
         "name": "links.json",
         "uuid": "3bdcee29-2225-4033-95e1-8330208629e9",
-        "version": "2019-09-24T093506.958773Z",
+        "version": "2019-09-24T09:35:06.958773Z",
         "content-type": "application/json; dcp-type=\"metadata/links\"",
         "size": 3451,
         "indexed": true,
@@ -326,7 +326,7 @@
     {
         "name": "IDC9_L001_I1.fastq.gz",
         "uuid": "08bc2234-5157-4f5c-b348-5d63cc9f14e1",
-        "version": "2019-09-24T093507.310307Z",
+        "version": "2019-09-24T09:35:07.310307Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 445530013,
         "indexed": false,
@@ -338,7 +338,7 @@
     {
         "name": "IDC9_L001_R1.fastq.gz",
         "uuid": "c4288821-5775-4163-9543-5d29f847b03b",
-        "version": "2019-09-24T093507.508582Z",
+        "version": "2019-09-24T09:35:07.508582Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 1324910829,
         "indexed": false,
@@ -350,7 +350,7 @@
     {
         "name": "IDC9_L001_R2.fastq.gz",
         "uuid": "1b9d4386-97ac-402d-a93d-40740b2c3c28",
-        "version": "2019-09-24T093507.677792Z",
+        "version": "2019-09-24T09:35:07.677792Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 4274107018,
         "indexed": false,
@@ -362,7 +362,7 @@
     {
         "name": "IDC9_L002_I1.fastq.gz",
         "uuid": "ed7405bd-c1d0-4501-9a7a-7e953d887322",
-        "version": "2019-09-24T093507.845958Z",
+        "version": "2019-09-24T09:35:07.845958Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 432714077,
         "indexed": false,
@@ -374,7 +374,7 @@
     {
         "name": "IDC9_L002_R1.fastq.gz",
         "uuid": "292b2faf-0db3-4ba1-a6a5-cb7bdfa9313d",
-        "version": "2019-09-24T093508.057668Z",
+        "version": "2019-09-24T09:35:08.057668Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 1297795360,
         "indexed": false,
@@ -386,7 +386,7 @@
     {
         "name": "IDC9_L002_R2.fastq.gz",
         "uuid": "ea44789f-43b3-4684-b515-800605394177",
-        "version": "2019-09-24T093508.227847Z",
+        "version": "2019-09-24T09:35:08.227847Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 4151699736,
         "indexed": false,
@@ -398,7 +398,7 @@
     {
         "name": "IDC9_L003_I1.fastq.gz",
         "uuid": "dd7d84d2-c515-489f-9ead-3f7df2c66848",
-        "version": "2019-09-24T093508.401689Z",
+        "version": "2019-09-24T09:35:08.401689Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 442526139,
         "indexed": false,
@@ -410,7 +410,7 @@
     {
         "name": "IDC9_L003_R1.fastq.gz",
         "uuid": "87fb0ccd-07d9-4dde-bbb0-c61338e3127b",
-        "version": "2019-09-24T093508.661156Z",
+        "version": "2019-09-24T09:35:08.661156Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 1323109644,
         "indexed": false,
@@ -422,7 +422,7 @@
     {
         "name": "IDC9_L003_R2.fastq.gz",
         "uuid": "c4613a58-8bfb-43c6-8901-35d579631859",
-        "version": "2019-09-24T093508.872601Z",
+        "version": "2019-09-24T09:35:08.872601Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 4278033574,
         "indexed": false,
@@ -434,7 +434,7 @@
     {
         "name": "IDC9_L004_I1.fastq.gz",
         "uuid": "f0011946-dbea-4f87-9858-5e3fd32a9829",
-        "version": "2019-09-24T093509.072703Z",
+        "version": "2019-09-24T09:35:09.072703Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 439983276,
         "indexed": false,
@@ -446,7 +446,7 @@
     {
         "name": "IDC9_L004_R1.fastq.gz",
         "uuid": "1abc51fb-6b3a-45e9-8691-fc250b4e0509",
-        "version": "2019-09-24T093509.245235Z",
+        "version": "2019-09-24T09:35:09.245235Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 1325811624,
         "indexed": false,
@@ -458,7 +458,7 @@
     {
         "name": "IDC9_L004_R2.fastq.gz",
         "uuid": "ae5d1035-8f2b-4355-a0ef-bbb99958b303",
-        "version": "2019-09-24T093509.407370Z",
+        "version": "2019-09-24T09:35:09.407370Z",
         "content-type": "application/gzip; dcp-type=data",
         "size": 4218464933,
         "indexed": false,

@@ -49,14 +49,14 @@ from azul.logging import (
     configure_script_logging,
 )
 from azul.plugins.repository import (
-    tdr,
+    tdr_hca,
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
     DSSSourceRef,
 )
-from azul.plugins.repository.tdr import (
-    TDRBundle,
+from azul.plugins.repository.tdr_hca import (
+    TDRHCABundle,
     TDRSourceRef,
 )
 from azul.terra import (
@@ -104,7 +104,7 @@ def find_manifest_entry(bundle: Bundle, entity_id: EntityID) -> MutableJSON:
 
 def convert_version(version: str) -> str:
     dt = datetime.strptime(version, dss.version_format).replace(tzinfo=timezone.utc)
-    return tdr.Plugin.format_version(dt)
+    return tdr_hca.Plugin.format_version(dt)
 
 
 def content_length(content: JSON) -> int:
@@ -131,7 +131,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
         return f'drs://{netloc}/{drs_path}'
 
 
-def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
+def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRHCABundle:
     metadata = copy_json(bundle.metadata_files)
 
     # Order entities by UUID for consistency with Plugin output.
@@ -196,16 +196,16 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
     # links.json has no FQID of its own in TDR since its FQID is used
     # for the entire bundle.
     links_entry['uuid'] = bundle.uuid
-    return TDRBundle(fqid=SourcedBundleFQID(source=source,
-                                            uuid=links_entry['uuid'],
-                                            version=links_entry['version']),
-                     manifest=manifest,
-                     metadata_files=metadata)
+    return TDRHCABundle(fqid=SourcedBundleFQID(source=source,
+                                               uuid=links_entry['uuid'],
+                                               version=links_entry['version']),
+                        manifest=manifest,
+                        metadata_files=metadata)
 
 
 class Entity:
 
-    def __init__(self, bundle: TDRBundle, file_name: str):
+    def __init__(self, bundle: TDRHCABundle, file_name: str):
         self.concrete_type = find_concrete_type(bundle, file_name)
         self.manifest_entry = one(e for e in bundle.manifest if e['name'] == file_name)
         self.metadata = bundle.metadata_files[file_name]
@@ -220,7 +220,7 @@ class Entity:
 
 class Links(Entity):
 
-    def __init__(self, bundle: TDRBundle, file_name: str):
+    def __init__(self, bundle: TDRHCABundle, file_name: str):
         assert file_name == 'links.json'
         super().__init__(bundle, file_name),
         self.project_id = bundle.metadata_files['project_0.json']['provenance']['document_id']
@@ -232,7 +232,7 @@ class Links(Entity):
 
 class File(Entity):
 
-    def __init__(self, bundle: TDRBundle, file_name: str):
+    def __init__(self, bundle: TDRHCABundle, file_name: str):
         super().__init__(bundle, file_name)
         assert self.concrete_type.endswith('_file')
         self.file_manifest_entry = one(e for e in bundle.manifest
@@ -243,7 +243,7 @@ class File(Entity):
     def to_json_row(self) -> JSON:
         return dict(super().to_json_row(),
                     file_id=drs_uri(self.file_manifest_entry['drs_path']),
-                    descriptor=dict(tdr.Checksums.from_json(self.file_manifest_entry).to_json(),
+                    descriptor=dict(tdr_hca.Checksums.from_json(self.file_manifest_entry).to_json(),
                                     file_name=self.file_manifest_entry['name'],
                                     file_version=self.file_manifest_entry['version'],
                                     file_id=self.file_manifest_entry['uuid'],
@@ -251,7 +251,7 @@ class File(Entity):
                                     size=self.file_manifest_entry['size']))
 
 
-def dump_tables(bundle: TDRBundle) -> MutableJSON:
+def dump_tables(bundle: TDRHCABundle) -> MutableJSON:
     tables = defaultdict(list)
     for file_name in bundle.metadata_files:
         if file_name == 'links.json':
@@ -272,7 +272,7 @@ def dump_tables(bundle: TDRBundle) -> MutableJSON:
     }
 
 
-def add_supp_files(bundle: TDRBundle,
+def add_supp_files(bundle: TDRHCABundle,
                    *,
                    num_files: int,
                    version: str
