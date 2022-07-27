@@ -234,4 +234,7 @@ def env() -> Mapping[str, Optional[str]]:
         'GOOGLE_PROJECT': 'platform-hca-dev',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
+
+        'azul_cloudtrail_bucket_region': 'us-west-2',
+        'azul_cloudtrail_trail_region': 'us-west-2',
     }

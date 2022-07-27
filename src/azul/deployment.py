@@ -27,6 +27,9 @@ from unittest.mock import (
 import boto3
 import botocore.credentials
 import botocore.session
+from more_itertools import (
+    one,
+)
 
 from azul import (
     Netloc,
@@ -133,6 +136,10 @@ class AWS:
     def account(self):
         # See also `make check_aws`
         return config.aws_account_id
+
+    @property
+    def account_name(self):
+        return one(self.iam.list_account_aliases()['AccountAliases'])
 
     @property
     def es(self):
