@@ -1,13 +1,8 @@
 from collections.abc import (
     Mapping,
-    Sequence,
 )
 from importlib.abc import (
     Loader,
-    MetaPathFinder,
-)
-from importlib.machinery import (
-    ModuleSpec,
 )
 import importlib.util
 from itertools import (
@@ -16,11 +11,7 @@ from itertools import (
 import os
 import pathlib
 import sys
-from types import (
-    ModuleType,
-)
 from typing import (
-    Optional,
     TypeVar,
 )
 
@@ -182,55 +173,6 @@ def _parse(env: str) -> dict[str, str]:
     return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
 
 
-class SanitizingFinder(MetaPathFinder):
-
-    def __init__(self) -> None:
-        super().__init__()
-        assert __name__ == 'sitecustomize'
-        sitecustomize_py = Path(__file__)
-        assert sitecustomize_py.is_symlink()
-        envhook_py = sitecustomize_py.follow()
-        self.bad_path = str(envhook_py.parent.parent / 'src' / 'azul')
-
-    def find_spec(self,
-                  fullname: str,
-                  path: Optional[Sequence[str]],
-                  target: Optional[ModuleType] = None
-                  ) -> Optional[ModuleSpec]:
-        sys_path = sys.path
-        while True:
-            try:
-                index = sys_path.index(self.bad_path)
-            except ValueError:
-                return None
-            else:
-                _print(f"Sanitizing sys.path by removing entry {index} containing '{self.bad_path}'.")
-                del sys_path[index]
-
-
-def sanitize_sys_path():
-    """
-    Certain PyCharm support scripts like docrunner.py add the directory
-    containing a module to `sys.path`, presumably with the intent to emulate
-    Python behavior for scripts run from the command line:
-
-    https://docs.python.org/3.9/using/cmdline.html#cmdoption-c
-
-    This has negative consequences when the module resides in the `src/azul`
-    directory of this project because that directory also contains modules
-    whose name conflicts with that of important built-in or third-party
-    packages, `json.py` for example. This project relies on the fully-qualified
-    package path of those modules to disambiguate them from the built-in ones
-    but placing their containing parent directory on `sys.path` defeats that.
-
-    This method attempts to counteract that by removing the directory again.
-    """
-    # Can't remove the entry immediately because it might not yet be present.
-    # Instead, install a hook into the import machinery so it will be removed
-    # soon after is added.
-    sys.meta_path.insert(0, SanitizingFinder())
-
-
 def share_aws_cli_credential_cache():
     """
     By default, boto3 and botocore do not use a cache for the assume-role
@@ -360,6 +302,5 @@ elif __name__ == 'sitecustomize':
     if int(os.environ.get('ENVHOOK', '1')) == 0:
         _print('Currently disabled because the ENVHOOK environment variable is set to 0.')
     else:
-        sanitize_sys_path()
         setenv()
         share_aws_cli_credential_cache()
