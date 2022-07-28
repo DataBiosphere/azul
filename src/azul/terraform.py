@@ -224,7 +224,7 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     >>> from azul.doctests import assert_json
     >>> assert_json(_tags('service'))  #doctest: +ELLIPSIS
     {
-        "project": "dcp",
+        "billing": "...",
         "service": "azul",
         "deployment": "...",
         "owner": ...,
@@ -233,9 +233,9 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     }
 
     >>> from azul.doctests import assert_json
-    >>> assert_json(_tags('service', project='foo'))  #doctest: +ELLIPSIS
+    >>> assert_json(_tags('service', billing='foo'))  #doctest: +ELLIPSIS
     {
-        "project": "foo",
+        "billing": "foo",
         "service": "azul",
         "deployment": "...",
         "owner": ...,
@@ -244,7 +244,7 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     }
     """
     return {
-        'project': 'dcp',
+        'billing': config.billing,
         'service': config.resource_prefix,
         'deployment': config.deployment_stage,
         'owner': config.owner,
