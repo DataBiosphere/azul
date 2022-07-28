@@ -130,6 +130,9 @@ def env() -> Mapping[str, Optional[str]]:
         # `secret`, `password` or `token`, either upper or lower case. Think twice
         # before publishing a variable containing a secret.
 
+        # The name of the billing accocunt that pays for this deployment.
+        'AZUL_BILLING': None,
+
         # The email address of a user that owns the cloud resources in the current
         # deployment. This will become the value of the Owner tag on all resources.
         'AZUL_OWNER': None,

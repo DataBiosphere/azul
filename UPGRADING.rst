@@ -10,6 +10,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#4122 Create AnVIL deployments of Azul and Data Browser
+=======================================================
+
+In personal deployments dedicated to AnVIL, set ``AZUL_BILLING`` to ``'anvil'``,
+set it to ``'hca'`` in all other personal deployments.
+
+
 #4224 Index ENCODE snapshot as PoC
 ==================================
 

@@ -83,6 +83,10 @@ class Config:
         return ChainMap(os.environ, self._outsourced_environ)
 
     @property
+    def billing(self):
+        return self.environ['AZUL_BILLING']
+
+    @property
     def owner(self):
         return self.environ['AZUL_OWNER']
 

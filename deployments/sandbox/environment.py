@@ -258,6 +258,8 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEBUG': '1',
 
+        'AZUL_BILLING': 'hca',
+
         # When using this file as a template for a personal deployment, change
         # `None` to a string contaiing YOUR email address.
         #
