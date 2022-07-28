@@ -627,10 +627,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
     'resource': {
         'aws_vpc': {
             'gitlab': {
-                'cidr_block': vpc_cidr,
-                'tags': {
-                    'Name': 'azul-gitlab'
-                }
+                'cidr_block': vpc_cidr
             }
         },
         'aws_subnet': {
@@ -639,20 +636,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'availability_zone': f'${{data.aws_availability_zones.available.names[{zone}]}}',
                 'cidr_block': f'${{cidrsubnet(aws_vpc.gitlab.cidr_block, 8, {vpc.subnet_number(zone, public)})}}',
                 'map_public_ip_on_launch': public,
-                'vpc_id': '${aws_vpc.gitlab.id}',
-                'tags': {
-                    'Name': f'azul-gitlab-{vpc.subnet_name(public)}-{zone}'
-                }
+                'vpc_id': '${aws_vpc.gitlab.id}'
             }
             for public in (False, True)
             for zone in range(num_zones)
         },
         'aws_internet_gateway': {
             'gitlab': {
-                'vpc_id': '${aws_vpc.gitlab.id}',
-                'tags': {
-                    'Name': 'azul-gitlab'
-                }
+                'vpc_id': '${aws_vpc.gitlab.id}'
             }
         },
         'aws_route': {
@@ -667,20 +658,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'depends_on': [
                     'aws_internet_gateway.gitlab'
                 ],
-                'vpc': True,
-                'tags': {
-                    'Name': f'azul-gitlab-{zone}'
-                }
+                'vpc': True
             }
             for zone in range(num_zones)
         },
         'aws_nat_gateway': {
             f'gitlab_{zone}': {
                 'allocation_id': f'${{aws_eip.gitlab_{zone}.id}}',
-                'subnet_id': f'${{aws_subnet.gitlab_public_{zone}.id}}',
-                'tags': {
-                    'Name': f'azul-gitlab-{zone}'
-                }
+                'subnet_id': f'${{aws_subnet.gitlab_public_{zone}.id}}'
             }
             for zone in range(num_zones)
         },
@@ -703,10 +688,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'vpc_endpoint_id': None,
                     }
                 ],
-                'vpc_id': '${aws_vpc.gitlab.id}',
-                'tags': {
-                    'Name': f'azul-gitlab-{zone}'
-                }
+                'vpc_id': '${aws_vpc.gitlab.id}'
             }
             for zone in range(num_zones)
         },
@@ -744,10 +726,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
-                ],
-                'tags': {
-                    'Name': 'azul-gitlab-vpn'
-                }
+                ]
             },
             'gitlab_alb': {
                 'name': 'azul-gitlab-alb',
@@ -776,10 +755,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
 
-                ],
-                'tags': {
-                    'Name': 'azul-gitlab-alb'
-                }
+                ]
             },
             'gitlab': {
                 'name': 'azul-gitlab',
@@ -834,10 +810,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
-                ],
-                'tags': {
-                    'Name': 'azul-gitlab'
-                }
+                ]
             }
         },
         'aws_s3_bucket': {
@@ -912,9 +885,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'connection_log_options': {
                     'enabled': True,
                     'cloudwatch_log_group': '${aws_cloudwatch_log_group.gitlab_vpn.name}'
-                },
-                'tags': {
-                    'Name': 'azul-gitlab'
                 }
             }
         },
@@ -940,10 +910,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'internal': 'true',
                 'subnets': [
                     f'${{aws_subnet.gitlab_public_{zone}.id}}' for zone in range(num_zones)
-                ],
-                'tags': {
-                    'Name': 'azul-gitlab'
-                }
+                ]
             },
             # Add an ALB for the same reason and for terminating TLS
             'gitlab_alb': {
@@ -960,9 +927,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'bucket': '${aws_s3_bucket.gitlab_logs.id}',
                     'prefix': logs_path_prefix,
                     'enabled': True
-                },
-                'tags': {
-                    'Name': 'azul-gitlab'
                 }
             }
         },
@@ -1029,9 +993,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'timeout': 5,
                     'interval': 30,
                     'matcher': '302'
-                },
-                'tags': {
-                    'Name': 'azul-gitlab-http'
                 }
             }
         },
@@ -1055,9 +1016,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'domain_name': '${aws_route53_record.gitlab.name}',
                 'subject_alternative_names': ['${aws_route53_record.gitlab_docker.name}'],
                 'validation_method': 'DNS',
-                'tags': {
-                    'Name': 'azul-gitlab'
-                },
                 'lifecycle': {
                     'create_before_destroy': True
                 }
@@ -1113,10 +1071,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'subnet_id': '${aws_subnet.gitlab_private_0.id}',
                 'security_groups': [
                     '${aws_security_group.gitlab.id}'
-                ],
-                'tags': {
-                    'Name': 'azul-gitlab'
-                }
+                ]
             }
         },
         'aws_volume_attachment': {
@@ -1326,7 +1281,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                gitlab/gitlab-runner:v15.2.1
                     '''[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 'tags': {
-                    'Name': 'azul-gitlab',
                     'Owner': config.owner
                 }
             }

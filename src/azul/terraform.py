@@ -243,13 +243,24 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
         "component": "azul-service"
     }
     """
+    component = f'{config.resource_prefix}-{resource_name}'
     return {
         'billing': config.billing,
         'service': config.resource_prefix,
         'deployment': config.deployment_stage,
         'owner': config.owner,
-        'name': config.qualified_resource_name(resource_name),
-        'component': f'{config.resource_prefix}-{resource_name}',
+        **(
+            {
+                'name': component,
+                'component': component,
+                'terraform_component': config.terraform_component
+            }
+            if config.terraform_component else
+            {
+                'name': config.qualified_resource_name(resource_name),
+                'component': component
+            }
+        ),
         **overrides
     }
 
