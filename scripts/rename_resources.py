@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import subprocess
 import sys
 
@@ -19,26 +18,25 @@ log = logging.getLogger(__name__)
 renamed = {
     'aws_cloudwatch_log_metric_filter.azul-service-5xx': 'aws_cloudwatch_log_metric_filter.service_5xx',
     'aws_cloudwatch_log_metric_filter.azul-indexer-5xx': 'aws_cloudwatch_log_metric_filter.indexer_5xx',
+    'aws_s3_bucket.cloudtrail_shared': 'aws_s3_bucket.shared_cloudtrail',
+    'aws_s3_bucket_policy.cloudtrail_shared': 'aws_s3_bucket_policy.shared_cloudtrail'
 }
 
 
 def chalice_renamed():
     for lambda_name in ('indexer', 'service'):
         tf_config_path = chalice.package_dir(lambda_name) / chalice.tf_config_name
-        with open(tf_config_path) as f:
-            tf_config_path = json.load(f)
-            mapping = chalice.resource_name_mapping(tf_config_path)
-            for (resource_type, name), new_name in mapping.items():
-                prefix = f'module.chalice_{lambda_name}.{resource_type}.'
-                yield prefix + name, prefix + new_name
-
-
-renamed.update(dict(chalice_renamed()))
+        if not config.terraform_component:
+            with open(tf_config_path) as f:
+                tf_config_path = json.load(f)
+                mapping = chalice.resource_name_mapping(tf_config_path)
+                for (resource_type, name), new_name in mapping.items():
+                    prefix = f'module.chalice_{lambda_name}.{resource_type}.'
+                    yield prefix + name, prefix + new_name
 
 
 def terraform_state(command: str, *args: str) -> bytes:
     proc = subprocess.run(['terraform', 'state', command, *args],
-                          cwd=os.path.join(config.project_root, 'terraform'),
                           check=False,
                           capture_output=True,
                           shell=False)
@@ -57,6 +55,7 @@ def terraform_state(command: str, *args: str) -> bytes:
 
 
 def main():
+    renamed.update(dict(chalice_renamed()))
     current_names = terraform_state('list').decode().splitlines()
     for current_name in current_names:
         try:

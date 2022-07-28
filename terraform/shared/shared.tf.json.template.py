@@ -14,15 +14,15 @@ from azul.terraform import (
 emit_tf({
     'resource': {
         'aws_s3_bucket': {
-            'cloudtrail_shared': {
+            'shared_cloudtrail': {
                 **provider_fragment(config.cloudtrail_s3_bucket_region),
                 'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail'
             }
         },
         'aws_s3_bucket_policy': {
-            'cloudtrail_shared': {
+            'shared_cloudtrail': {
                 **provider_fragment(config.cloudtrail_s3_bucket_region),
-                'bucket': '${aws_s3_bucket.cloudtrail_shared.id}',
+                'bucket': '${aws_s3_bucket.shared_cloudtrail.id}',
                 'policy': json.dumps({
                     'Version': '2012-10-17',
                     'Statement': [
@@ -32,7 +32,7 @@ emit_tf({
                                 'Service': 'cloudtrail.amazonaws.com'
                             },
                             'Action': 's3:GetBucketAcl',
-                            'Resource': '${aws_s3_bucket.cloudtrail_shared.arn}'
+                            'Resource': '${aws_s3_bucket.shared_cloudtrail.arn}'
                         },
                         {
                             'Effect': 'Allow',
@@ -40,7 +40,7 @@ emit_tf({
                                 'Service': 'cloudtrail.amazonaws.com'
                             },
                             'Action': 's3:PutObject',
-                            'Resource': '${aws_s3_bucket.cloudtrail_shared.arn}/AWSLogs/'
+                            'Resource': '${aws_s3_bucket.shared_cloudtrail.arn}/AWSLogs/'
                                         f'{config.aws_account_id}/*',
                             'Condition': {
                                 'StringEquals': {
@@ -56,7 +56,7 @@ emit_tf({
             'shared': {
                 **provider_fragment(config.cloudtrail_trail_region),
                 'name': 'azul-shared',
-                's3_bucket_name': '${aws_s3_bucket.cloudtrail_shared.id}',
+                's3_bucket_name': '${aws_s3_bucket.shared_cloudtrail.id}',
                 'enable_log_file_validation': True,
                 'is_multi_region_trail': True
             }
