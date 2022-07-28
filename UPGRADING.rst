@@ -17,6 +17,9 @@ have too many entries in this file.
 In personal deployments dedicated to AnVIL, set ``AZUL_BILLING`` to ``'anvil'``,
 set it to ``'hca'`` in all other personal deployments.
 
+Operator: Redeploy ``gitlab.dev`, ``shared.dev``, ``gitlab.prod`, and
+``shared.prod`` components to apply the changes to resource tags.
+
 
 #4224 Index ENCODE snapshot as PoC
 ==================================
