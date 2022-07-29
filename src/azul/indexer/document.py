@@ -828,13 +828,6 @@ class Document(Generic[C]):
                    coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None) -> 'Document':
         if coordinates is None:
             coordinates = DocumentCoordinates.from_hit(hit)
-        if 'contents' in hit['_source']:
-            file: JSON
-            content_descriptions = [
-                file['content_description']
-                for file in hit['_source']['contents']['files']
-            ]
-            assert [] not in content_descriptions, 'Found empty list as content_description value'
         document = cls.translate_fields(hit['_source'],
                                         field_types[coordinates.entity.catalog],
                                         forward=False)
