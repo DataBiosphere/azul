@@ -16,7 +16,10 @@ emit_tf({
         'aws_s3_bucket': {
             'shared_cloudtrail': {
                 **provider_fragment(config.cloudtrail_s3_bucket_region),
-                'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail'
+                'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail',
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
             },
             'versioned': {
                 'bucket': config.versioned_bucket,
