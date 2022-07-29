@@ -20,6 +20,9 @@ Everyone
 In personal deployments dedicated to AnVIL, set ``AZUL_BILLING`` to ``'anvil'``,
 set it to ``'hca'`` in all other personal deployments.
 
+In personal deployments, set ``AZUL_VERSIONED_BUCKET`` to the same value as in
+the ``sandbox`` deployment.
+
 Operator
 ~~~~~~~~
 
