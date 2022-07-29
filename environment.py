@@ -361,7 +361,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The name of the S3 bucket where the manifest API stores the downloadable
         # content requested by client.
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-singlecell-azul-storage-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_S3_BUCKET': None,
 
         # Name of the Route 53 zone to be used for shortened URLs.
         #
