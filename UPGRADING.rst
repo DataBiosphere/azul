@@ -23,6 +23,9 @@ set it to ``'hca'`` in all other personal deployments.
 In personal deployments, set ``AZUL_VERSIONED_BUCKET`` and ``AZUL_S3_BUCKET`` to
 the same value as in the ``sandbox`` deployment.
 
+In personal deployments, remove ``AZUL_URL_REDIRECT_FULL_DOMAIN_NAME`` if its
+value is (``'{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}'``.
+
 Operator
 ~~~~~~~~
 
