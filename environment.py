@@ -225,13 +225,14 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS': None,
 
         # The domain name of the HCA DRS endpoint. The service lambda serves
-        # requests under both its canonical domain name as well as the domain name
-        # given here. It is assumed that the parent domain of the given domain is
-        # a hosted zone in Route 53 that we can create additional certificate
-        # validation records in. If unset or set to empty string, the service lambda
-        # will only serve requests under its canonical domain name and no validation
-        # records will be created in hosted zones other than the zone defined by
-        # AZUL_DOMAIN_NAME.
+        # requests under both its canonical domain name as well as the domain
+        # name given here. It is assumed that the parent domain of the given
+        # domain is a hosted zone in Route 53 that we can create additional
+        # certificate validation records in. If unset or set to empty string,
+        # the service lambda will only serve requests under its canonical domain
+        # name and no validation records will be created in hosted zones other
+        # than the zone defined by AZUL_DOMAIN_NAME.
+        #
         'AZUL_DRS_DOMAIN_NAME': '',
 
         # A template for the name of the Route 53 record set in the hosted zone
@@ -362,13 +363,15 @@ def env() -> Mapping[str, Optional[str]]:
         # content requested by client.
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-singlecell-azul-storage-{AZUL_DEPLOYMENT_STAGE}',
 
-        # Name of the Route 53 zone used for shortened URLs.
+        # Name of the Route 53 zone to be used for shortened URLs.
+        #
         # This hosted zone will have to be created manually prior to running
-        # `make deploy`. Personal deployments typically share a zone with the
-        # `dev` deployment.
-        # If this variable is empty, a route 53 record will not be created and it
-        # is assumed that the record and zone have been created manually.  This is
-        # the case for staging, integration, and prod environments.
+        # `make deploy` in any deployment. Personal deployments typically share
+        # a zone with the `dev` deployment.
+        #
+        # If this variable is empty, no Route 53 record will be created and it
+        # is assumed that record and containing zone have been created manually.
+        #
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'url.singlecell.gi.ucsc.edu',
 
         # Full domain name to be used in the URL redirection URLs
