@@ -210,6 +210,14 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
+        # This deployment uses a subdomain of the `dev` deployment's domain.
+        #
+        'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
+        'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
+        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
+        'AZUL_DRS_DOMAIN_NAME': 'drs.{AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu',
+
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
                                        internal=internal,
@@ -230,16 +238,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
-
-        # This deployment uses a subdomain of the `dev` deployment's domain.
-        #
-        'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
-        'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
-
-        'AZUL_DRS_DOMAIN_NAME': 'drs.{AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu',
-
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
         **(
             {
