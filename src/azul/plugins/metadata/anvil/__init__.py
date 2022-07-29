@@ -58,6 +58,8 @@ class Plugin(MetadataPlugin):
 
     @property
     def manifest_formats(self) -> Sequence[ManifestFormat]:
+        # FIXME: Add support for compact manifest for AnVIL
+        #        https://github.com/DataBiosphere/azul/issues/4349
         return [ManifestFormat.terra_pfb]
 
     def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
