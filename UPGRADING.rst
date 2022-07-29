@@ -31,6 +31,8 @@ Run ::
     terraform import aws_s3_bucket.versioned $AZUL_VERSIONED_BUCKET
     terraform import aws_s3_bucket_versioning.versioned $AZUL_VERSIONED_BUCKET
     terraform import aws_s3_bucket_lifecycle_configuration.versioned $AZUL_VERSIONED_BUCKET
+    terraform import aws_api_gateway_account.shared api-gateway-account
+    terraform import aws_iam_role.api_gateway azul-api_gateway
 
 Repeat for ``shared.prod``.
 
