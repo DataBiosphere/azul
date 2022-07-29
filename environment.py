@@ -372,7 +372,7 @@ def env() -> Mapping[str, Optional[str]]:
         # If this variable is empty, no Route 53 record will be created and it
         # is assumed that record and containing zone have been created manually.
         #
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'url.singlecell.gi.ucsc.edu',
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': None,
 
         # Full domain name to be used in the URL redirection URLs
         # This is also used as the name of the S3 bucket used to store URL
