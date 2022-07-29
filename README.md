@@ -454,18 +454,27 @@ inversely, name the bucket using the current value of that variable.
 
 ### 3.1.2 Route 53 hosted zones
 
+Azul uses Route 53 to provide user-friendly domain names for its services. The 
+DNS setup for Azul deployments has historically been varied and rather 
+protracted. Azul's infrastrcture code will typically manage Route 53 records 
+but the zones have to be created manually.  
+
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
 deployments can share a hosted zone, but they don't have to. The name of the
 hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will
 automatically provision record sets in the configured zone, but it will not
 create the zone itself or register the  domain name it is associated with.
 
-Optionally create another hosted zone for the URL shortener. The URLs produced
+Optionally, create another hosted zone for the URL shortener. The URLs produced
 by the Azul service's URL shortening endpoint will refer to this zone. The name
 of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be
 supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and
 `AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a
 subdomain of the main Azul zone, but it doesn't have to be.
+
+Optionally, create a hosted zone for the DRS domain alias of the Azul service. 
+The corresponding environment variable is `AZUL_DRS_DOMAIN_NAME`. This feature 
+has not been used since 2020 when Azul stopped offering DRS for HCA.
 
 The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
