@@ -303,7 +303,7 @@ def env() -> Mapping[str, Optional[str]]:
         # include the region name at then end of the bucket name. That way you
         # can have consistent bucket names across regions.
         #
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
+        'AZUL_VERSIONED_BUCKET': None,
 
         # The number of workers pulling files from the DSS repository.
         # There is one such set of repository workers per index worker.
