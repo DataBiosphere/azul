@@ -202,7 +202,7 @@ def env() -> Mapping[str, Optional[str]]:
         # created manually prior to running `make deploy`. The value is typically
         # not deployment specific. A subdomain will automatically be created for
         # each deployment.
-        'AZUL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu',
+        'AZUL_DOMAIN_NAME': None,
 
         # An optional list of roles in other AWS accounts that can assume the IAM
         # role normally assumed by lambda functions in the active Azul deployment.
