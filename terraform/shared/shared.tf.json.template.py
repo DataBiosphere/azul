@@ -92,6 +92,54 @@ emit_tf({
                 'enable_log_file_validation': True,
                 'is_multi_region_trail': True
             }
+        },
+        'aws_iam_role': {
+            'api_gateway': {
+                'name': 'azul-api_gateway',
+                'assume_role_policy': json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'apigateway.amazonaws.com'
+                                },
+                                'Action': 'sts:AssumeRole'
+                            }
+                        ]
+                    }
+                )
+            }
+        },
+        'aws_iam_role_policy': {
+            'api_gateway': {
+                'name': 'azul-api_gateway',
+                'role': '${aws_iam_role.api_gateway.id}',
+                'policy': json.dumps({
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:DescribeLogGroups",
+                                "logs:DescribeLogStreams",
+                                "logs:PutLogEvents",
+                                "logs:GetLogEvents",
+                                "logs:FilterLogEvents"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                })
+            }
+        },
+        'aws_api_gateway_account': {
+            'shared': {
+                'cloudwatch_role_arn': '${aws_iam_role.api_gateway.arn}'
+            }
         }
     }
 })

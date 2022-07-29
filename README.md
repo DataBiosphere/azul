@@ -452,42 +452,7 @@ deployment to be created in the AWS account owning the bucket(typically `dev`
 or `prod`) to set `AZUL_VERSIONED_BUCKET` to the name of the bucket. Or,
 inversely, name the bucket using the current value of that variable.
 
-### 3.1.2 API Gateway logs
-
-To enable CloudWatch logs for API Gateway, an IAM role must be created and
-configured in the API Gateway console. This must be done for each AWS account
-and region, after at least one Azul deployment has been created in that account
-and region. Once these steps have been completed, all API Gateway instances in a
-region assume the resulting IAM role, allowing those instances to write to
-CloudWatch Logs in that region.
-
-1. Navigate to the *IAM Management Console*
-
-2. Click *Roles* under *Access management*
-
-3. Click *Create role*
-
-4. Click *AWS service* for *Select type of trusted entity*
-
-5. Click *API Gateway* for *Choose a use case*, click *Next: Permissions*
-
-6. Ensure *AmazonAPIGatewayPushToCloudWatchLogs* is listed exclusively as the
-policy and click *Next: Tags*
-
-7. Add *name: azul-api_gateway* as a tag and click *Next: Review*
-
-8. For *Role name* enter `azul-api_gateway`, ensure *Policies* are as prescribed
-in step 6 and click *Create role*
-
-9. Copy the *Role ARN* for the newly created `azul-api_gateway` role
-and go to the *API Gateway* console
-
-10. Select any available API Gateway resource (it doesn't matter which because
-this is a region wide configuration) e.g. `azul-{lambda}-{stage}`, click on
-*Settings* at the bottom of the left menu, paste the copied *Role ARN* into the
-*CloudWatch log role ARN* and click *Save*
-
-### 3.1.3 Route 53 hosted zones
+### 3.1.2 Route 53 hosted zones
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
 deployments can share a hosted zone, but they don't have to. The name of the
@@ -506,7 +471,7 @@ The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
 [src/azul/deployment.py:tags](src/azul/deployment.py).
 
-### 3.1.4 Shared resources managed by Terraform
+### 3.1.3 Shared resources managed by Terraform
 
 The remaining resources for each of the AWS accounts hosting Azul deployments
 are provisioned through Terraform. The corresponding resource definitions reside
@@ -546,13 +511,13 @@ make
 The invocation of `terraform import` puts the bucket we created 
 [earlier](#311-versioned-bucket-for-shared-state) under management by Terraform.
 
-### 3.1.5 EBS volume for Gitlab
+### 3.1.4 EBS volume for Gitlab
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details.
 
-### 3.1.6 Certificate authority for VPN access to Gitlab
+### 3.1.5 Certificate authority for VPN access to Gitlab
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments,
 a certificate authority must be set up. See the
@@ -1692,7 +1657,7 @@ one for `prod`.
 
 The GitLab instances are provisioned through the `gitlab` *Terraform component*.
 For more information about *Terraform components*, refer the [section on shared 
-resources managed by Terraform](#314-shared-resources-managed-by-terraform). 
+resources managed by Terraform](#313-shared-resources-managed-by-terraform). 
 Within the `gitlab` component, the `dev.gitlab` child component provides a 
 single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but 
 for `integration` and `staging` as well. The `prod.gitlab` child component 
