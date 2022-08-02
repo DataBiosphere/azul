@@ -80,11 +80,6 @@ def main(argv):
                         action='store_true',
                         help='Print the deployment matching the current branch or exit '
                              'with non-zero status code if no such deployment exists.')
-    parser.add_argument('--personal',
-                        default=False,
-                        action='store_true',
-                        help='Exit with non-zero status code if current deployment is a '
-                             'main deployment.')
     args = parser.parse_args(argv)
     if args.print:
         branch = gitlab_branch() or local_branch()
@@ -101,9 +96,6 @@ def main(argv):
                 raise RuntimeError(f'Only the GitLab runner should deploy to {stages!r}')
             branch = local_branch()
         check_branch(branch, stages)
-    if args.personal:
-        if config.deployment_stage in config.main_branches_by_deployment.values():
-            raise RuntimeError(f'Selected deployment {stages!r} is not a personal deployment.')
 
 
 if __name__ == '__main__':

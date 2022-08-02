@@ -78,10 +78,6 @@ check_aws: check_python
 check_branch: check_python
 	python $(project_root)/scripts/check_branch.py
 
-.PHONY: check_branch_personal
-check_branch_personal: check_python
-	python $(project_root)/scripts/check_branch.py --personal
-
 %.json: %.json.template.py check_python .FORCE
 	python $< $@
 .FORCE:
