@@ -726,16 +726,20 @@ class Config:
     def private_api(self) -> bool:
         return self._boolean(self.environ['AZUL_PRIVATE_API'])
 
-    main_deployments_by_branch: Mapping[str, Sequence[str]] = freeze({
-        'develop': ['dev'],
-        'prod': ['prod']
-    })
+    @property
+    def main_deployments_by_branch(self) -> Mapping[str, Sequence[str]]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        return freeze(json.loads(self.environ['azul_main_deployments']))
 
-    main_branches_by_deployment: Mapping[str, str] = freeze({
-        deployment: branch
-        for branch, deployments in main_deployments_by_branch.items()
-        for deployment in deployments
-    })
+    @property
+    def main_branches_by_deployment(self) -> Mapping[str, str]:
+        return freeze({
+            deployment: branch
+            for branch, deployments in self.main_deployments_by_branch.items()
+            for deployment in deployments
+        })
 
     def is_main_deployment(self, stage: str = None) -> bool:
         if stage is None:

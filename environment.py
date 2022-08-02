@@ -481,4 +481,13 @@ def env() -> Mapping[str, Optional[str]]:
         # The provider region used by the CloudTrail trail.
         'azul_cloudtrail_trail_region': '{AWS_DEFAULT_REGION}',
 
+        # Maps a branch name to a list of names of deployments the branch may be
+        # deployed to. When building a given branch, a GitLab instance uses this
+        # variable to automatically determine the target deployment by using the
+        # first item of the value for that branch.
+        #
+        'azul_main_deployments': json.dumps({
+            'develop': ['dev'],
+            'prod': ['prod']
+        }),
     }

@@ -89,7 +89,8 @@ def setenv():
     redact = getattr(export_environment, 'redact')
     resolve_env = getattr(export_environment, 'resolve_env')
     load_env = getattr(export_environment, 'load_env')
-    new = resolve_env(load_env())
+    new, _ = load_env()
+    new = resolve_env(new)
     old = os.environ
     pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
 
