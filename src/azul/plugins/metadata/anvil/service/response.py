@@ -88,6 +88,9 @@ class AnvilSearchResponseStage(SearchResponseStage):
         )
 
     def _make_terms(self, agg: JSON) -> JSON:
+        # FIXME: much of this is duplicated from
+        #        azul.plugins.metadata.hca.service.response.SearchResponseFactory
+        #        https://github.com/DataBiosphere/azul/issues/4135
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
