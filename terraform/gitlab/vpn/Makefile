@@ -22,7 +22,7 @@ _admin: check_env
 
 .PHONY: init
 init: _client
-	$(easyrsa) init-pki --batch
+	$(easyrsa) init-pki
 
 .PHONY: request
 request: _client
