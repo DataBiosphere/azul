@@ -452,6 +452,10 @@ deployment to be created in the AWS account owning the bucket(typically `dev`
 or `prod`) to set `AZUL_VERSIONED_BUCKET` to the name of the bucket. Or,
 inversely, name the bucket using the current value of that variable.
 
+```
+aws s3api create-bucket --bucket $AZUL_VERSIONED_BUCKET
+```
+
 ### 3.1.2 Route 53 hosted zones
 
 Azul uses Route 53 to provide user-friendly domain names for its services. The 
@@ -520,17 +524,27 @@ make
 The invocation of `terraform import` puts the bucket we created 
 [earlier](#311-versioned-bucket-for-shared-state) under management by Terraform.
 
-### 3.1.4 EBS volume for Gitlab
+### 3.1.4 GitLab
 
-If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
-EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
-[section on CI/CD](#9-continuous-deployment-and-integration) and for details.
+A self-hosted GitLab instance is provided by the `gitlab` TerraForm component. 
+It provides the necessary CI/CD infrastructure for one or more Azul deployments 
+and protects access to that infrastructure through a VPN. That same VPN is also
+used to access to Azul deployments with private APIs (see AZUL_PRIVATE_API in 
+[environment.py]). Like the `shared` component, the `gitlab` component belongs 
+to one main deployment in an AWS account (typically `dev` or `prod`) and is 
+shared by the other deployments colocated with that deployment. Unlike the 
+`shared` component, the `gitlab` component is optional.    
 
-### 3.1.5 Certificate authority for VPN access to Gitlab
+[environment.py]: /environment.py
 
-If you intend to set up a Gitlab instance for CI/CD of your Azul deployments,
-a certificate authority must be set up. See the
-[section on GitLab CA](#912-setting-up-the-certificate-authority) for details.
+The following resources must be created manually before deploying the `gitlab` 
+component:
+
+- An EBS volume needs to be created. See [gitlab.tf.json.template.py] and the
+  [section on CI/CD](#95-storage) for details.
+
+- A certificate authority must be set up for VPN access. For details refer to
+  [section on GitLab CA](#912-setting-up-the-certificate-authority).
 
 
 ## 3.2 One-time manual configuration of deployments
@@ -1960,24 +1974,41 @@ The runner is the container that performs the builds. The instance is configured
 to automatically start that container. The primary configuration for the runner
 is in `/mnt/gitlab/runner/config/config.toml`. There is one catch, on a fresh
 EBS volume that just been initialized, this file is missing, so the container
-starts but doesn't advertise itself to Gitlab. The easiest way to create the
-file is to kill the `gitlab-runner` container and the run it manually using
-the `docker run` command from the instance user data in
-[gitlab.tf.json.template.py], but replacing `--detach` with `-it` and adding
-`register` at the end of the command. You will be prompted to supply a URL and
-a token as [documented here](https://docs.gitlab.com/runner/register/). Specify
-`docker` as the runner type and `docker:18.03.1-ce` as the image. Once the
-container exits `config.toml` should have been created. Edit it and adjust the
-`volumes` setting to read
+starts but doesn't advertise any runners to Gitlab.
+
+The easiest way to create the file is to kill the `gitlab-runner` container and
+the run it manually using the `docker run` command from `/etc/rc.local`, but
+replacing `--detach` with `-it` and adding `register` at the end of the
+command. You will be prompted to supply a URL and a registration token as
+[documented here](https://docs.gitlab.com/runner/register/).
+
+Note that since version 15.0.0 of GitLab, there is no way to convert a runner
+from shared to project-specific or vice versa. If you want to register a runner
+reserved to a specific group, you must get the registration token from
+the *CI/CD* — *Runners* page of the respective group. Runners reserved to a
+project must be registered from the project's *Settings* — *CI/CD* — *Runners*
+page. Shared runners are registered via *Admin* — *Overview* — *Runners*. 
+
+Specify `docker` as the runner type and `docker:18.03.1-ce` as the image. Once
+the container exits `config.toml` should have been created. Edit it and adjust
+the `volumes` setting to read
 
 ```
 volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/etc/gitlab-runner/etc:/etc/gitlab"]
 ```
 
-Comparing `config.toml` between an existing instance and the new one doesn't
-hurt either. Finally, reboot the instance or manually start the container using
-the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should
-now show the runner.
+If you already have a GitLab instance top copy `config.toml` from, do that and
+register the runners as described above. Copy the runner tokens from the newly
+added runners at the end of config.toml to the preexisting runners. Then
+discard the newly added runners from the file. For another instance's
+`config.toml` to work on a new instance, the only piece of information that
+needs to be updated is the runner token. That's because the runner token is
+derived from the registration token which is different between the two
+instances.
+
+Finally, reboot the instance. Alternatively, manually start the container using
+the command from `/etc/rc.local` verbatim. Either way, the Gitlab UI should now
+show the runners.
 
 
 ## 9.8 The Gitlab runner image for Azul
