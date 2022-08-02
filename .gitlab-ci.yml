@@ -32,6 +32,7 @@ build_image:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
     - pip list
+    - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print || echo sandbox)
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
