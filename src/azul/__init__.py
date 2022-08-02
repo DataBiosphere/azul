@@ -728,9 +728,7 @@ class Config:
 
     main_deployments_by_branch: Mapping[str, Sequence[str]] = freeze({
         'develop': ['dev'],
-        'integration': ['integration'],
-        'staging': ['staging'],
-        'prod': ['prod', 'prod2']
+        'prod': ['prod']
     })
 
     main_branches_by_deployment: Mapping[str, str] = freeze({
@@ -747,7 +745,7 @@ class Config:
     def is_stable_deployment(self, stage=None) -> bool:
         if stage is None:
             stage = self.deployment_stage
-        return stage in ('staging', 'prod')
+        return stage in {'prod'}
 
     @property
     def _git_status(self) -> Mapping[str, str]:

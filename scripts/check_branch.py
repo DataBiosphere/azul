@@ -24,16 +24,14 @@ def check_branch(branch: Optional[str], stage: str) -> None:
     ...
     RuntimeError: Feature branch 'feature/foo' cannot be deployed to main deployment 'prod'
 
-    >>> check_branch('staging', 'hannes.local')
+    >>> check_branch('prod', 'hannes.local')
 
     >>> check_branch('develop', 'hannes.local')
 
-    >>> check_branch('staging', 'integration')
+    >>> check_branch('prod', 'dev')
     Traceback (most recent call last):
     ...
-    RuntimeError: Protected branch 'staging' should be deployed to one of ['staging'], not 'integration'
-
-    >>> check_branch('prod', 'prod2')
+    RuntimeError: Protected branch 'prod' should be deployed to one of ['prod'], not 'dev'
 
     >>> check_branch(None, 'dev')
     Traceback (most recent call last):
