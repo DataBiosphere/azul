@@ -135,12 +135,27 @@ from azul.types import (
 # destroy`.
 #
 # If this EBS volume does not exist you must create it with the desired size
-# before running Terraform. To then format the volume, you can then either
-# attach it to some other Linux instance and format it there or use `make
-# terraform` to create the actual Gitlab instance and attach the volume. For
-# the latter you would need to ssh into the Gitlab instance, format
-# `/dev/xvdf` (`/dev/nvme1n1` on newer instance types) and reboot the
-# instance.
+# before running Terraform. For example:
+#
+# aws ec2 create-volume \
+# --size 100 \
+# --availability-zone "${AWS_DEFAULT_REGION}a" \
+# --tag-specifications 'ResourceType=volume,Tags=[{Key=Name,Value=azul-gitlab},{Key=owner,Value=hannes@ucsc.edu}]'
+#
+# To then format the volume, you can then either attach it to some other Linux
+# instance and format it there or use `make terraform` to create the actual
+# Gitlab instance and attach the volume. For the latter you would need to ssh
+# into the Gitlab instance, format `/dev/xvdf` (`/dev/nvme1n1` on newer
+# instance types) and reboot the instance. For example:
+#
+# docker stop gitlab-runner
+# docker stop gitlab
+# docker stop gitlab-dind
+# sudo mv /mnt/gitlab /mnt/gitlab.deleteme
+# sudo mkdir /mnt/gitlab
+# sudo mkfs.ext4 /dev/nvme1n1
+# sudo reboot
+# sudo rm -rf /mnt/gitlab.deleteme
 #
 # The EBS volume should be backed up (EBS snapshot) periodically. Not only does
 # it contain Gitlab's data but also its config.
