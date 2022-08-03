@@ -26,6 +26,12 @@ the same value as in the ``sandbox`` deployment.
 In personal deployments, remove ``AZUL_URL_REDIRECT_FULL_DOMAIN_NAME`` if its
 value is (``'{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}'``.
 
+In ``environment.py`` for personal deployments, initialize the ``is_sandbox``
+variable to ``False``, replacing the dynamic initializer, and copy the
+definition of the ``AZUL_IS_SANDBOX`` environment variable from sandbox'
+``environment.py``. This will make it easier in the future to synchronize your
+deployments' ``environment.py`` with that of the sandbox.
+
 Operator
 ~~~~~~~~
 

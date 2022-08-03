@@ -6,7 +6,7 @@ from typing import (
     Optional,
 )
 
-is_sandbox = '/sandbox/' in __file__
+is_sandbox = True
 
 
 def common_prefix(n: int) -> str:
@@ -209,6 +209,8 @@ def env() -> Mapping[str, Optional[str]]:
         # `None` with a short string that is specific to to YOU.
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
+
+        'AZUL_IS_SANDBOX': str(int(is_sandbox)),
 
         # This deployment uses a subdomain of the `dev` deployment's domain.
         #

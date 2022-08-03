@@ -6,30 +6,42 @@ from typing import (
     Optional,
 )
 
+is_sandbox = True
 
-def partition_prefix_length(n: int) -> int:
-    """
-    For a given number of subgraphs, return a partition prefix length that is
-    expected to rarely exceed 512 subgraphs per partition.
 
-    >>> [partition_prefix_length(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
-    [0, 0, 0, 1, 1, 2]
+def common_prefix(n: int) -> str:
     """
-    return 1 + partition_prefix_length(n // 16) if n > 512 else 0
+    For a given number of subgraphs, return a common prefix that yields around
+    16 subgraphs.
+
+    >>> [common_prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
+    ['', '', '', '', '1', 'f', '01', '11']
+    """
+    hex_digits = '0123456789abcdef'
+    m = len(hex_digits)
+    # Double threshold to lower probability that no subgraphs match the prefix
+    return hex_digits[n % m] + common_prefix(n // m) if n > 2 * m else ''
 
 
 ma = 1  # managed access
 pop = 2  # remove snapshot
 
 
-def mksrc(google_project, snapshot, subgraphs, flags: int = 0):
+def mksrc(google_project,
+          snapshot,
+          subgraphs,
+          flags: int = 0,
+          /,
+          prefix: Optional[str] = None):
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= ma | pop
+    if prefix is None:
+        prefix = common_prefix(subgraphs)
     source = None if flags & pop else ':'.join([
         'tdr',
         google_project,
         'snapshot/' + snapshot,
-        '/' + str(partition_prefix_length(subgraphs))
+        prefix + '/0'
     ])
     return project, source
 
@@ -136,7 +148,7 @@ dcp2_sources = mkdict([
     mksrc('datarepo-dev-848e2d4f', 'hca_dev_dbd836cfbfc241f0983441cc6c0b235a__20210827_20210902', 1),
     mksrc('datarepo-dev-3b058b81', 'hca_dev_dc1a41f69e0942a6959e3be23db6da56__20210827_20220228_dcp14', 10),
     mksrc('datarepo-dev-27ad01e5', 'hca_dev_df88f39f01a84b5b92f43177d6c0f242__20210827_20210928', 1),
-    mksrc('datarepo-dev-b839d6c7', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20210907', 606),
+    mksrc('datarepo-dev-b839d6c7', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20210907', 606, prefix='14'),
     mksrc('datarepo-dev-3faef568', 'hca_dev_e5d455791f5b48c3b568320d93e7ca72__20210827_20210903', 8),
     mksrc('datarepo-dev-e304a8fe', 'hca_dev_e77fed30959d4fadbc15a0a5a85c21d2__20210830_20210903', 333),
     mksrc('datarepo-dev-6fdac3db', 'hca_dev_e8808cc84ca0409680f2bba73600cba6__20210902_20210907', 898),
@@ -148,17 +160,6 @@ dcp2_sources = mkdict([
     mksrc('datarepo-dev-e8e0a59a', 'hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903', 384),
     mksrc('datarepo-dev-96d8e08c', 'hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903', 62),
 ])
-
-lungmap_sources = mkdict([
-    mksrc('datarepo-dev-5d9526e0', 'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404', 1),
-    mksrc('datarepo-dev-8de6d66b', 'lungmap_dev_2620497955a349b28d2b53e0bdfcb176__20220404_20220404', 1)
-])
-
-lm2_sources = dict(**lungmap_sources, **mkdict([
-    mksrc('datarepo-dev-b47b6759', 'lungmap_dev_00f056f273ff43ac97ff69ca10e38c89__20220404_20220404_lm2', 1),
-    mksrc('datarepo-dev-2e9ef7fd', 'lungmap_dev_20037472ea1d4ddb9cd356a11a6f0f76__20220401_20220404_lm2', 1),
-    mksrc('datarepo-dev-d57fd0c5', 'lungmap_dev_f899709cae2c4bb988f0131142e6c7ec__20220401_20220629_lm2', 1)
-]))
 
 
 def env() -> Mapping[str, Optional[str]]:
@@ -180,22 +181,36 @@ def env() -> Mapping[str, Optional[str]]:
     provide the value.
     """
     return {
-        # Set variables for the `dev` (short for development) deployment here.
+        # Set variables for the `anvilbox` deployment here. The anvilbox is used
+        # to run integration tests against PRs and to perform CI/CD experiments.
         #
-        # Only modify this file if you intend to commit those changes. To change the
-        # environment with a setting that's specific to you AND the deployment, create
-        # a environment.local.py right next to this file and make your changes there.
-        # Settings applicable to all environments but specific to you go into
-        # environment.local.py at the project root.
+        # You can use this file as a template for a personal deployment. Look
+        # for conditionals using the `is_sandbox` variable and adjust the `else`
+        # branch accordingly.
+        #
+        # Only modify this file if you intend to commit those changes. To apply
+        # a setting that's specific to you AND the deployment, create an
+        # `environment.local.py` file right next to this one and apply that
+        # setting there. Settings that are applicable to all environments but
+        # specific to you go into `environment.local.py` at the project root.
 
-        'AZUL_DEPLOYMENT_STAGE': 'dev',
+        # When using this file as a template for a personal deployment, replace
+        # `None` with a short string that is specific to to YOU.
+        #
+        'AZUL_DEPLOYMENT_STAGE': 'anvilbox' if is_sandbox else None,
 
-        'AZUL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu',
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
-        'AZUL_DRS_DOMAIN_NAME': 'drs.dev.singlecell.gi.ucsc.edu',
+        'AZUL_IS_SANDBOX': str(int(is_sandbox)),
 
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-singlecell-azul-storage-{AZUL_DEPLOYMENT_STAGE}',
+        # This deployment uses a subdomain of the `anvildev` deployment's
+        # domain.
+        #
+        'AZUL_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
+        'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
+        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
+
+        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-platform-anvil-dev.{AWS_DEFAULT_REGION}',
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-dev-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
@@ -204,9 +219,7 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_hca')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('hca', 'dcp2', dcp2_sources),
-                ('lungmap', 'lungmap', lungmap_sources),
-                ('lungmap', 'lm2', lm2_sources)
+                ('hca', 'dcp2', dcp2_sources)
             ]
             for suffix, internal in [
                 ('', False),
@@ -218,25 +231,36 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
-        'AZUL_ENABLE_MONITORING': '1',
-
-        # $0.382/h × 3 × 24h/d × 30d/mo = $825.12/mo
-        'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-        'AZUL_ES_INSTANCE_COUNT': '3',
+        **(
+            {
+                # $0.382/h × 2 × 24h/d × 30d/mo = $550.08/mo
+                'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
+                'AZUL_ES_INSTANCE_COUNT': '2',
+            } if is_sandbox else {
+                # Personal deployments share an ES domain with `anvilbox`
+                'AZUL_SHARE_ES_DOMAIN': '1',
+                'AZUL_ES_DOMAIN': 'azul-index-anvilbox',
+                # Personal deployments use fewer Lambda invocations in parallel.
+                'AZUL_CONTRIBUTION_CONCURRENCY': '8',
+                'AZUL_AGGREGATION_CONCURRENCY': '8',
+            }
+        ),
 
         'AZUL_DEBUG': '1',
 
-        'AZUL_BILLING': 'hca',
+        'AZUL_BILLING': 'anvil',
 
-        'AZUL_OWNER': 'hannes@ucsc.edu',
+        # When using this file as a template for a personal deployment, change
+        # `None` to a string contaiing YOUR email address.
+        #
+        'AZUL_OWNER': 'hannes@ucsc.edu' if is_sandbox else None,
 
-        'AZUL_AWS_ACCOUNT_ID': '122796619775',
+        'AZUL_AWS_ACCOUNT_ID': '289950828509',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        'GOOGLE_PROJECT': 'platform-hca-dev',
+        # Set `GOOGLE_APPLICATION_CREDENTIALS` in `environment.local.py`
+        #
+        'GOOGLE_PROJECT': 'platform-anvil-dev',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
-
-        'azul_cloudtrail_bucket_region': 'us-west-2',
-        'azul_cloudtrail_trail_region': 'us-west-2',
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-cpo2avhomdh6t7fetp91js78cdhm9p47.apps.googleusercontent.com',
     }

@@ -484,10 +484,17 @@ def env() -> Mapping[str, Optional[str]]:
         # Maps a branch name to a list of names of deployments the branch may be
         # deployed to. When building a given branch, a GitLab instance uses this
         # variable to automatically determine the target deployment by using the
-        # first item of the value for that branch.
+        # first item of the value for that branch. An empty key signifies any
+        # other branch not mentioned explicitly, or a detached HEAD.
         #
         'azul_main_deployments': json.dumps({
-            'develop': ['dev'],
+            'develop': ['dev', 'sandbox'],
             'prod': ['prod']
         }),
+
+        # 1 if current deployment is a main deployment with the sole purpose of
+        # testing feature branches in GitLab before they are merged to the
+        # develop branch, 0 otherwise. Personal deployments have this set to 0.
+        #
+        'AZUL_IS_SANDBOX': '0'
     }
