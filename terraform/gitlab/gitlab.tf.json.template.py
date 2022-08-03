@@ -178,7 +178,7 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 # https://github.com/docker/libnetwork/blob/a79d3687931697244b8e03485bf7b2042f8ec6b6/ipamutils/utils.go#L10
 #
 
-cidr_offset = ['dev', 'prod'].index(config.deployment_stage)
+cidr_offset = ['dev', 'prod', 'anvildev'].index(config.deployment_stage)
 
 vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
 
@@ -410,8 +410,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 [
                                     'edu-ucsc-gi-singlecell-azul-*',
                                     '*.url.singlecell.gi.ucsc.edu',
-                                    'url.singlecell.gi.ucsc.edu'
+                                    'url.singlecell.gi.ucsc.edu',
                                 ] if 'singlecell' in config.domain_name else [
+                                    'edu-ucsc-gi-platform-anvil-dev.*',
+                                    'edu-ucsc-gi-platform-anvil-dev-*',
+                                    'url.*.anvil.gi.ucsc.edu',
+                                    'url.anvil.gi.ucsc.edu',
+                                    'edu-ucsc-gi-platform-anvil-anvilbox',
+                                ] if 'anvil' in config.domain_name else [
                                     'edu-ucsc-gi-azul-*',
                                     '*.azul.data.humancellatlas.org',
                                 ]
@@ -868,7 +874,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_s3_bucket': {
             'gitlab': {
-                'bucket': f'edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}'
+                'bucket':
+                    f'edu-ucsc-gi-{aws.account_name}-gitlab.{aws.region_name}'
+                    if 'anvil' in config.domain_name else
+                    f'edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}'
             }
         },
         'aws_s3_bucket_policy': {
