@@ -488,7 +488,7 @@ def env() -> Mapping[str, Optional[str]]:
         # other branch not mentioned explicitly, or a detached HEAD.
         #
         'azul_main_deployments': json.dumps({
-            'develop': ['dev', 'sandbox'],
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
             'prod': ['prod']
         }),
 
