@@ -36,7 +36,7 @@ build_image:
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
-    - status_context="gitlab/${GITLAB_INSTANCE_NAME}/${AZUL_DEPLOYMENT_STAGE}"
+    - status_context="gitlab/${azul_gitlab_instance_name}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
   dependencies:
     - build_image
