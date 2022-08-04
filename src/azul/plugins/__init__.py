@@ -8,6 +8,9 @@ from collections.abc import (
     Sequence,
     Set,
 )
+from enum import (
+    Enum,
+)
 import importlib
 from inspect import (
     isabstract,
@@ -122,6 +125,13 @@ class Sorting:
     @property
     def order(self) -> str:
         return 'desc' if self.descending else 'asc'
+
+
+class ManifestFormat(Enum):
+    compact = 'compact'
+    terra_bdbag = 'terra.bdbag'
+    terra_pfb = 'terra.pfb'
+    curl = 'curl'
 
 
 T = TypeVar('T', bound='Plugin')

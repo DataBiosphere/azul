@@ -75,6 +75,7 @@ from azul.openapi import (
     schema,
 )
 from azul.plugins import (
+    ManifestFormat,
     MetadataPlugin,
 )
 from azul.plugins.metadata.hca.indexer.transform import (
@@ -97,7 +98,6 @@ from azul.service.manifest_controller import (
 )
 from azul.service.manifest_service import (
     CurlManifestGenerator,
-    ManifestFormat,
 )
 from azul.service.repository_controller import (
     RepositoryController,

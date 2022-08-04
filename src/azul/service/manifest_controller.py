@@ -27,6 +27,9 @@ from azul.auth import (
 from azul.chalice import (
     GoneError,
 )
+from azul.plugins import (
+    ManifestFormat,
+)
 from azul.service import (
     Filters,
 )
@@ -39,7 +42,6 @@ from azul.service.manifest_service import (
     CachedManifestNotFound,
     CachedManifestSourcesChanged,
     Manifest,
-    ManifestFormat,
     ManifestPartition,
     ManifestService,
     ManifestUrlFunc,
