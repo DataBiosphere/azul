@@ -433,10 +433,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     *allow_service('SQS',
                                    QueueName='azul-*'),
 
-                    # API Gateway ARNs refer to APIs by ID so we cannot
-                    # restrict to name or prefix
-                    *allow_service('API Gateway',
-                                   ApiGatewayResourcePath='*'),
+                    # API Gateway ARNs refer to APIs by ID so we cannot restrict
+                    # to name or prefix. Even though all API Gateway ARNs start
+                    # with `arn:aws:apigateway:${Region}::`, using the pattern
+                    # `arn:aws:apigateway:${Region}::*` in the policy causes the
+                    # CreateDomainName action to return AccessDenied for unknown
+                    # reasons. Other API Gateway actions succeed with that ARN
+                    # pattern in the policy.
+                    {
+                        'actions': ['apigateway:*'],
+                        'resources': ['*']
+                    },
 
                     *allow_service('Elasticsearch Service',
                                    global_action_types={ServiceActionType.read, ServiceActionType.list},
