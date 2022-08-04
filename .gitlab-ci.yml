@@ -71,6 +71,9 @@ deploy:
     - make create
   except:
     - schedules
+  artifacts:
+    paths:
+      - terraform/plan.json
 
 integration_test:
   extends: .base

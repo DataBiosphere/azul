@@ -83,7 +83,7 @@ deploy: check_env
 
 .PHONY: auto_deploy
 auto_deploy: check_env
-	$(MAKE) -C terraform plan auto_apply
+	$(MAKE) -C terraform auto_apply
 	$(MAKE) post_deploy
 
 .PHONY: post_deploy

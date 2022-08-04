@@ -1,3 +1,5 @@
 /*.tf.json
 /service/
 /indexer/
+/plan.bin
+/plan.json
