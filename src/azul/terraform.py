@@ -261,6 +261,20 @@ def _adjust_name_tag(resource_type: str, tags: dict[str, str]) -> dict[str, str]
     }
 
 
+def provider_fragment(region: str) -> JSON:
+    """
+    Return a fragment of Terraform configuration JSON that specifies a
+    resource's provider. Empty JSON will be returned if the resource's region
+    is the same as the default region.
+    A non-default region must first be configured by adding a matching provider
+    for that region in `providers.tf.json`.
+    """
+    if region == config.region:
+        return {}
+    else:
+        return {'provider': f'aws.{region}'}
+
+
 U = TypeVar('U', bound=AnyJSON)
 
 

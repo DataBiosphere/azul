@@ -467,5 +467,12 @@ def env() -> Mapping[str, Optional[str]]:
 
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
+
+        # The provider region used by the S3 bucket that holds the Cloudtrail logs.
+        'azul_cloudtrail_bucket_region': '{AWS_DEFAULT_REGION}',
+
+        # The provider region used by the CloudTrail trail.
+        'azul_cloudtrail_trail_region': '{AWS_DEFAULT_REGION}',
+
     }
