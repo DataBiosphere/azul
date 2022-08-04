@@ -72,6 +72,9 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul.plugins import (
+    ManifestFormat,
+)
 from azul.plugins.repository.dss import (
     DSSBundle,
 )
@@ -84,7 +87,6 @@ from azul.service.manifest_service import (
     BDBagManifestGenerator,
     Bundles,
     Manifest,
-    ManifestFormat,
     ManifestGenerator,
     ManifestPartition,
     ManifestService,

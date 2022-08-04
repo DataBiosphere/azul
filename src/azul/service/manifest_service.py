@@ -21,9 +21,6 @@ from datetime import (
     timezone,
 )
 import email.utils
-from enum import (
-    Enum,
-)
 from inspect import (
     isabstract,
 )
@@ -103,6 +100,7 @@ from azul.plugins import (
     FieldGlobs,
     FieldPath,
     ManifestConfig,
+    ManifestFormat,
     MutableManifestConfig,
     RepositoryPlugin,
 )
@@ -134,13 +132,6 @@ from azul.vendored.frozendict import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-class ManifestFormat(Enum):
-    compact = 'compact'
-    terra_bdbag = 'terra.bdbag'
-    terra_pfb = 'terra.pfb'
-    curl = 'curl'
 
 
 class ManifestUrlFunc(Protocol):
