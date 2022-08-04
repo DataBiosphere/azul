@@ -311,6 +311,7 @@ dss_direct_access_policy_statement = {
 }
 
 clamav_image = 'clamav/clamav:0.104'
+dind_image = 'docker:19.03.15-dind'
 
 emit_tf({} if config.terraform_component != 'gitlab' else {
     'data': {
@@ -1244,6 +1245,20 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             - /var/run/docker.sock:/var/run/docker.sock
                           labels:
                             io.rancher.os.scope: "user"
+                        prune-images:
+                          image: {dind_image}
+                          volumes:
+                            - /var/run/docker.sock:/var/run/docker.sock
+                          # Don't delete images from more recent builds. If we
+                          # deleted them, we would risk failing the requirements
+                          # check on sandbox builds since that check depends on
+                          # image caching. This assumes that the most recent
+                          # pipeline was run less than a month ago.
+                          command: exec gitlab-dind docker image prune --all --force --filter "until={30 * 24}h"
+                          labels:
+                            io.rancher.os.scope: "user"
+                            io.rancher.os.createonly: "true"
+                            cron.schedule: "0 0 12 ? * SAT"
                         clamscan:
                           image: {clamav_image}
                           command: >
@@ -1289,7 +1304,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --env DOCKER_TLS_CERTDIR="" \
                                --volume /mnt/gitlab/docker:/var/lib/docker \
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
-                               docker:19.03.15-dind
+                               {dind_image}
                         docker run \
                                --detach \
                                --name gitlab \
@@ -1300,7 +1315,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:15.2.0-ce.0
+                               gitlab/gitlab-ce:15.2.1-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -1308,7 +1323,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v15.2.0
+                               gitlab/gitlab-runner:v15.2.1
                     '''[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 'tags': {
                     'Name': 'azul-gitlab',

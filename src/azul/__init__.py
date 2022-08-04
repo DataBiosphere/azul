@@ -1071,6 +1071,14 @@ class Config:
     def google_oauth2_client_id(self) -> Optional[str]:
         return os.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
 
+    @property
+    def cloudtrail_s3_bucket_region(self) -> str:
+        return self.environ['azul_cloudtrail_bucket_region']
+
+    @property
+    def cloudtrail_trail_region(self) -> str:
+        return self.environ['azul_cloudtrail_trail_region']
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 

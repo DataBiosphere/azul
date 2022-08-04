@@ -454,6 +454,27 @@ the *Permanently delete previous versions of objects* checkbox, and enter *30*
 for *Number of days after objects become previous versions*. Then click *Create
 rule.*
 
+### 3.1.1 CloudTrail
+
+The CloudTrail resources for each of the AWS accounts hosting Azul deployments
+are provisioned through Terraform. The corresponding resource definitions reside
+in a separate *Terraform component*.
+
+A Terraform component is a set of related resources. It is our own bastardized
+form of Terraform's *module* concept, aimed at facilitating encapsulation and
+reuse. Each deployment has at least a main component and zero or more child
+components. The main component is identified by the empty string for a name;
+child components have a non-empty name. The `dev` component has a child
+component `dev.shared`. To deploy the main component of the `dev`deployment, one
+selects the `dev` deployment and runs `make apply` from
+`${project_root}/terraform` (or `make deploy` from the project root). To deploy
+the `shared` child component of the `dev` deployment, one selects `dev.shared`
+and runs `make apply` from `${project_root}/terraform/shared`. In other words,
+there is one generic set of resource definitions for a child component, but
+multiple concrete deployment directories.
+
+### 3.1.2 API Gateway logs
+
 To enable CloudWatch logs for API Gateway, an IAM role must be created and
 configured in the API Gateway console. This must be done for each AWS account
 and region, after at least one Azul deployment has been created in that account
@@ -487,7 +508,7 @@ this is a region wide configuration) e.g. `azul-{lambda}-{stage}`, click on
 *Settings* at the bottom of the left menu, paste the copied *Role ARN* into the
 *CloudWatch log role ARN* and click *Save*
 
-### 3.1.1 Route 53 hosted zones
+### 3.1.3 Route 53 hosted zones
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
 deployments can share a hosted zone, but they don't have to. The name of the
@@ -506,13 +527,13 @@ The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
 [src/azul/deployment.py:tags](src/azul/deployment.py).
 
-### 3.1.2 EBS volume for Gitlab
+### 3.1.4 EBS volume for Gitlab
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details.
 
-### 3.1.3 Certificate authority for VPN access to Gitlab
+### 3.1.5 Certificate authority for VPN access to Gitlab
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments,
 a certificate authority must be set up. See the
@@ -1649,18 +1670,12 @@ run the community edition of GitLab on a project-specific EC2 instance. There is
 currently one such instance for the `sandbox` and `dev` deployments and another 
 one for `prod`.
 
-The Gitlab instances are provisioned through Terraform but its resource
-definitions reside in a separate *Terraform component*. A *Terraform component*
-is a set of related resources. Each deployment has at least a main component
-and zero or more subcomponents. The main component is identified by the empty
-string for a name, child components have a non-empty name. The `dev` component
-has a subcomponent `dev.gitlab`. To terraform the main component of the `dev`
-deployment, one selects the `dev` deployment and runs `make apply` from
-`${project_root}/terraform`. To deploy the `gitlab` subcomponent of the `dev`
-deployment, one selects `dev.gitlab` and runs `make apply` from
-`${project_root}/terraform/gitlab`. The `dev.gitlab` subcomponent provides a
+The GitLab instances are provisioned through the `gitlab` *Terraform component*.
+For more information about *Terraform components*, refer to the example of the
+`shared` component in [Cloudtrail event recording](#311-cloudtrail).
+Within the `gitlab` component, the `dev.gitlab` child component provides a
 single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but
-for `integration` and `staging` as well. The `prod.gitlab` subcomponent
+for `integration` and `staging` as well. The `prod.gitlab` child component
 provides the Gitlab EC2 instance for `prod`.
 
 To access the web UI of the Gitlab instance for `dev`, visit
@@ -1926,10 +1941,12 @@ test job with message like
 
 > `2021-03-11 19:38:05,133 WARNING MainThread: There was a general error with document ContributionCoordinates(entity=EntityReference(entity_type='files', entity_id='5ceb5dc3-9194-494a-b1df-42bb75ab1a04'), aggregate=False, bundle=BundleFQID(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', version='2019-04-03T103426.471000Z'), deleted=False): {'_index': 'azul_v2_dev_test_files', '_type': 'doc', '_id': '5ceb5dc3-9194-494a-b1df-42bb75ab1a04_94f2ba52-30c8-4de0-a78e-f95a3f8deb9c_2019-04-03T103426.471000Z_exists', 'status': 403, 'error': {'type': 'cluster_block_exception', 'reason': 'blocked by: [FORBIDDEN/12/index read-only / allow delete (api)];'}}. Total # of errors: 1, giving up.`
 
-The remedy is to periodically clean up unused images by running:
+A cron job running on the instance should prevent this by periodically pruning
+unused images. If the above error occurs despite that, there might be a problem
+with that cron job. To manually clean up unused images run:
 
 ```
-sudo docker exec -it gitlab-dind docker image prune -a
+sudo docker exec -it gitlab-dind docker image prune -a --filter "until=720h"
 ```
 
 on the instance.
