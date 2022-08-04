@@ -867,13 +867,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
         },
         'aws_s3_bucket': {
-            'gitlab_logs': {
+            'gitlab': {
                 'bucket': f'edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}'
             }
         },
         'aws_s3_bucket_policy': {
-            'gitlab_logs': {
-                'bucket': '${aws_s3_bucket.gitlab_logs.id}',
+            'gitlab': {
+                'bucket': '${aws_s3_bucket.gitlab.id}',
                 # FIXME:  Expire old logs using lifecycle policy
                 #         https://github.com/DataBiosphere/azul/issues/3620
                 'policy': json.dumps({
@@ -885,7 +885,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'AWS': f'arn:aws:iam::{elb_region_account_id[aws.region_name]}:root'
                             },
                             'Action': 's3:PutObject',
-                            'Resource': f'${{aws_s3_bucket.gitlab_logs.arn}}/{gitlab_logs_path}'
+                            'Resource': f'${{aws_s3_bucket.gitlab.arn}}/{gitlab_logs_path}'
                         },
                         *[
                             {
@@ -908,8 +908,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 )
                             }
                             for action, resource in [
-                                ('PutObject', f'${{aws_s3_bucket.gitlab_logs.arn}}/{gitlab_logs_path}'),
-                                ('GetBucketAcl', '${aws_s3_bucket.gitlab_logs.arn}')
+                                ('PutObject', f'${{aws_s3_bucket.gitlab.arn}}/{gitlab_logs_path}'),
+                                ('GetBucketAcl', '${aws_s3_bucket.gitlab.arn}')
                             ]
                         ]
                     ]
@@ -977,7 +977,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     '${aws_security_group.gitlab_alb.id}'
                 ],
                 'access_logs': {
-                    'bucket': '${aws_s3_bucket.gitlab_logs.id}',
+                    'bucket': '${aws_s3_bucket.gitlab.id}',
                     'prefix': logs_path_prefix,
                     'enabled': True
                 }
