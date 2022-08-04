@@ -225,7 +225,7 @@ class Config:
         return self.environ.get('AZUL_DSS_SOURCE')
 
     def sources(self, catalog: CatalogName) -> Set[str]:
-        return config.catalogs[catalog].sources
+        return self.catalogs[catalog].sources
 
     @property
     def tdr_allowed_source_locations(self) -> Set[str]:
@@ -795,7 +795,7 @@ class Config:
     @property
     def _git_status(self) -> Mapping[str, str]:
         import git
-        repo = git.Repo(config.project_root)
+        repo = git.Repo(self.project_root)
         return {
             'azul_git_commit': repo.head.object.hexsha,
             'azul_git_dirty': str(repo.is_dirty()),
@@ -929,7 +929,7 @@ class Config:
             return 'google_service_account' + self.value
 
     def state_machine_name(self, lambda_name):
-        return config.qualified_resource_name(lambda_name)
+        return self.qualified_resource_name(lambda_name)
 
     def _concurrency(self, value: str, retry: bool) -> int:
         """
@@ -997,7 +997,7 @@ class Config:
 
     def tallies_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_tallies_queue_name(retry=retry, fail=fail)
-        return config.qualified_resource_name(name, suffix='.fifo')
+        return self.qualified_resource_name(name, suffix='.fifo')
 
     def unqual_tallies_queue_name(self, *, retry=False, fail=False):
         return self._unqual_queue_name('tallies', retry, fail)
