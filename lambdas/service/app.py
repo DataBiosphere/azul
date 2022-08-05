@@ -290,7 +290,7 @@ class ServiceApp(AzulChaliceApp):
 
     @cached_property
     def health_controller(self) -> HealthController:
-        return HealthController(lambda_name='service')
+        return self._controller(HealthController, lambda_name='service')
 
     @cached_property
     def catalog_controller(self) -> CatalogController:
@@ -308,20 +308,6 @@ class ServiceApp(AzulChaliceApp):
 
     def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
         return self._controller(controller_cls, file_url_func=self.file_url, **kwargs)
-
-    @property
-    def catalog(self) -> str:
-        request = self.current_request
-        # request is none during `chalice package`
-        if request is not None:
-            # params is None whenever no params are passed
-            params = request.query_params
-            if params is not None:
-                try:
-                    return params['catalog']
-                except KeyError:
-                    pass
-        return config.default_catalog
 
     @property
     def metadata_plugin(self) -> MetadataPlugin:

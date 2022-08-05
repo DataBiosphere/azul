@@ -358,6 +358,22 @@ class AzulChaliceApp(Chalice):
     lambda_context: LambdaContext
     current_request: AzulRequest
 
+    @property
+    def catalog(self) -> str:
+        request = self.current_request
+        # A request is only present when this Lambda Function is invoked by
+        # API Gateway (or a simulation like `make local`). Prominient examples
+        # of when the request None are `chalice package` or when the Lambda
+        # Function is invoked via an event schedule.
+        if request is not None:
+            params = request.query_params
+            if params is not None:
+                try:
+                    return params['catalog']
+                except KeyError:
+                    pass
+        return config.default_catalog
+
     def _controller(self, controller_cls: Type[C], **kwargs) -> C:
         return controller_cls(app=self, **kwargs)
 

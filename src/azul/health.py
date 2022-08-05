@@ -13,6 +13,7 @@ import json
 import time
 from typing import (
     ClassVar,
+    Optional,
 )
 
 import attr
@@ -21,6 +22,7 @@ from botocore.exceptions import (
 )
 from chalice import (
     ChaliceViewError,
+    NotFoundError,
     Response,
 )
 from furl import (
@@ -29,17 +31,25 @@ from furl import (
 import requests
 
 from azul import (
+    CatalogName,
     RequirementError,
+    cache,
     cached_property,
     config,
     lru_cache,
     require,
+)
+from azul.chalice import (
+    AppController,
 )
 from azul.deployment import (
     aws,
 )
 from azul.es import (
     ESClientFactory,
+)
+from azul.plugins import (
+    MetadataPlugin,
 )
 from azul.service.storage_service import (
     StorageService,
@@ -67,27 +77,31 @@ class health_property(cached_property):
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-class HealthController:
+class HealthController(AppController):
     lambda_name: str
 
     @cached_property
     def storage_service(self):
         return StorageService()
 
+    @cache
+    def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
+        return MetadataPlugin.load(catalog).create()
+
     def basic_health(self) -> Response:
         return self._make_response({'up': True})
 
     def health(self) -> Response:
-        return self._make_response(self._health().as_json(Health.all_keys))
+        return self._make_response(self._health.as_json(Health.all_keys))
 
-    def custom_health(self, keys) -> Response:
+    def custom_health(self, keys: Optional[str]) -> Response:
         if keys is None:
-            body = self._health().as_json(Health.all_keys)
+            body = self._health.as_json(Health.all_keys)
         elif isinstance(keys, str):
             assert keys  # Chalice maps empty string to None
             keys = keys.split(',')
             try:
-                body = self._health().as_json(keys)
+                body = self._health.as_json(keys)
             except RequirementError:
                 body = {'Message': 'Invalid health keys'}
         else:
@@ -95,31 +109,37 @@ class HealthController:
         return self._make_response(body)
 
     def fast_health(self) -> Response:
-        return self._make_response(self._health().as_json_fast())
+        return self._make_response(self._health.as_json_fast())
 
     def cached_health(self) -> JSON:
-        try:
-            cache = json.loads(self.storage_service.get(f'health/{self.lambda_name}'))
-        except self.storage_service.client.exceptions.NoSuchKey:
-            raise ChaliceViewError('Cached health object does not exist')
+        if self.app.catalog != config.default_catalog:
+            raise NotFoundError('Health is only cached for default catalog',
+                                self.app.catalog, config.default_catalog)
         else:
-            max_age = 2 * 60
-            if time.time() - cache['time'] > max_age:
-                raise ChaliceViewError('Cached health object is stale')
+            try:
+                cache = json.loads(self.storage_service.get(f'health/{self.lambda_name}'))
+            except self.storage_service.client.exceptions.NoSuchKey:
+                raise NotFoundError('Cached health object does not exist')
             else:
-                body = cache['health']
-        return body
+                max_age = 2 * 60
+                if time.time() - cache['time'] > max_age:
+                    raise ChaliceViewError('Cached health object is stale')
+                else:
+                    body = cache['health']
+            return body
 
     def update_cache(self) -> None:
-        health_object = dict(time=time.time(), health=self._health().as_json_fast())
+        assert self.app.catalog == config.default_catalog
+        health_object = dict(time=time.time(), health=self._health.as_json_fast())
         self.storage_service.put(object_key=f'health/{self.lambda_name}',
                                  data=json.dumps(health_object).encode())
 
+    @property
     def _health(self):
         # Don't cache. A Health instance is meant to be short-lived since it
         # applies its own caching. If we cached the instance, we'd never observe
         # any changes in health.
-        return Health(lambda_name=self.lambda_name)
+        return Health(controller=self, catalog=self.app.catalog)
 
     def _make_response(self, body: JSON) -> Response:
         try:
@@ -139,8 +159,12 @@ class Health:
     class does not examine any resources, only accessing the individual
     properties does, or using the `to_json` method.
     """
+    controller: HealthController
+    catalog: str
 
-    lambda_name: str
+    @property
+    def lambda_name(self):
+        return self.controller.lambda_name
 
     def as_json(self, keys: Iterable[str]) -> JSON:
         keys = set(keys)
@@ -217,6 +241,10 @@ class Health:
         else:
             return url, {'up': True}
 
+    @cached_property
+    def entity_types(self):
+        return self.controller.metadata_plugin(self.catalog).exposed_indices.keys()
+
     @health_property
     def api_endpoints(self):
         """
@@ -224,7 +252,7 @@ class Health:
         """
         endpoints = [
             furl(path=('index', entity_type), args={'size': '1'})
-            for entity_type in ('projects', 'samples', 'files', 'bundles')
+            for entity_type in self.entity_types
         ]
         with ThreadPoolExecutor(len(endpoints)) as tpe:
             status = dict(tpe.map(self._api_endpoint, endpoints))
@@ -243,7 +271,8 @@ class Health:
     @lru_cache
     def _lambda(self, lambda_name) -> JSON:
         try:
-            url = config.lambda_endpoint(lambda_name).set(path='/health/basic')
+            url = config.lambda_endpoint(lambda_name).set(path='/health/basic',
+                                                          args={'catalog': self.catalog})
             response = requests.get(str(url))
             response.raise_for_status()
             up = response.json()['up']
