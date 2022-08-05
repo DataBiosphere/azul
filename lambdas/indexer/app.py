@@ -35,7 +35,7 @@ class IndexerApp(AzulChaliceApp):
 
     @cached_property
     def health_controller(self):
-        return HealthController(lambda_name='indexer')
+        return self._controller(HealthController, lambda_name='indexer')
 
     @cached_property
     def index_controller(self) -> IndexController:
