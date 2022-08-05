@@ -373,6 +373,10 @@ class AppController:
     def lambda_context(self) -> LambdaContext:
         return self.app.lambda_context
 
+    @property
+    def current_request(self) -> AzulRequest:
+        return self.app.current_request
+
 
 def private_api_stage_config():
     """
