@@ -58,6 +58,7 @@ from azul.drs import (
     AccessMethod,
 )
 from azul.health import (
+    Health,
     HealthController,
 )
 from azul.indexer.document import (
@@ -285,11 +286,8 @@ class ServiceApp(AzulChaliceApp):
     def drs_controller(self) -> DRSController:
         return self._create_controller(DRSController)
 
-    @property
+    @cached_property
     def health_controller(self) -> HealthController:
-        # Don't cache. Health controller is meant to be short-lived since it
-        # applies its own caching. If we cached the controller, we'd never
-        # observe any changes in health.
         return HealthController(lambda_name='service')
 
     @cached_property
@@ -498,7 +496,7 @@ health_up_key = {
 fast_health_keys = {
     **{
         prop.key: format_description(prop.description)
-        for prop in HealthController.fast_properties['service']
+        for prop in Health.fast_properties['service']
     },
     **health_up_key
 }
@@ -506,7 +504,7 @@ fast_health_keys = {
 health_all_keys = {
     **{
         prop.key: format_description(prop.description)
-        for prop in HealthController.all_properties
+        for prop in Health.all_properties
     },
     **health_up_key
 }
@@ -622,7 +620,7 @@ def fast_health():
     'parameters': [
         params.path(
             'keys',
-            type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
+            type_=schema.array(schema.enum(*sorted(Health.all_keys))),
             description='''
                 A comma-separated list of keys selecting the health checks to be
                 performed. Each key corresponds to an entry in the response.

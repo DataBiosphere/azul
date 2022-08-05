@@ -33,11 +33,8 @@ log = logging.getLogger(__name__)
 
 class IndexerApp(AzulChaliceApp):
 
-    @property
+    @cached_property
     def health_controller(self):
-        # Don't cache. Health controller is meant to be short-lived since it
-        # applies it's own caching. If we cached the controller, we'd never
-        # observe any changes in health.
         return HealthController(lambda_name='indexer')
 
     @cached_property
