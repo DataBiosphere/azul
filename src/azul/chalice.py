@@ -358,10 +358,7 @@ class AzulChaliceApp(Chalice):
     lambda_context: LambdaContext
     current_request: AzulRequest
 
-    def _create_controller(self,
-                           controller_cls: Type[C],
-                           **kwargs
-                           ) -> C:
+    def _controller(self, controller_cls: Type[C], **kwargs) -> C:
         return controller_cls(app=self, **kwargs)
 
 

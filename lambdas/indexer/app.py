@@ -39,7 +39,7 @@ class IndexerApp(AzulChaliceApp):
 
     @cached_property
     def index_controller(self) -> IndexController:
-        return self._create_controller(IndexController)
+        return self._controller(IndexController)
 
     def __init__(self):
         super().__init__(app_name=config.indexer_name,

@@ -286,7 +286,7 @@ class ServiceApp(AzulChaliceApp):
 
     @property
     def drs_controller(self) -> DRSController:
-        return self._create_controller(DRSController)
+        return self._service_controller(DRSController)
 
     @cached_property
     def health_controller(self) -> HealthController:
@@ -294,22 +294,20 @@ class ServiceApp(AzulChaliceApp):
 
     @cached_property
     def catalog_controller(self) -> CatalogController:
-        return self._create_controller(CatalogController)
+        return self._service_controller(CatalogController)
 
     @property
     def repository_controller(self) -> RepositoryController:
-        return self._create_controller(RepositoryController)
+        return self._service_controller(RepositoryController)
 
     @cached_property
     def manifest_controller(self) -> ManifestController:
-        return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name,
-                                       manifest_url_func=self.manifest_url)
+        return self._service_controller(ManifestController,
+                                        step_function_lambda_name=generate_manifest.name,
+                                        manifest_url_func=self.manifest_url)
 
-    def _create_controller(self, controller_cls: Type[C], **kwargs) -> C:
-        return super()._create_controller(controller_cls,
-                                          file_url_func=self.file_url,
-                                          **kwargs)
+    def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
+        return self._controller(controller_cls, file_url_func=self.file_url, **kwargs)
 
     @property
     def catalog(self) -> str:
