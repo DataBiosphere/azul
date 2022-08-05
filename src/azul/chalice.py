@@ -10,8 +10,11 @@ import os
 from typing import (
     Any,
     Optional,
+    Type,
+    TypeVar,
 )
 
+import attr
 from chalice import (
     Chalice,
     ChaliceViewError,
@@ -63,6 +66,9 @@ class GoneError(ChaliceViewError):
 # Chalice does not define any exceptions for 5xx status codes besides 500
 class ServiceUnavailableError(ChaliceViewError):
     STATUS_CODE = 503
+
+
+C = TypeVar('C', bound='AppController')
 
 
 class AzulChaliceApp(Chalice):
@@ -351,6 +357,17 @@ class AzulChaliceApp(Chalice):
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
     current_request: AzulRequest
+
+    def _create_controller(self,
+                           controller_cls: Type[C],
+                           **kwargs
+                           ) -> C:
+        return controller_cls(lambda_context=self.lambda_context, **kwargs)
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class AppController:
+    lambda_context: LambdaContext
 
 
 def private_api_stage_config():

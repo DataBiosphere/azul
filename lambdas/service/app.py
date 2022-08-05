@@ -14,6 +14,7 @@ from typing import (
     Any,
     Callable,
     Optional,
+    Type,
     Union,
 )
 import urllib.parse
@@ -53,6 +54,7 @@ from azul.auth import (
 )
 from azul.chalice import (
     AzulChaliceApp,
+    C,
 )
 from azul.drs import (
     AccessMethod,
@@ -304,10 +306,10 @@ class ServiceApp(AzulChaliceApp):
                                        step_function_lambda_name=generate_manifest.name,
                                        manifest_url_func=self.manifest_url)
 
-    def _create_controller(self, controller_cls, **kwargs):
-        return controller_cls(lambda_context=self.lambda_context,
-                              file_url_func=self.file_url,
-                              **kwargs)
+    def _create_controller(self, controller_cls: Type[C], **kwargs) -> C:
+        return super()._create_controller(controller_cls,
+                                          file_url_func=self.file_url,
+                                          **kwargs)
 
     @property
     def catalog(self) -> str:
