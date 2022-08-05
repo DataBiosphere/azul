@@ -362,12 +362,16 @@ class AzulChaliceApp(Chalice):
                            controller_cls: Type[C],
                            **kwargs
                            ) -> C:
-        return controller_cls(lambda_context=self.lambda_context, **kwargs)
+        return controller_cls(app=self, **kwargs)
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class AppController:
-    lambda_context: LambdaContext
+    app: AzulChaliceApp
+
+    @property
+    def lambda_context(self) -> LambdaContext:
+        return self.app.lambda_context
 
 
 def private_api_stage_config():
