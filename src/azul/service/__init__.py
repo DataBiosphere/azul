@@ -91,7 +91,7 @@ class FileUrlFunc(Protocol):
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
-class Controller:
+class ServiceAppController:
     lambda_context: LambdaContext
     file_url_func: FileUrlFunc
 
