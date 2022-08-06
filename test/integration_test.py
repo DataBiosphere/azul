@@ -519,7 +519,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 for attempt in range(attempts):
                     start = time.time()
                     response = self._check_endpoint('/manifest/files', args=args)
-                    log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
+                    log.info('Request %i/%i took %.3fs to execute.',
+                             attempt + 1, attempts, time.time() - start)
                     validator(catalog, response)
 
     @cache
