@@ -25,6 +25,7 @@ import sys
 from typing import (
     Optional,
     TextIO,
+    Tuple,
     cast,
 )
 
@@ -86,7 +87,7 @@ class BadParentDeployment(RuntimeError):
         )
 
 
-def load_env() -> Environment:
+def load_env() -> Tuple[Environment, Optional[str]]:
     """
     Load environment.py and environment.local.py modules from the project
     root and the current active deployment directory, call their env()
@@ -99,23 +100,32 @@ def load_env() -> Environment:
 
     deployments_dir = root_dir / 'deployments'
     active_deployment_dir = deployments_dir / '.active'
-    if not active_deployment_dir.is_dir() or not active_deployment_dir.is_symlink():
-        raise InvalidActiveDeployment(active_deployment_dir)
+    if active_deployment_dir.exists():
+        if not active_deployment_dir.is_dir() or not active_deployment_dir.is_symlink():
+            raise InvalidActiveDeployment(active_deployment_dir)
 
-    # If active deployment is a component of another one, also load the parent
-    # deployments (like dev.gitlab).
-    active_deployment_dir = Path(os.readlink(str(active_deployment_dir)))
-    if not active_deployment_dir.is_absolute():
-        active_deployment_dir = deployments_dir / active_deployment_dir
-    if not active_deployment_dir.is_dir():
-        raise InvalidActiveDeployment(active_deployment_dir)
-    relative_active_deployment_dir = active_deployment_dir.relative_to(deployments_dir)
-    prefix, _, suffix = str(relative_active_deployment_dir).partition('.')
-    if suffix and suffix != 'local':
-        parent_deployment_dir = deployments_dir / prefix
-        if not parent_deployment_dir.exists():
-            raise BadParentDeployment(parent_deployment_dir, active_deployment_dir)
+        # If active deployment is a component of another one, also load the parent
+        # deployments (like dev.gitlab).
+        active_deployment_dir = Path(os.readlink(str(active_deployment_dir)))
+        if not active_deployment_dir.is_absolute():
+            active_deployment_dir = deployments_dir / active_deployment_dir
+        if not active_deployment_dir.is_dir():
+            raise InvalidActiveDeployment(active_deployment_dir)
+        relative_active_deployment_dir = active_deployment_dir.relative_to(deployments_dir)
+        prefix, _, suffix = str(relative_active_deployment_dir).partition('.')
+        if suffix and suffix != 'local':
+            parent_deployment_dir = deployments_dir / prefix
+            if not parent_deployment_dir.exists():
+                raise BadParentDeployment(parent_deployment_dir, active_deployment_dir)
+        else:
+            parent_deployment_dir = None
+        warning = None
     else:
+        warning = (
+            f'No active deployment (missing {str(active_deployment_dir)!r}). '
+            f'Loaded global defaults only.'
+        )
+        active_deployment_dir = None
         parent_deployment_dir = None
 
     def _load(dir_path: Path, local: bool = False) -> Optional[EnvironmentModule]:
@@ -140,11 +150,11 @@ def load_env() -> Environment:
             return None
 
     modules = [
-        _load(active_deployment_dir, local=True),
-        _load(parent_deployment_dir, local=True) if parent_deployment_dir else None,
+        active_deployment_dir and _load(active_deployment_dir, local=True),
+        parent_deployment_dir and _load(parent_deployment_dir, local=True),
         _load(root_dir, local=True),
-        _load(active_deployment_dir),
-        _load(parent_deployment_dir) if parent_deployment_dir else None,
+        active_deployment_dir and _load(active_deployment_dir),
+        parent_deployment_dir and _load(parent_deployment_dir),
         _load(root_dir)
     ]
     # Note that ChainMap looks only considers the second mapping in the chain
@@ -156,7 +166,7 @@ def load_env() -> Environment:
             # https://github.com/python/typeshed/issues/6042
             # noinspection PyTypeChecker
             env.maps.append(filter_env(module.env()))
-    return env
+    return env, warning
 
 
 def filter_env(env: DraftEnvironment) -> Environment:
@@ -328,9 +338,11 @@ def main():
     # confusing the shell's eval. Note the  `|| echo false` in the recommended
     # usage below.
     output = None if os.isatty(sys.stdout.fileno()) else StringIO()
-    env = load_env()
+    env, warning = load_env()
     resolved_env = resolve_env(env)
     export_env(resolved_env, output)
+    if warning:
+        print(warning, file=sys.stderr)
     if output is None:
         print("\nStdout appears to be a terminal. No output was generated "
               "other than the usual redacted diagnostic output to stderr. To "

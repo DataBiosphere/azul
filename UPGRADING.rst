@@ -10,6 +10,48 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#4122 Create AnVIL deployments of Azul and Data Browser
+=======================================================
+
+Everyone
+~~~~~~~~
+
+In personal deployments dedicated to AnVIL, set ``AZUL_BILLING`` to ``'anvil'``,
+set it to ``'hca'`` in all other personal deployments.
+
+In personal deployments, set ``AZUL_VERSIONED_BUCKET`` and ``AZUL_S3_BUCKET`` to
+the same value as in the ``sandbox`` deployment.
+
+In personal deployments, remove ``AZUL_URL_REDIRECT_FULL_DOMAIN_NAME`` if its
+value is (``'{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}'``.
+
+In ``environment.py`` for personal deployments, initialize the ``is_sandbox``
+variable to ``False``, replacing the dynamic initializer, and copy the
+definition of the ``AZUL_IS_SANDBOX`` environment variable from sandbox'
+``environment.py``. This will make it easier in the future to synchronize your
+deployments' ``environment.py`` with that of the sandbox.
+
+Operator
+~~~~~~~~
+
+Run ::
+
+    _select dev.shared # or prod.shared
+    cd terraform/shared
+    make validate
+    terraform import aws_s3_bucket.versioned $AZUL_VERSIONED_BUCKET
+    terraform import aws_s3_bucket_versioning.versioned $AZUL_VERSIONED_BUCKET
+    terraform import aws_s3_bucket_lifecycle_configuration.versioned $AZUL_VERSIONED_BUCKET
+    terraform import aws_api_gateway_account.shared api-gateway-account
+    terraform import aws_iam_role.api_gateway azul-api_gateway
+
+Repeat for ``shared.prod``.
+
+Redeploy the ``shared.dev`, ``gitlab.dev``, ``shared.prod`, and ``gitlab.prod``
+components to apply the needed changes to any resources.
+
+
 #4224 Index ENCODE snapshot as PoC
 ==================================
 

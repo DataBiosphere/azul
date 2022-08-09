@@ -15,7 +15,7 @@ emit_tf({
                 },
                 "urls": {
                     "bucket": config.url_redirect_full_domain_name,
-                    "force_destroy": not config.is_main_deployment(),
+                    "force_destroy": config.is_sandbox_or_personal_deployment,
                 }
             },
             "aws_s3_bucket_lifecycle_configuration": {

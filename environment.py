@@ -130,6 +130,9 @@ def env() -> Mapping[str, Optional[str]]:
         # `secret`, `password` or `token`, either upper or lower case. Think twice
         # before publishing a variable containing a secret.
 
+        # The name of the billing accocunt that pays for this deployment.
+        'AZUL_BILLING': None,
+
         # The email address of a user that owns the cloud resources in the current
         # deployment. This will become the value of the Owner tag on all resources.
         'AZUL_OWNER': None,
@@ -199,7 +202,7 @@ def env() -> Mapping[str, Optional[str]]:
         # created manually prior to running `make deploy`. The value is typically
         # not deployment specific. A subdomain will automatically be created for
         # each deployment.
-        'AZUL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu',
+        'AZUL_DOMAIN_NAME': None,
 
         # An optional list of roles in other AWS accounts that can assume the IAM
         # role normally assumed by lambda functions in the active Azul deployment.
@@ -222,13 +225,14 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS': None,
 
         # The domain name of the HCA DRS endpoint. The service lambda serves
-        # requests under both its canonical domain name as well as the domain name
-        # given here. It is assumed that the parent domain of the given domain is
-        # a hosted zone in Route 53 that we can create additional certificate
-        # validation records in. If unset or set to empty string, the service lambda
-        # will only serve requests under its canonical domain name and no validation
-        # records will be created in hosted zones other than the zone defined by
-        # AZUL_DOMAIN_NAME.
+        # requests under both its canonical domain name as well as the domain
+        # name given here. It is assumed that the parent domain of the given
+        # domain is a hosted zone in Route 53 that we can create additional
+        # certificate validation records in. If unset or set to empty string,
+        # the service lambda will only serve requests under its canonical domain
+        # name and no validation records will be created in hosted zones other
+        # than the zone defined by AZUL_DOMAIN_NAME.
+        #
         'AZUL_DRS_DOMAIN_NAME': '',
 
         # A template for the name of the Route 53 record set in the hosted zone
@@ -299,7 +303,7 @@ def env() -> Mapping[str, Optional[str]]:
         # include the region name at then end of the bucket name. That way you
         # can have consistent bucket names across regions.
         #
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
+        'AZUL_VERSIONED_BUCKET': None,
 
         # The number of workers pulling files from the DSS repository.
         # There is one such set of repository workers per index worker.
@@ -357,16 +361,18 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The name of the S3 bucket where the manifest API stores the downloadable
         # content requested by client.
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-singlecell-azul-storage-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_S3_BUCKET': None,
 
-        # Name of the Route 53 zone used for shortened URLs.
+        # Name of the Route 53 zone to be used for shortened URLs.
+        #
         # This hosted zone will have to be created manually prior to running
-        # `make deploy`. Personal deployments typically share a zone with the
-        # `dev` deployment.
-        # If this variable is empty, a route 53 record will not be created and it
-        # is assumed that the record and zone have been created manually.  This is
-        # the case for staging, integration, and prod environments.
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'url.singlecell.gi.ucsc.edu',
+        # `make deploy` in any deployment. Personal deployments typically share
+        # a zone with the `dev` deployment.
+        #
+        # If this variable is empty, no Route 53 record will be created and it
+        # is assumed that record and containing zone have been created manually.
+        #
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': None,
 
         # Full domain name to be used in the URL redirection URLs
         # This is also used as the name of the S3 bucket used to store URL
@@ -475,4 +481,20 @@ def env() -> Mapping[str, Optional[str]]:
         # The provider region used by the CloudTrail trail.
         'azul_cloudtrail_trail_region': '{AWS_DEFAULT_REGION}',
 
+        # Maps a branch name to a list of names of deployments the branch may be
+        # deployed to. When building a given branch, a GitLab instance uses this
+        # variable to automatically determine the target deployment by using the
+        # first item of the value for that branch. An empty key signifies any
+        # other branch not mentioned explicitly, or a detached HEAD.
+        #
+        'azul_main_deployments': json.dumps({
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
+            'prod': ['prod']
+        }),
+
+        # 1 if current deployment is a main deployment with the sole purpose of
+        # testing feature branches in GitLab before they are merged to the
+        # develop branch, 0 otherwise. Personal deployments have this set to 0.
+        #
+        'AZUL_IS_SANDBOX': '0'
     }

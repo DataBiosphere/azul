@@ -22,7 +22,7 @@ _admin: check_env
 
 .PHONY: init
 init: _client
-	$(easyrsa) init-pki --batch
+	$(easyrsa) init-pki
 
 .PHONY: request
 request: _client
@@ -61,7 +61,7 @@ config: _client
 	@echo >&2
 	@echo "Import the generated configuration to your OpenVPN client." >&2
 	@echo "On Ubuntu, this is done with" \
-	      "'nmcli connection import type openvpn file azul-gitlab-$(AZUL_DEPLOYMENT_STAGE).ovpn'" >&2
+	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE).ovpn'" >&2
 	@echo >&2
 	@echo "Make sure that other Internet traffic isn't routed through the VPN." >&2
 	@echo "On Ubuntu, this is done with" \
