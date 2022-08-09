@@ -507,10 +507,6 @@ class Config:
         return self.environ['AWS_DEFAULT_REGION']
 
     @property
-    def terraform_backend_bucket(self) -> str:
-        return self.versioned_bucket
-
-    @property
     def versioned_bucket(self):
         return self.environ['AZUL_VERSIONED_BUCKET']
 

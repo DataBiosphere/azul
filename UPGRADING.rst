@@ -14,11 +14,28 @@ have too many entries in this file.
 #4122 Create AnVIL deployments of Azul and Data Browser
 =======================================================
 
+Everyone
+~~~~~~~~
+
 In personal deployments dedicated to AnVIL, set ``AZUL_BILLING`` to ``'anvil'``,
 set it to ``'hca'`` in all other personal deployments.
 
-Operator: Redeploy ``gitlab.dev`, ``shared.dev``, ``gitlab.prod`, and
-``shared.prod`` components to apply the changes to resource tags.
+Operator
+~~~~~~~~
+
+Run ::
+
+    _select dev.shared # or prod.shared
+    cd terraform/shared
+    make validate
+    terraform import aws_s3_bucket.versioned $AZUL_VERSIONED_BUCKET
+    terraform import aws_s3_bucket_versioning.versioned $AZUL_VERSIONED_BUCKET
+    terraform import aws_s3_bucket_lifecycle_configuration.versioned $AZUL_VERSIONED_BUCKET
+
+Repeat for ``shared.prod``.
+
+Redeploy the ``shared.dev`, ``gitlab.dev``, ``shared.prod`, and ``gitlab.prod``
+components to apply the needed changes to any resources.
 
 
 #4224 Index ENCODE snapshot as PoC
