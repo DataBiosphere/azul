@@ -427,51 +427,30 @@ module is part of a rarely used feature that can be disabled by unchecking
 
 # 3. Deployment
 
+
 ## 3.1 One-time provisioning of shared cloud resources
 
-Most of the cloud resources used by a particular deployment (personal or shared)
-are provisioned automatically by `make deploy`. A handful of  resources must be
-created manually before invoking these Makefile targets for the first time in a
-particular AWS account. This only needs to be done once per AWS account, before
-the first Azul deployment is created in that account. Additional deployments do 
-not require this step.
+Most of the cloud resources used by a particular deployment (personal or main
+ones alike) are provisioned automatically by `make deploy`. A handful of
+resources must be created manually before invoking this Makefile target for
+the first time in a particular AWS account. This only needs to be done once
+per AWS account, before the first Azul deployment is created in that account.
+Additional deployments do not require this step.
 
-Create an S3 bucket for shared Terraform and Chalice state. That bucket should
-have object versioning enabled and must not be publicly accessible since
-Terraform state may include secrets. If your developers assume a role via
-Amazon STS, the bucket should reside in the same region as the Azul deployment.
-This is because temporary STS AssumeRole credentials are specific to a region
-and won't be recognized by an S3 region that's different from the one the
-temporary credentials were issued in. To account for the region specificity of
-the bucket, you may want to include the region name at then end of the bucket
-name. That way you can have consistent bucket names across regions.
+### 3.1.1 Versioned bucket for shared state
 
-Next, create a lifecycle policy for the bucket. This rule governs the deletion
-of ephemeral object versions that are generated in large numbers by integration
-tests on personal and sandbox deployments. Name the rule `expire-tag`; enter
-`expires` for the Object tags Key and `true` for the Object tags Value; select
-the *Permanently delete previous versions of objects* checkbox, and enter *30*
-for *Number of days after objects become previous versions*. Then click *Create
-rule.*
-
-### 3.1.1 CloudTrail
-
-The CloudTrail resources for each of the AWS accounts hosting Azul deployments
-are provisioned through Terraform. The corresponding resource definitions reside
-in a separate *Terraform component*.
-
-A Terraform component is a set of related resources. It is our own bastardized
-form of Terraform's *module* concept, aimed at facilitating encapsulation and
-reuse. Each deployment has at least a main component and zero or more child
-components. The main component is identified by the empty string for a name;
-child components have a non-empty name. The `dev` component has a child
-component `dev.shared`. To deploy the main component of the `dev`deployment, one
-selects the `dev` deployment and runs `make apply` from
-`${project_root}/terraform` (or `make deploy` from the project root). To deploy
-the `shared` child component of the `dev` deployment, one selects `dev.shared`
-and runs `make apply` from `${project_root}/terraform/shared`. In other words,
-there is one generic set of resource definitions for a child component, but
-multiple concrete deployment directories.
+Create an S3 bucket for shared Terraform and Chalice state. The bucket must
+not be publicly accessible since Terraform state may include secrets. If your
+developers assume a role via Amazon STS, the bucket should reside in the same
+region as the Azul deployment. This is because temporary STS AssumeRole
+credentials are specific to a region and won't be recognized by an S3 region
+that's different from the one the temporary credentials were issued in. To
+account for the region specificity of the bucket, you may want to include the
+region name at then end of the bucket name. That way you can have consistent
+bucket names across regions. Modify the ``environment.py`` of a main
+deployment to be created in the AWS account owning the bucket(typically `dev`
+or `prod`) to set `AZUL_VERSIONED_BUCKET` to the name of the bucket. Or,
+inversely, name the bucket using the current value of that variable.
 
 ### 3.1.2 API Gateway logs
 
@@ -527,17 +506,58 @@ The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
 [src/azul/deployment.py:tags](src/azul/deployment.py).
 
-### 3.1.4 EBS volume for Gitlab
+### 3.1.4 Shared resources managed by Terraform
+
+The remaining resources for each of the AWS accounts hosting Azul deployments
+are provisioned through Terraform. The corresponding resource definitions reside
+in a separate *Terraform component*.
+
+A Terraform component is a set of related resources. It is our own bastardized
+form of Terraform's *module* concept, aimed at facilitating encapsulation and
+reuse. Each deployment has at least a main component and zero or more child
+components. The main component is identified by the empty string for a name;
+child components have a non-empty name. The `dev` component has a child
+component `dev.shared`. To deploy the main component of the `dev` deployment, 
+one selects the `dev` deployment and runs `make apply` from 
+`${project_root}/terraform` (or `make deploy` from the project root). To deploy 
+the `shared` child component of the `dev` deployment, one selects `dev.shared` 
+and runs `make apply` from `${project_root}/terraform/shared`. In other words, 
+there is one generic set of resource definitions for a child component, but 
+multiple concrete deployment directories.
+
+There are currently two Terraform components: `shared` and `gitlab`. 
+Interestingly, not every deployment uses these components. Typically, only the 
+`dev` and `prod` deployments use them. The other deployment share them with 
+`dev` or `prod`, depending on which of those deployments they are colocated 
+with. Two deployments are colocated if they use the same AWS account. The 
+`shared` component contains the resources shared by all deployments in an AWS 
+account.
+
+To deploy he remaining shared resources, run: 
+
+```
+_select dev.shared  # or prod.shared
+cd terraform/shared
+make validate
+terraform import aws_s3_bucket.versioned $AZUL_VERSIONED_BUCKET
+make
+```
+
+The invocation of `terraform import` puts the bucket we created 
+[earlier](#311-versioned-bucket-for-shared-state) under management by Terraform.
+
+### 3.1.5 EBS volume for Gitlab
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details.
 
-### 3.1.5 Certificate authority for VPN access to Gitlab
+### 3.1.6 Certificate authority for VPN access to Gitlab
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments,
 a certificate authority must be set up. See the
 [section on GitLab CA](#912-setting-up-the-certificate-authority) for details.
+
 
 ## 3.2 One-time manual configuration of deployments
 
@@ -1671,11 +1691,11 @@ currently one such instance for the `sandbox` and `dev` deployments and another
 one for `prod`.
 
 The GitLab instances are provisioned through the `gitlab` *Terraform component*.
-For more information about *Terraform components*, refer to the example of the
-`shared` component in [Cloudtrail event recording](#311-cloudtrail).
-Within the `gitlab` component, the `dev.gitlab` child component provides a
-single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but
-for `integration` and `staging` as well. The `prod.gitlab` child component
+For more information about *Terraform components*, refer the [section on shared 
+resources managed by Terraform](#314-shared-resources-managed-by-terraform). 
+Within the `gitlab` component, the `dev.gitlab` child component provides a 
+single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but 
+for `integration` and `staging` as well. The `prod.gitlab` child component 
 provides the Gitlab EC2 instance for `prod`.
 
 To access the web UI of the Gitlab instance for `dev`, visit

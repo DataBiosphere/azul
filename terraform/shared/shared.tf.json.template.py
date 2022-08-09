@@ -17,6 +17,12 @@ emit_tf({
             'shared_cloudtrail': {
                 **provider_fragment(config.cloudtrail_s3_bucket_region),
                 'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail'
+            },
+            'versioned': {
+                'bucket': config.versioned_bucket,
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
             }
         },
         'aws_s3_bucket_policy': {
@@ -50,6 +56,32 @@ emit_tf({
                         }
                     ]
                 })
+            }
+        },
+        'aws_s3_bucket_lifecycle_configuration': {
+            'versioned': {
+                'bucket': '${aws_s3_bucket.versioned.id}',
+                'rule': {
+                    'id': 'expire-tag',
+                    'status': 'Enabled',
+                    'filter': {
+                        'tag': {
+                            'key': 'expires',
+                            'value': 'true'
+                        }
+                    },
+                    'noncurrent_version_expiration': {
+                        'noncurrent_days': 30
+                    }
+                }
+            }
+        },
+        'aws_s3_bucket_versioning': {
+            'versioned': {
+                'bucket': '${aws_s3_bucket.versioned.id}',
+                'versioning_configuration': {
+                    'status': 'Enabled'
+                }
             }
         },
         'aws_cloudtrail': {
