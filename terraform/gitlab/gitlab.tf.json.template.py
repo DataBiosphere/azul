@@ -571,6 +571,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'actions': [
                             'iam:CreateRole',
                             'iam:TagRole',
+                            'iam:UntagRole',
                             'iam:PutRolePolicy',
                             'iam:DeleteRolePolicy',
                             'iam:AttachRolePolicy',
