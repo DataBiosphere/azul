@@ -188,7 +188,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 'aws_vpc': [{
                     'name': {
                         'tags': {
-                            'project': None,
+                            'billing': None,
                             'service': None,
                             'deployment': None,
                             'owner': None,
@@ -214,7 +214,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 'google_compute_instance': [{
                     'name': {
                         'tags': {
-                            'project': None,
+                            'billing': None,
                             'service': None,
                             'deployment': None,
                             'owner': None,
@@ -257,7 +257,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 'aws_vpc': [{
                     'name': {
                         'tags': {
-                            'project': None,
+                            'billing': None,
                             'service': None,
                             'deployment': None,
                             'owner': None,

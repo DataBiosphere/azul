@@ -257,7 +257,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
         bundle_count = len(fqids)
         partition = f'Partition {effective_prefix!r} of source {source.spec}'
-        if config.is_main_deployment():
+        if not config.is_sandbox_or_personal_deployment:
             # For sources that use partitioning, 512 is the desired partition
             # size. In practice, we observe the reindex succeeding with sizes
             # >700 without the partition size becoming a limiting factor. From
@@ -1224,7 +1224,8 @@ class PortalExpirationIntegrationTest(PortalTestCase):
 # FIXME: Re-enable when SlowDown error can be avoided
 #        https://github.com/DataBiosphere/azul/issues/4285
 @unittest.skip('Test disabled. FIXME #4285')
-@unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
+@unittest.skipUnless(config.is_sandbox_or_personal_deployment,
+                     'Test would pollute portal DB')
 class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 
     @property

@@ -224,7 +224,7 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     >>> from azul.doctests import assert_json
     >>> assert_json(_tags('service'))  #doctest: +ELLIPSIS
     {
-        "project": "dcp",
+        "billing": "...",
         "service": "azul",
         "deployment": "...",
         "owner": ...,
@@ -233,9 +233,9 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     }
 
     >>> from azul.doctests import assert_json
-    >>> assert_json(_tags('service', project='foo'))  #doctest: +ELLIPSIS
+    >>> assert_json(_tags('service', billing='foo'))  #doctest: +ELLIPSIS
     {
-        "project": "foo",
+        "billing": "foo",
         "service": "azul",
         "deployment": "...",
         "owner": ...,
@@ -243,13 +243,24 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
         "component": "azul-service"
     }
     """
+    component = f'{config.resource_prefix}-{resource_name}'
     return {
-        'project': 'dcp',
+        'billing': config.billing,
         'service': config.resource_prefix,
         'deployment': config.deployment_stage,
         'owner': config.owner,
-        'name': config.qualified_resource_name(resource_name),
-        'component': f'{config.resource_prefix}-{resource_name}',
+        **(
+            {
+                'name': component,
+                'component': component,
+                'terraform_component': config.terraform_component
+            }
+            if config.terraform_component else
+            {
+                'name': config.qualified_resource_name(resource_name),
+                'component': component
+            }
+        ),
         **overrides
     }
 

@@ -13,7 +13,7 @@ emit_tf(
         "terraform": {
             "backend": {
                 "s3": {
-                    "bucket": config.terraform_backend_bucket,
+                    "bucket": config.versioned_bucket,
                     "key": f"azul-{config.terraform_component}-{config.deployment_stage}.tfstate",
                     "region": aws.region_name,
                     **(
