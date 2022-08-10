@@ -8,31 +8,24 @@ from azul.terraform import (
 emit_tf(None if config.disable_monitoring else {
     "resource": [
         {
-            "aws_cloudwatch_log_metric_filter": {
-                f"{lambda_}_5xx": {
-                    "name": config.qualified_resource_name(lambda_ + '_5xx'),
-                    "pattern": "{ $.status = 5* }",
-                    "log_group_name": "${aws_cloudwatch_log_group.%s.name}" % lambda_,
-                    "metric_transformation": {
-                        "name": config.qualified_resource_name(lambda_ + '_5xx'),
-                        "namespace": config.qualified_resource_name('metrics'),
-                        "value": 1,
-                        "unit": "Count"
-                    }
-                }
-            },
             "aws_cloudwatch_metric_alarm": {
                 f"{lambda_}_5xx": {
                     "alarm_name": config.qualified_resource_name(lambda_ + '_5xx'),
                     "comparison_operator": "GreaterThanThreshold",
+                    # This alarm will catch persistent 5XX errors occurring over
+                    # one hour, specifically when more than one occurrence is
+                    # sampled in a ten-minute period for six consecutive periods.
                     "evaluation_periods": 6,
-                    "period": 6 * 10,
-                    "metric_name": "${aws_cloudwatch_log_metric_filter.%s_5xx.metric_transformation[0].name}"
-                                   % lambda_,
-                    "namespace": "${aws_cloudwatch_log_metric_filter.%s_5xx.metric_transformation[0].namespace}"
-                                 % lambda_,
+                    "period": 60 * 10,
+                    "metric_name": "5XXError",
+                    "namespace": "AWS/ApiGateway",
                     "statistic": "Sum",
-                    "threshold": 10,
+                    "threshold": 1,
+                    "treat_missing_data": "notBreaching",
+                    "dimensions": {
+                        "ApiName": config.qualified_resource_name(lambda_),
+                        "Stage": config.deployment_stage,
+                    }
                 }
             }
         }
