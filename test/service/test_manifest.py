@@ -72,6 +72,9 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul.plugins import (
+    ManifestFormat,
+)
 from azul.plugins.repository.dss import (
     DSSBundle,
 )
@@ -84,7 +87,6 @@ from azul.service.manifest_service import (
     BDBagManifestGenerator,
     Bundles,
     Manifest,
-    ManifestFormat,
     ManifestGenerator,
     ManifestPartition,
     ManifestService,
@@ -1363,7 +1365,7 @@ class TestManifestResponse(ManifestTestCase):
         """
         Verify the response from manifest endpoints for all manifest formats
         """
-        for format_ in ManifestFormat:
+        for format_ in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
                 with self.subTest(format=format_, fetch=fetch):
                     object_url = 'https://url.to.manifest?foo=bar'

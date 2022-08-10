@@ -133,6 +133,10 @@ from azul.modules import (
     load_app_module,
     load_script,
 )
+from azul.plugins import (
+    MetadataPlugin,
+    RepositoryPlugin,
+)
 from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
@@ -140,6 +144,7 @@ from azul.portal_service import (
     PortalService,
 )
 from azul.service.manifest_service import (
+    ManifestFormat,
     ManifestGenerator,
 )
 from azul.terra import (
@@ -185,6 +190,13 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     @cached_property
     def azul_client(self):
         return AzulClient()
+
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return self.azul_client.repository_plugin(catalog)
+
+    @cache
+    def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
+        return MetadataPlugin.load(catalog).create()
 
     def setUp(self) -> None:
         super().setUp()
@@ -501,26 +513,28 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self._check_endpoint(path, args=args, endpoint=endpoint)
 
     def _test_manifest(self, catalog: CatalogName):
-        for format_, validator, attempts in [
-            (None, self._check_manifest, 1),
-            ('compact', self._check_manifest, 1),
-            ('terra.bdbag', self._check_terra_bdbag, 1),
-            ('terra.pfb', self._check_terra_pfb, 1),
-            ('curl', self._check_curl_manifest, 1),
-        ]:
+        supported_formats = self.metadata_plugin(catalog).manifest_formats
+        assert supported_formats
+        validators = {
+            ManifestFormat.compact: self._check_manifest,
+            ManifestFormat.terra_bdbag: self._check_terra_bdbag,
+            ManifestFormat.terra_pfb: self._check_terra_pfb,
+            ManifestFormat.curl: self._check_curl_manifest
+        }
+        for format_ in [None, *supported_formats]:
             with self.subTest('manifest',
                               catalog=catalog,
-                              format=format_,
-                              attempts=attempts):
-                assert attempts > 0
+                              format=format_):
                 args = dict(catalog=catalog)
-                if format_ is not None:
-                    args['format'] = format_
-                for attempt in range(attempts):
-                    start = time.time()
-                    response = self._check_endpoint('/manifest/files', args=args)
-                    log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
-                    validator(catalog, response)
+                if format_ is None:
+                    validator = validators[first(supported_formats)]
+                else:
+                    validator = validators[format_]
+                    args['format'] = format_.value
+                start = time.time()
+                response = self._check_endpoint('/manifest/files', args=args)
+                log.info('Request took %.3fs to execute.', time.time() - start)
+                validator(catalog, response)
 
     @cache
     def _get_one_file(self, catalog: CatalogName) -> JSON:
