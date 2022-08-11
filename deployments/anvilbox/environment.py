@@ -155,6 +155,8 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_OWNER': 'hannes@ucsc.edu' if is_sandbox else None,
 
+        'AZUL_NOTIFICATION_EMAIL': '{AZUL_OWNER}',
+
         'AZUL_AWS_ACCOUNT_ID': '289950828509',
         'AWS_DEFAULT_REGION': 'us-east-1',
 

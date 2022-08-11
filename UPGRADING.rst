@@ -11,6 +11,24 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4190 Create SNS topic for monitoring and security notifications
+================================================================
+
+A new environment variable called ``AZUL_NOTIFICATION_EMAIL`` has been added. In
+personal deployments, set this variable to ``'{AZUL_OWNER}'``. As always, use
+the sandbox deployment's ``environment.py`` as a model when upgrading personal
+deployments.
+
+Note: The SNS topic and email subscription will only be created for deployments
+that have ``AZUL_ENABLE_MONITORING`` enabled, which is typically the case in
+main deployments only.
+
+**IMPORTANT**: The SNS topic subscription will be created with a status of
+"pending confirmation". Instead of simply clicking the link in the "Subscription
+Confirmation" email, you should follow the instructions given during the
+``make deploy`` process to confirm the subscription.
+
+
 #4122 Create AnVIL deployments of Azul and Data Browser
 =======================================================
 

@@ -117,6 +117,10 @@ class AWS:
         return self.client('s3')
 
     @property
+    def sns(self):
+        return self.client('sns')
+
+    @property
     def sts(self):
         return self.client('sts')
 

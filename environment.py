@@ -154,6 +154,16 @@ def env() -> Mapping[str, Optional[str]]:
         # deployment. This will become the value of the Owner tag on all resources.
         'AZUL_OWNER': None,
 
+        # An email address to subscribe to the SNS topic for monitoring
+        # notifications in the current deployment. Warn all members of the group
+        # to ignore any "Subscription Confirmation" emails and not to click the
+        # "Confirm subscription" link contained within, since doing so would
+        # confirm the subscription in a way that allows anyone with an
+        # unsubscribe link to unsubscribe the entire group from the topic.
+        # Instead, confirmation of the subscription should be done when prompted
+        # to do so during the `make deploy` process.
+        'AZUL_NOTIFICATION_EMAIL': None,
+
         # Controls the verbosity of application logs. Use 0 for no debug logging
         # 1 for debug logging by application code and info logging by other code
         # and 2 for debug logging by all code. This also controls app.debug, a
