@@ -1150,6 +1150,14 @@ class Config:
     def cloudtrail_trail_region(self) -> str:
         return self.environ['azul_cloudtrail_trail_region']
 
+    @property
+    def azul_monitoring_email(self) -> str:
+        return self.environ['AZUL_MONITORING_EMAIL']
+
+    @property
+    def monitoring_topic_name(self):
+        return self.qualified_resource_name('monitoring')
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 

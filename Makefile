@@ -89,6 +89,7 @@ auto_deploy: check_env
 
 .PHONY: post_deploy
 post_deploy: check_python
+	python $(project_root)/scripts/post_deploy_sns.py
 	python $(project_root)/scripts/post_deploy_tdr.py
 
 .PHONY: create
