@@ -269,6 +269,7 @@ class Plugin(TDRPlugin):
                            entities: KeysByType
                            ) -> Links:
         return set.union(
+            self._downstream_from_biosamples(source, entities['biosample']),
             self._downstream_from_libraries(source, entities['library']),
             self._downstream_from_files(source, entities['files'])
         )
@@ -403,6 +404,65 @@ class Plugin(TDRPlugin):
                     for key in row[column]
                 ]
             )
+            for row in rows
+        }
+
+    def _downstream_from_biosamples(self,
+                                    source: TDRSourceSpec,
+                                    biosample_ids: AbstractSet[Key],
+                                    ) -> Links:
+        if not biosample_ids:
+            return set()
+        rows = self._run_sql(f'''
+            WITH activities AS (
+                SELECT
+                    exa.experimentactivity_id AS activity_id,
+                    'experimentactivity' AS activity_type,
+                    exa.uses_sample_biosample_id AS biosample_ids,
+                    exa.generated_file_id AS output_ids,
+                    'file' AS output_type
+                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
+                UNION ALL
+                SELECT
+                    sqa.sequencingactivity_id,
+                    'sequencingactivity',
+                    sqa.uses_sample_biosample_id,
+                    sqa.generated_file_id,
+                    'file'
+                FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
+                UNION ALL
+                SELECT
+                    aya.assayactivity_id,
+                    'assayactivity',
+                    aya.uses_sample_biosample_id,
+                    aya.generated_file_id,
+                    'file'
+                FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                UNION ALL
+                SELECT
+                    lpa.librarypreparationactivity_id,
+                    'librarypreparationactivity',
+                    lpa.uses_sample_biosample_id,
+                    lpa.generated_library_id,
+                    'library'
+                FROM {backtick(self._full_table_name(source, 'librarypreparationactivity'))} AS lpa
+            )
+            SELECT
+                biosample_id,
+                a.activity_id,
+                a.activity_type,
+                a.output_ids,
+                a.output_type
+            FROM activities AS a, UNNEST(a.biosample_ids) AS biosample_id
+            WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
+        ''')
+        return {
+            Link.create(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
+                        outputs=[
+                            KeyReference(key=output_id, entity_type=row['output_type'])
+                            for output_id in row['output_ids']
+                        ],
+                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
             for row in rows
         }
 
@@ -625,7 +685,7 @@ class Plugin(TDRPlugin):
 
 
 class TDRAnvilBundle(Bundle[TDRSourceRef]):
-    entity_type: EntityType = 'library'
+    entity_type: EntityType = 'biosample'
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return None
