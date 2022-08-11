@@ -591,6 +591,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': ['wafv2:*'],
                         'resources': ['*']
+                    },
+
+                    # SNS
+                    {
+                        "actions": [
+                            'sns:*'
+                        ],
+                        "resources": aws_service_arns('SNS',
+                                                      TopicName='azul-*')
                     }
                 ]
             },
@@ -1540,21 +1549,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Owner': config.owner
                 }
-            }
-        },
-        'aws_sns_topic': {
-            'azul_monitoring': {
-                'name': 'azul-monitoring'
-            }
-        },
-        'aws_sns_topic_subscription': {
-            'azul_monitoring_azul_group': {
-                'topic_arn': '${aws_sns_topic.azul_monitoring.arn}',
-                # The `email` protocol is only partially supported. Be careful
-                # when changing or removing this.
-                # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
-                'protocol': 'email',
-                'endpoint': 'azul-group@ucsc.edu'
             }
         }
     }
