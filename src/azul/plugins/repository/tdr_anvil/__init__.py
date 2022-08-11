@@ -280,7 +280,7 @@ class Plugin(TDRPlugin):
         if not biosample_ids:
             return set()
         rows = self._run_sql(f'''
-            SELECT b.biosample_id, b.derived_from_biosample_id, b.donor_id
+            SELECT b.biosample_id, b.derived_from_biosample_id, b.donor_id, b.part_of_dataset_id
             FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
             WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
@@ -288,8 +288,10 @@ class Plugin(TDRPlugin):
         for row in rows:
             downstream_ref = KeyReference(entity_type='biosample',
                                           key=row['biosample_id'])
-            donor_id = row['donor_id']
-            if donor_id is not None:
+            result.add(Link.create(outputs=downstream_ref,
+                                   inputs=KeyReference(entity_type='dataset',
+                                                       key=one(row['part_of_dataset_id']))))
+            for donor_id in row['donor_id']:
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='donor',
                                                            key=donor_id)))
@@ -548,6 +550,14 @@ class Plugin(TDRPlugin):
             'lab',
             'preservation_state',
             'xref'
+        },
+        'dataset': {
+            'dataset_id',
+            'contact_point',
+            'custodian',
+            'last_modified_date',
+            'entity_description',
+            'entity_title',
         },
         'donor': {
             'donor_id',

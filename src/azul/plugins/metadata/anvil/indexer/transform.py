@@ -227,11 +227,11 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._entity_types(),
             'dataset_id': null_str,
-            'date_issued': null_datetime,
-            'description': null_str,
-            'last_modified_date': null_datetime,
-            'title': null_str,
-            'xref': null_str
+            'contact_point': [null_str],
+            'custodian': [null_str],
+            'entity_description': null_str,
+            'entity_title': null_str,
+            'last_modified_date': null_datetime
         }
 
     @classmethod
