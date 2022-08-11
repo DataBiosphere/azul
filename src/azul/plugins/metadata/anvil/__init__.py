@@ -134,12 +134,12 @@ class Plugin(MetadataPlugin):
                 'datasets': {
                     f: f for f in [
                         'dataset_id',
-                        'date_issued',
-                        'description',
+                        'contact_point',
+                        'custodian',
                         'document_id',
                         'last_modified_date',
-                        'title',
-                        'xref'
+                        'entity_description',
+                        'entity_title'
                     ]
                 },
                 'donors': {
@@ -194,7 +194,7 @@ class Plugin(MetadataPlugin):
             'assay_category',
             'biosample_type',
             'data_modality',
-            'title',
+            'entity_title',
             'donor_age_at_collection_age_stage',
             'file_format',
             'file_format_type',
@@ -232,7 +232,7 @@ class Plugin(MetadataPlugin):
             ('contents', 'datasets'): {
                 'document_id': 'dataset_document_id',
                 'dataset_id': 'dataset_id',
-                'title': 'dataset_title'
+                'entity_title': 'dataset_title'
             },
             ('contents', 'donors'): {
                 'phenotypic_sex': 'phenotypic_sex',

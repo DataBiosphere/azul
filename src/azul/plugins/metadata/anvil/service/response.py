@@ -40,7 +40,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
                 'anatomical_site'
             ],
             'datasets': [
-                'title'
+                'entity_title'
             ],
             'donors': [
                 'organism_type'
