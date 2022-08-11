@@ -524,10 +524,6 @@ class Plugin(TDRPlugin):
                 value.sort()
             if isinstance(value, datetime.datetime):
                 return self.format_version(value)
-            elif isinstance(value, datetime.date):
-                return convert_column(datetime.datetime.combine(value,
-                                                                datetime.time(),
-                                                                datetime.timezone.utc))
             else:
                 return value
 
