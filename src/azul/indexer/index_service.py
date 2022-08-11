@@ -178,7 +178,6 @@ class IndexService(DocumentService):
                      ) -> Bundle:
         plugin = self.repository_plugin(catalog)
         source = plugin.source_from_json(source)
-        plugin.verify_source(source)
         bundle_fqid = SourcedBundleFQID(source=source,
                                         uuid=bundle_uuid,
                                         version=bundle_version)
