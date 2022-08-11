@@ -537,8 +537,8 @@ class Plugin(TDRPlugin):
         ]
         log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
         missing = keys - {row[pk_column] for row in rows}
-        if missing:
-            log.warning(f'Required entities not found in {table_name}: {missing}')
+        require(not missing,
+                f'Required entities not found in {table_name}: {missing}')
         return rows
 
     def _synthesize_dataset(self) -> tuple[KeyReference, MutableJSON]:
