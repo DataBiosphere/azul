@@ -181,9 +181,9 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'anatomical_site',
             'biosample_type',
             'donor_age_at_collection_age_range',
-            'donor_age_at_collection_age_unit',
-            'donor_age_at_collection_age_stage',
-            'health_status',
+            'donor_age_at_collection_unit',
+            'donor_age_at_collection_life_stage',
+            'disease',
             'preservation_state'
         },
         'datasets': {
@@ -199,9 +199,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'count',
             'data_modality',
             'file_format',
-            'file_format_type',
             'file_type',
-            'genome_annotation',
             'reference_assembly'
         },
         'libraries': {
