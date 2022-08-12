@@ -182,8 +182,8 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'biosample_type',
             'donor_age_at_collection_age_range',
             'donor_age_at_collection_age_unit',
-            'donor_age_at_collection_age_stage',
-            'health_status',
+            'donor_age_at_collection_life_stage',
+            'disease_id',
             'preservation_state'
         },
         'datasets': {
@@ -199,10 +199,8 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'count',
             'data_modality',
             'file_format',
-            'file_format_type',
             'file_type',
-            'genome_annotation',
-            'reference_assembly'
+            'uses_reference_assembly'
         },
         'libraries': {
             'prep_material_name'

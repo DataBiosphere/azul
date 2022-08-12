@@ -281,7 +281,7 @@ class Plugin(TDRPlugin):
         if not biosample_ids:
             return set()
         rows = self._run_sql(f'''
-            SELECT b.biosample_id, b.derived_from_biosample_id, b.donor_id, b.part_of_dataset_id
+            SELECT b.biosample_id, b.derived_from, b.donor_id, b.part_of_dataset_id
             FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
             WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
@@ -296,8 +296,7 @@ class Plugin(TDRPlugin):
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='donor',
                                                            key=donor_id)))
-            upstream_biosample_id = row['derived_from_biosample_id']
-            if upstream_biosample_id is not None:
+            for upstream_biosample_id in row['derived_from']:
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='biosample',
                                                            key=upstream_biosample_id)))
@@ -342,7 +341,7 @@ class Plugin(TDRPlugin):
                   f.file_id AS generated_file_id,
                   'alignmentactivity' AS activity_type,
                   ama.alignmentactivity_id AS activity_id,
-                  ama.uses_file_id AS uses_file_id,
+                  ama.used_file_id AS uses_file_id,
                   [] AS uses_biosample_id,
                   [] AS library_id
               FROM file AS f
@@ -352,7 +351,7 @@ class Plugin(TDRPlugin):
                   f.file_id,
                   'analysisactivity',
                   asa.analysisactivity_id,
-                  asa.derived_from_file_id,
+                  asa.used_file_id,
                   [],
                   []
               FROM file AS f
@@ -382,12 +381,12 @@ class Plugin(TDRPlugin):
                   f.file_id,
                   'experimentactivity',
                   exa.experimentactivity_id,
-                  exa.used_file_id,
+                  exa.used,
                   exa.uses_sample_biosample_id,
-                  exa.library_id
+                  []
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                ON f.file_id IN UNNEST(exa.generated_file_id)
+                ON f.file_id IN UNNEST(exa.generated)
         ''')
         return {
             Link.create(
@@ -419,7 +418,7 @@ class Plugin(TDRPlugin):
                     exa.experimentactivity_id AS activity_id,
                     'experimentactivity' AS activity_type,
                     exa.uses_sample_biosample_id AS biosample_ids,
-                    exa.generated_file_id AS output_ids,
+                    exa.generated AS output_ids,
                     'file' AS output_type
                 FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
                 UNION ALL
@@ -478,7 +477,7 @@ class Plugin(TDRPlugin):
                     exa.experimentactivity_id AS activity_id,
                     'experimentactivity' AS activity_type,
                     exa.library_id AS library_ids,
-                    exa.generated_file_id AS file_ids
+                    exa.generated AS file_ids
                 FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
                 UNION ALL
                 SELECT
@@ -524,21 +523,21 @@ class Plugin(TDRPlugin):
                 SELECT
                     exa.experimentactivity_id AS activity_id,
                     'experimentactivity' AS activity_type,
-                    exa.used_file_id AS used_file_ids,
-                    exa.generated_file_id AS generated_file_ids
+                    exa.used AS used_file_ids,
+                    exa.generated AS generated_file_ids
                 FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
                 UNION ALL
                 SELECT
                     asa.analysisactivity_id,
                     'analysisactivity',
-                    asa.uses_file_id,
+                    asa.used_file_id,
                     asa.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'analysisactivity'))} AS asa
                 UNION ALL
                 SELECT
                     ala.alignmentactivity_id,
                     'alignmentactivity',
-                    ala.derived_file_id,
+                    ala.used_file_id,
                     ala.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
             )
@@ -600,14 +599,12 @@ class Plugin(TDRPlugin):
             'biosample_id',
             'biosample_type',
             'anatomical_site',
-            'date_created',
-            'date_obtained',
-            'donor_age_at_collection_age_lowerbound',
-            'donor_age_at_collection_age_upperbound',
-            'donor_age_at_collection_age_stage',
+            'date_collected',
+            'donor_age_at_collection_lower_bound',
+            'donor_age_at_collection_upper_bound',
+            'donor_age_at_collection_life_stage',
             'donor_age_at_collection_age_unit',
-            'health_status',
-            'lab',
+            'disease_id',
             'preservation_state',
             'xref'
         },
@@ -621,7 +618,7 @@ class Plugin(TDRPlugin):
         },
         'donor': {
             'donor_id',
-            'date_created',
+            'birth_date',
             'organism_type',
             'phenotypic_sex',
             'reported_ethnicity',
@@ -630,12 +627,8 @@ class Plugin(TDRPlugin):
         'file': {
             'file_id',
             'data_modality',
-            'date_created',
             'file_format',
-            'file_format_type',
-            'file_type',
-            'genome_annotation',
-            'reference_assembly'
+            'uses_reference_assembly'
         },
         'library': {
             'library_id',
@@ -674,8 +667,7 @@ class Plugin(TDRPlugin):
         'sequencingactivity': {
             'sequencingactivity_id',
             'data_modality',
-            'date_created',
-            'xref'
+            'started_at_time',
         }
     }
 

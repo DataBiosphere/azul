@@ -199,7 +199,7 @@ class BaseTransformer(Transformer, ABC):
             'analysis_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
-            'date_created': null_datetime,
+            'started_at_time': null_datetime,
             'date_submitted': null_datetime,
             'xref': [null_str]
         }
@@ -211,13 +211,11 @@ class BaseTransformer(Transformer, ABC):
             'anatomical_site': null_str,
             'biosample_id': null_str,
             'biosample_type': null_str,
-            'date_created': null_datetime,
-            'date_obtained': null_datetime,
+            'date_collected': null_datetime,
             'donor_age_at_collection_age_range': pass_thru_json,
-            'donor_age_at_collection_age_stage': null_str,
+            'donor_age_at_collection_life_stage': null_str,
             'donor_age_at_collection_age_unit': null_str,
-            'health_status': null_str,
-            'lab': null_str,
+            'disease_id': null_str,
             'preservation_state': null_str,
             'xref': [null_str]
         }
@@ -238,11 +236,11 @@ class BaseTransformer(Transformer, ABC):
     def _donor_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'date_created': null_datetime,
+            'birth_date': null_datetime,
             'donor_id': null_str,
             'organism_type': null_str,
             'phenotypic_sex': null_str,
-            'reported_ethnicity': [null_str],
+            'reported_ethnicity': null_str,
             'xref': [null_str]
         }
 
@@ -251,13 +249,9 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._entity_types(),
             'data_modality': [null_str],
-            'date_created': null_datetime,
             'file_format': null_str,
-            'file_format_type': null_str,
             'file_id': null_str,
-            'file_type': null_str,
-            'genome_annotation': null_str,
-            'reference_assembly': null_str,
+            'uses_reference_assembly': [null_str],
             'crc32': null_str,
             'sha256': null_str,
             'drs_path': null_str
@@ -344,8 +338,8 @@ class BaseTransformer(Transformer, ABC):
 
     def _biosample(self, manifest_entry: JSON) -> MutableJSON:
         metadata = self.bundle.metadata_files[manifest_entry['name']]
-        age_gte = metadata['donor_age_at_collection_age_lowerbound']
-        age_lte = metadata['donor_age_at_collection_age_upperbound']
+        age_gte = metadata['donor_age_at_collection_lower_bound']
+        age_lte = metadata['donor_age_at_collection_upper_bound']
         return self._entity(manifest_entry,
                             self._biosample_types(),
                             donor_age_at_collection_age_range={
