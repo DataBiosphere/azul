@@ -40,7 +40,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
                 'anatomical_site'
             ],
             'datasets': [
-                'entity_title'
+                'title'
             ],
             'donors': [
                 'organism_type'
@@ -200,7 +200,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'data_modality',
             'file_format',
             'file_type',
-            'uses_reference_assembly'
+            'reference_assembly'
         },
         'libraries': {
             'prep_material_name'

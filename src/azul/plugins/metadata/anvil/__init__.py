@@ -119,7 +119,7 @@ class Plugin(MetadataPlugin):
                         'anatomical_site',
                         'biosample_id',
                         'biosample_type',
-                        'date_collected',
+                        'date_obtained',
                         'document_id',
                         'donor_age_at_collection_age_range',
                         'donor_age_at_collection_life_stage',
@@ -136,8 +136,8 @@ class Plugin(MetadataPlugin):
                         'custodian',
                         'document_id',
                         'last_modified_date',
-                        'entity_description',
-                        'entity_title'
+                        'description',
+                        'title'
                     ]
                 },
                 'donors': {
@@ -157,7 +157,7 @@ class Plugin(MetadataPlugin):
                         'document_id',
                         'file_format',
                         'file_id',
-                        'uses_reference_assembly',
+                        'reference_assembly',
                         'crc32',
                         'sha256',
                         'drs_path'
@@ -188,7 +188,7 @@ class Plugin(MetadataPlugin):
             'assay_category',
             'biosample_type',
             'data_modality',
-            'entity_title',
+            'title',
             'donor_age_at_collection_life_stage',
             'file_format',
             'disease_id',
@@ -196,7 +196,7 @@ class Plugin(MetadataPlugin):
             'phenotypic_sex',
             'prep_material_name',
             'preservation_state',
-            'uses_reference_assembly',
+            'reference_assembly',
             'reported_ethnicity',
         ]
 
@@ -223,7 +223,7 @@ class Plugin(MetadataPlugin):
             ('contents', 'datasets'): {
                 'document_id': 'dataset_document_id',
                 'dataset_id': 'dataset_id',
-                'entity_title': 'dataset_title'
+                'title': 'dataset_title'
             },
             ('contents', 'donors'): {
                 'phenotypic_sex': 'phenotypic_sex',
@@ -233,7 +233,7 @@ class Plugin(MetadataPlugin):
             ('contents', 'files'): {
                 'document_id': 'file_document_id',
                 'file_format': 'file_format',
-                'uses_reference_assembly': 'file_reference_assembly',
+                'reference_assembly': 'file_reference_assembly',
                 'crc32': 'file_crc32',
                 'sha256': 'file_sha256',
                 'drs_path': 'file_drs_uri',

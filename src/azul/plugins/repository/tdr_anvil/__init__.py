@@ -281,7 +281,7 @@ class Plugin(TDRPlugin):
         if not biosample_ids:
             return set()
         rows = self._run_sql(f'''
-            SELECT b.biosample_id, b.derived_from, b.donor_id, b.part_of_dataset_id
+            SELECT b.biosample_id, b.derived_from_biosample_id, b.donor_id, b.part_of_dataset_id
             FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
             WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
@@ -291,12 +291,12 @@ class Plugin(TDRPlugin):
                                           key=row['biosample_id'])
             result.add(Link.create(outputs=downstream_ref,
                                    inputs=KeyReference(entity_type='dataset',
-                                                       key=one(row['part_of_dataset_id']))))
-            for donor_id in row['donor_id']:
+                                                       key=row['part_of_dataset_id'])))
+            for donor_id in filter(None, [row['donor_id']]):
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='donor',
                                                            key=donor_id)))
-            for upstream_biosample_id in row['derived_from']:
+            for upstream_biosample_id in filter(None, [row['derived_from_biosample_id']]):
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='biosample',
                                                            key=upstream_biosample_id)))
@@ -309,9 +309,10 @@ class Plugin(TDRPlugin):
         if not library_ids:
             return set()
         rows = self._run_sql(f'''
-            SELECT lpa.generated_library_id, lpa.librarypreparationactivity_id, lpa.uses_sample_biosample_id
-            FROM {backtick(self._full_table_name(source, 'librarypreparationactivity'))} AS lpa
-            WHERE lpa.generated_library_id IN ({', '.join(map(repr, library_ids))})
+            SELECT generated_library_id, lpa.librarypreparationactivity_id, lpa.uses_sample_biosample_id
+            FROM {backtick(self._full_table_name(source, 'librarypreparationactivity'))} AS lpa,
+                 UNNEST(lpa.generated_library_id) AS generated_library_id
+            WHERE generated_library_id IN ({', '.join(map(repr, library_ids))})
         ''')
         return {
             Link.create(inputs=[
@@ -351,7 +352,7 @@ class Plugin(TDRPlugin):
                   f.file_id,
                   'analysisactivity',
                   asa.analysisactivity_id,
-                  asa.used_file_id,
+                  asa.derived_from_file_id,
                   [],
                   []
               FROM file AS f
@@ -381,12 +382,12 @@ class Plugin(TDRPlugin):
                   f.file_id,
                   'experimentactivity',
                   exa.experimentactivity_id,
-                  exa.used,
+                  exa.used_file_id,
                   exa.uses_sample_biosample_id,
                   []
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                ON f.file_id IN UNNEST(exa.generated)
+                ON f.file_id IN UNNEST(exa.generated_file_id)
         ''')
         return {
             Link.create(
@@ -418,7 +419,7 @@ class Plugin(TDRPlugin):
                     exa.experimentactivity_id AS activity_id,
                     'experimentactivity' AS activity_type,
                     exa.uses_sample_biosample_id AS biosample_ids,
-                    exa.generated AS output_ids,
+                    exa.generated_file_id AS output_ids,
                     'file' AS output_type
                 FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
                 UNION ALL
@@ -477,7 +478,7 @@ class Plugin(TDRPlugin):
                     exa.experimentactivity_id AS activity_id,
                     'experimentactivity' AS activity_type,
                     exa.library_id AS library_ids,
-                    exa.generated AS file_ids
+                    exa.generated_file_id AS file_ids
                 FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
                 UNION ALL
                 SELECT
@@ -523,7 +524,7 @@ class Plugin(TDRPlugin):
                 SELECT
                     exa.experimentactivity_id AS activity_id,
                     'experimentactivity' AS activity_type,
-                    exa.used AS used_file_ids,
+                    exa.used_file_id AS used_file_ids,
                     exa.generated AS generated_file_ids
                 FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
                 UNION ALL
@@ -601,7 +602,7 @@ class Plugin(TDRPlugin):
             'biosample_id',
             'biosample_type',
             'anatomical_site',
-            'date_collected',
+            'date_obtained',
             'donor_age_at_collection_lower_bound',
             'donor_age_at_collection_upper_bound',
             'donor_age_at_collection_life_stage',
@@ -615,12 +616,12 @@ class Plugin(TDRPlugin):
             'contact_point',
             'custodian',
             'last_modified_date',
-            'entity_description',
-            'entity_title',
+            'description',
+            'title',
         },
         'donor': {
             'donor_id',
-            'birth_date',
+            'date_created',
             'organism_type',
             'phenotypic_sex',
             'reported_ethnicity',
@@ -630,7 +631,7 @@ class Plugin(TDRPlugin):
             'file_id',
             'data_modality',
             'file_format',
-            'uses_reference_assembly'
+            'reference_assembly'
         },
         'library': {
             'library_id',
@@ -669,7 +670,7 @@ class Plugin(TDRPlugin):
         'sequencingactivity': {
             'sequencingactivity_id',
             'data_modality',
-            'started_at_time',
+            'date_created',
         }
     }
 
