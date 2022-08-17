@@ -239,12 +239,16 @@ relationship.
 Upgrading GitLab
 ^^^^^^^^^^^^^^^^
 
-Operators must check for updates to GitLab on a weekly basis. Compare the
-current version of GitLab found at the ``/help`` endpoint for `GitLab dev`_ to
-the available releases for the `GitLab Docker image`_. When updating the GitLab
-instance, check if there are applicable updates to the `GitLab runner image`_.
-Use the latest runner image whose major and minor version match that of the
-GitLab image.
+Operators must check for updates to GitLab on a monthly basis in addition to
+triaging GitLab security releases that occur during the month. An email
+notification is sent to ``azul-group@ucsc.edu`` when a GitLab security release
+is available. Discuss with the lead the **Table of Fixes** referenced in the
+release blog post to determine the urgency of the update.
+The current version of GitLab installed can be found on the ``/help`` endpoint
+of `GitLab dev`_, and the available releases can be found on the
+`GitLab Docker image`_ page. When updating the GitLab instance, check if there
+are applicable updates to the `GitLab runner image`_. Use the latest runner
+image whose major and minor version match that of the GitLab image.
 
 Before starting the update process, check the `GitLab release notes`_ for
 upgrading instructions. When upgrading across multiple GitLab versions, follow
