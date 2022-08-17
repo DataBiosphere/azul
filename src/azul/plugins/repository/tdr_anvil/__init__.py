@@ -591,8 +591,8 @@ class Plugin(TDRPlugin):
         ]
         log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
         missing = keys - {row[pk_column] for row in rows}
-        require(not missing,
-                f'Required entities not found in {table_name}: {missing}')
+        if missing:
+            log.warning(f'Required entities not found in {table_name}: {missing}')
         return rows
 
     # This could be consolidated with similar info from the metadata plugin?
