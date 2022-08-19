@@ -506,6 +506,10 @@ class Config:
         return deployment_name
 
     @property
+    def deployment_incarnation(self) -> str:
+        return self.environ['AZUL_DEPLOYMENT_INCARNATION']
+
+    @property
     def region(self) -> str:
         return self.environ['AWS_DEFAULT_REGION']
 
