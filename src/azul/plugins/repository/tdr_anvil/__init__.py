@@ -728,6 +728,8 @@ class TDRAnvilBundle(Bundle[TDRSourceRef]):
                     metadata: AnyMutableJSON
                     ) -> None:
         name = manifest_entry['name']
-        assert name not in self.metadata_files, name
-        self.manifest.append(manifest_entry)
-        self.metadata_files[name] = metadata
+        if name in self.metadata_files:
+            log.warning('Duplicate entity %r', name)
+        else:
+            self.manifest.append(manifest_entry)
+            self.metadata_files[name] = metadata
