@@ -17,8 +17,8 @@ from azul.chalice import (
     ServiceUnavailableError,
 )
 from azul.service import (
-    Controller,
     Filters,
+    ServiceAppController,
 )
 from azul.service.source_service import (
     SourceService,
@@ -31,7 +31,7 @@ from azul.types import (
 )
 
 
-class SourceController(Controller):
+class SourceController(ServiceAppController):
 
     @cached_property
     def _source_service(self) -> SourceService:

@@ -15,11 +15,11 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.service import (
-    Controller,
+    ServiceAppController,
 )
 
 
-class CatalogController(Controller):
+class CatalogController(ServiceAppController):
 
     # The custom return type annotation is an experiment. Please don't adopt
     # this just yet elsewhere in the program.
