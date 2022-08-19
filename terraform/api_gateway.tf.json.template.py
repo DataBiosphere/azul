@@ -109,7 +109,7 @@ emit_tf({
                         f"gitlab_{vpc.subnet_name(public)}_{zone}": {
                             "filter": {
                                 "name": "tag:Name",
-                                "values": [f"azul-gitlab-{vpc.subnet_name(public)}-{zone}"]
+                                "values": [f"azul-gitlab_{vpc.subnet_name(public)}_{zone}"]
                             }
                         }
                         for public in (False, True)
