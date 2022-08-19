@@ -85,9 +85,10 @@ class TestIndexController(IndexerTestCase):
         super().setUp()
         self.index_service.create_indices(self.catalog)
         self.client = AzulClient()
-        self.controller = IndexController()
-        # noinspection PyPropertyAccess
-        self.controller.index_service = self.index_service
+        app = MagicMock()
+        self.controller = IndexController(app=app)
+        app.catalog = self.catalog
+        IndexController.index_service.fset(self.controller, self.index_service)
         self.queue_manager = queues.Queues(delete=True)
 
     def tearDown(self):

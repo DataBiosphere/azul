@@ -14,6 +14,7 @@ from typing import (
     Any,
     Callable,
     Optional,
+    Type,
     Union,
 )
 import urllib.parse
@@ -53,11 +54,13 @@ from azul.auth import (
 )
 from azul.chalice import (
     AzulChaliceApp,
+    C,
 )
 from azul.drs import (
     AccessMethod,
 )
 from azul.health import (
+    Health,
     HealthController,
 )
 from azul.indexer.document import (
@@ -283,47 +286,28 @@ class ServiceApp(AzulChaliceApp):
 
     @property
     def drs_controller(self) -> DRSController:
-        return self._create_controller(DRSController)
+        return self._service_controller(DRSController)
 
-    @property
+    @cached_property
     def health_controller(self) -> HealthController:
-        # Don't cache. Health controller is meant to be short-lived since it
-        # applies its own caching. If we cached the controller, we'd never
-        # observe any changes in health.
-        return HealthController(lambda_name='service')
+        return self._controller(HealthController, lambda_name='service')
 
     @cached_property
     def catalog_controller(self) -> CatalogController:
-        return self._create_controller(CatalogController)
+        return self._service_controller(CatalogController)
 
     @property
     def repository_controller(self) -> RepositoryController:
-        return self._create_controller(RepositoryController)
+        return self._service_controller(RepositoryController)
 
     @cached_property
     def manifest_controller(self) -> ManifestController:
-        return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name,
-                                       manifest_url_func=self.manifest_url)
+        return self._service_controller(ManifestController,
+                                        step_function_lambda_name=generate_manifest.name,
+                                        manifest_url_func=self.manifest_url)
 
-    def _create_controller(self, controller_cls, **kwargs):
-        return controller_cls(lambda_context=self.lambda_context,
-                              file_url_func=self.file_url,
-                              **kwargs)
-
-    @property
-    def catalog(self) -> str:
-        request = self.current_request
-        # request is none during `chalice package`
-        if request is not None:
-            # params is None whenever no params are passed
-            params = request.query_params
-            if params is not None:
-                try:
-                    return params['catalog']
-                except KeyError:
-                    pass
-        return config.default_catalog
+    def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
+        return self._controller(controller_cls, file_url_func=self.file_url, **kwargs)
 
     @property
     def metadata_plugin(self) -> MetadataPlugin:
@@ -498,7 +482,7 @@ health_up_key = {
 fast_health_keys = {
     **{
         prop.key: format_description(prop.description)
-        for prop in HealthController.fast_properties['service']
+        for prop in Health.fast_properties['service']
     },
     **health_up_key
 }
@@ -506,7 +490,7 @@ fast_health_keys = {
 health_all_keys = {
     **{
         prop.key: format_description(prop.description)
-        for prop in HealthController.all_properties
+        for prop in Health.all_properties
     },
     **health_up_key
 }
@@ -622,7 +606,7 @@ def fast_health():
     'parameters': [
         params.path(
             'keys',
-            type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
+            type_=schema.array(schema.enum(*sorted(Health.all_keys))),
             description='''
                 A comma-separated list of keys selecting the health checks to be
                 performed. Each key corresponds to an entry in the response.

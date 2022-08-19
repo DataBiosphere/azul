@@ -18,6 +18,9 @@ from azul import (
     CatalogName,
     mutable_furl,
 )
+from azul.chalice import (
+    AppController,
+)
 from azul.json import (
     copy_json,
 )
@@ -26,7 +29,6 @@ from azul.plugins import (
 )
 from azul.types import (
     JSON,
-    LambdaContext,
     PrimitiveJSON,
 )
 
@@ -91,8 +93,7 @@ class FileUrlFunc(Protocol):
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
-class Controller:
-    lambda_context: LambdaContext
+class ServiceAppController(AppController):
     file_url_func: FileUrlFunc
 
     def _parse_filters(self, filters: Optional[str]) -> FiltersJSON:
