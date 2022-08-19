@@ -56,7 +56,7 @@ emit_tf({
                     },
                     "google_project_iam_custom_role": {
                         "azul": {
-                            "role_id": f"azul_{config.deployment_stage}",
+                            "role_id": f"azul_{config.deployment_stage}_{config.deployment_incarnation}",
                             "title": f"azul_{config.deployment_stage}",
                             "permissions": [
                                 "bigquery.jobs.create",
