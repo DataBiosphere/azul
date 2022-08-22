@@ -595,7 +595,8 @@ class TDRClient(SAMClient):
     def for_anonymous_user(cls) -> 'TDRClient':
         return cls(
             credentials_provider=ServiceAccountCredentialsProvider(
-                service_account=config.ServiceAccount.public
+                # FIXME https://github.com/DataBiosphere/azul/issues/4398
+                service_account=config.ServiceAccount.public if False else config.ServiceAccount.indexer
             )
         )
 
