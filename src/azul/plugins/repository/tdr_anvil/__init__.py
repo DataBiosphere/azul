@@ -16,6 +16,9 @@ from typing import (
 )
 
 import attr
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -23,6 +26,7 @@ from more_itertools import (
 from azul import (
     JSON,
     cached_property,
+    config,
     require,
 )
 from azul.bigquery import (
@@ -626,6 +630,8 @@ class Plugin(TDRPlugin):
         },
         'file': {
             'file_id',
+            'file_ref',
+            'byte_size',
             'data_modality',
             'file_format',
             'uses_reference_assembly'
@@ -671,16 +677,12 @@ class Plugin(TDRPlugin):
         }
     }
 
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        assert drs_path is None, drs_path
-        return None
-
 
 class TDRAnvilBundle(Bundle[TDRSourceRef]):
     entity_type: EntityType = 'biosample'
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return None
+        return manifest_entry.get('drs_path')
 
     def add_entity(self,
                    entity: KeyReference,
@@ -696,7 +698,7 @@ class TDRAnvilBundle(Bundle[TDRSourceRef]):
                 'indexed': True,
                 'crc32': '',
                 'sha256': '',
-                **({'drs_path': None} if entity.entity_type == 'file' else {})
+                **({'drs_path': self._parse_drs_uri(row.get('file_ref'))} if entity.entity_type == 'file' else {})
             },
             metadata=row
         )
@@ -728,3 +730,13 @@ class TDRAnvilBundle(Bundle[TDRSourceRef]):
         assert name not in self.metadata_files, name
         self.manifest.append(manifest_entry)
         self.metadata_files[name] = metadata
+
+    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
+        if file_ref is None:
+            return None
+        else:
+            # FIXME duplicated from tdr_hca
+            file_ref = furl(file_ref)
+            require(file_ref.scheme == 'drs')
+            require(file_ref.netloc == config.tdr_service_url.netloc)
+            return str(file_ref.path).strip('/')
