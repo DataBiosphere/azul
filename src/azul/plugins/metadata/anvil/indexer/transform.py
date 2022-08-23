@@ -43,7 +43,6 @@ from azul.indexer.document import (
     EntityType,
     FieldTypes,
     null_datetime,
-    null_int,
     null_str,
     pass_thru_int,
     pass_thru_json,
@@ -249,14 +248,9 @@ class BaseTransformer(Transformer, ABC):
     def _file_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'version': null_str,
-            'uuid': null_str,
             'data_modality': [null_str],
             'file_format': null_str,
             'file_id': null_str,
-            'byte_size': null_int,
-            'size': null_int,
-            'name': null_str,
             'uses_reference_assembly': [null_str],
             'crc32': null_str,
             'sha256': null_str,
@@ -360,10 +354,7 @@ class BaseTransformer(Transformer, ABC):
         return self._entity(manifest_entry, self._donor_types())
 
     def _file(self, manifest_entry: JSON) -> MutableJSON:
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
-        return self._entity(manifest_entry,
-                            self._file_types(),
-                            size=metadata['byte_size'])
+        return self._entity(manifest_entry, self._file_types())
 
     def _library(self, manifest_entry: JSON) -> MutableJSON:
         return self._entity(manifest_entry, self._library_types())

@@ -152,24 +152,16 @@ class Plugin(MetadataPlugin):
                     ]
                 },
                 'files': {
-                    **{
-                        f: f for f in [
-                            'data_modality',
-                            'document_id',
-                            'file_format',
-                            'file_id',
-                            'uses_reference_assembly',
-                            'crc32',
-                            'sha256',
-                            'drs_path',
-                            'name'
-                        ]
-                    },
-                    **{
-                        'version': 'fileVersion',
-                        'uuid': 'fileId',
-                        'byte_size': 'size'
-                    }
+                    f: f for f in [
+                        'data_modality',
+                        'document_id',
+                        'file_format',
+                        'file_id',
+                        'uses_reference_assembly',
+                        'crc32',
+                        'sha256',
+                        'drs_path'
+                    ]
                 },
                 'libraries': {
                     f: f for f in [
@@ -206,8 +198,6 @@ class Plugin(MetadataPlugin):
             'preservation_state',
             'uses_reference_assembly',
             'reported_ethnicity',
-            'fileId',
-            'fileVersion'
         ]
 
     @property
