@@ -1,1049 +1,16 @@
 [
     {
-        "_index": "azul_v2_nadove4_test_biosamples_aggregate",
+        "_index": "azul_v2_anvildev_test_files_aggregate",
         "_type": "_doc",
-        "_id": "1ec7d53c60704283823335ad8f3aa660",
+        "_id": "22776090-0c51-46f8-b54c-8bba34996180",
         "_score": 1.0,
         "_source": {
-            "entity_id": "1ec7d53c60704283823335ad8f3aa660",
+            "entity_id": "22776090-0c51-46f8-b54c-8bba34996180",
             "contents": {
                 "activities": [
                     {
                         "document_id": [
-                            "a28a88b9a1bb69ab6890af1186d141fe",
-                            "cdee0b679f161d592640263f019da9f3"
-                        ],
-                        "activity_id": [
-                            "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                            "6a79c797-e281-5e29-8dd4-fa65b60ca375"
-                        ],
-                        "activity_type": [
-                            "sequencingactivity"
-                        ],
-                        "analysis_type": [
-                            "~null"
-                        ],
-                        "assay_category": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "date_submitted": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
-                        "anatomical_site": "~null",
-                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
-                        "biosample_type": "redacted-bdTZV79A",
-                        "date_collected": "9999-01-01T00:00:00.000000Z",
-                        "donor_age_at_collection_age_range": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "donor_age_at_collection_life_stage": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "disease": "~null",
-                        "preservation_state": "~null",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "24c39d3244d7fcdffbc6c02687fc4fbf"
-                        ],
-                        "dataset_id": [
-                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
-                        ],
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": [
-                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
-                        ],
-                        "entity_title": [
-                            "UW CMG"
-                        ],
-                        "last_modified_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "d71322aeb5817b95f667ab039bbdcee5"
-                        ],
-                        "birth_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_id": [
-                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-PzpInHLe"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".bam"
-                        ],
-                        "file_id": [
-                            "0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
-                        ],
-                        "byte_size": [
-                            5943851225
-                        ],
-                        "byte_size_": [
-                            5943851225
-                        ],
-                        "size": [
-                            5943851225
-                        ],
-                        "size_": [
-                            5943851225
-                        ],
-                        "name": [
-                            "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                        ],
-                        "count": 1
-                    },
-                    {
-                        "document_id": [
-                            "8b61770011f1806be5b2b8c2745ab077"
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "8b61770011f1806be5b2b8c2745ab077"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".gvcf.gz"
-                        ],
-                        "file_id": [
-                            "8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
-                        ],
-                        "byte_size": [
-                            64369315
-                        ],
-                        "byte_size_": [
-                            64369315
-                        ],
-                        "size": [
-                            64369315
-                        ],
-                        "size_": [
-                            64369315
-                        ],
-                        "name": [
-                            "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
-                        ],
-                        "count": 1
-                    }
-                ],
-                "libraries": []
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_biosamples",
-        "_type": "_doc",
-        "_id": "1ec7d53c60704283823335ad8f3aa660_b45716d9e63b2ebdffcaced552af9c63__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "1ec7d53c60704283823335ad8f3aa660",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "a28a88b9a1bb69ab6890af1186d141fe",
-                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    },
-                    {
-                        "document_id": "cdee0b679f161d592640263f019da9f3",
-                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
-                        "anatomical_site": "~null",
-                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
-                        "biosample_type": "redacted-bdTZV79A",
-                        "date_collected": "9999-01-01T00:00:00.000000Z",
-                        "donor_age_at_collection_age_range": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "donor_age_at_collection_life_stage": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "disease": "~null",
-                        "preservation_state": "~null",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
-                        "entity_title": "UW CMG",
-                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
-                        "birth_date": "9999-01-01T00:00:00.000000Z",
-                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-PzpInHLe",
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "byte_size": 5943851225,
-                        "byte_size_": 5943851225,
-                        "size": 5943851225,
-                        "size_": 5943851225,
-                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                    },
-                    {
-                        "document_id": "8b61770011f1806be5b2b8c2745ab077",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "8b61770011f1806be5b2b8c2745ab077",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".gvcf.gz",
-                        "file_id": "8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
-                        "byte_size": 64369315,
-                        "byte_size_": 64369315,
-                        "size": 64369315,
-                        "size_": 64369315,
-                        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
-                    }
-                ],
-                "libraries": []
-            },
-            "document_id": "1ec7d53c60704283823335ad8f3aa660_b45716d9e63b2ebdffcaced552af9c63__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_datasets_aggregate",
-        "_type": "_doc",
-        "_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": [
-                            "a28a88b9a1bb69ab6890af1186d141fe",
-                            "cdee0b679f161d592640263f019da9f3"
-                        ],
-                        "activity_id": [
-                            "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                            "6a79c797-e281-5e29-8dd4-fa65b60ca375"
-                        ],
-                        "activity_type": [
-                            "sequencingactivity"
-                        ],
-                        "analysis_type": [
-                            "~null"
-                        ],
-                        "assay_category": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "date_submitted": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": [
-                            "1ec7d53c60704283823335ad8f3aa660"
-                        ],
-                        "anatomical_site": [
-                            "~null"
-                        ],
-                        "biosample_id": [
-                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
-                        ],
-                        "biosample_type": [
-                            "redacted-bdTZV79A"
-                        ],
-                        "date_collected": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_age_at_collection_age_range": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "donor_age_at_collection_life_stage": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection_unit": [
-                            "~null"
-                        ],
-                        "disease": [
-                            "~null"
-                        ],
-                        "preservation_state": [
-                            "~null"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
-                        "entity_title": "UW CMG",
-                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "d71322aeb5817b95f667ab039bbdcee5"
-                        ],
-                        "birth_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_id": [
-                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-PzpInHLe"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".bam"
-                        ],
-                        "file_id": [
-                            "0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
-                        ],
-                        "byte_size": [
-                            5943851225
-                        ],
-                        "byte_size_": [
-                            5943851225
-                        ],
-                        "size": [
-                            5943851225
-                        ],
-                        "size_": [
-                            5943851225
-                        ],
-                        "name": [
-                            "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                        ],
-                        "count": 1
-                    },
-                    {
-                        "document_id": [
-                            "8b61770011f1806be5b2b8c2745ab077"
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "8b61770011f1806be5b2b8c2745ab077"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".gvcf.gz"
-                        ],
-                        "file_id": [
-                            "8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
-                        ],
-                        "byte_size": [
-                            64369315
-                        ],
-                        "byte_size_": [
-                            64369315
-                        ],
-                        "size": [
-                            64369315
-                        ],
-                        "size_": [
-                            64369315
-                        ],
-                        "name": [
-                            "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
-                        ],
-                        "count": 1
-                    }
-                ],
-                "libraries": []
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_datasets",
-        "_type": "_doc",
-        "_id": "24c39d3244d7fcdffbc6c02687fc4fbf_b45716d9e63b2ebdffcaced552af9c63__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "a28a88b9a1bb69ab6890af1186d141fe",
-                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    },
-                    {
-                        "document_id": "cdee0b679f161d592640263f019da9f3",
-                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
-                        "anatomical_site": "~null",
-                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
-                        "biosample_type": "redacted-bdTZV79A",
-                        "date_collected": "9999-01-01T00:00:00.000000Z",
-                        "donor_age_at_collection_age_range": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "donor_age_at_collection_life_stage": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "disease": "~null",
-                        "preservation_state": "~null",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
-                        "entity_title": "UW CMG",
-                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
-                        "birth_date": "9999-01-01T00:00:00.000000Z",
-                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-PzpInHLe",
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "byte_size": 5943851225,
-                        "byte_size_": 5943851225,
-                        "size": 5943851225,
-                        "size_": 5943851225,
-                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                    },
-                    {
-                        "document_id": "8b61770011f1806be5b2b8c2745ab077",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "8b61770011f1806be5b2b8c2745ab077",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".gvcf.gz",
-                        "file_id": "8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
-                        "byte_size": 64369315,
-                        "byte_size_": 64369315,
-                        "size": 64369315,
-                        "size_": 64369315,
-                        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
-                    }
-                ],
-                "libraries": []
-            },
-            "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf_b45716d9e63b2ebdffcaced552af9c63__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_files_aggregate",
-        "_type": "_doc",
-        "_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": [
-                            "cdee0b679f161d592640263f019da9f3"
-                        ],
-                        "activity_id": [
-                            "6a79c797-e281-5e29-8dd4-fa65b60ca375"
-                        ],
-                        "activity_type": [
-                            "sequencingactivity"
-                        ],
-                        "analysis_type": [
-                            "~null"
-                        ],
-                        "assay_category": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "date_submitted": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": [
-                            "1ec7d53c60704283823335ad8f3aa660"
-                        ],
-                        "anatomical_site": [
-                            "~null"
-                        ],
-                        "biosample_id": [
-                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
-                        ],
-                        "biosample_type": [
-                            "redacted-bdTZV79A"
-                        ],
-                        "date_collected": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_age_at_collection_age_range": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "donor_age_at_collection_life_stage": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection_unit": [
-                            "~null"
-                        ],
-                        "disease": [
-                            "~null"
-                        ],
-                        "preservation_state": [
-                            "~null"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "24c39d3244d7fcdffbc6c02687fc4fbf"
-                        ],
-                        "dataset_id": [
-                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
-                        ],
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": [
-                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
-                        ],
-                        "entity_title": [
-                            "UW CMG"
-                        ],
-                        "last_modified_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "byte_size": 5943851225,
-                        "byte_size_": 5943851225,
-                        "size": 5943851225,
-                        "size_": 5943851225,
-                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "d71322aeb5817b95f667ab039bbdcee5"
-                        ],
-                        "birth_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_id": [
-                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-PzpInHLe"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "libraries": []
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_files",
-        "_type": "_doc",
-        "_id": "34f7121fa02428ebcc2e5e2b09b36e48_b45716d9e63b2ebdffcaced552af9c63__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "cdee0b679f161d592640263f019da9f3",
-                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
-                        "anatomical_site": "~null",
-                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
-                        "biosample_type": "redacted-bdTZV79A",
-                        "date_collected": "9999-01-01T00:00:00.000000Z",
-                        "donor_age_at_collection_age_range": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "donor_age_at_collection_life_stage": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "disease": "~null",
-                        "preservation_state": "~null",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
-                        "entity_title": "UW CMG",
-                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "byte_size": 5943851225,
-                        "byte_size_": 5943851225,
-                        "size": 5943851225,
-                        "size_": 5943851225,
-                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
-                        "birth_date": "9999-01-01T00:00:00.000000Z",
-                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-PzpInHLe",
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "libraries": []
-            },
-            "document_id": "34f7121fa02428ebcc2e5e2b09b36e48_b45716d9e63b2ebdffcaced552af9c63__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_files_aggregate",
-        "_type": "_doc",
-        "_id": "8b61770011f1806be5b2b8c2745ab077",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "8b61770011f1806be5b2b8c2745ab077",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": [
-                            "a28a88b9a1bb69ab6890af1186d141fe"
+                            "90dc1cc6-4134-439b-878d-be3d16a79795"
                         ],
                         "activity_id": [
                             "5f188f1a-2cf0-5b1d-bd63-d7911956202f"
@@ -1074,7 +41,7 @@
                 "biosamples": [
                     {
                         "document_id": [
-                            "1ec7d53c60704283823335ad8f3aa660"
+                            "59fb2c7b-b699-497b-bf44-1d51b03a546d"
                         ],
                         "anatomical_site": [
                             "~null"
@@ -1114,7 +81,7 @@
                 "datasets": [
                     {
                         "document_id": [
-                            "24c39d3244d7fcdffbc6c02687fc4fbf"
+                            "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80"
                         ],
                         "dataset_id": [
                             "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
@@ -1138,9 +105,9 @@
                 ],
                 "files": [
                     {
-                        "document_id": "8b61770011f1806be5b2b8c2745ab077",
+                        "document_id": "22776090-0c51-46f8-b54c-8bba34996180",
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "8b61770011f1806be5b2b8c2745ab077",
+                        "uuid": "22776090-0c51-46f8-b54c-8bba34996180",
                         "data_modality": [
                             "~null"
                         ],
@@ -1162,7 +129,7 @@
                 "donors": [
                     {
                         "document_id": [
-                            "d71322aeb5817b95f667ab039bbdcee5"
+                            "8a423abf-e322-416d-a364-3b0a0f324304"
                         ],
                         "birth_date": [
                             "9999-01-01T00:00:00.000000Z"
@@ -1195,23 +162,23 @@
             ],
             "bundles": [
                 {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
                     "version": ""
                 }
             ]
         }
     },
     {
-        "_index": "azul_v2_nadove4_test_files",
+        "_index": "azul_v2_anvildev_test_files",
         "_type": "_doc",
-        "_id": "8b61770011f1806be5b2b8c2745ab077_b45716d9e63b2ebdffcaced552af9c63__exists",
+        "_id": "22776090-0c51-46f8-b54c-8bba34996180_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
         "_score": 1.0,
         "_source": {
-            "entity_id": "8b61770011f1806be5b2b8c2745ab077",
+            "entity_id": "22776090-0c51-46f8-b54c-8bba34996180",
             "contents": {
                 "activities": [
                     {
-                        "document_id": "a28a88b9a1bb69ab6890af1186d141fe",
+                        "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
                         "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
                         "activity_type": "sequencingactivity",
                         "analysis_type": "~null",
@@ -1228,7 +195,7 @@
                 ],
                 "biosamples": [
                     {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
                         "anatomical_site": "~null",
                         "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
                         "biosample_type": "redacted-bdTZV79A",
@@ -1248,7 +215,7 @@
                 ],
                 "datasets": [
                     {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
                         "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
                         "contact_point": [
                             "help@lists.anvilproject.org"
@@ -1263,9 +230,9 @@
                 ],
                 "files": [
                     {
-                        "document_id": "8b61770011f1806be5b2b8c2745ab077",
+                        "document_id": "22776090-0c51-46f8-b54c-8bba34996180",
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "8b61770011f1806be5b2b8c2745ab077",
+                        "uuid": "22776090-0c51-46f8-b54c-8bba34996180",
                         "data_modality": [
                             "~null"
                         ],
@@ -1286,7 +253,7 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
                         "birth_date": "9999-01-01T00:00:00.000000Z",
                         "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
                         "organism_type": "~null",
@@ -1301,613 +268,29 @@
                 ],
                 "libraries": []
             },
-            "document_id": "8b61770011f1806be5b2b8c2745ab077_b45716d9e63b2ebdffcaced552af9c63__exists",
+            "document_id": "22776090-0c51-46f8-b54c-8bba34996180_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
             "source": {
                 "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
                 "spec": "tdr:test_project:snapshot/snapshot:/2"
             },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
             "bundle_version": "",
             "bundle_deleted": false
         }
     },
     {
-        "_index": "azul_v2_nadove4_test_activities_aggregate",
+        "_index": "azul_v2_anvildev_test_datasets_aggregate",
         "_type": "_doc",
-        "_id": "a28a88b9a1bb69ab6890af1186d141fe",
+        "_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
         "_score": 1.0,
         "_source": {
-            "entity_id": "a28a88b9a1bb69ab6890af1186d141fe",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "a28a88b9a1bb69ab6890af1186d141fe",
-                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": [
-                            "1ec7d53c60704283823335ad8f3aa660"
-                        ],
-                        "anatomical_site": [
-                            "~null"
-                        ],
-                        "biosample_id": [
-                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
-                        ],
-                        "biosample_type": [
-                            "redacted-bdTZV79A"
-                        ],
-                        "date_collected": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_age_at_collection_age_range": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "donor_age_at_collection_life_stage": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection_unit": [
-                            "~null"
-                        ],
-                        "disease": [
-                            "~null"
-                        ],
-                        "preservation_state": [
-                            "~null"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "24c39d3244d7fcdffbc6c02687fc4fbf"
-                        ],
-                        "dataset_id": [
-                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
-                        ],
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": [
-                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
-                        ],
-                        "entity_title": [
-                            "UW CMG"
-                        ],
-                        "last_modified_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "d71322aeb5817b95f667ab039bbdcee5"
-                        ],
-                        "birth_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_id": [
-                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-PzpInHLe"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": [
-                            "8b61770011f1806be5b2b8c2745ab077"
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "8b61770011f1806be5b2b8c2745ab077"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".gvcf.gz"
-                        ],
-                        "file_id": [
-                            "8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
-                        ],
-                        "byte_size": [
-                            64369315
-                        ],
-                        "byte_size_": [
-                            64369315
-                        ],
-                        "size": [
-                            64369315
-                        ],
-                        "size_": [
-                            64369315
-                        ],
-                        "name": [
-                            "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
-                        ],
-                        "count": 1
-                    }
-                ],
-                "libraries": []
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_activities",
-        "_type": "_doc",
-        "_id": "a28a88b9a1bb69ab6890af1186d141fe_b45716d9e63b2ebdffcaced552af9c63__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "a28a88b9a1bb69ab6890af1186d141fe",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "a28a88b9a1bb69ab6890af1186d141fe",
-                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
-                        "anatomical_site": "~null",
-                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
-                        "biosample_type": "redacted-bdTZV79A",
-                        "date_collected": "9999-01-01T00:00:00.000000Z",
-                        "donor_age_at_collection_age_range": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "donor_age_at_collection_life_stage": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "disease": "~null",
-                        "preservation_state": "~null",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
-                        "entity_title": "UW CMG",
-                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
-                        "birth_date": "9999-01-01T00:00:00.000000Z",
-                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-PzpInHLe",
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "8b61770011f1806be5b2b8c2745ab077",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "8b61770011f1806be5b2b8c2745ab077",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".gvcf.gz",
-                        "file_id": "8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
-                        "byte_size": 64369315,
-                        "byte_size_": 64369315,
-                        "size": 64369315,
-                        "size_": 64369315,
-                        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
-                    }
-                ],
-                "libraries": []
-            },
-            "document_id": "a28a88b9a1bb69ab6890af1186d141fe_b45716d9e63b2ebdffcaced552af9c63__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_activities_aggregate",
-        "_type": "_doc",
-        "_id": "cdee0b679f161d592640263f019da9f3",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "cdee0b679f161d592640263f019da9f3",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "cdee0b679f161d592640263f019da9f3",
-                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": [
-                            "1ec7d53c60704283823335ad8f3aa660"
-                        ],
-                        "anatomical_site": [
-                            "~null"
-                        ],
-                        "biosample_id": [
-                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
-                        ],
-                        "biosample_type": [
-                            "redacted-bdTZV79A"
-                        ],
-                        "date_collected": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_age_at_collection_age_range": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "donor_age_at_collection_life_stage": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection_unit": [
-                            "~null"
-                        ],
-                        "disease": [
-                            "~null"
-                        ],
-                        "preservation_state": [
-                            "~null"
-                        ],
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "24c39d3244d7fcdffbc6c02687fc4fbf"
-                        ],
-                        "dataset_id": [
-                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
-                        ],
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": [
-                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
-                        ],
-                        "entity_title": [
-                            "UW CMG"
-                        ],
-                        "last_modified_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "d71322aeb5817b95f667ab039bbdcee5"
-                        ],
-                        "birth_date": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ],
-                        "donor_id": [
-                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-PzpInHLe"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".bam"
-                        ],
-                        "file_id": [
-                            "0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
-                        ],
-                        "byte_size": [
-                            5943851225
-                        ],
-                        "byte_size_": [
-                            5943851225
-                        ],
-                        "size": [
-                            5943851225
-                        ],
-                        "size_": [
-                            5943851225
-                        ],
-                        "name": [
-                            "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                        ],
-                        "count": 1
-                    }
-                ],
-                "libraries": []
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_activities",
-        "_type": "_doc",
-        "_id": "cdee0b679f161d592640263f019da9f3_b45716d9e63b2ebdffcaced552af9c63__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "cdee0b679f161d592640263f019da9f3",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "cdee0b679f161d592640263f019da9f3",
-                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
-                        "anatomical_site": "~null",
-                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
-                        "biosample_type": "redacted-bdTZV79A",
-                        "date_collected": "9999-01-01T00:00:00.000000Z",
-                        "donor_age_at_collection_age_range": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "donor_age_at_collection_life_stage": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "disease": "~null",
-                        "preservation_state": "~null",
-                        "xref": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
-                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
-                        "contact_point": [
-                            "help@lists.anvilproject.org"
-                        ],
-                        "custodian": [
-                            "NHGRI"
-                        ],
-                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
-                        "entity_title": "UW CMG",
-                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
-                        "birth_date": "9999-01-01T00:00:00.000000Z",
-                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-PzpInHLe",
-                        "reported_ethnicity": [
-                            "redacted-N2GfwTBT"
-                        ],
-                        "xref": [
-                            "redacted-BNXK33lp"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "byte_size": 5943851225,
-                        "byte_size_": 5943851225,
-                        "size": 5943851225,
-                        "size_": 5943851225,
-                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                    }
-                ],
-                "libraries": []
-            },
-            "document_id": "cdee0b679f161d592640263f019da9f3_b45716d9e63b2ebdffcaced552af9c63__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_donors_aggregate",
-        "_type": "_doc",
-        "_id": "d71322aeb5817b95f667ab039bbdcee5",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "d71322aeb5817b95f667ab039bbdcee5",
+            "entity_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
             "contents": {
                 "activities": [
                     {
                         "document_id": [
-                            "a28a88b9a1bb69ab6890af1186d141fe",
-                            "cdee0b679f161d592640263f019da9f3"
+                            "90dc1cc6-4134-439b-878d-be3d16a79795",
+                            "cbe76755-4212-4daa-9196-79c9da775cee"
                         ],
                         "activity_id": [
                             "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
@@ -1939,7 +322,761 @@
                 "biosamples": [
                     {
                         "document_id": [
-                            "1ec7d53c60704283823335ad8f3aa660"
+                            "59fb2c7b-b699-497b-bf44-1d51b03a546d"
+                        ],
+                        "anatomical_site": [
+                            "~null"
+                        ],
+                        "biosample_id": [
+                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
+                        ],
+                        "biosample_type": [
+                            "redacted-bdTZV79A"
+                        ],
+                        "date_collected": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_age_at_collection_age_range": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "donor_age_at_collection_life_stage": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection_unit": [
+                            "~null"
+                        ],
+                        "disease": [
+                            "~null"
+                        ],
+                        "preservation_state": [
+                            "~null"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
+                        "entity_title": "UW CMG",
+                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "8a423abf-e322-416d-a364-3b0a0f324304"
+                        ],
+                        "birth_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_id": [
+                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-PzpInHLe"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": [
+                            "22776090-0c51-46f8-b54c-8bba34996180"
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "22776090-0c51-46f8-b54c-8bba34996180"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".gvcf.gz"
+                        ],
+                        "file_id": [
+                            "8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
+                        ],
+                        "byte_size": [
+                            64369315
+                        ],
+                        "byte_size_": [
+                            64369315
+                        ],
+                        "size": [
+                            64369315
+                        ],
+                        "size_": [
+                            64369315
+                        ],
+                        "name": [
+                            "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+                        ],
+                        "count": 1
+                    },
+                    {
+                        "document_id": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".bam"
+                        ],
+                        "file_id": [
+                            "0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
+                        ],
+                        "byte_size": [
+                            5943851225
+                        ],
+                        "byte_size_": [
+                            5943851225
+                        ],
+                        "size": [
+                            5943851225
+                        ],
+                        "size_": [
+                            5943851225
+                        ],
+                        "name": [
+                            "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                        ],
+                        "count": 1
+                    }
+                ],
+                "libraries": []
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_datasets",
+        "_type": "_doc",
+        "_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
+                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    },
+                    {
+                        "document_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+                        "anatomical_site": "~null",
+                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
+                        "biosample_type": "redacted-bdTZV79A",
+                        "date_collected": "9999-01-01T00:00:00.000000Z",
+                        "donor_age_at_collection_age_range": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "donor_age_at_collection_life_stage": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "disease": "~null",
+                        "preservation_state": "~null",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
+                        "entity_title": "UW CMG",
+                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+                        "birth_date": "9999-01-01T00:00:00.000000Z",
+                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-PzpInHLe",
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "22776090-0c51-46f8-b54c-8bba34996180",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "22776090-0c51-46f8-b54c-8bba34996180",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".gvcf.gz",
+                        "file_id": "8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+                        "byte_size": 64369315,
+                        "byte_size_": 64369315,
+                        "size": 64369315,
+                        "size_": 64369315,
+                        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+                    },
+                    {
+                        "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "byte_size": 5943851225,
+                        "byte_size_": 5943851225,
+                        "size": 5943851225,
+                        "size_": 5943851225,
+                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                    }
+                ],
+                "libraries": []
+            },
+            "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_biosamples_aggregate",
+        "_type": "_doc",
+        "_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": [
+                            "90dc1cc6-4134-439b-878d-be3d16a79795",
+                            "cbe76755-4212-4daa-9196-79c9da775cee"
+                        ],
+                        "activity_id": [
+                            "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+                            "6a79c797-e281-5e29-8dd4-fa65b60ca375"
+                        ],
+                        "activity_type": [
+                            "sequencingactivity"
+                        ],
+                        "analysis_type": [
+                            "~null"
+                        ],
+                        "assay_category": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "date_submitted": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+                        "anatomical_site": "~null",
+                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
+                        "biosample_type": "redacted-bdTZV79A",
+                        "date_collected": "9999-01-01T00:00:00.000000Z",
+                        "donor_age_at_collection_age_range": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "donor_age_at_collection_life_stage": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "disease": "~null",
+                        "preservation_state": "~null",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80"
+                        ],
+                        "dataset_id": [
+                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
+                        ],
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": [
+                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
+                        ],
+                        "entity_title": [
+                            "UW CMG"
+                        ],
+                        "last_modified_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "8a423abf-e322-416d-a364-3b0a0f324304"
+                        ],
+                        "birth_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_id": [
+                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-PzpInHLe"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": [
+                            "22776090-0c51-46f8-b54c-8bba34996180"
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "22776090-0c51-46f8-b54c-8bba34996180"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".gvcf.gz"
+                        ],
+                        "file_id": [
+                            "8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
+                        ],
+                        "byte_size": [
+                            64369315
+                        ],
+                        "byte_size_": [
+                            64369315
+                        ],
+                        "size": [
+                            64369315
+                        ],
+                        "size_": [
+                            64369315
+                        ],
+                        "name": [
+                            "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+                        ],
+                        "count": 1
+                    },
+                    {
+                        "document_id": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".bam"
+                        ],
+                        "file_id": [
+                            "0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
+                        ],
+                        "byte_size": [
+                            5943851225
+                        ],
+                        "byte_size_": [
+                            5943851225
+                        ],
+                        "size": [
+                            5943851225
+                        ],
+                        "size_": [
+                            5943851225
+                        ],
+                        "name": [
+                            "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                        ],
+                        "count": 1
+                    }
+                ],
+                "libraries": []
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_biosamples",
+        "_type": "_doc",
+        "_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
+                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    },
+                    {
+                        "document_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+                        "anatomical_site": "~null",
+                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
+                        "biosample_type": "redacted-bdTZV79A",
+                        "date_collected": "9999-01-01T00:00:00.000000Z",
+                        "donor_age_at_collection_age_range": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "donor_age_at_collection_life_stage": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "disease": "~null",
+                        "preservation_state": "~null",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
+                        "entity_title": "UW CMG",
+                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+                        "birth_date": "9999-01-01T00:00:00.000000Z",
+                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-PzpInHLe",
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "22776090-0c51-46f8-b54c-8bba34996180",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "22776090-0c51-46f8-b54c-8bba34996180",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".gvcf.gz",
+                        "file_id": "8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+                        "byte_size": 64369315,
+                        "byte_size_": 64369315,
+                        "size": 64369315,
+                        "size_": 64369315,
+                        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+                    },
+                    {
+                        "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "byte_size": 5943851225,
+                        "byte_size_": 5943851225,
+                        "size": 5943851225,
+                        "size_": 5943851225,
+                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                    }
+                ],
+                "libraries": []
+            },
+            "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_donors_aggregate",
+        "_type": "_doc",
+        "_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": [
+                            "90dc1cc6-4134-439b-878d-be3d16a79795",
+                            "cbe76755-4212-4daa-9196-79c9da775cee"
+                        ],
+                        "activity_id": [
+                            "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+                            "6a79c797-e281-5e29-8dd4-fa65b60ca375"
+                        ],
+                        "activity_type": [
+                            "sequencingactivity"
+                        ],
+                        "analysis_type": [
+                            "~null"
+                        ],
+                        "assay_category": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "date_submitted": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": [
+                            "59fb2c7b-b699-497b-bf44-1d51b03a546d"
                         ],
                         "anatomical_site": [
                             "~null"
@@ -1979,7 +1116,7 @@
                 "datasets": [
                     {
                         "document_id": [
-                            "24c39d3244d7fcdffbc6c02687fc4fbf"
+                            "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80"
                         ],
                         "dataset_id": [
                             "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
@@ -2003,7 +1140,7 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
                         "birth_date": "9999-01-01T00:00:00.000000Z",
                         "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
                         "organism_type": "~null",
@@ -2019,13 +1156,61 @@
                 "files": [
                     {
                         "document_id": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
+                            "22776090-0c51-46f8-b54c-8bba34996180"
                         ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
                         "uuid": [
-                            "34f7121fa02428ebcc2e5e2b09b36e48"
+                            "22776090-0c51-46f8-b54c-8bba34996180"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".gvcf.gz"
+                        ],
+                        "file_id": [
+                            "8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
+                        ],
+                        "byte_size": [
+                            64369315
+                        ],
+                        "byte_size_": [
+                            64369315
+                        ],
+                        "size": [
+                            64369315
+                        ],
+                        "size_": [
+                            64369315
+                        ],
+                        "name": [
+                            "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+                        ],
+                        "count": 1
+                    },
+                    {
+                        "document_id": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
                         ],
                         "data_modality": [
                             "~null"
@@ -2064,16 +1249,296 @@
                             "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
                         ],
                         "count": 1
+                    }
+                ],
+                "libraries": []
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_donors",
+        "_type": "_doc",
+        "_id": "8a423abf-e322-416d-a364-3b0a0f324304_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
+                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
                     },
                     {
+                        "document_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+                        "anatomical_site": "~null",
+                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
+                        "biosample_type": "redacted-bdTZV79A",
+                        "date_collected": "9999-01-01T00:00:00.000000Z",
+                        "donor_age_at_collection_age_range": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "donor_age_at_collection_life_stage": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "disease": "~null",
+                        "preservation_state": "~null",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
+                        "entity_title": "UW CMG",
+                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+                        "birth_date": "9999-01-01T00:00:00.000000Z",
+                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-PzpInHLe",
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "22776090-0c51-46f8-b54c-8bba34996180",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "22776090-0c51-46f8-b54c-8bba34996180",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".gvcf.gz",
+                        "file_id": "8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+                        "byte_size": 64369315,
+                        "byte_size_": 64369315,
+                        "size": 64369315,
+                        "size_": 64369315,
+                        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+                    },
+                    {
+                        "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "byte_size": 5943851225,
+                        "byte_size_": 5943851225,
+                        "size": 5943851225,
+                        "size_": 5943851225,
+                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                    }
+                ],
+                "libraries": []
+            },
+            "document_id": "8a423abf-e322-416d-a364-3b0a0f324304_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_activities_aggregate",
+        "_type": "_doc",
+        "_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
+                        "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
                         "document_id": [
-                            "8b61770011f1806be5b2b8c2745ab077"
+                            "59fb2c7b-b699-497b-bf44-1d51b03a546d"
+                        ],
+                        "anatomical_site": [
+                            "~null"
+                        ],
+                        "biosample_id": [
+                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
+                        ],
+                        "biosample_type": [
+                            "redacted-bdTZV79A"
+                        ],
+                        "date_collected": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_age_at_collection_age_range": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "donor_age_at_collection_life_stage": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection_unit": [
+                            "~null"
+                        ],
+                        "disease": [
+                            "~null"
+                        ],
+                        "preservation_state": [
+                            "~null"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80"
+                        ],
+                        "dataset_id": [
+                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
+                        ],
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": [
+                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
+                        ],
+                        "entity_title": [
+                            "UW CMG"
+                        ],
+                        "last_modified_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "8a423abf-e322-416d-a364-3b0a0f324304"
+                        ],
+                        "birth_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_id": [
+                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-PzpInHLe"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": [
+                            "22776090-0c51-46f8-b54c-8bba34996180"
                         ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
                         "uuid": [
-                            "8b61770011f1806be5b2b8c2745ab077"
+                            "22776090-0c51-46f8-b54c-8bba34996180"
                         ],
                         "data_modality": [
                             "~null"
@@ -2125,39 +1590,24 @@
             ],
             "bundles": [
                 {
-                    "uuid": "b45716d9e63b2ebdffcaced552af9c63",
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
                     "version": ""
                 }
             ]
         }
     },
     {
-        "_index": "azul_v2_nadove4_test_donors",
+        "_index": "azul_v2_anvildev_test_activities",
         "_type": "_doc",
-        "_id": "d71322aeb5817b95f667ab039bbdcee5_b45716d9e63b2ebdffcaced552af9c63__exists",
+        "_id": "90dc1cc6-4134-439b-878d-be3d16a79795_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
         "_score": 1.0,
         "_source": {
-            "entity_id": "d71322aeb5817b95f667ab039bbdcee5",
+            "entity_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
             "contents": {
                 "activities": [
                     {
-                        "document_id": "a28a88b9a1bb69ab6890af1186d141fe",
+                        "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795",
                         "activity_id": "5f188f1a-2cf0-5b1d-bd63-d7911956202f",
-                        "activity_type": "sequencingactivity",
-                        "analysis_type": "~null",
-                        "assay_category": "~null",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "started_at_time": "9999-01-01T00:00:00.000000Z",
-                        "date_submitted": "9999-01-01T00:00:00.000000Z",
-                        "xref": [
-                            "~null"
-                        ]
-                    },
-                    {
-                        "document_id": "cdee0b679f161d592640263f019da9f3",
-                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
                         "activity_type": "sequencingactivity",
                         "analysis_type": "~null",
                         "assay_category": "~null",
@@ -2173,7 +1623,7 @@
                 ],
                 "biosamples": [
                     {
-                        "document_id": "1ec7d53c60704283823335ad8f3aa660",
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
                         "anatomical_site": "~null",
                         "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
                         "biosample_type": "redacted-bdTZV79A",
@@ -2193,7 +1643,7 @@
                 ],
                 "datasets": [
                     {
-                        "document_id": "24c39d3244d7fcdffbc6c02687fc4fbf",
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
                         "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
                         "contact_point": [
                             "help@lists.anvilproject.org"
@@ -2208,7 +1658,7 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "d71322aeb5817b95f667ab039bbdcee5",
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
                         "birth_date": "9999-01-01T00:00:00.000000Z",
                         "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
                         "organism_type": "~null",
@@ -2223,30 +1673,9 @@
                 ],
                 "files": [
                     {
-                        "document_id": "34f7121fa02428ebcc2e5e2b09b36e48",
+                        "document_id": "22776090-0c51-46f8-b54c-8bba34996180",
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "byte_size": 5943851225,
-                        "byte_size_": 5943851225,
-                        "size": 5943851225,
-                        "size_": 5943851225,
-                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
-                    },
-                    {
-                        "document_id": "8b61770011f1806be5b2b8c2745ab077",
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "8b61770011f1806be5b2b8c2745ab077",
+                        "uuid": "22776090-0c51-46f8-b54c-8bba34996180",
                         "data_modality": [
                             "~null"
                         ],
@@ -2267,12 +1696,583 @@
                 ],
                 "libraries": []
             },
-            "document_id": "d71322aeb5817b95f667ab039bbdcee5_b45716d9e63b2ebdffcaced552af9c63__exists",
+            "document_id": "90dc1cc6-4134-439b-878d-be3d16a79795_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
             "source": {
                 "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
                 "spec": "tdr:test_project:snapshot/snapshot:/2"
             },
-            "bundle_uuid": "b45716d9e63b2ebdffcaced552af9c63",
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_files_aggregate",
+        "_type": "_doc",
+        "_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": [
+                            "cbe76755-4212-4daa-9196-79c9da775cee"
+                        ],
+                        "activity_id": [
+                            "6a79c797-e281-5e29-8dd4-fa65b60ca375"
+                        ],
+                        "activity_type": [
+                            "sequencingactivity"
+                        ],
+                        "analysis_type": [
+                            "~null"
+                        ],
+                        "assay_category": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "date_submitted": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": [
+                            "59fb2c7b-b699-497b-bf44-1d51b03a546d"
+                        ],
+                        "anatomical_site": [
+                            "~null"
+                        ],
+                        "biosample_id": [
+                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
+                        ],
+                        "biosample_type": [
+                            "redacted-bdTZV79A"
+                        ],
+                        "date_collected": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_age_at_collection_age_range": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "donor_age_at_collection_life_stage": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection_unit": [
+                            "~null"
+                        ],
+                        "disease": [
+                            "~null"
+                        ],
+                        "preservation_state": [
+                            "~null"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80"
+                        ],
+                        "dataset_id": [
+                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
+                        ],
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": [
+                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
+                        ],
+                        "entity_title": [
+                            "UW CMG"
+                        ],
+                        "last_modified_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "byte_size": 5943851225,
+                        "byte_size_": 5943851225,
+                        "size": 5943851225,
+                        "size_": 5943851225,
+                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "8a423abf-e322-416d-a364-3b0a0f324304"
+                        ],
+                        "birth_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_id": [
+                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-PzpInHLe"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "libraries": []
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_files",
+        "_type": "_doc",
+        "_id": "c9bf8c47-a03f-4439-a057-2951bba34a74_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+                        "anatomical_site": "~null",
+                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
+                        "biosample_type": "redacted-bdTZV79A",
+                        "date_collected": "9999-01-01T00:00:00.000000Z",
+                        "donor_age_at_collection_age_range": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "donor_age_at_collection_life_stage": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "disease": "~null",
+                        "preservation_state": "~null",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
+                        "entity_title": "UW CMG",
+                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "byte_size": 5943851225,
+                        "byte_size_": 5943851225,
+                        "size": 5943851225,
+                        "size_": 5943851225,
+                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+                        "birth_date": "9999-01-01T00:00:00.000000Z",
+                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-PzpInHLe",
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "libraries": []
+            },
+            "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_activities_aggregate",
+        "_type": "_doc",
+        "_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": [
+                            "59fb2c7b-b699-497b-bf44-1d51b03a546d"
+                        ],
+                        "anatomical_site": [
+                            "~null"
+                        ],
+                        "biosample_id": [
+                            "002e71d4-3ceb-5509-b44c-f817272dd1bd"
+                        ],
+                        "biosample_type": [
+                            "redacted-bdTZV79A"
+                        ],
+                        "date_collected": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_age_at_collection_age_range": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "donor_age_at_collection_life_stage": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection_unit": [
+                            "~null"
+                        ],
+                        "disease": [
+                            "~null"
+                        ],
+                        "preservation_state": [
+                            "~null"
+                        ],
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80"
+                        ],
+                        "dataset_id": [
+                            "2d0c9e38-6c11-5545-b3c8-f847d949c48b"
+                        ],
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": [
+                            "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments."
+                        ],
+                        "entity_title": [
+                            "UW CMG"
+                        ],
+                        "last_modified_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "8a423abf-e322-416d-a364-3b0a0f324304"
+                        ],
+                        "birth_date": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ],
+                        "donor_id": [
+                            "b8a9b8cf-f790-5ae6-a404-802075ca37f2"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-PzpInHLe"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "c9bf8c47-a03f-4439-a057-2951bba34a74"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".bam"
+                        ],
+                        "file_id": [
+                            "0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
+                        ],
+                        "byte_size": [
+                            5943851225
+                        ],
+                        "byte_size_": [
+                            5943851225
+                        ],
+                        "size": [
+                            5943851225
+                        ],
+                        "size_": [
+                            5943851225
+                        ],
+                        "name": [
+                            "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                        ],
+                        "count": 1
+                    }
+                ],
+                "libraries": []
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_anvildev_test_activities",
+        "_type": "_doc",
+        "_id": "cbe76755-4212-4daa-9196-79c9da775cee_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "cbe76755-4212-4daa-9196-79c9da775cee",
+                        "activity_id": "6a79c797-e281-5e29-8dd4-fa65b60ca375",
+                        "activity_type": "sequencingactivity",
+                        "analysis_type": "~null",
+                        "assay_category": "~null",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "started_at_time": "9999-01-01T00:00:00.000000Z",
+                        "date_submitted": "9999-01-01T00:00:00.000000Z",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "59fb2c7b-b699-497b-bf44-1d51b03a546d",
+                        "anatomical_site": "~null",
+                        "biosample_id": "002e71d4-3ceb-5509-b44c-f817272dd1bd",
+                        "biosample_type": "redacted-bdTZV79A",
+                        "date_collected": "9999-01-01T00:00:00.000000Z",
+                        "donor_age_at_collection_age_range": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "donor_age_at_collection_life_stage": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "disease": "~null",
+                        "preservation_state": "~null",
+                        "xref": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "3ffb94be-7a7f-463d-b9d8-0c6c29db7b80",
+                        "dataset_id": "2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+                        "contact_point": [
+                            "help@lists.anvilproject.org"
+                        ],
+                        "custodian": [
+                            "NHGRI"
+                        ],
+                        "entity_description": "The Centers for Mendelian Genomics project uses next-generation sequencing and computational approaches to discover the genes and variants that underlie Mendelian conditions. By discovering genes that cause Mendelian conditions, we will expand our understanding of their biology to facilitate diagnosis and new treatments.",
+                        "entity_title": "UW CMG",
+                        "last_modified_date": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "8a423abf-e322-416d-a364-3b0a0f324304",
+                        "birth_date": "9999-01-01T00:00:00.000000Z",
+                        "donor_id": "b8a9b8cf-f790-5ae6-a404-802075ca37f2",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-PzpInHLe",
+                        "reported_ethnicity": [
+                            "redacted-N2GfwTBT"
+                        ],
+                        "xref": [
+                            "redacted-BNXK33lp"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "c9bf8c47-a03f-4439-a057-2951bba34a74",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_id": "0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "byte_size": 5943851225,
+                        "byte_size_": 5943851225,
+                        "size": 5943851225,
+                        "size_": 5943851225,
+                        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+                    }
+                ],
+                "libraries": []
+            },
+            "document_id": "cbe76755-4212-4daa-9196-79c9da775cee_59fb2c7b-b699-a97b-bf44-1d51b03a546d__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "59fb2c7b-b699-a97b-bf44-1d51b03a546d",
             "bundle_version": "",
             "bundle_deleted": false
         }

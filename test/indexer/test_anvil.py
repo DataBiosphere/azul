@@ -19,7 +19,7 @@ from indexer.test_tdr import (
 
 
 class TestAnvil(IndexerTestCase, TDRAnvilPluginTestCase):
-    bundle_fqid = SourcedBundleFQID(uuid='b45716d9e63b2ebdffcaced552af9c63',
+    bundle_fqid = SourcedBundleFQID(uuid='59fb2c7b-b699-a97b-bf44-1d51b03a546d',
                                     version='',
                                     source=TDRAnvilPluginTestCase.source)
 
@@ -50,9 +50,7 @@ class TestAnvil(IndexerTestCase, TDRAnvilPluginTestCase):
         expected_hits = self._load_canned_result(self.bundle_fqid)
         self.assertEqual(expected_hits, hits)
 
-    # FIXME: Switch to using datarepo_row_id for partitioning and entity IDs
-    #        https://github.com/DataBiosphere/azul/issues/4341
-    @unittest.skip('TinyQuery does not support SHA1')
+    @unittest.skip('TinyQuery does not support the WITH clause')
     def test_fetch_bundle(self):
         canned_bundle = self._load_canned_bundle(self.bundle_fqid)
         self._make_mock_tdr_tables(self.bundle_fqid)

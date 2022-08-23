@@ -109,6 +109,28 @@ def validate_uuid_prefix(uuid_prefix: str) -> None:
         raise InvalidUUIDPrefixError(uuid_prefix)
 
 
+def change_version(uuid: str, old_version: int, new_version: int) -> str:
+    """
+    >>> change_version('d36eb64f-162c-4b8f-bb17-069e2fd2b208', 1, 10)
+    Traceback (most recent call last):
+    ...
+    AssertionError: ('d36eb64f-162c-4b8f-bb17-069e2fd2b208', 4, 1)
+    >>> change_version('d36eb64f-162c-4b8f-bb17-069e2fd2b208', 4, 10)
+    'd36eb64f-162c-ab8f-bb17-069e2fd2b208'
+    """
+    assert 1 <= new_version < 16, new_version
+    if old_version in (1, 3, 4, 5):
+        validate_uuid(uuid)
+    prefix, version, suffix = uuid[:14], uuid[14], uuid[15:]
+    version = int(version, 16)
+    assert version == old_version, (uuid, version, old_version)
+    uuid = prefix + hex(new_version)[2:] + suffix
+    assert UUID(uuid).version == new_version, (uuid, old_version)
+    if new_version in (1, 3, 4, 5):
+        validate_uuid(uuid)
+    return uuid
+
+
 UUID_PARTITION = TypeVar('UUID_PARTITION', bound='UUIDPartition')
 
 
