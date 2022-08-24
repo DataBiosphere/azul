@@ -1168,6 +1168,10 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '',
             '--continue-at -',
             '',
+            '--retry 2',
+            '',
+            '--retry-delay 10',
+            '',
             '--write-out "Downloading to: %{filename_effective}\\n\\n"',
             '',
         ]
