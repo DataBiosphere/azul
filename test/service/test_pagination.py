@@ -51,7 +51,7 @@ def setUpModule():
 
 @patch_dss_source
 @patch_source_cache
-class PaginationTestCase(WebServiceTestCase):
+class TestPagination(WebServiceTestCase):
     templates: JSONs
     random: Random
 
