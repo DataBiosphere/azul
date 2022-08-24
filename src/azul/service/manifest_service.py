@@ -123,6 +123,7 @@ from azul.service.storage_service import (
     StorageService,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
     JSONs,
     MutableJSON,
@@ -230,7 +231,7 @@ class ManifestPartition:
     #: The cached configuration of the manifest that contains this partition.
     #: Manifest generators whose `manifest_config` property is expensive should
     #: cache the returned value here for subsequent partitions to reuse.
-    config: Optional[ManifestConfig] = None
+    config: Optional[AnyJSON] = None
 
     #: The ID of the S3 multi-part upload this partition is a part of. If a
     #: manifest consists of just one partition, this may be None, but it doesn't
@@ -258,7 +259,7 @@ class ManifestPartition:
     @classmethod
     def from_json(cls, partition: JSON) -> 'ManifestPartition':
         return cls(**{
-            k: tuple(v) if isinstance(v, list) else v
+            k: tuple(v) if k == 'search_after' and v is not None else v
             for k, v in partition.items()
         })
 
@@ -270,7 +271,7 @@ class ManifestPartition:
         return cls(index=0,
                    is_last=False)
 
-    def with_config(self, config: ManifestConfig):
+    def with_config(self, config: AnyJSON):
         return attr.evolve(self, config=config)
 
     def with_upload(self, multipart_upload_id) -> 'ManifestPartition':
@@ -1038,9 +1039,13 @@ class PagedManifestGenerator(ManifestGenerator):
               ) -> ManifestPartition:
         assert not partition.is_last, partition
         if partition.config is None:
-            partition = partition.with_config(self.manifest_config)
+            # The keys in manifest config are tuples which aren't allowed in
+            # JSON. We convert the outer mapping to a list of entries.
+            config = [[list(k), v] for k, v in self.manifest_config.items()]
+            partition = partition.with_config(config)
         else:
-            type(self).manifest_config.fset(self, partition.config)
+            config = {tuple(k): v for k, v in partition.config}
+            type(self).manifest_config.fset(self, config)
         if partition.multipart_upload_id is None:
             upload = self.storage.create_multipart_upload(object_key)
             partition = partition.with_upload(upload.id)

@@ -228,7 +228,7 @@ class TestManifestController(LocalAppTestCase):
                         ManifestPartition(index=1,
                                           is_last=False,
                                           file_name=file_name,
-                                          config={('foo', 'bar'): {'baz': 'blah'}},
+                                          config=[[['foo', 'bar'], {'baz': 'blah'}]],
                                           multipart_upload_id='some_upload_id',
                                           part_etags=('some_etag',),
                                           page_index=512,
