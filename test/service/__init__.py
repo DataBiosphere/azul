@@ -1,5 +1,9 @@
+import copy
 import json
 import os
+from random import (
+    Random,
+)
 from typing import (
     Any,
     Callable,
@@ -17,6 +21,12 @@ from unittest.mock import (
     PropertyMock,
     patch,
 )
+import uuid
+
+from more_itertools import (
+    flatten,
+    one,
+)
 
 from app_test_case import (
     LocalAppTestCase,
@@ -24,12 +34,14 @@ from app_test_case import (
 from azul import (
     JSON,
     cached_property,
+    config,
 )
 from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.service.source_service import (
     NotFound,
@@ -45,6 +57,8 @@ import indexer
 from indexer import (
     IndexerTestCase,
 )
+
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
@@ -86,6 +100,78 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
             'catalog': self.catalog,
             **params
         }
+
+
+class DocumentCloningTestCase(WebServiceTestCase):
+    _templates: JSONs
+    _random: Random
+
+    def setUp(self):
+        super().setUp()
+        self._random = Random(42)
+
+    def _setup_document_templates(self):
+        hits = self._get_all_hits()
+        self._templates = [hit['_source'] for hit in hits]
+        self._delete_all_hits()
+
+    def tearDown(self):
+        self._teardown_indices()
+        super().tearDown()
+
+    _query = {
+        'query': {
+            'match_all': {}
+        }
+    }
+
+    def _get_all_hits(self):
+        response = self.es_client.search(index=self._index_name,
+                                         body=self._query)
+        return response['hits']['hits']
+
+    def _delete_all_hits(self):
+        self.es_client.delete_by_query(index=self._index_name,
+                                       body=self._query,
+                                       refresh=True)
+
+    def _clone_doc(self, doc):
+        """
+        Duplicate the given `files` document with new identifiers.
+        """
+        doc = copy.deepcopy(doc)
+        entity_id, file_id = str(uuid.uuid4()), str(uuid.uuid4())
+        doc['entity_id'] = entity_id
+        file = one(doc['contents']['files'])
+        file['document_id'] = entity_id
+        file['uuid'] = file_id
+        return doc
+
+    def _add_docs(self, num_docs):
+        """
+        Make the given number of copies of a randomly selected template
+        document from the `files` index.
+        """
+        if num_docs > 0:
+            log.info('Adding %i documents to index', num_docs)
+            template = self._random.choice(self._templates)
+            docs = [self._clone_doc(template) for _ in range(num_docs)]
+            body = '\n'.join(
+                flatten(
+                    (
+                        json.dumps({'create': {}}),
+                        json.dumps(doc)
+                    )
+                    for doc in docs
+                )
+            )
+            self.es_client.bulk(body, index=self._index_name, refresh=True)
+
+    @property
+    def _index_name(self):
+        return config.es_index_name(catalog=self.catalog,
+                                    entity_type='files',
+                                    aggregate=True)
 
 
 class DSSUnitTestCase(TestCase):
