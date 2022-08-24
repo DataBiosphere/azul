@@ -1,42 +1,28 @@
-import copy
 from itertools import (
     chain,
     groupby,
 )
-import json
 from operator import (
     itemgetter,
-)
-from random import (
-    Random,
 )
 from typing import (
     Any,
     Optional,
 )
 import unittest
-import uuid
 
 import attr
 from more_itertools import (
-    flatten,
-    one,
     unzip,
 )
 import requests
 
-from azul import (
-    config,
-)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
-from azul.types import (
-    JSONs,
-)
 from service import (
-    WebServiceTestCase,
+    DocumentCloningTestCase,
     patch_dss_source,
     patch_source_cache,
 )
@@ -51,75 +37,12 @@ def setUpModule():
 
 @patch_dss_source
 @patch_source_cache
-class TestPagination(WebServiceTestCase):
-    templates: JSONs
-    random: Random
+class TestPagination(DocumentCloningTestCase):
 
     def setUp(self):
         super().setUp()
-        self.random = Random(42)
         self._setup_indices()
-        hits = self._get_all_hits()
-        self.templates = [hit['_source'] for hit in hits]
-        self._delete_all_hits()
-
-    def tearDown(self):
-        self._teardown_indices()
-        super().tearDown()
-
-    @property
-    def _index_name(self):
-        return config.es_index_name(catalog=self.catalog,
-                                    entity_type='files',
-                                    aggregate=True)
-
-    query = {
-        'query': {
-            'match_all': {}
-        }
-    }
-
-    def _get_all_hits(self):
-        response = self.es_client.search(index=self._index_name,
-                                         body=self.query)
-        return response['hits']['hits']
-
-    def _delete_all_hits(self):
-        self.es_client.delete_by_query(index=self._index_name,
-                                       body=self.query,
-                                       refresh=True)
-
-    def _clone_doc(self, doc):
-        """
-        Duplicate the given `files` document with new identifiers.
-        """
-        doc = copy.deepcopy(doc)
-        entity_id, file_id = str(uuid.uuid4()), str(uuid.uuid4())
-        doc['entity_id'] = entity_id
-        file = one(doc['contents']['files'])
-        file['document_id'] = entity_id
-        file['uuid'] = file_id
-        return doc
-
-    def _add_docs(self, num_docs):
-        """
-        Make the given number of copies of a randomly selected template
-        document from the `files` index.
-        """
-        if num_docs > 0:
-            log.info('Adding %i documents to index', num_docs)
-            template = self.random.choice(self.templates)
-            docs = [self._clone_doc(template) for _ in range(num_docs)]
-            body = '\n'.join(
-                flatten(
-                    (
-                        json.dumps({'create': {}}),
-                        json.dumps(doc)
-                    )
-                    for doc in docs
-                )
-            )
-            self.es_client.bulk(body, index=self._index_name, refresh=True)
+        self._setup_document_templates()
 
     def test_pagination(self):
 
