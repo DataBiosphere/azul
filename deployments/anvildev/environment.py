@@ -149,17 +149,6 @@ dcp2_sources = mkdict([
     mksrc('datarepo-dev-96d8e08c', 'hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903', 62),
 ])
 
-lungmap_sources = mkdict([
-    mksrc('datarepo-dev-5d9526e0', 'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404', 1),
-    mksrc('datarepo-dev-8de6d66b', 'lungmap_dev_2620497955a349b28d2b53e0bdfcb176__20220404_20220404', 1)
-])
-
-lm2_sources = dict(**lungmap_sources, **mkdict([
-    mksrc('datarepo-dev-b47b6759', 'lungmap_dev_00f056f273ff43ac97ff69ca10e38c89__20220404_20220404_lm2', 1),
-    mksrc('datarepo-dev-2e9ef7fd', 'lungmap_dev_20037472ea1d4ddb9cd356a11a6f0f76__20220401_20220404_lm2', 1),
-    mksrc('datarepo-dev-d57fd0c5', 'lungmap_dev_f899709cae2c4bb988f0131142e6c7ec__20220401_20220629_lm2', 1)
-]))
-
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -188,14 +177,14 @@ def env() -> Mapping[str, Optional[str]]:
         # Settings applicable to all environments but specific to you go into
         # environment.local.py at the project root.
 
-        'AZUL_DEPLOYMENT_STAGE': 'dev',
+        'AZUL_DEPLOYMENT_STAGE': 'anvildev',
 
-        'AZUL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu',
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
-        'AZUL_DRS_DOMAIN_NAME': 'drs.dev.singlecell.gi.ucsc.edu',
+        'AZUL_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
+        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-singlecell-azul-storage-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-platform-anvil-dev.{AWS_DEFAULT_REGION}',
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-dev-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
@@ -205,8 +194,6 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp2', dcp2_sources),
-                ('lungmap', 'lungmap', lungmap_sources),
-                ('lungmap', 'lm2', lm2_sources)
             ]
             for suffix, internal in [
                 ('', False),
@@ -226,17 +213,14 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEBUG': '1',
 
-        'AZUL_BILLING': 'hca',
+        'AZUL_BILLING': 'anvil',
 
         'AZUL_OWNER': 'hannes@ucsc.edu',
 
-        'AZUL_AWS_ACCOUNT_ID': '122796619775',
+        'AZUL_AWS_ACCOUNT_ID': '289950828509',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        'GOOGLE_PROJECT': 'platform-hca-dev',
+        'GOOGLE_PROJECT': 'platform-anvil-dev',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
-
-        'azul_cloudtrail_bucket_region': 'us-west-2',
-        'azul_cloudtrail_trail_region': 'us-west-2',
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-3cv4g8ii9enl2000ra6m02r3ne7bgnth.apps.googleusercontent.com',
     }

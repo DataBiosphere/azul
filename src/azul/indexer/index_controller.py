@@ -36,7 +36,7 @@ from azul.azulclient import (
     AzulClient,
 )
 from azul.chalice import (
-    AzulRequest,
+    AppController,
 )
 from azul.deployment import (
     aws,
@@ -89,7 +89,7 @@ class Action(Enum):
             assert False
 
 
-class IndexController:
+class IndexController(AppController):
     # The number of documents to be queued in a single SQS `send_messages`.
     # Theoretically, larger batches are better but SQS currently limits the
     # batch size to 10.
@@ -100,7 +100,8 @@ class IndexController:
     def index_service(self):
         return IndexService()
 
-    def handle_notification(self, catalog: CatalogName, action: str, request: AzulRequest):
+    def handle_notification(self, catalog: CatalogName, action: str):
+        request = self.current_request
         if isinstance(request.authentication, HMACAuthentication):
             assert request.authentication.identity() is not None
             config.Catalog.validate_name(catalog, exception=chalice.BadRequestError)

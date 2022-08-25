@@ -14,6 +14,7 @@ from typing import (
     Any,
     Callable,
     Optional,
+    Type,
     Union,
 )
 import urllib.parse
@@ -53,11 +54,13 @@ from azul.auth import (
 )
 from azul.chalice import (
     AzulChaliceApp,
+    C,
 )
 from azul.drs import (
     AccessMethod,
 )
 from azul.health import (
+    Health,
     HealthController,
 )
 from azul.indexer.document import (
@@ -75,6 +78,7 @@ from azul.openapi import (
     schema,
 )
 from azul.plugins import (
+    ManifestFormat,
     MetadataPlugin,
 )
 from azul.plugins.metadata.hca.indexer.transform import (
@@ -97,7 +101,6 @@ from azul.service.manifest_controller import (
 )
 from azul.service.manifest_service import (
     CurlManifestGenerator,
-    ManifestFormat,
 )
 from azul.service.repository_controller import (
     RepositoryController,
@@ -283,47 +286,28 @@ class ServiceApp(AzulChaliceApp):
 
     @property
     def drs_controller(self) -> DRSController:
-        return self._create_controller(DRSController)
+        return self._service_controller(DRSController)
 
-    @property
+    @cached_property
     def health_controller(self) -> HealthController:
-        # Don't cache. Health controller is meant to be short-lived since it
-        # applies its own caching. If we cached the controller, we'd never
-        # observe any changes in health.
-        return HealthController(lambda_name='service')
+        return self._controller(HealthController, lambda_name='service')
 
     @cached_property
     def catalog_controller(self) -> CatalogController:
-        return self._create_controller(CatalogController)
+        return self._service_controller(CatalogController)
 
     @property
     def repository_controller(self) -> RepositoryController:
-        return self._create_controller(RepositoryController)
+        return self._service_controller(RepositoryController)
 
     @cached_property
     def manifest_controller(self) -> ManifestController:
-        return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name,
-                                       manifest_url_func=self.manifest_url)
+        return self._service_controller(ManifestController,
+                                        step_function_lambda_name=generate_manifest.name,
+                                        manifest_url_func=self.manifest_url)
 
-    def _create_controller(self, controller_cls, **kwargs):
-        return controller_cls(lambda_context=self.lambda_context,
-                              file_url_func=self.file_url,
-                              **kwargs)
-
-    @property
-    def catalog(self) -> str:
-        request = self.current_request
-        # request is none during `chalice package`
-        if request is not None:
-            # params is None whenever no params are passed
-            params = request.query_params
-            if params is not None:
-                try:
-                    return params['catalog']
-                except KeyError:
-                    pass
-        return config.default_catalog
+    def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
+        return self._controller(controller_cls, file_url_func=self.file_url, **kwargs)
 
     @property
     def metadata_plugin(self) -> MetadataPlugin:
@@ -498,7 +482,7 @@ health_up_key = {
 fast_health_keys = {
     **{
         prop.key: format_description(prop.description)
-        for prop in HealthController.fast_properties['service']
+        for prop in Health.fast_properties['service']
     },
     **health_up_key
 }
@@ -506,7 +490,7 @@ fast_health_keys = {
 health_all_keys = {
     **{
         prop.key: format_description(prop.description)
-        for prop in HealthController.all_properties
+        for prop in Health.all_properties
     },
     **health_up_key
 }
@@ -622,7 +606,7 @@ def fast_health():
     'parameters': [
         params.path(
             'keys',
-            type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
+            type_=schema.array(schema.enum(*sorted(Health.all_keys))),
             description='''
                 A comma-separated list of keys selecting the health checks to be
                 performed. Each key corresponds to an entry in the response.
@@ -907,6 +891,19 @@ def validate_field(field: str):
     """
     if field not in app.metadata_plugin.field_mapping:
         raise BRE(f'Unknown field `{field}`')
+
+
+def validate_manifest_format(format_: str):
+    supported_formats = {f.value for f in app.metadata_plugin.manifest_formats}
+    try:
+        ManifestFormat(format_)
+    except ValueError:
+        raise BRE(f'Unknown manifest format `{format_}`. '
+                  f'Must be one of {supported_formats}')
+    else:
+        if format_ not in supported_formats:
+            raise BRE(f'Manifest format `{format_}` is not supported for '
+                      f'catalog {app.catalog}. Must be one of {supported_formats}')
 
 
 class Mandatory:
@@ -1403,7 +1400,8 @@ def manifest_path_spec(*, fetch: bool):
                 schema.optional(
                     schema.enum(
                         *[
-                            format_.value for format_ in ManifestFormat
+                            format_.value
+                            for format_ in app.metadata_plugin.manifest_formats
                         ],
                         type_=str
                     )
@@ -1571,17 +1569,19 @@ def _file_manifest(fetch: bool):
     request = app.current_request
     query_params = request.query_params or {}
     query_params.setdefault('filters', '{}')
-    query_params.setdefault('format', ManifestFormat.compact.value)
     # FIXME: Remove `object_key` when Swagger validation lands
     #        https://github.com/DataBiosphere/azul/issues/1465
     # The objectKey query parameter is not allowed in /fetch/manifest/files
     object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
-                    format=ManifestFormat,
+                    format=validate_manifest_format,
                     catalog=validate_catalog,
                     filters=str,
                     token=str,
                     **object_key)
+    # Wait to load metadata plugin until we've validated the catalog
+    default_format = app.metadata_plugin.manifest_formats[0].value
+    query_params.setdefault('format', default_format)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url,
                                                       catalog=catalog,

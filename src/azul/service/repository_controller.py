@@ -107,7 +107,7 @@ class RepositoryController(SourceController):
                                     ) -> Sequence[tuple[Optional[int], Optional[int]]]:
         """
         >>> # noinspection PyTypeChecker
-        >>> rc = RepositoryController(lambda_context=None, file_url_func=None)
+        >>> rc = RepositoryController(app=None, file_url_func=None)
         >>> rc._parse_range_request_header('bytes=100-200,300-400')
         [(100, 200), (300, 400)]
 

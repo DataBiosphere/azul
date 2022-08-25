@@ -6,7 +6,7 @@ from typing import (
     Optional,
 )
 
-is_sandbox = '/sandbox/' in __file__
+is_sandbox = True
 
 
 def common_prefix(n: int) -> str:
@@ -210,6 +210,18 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
+        'AZUL_IS_SANDBOX': str(int(is_sandbox)),
+
+        # This deployment uses a subdomain of the `dev` deployment's domain.
+        #
+        'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
+        'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
+        'AZUL_DRS_DOMAIN_NAME': 'drs.{AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu',
+
+        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-singlecell-azul-storage-{AZUL_DEPLOYMENT_STAGE}',
+
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
                                        internal=internal,
@@ -231,16 +243,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
-        # This deployment uses a subdomain of the `dev` deployment's domain.
-        #
-        'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
-        'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
-
-        'AZUL_DRS_DOMAIN_NAME': 'drs.{AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu',
-
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
-
         **(
             {
                 # $0.382/h × 2 × 24h/d × 30d/mo = $550.08/mo
@@ -257,6 +259,8 @@ def env() -> Mapping[str, Optional[str]]:
         ),
 
         'AZUL_DEBUG': '1',
+
+        'AZUL_BILLING': 'hca',
 
         # When using this file as a template for a personal deployment, change
         # `None` to a string contaiing YOUR email address.

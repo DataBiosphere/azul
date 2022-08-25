@@ -93,7 +93,6 @@ def load_tests(_loader, tests, _ignore):
         azul.uuids,
         azul.vendored.frozendict,
         load_app_module('service', unit_test=True),
-        load_script('check_branch'),
         load_script('envhook'),
         load_script('export_environment'),
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),

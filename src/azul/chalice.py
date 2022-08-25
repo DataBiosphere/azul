@@ -10,8 +10,11 @@ import os
 from typing import (
     Any,
     Optional,
+    Type,
+    TypeVar,
 )
 
+import attr
 from chalice import (
     Chalice,
     ChaliceViewError,
@@ -63,6 +66,9 @@ class GoneError(ChaliceViewError):
 # Chalice does not define any exceptions for 5xx status codes besides 500
 class ServiceUnavailableError(ChaliceViewError):
     STATUS_CODE = 503
+
+
+C = TypeVar('C', bound='AppController')
 
 
 class AzulChaliceApp(Chalice):
@@ -351,6 +357,38 @@ class AzulChaliceApp(Chalice):
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
     current_request: AzulRequest
+
+    @property
+    def catalog(self) -> str:
+        request = self.current_request
+        # A request is only present when this Lambda Function is invoked by
+        # API Gateway (or a simulation like `make local`). Prominient examples
+        # of when the request None are `chalice package` or when the Lambda
+        # Function is invoked via an event schedule.
+        if request is not None:
+            params = request.query_params
+            if params is not None:
+                try:
+                    return params['catalog']
+                except KeyError:
+                    pass
+        return config.default_catalog
+
+    def _controller(self, controller_cls: Type[C], **kwargs) -> C:
+        return controller_cls(app=self, **kwargs)
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class AppController:
+    app: AzulChaliceApp
+
+    @property
+    def lambda_context(self) -> LambdaContext:
+        return self.app.lambda_context
+
+    @property
+    def current_request(self) -> AzulRequest:
+        return self.app.current_request
 
 
 def private_api_stage_config():

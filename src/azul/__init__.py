@@ -10,6 +10,9 @@ from enum import (
     Enum,
 )
 import functools
+from itertools import (
+    chain,
+)
 import logging
 import os
 import re
@@ -81,6 +84,10 @@ class Config:
     @property
     def environ(self):
         return ChainMap(os.environ, self._outsourced_environ)
+
+    @property
+    def billing(self):
+        return self.environ['AZUL_BILLING']
 
     @property
     def owner(self):
@@ -218,7 +225,7 @@ class Config:
         return self.environ.get('AZUL_DSS_SOURCE')
 
     def sources(self, catalog: CatalogName) -> Set[str]:
-        return config.catalogs[catalog].sources
+        return self.catalogs[catalog].sources
 
     @property
     def tdr_allowed_source_locations(self) -> Set[str]:
@@ -503,10 +510,6 @@ class Config:
         return self.environ['AWS_DEFAULT_REGION']
 
     @property
-    def terraform_backend_bucket(self) -> str:
-        return self.versioned_bucket
-
-    @property
     def versioned_bucket(self):
         return self.environ['AZUL_VERSIONED_BUCKET']
 
@@ -726,33 +729,73 @@ class Config:
     def private_api(self) -> bool:
         return self._boolean(self.environ['AZUL_PRIVATE_API'])
 
-    main_deployments_by_branch: Mapping[str, Sequence[str]] = freeze({
-        'develop': ['dev'],
-        'integration': ['integration'],
-        'staging': ['staging'],
-        'prod': ['prod', 'prod2']
-    })
+    @property
+    def _main_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
+        """
+        Maps a branch name to a sequence of names of main deployments the branch
+        can be deployed to. The key of None signifies any other branch not
+        mapped explicitly, or a detached head.
+        """
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        return freeze({
+            k if k else None: v
+            for k, v in json.loads(self.environ['azul_main_deployments']).items()
+        })
 
-    main_branches_by_deployment: Mapping[str, str] = freeze({
-        deployment: branch
-        for branch, deployments in main_deployments_by_branch.items()
-        for deployment in deployments
-    })
+    def main_deployments_for_branch(self,
+                                    branch: Optional[str]
+                                    ) -> Optional[Sequence[str]]:
+        """
+        The list of names of main deployments the given branch can be deployed
+        to or `None` of no such deployments exist. An argument of `None`
+        indicates a detached head.
+        """
+        deployments = self._main_deployments
+        try:
+            return deployments[branch]
+        except KeyError:
+            return None if branch is None else deployments.get(None)
 
-    def is_main_deployment(self, stage: str = None) -> bool:
-        if stage is None:
-            stage = self.deployment_stage
-        return stage in self.main_branches_by_deployment
+    def is_main_deployment(self, deployment: Optional[str] = None) -> bool:
+        """
+        Returns `True` if the deployment of the specified name is a main
+        deployment, or `False` if it is a shared deployment. If no argument is
+        passed or if the argument is `None`, the current deployment's name is
+        used instead.
+        """
+        if deployment is None:
+            deployment = self.deployment_stage
+        return deployment in set(chain.from_iterable(self._main_deployments.values()))
 
-    def is_stable_deployment(self, stage=None) -> bool:
-        if stage is None:
-            stage = self.deployment_stage
-        return stage in ('staging', 'prod')
+    def is_stable_deployment(self, deployment: Optional[str] = None) -> bool:
+        """
+        Returns `True` if the deployment of the specified name must be kept
+        functional for public use at all times.
+        """
+        if deployment is None:
+            deployment = self.deployment_stage
+        if deployment in {'prod'}:
+            assert self.is_main_deployment(deployment)
+            return True
+
+    @property
+    def is_sandbox_deployment(self) -> bool:
+        """
+        True, if current deployment is a main deployment with the sole purpose
+        of testing feature branches.
+        """
+        return self._boolean(self.environ['AZUL_IS_SANDBOX'])
+
+    @property
+    def is_sandbox_or_personal_deployment(self) -> bool:
+        return self.is_sandbox_deployment or not self.is_main_deployment()
 
     @property
     def _git_status(self) -> Mapping[str, str]:
         import git
-        repo = git.Repo(config.project_root)
+        repo = git.Repo(self.project_root)
         return {
             'azul_git_commit': repo.head.object.hexsha,
             'azul_git_dirty': str(repo.is_dirty()),
@@ -886,7 +929,7 @@ class Config:
             return 'google_service_account' + self.value
 
     def state_machine_name(self, lambda_name):
-        return config.qualified_resource_name(lambda_name)
+        return self.qualified_resource_name(lambda_name)
 
     def _concurrency(self, value: str, retry: bool) -> int:
         """
@@ -954,7 +997,7 @@ class Config:
 
     def tallies_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_tallies_queue_name(retry=retry, fail=fail)
-        return config.qualified_resource_name(name, suffix='.fifo')
+        return self.qualified_resource_name(name, suffix='.fifo')
 
     def unqual_tallies_queue_name(self, *, retry=False, fail=False):
         return self._unqual_queue_name('tallies', retry, fail)

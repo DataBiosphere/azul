@@ -19,7 +19,7 @@ plan: validate
 	terraform plan
 
 .PHONY: apply
-apply: validate
+apply: validate rename_resources
 	terraform apply
 
 .PHONY: destroy
@@ -29,3 +29,7 @@ destroy: validate
 .PHONY: clean
 clean: check_env
 	rm -f *.tf.json
+
+.PHONY: rename_resources
+rename_resources: init
+	python $(project_root)/scripts/rename_resources.py
