@@ -46,6 +46,9 @@ from azul.plugins.metadata.hca.service.response import (
     HCASearchResponseStage,
     HCASummaryResponseStage,
 )
+from azul.service.manifest_service import (
+    ManifestFormat,
+)
 from azul.types import (
     JSON,
 )
@@ -193,6 +196,10 @@ class Plugin(MetadataPlugin):
             projects=Sorting(field_name='projectTitle'),
             samples=Sorting(field_name='sampleId')
         )
+
+    @property
+    def manifest_formats(self) -> Sequence[ManifestFormat]:
+        return tuple(ManifestFormat)
 
     @property
     def _field_mapping(self) -> MetadataPlugin._FieldMapping:

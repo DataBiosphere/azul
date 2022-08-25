@@ -283,3 +283,15 @@ class RequestParameterValidationTest(WebServiceTestCase):
         expected = (f'Entity type {bad_entity_type!r} is invalid for catalog '
                     f'{self.catalog!r}. Must be one of {good_entity_types}.')
         self.assertEqual(expected, response.json()['Message'])
+
+    def test_bad_manifest_format(self):
+        bad_format = 'fluffy'
+        good_formats = {f.value for f in self.app_module.app.metadata_plugin.manifest_formats}
+        assert bad_format not in good_formats
+        url = self.base_url.set(path='/manifest/files',
+                                query_params={'format': bad_format})
+        response = requests.get(str(url))
+        self.assertEqual(response.status_code, 400, response.json())
+        expected = (f'Unknown manifest format `{bad_format}`. '
+                    f'Must be one of {good_formats}')
+        self.assertEqual(expected, response.json()['Message'])

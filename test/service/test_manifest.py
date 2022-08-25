@@ -31,6 +31,9 @@ from typing import (
 from unittest import (
     mock,
 )
+from unittest.mock import (
+    patch,
+)
 import unittest.result
 from urllib.parse import (
     parse_qs,
@@ -72,6 +75,9 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul.plugins import (
+    ManifestFormat,
+)
 from azul.plugins.repository.dss import (
     DSSBundle,
 )
@@ -84,7 +90,6 @@ from azul.service.manifest_service import (
     BDBagManifestGenerator,
     Bundles,
     Manifest,
-    ManifestFormat,
     ManifestGenerator,
     ManifestPartition,
     ManifestService,
@@ -100,6 +105,7 @@ from azul_test_case import (
 )
 from service import (
     DSSUnitTestCase,
+    DocumentCloningTestCase,
     StorageServiceTestCase,
     WebServiceTestCase,
     patch_dss_source,
@@ -144,16 +150,26 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         os.environ.pop('azul_git_dirty')
 
     def _get_manifest(self, format_: ManifestFormat, filters: FiltersJSON, stream=False) -> Response:
-        manifest = self._get_manifest_object(format_, filters)
+        manifest, num_partitions = self._get_manifest_object(format_, filters)
+        self.assertEqual(1, num_partitions)
         return requests.get(manifest.location, stream=stream)
 
-    def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> Manifest:
+    def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> tuple[Manifest, int]:
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
-        return service.get_manifest(format_=format_,
-                                    catalog=self.catalog,
-                                    filters=self._filters(filters),
-                                    partition=ManifestPartition.first(),
-                                    authentication=None)
+        filters = self._filters(filters)
+        partition = ManifestPartition.first()
+        num_partitions = 1
+        while True:
+            partition = service.get_manifest(format_=format_,
+                                             catalog=self.catalog,
+                                             filters=filters,
+                                             partition=partition,
+                                             authentication=None)
+            if isinstance(partition, Manifest):
+                return partition, num_partitions
+            # Emulate controller serializing the partition between steps
+            partition = ManifestPartition.from_json(partition.to_json())
+            num_partitions += 1
 
 
 def manifest_test(test):
@@ -293,8 +309,9 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         """
         for i in range(2):
             with self.subTest(i=i):
-                manifest = self._get_manifest_object(ManifestFormat.compact, {})
+                manifest, num_partitions = self._get_manifest_object(ManifestFormat.compact, {})
                 self.assertFalse(manifest.was_cached)
+                self.assertEqual(1, num_partitions)
 
     @manifest_test
     def test_compact_manifest(self):
@@ -1221,8 +1238,9 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):
-                        manifest = self._get_manifest_object(format_, filters)
+                        manifest, num_partitions = self._get_manifest_object(format_, filters)
                         self.assertFalse(manifest.was_cached)
+                        self.assertEqual(1, num_partitions)
                         query = urlparse(manifest.location).query
                         expected_cd = f'attachment;filename="{expected_name}.tsv"'
                         actual_cd = one(parse_qs(query).get('response-content-disposition'))
@@ -1363,7 +1381,7 @@ class TestManifestResponse(ManifestTestCase):
         """
         Verify the response from manifest endpoints for all manifest formats
         """
-        for format_ in ManifestFormat:
+        for format_ in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
                 with self.subTest(format=format_, fetch=fetch):
                     object_url = 'https://url.to.manifest?foo=bar'
@@ -1440,3 +1458,22 @@ class TestManifestExpiration(AzulUnitTestCase):
                         }
                         self.assertEqual(0, ManifestService._get_seconds_until_expire(headers))
                     self.assertIs(expect_error, any('does not match' in log for log in logs.output))
+
+
+class TestManifestPartitioning(ManifestTestCase, DocumentCloningTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self._setup_document_templates()
+        self._add_docs(5000)
+
+    @manifest_test
+    def test(self):
+        # This is the smallest valid S3 part size
+        part_size = 5 * 1024 * 1024
+        with patch.object(PagedManifestGenerator, 'part_size', part_size):
+            manifest, num_partitions = self._get_manifest_object(ManifestFormat.compact,
+                                                                 filters={})
+        content = requests.get(manifest.location).content
+        self.assertGreater(num_partitions, 1)
+        self.assertGreater(len(content), (num_partitions - 1) * part_size)

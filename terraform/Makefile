@@ -44,7 +44,9 @@ ifeq ($(AZUL_PRIVATE_API),1)
 	# aws_lb_target_group_attachment can iterate over the network_interface_ids.
 	terraform apply -auto-approve -target aws_vpc_endpoint.indexer -target aws_vpc_endpoint.service
 endif
-	terraform apply -auto-approve
+	terraform plan -no-color -out=plan.bin
+	terraform show -json plan.bin > plan.json
+	terraform apply -auto-approve plan.bin
 
 .PHONY: destroy
 destroy: validate

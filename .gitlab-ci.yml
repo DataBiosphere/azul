@@ -32,10 +32,11 @@ build_image:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
     - pip list
-    - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print || echo sandbox)
+    - source environment  # load global defaults
+    - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
-    - status_context="gitlab/${GITLAB_INSTANCE_NAME}/${AZUL_DEPLOYMENT_STAGE}"
+    - status_context="gitlab/${azul_gitlab_instance_name}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
   dependencies:
     - build_image
@@ -53,7 +54,7 @@ test:
   stage: test
   script:
     - make format  # Any ill-formatted sources, ...
-    - test "$deployment" != sandbox || make requirements_update  # ... stale transitive dependencies ...
+    - test "$azul_is_sandbox" = 1 && make requirements_update  # ... stale transitive dependencies ...
     - make openapi # ... or changes to the canned OpenAPI definition document ...
     - make check_clean  # would dirty up the working copy and fail the build.
     - make pep8
@@ -70,6 +71,9 @@ deploy:
     - make create
   except:
     - schedules
+  artifacts:
+    paths:
+      - terraform/plan.json
 
 integration_test:
   extends: .base

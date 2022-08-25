@@ -546,11 +546,13 @@ def env() -> Mapping[str, Optional[str]]:
         # Settings applicable to all environments but specific to you go into
         # environment.local.py at the project root.
 
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-config.{AWS_DEFAULT_REGION}',
-        'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
-
         'AZUL_DEPLOYMENT_STAGE': 'prod',
 
+        'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
+        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'azul.data.humancellatlas.org',
+        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
+
+        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-config.{AWS_DEFAULT_REGION}',
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': json.dumps({
@@ -560,7 +562,6 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_hca')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('hca', 'dcp18', dcp18_sources),
                 ('hca', 'dcp19', dcp19_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources)
@@ -573,9 +574,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SOURCE_LOCATION': 'US',
         'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
-
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'azul.data.humancellatlas.org',
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
         'AZUL_ENABLE_MONITORING': '1',
 

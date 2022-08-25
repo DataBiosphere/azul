@@ -33,16 +33,13 @@ log = logging.getLogger(__name__)
 
 class IndexerApp(AzulChaliceApp):
 
-    @property
+    @cached_property
     def health_controller(self):
-        # Don't cache. Health controller is meant to be short-lived since it
-        # applies it's own caching. If we cached the controller, we'd never
-        # observe any changes in health.
-        return HealthController(lambda_name='indexer')
+        return self._controller(HealthController, lambda_name='indexer')
 
     @cached_property
     def index_controller(self) -> IndexController:
-        return IndexController()
+        return self._controller(IndexController)
 
     def __init__(self):
         super().__init__(app_name=config.indexer_name,
@@ -110,7 +107,7 @@ def post_notification(catalog: CatalogName, action: str):
     """
     Receive a notification event and queue it for indexing or deletion.
     """
-    return app.index_controller.handle_notification(catalog, action, app.current_request)
+    return app.index_controller.handle_notification(catalog, action)
 
 
 # Work around https://github.com/aws/chalice/issues/856

@@ -8,6 +8,9 @@ from collections.abc import (
     Sequence,
     Set,
 )
+from enum import (
+    Enum,
+)
 import importlib
 from inspect import (
     isabstract,
@@ -124,6 +127,13 @@ class Sorting:
         return 'desc' if self.descending else 'asc'
 
 
+class ManifestFormat(Enum):
+    compact = 'compact'
+    terra_bdbag = 'terra.bdbag'
+    terra_pfb = 'terra.pfb'
+    curl = 'curl'
+
+
 T = TypeVar('T', bound='Plugin')
 
 
@@ -235,6 +245,15 @@ class MetadataPlugin(Plugin):
         The return value maps the outer entity type of each exposed index to the
         default values of the request parameters that control the ordering of
         hits returned by the corresponding endpoint.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def manifest_formats(self) -> Sequence[ManifestFormat]:
+        """
+        The supported formats for generating a manifest. The first value will be
+        used as a default if no format is explicitly specified.
         """
         raise NotImplementedError
 

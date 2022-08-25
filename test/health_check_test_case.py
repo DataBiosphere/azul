@@ -136,9 +136,9 @@ class HealthCheckTestCase(LocalAppTestCase,
         # No health object is available in S3 bucket, yielding an error
         with self.helper():
             response = requests.get(str(self.base_url.set(path='/health/cached')))
-            self.assertEqual(500, response.status_code)
+            self.assertEqual(404, response.status_code)
             expected_response = {
-                'Code': 'ChaliceViewError',
+                'Code': 'NotFoundError',
                 'Message': 'Cached health object does not exist'
             }
             self.assertEqual(expected_response, response.json())

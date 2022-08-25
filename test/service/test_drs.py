@@ -298,8 +298,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
 class TestDRSController(unittest.TestCase):
 
     def test_bad_token(self):
-        controller = DRSController(lambda_context=MagicMock(),
-                                   file_url_func=MagicMock())
+        controller = DRSController(app=MagicMock(), file_url_func=MagicMock())
         literal = repr({'a': 'malicious(?) access ID'}).encode()
         bad_access_id = base64.urlsafe_b64encode(literal).rstrip(b'=').decode()
         response = controller.get_object_access(bad_access_id, 'file_uuid', {})

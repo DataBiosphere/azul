@@ -35,6 +35,9 @@ from azul.logging import (
 from azul.modules import (
     load_app_module,
 )
+from azul.plugins import (
+    ManifestFormat,
+)
 from azul.service import (
     Filters,
 )
@@ -48,7 +51,6 @@ from azul.service.manifest_service import (
     CachedManifestNotFound,
     CachedManifestSourcesChanged,
     Manifest,
-    ManifestFormat,
     ManifestPartition,
     ManifestService,
 )
@@ -226,7 +228,7 @@ class TestManifestController(LocalAppTestCase):
                         ManifestPartition(index=1,
                                           is_last=False,
                                           file_name=file_name,
-                                          config={},
+                                          config=[[['foo', 'bar'], {'baz': 'blah'}]],
                                           multipart_upload_id='some_upload_id',
                                           part_etags=('some_etag',),
                                           page_index=512,
