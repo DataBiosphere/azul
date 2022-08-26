@@ -1,3 +1,7 @@
+from abc import (
+    ABC,
+    abstractmethod,
+)
 from collections.abc import (
     Iterable,
     Mapping,
@@ -11,6 +15,9 @@ from operator import (
 )
 from typing import (
     Callable,
+    Generic,
+    Type,
+    TypeVar,
 )
 import unittest
 from unittest import (
@@ -54,10 +61,18 @@ from azul.bigquery import (
     BigQueryRows,
 )
 from azul.indexer import (
+    Bundle,
     SourcedBundleFQID,
 )
 from azul.plugins.repository import (
+    tdr_anvil,
     tdr_hca,
+)
+from azul.plugins.repository.tdr import (
+    TDRPlugin,
+)
+from azul.plugins.repository.tdr_anvil import (
+    TDRAnvilBundle,
 )
 from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
@@ -80,20 +95,80 @@ from indexer import (
     CannedBundleTestCase,
 )
 
+BUNDLE = TypeVar('BUNDLE', bound=Bundle)
 
-class TDRPluginTestCase(CannedBundleTestCase):
+
+@attr.s(kw_only=True, auto_attribs=True, frozen=True)
+class TestPlugin(TDRPlugin, ABC):
+    tinyquery: tinyquery.TinyQuery
+
+    def _run_sql(self, query: str) -> BigQueryRows:
+        columns = self.tinyquery.evaluate_query(query).columns
+        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
+        # Tinyquery returns naive datetime objects from a TIMESTAMP type column,
+        # so we manually set the tzinfo back to UTC on these values.
+        # https://github.com/Khan/tinyquery/blob/9382b18b/tinyquery/runtime.py#L215
+        for key, column in columns.items():
+            if column.type == 'TIMESTAMP':
+                values = [
+                    None if d is None else d.replace(tzinfo=timezone.utc)
+                    for d in column.values
+                ]
+                columns[key] = Column(type=column.type,
+                                      mode=column.mode,
+                                      values=values)
+        for i in range(num_rows):
+            yield {k[1]: v.values[i] for k, v in columns.items()}
+
+    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
+        return source.bq_name + '.' + table_name
+
+    def _in(self,
+            columns: tuple[str, ...],
+            values: Iterable[tuple[str, ...]]
+            ) -> str:
+        """
+        >>> TestPlugin._in(None, ('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
+        '(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)'
+        """
+        return ' OR '.join(
+            '(' + ' AND '.join(
+                f'{column} = {inner_value}'
+                for column, inner_value in zip(columns, value)
+            ) + ')'
+            for value in values
+        )
+
+
+class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
 
     @classmethod
-    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> TDRHCABundle:
+    @abstractmethod
+    def _bundle_cls(cls) -> Type[BUNDLE]:
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def _plugin_cls(cls) -> Type[TDRPlugin]:
+        raise NotImplementedError
+
+    @classmethod
+    @cache
+    def _test_plugin_cls(cls) -> Type[TDRPlugin]:
+        class Plugin(TestPlugin, cls._plugin_cls()):
+            pass
+
+        return Plugin
+
+    @classmethod
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
         canned_result = cls._load_canned_file_version(uuid=bundle.uuid,
                                                       version=None,
                                                       extension='result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
-        version = one(e['version'] for e in manifest if e['name'] == 'links.json')
-        assert bundle.version == version, (bundle, version)
-        return TDRHCABundle(fqid=bundle,
-                            manifest=manifest,
-                            metadata_files=metadata)
+        return cls._bundle_cls()(fqid=bundle,
+                                 manifest=manifest,
+                                 metadata_files=metadata)
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
     partition_prefix_length = 2
@@ -101,19 +176,87 @@ class TDRPluginTestCase(CannedBundleTestCase):
     source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
                           spec=TDRSourceSpec.parse(source))
 
-
-class TestTDRPlugin(TDRPluginTestCase):
-    bundle_fqid = SourcedBundleFQID(source=TDRPluginTestCase.source,
-                                    uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
-                                    version='2019-09-24T09:35:06.958773Z')
-
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
         return tinyquery.TinyQuery()
 
     @cache
-    def plugin_for_source_spec(self, source_spec) -> tdr_hca.Plugin:
-        return TestPlugin(sources={source_spec}, tinyquery=self.tinyquery)
+    def plugin_for_source_spec(self, source_spec) -> TDRPlugin:
+        return self._test_plugin_cls()(sources={source_spec}, tinyquery=self.tinyquery)
+
+    def _make_mock_tdr_tables(self,
+                              bundle_fqid: SourcedBundleFQID) -> None:
+        tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
+                                                version=None,
+                                                extension='tables.tdr')['tables']
+        for table_name, table_rows in tables.items():
+            self._make_mock_entity_table(bundle_fqid.source.spec,
+                                         table_name,
+                                         table_rows['rows'])
+
+    def _make_mock_entity_table(self,
+                                source: TDRSourceSpec,
+                                table_name: str,
+                                rows: JSONs) -> None:
+        schema = self._bq_schema(rows[0])
+        columns = {column['name'] for column in schema}
+
+        def dump_row(row: JSON) -> str:
+            row_columns = row.keys()
+            # TinyQuery's errors are typically not helpful in debugging missing/
+            # extra columns in the row JSON.
+            assert row_columns == columns, row_columns
+            row = {
+                column_name: (json.dumps(column_value)
+                              if isinstance(column_value, Mapping) else
+                              column_value)
+                for column_name, column_value in row.items()
+            }
+            return json.dumps(row)
+
+        self.tinyquery.load_table_from_newline_delimited_json(
+            table_name=f'{source.bq_name}.{table_name}',
+            schema=json.dumps(schema),
+            table_lines=map(dump_row, rows)
+        )
+
+    def _bq_schema(self, row: BigQueryRow) -> JSONs:
+        return [
+            dict(name=k,
+                 type='TIMESTAMP' if k == 'version' else 'STRING',
+                 mode='NULLABLE')
+            for k, v in row.items()
+        ]
+
+
+class TDRHCAPluginTestCase(TDRPluginTestCase[TDRHCABundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[TDRHCABundle]:
+        return TDRHCABundle
+
+    @classmethod
+    @cache
+    def _plugin_cls(cls) -> Type[TDRPlugin]:
+        return tdr_hca.Plugin
+
+
+class TDRAnvilPluginTestCase(TDRPluginTestCase[TDRAnvilBundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
+        return TDRAnvilBundle
+
+    @classmethod
+    @cache
+    def _plugin_cls(cls) -> Type[TDRPlugin]:
+        return tdr_anvil.Plugin
+
+
+class TestTDRHCAPlugin(TDRHCAPluginTestCase):
+    bundle_fqid = SourcedBundleFQID(source=TDRPluginTestCase.source,
+                                    uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
+                                    version='2019-09-24T09:35:06.958773Z')
 
     def test_list_bundles(self):
         source = self.source
@@ -135,16 +278,6 @@ class TestTDRPlugin(TDRPluginTestCase):
             TDRBundleFQID(source=source, uuid='42-def', version=current_version),
             TDRBundleFQID(source=source, uuid='42-ghi', version=current_version)
         ])
-
-    def _make_mock_tdr_tables(self,
-                              bundle_fqid: SourcedBundleFQID) -> None:
-        tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
-                                                version=None,
-                                                extension='tables.tdr')['tables']
-        for table_name, table_rows in tables.items():
-            self._make_mock_entity_table(bundle_fqid.source.spec,
-                                         table_name,
-                                         table_rows['rows'])
 
     def test_fetch_bundle(self):
         bundle = self._load_canned_bundle(self.bundle_fqid)
@@ -218,83 +351,6 @@ class TestTDRPlugin(TDRPluginTestCase):
         # Manifest and metadata should both be sorted by entity UUID
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
         self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
-
-    def _make_mock_entity_table(self,
-                                source: TDRSourceSpec,
-                                table_name: str,
-                                rows: JSONs) -> None:
-        schema = self._bq_schema(rows[0])
-        columns = {column['name'] for column in schema}
-
-        def dump_row(row: JSON) -> str:
-            row_columns = row.keys()
-            # TinyQuery's errors are typically not helpful in debugging missing/
-            # extra columns in the row JSON.
-            assert row_columns == columns, row_columns
-            row = {
-                column_name: (json.dumps(column_value)
-                              if isinstance(column_value, Mapping) else
-                              column_value)
-                for column_name, column_value in row.items()
-            }
-            return json.dumps(row)
-
-        self.tinyquery.load_table_from_newline_delimited_json(
-            table_name=f'{source.bq_name}.{table_name}',
-            schema=json.dumps(schema),
-            table_lines=map(dump_row, rows)
-        )
-
-    def _bq_schema(self, row: BigQueryRow) -> JSONs:
-        return [
-            dict(name=k,
-                 type='TIMESTAMP' if k == 'version' else 'STRING',
-                 mode='NULLABLE')
-            for k, v in row.items()
-        ]
-
-
-@attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TestPlugin(tdr_hca.Plugin):
-    tinyquery: tinyquery.TinyQuery
-
-    def _run_sql(self, query: str) -> BigQueryRows:
-        columns = self.tinyquery.evaluate_query(query).columns
-        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
-        # Tinyquery returns naive datetime objects from a TIMESTAMP type column,
-        # so we manually set the tzinfo back to UTC on these values.
-        # https://github.com/Khan/tinyquery/blob/9382b18b/tinyquery/runtime.py#L215
-        for key, column in columns.items():
-            if column.type == 'TIMESTAMP':
-                values = [
-                    None if d is None else d.replace(tzinfo=timezone.utc)
-                    for d in column.values
-                ]
-                columns[key] = Column(type=column.type,
-                                      mode=column.mode,
-                                      values=values)
-        for i in range(num_rows):
-            yield {k[1]: v.values[i] for k, v in columns.items()}
-
-    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
-        return source.bq_name + '.' + table_name
-
-    def _in(self,
-            columns: tuple[str, ...],
-            values: Iterable[tuple[str, ...]]
-            ) -> str:
-        """
-        >>> plugin = TestPlugin(sources=set(), tinyquery=None)
-        >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
-        '(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)'
-        """
-        return ' OR '.join(
-            '(' + ' AND '.join(
-                f'{column} = {inner_value}'
-                for column, inner_value in zip(columns, value)
-            ) + ')'
-            for value in values
-        )
 
 
 class TestTDRSourceList(AzulTestCase):

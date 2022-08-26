@@ -79,6 +79,7 @@ from azul.types import (
     JSONs,
 )
 from indexer.test_tdr import (
+    TDRHCAPluginTestCase,
     TDRPluginTestCase,
 )
 from service import (
@@ -3714,7 +3715,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
 
 
 @patch_source_cache([TDRPluginTestCase.source.to_json()])
-class TestTDRIndexer(WebServiceTestCase, TDRPluginTestCase):
+class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
 
     @classmethod
     def catalog_config(cls):

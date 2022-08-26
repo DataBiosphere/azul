@@ -439,8 +439,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.azul_client.queue_notifications(catalog.notifications)
             _wait_for_indexer()
             for catalog in catalogs:
+                if config.is_hca_enabled(catalog.name):
+                    entity_type = 'files'
+                elif config.is_anvil_enabled(catalog.name):
+                    # While the files index does exist for AnVIL, it's possible
+                    # for a library (bundle entity) not to contain any files and
+                    # thus be absent from the files response
+                    entity_type = 'libraries'
+                else:
+                    assert False, catalog
                 self._assert_catalog_complete(catalog=catalog.name,
-                                              entity_type='files',
+                                              entity_type=entity_type,
                                               bundle_fqids=catalog.bundles)
 
         for catalog in catalogs:
@@ -475,15 +484,22 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                        create_indices=True)
 
     def _test_other_endpoints(self):
+        catalog = config.default_catalog
+        if config.is_hca_enabled(catalog):
+            bundle_index, project_index = 'bundles', 'projects'
+        elif config.is_anvil_enabled(catalog):
+            bundle_index, project_index = 'libraries', 'datasets'
+        else:
+            assert False, catalog
         service_paths = {
             '/': None,
             '/openapi': None,
             '/version': None,
             '/index/summary': None,
-            '/index/bundles': {
-                'filters': json.dumps({'fileFormat': {'is': ['fastq.gz', 'fastq']}})
+            f'/index/{bundle_index}': {
+                'filters': json.dumps(self._fastq_filter(catalog))
             },
-            '/index/projects': {'size': 25},
+            f'/index/{project_index}': {'size': 25}
         }
         service_routes = (
             (config.service_endpoint, path, args)
@@ -539,7 +555,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     @cache
     def _get_one_file(self, catalog: CatalogName) -> JSON:
         # Try to filter for an easy-to-parse format to verify its contents
-        for filters in [{'fileFormat': {'is': ['fastq.gz', 'fastq']}}, {}]:
+        for filters in [self._fastq_filter(catalog), {}]:
             response = self._check_endpoint(path='/index/files',
                                             args=dict(catalog=catalog,
                                                       filters=json.dumps(filters),
@@ -551,6 +567,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 hit = one(hits)
                 return one(hit['files'])
         self.fail('No files found')
+
+    def _fastq_filter(self, catalog: CatalogName) -> JSON:
+        if config.is_hca_enabled(catalog):
+            facet = 'fileFormat'
+        elif config.is_anvil_enabled(catalog):
+            facet = 'file_format'
+        else:
+            assert False, catalog
+        return {facet: {'is': ['fastq', 'fastq.gz']}}
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
@@ -748,6 +773,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
+            if config.is_anvil_enabled(catalog):
+                self.skipTest('AnVIL does not support file downloads')
             file = self._get_one_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
             endpoint_url = config.service_endpoint
@@ -1513,7 +1540,13 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         self.assertEqual(200, response.status_code)
 
     def test_local_filtered_index_endpoints(self):
-        filters = {'genusSpecies': {'is': ['Homo sapiens']}}
+        if config.is_hca_enabled(self.catalog):
+            species_facet = 'genusSpecies'
+        elif config.is_anvil_enabled(self.catalog):
+            species_facet = 'organism_type'
+        else:
+            assert False, self.catalog
+        filters = {species_facet: {'is': ['Homo sapiens']}}
         url = str(self.url.copy().set(path='index/files',
                                       query=dict(filters=json.dumps(filters),
                                                  catalog=self.catalog)))
