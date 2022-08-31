@@ -39,7 +39,7 @@ import: _client
 	@echo "Paste the certificate you received from your administrator and hit Ctrl-D"
 	@cat > $(EASYRSA_PKI)/issued/$(client_cn).crt
 	@echo
-	@echo "Run 'make config > ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE).ovpn' to generate the OpenVPN configuration"
+	@echo "Run 'make config > ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn' to generate the OpenVPN configuration"
 	@echo
 
 .PHONY: config
@@ -61,11 +61,11 @@ config: _client
 	@echo >&2
 	@echo "Import the generated configuration to your OpenVPN client." >&2
 	@echo "On Ubuntu, this is done with" \
-	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE).ovpn'" >&2
+	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn'" >&2
 	@echo >&2
 	@echo "Make sure that other Internet traffic isn't routed through the VPN." >&2
 	@echo "On Ubuntu, this is done with" \
-	      "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE) ipv4.never-default true'" >&2
+	      "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn) ipv4.never-default true'" >&2
 	@echo >&2
 
 .PHONY: ca
