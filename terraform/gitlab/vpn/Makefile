@@ -44,6 +44,7 @@ import: _client
 
 .PHONY: config
 config: _client
+	@echo "Generating configuration for your OpenVPN client ..." >&2
 	@export endpoint=$$(aws ec2 describe-client-vpn-endpoints \
 			--filters Name=tag:Name,Values=azul-gitlab \
 			--query ClientVpnEndpoints[*].ClientVpnEndpointId \
@@ -59,13 +60,14 @@ config: _client
 	@cat $(EASYRSA_PKI)/private/$(client_cn).key
 	@echo "</key>"
 	@echo >&2
-	@echo "Import the generated configuration to your OpenVPN client." >&2
+	@echo "... done. You can now import the generated configuration to your OpenVPN client." >&2
 	@echo "On Ubuntu, this is done with" \
 	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn'" >&2
 	@echo >&2
-	@echo "Make sure that other Internet traffic isn't routed through the VPN." >&2
+	@echo "Please make sure that other Internet traffic isn't routed through the VPN connection." >&2
 	@echo "On Ubuntu, this is done with" \
 	      "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn) ipv4.never-default true'" >&2
+	@echo "For other Operating systems please refer to README.md section 9.1" >&2
 	@echo >&2
 
 .PHONY: ca
