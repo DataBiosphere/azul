@@ -1740,11 +1740,12 @@ the same CA.
 
 Install an OpenVPN client. On Ubuntu, the respective package is called
 `network-manager-openvpn-gnome`. Popular clients for macOS are [Tunnelblick]
-(free) and [Viscosity] (for pay, with 30 day trial). Tunnelblick is currently
-incompatible, see paragraph on split tunnels below.
+(free) and [Viscosity] (for pay, with 30 day trial). For Windows, only 
+[Viscosity] was tested but the [official Windows client] may also work there.
 
 [Tunnelblick]: https://tunnelblick.net/index.html
 [Viscosity]: https://www.sparklabs.com/viscosity/
+[official Windows client]: https://openvpn.net/client-connect-vpn-for-windows/
 
 <!--
 FIXME: Figure out why Tunnelblick doesn't work
@@ -1804,6 +1805,16 @@ For Viscosity, the steps are as follows:
 
 6) Click *Save*
 
+For Tunnelblick, the steps are as follows:
+
+1) Right-click the Tunnelblick menu bar icon
+
+2) Click *VPN Details …*
+
+3) Click on the left-hand side bar entry for the connection you just imported
+
+4) On the *Settings* tab of the right-hand side of the window, make sure that
+   the *Route all IPv4 traffic through the VPN* option is unchecked
 
 ### 9.1.2 Setting up the certificate authority
 
