@@ -121,7 +121,6 @@ end.
 
    [pyenv]: https://github.com/pyenv/pyenv
 
-
 5. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
 
