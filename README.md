@@ -1755,7 +1755,7 @@ Generate a certificate request, import the certificate and generate the `.ovpn`
 file containing the configuration for the VPN connection:
 
 ```
-_select dev.gitlab  # or prod.gitlab
+_select dev.gitlab  # or prod.gitlab, anvildev.gitlab
 cd terraform/gitlab/vpn
 git submodule update --init easy-rsa
 make init  # (do this only once per GitLab deployment)
