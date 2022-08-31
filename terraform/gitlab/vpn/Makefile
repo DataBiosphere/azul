@@ -45,6 +45,8 @@ import: _client
 .PHONY: config
 config: _client
 	@echo "Generating configuration for your OpenVPN client ..." >&2
+	@if [ -t 1 ]; then echo "Standard output is a terminal." \
+		"Please run this target as in 'make config > ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn'." >&2; false; fi
 	@export endpoint=$$(aws ec2 describe-client-vpn-endpoints \
 			--filters Name=tag:Name,Values=azul-gitlab \
 			--query ClientVpnEndpoints[*].ClientVpnEndpointId \
