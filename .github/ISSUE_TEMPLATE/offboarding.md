@@ -95,4 +95,8 @@ or:
 - [ ] Disabled the offboarded employee/contractor's UCSC account.
 - [ ] All shared credentials have been rotated and redistributed to all
       remaining eligible employees and contractors.
+
+
+## Conclusion
+
 - [ ] Close & unassign ticket.
