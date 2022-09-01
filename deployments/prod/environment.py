@@ -583,6 +583,8 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEBUG': '1',
 
+        'AZUL_BILLING': 'hca',
+
         'AZUL_OWNER': 'hannes@ucsc.edu',
 
         'AZUL_AWS_ACCOUNT_ID': '542754589326',
