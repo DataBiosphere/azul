@@ -403,7 +403,7 @@ class SAMClient(TerraClient):
         Check whether the user or service account associated with the current
         client's credentials is registered with SAM.
         """
-        endpoint = config.sam_service_url.set(path='/register/users/v1')
+        endpoint = config.sam_service_url.set(path='/register/user/v1')
         response = self._request('GET', endpoint)
         if response.status == 200:
             return True

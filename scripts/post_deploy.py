@@ -27,7 +27,9 @@ public_tdr = TDRClient.for_anonymous_user()
 
 def register_with_sam():
     tdr.register_with_sam()
+    require(tdr.is_registered())
     public_tdr.register_with_sam()
+    require(public_tdr.is_registered())
 
 
 def verify_sources():
