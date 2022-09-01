@@ -405,10 +405,13 @@ class SAMClient(TerraClient):
         """
         endpoint = config.sam_service_url.set(path='/register/user/v1')
         response = self._request('GET', endpoint)
+        auth_header = response.headers.get('WWW-Authenticate')
         if response.status == 200:
             return True
         elif response.status == 404:
             return False
+        elif response.status == 401 and auth_header and 'invalid_token' in auth_header:
+            raise PermissionError('The provided authentication is invalid')
         else:
             raise TerraStatusException(endpoint, response)
 
