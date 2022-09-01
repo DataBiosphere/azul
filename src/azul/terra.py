@@ -357,15 +357,15 @@ class TerraClient(OAuth2Client):
 
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
+            log.debug('_request(…) -> %r %r',
+                      response.status, trunc_ellipses(response.data, 256))
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]
         except KeyError:
             pass
         else:
-            log.warning('_request(…) -> %r %r: %r',
-                        response.status, header_name, header_value)
+            log.warning('_request(…) -> %r: %r', header_name, header_value)
         return response
 
 
