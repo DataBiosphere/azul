@@ -331,6 +331,7 @@ class TerraClient(OAuth2Client):
                  body=None
                  ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
+        retries = config.terra_client_retries
         log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
         try:
@@ -338,11 +339,11 @@ class TerraClient(OAuth2Client):
             # connections. The latter are actually very likely if connections
             # from the pool are reused after a long period of idleness.
             retry = urllib3.Retry(total=None,
-                                  connect=2,
+                                  connect=retries,
                                   read=2,
                                   redirect=0,
                                   status=0,
-                                  other=2)
+                                  other=retries)
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
