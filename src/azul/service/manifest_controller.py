@@ -191,8 +191,8 @@ class ManifestController(SourceController):
             # this case is mitigated by 1) the URL's short lifespan and 2) the
             # very small size of the set of users who will ever be authorized to
             # access the private API.
-            for_terra = manifest.format_ in (ManifestFormat.terra_pfb, ManifestFormat.terra_bdbag)
-            if fetch and not (config.private_api and for_terra):
+            handover_formats = (ManifestFormat.terra_pfb, ManifestFormat.terra_bdbag)
+            if fetch and not (config.private_api and manifest.format_ in handover_formats):
                 url = self.manifest_url_func(fetch=False,
                                              catalog=manifest.catalog,
                                              format_=manifest.format_,
