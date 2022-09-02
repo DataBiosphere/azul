@@ -207,6 +207,61 @@ class RequestParameterValidationTest(WebServiceTestCase):
         url = self.base_url.set(path='/index/files', args=params)
         self.assertBadField(url)
 
+    def test_bad_filters(self):
+        url = self.base_url.set(path='/index/files', args=dict(catalog=self.catalog))
+        for filters, message in [
+            ('"', 'The `filters` parameter is not valid JSON'),
+            ('""', 'The `filters` parameter must be a dictionary'),
+            (
+                '{"sampleDisease": ["H syndrome"]}',
+                'The `filters` parameter entry for `sampleDisease` must be a '
+                'single-item dictionary'
+            ),
+            (
+                '{"sampleDisease": {"is": "H syndrome"}}',
+                'The value of the `is` relation in the `filters` parameter '
+                'entry for `sampleDisease` is not a list'
+            ),
+            (
+                '{"sampleDisease": {"was": "H syndrome"}}',
+                "The relation in the `filters` parameter entry "
+                "for `sampleDisease` must be one of "
+                "('is', 'contains', 'within', 'intersects')"
+            ),
+            (
+                '{"fileSource": {"is": [["foo:23/33"]]}}',
+                'The value of the `is` relation in the `filters` parameter entry '
+                'for `fileSource` is invalid'
+            ),
+            (
+                '{"accessions": {"within": ["foo"]}}',
+                'The field `accessions` can only be filtered by the `is` relation'
+            ),
+            (
+                '{"accessions": {"is": []}}',
+                'The value of the `is` relation in the `filters` parameter entry '
+                'for `accessions` is not a single-item list'
+            ),
+            (
+                '{"accessions": {"is": ["foo"]}}',
+                'The value of the `is` relation in the `filters` parameter entry '
+                'for `accessions` must contain a dictionary'
+            ),
+            (
+                '{"accessions": {"is": [{"foo": "geostudies"}]}}',
+                "The value of the `is` relation in the `filters` parameter entry "
+                "for `accessions` has invalid properties `{'foo'}`"
+            ),
+            (
+                '{"accessions": {"is": [{"namespace": "baz", "foo": "bar"}]}}',
+                "The value of the `is` relation in the `filters` parameter entry "
+                "for `accessions` has invalid properties `{'foo'}`"
+            )
+        ]:
+            with self.subTest(filters=filters):
+                url.args.set('filters', filters)
+                self.assertBadRequest(url, message)
+
     @patch_dss_source
     @patch_source_cache
     def test_single_entity_error_responses(self):
@@ -228,14 +283,6 @@ class RequestParameterValidationTest(WebServiceTestCase):
                     url.args = dict(catalog=self.catalog,
                                     some_nonexistent_filter=1)
                     self.assertBadRequest(url, 'Unknown query parameter `some_nonexistent_filter`')
-                with self.subTest(test='malformed parameter'):
-                    url.args = dict(catalog=self.catalog,
-                                    size='foo')
-                    self.assertBadRequest(url, 'Invalid value for parameter `size`')
-                with self.subTest(test='malformed filter parameter'):
-                    url.args = dict(catalog=self.catalog,
-                                    filters='{"}')
-                    self.assertBadRequest(url, 'The `filters` parameter is not valid JSON')
         with self.subTest(test='missing required parameter'):
             url = self.base_url.set(path='/integrations')
             self.assertBadRequest(url, 'Missing required query parameters `entity_type`, `integration_type`')
@@ -270,3 +317,14 @@ class RequestParameterValidationTest(WebServiceTestCase):
         expected = (f'Unknown manifest format `{bad_format}`. '
                     f'Must be one of {good_formats}')
         self.assertBadRequest(url, expected)
+
+    def test_size(self):
+        url = self.base_url.set(path='/index/files')
+        for size, test, arg in [
+            (1001, self.assertBadRequest, 'Invalid value for parameter `size`, must not be greater than 1000'),
+            (0, self.assertBadRequest, 'Invalid value for parameter `size`, must be greater than 0'),
+            ('foo', self.assertBadRequest, 'Invalid value for parameter `size`')
+        ]:
+            with self.subTest(size=size):
+                url.args.set('size', size)
+                test(url, arg)
