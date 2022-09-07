@@ -7,12 +7,11 @@ from itertools import (
 )
 import json
 import os
-from textwrap import (
-    dedent,
-)
 from typing import (
     Union,
 )
+
+import yaml
 
 from azul import (
     config,
@@ -348,6 +347,19 @@ dss_direct_access_policy_statement = {
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:19.03.15-dind'
+
+
+def jw(*words):
+    return ' '.join(words)
+
+
+def jl(*lines):
+    return '\n'.join(lines)
+
+
+def qq(*words):
+    return '"' + jw(*words) + '"'
+
 
 emit_tf({} if config.terraform_component != 'gitlab' else {
     'data': {
@@ -1257,101 +1269,127 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'network_interface_id': '${aws_network_interface.gitlab.id}',
                     'device_index': 0
                 },
-                'user_data': dedent(rf'''
-                    #cloud-config
-                    mounts:
-                    - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
-                    rancher:
-                      services:
-                        user-cron:
-                          image: rancher/container-crontab:v0.4.0
-                          restart: always
-                          volumes:
-                            - /var/run/docker.sock:/var/run/docker.sock
-                          labels:
-                            io.rancher.os.scope: "user"
-                        prune-images:
-                          image: {dind_image}
-                          volumes:
-                            - /var/run/docker.sock:/var/run/docker.sock
-                          # Don't delete images from more recent builds. If we
-                          # deleted them, we would risk failing the requirements
-                          # check on sandbox builds since that check depends on
-                          # image caching. This assumes that the most recent
-                          # pipeline was run less than a month ago.
-                          command: exec gitlab-dind docker image prune --all --force --filter "until={30 * 24}h"
-                          labels:
-                            io.rancher.os.scope: "user"
-                            io.rancher.os.createonly: "true"
-                            cron.schedule: "0 0 12 ? * SAT"
-                        clamscan:
-                          image: {clamav_image}
-                          command: >
-                              /bin/sh -c "freshclam
-                              && echo freshclam succeeded
-                              || echo freshclam failed
-                              && clamscan --infected
-                              --exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/sys
-                              --exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/proc
-                              --exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/dev
-                              --exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/sys
-                              --exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/proc
-                              --exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/dev
-                              --exclude-dir=^/scan/sys
-                              --exclude-dir=^/scan/proc
-                              --exclude-dir=^/scan/dev
-                              -rz /scan
-                              && echo clamscan succeeded
-                              || echo clamscan failed"
-                          volumes:
-                            - /:/scan:ro
-                            - /mnt/gitlab/clamav:/var/lib/clamav:rw
-                          labels:
-                            io.rancher.os.scope: "user"
-                            io.rancher.os.createonly: "true"
-                            cron.schedule: "0 0 8 ? * SUN"
-                    ssh_authorized_keys: {other_public_keys.get(config.deployment_stage, [])}
-                    write_files:
-                    - path: /etc/rc.local
-                      permissions: "0755"
-                      owner: root
-                      content: |
-                        #!/bin/bash
-                        wait-for-docker
-                        docker network \
-                               create gitlab-runner-net
-                        docker run \
-                               --detach \
-                               --name gitlab-dind \
-                               --privileged \
-                               --restart always \
-                               --network gitlab-runner-net \
-                               --env DOCKER_TLS_CERTDIR="" \
-                               --volume /mnt/gitlab/docker:/var/lib/docker \
-                               --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
-                               {dind_image}
-                        docker run \
-                               --detach \
-                               --name gitlab \
-                               --hostname ${{aws_route53_record.gitlab.name}} \
-                               --publish 80:80 \
-                               --publish 2222:22 \
-                               --restart always \
-                               --volume /mnt/gitlab/config:/etc/gitlab \
-                               --volume /mnt/gitlab/logs:/var/log/gitlab \
-                               --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:15.3.3-ce.0
-                        docker run \
-                               --detach \
-                               --name gitlab-runner \
-                               --restart always \
-                               --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
-                               --network gitlab-runner-net \
-                               --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v15.3.0
-                    '''[1:]),
-                # ^^^ Trim newline char at the beginning as dedent() only
-                # removes indent common to all lines.
+                'user_data': '#cloud-config\n' + yaml.dump({
+                    'mounts': [
+                        ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
+                    ],
+                    'rancher': {
+                        'services': {
+                            'user-cron': {
+                                'image': 'rancher/container-crontab:v0.4.0',
+                                'restart': 'always',
+                                'volumes': [
+                                    '/var/run/docker.sock:/var/run/docker.sock'
+                                ],
+                                'labels': {
+                                    'io.rancher.os.scope': 'user'
+                                }
+                            },
+                            'prune-images': {
+                                'image': dind_image,
+                                'volumes': [
+                                    '/var/run/docker.sock:/var/run/docker.sock'
+                                ],
+                                # Don't delete images from more recent builds. If we
+                                # deleted them, we would risk failing the requirements
+                                # check on sandbox builds since that check depends on
+                                # image caching. This assumes that the most recent
+                                # pipeline was run less than a month ago.
+                                'command': f'exec gitlab-dind docker image prune --all --force --filter "until={30 * 24}"',
+                                'labels': {
+                                    'io.rancher.os.scope': 'user',
+                                    'io.rancher.os.createonly': 'true',
+                                    'cron.schedule': '0 0 12 ? * SAT'
+                                }
+                            },
+                            'clamscan': {
+                                'image': clamav_image,
+                                'command': jw(
+                                    '/bin/sh',
+                                    '-c',
+                                    qq(
+                                        'freshclam',
+                                        '&& echo freshclam succeeded',
+                                        '|| echo freshclam failed',
+                                        '&& clamscan --infected',
+                                        '--exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/sys',
+                                        '--exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/proc',
+                                        '--exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/dev',
+                                        '--exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/sys',
+                                        '--exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/proc',
+                                        '--exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/dev',
+                                        '--exclude-dir=^/scan/sys',
+                                        '--exclude-dir=^/scan/proc',
+                                        '--exclude-dir=^/scan/dev',
+                                        '-rz /scan',
+                                        '&& echo clamscan succeeded',
+                                        '|| echo clamscan failed'
+                                    )
+                                ),
+                                'volumes': [
+                                    '/:/scan:ro',
+                                    '/mnt/gitlab/clamav:/var/lib/clamav:rw'
+                                ],
+                                'labels': {
+                                    'io.rancher.os.scope': 'user',
+                                    'io.rancher.os.createonly': 'true',
+                                    'cron.schedule': '0 0 8 ? * SUN'
+                                }
+                            }
+                        }
+                    },
+                    'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
+                    'write_files': [
+                        {
+                            'path': '/etc/rc.local',
+                            'permissions': '0755',
+                            'owner': 'root',
+                            'content': jl(
+                                '#!/bin/bash',
+                                'wait-for-docker',
+                                jw(
+                                    'docker network',
+                                    'create gitlab-runner-net'
+                                ),
+                                jw(
+                                    'docker run',
+                                    '--detach',
+                                    '--name gitlab-dind',
+                                    '--privileged',
+                                    '--restart always',
+                                    '--network gitlab-runner-net',
+                                    '--env DOCKER_TLS_CERTDIR=""',
+                                    '--volume /mnt/gitlab/docker:/var/lib/docker',
+                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    dind_image
+                                ),
+                                jw(
+                                    'docker run',
+                                    '--detach',
+                                    '--name gitlab',
+                                    '--hostname ${aws_route53_record.gitlab.name}',
+                                    '--publish 80:80',
+                                    '--publish 2222:22',
+                                    '--restart always',
+                                    '--volume /mnt/gitlab/config:/etc/gitlab',
+                                    '--volume /mnt/gitlab/logs:/var/log/gitlab',
+                                    '--volume /mnt/gitlab/data:/var/opt/gitlab',
+                                    'gitlab/gitlab-ce:15.3.3-ce.0'
+                                ),
+                                jw(
+                                    'docker run',
+                                    '--detach',
+                                    '--name gitlab-runner',
+                                    '--restart always',
+                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    '--network gitlab-runner-net',
+                                    '--env DOCKER_HOST=tcp://gitlab-dind:2375',
+                                    'gitlab/gitlab-runner:v15.3.0'
+                                )
+                            )
+                        }
+                    ]
+                }, indent=2),
                 'tags': {
                     'Owner': config.owner
                 }
