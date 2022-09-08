@@ -69,6 +69,11 @@ class EntityReference:
     def __str__(self) -> str:
         return f'{self.entity_type}/{self.entity_id}'
 
+    @classmethod
+    def parse(cls, s: str) -> 'EntityReference':
+        entity_type, entity_id = s.split('/')
+        return cls(entity_type=entity_type, entity_id=entity_id)
+
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class CataloguedEntityReference(EntityReference):
@@ -828,13 +833,6 @@ class Document(Generic[C]):
                    coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None) -> 'Document':
         if coordinates is None:
             coordinates = DocumentCoordinates.from_hit(hit)
-        if 'contents' in hit['_source']:
-            file: JSON
-            content_descriptions = [
-                file['content_description']
-                for file in hit['_source']['contents']['files']
-            ]
-            assert [] not in content_descriptions, 'Found empty list as content_description value'
         document = cls.translate_fields(hit['_source'],
                                         field_types[coordinates.entity.catalog],
                                         forward=False)

@@ -10,6 +10,9 @@ from typing import (
 )
 
 import attr
+from elasticsearch.helpers import (
+    scan,
+)
 
 from azul import (
     CatalogName,
@@ -118,6 +121,19 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
         return SourcedBundleFQID(source=cls.source,
                                  uuid=uuid,
                                  version=version)
+
+    def _get_all_hits(self):
+        # Without `preserve_order`, hits are sorted by `_doc`, which is fastest
+        # but causes the `sort` field in hits to vary unpredictably, based on
+        # the number of shards, for example, but also under what appear to be
+        # unrelated code changes. This makes asserting test results verbatim
+        # impossible. Thus we set `preserve_order` to True.
+        hits = list(scan(client=self.es_client,
+                         index=','.join(self.index_service.index_names(self.catalog)),
+                         preserve_order=True))
+        for hit in hits:
+            self._verify_sorted_lists(hit)
+        return hits
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """

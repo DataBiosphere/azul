@@ -681,11 +681,20 @@ class Config:
         return self._is_plugin_enabled('dss', catalog)
 
     def is_tdr_enabled(self, catalog: Optional[str] = None) -> bool:
-        return self._is_plugin_enabled('tdr_hca', catalog)
+        return self._is_plugin_enabled('tdr', catalog)
 
-    def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
+    def is_hca_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('hca', catalog)
+
+    def is_anvil_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('anvil', catalog)
+
+    def _is_plugin_enabled(self, plugin_prefix: str, catalog: Optional[str]) -> bool:
         def predicate(catalog):
-            return catalog.plugins['repository'].name == plugin
+            return any(
+                plugin.name.split('_')[0] == plugin_prefix
+                for plugin in catalog.plugins.values()
+            )
 
         if catalog is None:
             return any(map(predicate, self.catalogs.values()))
