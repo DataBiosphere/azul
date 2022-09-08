@@ -64,6 +64,10 @@ from azul.indexer.transform import (
 from azul.types import (
     JSON,
     JSONs,
+    MutableJSON,
+)
+from azul.uuids import (
+    validate_uuid,
 )
 
 if TYPE_CHECKING:
@@ -233,9 +237,69 @@ class MetadataPlugin(Plugin):
         """
         return Aggregate
 
-    @abstractmethod
-    def mapping(self) -> JSON:
-        raise NotImplementedError
+    string_mapping = {
+        'type': 'text',
+        'fields': {
+            'keyword': {
+                'type': 'keyword',
+                'ignore_above': 256
+            }
+        }
+    }
+
+    range_mapping = {
+        # A float (single precision IEEE-754) can represent all integers up to 16,777,216. If we
+        # used float values for organism ages in seconds, we would not be able to accurately
+        # represent an organism age of 16,777,217 seconds. That is 194 days and 15617 seconds.
+        # A double precision IEEE-754 representation loses accuracy at 9,007,199,254,740,993 which
+        # is more than 285616415 years.
+
+        # Note that Python's float uses double precision IEEE-754.
+        # (https://docs.python.org/3/tutorial/floatingpoint.html#representation-error)
+        'type': 'double_range'
+    }
+
+    def mapping(self) -> MutableJSON:
+        return {
+            'numeric_detection': False,
+            'properties': {
+                # Declare the primary key since it's used as the tie breaker when
+                # sorting. We used to use _uid for that but that's gone in ES 7 and
+                # _id can't be used for sorting:
+                #
+                # https://www.elastic.co/guide/en/elasticsearch/reference/current/breaking-changes-7.0.html#uid-meta-field-removed
+                #
+                # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-id-field.html
+                #
+                # > The _id field is restricted from use in aggregations, sorting,
+                # > and scripting. In case sorting or aggregating on the _id field
+                # > is required, it is advised to duplicate the content of the _id
+                # > field into another field that has doc_values enabled.
+                #
+                'entity_id': self.string_mapping
+            },
+            'dynamic_templates': [
+                {
+                    'strings_as_text': {
+                        'match_mapping_type': 'string',
+                        'mapping': self.string_mapping
+                    }
+                },
+                {
+                    'other_types_with_keyword': {
+                        'match_mapping_type': '*',
+                        'mapping': {
+                            'type': '{dynamic_type}',
+                            'fields': {
+                                'keyword': {
+                                    'type': '{dynamic_type}'
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
 
     @property
     @abstractmethod
@@ -410,6 +474,9 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         repository for the source's spec.
         """
         raise NotImplementedError
+
+    def validate_entity_id(self, entity_id: str) -> None:
+        validate_uuid(entity_id)
 
     @abstractmethod
     def lookup_source_id(self, spec: SOURCE_SPEC) -> str:
