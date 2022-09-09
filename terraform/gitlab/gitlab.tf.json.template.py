@@ -177,7 +177,7 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 # https://github.com/docker/libnetwork/blob/a79d3687931697244b8e03485bf7b2042f8ec6b6/ipamutils/utils.go#L10
 #
 
-cidr_offset = ['dev', 'prod', 'anvildev'].index(config.deployment_stage)
+cidr_offset = ['dev', 'prod', 'anvildev', 'anvilprod'].index(config.deployment_stage)
 
 vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
 
