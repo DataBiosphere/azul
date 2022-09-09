@@ -347,6 +347,36 @@ dss_direct_access_policy_statement = {
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:19.03.15-dind'
+gitlab_image = 'gitlab/gitlab-ce:15.3.3-ce.0'
+runner_image = 'gitlab/gitlab-runner:v15.3.0'
+
+# There are ways to dynamically determine the latest Amazon Linux AMI but in the
+# spirit of reproducable builds we would rather pin the AMI and adopt updates at
+# our own discretion so as to avoid unexpected failures due to AMI changes. To
+# determine the latest AMI for Amazon Linux 2, I used the following commands:
+#
+# _select dev.gitlab
+# aws ssm get-parameters \
+#   --names \
+#       $(aws ssm get-parameters-by-path \
+#           --path /aws/service/ami-amazon-linux-latest \
+#           --query "Parameters[].Name" \
+#       | jq -r .[] \
+#       | grep -F amzn2 \
+#       | grep -Fv minimal \
+#       | grep -Fv kernel-5.10 \
+#       | grep -F x86_64 \
+#       | grep -F ebs) \
+# | jq -r .Parameters[].Value
+#
+# The AMI ID is specific to a region. If there are ….gitlab components in more
+# than one AWS region, you need to select at least one ….gitlab component in
+# each of these regions, rerun the command for each such component and add or
+# update the entry for the respective region in the dictionary literal below.
+#
+ami_id = {
+    'us-east-1': 'ami-0bb85ecb87fe01c2f'
+}
 
 
 def jw(*words):
@@ -391,17 +421,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab': {
                 'name': config.domain_name + '.',
                 'private_zone': False
-            }
-        },
-        'aws_ami': {
-            'rancheros': {
-                'owners': ['605812595337'],
-                'filter': [
-                    {
-                        'name': 'name',
-                        'values': ['rancheros-v1.5.8-hvm-1']
-                    }
-                ]
             }
         },
         'aws_iam_policy_document': {
@@ -1262,7 +1281,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_instance': {
             'gitlab': {
                 'iam_instance_profile': '${aws_iam_instance_profile.gitlab.name}',
-                'ami': '${data.aws_ami.rancheros.id}',
+                'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
                 'key_name': '${aws_key_pair.gitlab.key_name}',
                 'network_interface': {
@@ -1273,122 +1292,237 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
                     ],
-                    'rancher': {
-                        'services': {
-                            'user-cron': {
-                                'image': 'rancher/container-crontab:v0.4.0',
-                                'restart': 'always',
-                                'volumes': [
-                                    '/var/run/docker.sock:/var/run/docker.sock'
-                                ],
-                                'labels': {
-                                    'io.rancher.os.scope': 'user'
-                                }
-                            },
-                            'prune-images': {
-                                'image': dind_image,
-                                'volumes': [
-                                    '/var/run/docker.sock:/var/run/docker.sock'
-                                ],
-                                # Don't delete images from more recent builds. If we
-                                # deleted them, we would risk failing the requirements
-                                # check on sandbox builds since that check depends on
-                                # image caching. This assumes that the most recent
-                                # pipeline was run less than a month ago.
-                                'command': f'exec gitlab-dind docker image prune --all --force --filter "until={30 * 24}"',
-                                'labels': {
-                                    'io.rancher.os.scope': 'user',
-                                    'io.rancher.os.createonly': 'true',
-                                    'cron.schedule': '0 0 12 ? * SAT'
-                                }
-                            },
-                            'clamscan': {
-                                'image': clamav_image,
-                                'command': jw(
+                    'packages': ['docker'],
+                    'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
+                    'write_files': [
+                        {
+                            'path': '/etc/systemd/system/gitlab-dind.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=Docker-in-Docker service for GitLab',
+                                'After=docker.service',
+                                'Requires=docker.service',
+                                '[Service]',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'Restart=always',
+                                'ExecStartPre=-/usr/bin/docker stop gitlab-dind',
+                                'ExecStartPre=-/usr/bin/docker rm gitlab-dind',
+                                'ExecStartPre=-/usr/bin/docker network rm gitlab-runner-net',
+                                'ExecStartPre=/usr/bin/docker network create gitlab-runner-net',
+                                'ExecStartPre=/usr/bin/docker pull ' + dind_image,
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'run',
+                                    '--name gitlab-dind',
+                                    '--privileged',
+                                    '--rm',
+                                    '--network gitlab-runner-net',
+                                    '--env DOCKER_TLS_CERTDIR=',
+                                    '--volume /mnt/gitlab/docker:/var/lib/docker',
+                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    dind_image
+                                ),
+                                '[Install]',
+                                'WantedBy=multi-user.target',
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/gitlab.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=GitLab service',
+                                'After=docker.service',
+                                'Requires=docker.service',
+                                '[Service]',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'Restart=always',
+                                'ExecStartPre=-/usr/bin/docker stop gitlab',
+                                'ExecStartPre=-/usr/bin/docker rm gitlab',
+                                'ExecStartPre=/usr/bin/docker pull ' + gitlab_image,
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'run',
+                                    '--name gitlab',
+                                    '--hostname ${aws_route53_record.gitlab.name}',
+                                    '--publish 80:80',
+                                    '--publish 2222:22',
+                                    '--rm',
+                                    '--volume /mnt/gitlab/config:/etc/gitlab',
+                                    '--volume /mnt/gitlab/logs:/var/log/gitlab',
+                                    '--volume /mnt/gitlab/data:/var/opt/gitlab',
+                                    gitlab_image
+                                ),
+                                '[Install]',
+                                'WantedBy=multi-user.target'
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/gitlab-runner.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=GitLab runner service',
+                                'After=docker.service gitlab-dind.service gitlab.service',
+                                'Requires=docker.service gitlab-dind.service gitlab.service',
+                                '[Service]',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'Restart=always',
+                                'ExecStartPre=-/usr/bin/docker stop gitlab-runner',
+                                'ExecStartPre=-/usr/bin/docker rm gitlab-runner',
+                                'ExecStartPre=/usr/bin/docker pull ' + runner_image,
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'run',
+                                    '--name gitlab-runner',
+                                    '--rm',
+                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    '--network gitlab-runner-net',
+                                    '--env DOCKER_HOST=tcp://gitlab-dind:2375',
+                                    runner_image
+                                ),
+                                '[Install]',
+                                'WantedBy=multi-user.target'
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/clamscan.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=ClamAV malware scan of entire file system',
+                                'After=docker.service gitlab-dind.service',
+                                'Requires=docker.service gitlab-dind.service',
+                                '[Service]',
+                                'Type=simple',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'ExecStartPre=-/usr/bin/docker stop clamscan',
+                                'ExecStartPre=-/usr/bin/docker rm clamscan',
+                                'ExecStartPre=/usr/bin/docker pull ' + clamav_image,
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'run',
+                                    '--name clamscan',
+                                    '--rm',
+                                    '--volume /var/run/docker.sock:/var/run/docker.sock',
+                                    '--volume /:/scan:ro',
+                                    '--volume /mnt/gitlab/clamav:/var/lib/clamav:rw',
+                                    clamav_image,
                                     '/bin/sh',
                                     '-c',
                                     qq(
                                         'freshclam',
                                         '&& echo freshclam succeeded',
                                         '|| echo freshclam failed',
-                                        '&& clamscan --infected',
-                                        '--exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/sys',
-                                        '--exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/proc',
-                                        '--exclude-dir=^/scan/var/lib/system-docker/overlay2/.*/merged/dev',
+                                        '&& clamscan',
+                                        '--recursive',
+                                        '--infected',  # Only print infected files
+                                        '--allmatch=yes',  # Continue scanning within file after a match
                                         '--exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/sys',
                                         '--exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/proc',
                                         '--exclude-dir=^/scan/var/lib/docker/overlay2/.*/merged/dev',
                                         '--exclude-dir=^/scan/sys',
                                         '--exclude-dir=^/scan/proc',
                                         '--exclude-dir=^/scan/dev',
-                                        '-rz /scan',
+                                        '/scan',
                                         '&& echo clamscan succeeded',
                                         '|| echo clamscan failed'
                                     )
                                 ),
-                                'volumes': [
-                                    '/:/scan:ro',
-                                    '/mnt/gitlab/clamav:/var/lib/clamav:rw'
-                                ],
-                                'labels': {
-                                    'io.rancher.os.scope': 'user',
-                                    'io.rancher.os.createonly': 'true',
-                                    'cron.schedule': '0 0 8 ? * SUN'
-                                }
-                            }
-                        }
-                    },
-                    'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
-                    'write_files': [
+                                '[Install]',
+                                'WantedBy='
+                            )
+                        },
                         {
-                            'path': '/etc/rc.local',
-                            'permissions': '0755',
+                            'path': '/etc/systemd/system/clamscan.timer',
+                            'permissions': '0644',
                             'owner': 'root',
                             'content': jl(
-                                '#!/bin/bash',
-                                'wait-for-docker',
+                                '[Unit]',
+                                'Description=Scheduled ClamAV malware scan of entire file system',
+                                '[Timer]',
+                                'OnCalendar=Sun *-*-* 8:0:0',
+                                '[Install]',
+                                'WantedBy=timers.target'
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/prune-images.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=Pruning of stale docker images',
+                                'After=docker.service gitlab-dind.service',
+                                'Requires=docker.service gitlab-dind.service',
+                                '[Service]',
+                                'Type=simple',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'ExecStartPre=-/usr/bin/docker stop prune-images',
+                                'ExecStartPre=-/usr/bin/docker rm prune-images',
+                                'ExecStartPre=/usr/bin/docker pull ' + dind_image,
                                 jw(
-                                    'docker network',
-                                    'create gitlab-runner-net'
+                                    'ExecStart=/usr/bin/docker',
+                                    'run',
+                                    '--name prune-images',
+                                    '--rm',
+                                    '--volume /var/run/docker.sock:/var/run/docker.sock',
+                                    dind_image,
+                                    'exec',  # Execute (as in `docker exec`) …
+                                    'gitlab-dind',  # … inside the gitlab-dind container …
+                                    'docker',  # … the docker …
+                                    'image',  # … image command …
+                                    'prune',  # … to delete, …
+                                    '--force',  # … without prompting for confirmation, …
+                                    '--all',  # … all images …
+                                    f'--filter "until={30 * 24}"',  # … except those from more recent builds.
+                                    #
+                                    # If we deleted more recent images, we
+                                    # would risk failing the requirements
+                                    # check on sandbox builds since that
+                                    # check depends on image caching. The
+                                    # dead line below assumes that the most
+                                    # recent pipeline was run less than a
+                                    # month ago.
                                 ),
-                                jw(
-                                    'docker run',
-                                    '--detach',
-                                    '--name gitlab-dind',
-                                    '--privileged',
-                                    '--restart always',
-                                    '--network gitlab-runner-net',
-                                    '--env DOCKER_TLS_CERTDIR=""',
-                                    '--volume /mnt/gitlab/docker:/var/lib/docker',
-                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
-                                    dind_image
-                                ),
-                                jw(
-                                    'docker run',
-                                    '--detach',
-                                    '--name gitlab',
-                                    '--hostname ${aws_route53_record.gitlab.name}',
-                                    '--publish 80:80',
-                                    '--publish 2222:22',
-                                    '--restart always',
-                                    '--volume /mnt/gitlab/config:/etc/gitlab',
-                                    '--volume /mnt/gitlab/logs:/var/log/gitlab',
-                                    '--volume /mnt/gitlab/data:/var/opt/gitlab',
-                                    'gitlab/gitlab-ce:15.3.3-ce.0'
-                                ),
-                                jw(
-                                    'docker run',
-                                    '--detach',
-                                    '--name gitlab-runner',
-                                    '--restart always',
-                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
-                                    '--network gitlab-runner-net',
-                                    '--env DOCKER_HOST=tcp://gitlab-dind:2375',
-                                    'gitlab/gitlab-runner:v15.3.0'
-                                )
+                                '[Install]',
+                                'WantedBy='
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/prune-images.timer',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=Scheduled pruning of stale docker images',
+                                '[Timer]',
+                                'OnCalendar=Sat *-*-* 12:0:0',
+                                '[Install]',
+                                'WantedBy=timers.target'
                             )
                         }
-                    ]
+                    ],
+                    'runcmd': [
+                        ['systemctl', 'daemon-reload'],
+                        [
+                            'systemctl',
+                            'enable',
+                            '--now',  # also start the units
+                            '--no-block',  # avoid dead-lock with cloud-init which is an active systemd unit, too
+                            'docker',
+                            'gitlab-dind',
+                            'gitlab',
+                            'gitlab-runner',
+                            'clamscan.timer',
+                            'prune-images.timer'
+                        ]
+                    ],
                 }, indent=2),
                 'tags': {
                     'Owner': config.owner
