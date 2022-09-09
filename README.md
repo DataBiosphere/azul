@@ -1,5 +1,3 @@
-
-
 The Azul project contains the components that together serve as the backend to
 Boardwalk, a web application for browsing genomic data sets.
 
@@ -453,6 +451,9 @@ inversely, name the bucket using the current value of that variable.
 
 ```
 aws s3api create-bucket --bucket $AZUL_VERSIONED_BUCKET
+aws s3api put-bucket-tagging \
+          --bucket $AZUL_VERSIONED_BUCKET \
+          --tagging TagSet="[{Key=owner,Value=$AZUL_OWNER}]"
 ```
 
 ### 3.1.2 Route 53 hosted zones
