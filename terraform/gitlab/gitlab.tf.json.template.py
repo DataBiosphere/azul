@@ -782,6 +782,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'destination_prefix_list_id': None,
                         'local_gateway_id': None,
                         'vpc_endpoint_id': None,
+                        'core_network_arn': None,
                     }
                 ],
                 'vpc_id': '${aws_vpc.gitlab.id}'
@@ -1288,6 +1289,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'network_interface_id': '${aws_network_interface.gitlab.id}',
                     'device_index': 0
                 },
+                'user_data_replace_on_change': True,
                 'user_data': '#cloud-config\n' + yaml.dump({
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
@@ -1319,6 +1321,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--privileged',
                                     '--rm',
                                     '--network gitlab-runner-net',
+                                    # The following option makes dockerd
+                                    # listen on port 2375 without TLS. By
+                                    # default, dockerd only listens on 2376
+                                    # with TLS. The port is not exposed and
+                                    # can only be reached from other
+                                    # containers on the dedicated
+                                    # gitlab-runner-net network, so TLS is
+                                    # unnecessary.
                                     '--env DOCKER_TLS_CERTDIR=',
                                     '--volume /mnt/gitlab/docker:/var/lib/docker',
                                     '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
