@@ -346,7 +346,7 @@ dss_direct_access_policy_statement = {
 }
 
 clamav_image = 'clamav/clamav:0.104'
-dind_image = 'docker:19.03.15-dind'
+dind_image = 'docker:20.10.18-dind'
 gitlab_image = 'gitlab/gitlab-ce:15.3.3-ce.0'
 runner_image = 'gitlab/gitlab-runner:v15.3.0'
 
