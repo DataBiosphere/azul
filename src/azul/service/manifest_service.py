@@ -1429,8 +1429,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
             for hit in response.hits:
                 doc = self._hit_to_doc(hit)
                 assert isinstance(doc, dict)
-                if len(project_short_names) < 2:
-                    project = one(doc['contents']['projects'])
+                contents = doc['contents']
+                if len(project_short_names) < 2 and 'projects' in contents:
+                    project = one(contents['projects'])
                     short_names = project['project_short_name']
                     project_short_names.update(short_names)
                 row = {}
