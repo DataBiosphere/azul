@@ -11,7 +11,7 @@ Connected issue: #0000
 ### Author
 - 
 - [ ] Target branch is `prod`
-- [ ] Name of source branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>`
+- [ ] Name of PR branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] PR title references the connected issue
 - [ ] PR title is `Hotfix: ` followed by title of connected issue
 - [ ] PR is connected to issue via Zenhub 
@@ -35,7 +35,7 @@ Connected issue: #0000
 
 ### Author (before every review)
 
-- [ ] Rebased branch on `prod`, squashed old fixups
+- [ ] Rebased PR branch on `prod`, squashed old fixups
 
 
 ### Primary reviewer (after approval)
@@ -49,7 +49,7 @@ Connected issue: #0000
 
 ### Operator (before pushing merge the commit)
 
-- [ ] Rebased and squashed branch onto `prod` 
+- [ ] Rebased and squashed PR branch onto `prod` 
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Added PR reference to merge commit title
@@ -61,7 +61,7 @@ Connected issue: #0000
 ### Operator (after pushing the merge commit)
 
 - [ ] Pushed merge commit to GitLab `prod`
-- [ ] Deleted PR branch from GitHub and GitLab
+- [ ] Deleted PR branch from GitHub and GitLab `prod`
 - [ ] Build passes on GitLab
 
 
