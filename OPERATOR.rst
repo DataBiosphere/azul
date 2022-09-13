@@ -277,7 +277,7 @@ Edit the `GitLab Terraform`_ file, updating the version of the Docker images for
 
     CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
 
-.. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py#L1243
+.. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py
 
 The new GitLab instance should be online again in 10 minutes. If it takes
 longer, contact the lead. When the GitLab web app is online, have the lead
