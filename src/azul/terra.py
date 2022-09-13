@@ -357,15 +357,15 @@ class TerraClient(OAuth2Client):
 
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
+            log.debug('_request(…) -> %r %r',
+                      response.status, trunc_ellipses(response.data, 256))
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]
         except KeyError:
             pass
         else:
-            log.warning('_request(…) -> %r %r: %r',
-                        response.status, header_name, header_value)
+            log.warning('_request(…) -> %r: %r', header_name, header_value)
         return response
 
 
@@ -403,12 +403,15 @@ class SAMClient(TerraClient):
         Check whether the user or service account associated with the current
         client's credentials is registered with SAM.
         """
-        endpoint = config.sam_service_url.set(path='/register/users/v1')
+        endpoint = config.sam_service_url.set(path='/register/user/v1')
         response = self._request('GET', endpoint)
+        auth_header = response.headers.get('WWW-Authenticate')
         if response.status == 200:
             return True
         elif response.status == 404:
             return False
+        elif response.status == 401 and auth_header and 'invalid_token' in auth_header:
+            raise PermissionError('The provided authentication is invalid')
         else:
             raise TerraStatusException(endpoint, response)
 

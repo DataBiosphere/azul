@@ -25,6 +25,7 @@ from azul import (
     CatalogName,
     cache_per_thread,
     config,
+    reject,
     require,
 )
 from azul.auth import (
@@ -94,12 +95,15 @@ class TDRPlugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         try:
             snapshots = tdr.snapshot_names_by_id()
         except UnauthorizedError:
-            if authentication is not None and tdr.token_is_valid():
-                # Fall back to anonymous access if the user-provided credentials
-                # are valid but lack authorization
-                return self.list_sources(None)
-            else:
+            if tdr.is_registered():
                 raise
+            else:
+                # Fall back to anonymous access if the user has authenticated
+                # using an unregistered account. The call to `reject` protects
+                # against infinite recursion in the event that the public
+                # service account erroneously isn't registered.
+                reject(authentication is None)
+                return self.list_sources(None)
 
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
         snapshot_ids_by_name = {
