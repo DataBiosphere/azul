@@ -695,22 +695,6 @@ def validate_catalog(catalog):
 
 
 def validate_size(size):
-    """
-    >>> validate_size('1000')
-
-    >>> validate_size('1001')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
-    >>> validate_size('0')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: Invalid value for parameter `size`, must be greater than 0
-    >>> validate_size('foo')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: Invalid value for parameter `size`
-    """
     try:
         size = int(size)
     except BaseException:
@@ -723,102 +707,6 @@ def validate_size(size):
 
 
 def validate_filters(filters):
-    """
-    >>> validate_filters('{"fileName": {"is": ["foo.txt"]}}')
-
-    >>> validate_filters('"')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The `filters` parameter is not valid JSON
-
-    >>> validate_filters('""')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The `filters` parameter must be a dictionary
-
-    >>> validate_filters('{"sampleDisease": ["H syndrome"]}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The `filters` parameter entry for `sampleDisease`
-    must be a single-item dictionary
-
-    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The value of the `is` relation
-    in the `filters` parameter entry for `sampleDisease`
-    is not a list
-
-    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The relation in the `filters` parameter entry
-    for `sampleDisease` must be one of
-    ('is', 'contains', 'within', 'intersects')
-
-    >>> validate_filters('{"fileSource": {"is": [["foo:23/33"]]}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The value of the `is` relation
-    in the `filters` parameter entry for
-    `fileSource` is invalid
-
-    >>> validate_filters('{"accessions": {"within": ["foo"]}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The field `accessions`
-    can only be filtered by the `is` relation
-
-    >>> validate_filters('{"accessions": {"is": []}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The value of the `is` relation
-    in the `filters` parameter entry
-    for `accessions` is not a single-item list
-
-    >>> validate_filters('{"accessions": {"is": ["foo"]}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The value of the `is` relation
-    in the `filters` parameter entry
-    for `accessions` must contain a dictionary
-
-    >>> validate_filters('{"accessions": {"is": [{"foo": "geostudies"}]}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The value of the `is` relation
-    in the `filters` parameter entry for `accessions`
-    has invalid properties `{'foo'}`
-
-    >>> validate_filters('{"accessions": {"is": [{"namespace": "baz", "foo": "bar"}]}}')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError:
-    The value of the `is` relation
-    in the `filters` parameter entry for `accessions`
-    has invalid properties `{'foo'}`
-    """
     try:
         filters = json.loads(filters)
     except Exception:
@@ -881,14 +769,6 @@ def validate_organism_age_filter(values):
 
 
 def validate_field(field: str):
-    """
-    >>> validate_field('fileName')
-
-    >>> validate_field('fooBar')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: Unknown field `fooBar`
-    """
     if field not in app.metadata_plugin.field_mapping:
         raise BRE(f'Unknown field `{field}`')
 

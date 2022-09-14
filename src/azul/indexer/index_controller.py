@@ -206,25 +206,18 @@ class IndexController(AppController):
             partition = BundlePartition.from_json(partition)
         service = self.index_service
         bundle = service.fetch_bundle(catalog, source, bundle_uuid, bundle_version)
-
-        # Filter out bundles that don't have project metadata. `project.json` is
-        # used in very old v5 bundles which only occur as cans in tests.
-        if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            results = service.transform(catalog, bundle, partition, delete=delete)
-            result = first(results)
-            if isinstance(result, BundlePartition):
-                for partition in results:
-                    notification = dict(notification, partition=partition.to_json())
-                    action = Action.delete if delete else Action.add
-                    # There's a good chance that the partition will also fail in
-                    # the non-retry Lambda function so we'll go straight to retry.
-                    self._queue_notification(action, notification, catalog, retry=True)
-                return []
-            else:
-                return results
-        else:
-            log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
+        results = service.transform(catalog, bundle, partition, delete=delete)
+        result = first(results)
+        if isinstance(result, BundlePartition):
+            for partition in results:
+                notification = dict(notification, partition=partition.to_json())
+                action = Action.delete if delete else Action.add
+                # There's a good chance that the partition will also fail in
+                # the non-retry Lambda function so we'll go straight to retry.
+                self._queue_notification(action, notification, catalog, retry=True)
             return []
+        else:
+            return results
 
     #: The number of failed attempts before a tally is referred as a batch of 1.
     #: Note that the retry lambda does first attempts, too, namely on re-fed and

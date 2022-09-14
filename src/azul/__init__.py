@@ -681,11 +681,20 @@ class Config:
         return self._is_plugin_enabled('dss', catalog)
 
     def is_tdr_enabled(self, catalog: Optional[str] = None) -> bool:
-        return self._is_plugin_enabled('tdr_hca', catalog)
+        return self._is_plugin_enabled('tdr', catalog)
 
-    def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
+    def is_hca_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('hca', catalog)
+
+    def is_anvil_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('anvil', catalog)
+
+    def _is_plugin_enabled(self, plugin_prefix: str, catalog: Optional[str]) -> bool:
         def predicate(catalog):
-            return catalog.plugins['repository'].name == plugin
+            return any(
+                plugin.name.split('_')[0] == plugin_prefix
+                for plugin in catalog.plugins.values()
+            )
 
         if catalog is None:
             return any(map(predicate, self.catalogs.values()))
@@ -882,17 +891,23 @@ class Config:
     lambda_context: Optional[LambdaContext] = None
 
     @property
+    def _timing_is_restricted(self) -> bool:
+        if self.lambda_context is None:
+            return False
+        else:
+            remaining = self.lambda_context.get_remaining_time_in_millis() / 1000
+            return remaining <= self.api_gateway_lambda_timeout
+
+    @property
     def terra_client_timeout(self) -> float:
         value = os.environ['AZUL_TERRA_TIMEOUT']
         short_timeout, long_timeout = map(float, value.split(':'))
         require(short_timeout <= long_timeout, short_timeout, long_timeout)
-        if self.lambda_context is None:
-            return long_timeout
-        else:
-            remaining = self.lambda_context.get_remaining_time_in_millis() / 1000
-            return (short_timeout
-                    if remaining <= self.api_gateway_lambda_timeout else
-                    long_timeout)
+        return short_timeout if self._timing_is_restricted else long_timeout
+
+    @property
+    def terra_client_retries(self) -> int:
+        return 0 if self._timing_is_restricted else 2
 
     term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
 

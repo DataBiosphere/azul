@@ -39,11 +39,14 @@ import: _client
 	@echo "Paste the certificate you received from your administrator and hit Ctrl-D"
 	@cat > $(EASYRSA_PKI)/issued/$(client_cn).crt
 	@echo
-	@echo "Run 'make config > ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE).ovpn' to generate the OpenVPN configuration"
+	@echo "Run 'make config > ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn' to generate the OpenVPN configuration"
 	@echo
 
 .PHONY: config
 config: _client
+	@echo "Generating configuration for your OpenVPN client ..." >&2
+	@if [ -t 1 ]; then echo "Standard output is a terminal." \
+		"Please run this target as in 'make config > ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn'." >&2; false; fi
 	@export endpoint=$$(aws ec2 describe-client-vpn-endpoints \
 			--filters Name=tag:Name,Values=azul-gitlab \
 			--query ClientVpnEndpoints[*].ClientVpnEndpointId \
@@ -51,21 +54,22 @@ config: _client
 		&& aws ec2 export-client-vpn-client-configuration \
 			--client-vpn-endpoint-id $$endpoint \
 			--output=text
+	@echo "pull-filter ignore redirect-gateway"
 	@echo "<cert>"
 	@cat $(EASYRSA_PKI)/issued/$(client_cn).crt | openssl x509 -inform pem
 	@echo "</cert>"
 	@echo "<key>"
 	@cat $(EASYRSA_PKI)/private/$(client_cn).key
 	@echo "</key>"
-	@echo "redirect-gateway"
 	@echo >&2
-	@echo "Import the generated configuration to your OpenVPN client." >&2
+	@echo "... done. You can now import the generated configuration to your OpenVPN client." >&2
 	@echo "On Ubuntu, this is done with" \
-	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE).ovpn'" >&2
+	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn'" >&2
 	@echo >&2
-	@echo "Make sure that other Internet traffic isn't routed through the VPN." >&2
+	@echo "Please make sure that other Internet traffic isn't routed through the VPN connection." >&2
 	@echo "On Ubuntu, this is done with" \
-	      "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE) ipv4.never-default true'" >&2
+	      "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn) ipv4.never-default true'" >&2
+	@echo "For other Operating systems please refer to README.md section 9.1" >&2
 	@echo >&2
 
 .PHONY: ca
