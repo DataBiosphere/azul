@@ -110,17 +110,6 @@ def post_notification(catalog: CatalogName, action: str):
     return app.index_controller.handle_notification(catalog, action)
 
 
-# Work around https://github.com/aws/chalice/issues/856
-
-def new_handler(self, event, context):
-    app.lambda_context = context
-    return old_handler(self, event, context)
-
-
-old_handler = chalice.app.EventSourceHandler.__call__
-chalice.app.EventSourceHandler.__call__ = new_handler
-
-
 @app.on_sqs_message(queue=config.notifications_queue_name(), batch_size=1)
 def contribute(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event)

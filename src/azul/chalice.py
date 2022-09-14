@@ -78,6 +78,7 @@ class AzulChaliceApp(Chalice):
                  app_module_path: str,
                  unit_test: bool = False,
                  spec: Optional[JSON] = None):
+        self._patch_event_source_handler()
         assert app_module_path.endswith('/app.py'), app_module_path
         self.app_module_path = app_module_path
         self.unit_test = unit_test
@@ -93,6 +94,23 @@ class AzulChaliceApp(Chalice):
         self.register_middleware(self._logging_middleware, 'http')
         self.register_middleware(self._lambda_context_middleware, 'all')
         self.register_middleware(self._authentication_middleware, 'http')
+
+    def _patch_event_source_handler(self):
+        """
+        Work around https://github.com/aws/chalice/issues/856. That issue has
+        been fixed for a while now but in a way that doesn't help us: it makes
+        the context available in each event object whereas we need the context
+        in the application object.
+        """
+        import chalice.app
+
+        def patched_event_source_handler(self_, event, context):
+            self.lambda_context = context
+            return old_handler(self_, event, context)
+
+        old_handler = chalice.app.EventSourceHandler.__call__
+        if old_handler.__code__ != patched_event_source_handler.__code__:
+            chalice.app.EventSourceHandler.__call__ = patched_event_source_handler
 
     def _logging_middleware(self, event, get_response):
         self._log_request()
