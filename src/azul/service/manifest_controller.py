@@ -177,7 +177,22 @@ class ManifestController(SourceController):
                 'CommandLine': self.service.command_lines(manifest, location, authentication)
             }
         else:
-            if fetch:
+            # The manifest is ultimately downloaded via a signed URL that points
+            # to the storage bucket. This signed URL expires after one hour and
+            # is a client secret which should not be shared, so we prefer to
+            # hide it behind a 301 redirect to the non-fetch `/manifest/files`
+            # endpoint, which is not secret and enforces access controls via a
+            # bearer token. This was implemented as a solution to
+            # https://github.com/DataBiosphere/azul/issues/2875
+            # However, enabling the private API will prevent servers outside the
+            # VPN (e.g. Terra) from accessing the `/manifest/files` endpoint to
+            # obtain the redirect, forcing us to return the signed URL directly
+            # to facilitate handovers. The risk of the secret being shared in
+            # this case is mitigated by 1) the URL's short lifespan and 2) the
+            # very small size of the set of users who will ever be authorized to
+            # access the private API.
+            handover_formats = (ManifestFormat.terra_pfb, ManifestFormat.terra_bdbag)
+            if fetch and not (config.private_api and manifest.format_ in handover_formats):
                 url = self.manifest_url_func(fetch=False,
                                              catalog=manifest.catalog,
                                              format_=manifest.format_,

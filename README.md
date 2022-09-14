@@ -121,7 +121,6 @@ end.
 
    [pyenv]: https://github.com/pyenv/pyenv
 
-
 5. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
 
@@ -1704,6 +1703,7 @@ An Azul build on Gitlab runs the `test`, `package`, `deploy`,  and
 feature branches is `sandbox`, the protected branches (`develop` and `prod` use 
 their respective deployments.
 
+
 ## 9.1 VPN access to GitLab
 
 The GitLab EC2 instance resides in a VPC that can only be accessed through a
@@ -1736,25 +1736,27 @@ authenticate itself to clients and check validity of the certificates that
 clients present to the server. Both client and server keys must be signed by
 the same CA.
 
-### 9.1.1 Requesting access
+### 9.1.1 Setting up a VPN client
 
 Install an OpenVPN client. On Ubuntu, the respective package is called
 `network-manager-openvpn-gnome`. Popular clients for macOS are [Tunnelblick]
-(free) and [Viscosity] (for pay, with 30 day trial). Tunnelblick is currently
-incompatible, see paragraph on split tunnels below.
+(free) and [Viscosity] (for pay, with 30 day trial). For Windows, only 
+[Viscosity] was tested but the [official Windows client] may also work there.
 
 [Tunnelblick]: https://tunnelblick.net/index.html
 [Viscosity]: https://www.sparklabs.com/viscosity/
+[official Windows client]: https://openvpn.net/client-connect-vpn-for-windows/
 
 <!--
 FIXME: Figure out why Tunnelblick doesn't work
        https://github.com/DataBiosphere/azul/issues/3930
 -->
 
-Generate a certificate request:
+Generate a certificate request, import the certificate and generate the `.ovpn` 
+file containing the configuration for the VPN connection:
 
 ```
-_select dev.gitlab  # or prod.gitlab
+_select dev.gitlab  # or prod.gitlab, anvildev.gitlab
 cd terraform/gitlab/vpn
 git submodule update --init easy-rsa
 make init  # (do this only once per GitLab deployment)
@@ -1763,13 +1765,22 @@ make import  # paste the certificate
 make config > ~/azul-gitlab-dev.ovpn  # or azul-gitlab-prod.ovpn
 ```
 
-Import the generated `.ovpn` file into the client. `make config` prints
+The `make init` step creates a PKI directory in `~/.local/share` outside of the 
+Azul source tree. It should only be done once per GitLab deployment. On a second 
+attempt it will ask for confirmation to overwrite the existing directory. If 
+confirmed, existing OpenVPN client connections will remain functional (as they 
+keep a copy of the private key) but you will lose the ability to regenerate the 
+`.ovpn` file.
+
+Now import the generated `.ovpn` file into your client. `make config` prints
 instructions on how to do so on Ubuntu. For other VPN clients the process is
 pretty much self-explanatory. Delete the file after importing it. It contains
-the private key and can always be regenerated again later. 
+the private key and can always be regenerated again later using `make config`. 
+
+### 9.1.2 Ensuring split tunnel on client
 
 It is important that you configure the client to only route VPC traffic
-through the VPN. The VPN will not forward any other traffic, it whats
+through the VPN. The VPN server will not forward any other traffic, in what's
 commonly referred to as a *split tunnel*. The key indicator of a split tunnel
 is that it doesn't set up a default route on the client system. There will
 only be a route to the private 172.… subnet of the GitLab VPC but the default
@@ -1778,29 +1789,32 @@ default route, your Internet access will be severed as soon as you establish
 the VPN connection. 
 
 The `make config` step prints instruction on how to configure a split tunnel
-on Ubuntu. For Viscosity, the steps are as follows:
+on Ubuntu. 
 
-1) Click the Viscosity menubar icon -> click *Preferences*
-2) Right-click `azul-gitlab-dev` or `azul-gitlab-prod` -> click *Edit*
-3) Click the *Networking* tab
-4) Under *All traffic*, select *Automatic (Set by server)*
-5) Click *Save*
+For Viscosity, the steps are as follows:
 
-Tunnelblick has an UI option for split tunnels as well but it doesn't work for
-unknown reasons.
+1) Click the Viscosity menu bar icon (or the task bar icon on windows)
 
-<!--
-FIXME: Figure out why Tunnelblick doesn't work
-       https://github.com/DataBiosphere/azul/issues/3930
--->
+2) Click *Preferences*
 
-The `make init` step creates a PKI directory in `~/.local/share` outside of the 
-Azul source tree. It should only be done once per GitLab deployment. On a second 
-attempt it will ask for confirmation to overwrite the existing directory. If 
-confirmed, existing OpenVPN client connections will remain functional (as they 
-keep a copy of the private key) but you will lose the ability to regenerate the 
-`.ovpn` file.
+3) Right-click `azul-gitlab-dev` or `azul-gitlab-prod` -> click *Edit*
 
+4) Click the *Networking* tab
+
+5) Under *All traffic*, select *Automatic (Set by server)*
+
+6) Click *Save*
+
+For Tunnelblick, the steps are as follows:
+
+1) Right-click the Tunnelblick menu bar icon
+
+2) Click *VPN Details …*
+
+3) Click on the left-hand side bar entry for the connection you just imported
+
+4) On the *Settings* tab of the right-hand side of the window, make sure that
+   the *Route all IPv4 traffic through the VPN* option is unchecked
 
 ### 9.1.2 Setting up the certificate authority
 
@@ -1817,7 +1831,6 @@ make publish  # upload the server certificate to ACM
 cd ..
 make apply  # (re)deploy GitLab
 ```
-
 
 ### 9.1.3 Issuing a certificate
 
@@ -1839,7 +1852,6 @@ Send the resulting certificate back to the requesting developer.
 The communication channel through which requests and certificates are messaged
 does not need to be private but it needs to ensure the integrity of the
 messages.
-
 
 ### 9.1.4 Revoking a certificate
 
@@ -1866,6 +1878,21 @@ make revoke/joe@foo.org
 make publish_revocations
 mv $EASYRSA_PKI/issued/joe@foo.org.crt.orig $EASYRSA_PKI/issued/joe@foo.org.crt
 ```
+
+### 9.1.5 Issuing a certificate on a person's behalf
+
+A private key and OpenVPN configuration can be generated by a system
+administrator on behalf of any person that doesn't have a configured working
+copy of this repository. Doing so has the disadvantage of making that
+person's private key known to the system administrator and anyone that
+eavesdrops on the channel through which the OpenVPN configuration
+(which includes the private key) is communicated to the person.
+
+To generate the key and OpenVPN configuration file on another person's behalf, 
+invoke the `make` steps as outlined in [9.1.1](#911-setting-up-a-vpn-client) and 
+[9.1.3](#913-issuing-a-certificate) but use `make client_cn=joe@foo.org` instead 
+of `make`.
+
 
 ## 9.2 The Sandbox Deployment
 

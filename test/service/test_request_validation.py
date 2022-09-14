@@ -8,7 +8,13 @@ from unittest import (
     mock,
 )
 
+from furl import (
+    furl,
+)
 import requests
+from requests import (
+    Response,
+)
 
 import azul.changelog
 from azul.logging import (
@@ -27,10 +33,28 @@ def setUpModule():
 
 
 class RequestParameterValidationTest(WebServiceTestCase):
-    expected_response = {
-        'Code': 'BadRequestError',
-        'Message': 'Unknown field `bad-field`'
-    }
+
+    def assertResponseStatus(self, url: furl, status: int) -> Response:
+        response = requests.get(str(url))
+        self.assertEqual(status, response.status_code, response.content)
+        return response
+
+    def assertErrorMessage(self, url: furl, status: int, code: str, message: str):
+        response = self.assertResponseStatus(url, status)
+        expected_response = {
+            'Code': code,
+            'Message': message
+        }
+        self.assertEqual(expected_response, response.json())
+
+    def assertBadRequest(self, url: furl, message: str):
+        self.assertErrorMessage(url, 400, 'BadRequestError', message)
+
+    def assertNotFound(self, url: furl, message: str):
+        self.assertErrorMessage(url, 404, 'NotFoundError', message)
+
+    def assertBadField(self, url: furl):
+        self.assertBadRequest(url, 'Unknown field `bad-field`')
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
@@ -40,13 +64,13 @@ class RequestParameterValidationTest(WebServiceTestCase):
                 for dirty in True, False:
                     with self.subTest(is_repo_dirty=dirty):
                         with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
-                            response = requests.get(str(self.base_url.set(path='/version')))
-                            response.raise_for_status()
+                            url = self.base_url.set(path='/version')
+                            response = self.assertResponseStatus(url, 200)
                             expected_json = {
                                 'commit': commit,
                                 'dirty': dirty
                             }
-                            self.assertEqual(response.json()['git'], expected_json)
+                            self.assertEqual(expected_json, response.json()['git'])
 
     def test_bad_single_filter_field_of_sample(self):
         params = {
@@ -55,9 +79,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'bad-field': {'is': ['fake-val']}}),
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_multiple_filter_field_of_sample(self):
         params = {
@@ -66,9 +88,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'bad-field': {'is': ['fake-val']}, 'bad-field2': {'is': ['fake-val2']}}),
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_mixed_multiple_filter_field_of_sample(self):
         params = {
@@ -77,9 +97,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-field': {'is': ['fake-val']}}),
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_sort_field_of_sample(self):
         params = {
@@ -89,9 +107,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'order': 'asc',
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_sort_field_and_filter_field_of_sample(self):
         params = {
@@ -101,9 +117,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'order': 'asc',
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_valid_sort_field_but_bad_filter_field_of_sample(self):
         params = {
@@ -114,9 +128,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'order': 'asc',
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_sort_field_but_valid_filter_field_of_sample(self):
         params = {
@@ -126,9 +138,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'order': 'asc',
         }
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_single_filter_field_of_file(self):
         params = {
@@ -137,9 +147,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'bad-field': {'is': ['fake-val2']}}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_multiple_filter_field_of_file(self):
         params = {
@@ -148,9 +156,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'bad-field': {'is': ['fake-val']}, 'bad-field2': {'is': ['fake-val2']}}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_mixed_multiple_filter_field_of_file(self):
         params = {
@@ -159,9 +165,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-field': {'is': ['fake-val']}}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_sort_field_of_file(self):
         params = {
@@ -171,9 +175,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_bad_sort_field_and_filter_field_of_file(self):
         params = {
@@ -182,9 +184,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'bad-field': {'is': ['fake-val2']}}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertTrue(response.json() in [self.expected_response, self.expected_response])
+        self.assertBadField(url)
 
     def test_bad_sort_field_but_valid_filter_field_of_file(self):
         params = {
@@ -194,9 +194,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'organ': {'is': ['fake-val2']}}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
 
     def test_valid_sort_field_but_bad_filter_field_of_file(self):
         params = {
@@ -207,9 +205,62 @@ class RequestParameterValidationTest(WebServiceTestCase):
             'filters': json.dumps({'bad-field': {'is': ['fake-val2']}}),
         }
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.expected_response, response.json())
+        self.assertBadField(url)
+
+    def test_bad_filters(self):
+        url = self.base_url.set(path='/index/files', args=dict(catalog=self.catalog))
+        for filters, message in [
+            ('"', 'The `filters` parameter is not valid JSON'),
+            ('""', 'The `filters` parameter must be a dictionary'),
+            (
+                '{"sampleDisease": ["H syndrome"]}',
+                'The `filters` parameter entry for `sampleDisease` must be a '
+                'single-item dictionary'
+            ),
+            (
+                '{"sampleDisease": {"is": "H syndrome"}}',
+                'The value of the `is` relation in the `filters` parameter '
+                'entry for `sampleDisease` is not a list'
+            ),
+            (
+                '{"sampleDisease": {"was": "H syndrome"}}',
+                "The relation in the `filters` parameter entry "
+                "for `sampleDisease` must be one of "
+                "('is', 'contains', 'within', 'intersects')"
+            ),
+            (
+                '{"fileSource": {"is": [["foo:23/33"]]}}',
+                'The value of the `is` relation in the `filters` parameter entry '
+                'for `fileSource` is invalid'
+            ),
+            (
+                '{"accessions": {"within": ["foo"]}}',
+                'The field `accessions` can only be filtered by the `is` relation'
+            ),
+            (
+                '{"accessions": {"is": []}}',
+                'The value of the `is` relation in the `filters` parameter entry '
+                'for `accessions` is not a single-item list'
+            ),
+            (
+                '{"accessions": {"is": ["foo"]}}',
+                'The value of the `is` relation in the `filters` parameter entry '
+                'for `accessions` must contain a dictionary'
+            ),
+            (
+                '{"accessions": {"is": [{"foo": "geostudies"}]}}',
+                "The value of the `is` relation in the `filters` parameter entry "
+                "for `accessions` has invalid properties `{'foo'}`"
+            ),
+            (
+                '{"accessions": {"is": [{"namespace": "baz", "foo": "bar"}]}}',
+                "The value of the `is` relation in the `filters` parameter entry "
+                "for `accessions` has invalid properties `{'foo'}`"
+            )
+        ]:
+            with self.subTest(filters=filters):
+                url.args.set('filters', filters)
+                self.assertBadRequest(url, message)
 
     @patch_dss_source
     @patch_source_cache
@@ -221,68 +272,41 @@ class RequestParameterValidationTest(WebServiceTestCase):
             for entity_type in entity_types:
                 with self.subTest(entity_name=entity_type, error_code=expected_error_code, uuid=uuid):
                     url = self.base_url.set(path=('index', entity_type, uuid))
-                    response = requests.get(str(url))
-                    self.assertEqual(expected_error_code, response.status_code)
+                    self.assertResponseStatus(url, expected_error_code)
 
     def test_bad_query_params(self):
-
-        def test(url, message, params):
-            response = requests.get(url, params=params)
-            self.assertEqual(400, response.status_code, response.content)
-            response = response.json()
-            expected_response = {
-                'Code': 'BadRequestError',
-                'Message': message
-            }
-            self.assertEqual(expected_response, response)
 
         for entity_type in ('files', 'bundles', 'samples'):
             url = self.base_url.set(path=('index', entity_type))
             with self.subTest(entity_type=entity_type):
                 with self.subTest(test='extra parameter'):
-                    test(str(url),
-                         params=dict(catalog=self.catalog,
-                                     some_nonexistent_filter=1),
-                         message='Unknown query parameter `some_nonexistent_filter`')
-                with self.subTest(test='malformed parameter'):
-                    test(str(url),
-                         params=dict(catalog=self.catalog,
-                                     size='foo'),
-                         message='Invalid value for parameter `size`')
-                with self.subTest(test='malformed filter parameter'):
-                    test(str(url),
-                         params=dict(catalog=self.catalog,
-                                     filters='{"}'),
-                         message='The `filters` parameter is not valid JSON')
+                    url.args = dict(catalog=self.catalog,
+                                    some_nonexistent_filter=1)
+                    self.assertBadRequest(url, 'Unknown query parameter `some_nonexistent_filter`')
         with self.subTest(test='missing required parameter'):
-            test(str(self.base_url.set(path='/integrations')),
-                 params={},
-                 message='Missing required query parameters `entity_type`, `integration_type`')
+            url = self.base_url.set(path='/integrations')
+            self.assertBadRequest(url, 'Missing required query parameters `entity_type`, `integration_type`')
 
     def test_bad_catalog_param(self):
         for path in (*('/index/' + e for e in ('summary', 'files')),
                      '/manifest/files',
                      '/repository/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b'):
-            for catalog, status, error in [
-                ('foo', 404, "Catalog name 'foo' does not exist."),
-                ('foo ', 400, "('Catalog name is invalid', 'foo ')")
+            for catalog, test, message in [
+                ('foo', self.assertNotFound, "Catalog name 'foo' does not exist. Must be one of %r." % {self.catalog}),
+                ('foo ', self.assertBadRequest, "('Catalog name is invalid', 'foo ')")
             ]:
                 with self.subTest(path=path, catalog=catalog):
                     url = self.base_url.set(path=path, args=dict(catalog=catalog))
-                    response = requests.get(str(url))
-                    self.assertEqual(status, response.status_code, response.json())
-                    self.assertIn(error, response.json()['Message'])
+                    test(url, message)
 
     def test_bad_entity_type(self):
         bad_entity_type = 'spiders'
         good_entity_types = set(self.app_module.app.metadata_plugin.exposed_indices)
         assert bad_entity_type not in good_entity_types
         url = self.base_url.set(path='/index/' + bad_entity_type)
-        response = requests.get(str(url))
-        self.assertEqual(response.status_code, 400, response.json())
         expected = (f'Entity type {bad_entity_type!r} is invalid for catalog '
                     f'{self.catalog!r}. Must be one of {good_entity_types}.')
-        self.assertEqual(expected, response.json()['Message'])
+        self.assertBadRequest(url, expected)
 
     def test_bad_manifest_format(self):
         bad_format = 'fluffy'
@@ -290,8 +314,17 @@ class RequestParameterValidationTest(WebServiceTestCase):
         assert bad_format not in good_formats
         url = self.base_url.set(path='/manifest/files',
                                 query_params={'format': bad_format})
-        response = requests.get(str(url))
-        self.assertEqual(response.status_code, 400, response.json())
         expected = (f'Unknown manifest format `{bad_format}`. '
                     f'Must be one of {good_formats}')
-        self.assertEqual(expected, response.json()['Message'])
+        self.assertBadRequest(url, expected)
+
+    def test_size(self):
+        url = self.base_url.set(path='/index/files')
+        for size, test, arg in [
+            (1001, self.assertBadRequest, 'Invalid value for parameter `size`, must not be greater than 1000'),
+            (0, self.assertBadRequest, 'Invalid value for parameter `size`, must be greater than 0'),
+            ('foo', self.assertBadRequest, 'Invalid value for parameter `size`')
+        ]:
+            with self.subTest(size=size):
+                url.args.set('size', size)
+                test(url, arg)
