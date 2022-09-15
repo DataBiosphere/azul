@@ -42,7 +42,8 @@ def mksrc(google_project,
         'snapshot/' + snapshot,
         prefix + '/0'
     ])
-    return source
+    key = '_'.join(snapshot.split('_')[1:-1])
+    return key, source
 
 
 def mkdict(items):
@@ -53,7 +54,10 @@ def mkdict(items):
 
 
 anvil_sources = mkdict([
-    ('encode', mksrc('datarepo-e8d615a1', 'AnVIL_ENCODE_default_v1', 31975))
+    mksrc('datarepo-b0924e15', 'ANVIL_CMG_UWASH_DS_BAV_IRB_PUB_RD_202209011709', 177),
+    mksrc('datarepo-962bbe4a', 'ANVIL_CMG_UWASH_DS_EP_202209011710', 49),
+    mksrc('datarepo-a7cb3ea0', 'ANVIL_CMG_UWASH_GRU_202209011830', 2113),
+    mksrc('datarepo-5adb3720', 'ANVIL_CMG_UWASH_HMB_IRB_202209011746', 41)
 ])
 
 
@@ -114,7 +118,7 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_anvil')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('anvil', 'anvil-encode', anvil_sources)
+                ('anvil', 'anvil', anvil_sources)
             ]
             for suffix, internal in [
                 ('', False),
@@ -122,7 +126,7 @@ def env() -> Mapping[str, Optional[str]]:
             ]
         }),
 
-        'AZUL_TDR_SOURCE_LOCATION': 'US',
+        'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
         'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 
