@@ -661,7 +661,12 @@ class Config:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
-        catalogs = json.loads(self.environ['AZUL_CATALOGS'])
+        catalogs = self.environ['AZUL_CATALOGS']
+        if catalogs.startswith('Qlpo'):  # bzip2 header, `BZh`, base64-encoded
+            import bz2
+            import base64
+            catalogs = bz2.decompress(base64.b64decode(catalogs)).decode()
+        catalogs = json.loads(catalogs)
         require(bool(catalogs), 'No catalogs configured')
         return {
             name: self.Catalog.from_json(name, catalog)
