@@ -33,8 +33,8 @@ def env() -> Mapping[str, Optional[str]]:
         # Configure the catalogs to be managed by this Azul deployment. A
         # catalog is a group of indices populated from a particular source.
         #
-        # The AZUL_CATALOGS variable must be a string that represents a JSON
-        # array of JSON objects with the following fields:
+        # The AZUL_CATALOGS variable must be a string containing a JSON object
+        # of the following shape:
         #
         # {
         #   'name': {
@@ -49,7 +49,8 @@ def env() -> Mapping[str, Optional[str]]:
         #                   source,
         #                   ...
         #       ]
-        #   }
+        #   },
+        #   ...
         # }
         #
         # The `atlas` and `name` properties follow the same, fairly restrictive
