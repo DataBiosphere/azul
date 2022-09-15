@@ -11,7 +11,7 @@ Connected issue: #4014
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Name of source branch matches `gitlab/yyyy-mm-dd/<GitLab version>`
+- [ ] Name of PR branch matches `gitlab/yyyy-mm-dd/<GitLab version>`
 - [ ] PR title matches `Update GitLab to <GitLab version> (#4014)`
 - [ ] Disconnected any other PRs currently connected to #4014 via ZenHub
 - [ ] PR is connected to issue #4014 via ZenHub
@@ -20,12 +20,14 @@ Connected issue: #4014
 ### Author (deploy)
 
 - [ ] Deployed changes to `dev.gitlab`
+- [ ] Deployed changes to `anvildev.gitlab`
 - [ ] Deployed changes to `prod.gitlab`
 
 
 ### Primary reviewer (after approval)
 
 - [ ] Verified background migrations for `dev.gitlab` are complete
+- [ ] Verified background migrations for `anvildev.gitlab` are complete
 - [ ] Verified background migrations for `prod.gitlab` are complete
 - [ ] Actually approved the PR
 - [ ] Labeled connected issue as `no demo`
@@ -37,7 +39,7 @@ Connected issue: #4014
 
 ### Operator (before pushing merge the commit)
 
-- [ ] Rebased and squashed branch
+- [ ] Rebased and squashed PR branch
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Added PR reference to merge commit title

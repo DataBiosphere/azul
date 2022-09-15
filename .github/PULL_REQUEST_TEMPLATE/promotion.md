@@ -11,10 +11,10 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `prod`
-- [ ] Source branch matches `promotions/yyyy-mm-dd`
+- [ ] Name of PR branch matches `promotions/yyyy-mm-dd`
 - [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
-- [ ] PR title starts with title of connected issue
 - [ ] PR title references the connected issue
+- [ ] PR title starts with title of connected issue
 - [ ] PR is connected to issue via Zenhub 
 - [ ] PR description links to connected issue
 
@@ -31,7 +31,7 @@ Connected issue: #0000
 ### Primary reviewer (after approval)
 
 - [ ] Actually approved the PR
-- [ ] Labeled PR as `no sandbox`
+- [ ] Labeled PR `no sandbox`
 - [ ] Moved ticket to *Approved* column
 - [ ] Assigned PR to current operator
 
@@ -61,7 +61,7 @@ Connected issue: #0000
 - [ ] Deleted unreferenced indices in `prod`                        <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `prod`                                     <sub>or this PR does not require reindexing</sub>
 - [ ] Checked for and triaged indexing failures                     <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in target deployment                      <sub>or this PR does not require reindexing</sub>
+- [ ] Emptied fail queues in `prod` deployment                      <sub>or this PR does not require reindexing</sub>
 
 
 ### Operator

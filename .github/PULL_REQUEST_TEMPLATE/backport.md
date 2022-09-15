@@ -8,7 +8,7 @@ This is the PR template for backport PRs against `develop`.
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Name of source branch matches `backports/<7-digit SHA1 of most recent backported commit>`
+- [ ] Name of PR branch matches `backports/<7-digit SHA1 of most recent backported commit>`
 - [ ] PR title contains the 7-digit SHA1 of the backported commits
 - [ ] PR title references the issues relating to the backported commits
 - [ ] PR title references the PRs that introduced the backported commits
@@ -21,7 +21,7 @@ This is the PR template for backport PRs against `develop`.
 - [ ] Added `reqs` label to PR                                      <sub>or this PR does not touch requirements*.txt</sub>
 
 
-### Primary reviewer (after rejection)
+### Primary reviewer (after requesting changes)
 
 Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* 
 checklists.
@@ -40,8 +40,10 @@ checklists.
 
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Branch pushed to GitLab and added `sandbox` label             <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passed in sandbox                                       <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label    <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `sandbox` deployment                          <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `anvildev`                         <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `anvilbox` deployment                         <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Added PR reference (this PR) to merge commit title
 - [ ] Collected commit title tags in merge commit title
 - [ ] Pushed merge commit to GitHub
@@ -49,9 +51,13 @@ checklists.
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Pushed merge commit to GitLab                                 <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Deleted PR branch from GitHub and GitLab
-- [ ] Build passes on GitLab<sup>1</sup>
+- [ ] Pushed merge commit to GitLab `dev`                            <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed merge commit to GitLab `anvildev`                       <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes on GitLab `dev`<sup>1</sup>
+- [ ] Build passes on GitLab `anvildev`<sup>1</sup>
+- [ ] Deleted PR branch from GitHub
+- [ ] Deleted PR branch from GitLab `dev`
+- [ ] Deleted PR branch from GitLab `anvildev`
 
 <sup>1</sup> When pushing the merge commit is skipped due to the PR being
 labelled `no sandbox`, the next build triggered by a PR whose merge commit *is* 
