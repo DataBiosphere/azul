@@ -551,7 +551,9 @@ class TDRClient(SAMClient):
                         ) -> MutableJSON:
         if response.status == 200:
             return json.loads(response.data)
-        elif response.status == 401:
+        # FIXME: Azul sometimes conflates 401 and 403
+        #        https://github.com/DataBiosphere/azul/issues/4463
+        elif response.status in (401, 403):
             raise self._insufficient_access(str(endpoint))
         else:
             raise TerraStatusException(endpoint, response)
