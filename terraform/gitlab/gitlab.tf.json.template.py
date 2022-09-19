@@ -1284,6 +1284,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'iam_instance_profile': '${aws_iam_instance_profile.gitlab.name}',
                 'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
+                'root_block_device': {
+                    'volume_size': 64
+                },
                 'key_name': '${aws_key_pair.gitlab.key_name}',
                 'network_interface': {
                     'network_interface_id': '${aws_network_interface.gitlab.id}',
