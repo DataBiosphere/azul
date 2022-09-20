@@ -24,7 +24,7 @@ emit_tf({
         },
         *({
             "aws": {
-                'version': '4.3.0',
+                'version': '4.30.0',
                 **(
                     {
                         'region': region,

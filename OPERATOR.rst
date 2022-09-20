@@ -272,19 +272,12 @@ create a properly tagged snapshot of the GitLab EBS volume. Run::
 
 	python scripts/create_gitlab_snapshot.py
 
-.. FIXME: Should not have to destroy the instance to update
-          https://github.com/DataBiosphere/azul/issues/3942
-
-::
-
-	(cd terraform/gitlab && CI_COMMIT_REF_NAME=develop make validate && terraform taint aws_instance.gitlab)
-
-Once the instance is tainted, edit the `GitLab Terraform`_ file, updating the
-version of the Docker images for ``gitlab-ce`` and ``gitlab-runner``. Then run::
+Edit the `GitLab Terraform`_ file, updating the version of the Docker images for
+``gitlab-ce`` and ``gitlab-runner``. Then run::
 
     CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
 
-.. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py#L1243
+.. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py
 
 The new GitLab instance should be online again in 10 minutes. If it takes
 longer, contact the lead. When the GitLab web app is online, have the lead
