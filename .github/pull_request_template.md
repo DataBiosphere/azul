@@ -14,13 +14,13 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Name of source branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
+- [ ] Name of PR branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] PR title references the connected issue
 - [ ] PR title matches<sup>1</sup> title of connected issue         <sub>or comment in PR explains why they're different</sub>
 - [ ] Title of at least one commit references connected issue
 - [ ] PR is connected to issue via Zenhub 
 - [ ] PR description links to connected issue
-- [ ] Added `partial` label to PR                                    <sub>or this PR completely resolves the connected issue</sub>
+- [ ] Added `partial` label to PR                                   <sub>or this PR completely resolves the connected issue</sub>
 
 <sup>1</sup> when the issue title describes a problem, the PR title is `Fix: ` followed by the issue title   
 
@@ -56,7 +56,7 @@ Connected issue: #0000
 - [ ] Reverted the temporary hotfix connected to the issue          <sub>or there is no temporary hotfix for the connected issue on the `prod` branch</sub>
 
 
-### Author (requirements)
+### Author (requirements, before every review)
 
 - [ ] Ran `make requirements_update`                                <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title                                 <sub>or this PR does not touch requirements*.txt</sub>
@@ -66,7 +66,7 @@ Connected issue: #0000
 ### Author (rebasing, integration test)
 
 - [ ] `make integration_test` passes in personal deployment         <sub>or this PR does not touch functionality that could break the IT</sub>
-- [ ] Rebased branch on `develop`, squashed old fixups
+- [ ] Rebased PR branch on `develop`, squashed old fixups
 
 
 ### Peer reviewer (after requesting changes)
@@ -104,14 +104,19 @@ checklists. Update the `N reviews` label.
 
 - [ ] Checked `reindex` label and `r` commit title tag
 - [ ] Checked that demo expectations are clear                      <sub>or connected issue is labeled as `no demo`</sub>
-- [ ] Rebased and squashed branch
+- [ ] Rebased and squashed PR branch
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Branch pushed to GitLab and added `sandbox` label             <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passed in sandbox                                       <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label    <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `sandbox` deployment                          <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `sandbox`                     <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `sandbox`                                  <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                             <sub>or this PR does not require reindexing `sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `anvildev`                         <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `anvilbox` deployment                         <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Deleted unreferenced indices in `anvilbox`                    <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
+- [ ] Started reindex in `anvilbox`                                 <sub>or this PR does not require reindexing `sandbox`</sub>
+- [ ] Checked for failures in `anvilbox`                            <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title
 - [ ] Moved connected issue to Merged column
@@ -121,9 +126,13 @@ checklists. Update the `N reviews` label.
 ### Operator (after pushing the merge commit)
 
 - [ ] Shortened the PR chain                                        <sub>or this PR is not labeled `base`</sub>
-- [ ] Pushed merge commit to GitLab                                 <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Deleted PR branch from GitHub and GitLab
-- [ ] Build passes on GitLab<sup>1</sup>
+- [ ] Pushed merge commit to GitLab `dev`                           <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed merge commit to GitLab `anvildev`                      <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes on GitLab `dev`<sup>1</sup>
+- [ ] Build passes on GitLab `anvildev`<sup>1</sup>
+- [ ] Deleted PR branch from GitHub
+- [ ] Deleted PR branch from GitLab `dev`
+- [ ] Deleted PR branch from GitLab `anvildev`
 
 <sup>1</sup> When pushing the merge commit is skipped due to the PR being
 labelled `no sandbox`, the next build triggered by a PR whose merge commit *is* 
@@ -133,9 +142,13 @@ pushed determines this checklist item.
 ### Operator (reindex) 
 
 - [ ] Deleted unreferenced indices in `dev`                         <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
+- [ ] Deleted unreferenced indices in `anvildev`                    <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `dev`                                      <sub>or this PR does not require reindexing</sub>
-- [ ] Checked for and triaged indexing failures                     <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in target deployment                      <sub>or this PR does not require reindexing</sub>
+- [ ] Started reindex in `anvildev`                                 <sub>or this PR does not require reindexing</sub>
+- [ ] Checked for and triaged indexing failures in `dev`            <sub>or this PR does not require reindexing</sub>
+- [ ] Checked for and triaged indexing failures in `anvildev`       <sub>or this PR does not require reindexing</sub>
+- [ ] Emptied fail queues in `dev` deployment                       <sub>or this PR does not require reindexing</sub>
+- [ ] Emptied fail queues in `anvildev` deployment                  <sub>or this PR does not require reindexing</sub>
 
 
 ### Operator
