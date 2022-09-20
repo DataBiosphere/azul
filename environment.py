@@ -33,8 +33,8 @@ def env() -> Mapping[str, Optional[str]]:
         # Configure the catalogs to be managed by this Azul deployment. A
         # catalog is a group of indices populated from a particular source.
         #
-        # The AZUL_CATALOGS variable must be a string that represents a JSON
-        # array of JSON objects with the following fields:
+        # The AZUL_CATALOGS variable must be a string containing a JSON object
+        # of the following shape:
         #
         # {
         #   'name': {
@@ -49,7 +49,8 @@ def env() -> Mapping[str, Optional[str]]:
         #                   source,
         #                   ...
         #       ]
-        #   }
+        #   },
+        #   ...
         # }
         #
         # The `atlas` and `name` properties follow the same, fairly restrictive
@@ -110,6 +111,22 @@ def env() -> Mapping[str, Optional[str]]:
         # tdr:broad-jade-dev-data:snapshot/hca_mvp:/1
         # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1
         # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:2
+        #
+        # This variable tends to be large. If you get `Argument list too long`
+        # after sourcing the environment, a last-resort option is to compress
+        # the variable. The application automatically detects a compressed
+        # value and decompresses it on the fly. If the uncompressed definition
+        # of this variable is
+        #
+        # 'AZUL_CATALOGS': json.dumps({
+        #   ...
+        # }),
+        #
+        # the compressed version of that definition would be
+        #
+        # 'AZUL_CATALOGS': base64.b64encode(bz2.compress(json.dumps({
+        #   ...
+        # }).encode())).decode('ascii'),
         #
         'AZUL_CATALOGS': None,
 
