@@ -64,7 +64,8 @@ def env() -> Mapping[str, Optional[str]]:
     provide the value.
     """
     return {
-        # Set variables for the `dev` (short for development) deployment here.
+        # Set variables for the `anvildev` (short for AnVIL development)
+        # deployment here.
         #
         # Only modify this file if you intend to commit those changes. To change the
         # environment with a setting that's specific to you AND the deployment, create
