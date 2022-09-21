@@ -1618,7 +1618,6 @@ class TestHCAIndexer(IndexerTestCase):
             'development_stage': 'human adult stage',
             'diseases': ['normal'],
             'organism_age': '62 year',
-            'organism_age_unit': 'year',
             'organism_age_range': {
                 'gte': 1955232000.0,
                 'lte': 1955232000.0

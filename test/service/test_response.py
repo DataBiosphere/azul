@@ -1015,22 +1015,21 @@ class TestResponse(WebServiceTestCase):
         """
         Test response when using a filter with a None value
         """
-        test_data_values = [["year"], [None], ["year", None]]
+        test_data_values = [["normal"], [None], ["normal", None]]
         for test_data in test_data_values:
             with self.subTest(test_data=test_data):
-                params = self._params(size=10, filters={'organismAgeUnit': {'is': test_data}})
+                params = self._params(size=10, filters={'specimenDisease': {'is': test_data}})
                 url = self.base_url.set(path='/index/samples', args=params)
                 response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
-                organism_age_units = {
-                    None if oa is None else oa['unit']
+                diseases = {
+                    disease
                     for hit in response_json['hits']
-                    for donor in hit['donorOrganisms']
-                    for oa in donor['organismAge']
+                    for specimen in hit['specimens']
+                    for disease in specimen['disease']
                 }
-                # Assert that the organismAge unit values found in the response only match what was filtered for
-                self.assertEqual(organism_age_units, set(test_data))
+                self.assertEqual(diseases, set(test_data))
 
     def test_filter_by_projectId(self):
         """
@@ -1875,12 +1874,6 @@ class TestResponse(WebServiceTestCase):
                         'count': 1
                     }
                 ],
-                'organismAgeUnit': [
-                    {
-                        'term': 'year',
-                        'count': 1
-                    }
-                ]
             },
             # This project has multiple donor organisms
             '2c4724a4-7252-409e-b008-ff5c127c7e89': {
@@ -1900,12 +1893,6 @@ class TestResponse(WebServiceTestCase):
                         'count': 1
                     }
                 ],
-                'organismAgeUnit': [
-                    {
-                        'term': 'year',
-                        'count': 1
-                    }
-                ]
             },
             # This project has one donor but donor has no age
             'c765e3f9-7cfc-4501-8832-79e5f7abd321': {
@@ -1915,12 +1902,6 @@ class TestResponse(WebServiceTestCase):
                         'count': 1
                     }
                 ],
-                'organismAgeUnit': [
-                    {
-                        'term': None,
-                        'count': 1
-                    }
-                ]
             }
         }
         self._assert_term_facets(test_data,
