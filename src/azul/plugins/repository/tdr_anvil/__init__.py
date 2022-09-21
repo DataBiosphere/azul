@@ -626,6 +626,8 @@ class Plugin(TDRPlugin):
         },
         'file': {
             'file_id',
+            'file_ref',
+            'byte_size',
             'data_modality',
             'file_format',
             'reference_assembly'
@@ -671,16 +673,9 @@ class Plugin(TDRPlugin):
         }
     }
 
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        assert drs_path is None, drs_path
-        return None
 
-
-class TDRAnvilBundle(Bundle[TDRSourceRef]):
+class TDRAnvilBundle(TDRBundle):
     entity_type: EntityType = 'biosample'
-
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return None
 
     def add_entity(self,
                    entity: KeyReference,
@@ -696,7 +691,10 @@ class TDRAnvilBundle(Bundle[TDRSourceRef]):
                 'indexed': True,
                 'crc32': '',
                 'sha256': '',
-                **({'drs_path': None} if entity.entity_type == 'file' else {})
+                **(
+                    {'drs_path': self._parse_drs_uri(row.get('file_ref'))}
+                    if entity.entity_type == 'file' else {}
+                )
             },
             metadata=row
         )
@@ -728,3 +726,9 @@ class TDRAnvilBundle(Bundle[TDRSourceRef]):
         assert name not in self.metadata_files, name
         self.manifest.append(manifest_entry)
         self.metadata_files[name] = metadata
+
+    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
+        if file_ref is None:
+            return None
+        else:
+            return self._parse_drs_path(file_ref)

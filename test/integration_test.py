@@ -561,13 +561,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     @cache
     def _get_one_file(self, catalog: CatalogName) -> JSON:
         # Try to filter for an easy-to-parse format to verify its contents
+        if config.is_hca_enabled(catalog):
+            file_size_facet = 'fileSize'
+        elif config.is_anvil_enabled(catalog):
+            file_size_facet = 'size'
+        else:
+            assert False, catalog
         for filters in [self._fastq_filter(catalog), {}]:
             response = self._check_endpoint(path='/index/files',
                                             args=dict(catalog=catalog,
                                                       filters=json.dumps(filters),
                                                       size=1,
                                                       order='asc',
-                                                      sort='fileSize'))
+                                                      sort=file_size_facet))
             hits = json.loads(response)['hits']
             if hits:
                 hit = one(hits)
@@ -782,8 +788,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            if config.is_anvil_enabled(catalog):
-                self.skipTest('AnVIL does not support file downloads')
             file = self._get_one_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
             endpoint_url = config.service_endpoint

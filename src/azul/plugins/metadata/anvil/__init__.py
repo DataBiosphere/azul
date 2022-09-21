@@ -150,16 +150,26 @@ class Plugin(MetadataPlugin):
                     ]
                 },
                 'files': {
-                    f: f for f in [
-                        'data_modality',
-                        'document_id',
-                        'file_format',
-                        'file_id',
-                        'reference_assembly',
-                        'crc32',
-                        'sha256',
-                        'drs_path'
-                    ]
+                    **{
+                        f: f for f in [
+                            'data_modality',
+                            'document_id',
+                            'file_format',
+                            'file_id',
+                            'reference_assembly',
+                            'crc32',
+                            'sha256',
+                            'drs_path',
+                            'name'
+                        ]
+                    },
+                    # These field names are hard-coded in the implementation of
+                    # the repository service/controller.
+                    **{
+                        'version': 'fileVersion',
+                        'uuid': 'fileId',
+                        'byte_size': 'size'
+                    }
                 },
                 'libraries': {
                     f: f for f in [
