@@ -53,6 +53,7 @@ from azul.indexer.document import (
     EntityType,
 )
 from azul.plugins.repository.tdr import (
+    TDRBundle,
     TDRBundleFQID,
     TDRPlugin,
 )
@@ -469,7 +470,7 @@ class Checksums:
         return cls(**dict(map(extract_field, attr.fields(cls))))
 
 
-class TDRHCABundle(Bundle[TDRSourceRef]):
+class TDRHCABundle(TDRBundle):
 
     def add_entity(self,
                    *,
@@ -520,9 +521,6 @@ class TDRHCABundle(Bundle[TDRSourceRef]):
     links_columns: ClassVar[set[str]] = metadata_columns | {
         'project_id'
     }
-
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return manifest_entry.get('drs_path')
 
     def _add_manifest_entry(self,
                             *,
@@ -576,13 +574,6 @@ class TDRHCABundle(Bundle[TDRSourceRef]):
                             'Non-null `drs_uri` in file descriptor', external_drs_uri)
                     return external_drs_uri
             else:
-                # TDR stores the complete DRS URI in the file_id column, but we only
-                # index the path component. These requirements prevent mismatches in
-                # the DRS domain, and ensure that changes to the column syntax don't
-                # go undetected.
-                file_id = furl(file_id)
-                require(file_id.scheme == 'drs')
-                require(file_id.netloc == config.tdr_service_url.netloc)
-                return str(file_id.path).strip('/')
+                return self._parse_drs_path(file_id)
         else:
             return None

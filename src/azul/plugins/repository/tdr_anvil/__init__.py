@@ -21,7 +21,6 @@ from more_itertools import (
 )
 
 from azul import (
-    JSON,
     cached_property,
     require,
 )
@@ -39,6 +38,7 @@ from azul.indexer.document import (
     EntityType,
 )
 from azul.plugins.repository.tdr import (
+    TDRBundle,
     TDRBundleFQID,
     TDRPlugin,
     TDRSourceRef,
