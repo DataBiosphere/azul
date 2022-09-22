@@ -446,10 +446,7 @@
             "organism_age": [
                 ""
             ],
-            "organism_age_range": [],
-            "organism_age_unit": [
-                ""
-            ]
+            "organism_age_range": []
         },
         "relations": []
     },
@@ -783,9 +780,6 @@
                     1198368000.0,
                     1198368000.0
                 ]
-            ],
-            "organism_age_unit": [
-                "year"
             ]
         },
         "relations": []
@@ -3207,10 +3201,6 @@
                     1766016000.0,
                     1766016000.0
                 ]
-            ],
-            "organism_age_unit": [
-                "year",
-                ""
             ]
         },
         "relations": []

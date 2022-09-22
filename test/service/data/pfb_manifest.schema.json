@@ -755,16 +755,6 @@
                             }
                         },
                         {
-                            "name": "organism_age_unit",
-                            "namespace": "donors",
-                            "type": {
-                                "items": [
-                                    "string"
-                                ],
-                                "type": "array"
-                            }
-                        },
-                        {
                             "name": "organism_age_range",
                             "namespace": "donors",
                             "type": {

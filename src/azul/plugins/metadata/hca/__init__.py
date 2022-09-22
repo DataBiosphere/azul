@@ -214,7 +214,6 @@ class Plugin(MetadataPlugin):
                     'diseases': 'donorDisease',
                     'development_stage': 'developmentStage',
                     'organism_age': 'organismAge',
-                    'organism_age_unit': 'organismAgeUnit',
                     'organism_age_range': 'organismAgeRange',
                     'donor_count': 'donorCount'
                 },
@@ -264,7 +263,6 @@ class Plugin(MetadataPlugin):
             'nucleicAcidSource',
             'genusSpecies',
             'organismAge',
-            'organismAgeUnit',
             'biologicalSex',
             'sampleDisease',
             'specimenDisease',
