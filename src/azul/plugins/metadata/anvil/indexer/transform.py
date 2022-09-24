@@ -13,7 +13,6 @@ from functools import (
 from itertools import (
     chain,
 )
-import logging
 from typing import (
     Callable,
     Iterable,
@@ -44,6 +43,7 @@ from azul.indexer.document import (
     EntityType,
     FieldTypes,
     null_datetime,
+    null_int,
     null_str,
     pass_thru_int,
     pass_thru_json,
@@ -71,8 +71,6 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
-
-log = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -202,7 +200,7 @@ class BaseTransformer(Transformer, ABC):
             'analysis_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
-            'date_created': null_datetime,
+            'started_at_time': null_datetime,
             'date_submitted': null_datetime,
             'xref': [null_str]
         }
@@ -214,13 +212,11 @@ class BaseTransformer(Transformer, ABC):
             'anatomical_site': null_str,
             'biosample_id': null_str,
             'biosample_type': null_str,
-            'date_created': null_datetime,
-            'date_obtained': null_datetime,
+            'date_collected': null_datetime,
             'donor_age_at_collection_age_range': pass_thru_json,
-            'donor_age_at_collection_age_stage': null_str,
-            'donor_age_at_collection_age_unit': null_str,
-            'health_status': null_str,
-            'lab': null_str,
+            'donor_age_at_collection_life_stage': null_str,
+            'donor_age_at_collection_unit': null_str,
+            'disease': null_str,
             'preservation_state': null_str,
             'xref': [null_str]
         }
@@ -230,22 +226,22 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._entity_types(),
             'dataset_id': null_str,
-            'date_issued': null_datetime,
-            'description': null_str,
-            'last_modified_date': null_datetime,
-            'title': null_str,
-            'xref': null_str
+            'contact_point': [null_str],
+            'custodian': [null_str],
+            'entity_description': null_str,
+            'entity_title': null_str,
+            'last_modified_date': null_datetime
         }
 
     @classmethod
     def _donor_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'date_created': null_datetime,
+            'birth_date': null_datetime,
             'donor_id': null_str,
             'organism_type': null_str,
             'phenotypic_sex': null_str,
-            'reported_ethnicity': [null_str],
+            'reported_ethnicity': null_str,
             'xref': [null_str]
         }
 
@@ -253,14 +249,15 @@ class BaseTransformer(Transformer, ABC):
     def _file_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
+            'version': null_str,
+            'uuid': null_str,
             'data_modality': [null_str],
-            'date_created': null_datetime,
             'file_format': null_str,
-            'file_format_type': null_str,
             'file_id': null_str,
-            'file_type': null_str,
-            'genome_annotation': null_str,
-            'reference_assembly': null_str,
+            'byte_size': null_int,
+            'size': null_int,
+            'name': null_str,
+            'reference_assembly': [null_str],
             'crc32': null_str,
             'sha256': null_str,
             'drs_path': null_str
@@ -318,12 +315,8 @@ class BaseTransformer(Transformer, ABC):
                   ) -> MutableJSONs:
         entities = []
         for entity_id in sorted(entity_ids):
-            try:
-                manifest_entry = self._entries_by_entity_id[entity_id]
-            except KeyError:
-                log.warning('Missing entity from dangling reference: %r', entity_id)
-            else:
-                entities.append(factory(manifest_entry))
+            manifest_entry = self._entries_by_entity_id[entity_id]
+            entities.append(factory(manifest_entry))
         return entities
 
     def _activity(self, manifest_entry: JSON) -> MutableJSON:
@@ -351,8 +344,8 @@ class BaseTransformer(Transformer, ABC):
 
     def _biosample(self, manifest_entry: JSON) -> MutableJSON:
         metadata = self.bundle.metadata_files[manifest_entry['name']]
-        age_gte = metadata['donor_age_at_collection_age_lowerbound']
-        age_lte = metadata['donor_age_at_collection_age_upperbound']
+        age_gte = metadata['donor_age_at_collection_lower_bound']
+        age_lte = metadata['donor_age_at_collection_upper_bound']
         return self._entity(manifest_entry,
                             self._biosample_types(),
                             donor_age_at_collection_age_range={
@@ -367,7 +360,10 @@ class BaseTransformer(Transformer, ABC):
         return self._entity(manifest_entry, self._donor_types())
 
     def _file(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry, self._file_types())
+        metadata = self.bundle.metadata_files[manifest_entry['name']]
+        return self._entity(manifest_entry,
+                            self._file_types(),
+                            size=metadata['byte_size'])
 
     def _library(self, manifest_entry: JSON) -> MutableJSON:
         return self._entity(manifest_entry, self._library_types())

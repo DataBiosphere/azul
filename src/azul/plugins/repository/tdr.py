@@ -228,3 +228,19 @@ class TDRFileDownload(RepositoryFileDownload):
     @property
     def retry_after(self) -> Optional[int]:
         return None
+
+
+class TDRBundle(Bundle[TDRSourceRef]):
+
+    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
+        return manifest_entry.get('drs_path')
+
+    def _parse_drs_path(self, drs_uri: str) -> str:
+        # TDR stores the complete DRS URI as a BigQuery column, but we only
+        # index the path component. These requirements prevent mismatches in
+        # the DRS domain, and ensure that changes to the column syntax don't
+        # go undetected.
+        drs_uri = furl(drs_uri)
+        require(drs_uri.scheme == 'drs')
+        require(drs_uri.netloc == config.tdr_service_url.netloc)
+        return str(drs_uri.path).strip('/')

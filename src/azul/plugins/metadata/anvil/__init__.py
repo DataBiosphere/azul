@@ -117,14 +117,12 @@ class Plugin(MetadataPlugin):
                         'anatomical_site',
                         'biosample_id',
                         'biosample_type',
-                        'date_created',
-                        'date_obtained',
+                        'date_collected',
                         'document_id',
                         'donor_age_at_collection_age_range',
-                        'donor_age_at_collection_age_stage',
-                        'donor_age_at_collection_age_unit',
-                        'health_status',
-                        'lab',
+                        'donor_age_at_collection_life_stage',
+                        'donor_age_at_collection_unit',
+                        'disease',
                         'preservation_state',
                         'xref'
                     ]
@@ -132,12 +130,12 @@ class Plugin(MetadataPlugin):
                 'datasets': {
                     f: f for f in [
                         'dataset_id',
-                        'date_issued',
-                        'description',
+                        'contact_point',
+                        'custodian',
                         'document_id',
                         'last_modified_date',
-                        'title',
-                        'xref'
+                        'entity_description',
+                        'entity_title'
                     ]
                 },
                 'donors': {
@@ -152,20 +150,26 @@ class Plugin(MetadataPlugin):
                     ]
                 },
                 'files': {
-                    f: f for f in [
-                        'data_modality',
-                        'date_created',
-                        'document_id',
-                        'file_format',
-                        'file_format_type',
-                        'file_id',
-                        'file_type',
-                        'genome_annotation',
-                        'reference_assembly',
-                        'crc32',
-                        'sha256',
-                        'drs_path'
-                    ]
+                    **{
+                        f: f for f in [
+                            'data_modality',
+                            'document_id',
+                            'file_format',
+                            'file_id',
+                            'reference_assembly',
+                            'crc32',
+                            'sha256',
+                            'drs_path',
+                            'name'
+                        ]
+                    },
+                    # These field names are hard-coded in the implementation of
+                    # the repository service/controller.
+                    **{
+                        'version': 'fileVersion',
+                        'uuid': 'fileId',
+                        'byte_size': 'size'
+                    }
                 },
                 'libraries': {
                     f: f for f in [
@@ -192,13 +196,10 @@ class Plugin(MetadataPlugin):
             'assay_category',
             'biosample_type',
             'data_modality',
-            'title',
-            'donor_age_at_collection_age_stage',
+            'entity_title',
+            'donor_age_at_collection_life_stage',
             'file_format',
-            'file_format_type',
-            'file_type',
-            'genome_annotation',
-            'health_status',
+            'disease',
             'organism_type',
             'phenotypic_sex',
             'prep_material_name',
@@ -230,7 +231,7 @@ class Plugin(MetadataPlugin):
             ('contents', 'datasets'): {
                 'document_id': 'dataset_document_id',
                 'dataset_id': 'dataset_id',
-                'title': 'dataset_title'
+                'entity_title': 'dataset_title'
             },
             ('contents', 'donors'): {
                 'phenotypic_sex': 'phenotypic_sex',
@@ -239,10 +240,7 @@ class Plugin(MetadataPlugin):
             },
             ('contents', 'files'): {
                 'document_id': 'file_document_id',
-                'file_type': 'file_type',
                 'file_format': 'file_format',
-                'file_format_type': 'file_format_type',
-                'genome_annotation': 'file_genome_annotation',
                 'reference_assembly': 'file_reference_assembly',
                 'crc32': 'file_crc32',
                 'sha256': 'file_sha256',

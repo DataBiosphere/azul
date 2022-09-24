@@ -601,7 +601,11 @@ class TDRClient(SAMClient):
     def for_anonymous_user(cls) -> 'TDRClient':
         return cls(
             credentials_provider=ServiceAccountCredentialsProvider(
-                service_account=config.ServiceAccount.public
+                # FIXME: AnVIL deployments conflate indexer and public SAs
+                #        https://github.com/DataBiosphere/azul/issues/4398
+                service_account=(config.ServiceAccount.indexer
+                                 if config.is_anvil_enabled() and not config.is_hca_enabled()
+                                 else config.ServiceAccount.public)
             )
         )
 

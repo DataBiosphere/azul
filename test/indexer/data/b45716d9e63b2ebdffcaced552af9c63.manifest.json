@@ -1,0 +1,66 @@
+[
+    {
+        "uuid": "b45716d9e63b2ebdffcaced552af9c63",
+        "version": null,
+        "name": "links",
+        "indexed": true
+    },
+    {
+        "uuid": "24c39d3244d7fcdffbc6c02687fc4fbf",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "dataset_2d0c9e38-6c11-5545-b3c8-f847d949c48b",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "d71322aeb5817b95f667ab039bbdcee5",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "donor_b8a9b8cf-f790-5ae6-a404-802075ca37f2",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "cdee0b679f161d592640263f019da9f3",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "sequencingactivity_6a79c797-e281-5e29-8dd4-fa65b60ca375",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "a28a88b9a1bb69ab6890af1186d141fe",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "sequencingactivity_5f188f1a-2cf0-5b1d-bd63-d7911956202f",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "1ec7d53c60704283823335ad8f3aa660",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "biosample_002e71d4-3ceb-5509-b44c-f817272dd1bd",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "8b61770011f1806be5b2b8c2745ab077",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "file_8b63e8bd-f4e1-562e-919a-3e74e6a334f7",
+        "indexed": true,
+        "crc32": "",
+        "sha256": "",
+        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_fc91a2b3-2e8a-4baa-b362-e440498a35ef"
+    },
+    {
+        "uuid": "34f7121fa02428ebcc2e5e2b09b36e48",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "file_0c8d4d35-9f75-5a3c-b464-e68b471a22c4",
+        "indexed": true,
+        "crc32": "",
+        "sha256": "",
+        "drs_path": "v1_327fe285-3825-4d98-a2ac-332073d78189_af1bd596-53ad-4385-8d63-c6873c74deb9"
+    }
+]

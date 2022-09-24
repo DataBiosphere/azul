@@ -16,6 +16,9 @@ from azul import (
 from azul.collections import (
     dict_merge,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.service.elasticsearch_service import (
     ResponseTriple,
 )
@@ -40,7 +43,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
                 'anatomical_site'
             ],
             'datasets': [
-                'title'
+                'entity_title'
             ],
             'donors': [
                 'organism_type'
@@ -152,12 +155,21 @@ class AnvilSearchResponseStage(SearchResponseStage):
     def _make_contents(self, es_contents: JSON) -> MutableJSON:
         return {
             inner_entity_type: (
-                [one(inner_entities)]
+                [self._pivotal_entity(inner_entity_type, one(inner_entities))]
                 if inner_entity_type == self.entity_type else
                 list(map(partial(self._non_pivotal_entity, inner_entity_type), inner_entities))
             )
             for inner_entity_type, inner_entities in es_contents.items()
         }
+
+    def _pivotal_entity(self,
+                        inner_entity_type: str,
+                        inner_entity: JSON
+                        ) -> MutableJSON:
+        inner_entity = copy_json(inner_entity)
+        if inner_entity_type == 'files':
+            inner_entity['uuid'] = inner_entity['document_id']
+        return inner_entity
 
     def _non_pivotal_entity(self,
                             inner_entity_type: str,
@@ -181,9 +193,9 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'anatomical_site',
             'biosample_type',
             'donor_age_at_collection_age_range',
-            'donor_age_at_collection_age_unit',
-            'donor_age_at_collection_age_stage',
-            'health_status',
+            'donor_age_at_collection_unit',
+            'donor_age_at_collection_life_stage',
+            'disease',
             'preservation_state'
         },
         'datasets': {
@@ -199,9 +211,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'count',
             'data_modality',
             'file_format',
-            'file_format_type',
             'file_type',
-            'genome_annotation',
             'reference_assembly'
         },
         'libraries': {
