@@ -596,7 +596,7 @@ class Config:
         plugins: Mapping[str, Plugin]
         sources: Set[str]
 
-        _catalog_re = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
+        _catalog_re: str = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
         _catalog_re = r'(?=.{1,64}$)' + _catalog_re
         _it_catalog_suffix: ClassVar[str] = '-it'
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(
@@ -925,7 +925,7 @@ class Config:
     def terra_client_retries(self) -> int:
         return 0 if self._timing_is_restricted else 2
 
-    term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
+    term_re = re.compile(r'[a-z][a-z0-9_]{1,28}[a-z0-9]')
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
         value = self.environ.get(env_var_name, default='')
@@ -954,6 +954,8 @@ class Config:
         indexer = ''
         public = '_public'
         unregistered = '_unregistered'
+
+        value: str  # avoid type warning in PyCharm
 
         @property
         def id(self) -> str:
