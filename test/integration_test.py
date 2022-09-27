@@ -761,11 +761,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertIn(uuid_field_name, reader.fieldnames)
         bundle_uuids = rows[0][uuid_field_name].split(ManifestGenerator.column_joiner)
         self.assertGreater(len(bundle_uuids), 0)
-        # FIXME: Switch to using datarepo_row_id for partitioning and entity IDs
-        #        https://github.com/DataBiosphere/azul/issues/4341
-        if not config.is_anvil_enabled():
-            for bundle_uuid in bundle_uuids:
-                self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
+        for bundle_uuid in bundle_uuids:
+            self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
 
     def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
