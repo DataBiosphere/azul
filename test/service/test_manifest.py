@@ -1380,6 +1380,7 @@ class TestManifestCache(ManifestTestCase):
 @patch_source_cache
 class TestManifestResponse(ManifestTestCase):
 
+    @mock.patch.dict(os.environ, AZUL_PRIVATE_API='0')
     @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     def test_manifest(self, get_cached_manifest):
         """
