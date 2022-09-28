@@ -30,6 +30,16 @@ _select () {
 # https://github.com/boto/boto3/issues/1179#issuecomment-569940530
 #
 _preauth () {
+	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
+		gcloud config set project "$GOOGLE_PROJECT"
+		if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
+			gcloud auth application-default login
+			if ! gcloud auth application-default print-access-token > /dev/null; then
+				>&2 echo "Login failed"
+				return 1
+			fi
+		fi
+	fi
 	eval "$(
 		python - <<- "EOF"
 			from pathlib import Path
@@ -58,17 +68,17 @@ _preauth () {
 			print(f'export AWS_ACCESS_KEY_ID={credentials.access_key}')
 			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
-
-			print("All AWS interactions initiated in this shell will use temporary "
-			      "session credentials from now on. Use '_deauth' or run 'source "
-			      "environment' again to revert the effect of this command.",
-			      file=sys.stderr)
 		EOF
 	)"
+	>&2 echo "Temporary session credentials are in effect. Use '_deauth' " \
+	"or run 'source environment' again to revert the effect of this command."
 }
 
 _deauth () {
   unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+  if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
+    gcloud auth application-default revoke
+  fi
 }
 
 _deauth
