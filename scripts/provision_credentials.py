@@ -6,9 +6,7 @@ import os
 import time
 import uuid
 
-from google.oauth2 import (
-    service_account,
-)
+import google.auth
 import googleapiclient.discovery
 from googleapiclient.errors import (
     HttpError,
@@ -32,9 +30,9 @@ def parse_google_key(response):
 
 
 def get_google_service():
-    credentials = service_account.Credentials.from_service_account_file(
-        filename=os.environ['GOOGLE_APPLICATION_CREDENTIALS'],
-        scopes=['https://www.googleapis.com/auth/cloud-platform'])
+    credentials, project_id = google.auth.default(
+        scopes=['https://www.googleapis.com/auth/cloud-platform']
+    )
     return googleapiclient.discovery.build('iam', 'v1', credentials=credentials)
 
 

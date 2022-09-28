@@ -51,8 +51,7 @@ ticket has been completed. At that time, put the ticket back to triage.
 - [ ] Assigned the `system administrator` role to the replacement nominated by the project manager <sub>or the offboarded employee/contractor was not the sole `system administrator`</sub> 
 - [ ] Removed the offboarded employee/contractor's GitHub account from the `Azul Admins` team in the DataBiosphere organization on GitHub
 - [ ] Removed the offboarded employee/contractor's Google workspace account from all Google projects used in any deployment zones
-- [ ] Deleted the Google service account (name derived from the Google workspace account name) in all Google projects used in any deployment zones
-- [ ] Removed the offboarded employee/contractor's Google workspace account and the Google service account deleted above from the `azul-dev` group in Terra
+- [ ] Removed the offboarded employee/contractor's Google workspace account from the `azul-dev` group in Terra
 - [ ] Removed the offboarded employee/contractor from the `HumanCellAtlas` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
 - [ ] Removed the offboarded employee/contractor from the `DataBiosphere` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
 - [ ] Removed the offboarded employee/contractor from the `ucsc-cgp` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
