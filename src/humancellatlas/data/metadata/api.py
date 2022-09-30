@@ -761,6 +761,11 @@ class IpscInductionProtocol(Protocol):
 
 
 @dataclass(init=False)
+class TreatmentProtocol(Protocol):
+    pass
+
+
+@dataclass(init=False)
 class ImagingProtocol(Protocol):
     probe: List[ImagingProbe]  # A list so all the ImagingProbe objects can be tallied when indexed
 
@@ -1121,6 +1126,7 @@ entity_types = {
     'library_preparation_protocol': LibraryPreparationProtocol,
     'sequencing_protocol': SequencingProtocol,
     'imaging_preparation_protocol': ImagingPreparationProtocol,
+    'treatment_protocol': TreatmentProtocol,
 
     'project': Project,
 
