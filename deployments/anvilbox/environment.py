@@ -162,7 +162,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'GOOGLE_PROJECT': 'platform-anvil-dev',
 
-        'AZUL_DEPLOYMENT_INCARNATION': '1',
+        'AZUL_DEPLOYMENT_INCARNATION': '2',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-cpo2avhomdh6t7fetp91js78cdhm9p47.apps.googleusercontent.com',
     }
