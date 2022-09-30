@@ -54,10 +54,10 @@ def mkdict(items):
 
 
 anvil_sources = mkdict([
-    mksrc('datarepo-b0924e15', 'ANVIL_CMG_UWASH_DS_BAV_IRB_PUB_RD_202209011709', 177),
-    mksrc('datarepo-962bbe4a', 'ANVIL_CMG_UWASH_DS_EP_202209011710', 49),
-    mksrc('datarepo-a7cb3ea0', 'ANVIL_CMG_UWASH_GRU_202209011830', 2113),
-    mksrc('datarepo-5adb3720', 'ANVIL_CMG_UWASH_HMB_IRB_202209011746', 41)
+    mksrc('datarepo-1451969d', 'ANVIL_CMG_UWASH_DS_BAV_IRB_PUB_RD_20220921_202209211310', 177),
+    mksrc('datarepo-bd281341', 'ANVIL_CMG_UWASH_DS_EP_20220921_202209211403', 49),
+    mksrc('datarepo-17fcd708', 'ANVIL_CMG_UWASH_GRU_20220919_202209211317', 2113),
+    mksrc('datarepo-1dfe694b', 'ANVIL_CMG_UWASH_HMB_IRB_20220921_202209211635', 41),
 ])
 
 
