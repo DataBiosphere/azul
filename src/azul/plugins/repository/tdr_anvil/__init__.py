@@ -269,7 +269,7 @@ class Plugin(TDRPlugin):
         if not biosample_ids:
             return set()
         rows = self._run_sql(f'''
-            SELECT b.biosample_id, b.derived_from, b.donor_id, b.part_of_dataset_id
+            SELECT b.biosample_id, b.donor_id, b.part_of_dataset_id
             FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
             WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
@@ -284,10 +284,6 @@ class Plugin(TDRPlugin):
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='donor',
                                                            key=donor_id)))
-            for upstream_biosample_id in row['derived_from']:
-                result.add(Link.create(outputs=downstream_ref,
-                                       inputs=KeyReference(entity_type='biosample',
-                                                           key=upstream_biosample_id)))
         return result
 
     def _upstream_from_files(self,
@@ -461,30 +457,23 @@ class Plugin(TDRPlugin):
             'biosample_id',
             'biosample_type',
             'anatomical_site',
-            'date_collected',
             'donor_age_at_collection_lower_bound',
             'donor_age_at_collection_upper_bound',
-            'donor_age_at_collection_life_stage',
             'donor_age_at_collection_unit',
             'disease',
-            'preservation_state',
-            'xref'
         },
         'dataset': {
             'dataset_id',
-            'contact_point',
-            'custodian',
-            'last_modified_date',
-            'entity_description',
-            'entity_title',
+            'consent_group',
+            'data_use_permission',
+            'registered_identifier',
+            'title'
         },
         'donor': {
             'donor_id',
-            'birth_date',
             'organism_type',
             'phenotypic_sex',
             'reported_ethnicity',
-            'xref'
         },
         'file': {
             'file_id',
@@ -498,19 +487,16 @@ class Plugin(TDRPlugin):
             'alignmentactivity_id',
             'data_modality',
             'date_created',
-            'xref'
         },
         'assayactivity': {
             'assayactivity_id',
             'assay_category',
             'data_modality',
             'date_created',
-            'xref'
         },
         'sequencingactivity': {
             'sequencingactivity_id',
             'data_modality',
-            'started_at_time',
         }
     }
 

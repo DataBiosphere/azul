@@ -195,9 +195,7 @@ class BaseTransformer(Transformer, ABC):
             'activity_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
-            'started_at_time': null_datetime,
             'date_submitted': null_datetime,
-            'xref': [null_str]
         }
 
     @classmethod
@@ -207,13 +205,9 @@ class BaseTransformer(Transformer, ABC):
             'anatomical_site': null_str,
             'biosample_id': null_str,
             'biosample_type': null_str,
-            'date_collected': null_datetime,
             'donor_age_at_collection_age_range': pass_thru_json,
-            'donor_age_at_collection_life_stage': null_str,
             'donor_age_at_collection_unit': null_str,
             'disease': null_str,
-            'preservation_state': null_str,
-            'xref': [null_str]
         }
 
     @classmethod
@@ -221,23 +215,20 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._entity_types(),
             'dataset_id': null_str,
-            'contact_point': [null_str],
-            'custodian': [null_str],
-            'entity_description': null_str,
-            'entity_title': null_str,
-            'last_modified_date': null_datetime
+            'consent_group': [null_str],
+            'data_use_permission': [null_str],
+            'registered_identifier': [null_str],
+            'title': null_str,
         }
 
     @classmethod
     def _donor_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'birth_date': null_datetime,
             'donor_id': null_str,
             'organism_type': null_str,
             'phenotypic_sex': null_str,
             'reported_ethnicity': null_str,
-            'xref': [null_str]
         }
 
     @classmethod

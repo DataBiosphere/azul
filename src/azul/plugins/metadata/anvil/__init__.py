@@ -104,7 +104,6 @@ class Plugin(MetadataPlugin):
                         'data_modality',
                         'date_submitted',
                         'document_id',
-                        'xref'
                     ]
                 },
                 'biosamples': {
@@ -112,36 +111,29 @@ class Plugin(MetadataPlugin):
                         'anatomical_site',
                         'biosample_id',
                         'biosample_type',
-                        'date_collected',
                         'document_id',
                         'donor_age_at_collection_age_range',
-                        'donor_age_at_collection_life_stage',
                         'donor_age_at_collection_unit',
                         'disease',
-                        'preservation_state',
-                        'xref'
                     ]
                 },
                 'datasets': {
                     f: f for f in [
                         'dataset_id',
-                        'contact_point',
-                        'custodian',
+                        'consent_group',
+                        'data_use_permission',
                         'document_id',
-                        'last_modified_date',
-                        'entity_description',
-                        'entity_title'
+                        'registered_identifier',
+                        'title',
                     ]
                 },
                 'donors': {
                     f: f for f in [
-                        'birth_date',
                         'document_id',
                         'donor_id',
                         'organism_type',
                         'phenotypic_sex',
                         'reported_ethnicity',
-                        'xref'
                     ]
                 },
                 'files': {
@@ -181,13 +173,11 @@ class Plugin(MetadataPlugin):
             'assay_category',
             'biosample_type',
             'data_modality',
-            'entity_title',
-            'donor_age_at_collection_life_stage',
+            'title',
             'file_format',
             'disease',
             'organism_type',
             'phenotypic_sex',
-            'preservation_state',
             'reference_assembly',
             'reported_ethnicity',
         ]
@@ -215,7 +205,7 @@ class Plugin(MetadataPlugin):
             ('contents', 'datasets'): {
                 'document_id': 'dataset_document_id',
                 'dataset_id': 'dataset_id',
-                'entity_title': 'dataset_title'
+                'title': 'dataset_title'
             },
             ('contents', 'donors'): {
                 'phenotypic_sex': 'phenotypic_sex',

@@ -43,7 +43,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
                 'anatomical_site'
             ],
             'datasets': [
-                'entity_title'
+                'title'
             ],
             'donors': [
                 'organism_type'
@@ -189,9 +189,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'biosample_type',
             'donor_age_at_collection_age_range',
             'donor_age_at_collection_unit',
-            'donor_age_at_collection_life_stage',
             'disease',
-            'preservation_state'
         },
         'datasets': {
             'dataset_id',
