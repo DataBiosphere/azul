@@ -591,15 +591,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': ['wafv2:*'],
                         'resources': ['*']
-                    },
-
-                    # SNS
-                    {
-                        "actions": [
-                            'sns:*'
-                        ],
-                        "resources": aws_service_arns('SNS',
-                                                      TopicName='azul-*')
                     }
                 ]
             },
@@ -735,6 +726,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': ['elasticloadbalancing:*'],
                         'resources': ['*']
+                    },
+
+                    # SNS
+                    {
+                        "actions": [
+                            'sns:*'
+                        ],
+                        "resources": aws_service_arns('SNS',
+                                                      TopicName='azul-*')
                     }
                 ]
             }
