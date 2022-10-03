@@ -105,6 +105,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
         'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_PRIVATE_API': '1',
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
@@ -160,6 +161,8 @@ def env() -> Mapping[str, Optional[str]]:
         # Set `GOOGLE_APPLICATION_CREDENTIALS` in `environment.local.py`
         #
         'GOOGLE_PROJECT': 'platform-anvil-dev',
+
+        'AZUL_DEPLOYMENT_INCARNATION': '2',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-cpo2avhomdh6t7fetp91js78cdhm9p47.apps.googleusercontent.com',
     }

@@ -715,7 +715,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             }
                         ] if config.domain_name == 'azul.data.humancellatlas.org' else [
                         ]
-                    )
+                    ),
+                    # Manage VPN infrastructure for private API
+                    # FIXME: Tighten GitLab security boundary
+                    #        https://github.com/DataBiosphere/azul/issues/4207
+                    {
+                        'actions': ['ec2:*'],
+                        'resources': ['*']
+                    },
+                    {
+                        'actions': ['elasticloadbalancing:*'],
+                        'resources': ['*']
+                    }
                 ]
             }
         },

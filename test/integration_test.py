@@ -788,6 +788,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
+            # FIXME: File downloads are broken on AnVIL deployments
+            #        https://github.com/DataBiosphere/azul/issues/4507
+            if config.is_anvil_enabled(catalog):
+                self.skipTest('File downloads are broken on AnVIL deployments')
             file = self._get_one_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
             endpoint_url = config.service_endpoint
