@@ -48,12 +48,16 @@ class Versions(frozenset[Version]):
         return super().__new__(cls, versions)
 
     def __str__(self) -> str:
-        return ','.join('==' + v for v in self)
+        return ','.join('==' + v for v in sorted(self))
 
     def __or__(self, other: 'Versions') -> 'Versions':
         # We need to hand-implement this because the overridden base class
         # method returns a base class instance, unfortunately.
         return type(self)(*self, *other)
+
+    def __lt__(self, other):
+        # Currently we only support sorting singletons
+        return one(self) < one(other)
 
 
 @dataclass(frozen=True)
@@ -82,6 +86,14 @@ class PinnedRequirement:
         else:
             return PinnedRequirement(name=other.name,
                                      versions=self.versions | other.versions)
+
+    def __lt__(self, other: 'PinnedRequirement'):
+        if self.name < other.name:
+            return True
+        elif self.name == other.name:
+            return self.versions < other.versions
+        else:
+            return False
 
     def __str__(self) -> str:
         assert self.versions
@@ -235,7 +247,7 @@ class Main:
         path = self.project_root / file_name
         log.info('Writing transitive requirements to %s', path)
         with open(path, 'w') as f:
-            f.writelines(sorted(f'{req}\n' for req in reqs))
+            f.writelines(f'{req}\n' for req in sorted(reqs))
 
 
 if __name__ == '__main__':
