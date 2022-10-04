@@ -1231,6 +1231,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         managed_access_files: JSONs = self.random.choice(bundles)['files']
         managed_access_file_id = self.random.choice(managed_access_files)['uuid']
         manifest_url.set(args={
+            'catalog': catalog,
             'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
             'format': 'curl'
         })
@@ -1242,6 +1243,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 self.assertEqual(response.status, 301)
                 time.sleep(int(response.headers['Retry-After']))
+                manifest_url.url = response.headers['Location']
         token = self._tdr_client.credentials.token
         expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
         command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
