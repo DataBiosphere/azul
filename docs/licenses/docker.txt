@@ -1,0 +1,51 @@
+https://www.docker.com/legal/docker-software-end-user-license-agreement/
+
+THIS DOCKER SOFTWARE END USER LICENSE AGREEMENT (“AGREEMENT”) IS BY AND BETWEEN DOCKER, INC., LOCATED AT 318 CAMBRIDGE AVENUE, PALO ALTO, CALIFORNIA 94306 USA (“DOCKER”) AND THE INDIVIDUAL OR LEGAL ENTITY WHO IS USING THE APPLICABLE SOFTWARE MADE AVAILABLE BY DOCKER (“CUSTOMER”) AND GOVERNS ALL USE BY CUSTOMER OF SUCH SOFTWARE.
+
+BY DOWNLOADING OR USING THE SOFTWARE YOU EXPRESSLY ACCEPT AND AGREE TO THE TERMS OF THIS AGREEMENT. IF YOU ARE AN INDIVIDUAL AGREEING TO THE TERMS OF THIS AGREEMENT ON BEHALF OF AN ENTITY, SUCH AS YOUR EMPLOYER, YOU REPRESENT THAT YOU HAVE THE LEGAL AUTHORITY TO BIND THAT ENTITY AND “YOU” AND “YOUR” SHALL REFER HEREIN TO SUCH ENTITY. IF YOU DO NOT HAVE SUCH AUTHORITY, OR IF YOU DO NOT AGREE WITH ALL THE TERMS OF THIS AGREEMENT, YOU MUST NOT DOWNLOAD, INSTALL, DEPLOY, OR USE THE SOFTWARE.
+
+1. DEFINITIONS
+
+The following capitalized terms shall have the meanings set forth below:
+
+1.1 “Licensed Software” means the Docker software licensed to you pursuant to the terms of this Agreement, excluding any Open Source Software contained therein.
+
+1.2 “Open Source Software” means Docker or third party software that is distributed or otherwise made available as “free software”, “open source software” or under a similar licensing or distribution model.
+
+2. LICENSE
+
+2.1 Licensed Software. Subject to your compliance with the terms and conditions of this Agreement, Docker hereby grants You a limited, non-exclusive, non-transferable, non-sub-licensable license to install, copy and use the Licensed Software solely for your internal use.
+
+2.2 Open Source Software. If applicable, Open Source Software is distributed or made available under the terms of the open source license agreements referenced in the applicable distribution or the applicable help, notices, about or source files. Copyrights and other proprietary rights to the Open Source Software are held by the copyright holders identified in the applicable distribution or the applicable help, notices, about or source files.
+
+3. RESTRICTED ACTIVITIES
+
+You shall not, and shall not encourage any third party to: (a) modify, adapt, alter, translate, or create derivative works of the Licensed Software; (b) reverse-engineer, decompile, disassemble, or attempt to derive the source code for the Licensed Software, in whole or in part, except to the extent that such activities are permitted under applicable law; (c) distribute, license, sublicense, lease, rent, loan, or otherwise transfer the Licensed Software to any third party; (d) remove, alter, or obscure in any way the proprietary rights notices (including copyright, patent, and trademark notices and symbols) of Docker or its suppliers contained on or within any copies of the Licensed Software; (e) use the Licensed Software for the purpose of creating a product or service competitive with the Licensed Software; (f) use the Licensed Software for any time-sharing, outsourcing, service bureau, hosting, application service provider or like purposes; (g) disclose the results of any benchmark tests on the Licensed Software without Docker’s prior written consent; or (h) use the Licensed Software other than as described in the documentation provided therewith, or for any unlawful purpose.
+
+4. OWNERSHIP
+
+Docker and its licensors own and retain all right, title, and interest, including all intellectual property rights, in and to the Licensed Software, including any improvements, modifications, and enhancements to it. Except for the rights expressly granted in this Agreement, You shall acquire no other rights, express or implied, in or to the Licensed Software, and all rights not expressly provided to you hereunder are reserved by Docker and its licensors. All the copies of the Licensed Software provided or made available hereunder are licensed, not sold.
+
+5. FEEDBACK
+
+Feedback means any comments or other feedback You may provide to Docker, at your sole discretion, concerning the functionality and performance of the Licensed Software, including identification of potential errors and improvements. By submitting any Feedback, You hereby assign to Docker all right, title, and interest in and to the Feedback, if any.
+
+6. NO WARRANTIES
+
+YOU EXPRESSLY UNDERSTAND AND AGREE THAT ALL USE OF THE LICENSED SOFTWARE IS AT YOUR SOLE RISK AND THAT THE LICENSED SOFTWARE IS PROVIDED “AS IS” AND “AS AVAILABLE.” DOCKER, ITS SUBSIDIARIES AND AFFILIATES, AND ITS LICENSORS MAKE NO EXPRESS WARRANTIES AND DISCLAIM ALL IMPLIED WARRANTIES REGARDING THE LICENSED SOFTWARE, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT, TOGETHER WITH ANY AND ALL WARRANTIES ARISING FROM COURSE OF DEALING OR USAGE IN TRADE. NO ADVICE OR INFORMATION, WHETHER ORAL OR WRITTEN, OBTAINED FROM DOCKER OR ELSEWHERE SHALL CREATE ANY WARRANTY NOT EXPRESSLY STATED IN THIS AGREEMENT. WITHOUT LIMITING THE GENERALITY OF THE FOREGOING, DOCKER, ITS SUBSIDIARIES AND AFFILIATES, AND ITS LICENSORS DO NOT REPRESENT OR WARRANT TO YOU THAT: (A) YOUR USE OF THE LICENSED SOFTWARE WILL MEET YOUR REQUIREMENTS, OR (B) YOUR USE OF THE LICENSED SOFTWARE WILL BE UNINTERRUPTED, TIMELY, SECURE OR FREE FROM ERROR. NOTWITHSTANDING THE FOREGOING, NOTHING HEREIN SHALL EXCLUDE OR LIMIT DOCKER’S WARRANTY OR LIABILITY FOR LOSSES WHICH MAY NOT BE LAWFULLY EXCLUDED OR LIMITED BY APPLICABLE LAW. YOU UNDERSTAND AND ACKNOWLEDGE THAT THE LICENSED SOFTWARE IS NOT DESIGNED, INTENDED OR WARRANTED FOR USE IN HAZARDOUS ENVIRONMENTS REQUIRING FAIL-SAFE CONTROLS, INCLUDING WITHOUT LIMITATION, OPERATION OF NUCLEAR FACILITIES, AIRCRAFT NAVIGATION OR COMMUNICATION SYSTEMS, AIR TRAFFIC CONTROL, AND LIFE SUPPORT OR WEAPONS SYSTEMS.
+
+7. INDEMNIFICATION BY YOU
+
+You agree to hold harmless and indemnify Docker and its subsidiaries, affiliates, officers, agents, employees, advertisers, licensors, suppliers or partners from and against any third party claim arising from or in any way related to your breach of this Agreement, use of the Licensed Software, or violation of applicable laws, rules or regulations in connection with the Licensed Software, including any liability or expense arising from all claims, losses, damages (actual and consequential), suits, judgments, litigation costs and attorneys’ fees, of every kind and nature.
+
+8. LIMITATION OF LIABILITY
+
+YOU EXPRESSLY UNDERSTAND AND AGREE THAT DOCKER, ITS SUBSIDIARIES AND AFFILIATES, AND ITS LICENSORS SHALL NOT BE LIABLE TO YOU FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL CONSEQUENTIAL OR EXEMPLARY DAMAGES INCURRED BY YOU, HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, INCLUDING, BUT NOT LIMITED TO, ANY LOSS OF PROFIT (WHETHER INCURRED DIRECTLY OR INDIRECTLY), ANY LOSS OF GOODWILL OR BUSINESS REPUTATION, ANY LOSS OF DATA SUFFERED, COST OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR OTHER INTANGIBLE LOSS. THE FOREGOING LIMITATIONS ON DOCKER’S LIABILITY SHALL APPLY WHETHER OR NOT DOCKER HAS BEEN ADVISED OF OR SHOULD HAVE BEEN AWARE OF THE POSSIBILITY OF ANY SUCH LOSSES ARISING. NOTWITHSTANDING THE FOREGOING, NOTHING HEREIN SHALL EXCLUDE OR LIMIT DOCKER’S LIABILITY FOR LOSSES WHICH MAY NOT BE LAWFULLY EXCLUDED OR LIMITED BY APPLICABLE LAW. THE TOTAL LIABILITY OF DOCKER ARISING OUT OF OR RELATED TO THIS AGREEMENT WILL NOT EXCEED USD $100.
+
+9. EXPORT RESTRICTIONS
+
+You understand that the software provided under this Agreement may contain encryption technology and other software programs that may require an export license from the U.S. State Department and that export or re-export of the software to certain entities (such as a foreign government and its subdivisions) and certain countries is prohibited. You agree that you will comply with all applicable export and import control laws and regulations of the United States and the foreign jurisdiction in which the software is used and, in particular, You will not export or re-export the software without all required United States and foreign government licenses. You will defend, indemnify, and hold harmless Docker and its suppliers and licensors from and against any violation of such laws or regulations by you or any of your agents, officers, directors or employees.
+
+10. MISCELLANEOUS
+
+The Licensed Software and any other software covered under this Agreement are “commercial items” as that term is defined at 48 C.F.R. 2.101; consisting of “commercial computer software” and “commercial computer software documentation” as such terms are used in 48 C.F.R. 12.212. Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4, all U.S. Government end users acquire the Licensed Software and any other software and documentation covered under this Agreement with only those rights set forth herein. This Agreement will be governed by the laws of the State of California without reference to conflict of law principles. Each party agrees to submit to the exclusive jurisdiction of the courts located within the county of Santa Clara, California to resolve any legal matter arising from this Agreement. You may not assign any of your rights or obligations under this Agreement, whether by operation of law or otherwise, without the prior written consent of Docker. Notwithstanding the foregoing, Docker may assign the entirety of its rights and obligations under this Agreement without your consent. The application of the UN Convention of International Sale of Goods to this Agreement is disclaimed in its entirety. This Agreement constitutes the entire agreement between You and Docker governing your use of the Licensed Software and supersedes any prior agreements between You and Docker, including but not limited to, any prior versions of this Agreement. The failure of Docker to enforce its rights under this Agreement at any time for any period shall not be construed as a waiver of such rights. If any provision of this Agreement is held invalid or unenforceable, the remainder of this Agreement will continue in full force and effect and the invalid or unenforceable provision shall be reformed to the extent necessary to make it valid and enforceable.

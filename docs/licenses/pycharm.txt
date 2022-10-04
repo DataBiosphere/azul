@@ -1,0 +1,44 @@
+https://sales.jetbrains.com/hc/en-gb/articles/115001015290-Where-can-I-find-the-EULA-End-User-License-Agreement-
+
+EULA for Community editions:
+Community Edition is open-source, licensed under Apache 2.0.
+It can be used for commercial development.
+
+----------------------------------------
+
+https://sales.jetbrains.com/hc/en-gb/articles/206544679-What-is-our-licensing-model-
+
+JetBrains adopted a subscription-based licensing model for selected products on November 2, 2015.  This new model allows our customers to purchase monthly and yearly subscriptions for one or more products.
+
+Renewing your subscription will keep it active, allowing you to continuously install and use the latest versions of the Products as they are released.  Please note, our subscription-based licensing model also grants a perpetual fallback license.
+
+Subscriptions of least 365 consecutive days qualify for a Perpetual Fallback License. The Perpetual Fallback license lets you keep using the subscribed to products forever at no additional cost if you have ever decided to not renew your subscription. However, the Perpetual Fallback License will be limited to the version of the product available at the time of purchase or 12 months prior.
+
+An All Products option is also available providing our customers with access to all our desktop products (IDEs, utilities, and extensions).
+
+For JetBrains Team Tools
+
+    - TeamCity, YouTrack Standalone, and Upsource are covered under a normal perpetual licensing model.
+    - YouTrack InCloud and Space are covered under a subscription licensing model.
+
+----------------------------------------
+
+https://sales.jetbrains.com/hc/en-gb/articles/207240845
+
+What is a perpetual fallback license?
+
+A perpetual fallback license is a license that allows you to use a specific version of software without an active subscription for it. The license also includes all bugfix updates, more specifically in X.Y.Z version all Z releases are included.
+
+When purchasing an annual subscription, you will immediately get a perpetual fallback license for the exact version available at the time.
+
+If paying on a monthly basis, as soon as you pay for 12 consecutive months, you will receive this perpetual fallback license providing you with access to the exact product version for when your 12 consecutive months subscription started. You will receive perpetual fallback licenses for every version you’ve paid 12 consecutive months for.
+
+This option is available whether you subscribe to a single product or the ‘All Products’ option.
+
+If you are an Administrator, the version each subscription will continue working with after it expires is shown in the "Fallback Product" column.
+
+If you are a subscription license User, the version you can continue using after the subscription expires is shown at the main login page at https://account.jetbrains.com/login
+
+A detailed description on how to obtain and install a fallback license is available here. https://sales.jetbrains.com/hc/en-gb/articles/360001186840-How-do-I-Obtain-and-Install-my-fallback-perpetual-license-
+
+For related FAQ articles, please refer here. https://sales.jetbrains.com/hc/en-gb/sections/201619995-Our-Licensing-Model-and-JetBrains-Toolbox

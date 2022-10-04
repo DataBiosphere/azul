@@ -1,0 +1,121 @@
+https://cloud.google.com/terms/service-terms
+
+Service Specific Terms
+
+These Service Specific Terms are incorporated into the agreement under which Google has agreed to provide Google Cloud Platform (as described at https://cloud.google.com/terms/services) to Customer (the “Agreement”). If the Agreement authorizes the resale or supply of Google Cloud Platform under a Google Cloud partner or reseller program, then all references to Customer in the Service Specific Terms mean Partner or Reseller (as applicable), and all references to Customer Data in the Service Specific Terms mean Partner Data. Capitalized terms used but not defined in the Service Specific Terms have the meaning given to them in the Agreement.
+
+General Service Terms
+
+1. Data Location. Customer may configure the Services listed at https://cloud.google.com/terms/data-residency to store Customer Data in a specific Region or Multi-Region as detailed in the Cloud Locations Page, and Google will store that Customer Data at rest only in the selected Region or Multi-Region. The Services do not limit the locations from which Customer or Customer End Users may access Customer Data or to which they may move Customer Data. For clarity, Customer Data does not include resource identifiers, attributes, or other data labels.
+
+2. Operations of Communications Services. Notwithstanding any telecommunications restrictions in the Agreement, Customer may use the Services for hosting capacity in connection with Customer’s provision of telecommunications services to Customer End Users if (a) Customer obtains, maintains, and complies with all necessary regulatory licenses, registrations or other applicable requirements relating to such telecommunications services, and (b) Customer does not use or resell the Services to provide telecommunications connectivity, including for virtual private network services, network transport, or voice or data transmission.
+
+3. General Software Terms. The following terms apply to all Software:
+
+    a. License. Google grants Customer a royalty-free (unless otherwise stated by Google), non-exclusive, non-sublicensable, non-transferable license during the Term to reproduce and use the Software ordered by Customer on systems owned, operated, or managed by or on behalf of Customer in accordance with (i) the Agreement, and (ii) if applicable, the Scope of Use. Customer may authorize its and its Affiliates' employees, agents, and subcontractors (collectively, “Software Users”) to use the Software in accordance with this section (License), so long as Customer remains responsible. Customer may make a reasonable number of copies of the Software for back-up and archival purposes. For clarity, Software does not constitute Services.
+
+    b. Documentation. Google may provide Documentation describing the appropriate operation of the Software, including a description of how Software is properly used, and whether and how the Software collects and processes data. Customer will comply with any restrictions in the Documentation regarding Software use.
+
+    c. Compliance With Scope of Use. Within 30 days of Google’s reasonable written request, Customer will provide a sufficiently detailed written report describing its usage in accordance with the applicable Scope of Use of each Software product used by Customer and its Software Users during the requested period. If requested, Customer will provide reasonable assistance and access to information to verify the accuracy of Customer’s Software usage report(s).
+
+    d. Other Warranties and Compliance. Each party represents and warrants that it will comply with all laws and regulations applicable to its provision or use of the Software, as applicable. Customer will: (i) ensure that Customer and its Software Users' use of the Software complies with the Agreement and the restrictions in the Agreement applying to Customer's use of the Services; (ii) use commercially reasonable efforts to prevent and terminate any unauthorized access to or use of the Software; and (iii) promptly notify Google of any unauthorized access to or use of the Software of which Customer becomes aware. If the Software contains open source or third-party components, those components may be subject to separate license agreements, which Google will make available to Customer. Customer is solely responsible for complying with the terms of any third-party sources from which Customer elects to migrate its workloads onto the Services, and represents and warrants that such third-party sources permit the use of Software to migrate applications away from such sources. If the Agreement terminates or expires, then Customer will stop using all Software and delete it from Customer's systems.
+
+4. Premium Software Terms. The following terms apply only to Premium Software:
+
+    a. Introduction. Google makes certain Software available under the Agreement described as “Premium Software” at https://cloud.google.com/terms/services(“Premium Software”). Customer will pay applicable Fees for any Premium Software it obtains as described at the Fees URL. Premium Software is Google’s Confidential Information.
+
+    b. Software Warranty. Google warrants to Customer that for one year from its delivery, Premium Software will perform in material conformance with the applicable Documentation. This warranty will not apply if (i) Customer does not notify Google of the non-conformity within 30 days after Customer first discovers it, (ii) Customer modifies Premium Software or uses it in violation of the Agreement, or (iii) the non-conformity is caused by any third-party hardware, software, services, or other offerings or materials, in each case not provided by Google.
+
+    If Google breaches this warranty, then Google will, in its discretion, repair or replace the impacted Premium Software at no additional charge. If Google does not believe that repairing or replacing would be commercially reasonable, then Google will notify Customer and (A) Customer will immediately cease use of the impacted Premium Software and (B) Google will refund or credit any prepaid amounts for the impacted Premium Software and Customer will be relieved of any then-current commitment to pay for future use of the impacted Premium Software. Without limiting the parties’ termination rights, this section (Software Warranty) states Customer’s sole remedy for Google’s breach of the warranty in this section (Software Warranty).
+
+    c. Software Indemnification. Google’s indemnity obligations under the Agreement with respect to allegations of infringement of third-party Intellectual Property Rights apply to Premium Software, and Customer’s indemnity obligations under the Agreement with respect to Customer’s use of the Services apply to Customer’s use of Premium Software. In addition to any other indemnity exclusions in the Agreement, Google’s indemnity obligations will not apply to the extent the underlying allegation arises from modifications to Premium Software not made by Google or use of versions of Premium Software that are no longer supported by Google.
+
+    d. Technical Support. Unless otherwise specified by Google, Google will make TSS available for Premium Software for an additional charge, in accordance with the TSS Guidelines.
+
+    e. Compliance. Premium Software may transmit to Google metering information reasonably necessary to verify that use of the Premium Software complies with the Scope of Use, as described in the applicable Documentation. Customer will not disable or interfere with the transmission of such metering information.
+
+    f. Updates and Maintenance. During the Term, Google will make available to Customer copies of all current versions, updates, and upgrades of Premium Software, promptly upon general availability, as described in the Documentation. Unless otherwise stated in the Documentation for the applicable component of Premium Software, Google will maintain the current release of Premium Software and the two versions immediately preceding the current release, including by providing reasonable bug fixes and security patches. Maintenance for any Premium Software may be discontinued with one year’s notice from Google, except Google may eliminate maintenance for a version and require upgrading to a maintained version to address a material security risk or when reasonably necessary to avoid an infringement claim or comply with applicable law.
+
+5. Pre-GA Offerings Terms. Google may make available to Customer pre-general availability Google Cloud Platform features, services or software that are either not yet listed at https://cloud.google.com/terms/services or identified as “Early Access,” “Alpha,” “Beta,” “Preview,” “Experimental,” or a similar designation in related documentation or materials (collectively, “Pre-GA Offerings”). While Pre-GA Offerings are not Services or Software, Customer’s use of Pre-GA Offerings is subject to the terms of the Agreement applicable to Services (or Software, if applicable), as amended by this Section 5.
+
+Customer may provide feedback and suggestions about the Pre-GA Offerings to Google, and Google and its Affiliates may use any feedback or suggestions provided without restriction and without obligation to Customer.
+
+PRE-GA OFFERINGS ARE PROVIDED “AS IS” WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES OR REPRESENTATIONS OF ANY KIND. Pre-GA Offerings (a) may be changed, suspended or discontinued at any time without prior notice to Customer and (b) are not covered by any SLA or Google indemnity. Except as otherwise expressly indicated in a written notice or the documentation for a given Pre-GA Offering, (i) Pre-GA Offerings may not be covered by TSS, (ii) the Cloud Data Processing Addendum does not apply to Pre-GA Offerings and Customer should not use Pre-GA Offerings to process personal data or other data subject to legal or regulatory compliance requirements, and (iii) Google’s data location commitments set out in these Service Specific Terms will not apply to Pre-GA Offerings. With respect to Pre-GA Offerings, to the maximum extent permitted by applicable law, neither Google nor its suppliers will be liable for any amounts in excess of the lesser of (A) the limitation on the amount of liability stated in the Agreement or (B) $25,000. Nothing in the preceding sentence will affect the remaining terms of the Agreement relating to liability (including any specific exclusions from any limitation of liability). Customer's access to and use of any Pre-GA Offering is subject to any applicable Scope of Use. Either party may terminate Customer's use of a Pre-GA Offering at any time with written notice to the other party. Certain Pre-GA Offerings may be subject to additional terms stated below.
+
+6. Google-Managed Multi-Cloud. The then-current services described as “Google-Managed Multi-Cloud Services” at https://cloud.google.com/terms/services ("Google-Managed MCS") are Google services, products and features that are hosted on the infrastructure of a third party cloud provider (“Multi-Cloud Service Third-Party Provider”). While the Google-Managed MCS are not Services or Software, Customer’s use of the Google-Managed MCS is subject to the terms of the Agreement applicable to Services (or Software, if applicable), as amended by this Section 6. In addition to the terms of the Agreement and notwithstanding anything to the contrary in the “Conflicting Terms” section of the Agreement, Customer’s use of the Google-Managed MCS is subject to the following terms:
+
+a. Admin Console. The Google-Managed MCS may not be available through the Admin Console.
+
+b. Multi-Cloud Service Third-Party Provider Relationship.
+
+i. To make use of the Google-Managed MCS, Customer must maintain an independent account and billing relationship with the applicable Multi-Cloud Service Third-Party Provider. Customer is responsible for entering into and complying with an appropriate agreement with the applicable Multi-Cloud Service Third-Party Provider governing Customer’s use of the Multi-Cloud Service Third-Party Provider’s services and the Multi-Cloud Service Third-Party Provider’s processing of personal data on behalf of Customer. The Agreement does not obligate Google or the Multi-Cloud Service Third-Party Provider to provide the Multi-Cloud Service Third-Party Provider’s services that are necessary for the Customer to use the Google-Managed MCS.
+
+ii. If the Multi-Cloud Service Third-Party Provider makes a change to its services or terms, and Google reasonably concludes that its provision of the Google-Managed MCS is no longer commercially feasible as a result of the change, Google may immediately Suspend all or part of Customer's use of the impacted Google-Managed MCS, or make any other discontinuance or backwards-incompatible change necessary to continue to provide the Google-Managed MCS. Google will lift any such Suspension once the circumstances giving rise to the Suspension have been resolved. To the extent Google may Suspend or modify the Google-Managed MCS as set forth in this Section, the Google-Managed MCS are not subject to the sections of the Agreement covering discontinuance and backwards-incompatible changes.
+
+c. Data Processing. Processing of data by the Google-Managed MCS is subject to the terms of the Cloud Data Processing Addendum, as supplemented and amended by the Google-Managed Multi-Cloud Services Cloud Data Processing Addendum. "Google-Managed Multi-Cloud Services Cloud Data Processing Addendum" means the terms stated at https://cloud.google.com/terms/mcs-data-processing-terms.
+
+d. Limitation of Liability. Notwithstanding anything to the contrary in the Agreement (except subject to any unlimited liabilities expressly stated in the Agreement), to the maximum extent permitted by law, each party’s total aggregate Liability for damages arising out of or relating to the Google-Managed MCS is limited to the greater of (1) the Fees Customer paid for the Google-Managed MCS during the 12-month period before the event giving rise to liability and (2) $25,000.
+
+e. Disclaimers. Notwithstanding anything to the contrary in the Agreement, the Google-Managed MCS (i) are not covered by any SLA covering Google Cloud Platform Services, unless specifically identified under the terms of the SLA, (ii) are not subject to any obligations for Google to provide termination or transition assistance or other technical assistance after Suspension or termination, (iii) are not subject to any business continuity or disaster recovery commitments, and (iv) are not Audited Services, unless specifically identified at the Audited Services URL as listed in Section 2.1 (Definitions) of the CDPA.
+
+f. Survival. The following subsections of these Google-Managed Multi-Cloud Service Specific Terms will survive expiration or termination of the Agreement: d (Limitation of Liability); e (Disclaimer); and f (Survival).
+
+7. Benchmarking. Customer may conduct benchmark tests of the Services (each a "Test"). Customer may only publicly disclose the results of such Tests if it (a) obtains Google's prior written consent, (b) provides Google all necessary information to replicate the Tests, and (c) allows Google to conduct benchmark tests of Customer's publicly available products or services and publicly disclose the results of such tests. Notwithstanding the foregoing, Customer may not do either of the following on behalf of a hyperscale public cloud provider without Google's prior written consent: (i) conduct (directly or through a third party) any Test of the Services or (ii) disclose the results of any such Test.
+
+8. Trials. Certain Services may be made available to Customer on a trial basis. The parameters of each trial, including any Scope of Use, may be presented to Customer either through the Fees URL, Admin Console, Documentation, email, or as otherwise communicated by Google. Use of a trial indicates Customer’s acceptance of any such parameters.
+
+9. User Experience Research. If Customer enrolls in the Google Cloud User Experience Research Program for Google Cloud Platform, Customer’s participation will be subject to the Google Cloud User Experience Research Panel Addendum available at https://cloud.google.com/terms/user-experience-research or a successor URL.
+
+10. PGSSI-S. Customer will comply with France's General Security Policy for Health Information Systems (PGSSI-S) to the extent applicable.
+
+11. Additional Definitions.
+
+“Cloud Locations Page” means https://cloud.google.com/about/locations/.
+
+“Documentation” means the then-current Google documentation made available by Google to its customers for use with the Services at https://cloud.google.com/docs/.
+
+“Fees URL” means https://cloud.google.com/skus.
+
+“Multi-Region” means a defined set of Regions.
+
+“Region” means a region from which a particular Service is offered, as identified at the Cloud Locations Page.
+
+“Scope of Use” means any limits on installation or usage of Services or Software described at the Fees URL, Admin Console, order form, or otherwise presented by Google.
+
+Service Terms
+
+5. BigQuery.
+
+a. ODBC/JDBC Drivers. The ODBC and JDBC drivers for BigQuery (as described here) are “Software” as defined in the Agreement and any use of them is subject to the “General Software Terms” above. These drivers may only be used with BigQuery and may not be used with any other product or service.
+
+b. Analytics Hub (PREVIEW)
+
+(i) Introduction. Analytics Hub is a feature of BigQuery that helps users find and share sets of Customer Data (“Datasets”). Datasets are organized into shared repositories (“Exchanges”) with each Dataset’s listings containing (as applicable) a description, documentation, branding, metadata or similar materials (“Listing Materials”).
+
+(ii) Roles. Customer can serve different roles in Analytics Hub:
+
+    A. “Publishers” create and submit Datasets for listing within Exchanges.
+
+    B. “Subscribers” request access to Datasets listed in Exchanges for their own use in BigQuery.
+
+    C. “Exchange Administrators” (1) create and administer Exchanges, (2) add or remove Listing Materials in Exchanges, (3) control visibility of Exchanges and Listing Materials, and (4) on behalf of the relevant Publisher, enable or reject Subscriber requests to access Datasets.
+
+(iii) Publishers. Publishers can serve as their own Exchange Administrators or submit Datasets to Exchanges operated by third-party Exchange Administrators. In the latter case, the Publisher submits its Dataset to the Exchange Administrator and must follow any enrollment steps specified by the Exchange Administrator for its Exchange.
+
+(iv) Exchange Administrators. When acting as an Exchange Administrator, Customer must:
+
+    A. Secure and maintain all necessary rights, consents and permissions (including from any third-party Publishers) to list, share or take other action with respect to the Datasets or Listing Materials; and
+
+    B. Handle takedown requests, data subject requests, notices of infringement, and any other notices or requests it receives regarding its Exchange or related Listing Materials or Datasets.
+
+    For clarity, Listing Materials are considered Customer Data of the applicable Exchange Administrator.
+
+(v) Separate Relationships.
+
+    A. Google is not responsible for and will have no liability to Customer in relation to any terms or relationships between Customer and any third party acting as a Publisher, Subscriber, or Exchange Administrator. If Customer offers any commitments to any third such party beyond the commitments that Google has made to Customer in the Agreement (including in these Service Specific Terms), Google will not be liable for such commitments.
+
+    B. Publishers and Exchange Administrators must ensure that any terms they have with Subscribers do not contradict these Service Specific Terms or the Agreement.
+
+    C. If a Publisher or Exchange Administrator charges fees for access to Datasets, it is solely responsible for (1) collecting the fees independently of Google and Analytics Hub and (2) any related refunds or liabilities to Subscribers.
+
+    D. Google does not guarantee continued availability of any Datasets, and gives no warranty, indemnification or other obligation, and accepts no liability or responsibility, with respect to Datasets or their use.
