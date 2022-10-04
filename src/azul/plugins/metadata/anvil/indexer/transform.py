@@ -375,7 +375,6 @@ class BaseTransformer(Transformer, ABC):
         'alignmentactivity',
         'analysisactivity',
         'assayactivity',
-        'experimentactivity',
         'librarypreparationactivity',
         'sequencingactivity'
     }

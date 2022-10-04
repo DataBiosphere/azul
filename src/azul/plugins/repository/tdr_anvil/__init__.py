@@ -367,16 +367,6 @@ class Plugin(TDRPlugin):
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
                 ON f.file_id IN UNNEST(sqa.generated_file_id)
-            UNION ALL SELECT
-                  f.file_id,
-                  'experimentactivity',
-                  exa.experimentactivity_id,
-                  exa.used,
-                  exa.used_biosample_id,
-                  []
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                ON f.file_id IN UNNEST(exa.generated)
         ''')
         return {
             Link.create(
@@ -405,19 +395,11 @@ class Plugin(TDRPlugin):
         rows = self._run_sql(f'''
             WITH activities AS (
                 SELECT
-                    exa.experimentactivity_id AS activity_id,
-                    'experimentactivity' AS activity_type,
-                    exa.used_biosample_id AS biosample_ids,
-                    exa.generated AS output_ids,
-                    'file' AS output_type
-                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                UNION ALL
-                SELECT
-                    sqa.sequencingactivity_id,
-                    'sequencingactivity',
+                    sqa.sequencingactivity_id as activity_id,
+                    'sequencingactivity' as activity_type,
                     sqa.used_biosample_id,
-                    sqa.generated_file_id,
-                    'file'
+                    sqa.generated_file_id as output_ids,
+                    'file' as output_type
                 FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
                 UNION ALL
                 SELECT
@@ -442,7 +424,7 @@ class Plugin(TDRPlugin):
                 a.activity_type,
                 a.output_ids,
                 a.output_type
-            FROM activities AS a, UNNEST(a.biosample_ids) AS biosample_id
+            FROM activities AS a, UNNEST(a.used_biosample_id) AS biosample_id
             WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
         return {
@@ -464,15 +446,8 @@ class Plugin(TDRPlugin):
         rows = self._run_sql(f'''
             WITH activities AS (
                 SELECT
-                    exa.experimentactivity_id AS activity_id,
-                    'experimentactivity' AS activity_type,
-                    exa.library_id AS library_ids,
-                    exa.generated AS file_ids
-                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                UNION ALL
-                SELECT
-                    sqa.sequencingactivity_id,
-                    'sequencingactivity',
+                    sqa.sequencingactivity_id as activity_id,
+                    'sequencingactivity' as acticity_type,
                     sqa.library_id,
                     sqa.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
@@ -488,15 +463,15 @@ class Plugin(TDRPlugin):
                 library_id,
                 a.activity_id,
                 a.activity_type,
-                a.file_ids
-            FROM activities AS a, UNNEST(a.library_ids) AS library_id
+                a.generated_file_id
+            FROM activities AS a, UNNEST(a.library_id) AS library_id
             WHERE library_id IN ({', '.join(map(repr, library_ids))})
         ''')
         return {
             Link.create(inputs=KeyReference(key=row['library_id'], entity_type='library'),
                         outputs=[
                             KeyReference(key=file_id, entity_type='file')
-                            for file_id in row['file_ids']
+                            for file_id in row['generated_file_id']
                         ],
                         activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
             for row in rows
@@ -511,15 +486,8 @@ class Plugin(TDRPlugin):
         rows = self._run_sql(f'''
             WITH activities AS (
                 SELECT
-                    exa.experimentactivity_id AS activity_id,
-                    'experimentactivity' AS activity_type,
-                    exa.used AS used_file_ids,
-                    exa.generated AS generated_file_ids
-                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                UNION ALL
-                SELECT
-                    asa.analysisactivity_id,
-                    'analysisactivity',
+                    asa.analysisactivity_id as activity_id,
+                    'analysisactivity' as activity_type,
                     asa.used_file_id,
                     asa.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'analysisactivity'))} AS asa
@@ -533,17 +501,17 @@ class Plugin(TDRPlugin):
             )
             SELECT
                 used_file_id,
-                a.generated_file_ids,
+                a.generated_file_id,
                 a.activity_id,
                 a.activity_type
-            FROM activities AS a, UNNEST(a.used_file_ids) AS used_file_id
+            FROM activities AS a, UNNEST(a.used_file_id) AS used_file_id
             WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
         ''')
         return {
             Link.create(inputs=KeyReference(key=row['used_file_id'], entity_type='file'),
                         outputs=[
                             KeyReference(key=file_id, entity_type='file')
-                            for file_id in row['generated_file_ids']
+                            for file_id in row['generated_file_id']
                         ],
                         activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_type']))
             for row in rows
@@ -646,12 +614,6 @@ class Plugin(TDRPlugin):
             'assay_category',
             'data_modality',
             'date_created',
-            'xref'
-        },
-        'experimentactivity': {
-            'experimentactivity_id',
-            'date_created',
-            'date_submitted',
             'xref'
         },
         'librarypreparationactivity': {
