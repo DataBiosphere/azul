@@ -50,9 +50,6 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             ],
             'files': [
                 'file_format'
-            ],
-            'libraries': [
-                'prep_material_name'
             ]
         }
 
@@ -75,7 +72,6 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             bucket_count('file_format', 'fileCount', 'fileFormats', 'format'),
             bucket_count('activity_type', 'activityCount', 'activityTypes', 'type'),
             bucket_count('organism_type', 'donorCount', 'donorSpecies', 'species'),
-            count('prep_material_name', 'libraryCount'),
             count('anatomical_site', 'biosampleCount')
         ])
 
@@ -212,8 +208,5 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'file_format',
             'file_type',
             'reference_assembly'
-        },
-        'libraries': {
-            'prep_material_name'
         }
     }

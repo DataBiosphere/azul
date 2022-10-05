@@ -57,7 +57,6 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
     DatasetAggregator,
     DonorAggregator,
     FileAggregator,
-    LibraryAggregator,
 )
 from azul.plugins.repository.tdr_hca import (
     EntitiesByType,
@@ -125,7 +124,6 @@ class BaseTransformer(Transformer, ABC):
             'datasets': cls._dataset_types(),
             'donors': cls._donor_types(),
             'files': cls._aggregate_file_types(),
-            'libraries': cls._library_types()
         }
 
     @classmethod
@@ -140,8 +138,6 @@ class BaseTransformer(Transformer, ABC):
             return DonorAggregator()
         if entity_type == 'files':
             return FileAggregator()
-        if entity_type == 'libraries':
-            return LibraryAggregator()
         else:
             assert False, entity_type
 
@@ -269,16 +265,6 @@ class BaseTransformer(Transformer, ABC):
             'count': pass_thru_int  # Added by FileAggregator, ever null
         }
 
-    @classmethod
-    def _library_types(cls) -> FieldTypes:
-        return {
-            **cls._entity_types(),
-            'date_created': null_datetime,
-            'library_id': null_str,
-            'prep_material_name': null_str,
-            'xref': [null_str]
-        }
-
     def _contribution(self,
                       contents: MutableJSON,
                       entity_id: EntityID
@@ -364,16 +350,12 @@ class BaseTransformer(Transformer, ABC):
                             self._file_types(),
                             size=metadata['byte_size'])
 
-    def _library(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry, self._library_types())
-
     def _only_dataset(self) -> MutableJSON:
         return self._dataset(self._entries_by_entity_id[one(self._entities_by_type['dataset'])])
 
     _activity_polymorphic_types = {
         'alignmentactivity',
         'assayactivity',
-        'librarypreparationactivity',
         'sequencingactivity'
     }
 
@@ -392,7 +374,6 @@ class ActivityTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
-            libraries=self._entities(self._library, linked['library'])
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -414,7 +395,6 @@ class BiosampleTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
-            libraries=self._entities(self._library, linked['library'])
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -435,7 +415,6 @@ class DatasetTransformer(BaseTransformer):
             datasets=[self._dataset(manifest_entry)],
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file']),
-            libraries=self._entities(self._library, self._entities_by_type['library'])
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -457,7 +436,6 @@ class DonorTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             donors=[self._donor(manifest_entry)],
             files=self._entities(self._file, linked['file']),
-            libraries=self._entities(self._library, linked['library']),
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -479,28 +457,5 @@ class FileTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             files=[self._file(manifest_entry)],
             donors=self._entities(self._donor, linked['donor']),
-            libraries=self._entities(self._library, linked['library'])
-        )
-        return self._contribution(contents, manifest_entry['uuid'])
-
-
-class LibraryTransformer(BaseTransformer):
-
-    @classmethod
-    def entity_type(cls) -> str:
-        return 'libraries'
-
-    def _transform(self, manifest_entry: JSON) -> Contribution:
-        linked = self._linked_entities(manifest_entry)
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['biosample']),
-            datasets=[self._only_dataset()],
-            files=self._entities(self._file, linked['file']),
-            donors=self._entities(self._donor, linked['donor']),
-            libraries=[self._library(manifest_entry)]
         )
         return self._contribution(contents, manifest_entry['uuid'])

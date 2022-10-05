@@ -22,7 +22,6 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     DatasetTransformer,
     DonorTransformer,
     FileTransformer,
-    LibraryTransformer,
 )
 from azul.plugins.metadata.anvil.service.aggregation import (
     AnvilAggregationStage,
@@ -53,7 +52,6 @@ class Plugin(MetadataPlugin):
             datasets=Sorting(field_name='dataset_id'),
             donors=Sorting(field_name='donor_id'),
             files=Sorting(field_name='file_id'),
-            libraries=Sorting(field_name='library_id')
         )
 
     @property
@@ -67,7 +65,6 @@ class Plugin(MetadataPlugin):
             DatasetTransformer,
             DonorTransformer,
             FileTransformer,
-            LibraryTransformer
         )
 
     def transformers(self, bundle: Bundle, *, delete: bool) -> Iterable[BaseTransformer]:
@@ -168,15 +165,6 @@ class Plugin(MetadataPlugin):
                         'uuid': 'fileId',
                         'byte_size': 'size'
                     }
-                },
-                'libraries': {
-                    f: f for f in [
-                        'date_created',
-                        'document_id',
-                        'library_id',
-                        'prep_material_name',
-                        'xref'
-                    ]
                 }
             }
         }
@@ -199,7 +187,6 @@ class Plugin(MetadataPlugin):
             'disease',
             'organism_type',
             'phenotypic_sex',
-            'prep_material_name',
             'preservation_state',
             'reference_assembly',
             'reported_ethnicity',
@@ -243,10 +230,6 @@ class Plugin(MetadataPlugin):
                 'sha256': 'file_sha256',
                 'drs_path': 'file_drs_uri',
                 'file_url': 'file_url'
-            },
-            ('contents', 'libraries'): {
-                'document_id': 'library_document_id',
-                'library_id': 'library_id'
             }
         }
 
