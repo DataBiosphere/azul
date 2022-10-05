@@ -348,26 +348,23 @@ We promote at 3pm to give a cushion of time in case anything goes wrong.
 
 To do a promotion:
 
+#. Decide together with lead up to which commit to promote. This commit will be
+   the HEAD of the promotions branch.
+
 #. Create a new GitHub issue with the title ``Promotion yyyy-mm-dd``
 
-#. Announce in the `#team-boardwalk Slack channel`_ that you plan to promote to ``prod``
+#. Make sure your ``prod`` branch is up to date with the remote.
 
-#. Make sure your ``develop`` and ``prod`` branches are up to date. Run::
-
-	git checkout develop
-	git pull -ff-only
-	git checkout prod
-	git pull -ff-only
-
-#. Then run::
-
-      git checkout -b promotions/yyyy-mm-dd develop
-      git push github --set-upstream promotions/yyyy-mm-dd
+#. Create a branch at the commit chosen above. Name the branch correctly. See
+   `promotion PR template`_ for what the correct branch name is.
 
 #. File a PR on GitHub from the new promotion branch and connect it to the issue.
-   The PR must target ``prod``.
+   The PR must target ``prod``. Use the `promotion PR template`_.
 
 #. Request a review from the primary reviewer.
+
+#. Once PR is approved, announce in the `#team-boardwalk Slack channel`_ that
+   you plan to promote to ``prod``
 
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 
@@ -377,6 +374,8 @@ To do a promotion:
    rebase the promotion branch and don't push the promotion branch to GitLab.
    Merge the promotion branch into ``prod`` and push the merge commit on the
    ``prod`` branch first to GitHub and then to the ``prod`` instance of GitLab.
+
+.. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/promotion.md
 
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
