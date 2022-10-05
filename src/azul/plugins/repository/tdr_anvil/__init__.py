@@ -6,6 +6,9 @@ from hashlib import (
     sha1,
 )
 import logging
+from operator import (
+    itemgetter,
+)
 from typing import (
     AbstractSet,
     Callable,
@@ -51,6 +54,7 @@ from azul.terra import (
 )
 from azul.types import (
     AnyMutableJSON,
+    JSON,
     MutableJSON,
     MutableJSONs,
 )
@@ -213,9 +217,10 @@ class Plugin(TDRPlugin):
         self._simplify_links(links)
         result = TDRAnvilBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
         result.add_links(bundle_fqid, links)
-        for entity_type, typed_keys in keys_by_type.items():
+        for entity_type, typed_keys in sorted(keys_by_type.items()):
             pk_column = entity_type + '_id'
-            for row in self._retrieve_entities(source.spec, entity_type, typed_keys):
+            rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
+            for row in sorted(rows, key=itemgetter(pk_column)):
                 result.add_entity(KeyReference(key=row[pk_column], entity_type=entity_type),
                                   self._version,
                                   row)
@@ -570,7 +575,7 @@ class Plugin(TDRPlugin):
         assert pk_column in columns, entity_type
         log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
         rows = self._run_sql(f'''
-            SELECT {', '.join(columns)}
+            SELECT {', '.join(sorted(columns))}
             FROM {backtick(table_name)}
             WHERE {pk_column} IN ({', '.join(map(repr, keys))})
         ''')
@@ -702,6 +707,10 @@ class TDRAnvilBundle(TDRBundle):
         )
 
     def add_links(self, bundle_fqid: BundleFQID, links: Links) -> None:
+
+        def link_sort_key(link: JSON):
+            return link['activity'] or '', link['inputs'], link['outputs']
+
         self._add_entity(
             manifest_entry={
                 'uuid': bundle_fqid.uuid,
@@ -709,14 +718,14 @@ class TDRAnvilBundle(TDRBundle):
                 'name': 'links',
                 'indexed': True
             },
-            metadata=[
+            metadata=sorted((
                 {
                     'inputs': sorted(str(i.as_entity_reference()) for i in link.inputs),
                     'activity': None if link.activity is None else str(link.activity.as_entity_reference()),
                     'outputs': sorted(str(o.as_entity_reference()) for o in link.outputs)
                 }
                 for link in links
-            ]
+            ), key=link_sort_key)
         )
 
     def _add_entity(self,
