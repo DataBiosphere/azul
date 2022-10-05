@@ -788,6 +788,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
+            # FIXME: File downloads are broken on AnVIL deployments
+            #        https://github.com/DataBiosphere/azul/issues/4507
+            if config.is_anvil_enabled(catalog):
+                self.skipTest('File downloads are broken on AnVIL deployments')
             file = self._get_one_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
             endpoint_url = config.service_endpoint
@@ -1227,6 +1231,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         managed_access_files: JSONs = self.random.choice(bundles)['files']
         managed_access_file_id = self.random.choice(managed_access_files)['uuid']
         manifest_url.set(args={
+            'catalog': catalog,
             'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
             'format': 'curl'
         })
@@ -1238,6 +1243,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 self.assertEqual(response.status, 301)
                 time.sleep(int(response.headers['Retry-After']))
+                manifest_url.url = response.headers['Location']
         token = self._tdr_client.credentials.token
         expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
         command_lines = list(filter(None, response.data.split(b'\n')))[1::2]

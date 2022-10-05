@@ -745,7 +745,11 @@ class Config:
 
     @property
     def private_api(self) -> bool:
-        return self._boolean(self.environ['AZUL_PRIVATE_API'])
+        is_private_api = self._boolean(self.environ['AZUL_PRIVATE_API'])
+        if not is_private_api:
+            reject(self.is_anvil_enabled(),
+                   'Deployments with AnVIL metadata must be private')
+        return is_private_api
 
     @property
     def _main_deployments(self) -> Mapping[Optional[str], Sequence[str]]:

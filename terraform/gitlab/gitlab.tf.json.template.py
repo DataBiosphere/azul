@@ -347,8 +347,8 @@ dss_direct_access_policy_statement = {
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.3.3-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.3.0'
+gitlab_image = 'gitlab/gitlab-ce:15.4.1-ce.0'
+runner_image = 'gitlab/gitlab-runner:v15.4.0'
 
 # There are ways to dynamically determine the latest Amazon Linux AMI but in the
 # spirit of reproducable builds we would rather pin the AMI and adopt updates at
@@ -715,7 +715,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             }
                         ] if config.domain_name == 'azul.data.humancellatlas.org' else [
                         ]
-                    )
+                    ),
+                    # Manage VPN infrastructure for private API
+                    # FIXME: Tighten GitLab security boundary
+                    #        https://github.com/DataBiosphere/azul/issues/4207
+                    {
+                        'actions': ['ec2:*'],
+                        'resources': ['*']
+                    },
+                    {
+                        'actions': ['elasticloadbalancing:*'],
+                        'resources': ['*']
+                    }
                 ]
             }
         },
