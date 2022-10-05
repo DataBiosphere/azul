@@ -2,3 +2,4 @@
 !Makefile
 !common.mk
 !requirements*.txt
+requirements.all.txt

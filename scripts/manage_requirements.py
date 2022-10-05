@@ -48,12 +48,16 @@ class Versions(frozenset[Version]):
         return super().__new__(cls, versions)
 
     def __str__(self) -> str:
-        return ','.join('==' + v for v in self)
+        return ','.join('==' + v for v in sorted(self))
 
     def __or__(self, other: 'Versions') -> 'Versions':
         # We need to hand-implement this because the overridden base class
         # method returns a base class instance, unfortunately.
         return type(self)(*self, *other)
+
+    def __lt__(self, other):
+        # Currently we only support sorting singletons
+        return one(self) < one(other)
 
 
 @dataclass(frozen=True)
@@ -82,6 +86,14 @@ class PinnedRequirement:
         else:
             return PinnedRequirement(name=other.name,
                                      versions=self.versions | other.versions)
+
+    def __lt__(self, other: 'PinnedRequirement'):
+        if self.name < other.name:
+            return True
+        elif self.name == other.name:
+            return self.versions < other.versions
+        else:
+            return False
 
     def __str__(self) -> str:
         assert self.versions
@@ -149,19 +161,22 @@ class Main:
     runtime_image: str
 
     @cached_property
-    def pip(self): return Qualifier(name='pip',
-                                    extension='.pip',
-                                    image=None)
+    def pip(self):
+        return Qualifier(name='pip',
+                         extension='.pip',
+                         image=None)
 
     @cached_property
-    def runtime(self): return Qualifier(name='runtime',
-                                        extension='',
-                                        image=self.runtime_image)
+    def runtime(self):
+        return Qualifier(name='runtime',
+                         extension='',
+                         image=self.runtime_image)
 
     @cached_property
-    def build(self): return Qualifier(name='build',
-                                      extension='.dev',
-                                      image=self.build_image)
+    def build(self):
+        return Qualifier(name='build',
+                         extension='.dev',
+                         image=self.build_image)
 
     @cached_property
     def project_root(self):
@@ -172,14 +187,16 @@ class Main:
         return docker.from_env()
 
     def run(self):
-        pip_deps = self.get_direct_reqs(self.pip)
+        pip_reqs = self.get_direct_reqs(self.pip)
         direct_runtime_reqs = self.get_direct_reqs(self.runtime)
         direct_build_reqs = self.get_direct_reqs(self.build)
         dupes = direct_build_reqs & direct_runtime_reqs
         require(not dupes, 'Some requirements are declared as both run and build time', dupes)
 
-        build_reqs = self.get_reqs(self.build) - pip_deps
-        runtime_reqs = self.get_reqs(self.runtime) - pip_deps
+        all_reqs = self.get_reqs(self.build)
+        build_reqs = all_reqs - pip_reqs
+        all_runtime_reqs = self.get_reqs(self.runtime)
+        runtime_reqs = all_runtime_reqs - pip_reqs
         require(runtime_reqs <= build_reqs,
                 'Runtime requirements are not a subset of build requirements',
                 runtime_reqs - build_reqs)
@@ -204,8 +221,19 @@ class Main:
         transitive_build_reqs = build_only_reqs - direct_build_reqs
         transitive_runtime_reqs = runtime_reqs - direct_runtime_reqs
         assert not transitive_build_reqs & transitive_runtime_reqs
+        # Assert that all_reqs really includes everyting
+        for reqs in [
+            pip_reqs,
+            direct_runtime_reqs,
+            transitive_runtime_reqs,
+            direct_build_reqs,
+            transitive_build_reqs,
+            all_runtime_reqs
+        ]:
+            assert reqs <= all_reqs, reqs - all_reqs
         self.write_transitive_reqs(transitive_build_reqs, self.build)
         self.write_transitive_reqs(transitive_runtime_reqs, self.runtime)
+        self.write_all_reqs(all_reqs)
 
     def parse_reqs(self, file_or_str: Union[IO, str]) -> PinnedRequirements:
         parsed_reqs = requirements.parse(file_or_str, recurse=False)
@@ -231,11 +259,20 @@ class Main:
             return self.parse_reqs(f)
 
     def write_transitive_reqs(self, reqs: PinnedRequirements, qualifier: Qualifier) -> None:
-        file_name = f'requirements{qualifier.extension}.trans.txt'
+        self.write_reqs(reqs,
+                        file_name=f'requirements{qualifier.extension}.trans.txt',
+                        type='transitive')
+
+    def write_all_reqs(self, reqs: PinnedRequirements) -> None:
+        self.write_reqs(reqs,
+                        file_name='requirements.all.txt',
+                        type='all')
+
+    def write_reqs(self, reqs, *, file_name, type):
         path = self.project_root / file_name
-        log.info('Writing transitive requirements to %s', path)
+        log.info('Writing %s requirements to %s', type, path)
         with open(path, 'w') as f:
-            f.writelines(sorted(f'{req}\n' for req in reqs))
+            f.writelines(f'{req}\n' for req in sorted(reqs))
 
 
 if __name__ == '__main__':

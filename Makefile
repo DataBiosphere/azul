@@ -62,6 +62,7 @@ requirements_update: check_venv check_docker
 # 	image. This makes the pin removal injective. If we truncated the file, we
 # 	might inadvertently reuse a stale image layer despite the .trans file
 # 	having been updated. Not using sed because Darwin's sed does not do -i.
+	git restore requirements.trans.txt requirements.dev.trans.txt
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
 	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
