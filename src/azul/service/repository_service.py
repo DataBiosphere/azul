@@ -56,6 +56,9 @@ from azul.types import (
     JSON,
     MutableJSON,
 )
+from azul.uuids import (
+    validate_uuid,
+)
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +116,7 @@ class RepositoryService(ElasticsearchService):
         :return: The Elasticsearch JSON response
         """
         if item_id is not None:
-            self.repository_plugin(catalog).validate_entity_id(item_id)
+            validate_uuid(item_id)
             filters = filters.update({'entryId': {'is': [item_id]}})
 
         response = self._search(catalog=catalog,
