@@ -3,6 +3,7 @@ from enum import (
 )
 from typing import (
     Mapping,
+    Optional,
     TypeVar,
     Union,
 )
@@ -15,7 +16,11 @@ class LookupDefault(Enum):
     RAISE = 0
 
 
-def lookup(d: Mapping[K, V], k: K, *ks: K, default: Union[V, LookupDefault] = LookupDefault.RAISE) -> V:
+def lookup(d: Mapping[K, V],
+           k: K,
+           *ks: K,
+           default: Union[Optional[V], LookupDefault] = LookupDefault.RAISE
+           ) -> V:
     """
     Look up a value in the specified dictionary given one or more candidate keys.
 
@@ -64,8 +69,7 @@ def lookup(d: Mapping[K, V], k: K, *ks: K, default: Union[V, LookupDefault] = Lo
                 return d[k]
             except KeyError:
                 pass
+        if default is LookupDefault.RAISE:
+            raise
         else:
-            if default is LookupDefault.RAISE:
-                raise
-            else:
-                return default
+            return default

@@ -135,9 +135,9 @@ class Entity:
         self.document_id = UUID4(provenance['document_id'])
         # Some older DCP/1 bundles use different UUIDs in the manifest and
         # metadata.
-        # noinspection PyUnreachableCode
-        if False and self.metadata_manifest_entry is not None:
-            assert self.document_id == self.metadata_manifest_entry.uuid
+        if False:
+            if self.metadata_manifest_entry is not None:
+                assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
         submission_date = lookup(provenance, 'submission_date', 'submissionDate')
         self.submission_date = self._datetime(submission_date)
@@ -837,8 +837,8 @@ class File(LinkedEntity):
         self.manifest_entry = manifest[core['file_name']]
         self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
         self.file_source = core.get('file_source')
-        self.from_processes = {}
-        self.to_processes = {}
+        self.from_processes = dict()
+        self.to_processes = dict()
 
     def _connect_to(self, other: Entity, forward: bool) -> None:
         if isinstance(other, Process):
