@@ -23,7 +23,6 @@ from unittest.mock import (
 from uuid import (
     UUID,
 )
-import warnings
 
 from atomicwrites import (
     atomic_write,
@@ -74,10 +73,6 @@ def setUpModule():
 
 
 class TestAccessorApi(TestCase):
-
-    def setUp(self):
-        # Suppress `sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=6, family=AddressFamily.AF_INET, ...`
-        warnings.simplefilter("ignore", ResourceWarning)
 
     def _rename_keys(self, d, **kwargs):
         for new_name, old_name in kwargs.items():
