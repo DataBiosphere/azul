@@ -106,7 +106,6 @@ class Plugin(MetadataPlugin):
                         'analysis_type',
                         'assay_category',
                         'data_modality',
-                        'date_created',
                         'date_submitted',
                         'document_id',
                         'xref'
@@ -140,7 +139,7 @@ class Plugin(MetadataPlugin):
                 },
                 'donors': {
                     f: f for f in [
-                        'date_created',
+                        'birth_date',
                         'document_id',
                         'donor_id',
                         'organism_type',
