@@ -1,0 +1,701 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/11.0.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "D54Dn15E01",
+            "biomaterial_name": "hESC-derived inhibitory interneurons",
+            "biomaterial_description": "hESC-derived inhibitory interneurons at day 54",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "DCX-Citrine"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "inhibitory interneurons",
+                "ontology": "CL:0000498",
+                "ontology_label": "inhibitory interneuron"
+            }
+        ],
+        "timecourse": {
+            "value": "54",
+            "unit": {
+                "text": "day",
+                "ontology_label": "day",
+                "ontology": "UO:0000627"
+            }
+        },
+        "provenance": {
+            "document_id": "e4c205cd-746f-4665-8c29-149c6e109e9d",
+            "submission_date": "2019-04-17T16:51:39.733Z",
+            "update_date": "2019-04-17T16:58:31.889Z"
+        }
+    },
+    "cell_line_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/11.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "cell_line_at_day_54",
+            "biomaterial_name": "cell_line_at_day_54",
+            "biomaterial_description": "hESC-derived inhibitory interneurons at day 54",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "DCX-Citrine"
+        },
+        "cell_line_type": "stem cell-derived",
+        "cell_type": {
+            "text": "interneuron",
+            "ontology": "CL:0000099",
+            "ontology_label": "interneuron"
+        },
+        "disease": {
+            "text": "normal",
+            "ontology": "PATO:0000461",
+            "ontology_label": "normal"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "publication": {
+            "authors": [
+                "Close JL",
+                "Yao Z",
+                "Levi BP",
+                "Miller JA",
+                "Bakken TE",
+                "Menon V",
+                "Ting JT",
+                "Wall A",
+                "Krostag AR",
+                "Thomsen ER",
+                "Nelson AM",
+                "Mich JK",
+                "Hodge RD",
+                "Shehata SI",
+                "Glass IA",
+                "Bort S",
+                "Shapovalova NV",
+                "Ngo NK",
+                "Grimley JS",
+                "Phillips JW",
+                "Thompson CL",
+                "Ramanathan S",
+                "Lein E"
+            ],
+            "publication_title": "Single-Cell Profiling of an In\u00a0Vitro Model of Human Interneuron Development Reveals Temporal Dynamics of Cell Type Production and Maturation.",
+            "doi": "10.1016/j.neuron.2017.02.014",
+            "pmid": 28279351,
+            "publication_url": "https://europepmc.org/abstract/MED/28279351"
+        },
+        "model_organ": {
+            "text": "brain",
+            "ontology": "UBERON_0000955",
+            "ontology_label": "brain"
+        },
+        "provenance": {
+            "document_id": "961092cd-dcff-4b59-a0d2-ceeef0aece74",
+            "submission_date": "2019-04-17T16:51:35.053Z",
+            "update_date": "2019-04-17T16:57:09.605Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/9.0.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "embryo_WAe001-A",
+            "biomaterial_name": "human embryo",
+            "biomaterial_description": "human embryo",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "DCX-Citrine"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "embryo",
+            "ontology": "UBERON:0000922",
+            "ontology_label": "embryo"
+        },
+        "organ_parts": [
+            {
+                "text": "blastocyst",
+                "ontology": "UBERON:0000358",
+                "ontology_label": "blastocyst"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "a72a2ac2-c91b-406a-968c-28c8e15a2eaf",
+            "submission_date": "2019-04-17T16:51:35.037Z",
+            "update_date": "2019-04-17T16:55:13.039Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/14.0.7/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "donor_WAe001-A",
+            "biomaterial_name": "human embryo",
+            "biomaterial_description": "human embryo",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "development_stage": {
+            "text": "human embryonic stage",
+            "ontology": "HsapDv:0000002",
+            "ontology_label": "human embryonic stage"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "is_living": "yes",
+        "sex": "male",
+        "provenance": {
+            "document_id": "6c6973d5-9b4a-426d-9d88-825b464500f8",
+            "submission_date": "2019-04-17T16:51:35.032Z",
+            "update_date": "2019-04-17T16:55:12.518Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/8.0.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR5174359_2.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read2",
+        "provenance": {
+            "document_id": "a31d51c9-7354-4c8c-91e6-a9d2a2e10616",
+            "submission_date": "2019-04-17T16:53:04.375Z",
+            "update_date": "2019-04-17T17:27:47.623Z"
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/8.0.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR5174359_1.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "provenance": {
+            "document_id": "a2db643f-decd-426d-94db-13c3279ea80a",
+            "submission_date": "2019-04-17T16:53:04.385Z",
+            "update_date": "2019-04-17T17:27:46.767Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/11.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Single cell RNAseq characterization of cell types produced over time in an in vitro model of human inhibitory interneuron differentiation.",
+            "project_title": "Single-cell RNA-seq analysis  throughout a 125-day differentiation protocol that converted H1 human embryonic stem cells to a variety of ventrally-derived cell types.",
+            "project_description": "Diverse cell types are produced from dorsal and ventral regions of the developing neural tube. In this study we describe a system for generating human inhibitory interneurons by ventralizing human embryonic stem cells in vitro and characterizing the gene expression of the cell types produced over time. We engineered a DCX-Citrine/Y hESC line to sort and characterize progenitor and neuron transcriptomics separately at both the subpopulation and single cell level. The cells generated in vitro were compared to similar populations present in human fetal brain samples by mapping gene expression data from human fetal cells onto the principal component analysis (PCA) space of in vitro-derived populations. Weighted gene co-expression network analysis (WGCNA) was used to determine the discreet cell types present at D24, D54, D100 and D125 of culture, and describe the gene expression changes that occur in progenitor and neuron populations over time. Immature lateral ganglionic eminence and medial ganglionic eminence cells are present at early timepoints, along with MGE-like and dorsal pallium-like neuronal progenitors. At later timepoints we observe the emergence of SST-expressing interneurons, as well as oligodendrocyte and astrocyte progenitors. We also identified genes that were upregulated in somatostatin-expressing interneurons as they mature. The transcriptomes of 1732 ventralized single cells were profiled by SmartSeq2 at different timepoints throughout a 125-day differentiation protocol that converted H1 human embryonic stem cells to a variety of ventrally-derived cell types."
+        },
+        "insdc_project_accessions": [
+            "SRP096727"
+        ],
+        "geo_series_accessions": [
+            "GSE93593"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA361254"
+        ],
+        "supplementary_links": [
+            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-93593/Results"
+        ],
+        "array_express_accessions": [
+            "E-GEOD-93593"
+        ],
+        "contributors": [
+            {
+                "contact_name": "Jennie,,Close",
+                "email": "jenniec@alleninstitute.org",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Zizhen,,Yao",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Boaz,,Levi",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Jeremy,,Miller",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Trygve,,Bakken",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Vilas,,Menon",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Jonathan,,Ting",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Abigail,,Wall",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Anne-Rachel,,Krogstag",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Elliot,,Thomsen",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Angel,,Nelson",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "John,,Mich",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Rebecca,,Hodge",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Soraya,,Shehata",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Ian,,Glass",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Susan,,Bort",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Nadiya,,Shapovalova",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Olivia,,Fong",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Kiet,,Ngo",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Joshua,,Grimley",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "John,,Phillips",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Carol,,Thompson",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Sharad,,Ramanathan",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Ed,,Lein",
+                "institution": "The Allen Institute for Brain Science",
+                "address": "615 Westlake Ave N, Seattle, WA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Laura,,Huerta",
+                "email": "lauhuema@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Molecular Atlas",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "external curator",
+                "orcid_id": "0000-0002-8748-599X",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Matthew,,Green",
+                "email": "hewgreen@ebi.ac.uk",
+                "phone": "(+44) 122-349-4444",
+                "institution": "EMBL-EBI European Bioinformatics Institute",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SD",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2771-9894",
+                "corresponding_contributor": false
+            }
+        ],
+        "funders": [
+            {
+                "grant_title": "Directors Pioneer Award",
+                "grant_id": "5DP1MH099906-03",
+                "organization": "National Institute of Health"
+            },
+            {
+                "grant_title": "National Science Foundation grant",
+                "grant_id": "PHY-0952766",
+                "organization": "National Science Foundation"
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Close JL",
+                    "Yao Z",
+                    "Levi BP",
+                    "Miller JA",
+                    "Bakken TE",
+                    "Menon V",
+                    "Ting JT",
+                    "Wall A",
+                    "Krostag AR",
+                    "Thomsen ER",
+                    "Nelson AM",
+                    "Mich JK",
+                    "Hodge RD",
+                    "Shehata SI",
+                    "Glass IA",
+                    "Bort S",
+                    "Shapovalova NV",
+                    "Ngo NK",
+                    "Grimley JS",
+                    "Phillips JW",
+                    "Thompson CL",
+                    "Ramanathan S",
+                    "Lein E"
+                ],
+                "publication_title": "Single-Cell Profiling of an In\u00a0Vitro Model of Human Interneuron Development Reveals Temporal Dynamics of Cell Type Production and Maturation.",
+                "doi": "10.1016/j.neuron.2017.02.014",
+                "pmid": 28279351,
+                "publication_url": "https://europepmc.org/abstract/MED/28279351"
+            }
+        ],
+        "provenance": {
+            "document_id": "b6dc9b93-929a-45d0-beb2-5cf8e64872fe",
+            "submission_date": "2019-04-17T16:51:35.026Z",
+            "update_date": "2019-04-17T16:55:12.490Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.0.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "P-GSE93593-3",
+            "protocol_name": "single cell library construction protocol",
+            "protocol_description": "Cells were prepared for single-cell transcriptomics using SmartSeq2 (Picelli et al., 2014). After reverse transcription and template switching, we amplified cDNA with KAPA HotStart HIFI 2\u00d7 ReadyMix (Kapa Biosystems) for 22 cycles for RNA from single primary cortical cells. We purified PCR products using Ampure XP beads (Beckman Coulter). We quantified cDNA using a High Sensitivity DNA Chip (Agilent) on a Bioanalyzer 2100 or with the Quant-iT PicoGreen dsDNA Assay Kit (Thermo Fisher) on an Enspire plate reader (PerkinElmer)."
+        },
+        "nucleic_acid_source": "single cell",
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "library_construction_method": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931",
+            "ontology_label": "Smart-seq2"
+        },
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "provenance": {
+            "document_id": "60085aee-e5a6-40ac-bda1-855c052550b5",
+            "submission_date": "2019-04-17T16:52:10.952Z",
+            "update_date": "2019-04-17T16:52:16.679Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.0.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "P-GSE93593-4",
+            "protocol_name": "single cell sequencing protocol",
+            "protocol_description": "We used 1 ng of cDNA to generate RNA-Seq libraries using the Nextera XT library prep system (Illumina). We carried out sequencing of human cortical cells the on Illumina HiSeq using 50 base paired-end reads"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565",
+            "ontology_label": "Illumina HiSeq 2500"
+        },
+        "paired_end": true,
+        "method": {
+            "text": "full length single cell RNA sequencing",
+            "ontology": "EFO:0008441",
+            "ontology_label": "full length single cell RNA sequencing"
+        },
+        "provenance": {
+            "document_id": "9ccabcf3-7203-4f07-837f-6dde903d4cec",
+            "submission_date": "2019-04-17T16:52:11.186Z",
+            "update_date": "2019-04-17T16:52:16.627Z"
+        }
+    },
+    "differentiation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/1.3.3/differentiation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "P-GSE93593-1",
+            "protocol_name": "growth protocol",
+            "protocol_description": "We constructed an hESC line with Citrine (Cit) fused to the endogenous copy of the DCX gene in the H1 parent line (WAe001-A RRID:CVCL_9771) to allow us to profile neurons (Cit+) and progenitors (Cit\u2212) (Yao et al., 2017). hESCs were seeded for a 10-day cortical induction phase in NIMX media with SMAD inhibitors; reseeded for the ventralization phase at D10 in culture media containing Shh and purmorphamine, and finally at D24 for neural differentiation with neurogenic/neurotrophic factors BDNF, GDNF, NT3, and cAMP. The protocol was ended at D125."
+        },
+        "differentiation_method": "cell suspension",
+        "provenance": {
+            "document_id": "348b04e9-d131-4d45-b198-0c75300ee4a3",
+            "submission_date": "2019-04-17T16:52:10.815Z",
+            "update_date": "2019-04-17T16:52:16.700Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.0.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "P-GSE93593-2",
+            "protocol_name": "single cell isolation protocol",
+            "protocol_description": "To generate single cell suspensions, hESC-derived cultures were dissociated from plates using Accutase (ThermoFisher) at 37C. Light trituration using a P1000 pipette was done every 5 min until nearly all clumps had been dissociated (up to 1 h). Cell suspension was washed and filtered through a 40 um cell strainer. Cells were washed in PBS with 1% FBS and stained with 0.5-1 ug/mL DAPI. Single-cell suspensions were loaded onto a FACSAria II SORP (Becton Dickinson) and sorted directly into PCR strip tubes or plates held in chilled aluminium blocks. Doublets and dead cells were excluded based on forward scatter, side scatter and DAPI fluorescence. Sorting was done using the 130 um nozzle with the sort mode set to single cell. Accuracy of single-cell sorts was confirmed by sorting DAPI-stained fixed cells onto a dry well of a 96-well plate and analyzing by fluorescence microscopy."
+        },
+        "method": {
+            "text": "enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "provenance": {
+            "document_id": "31b89ceb-0625-4f88-9623-85a18bbb84ee",
+            "submission_date": "2019-04-17T16:52:10.865Z",
+            "update_date": "2019-04-17T16:52:16.668Z"
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/2.2.9/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "FACS_enrichment_protocol",
+            "protocol_name": "FACS enrichment for single, live cells.",
+            "protocol_description": "Single-cell suspensions were loaded onto  a  FACSAria  II  SORP  (Becton  Dickinson)  and  sorted  directly  into  PCR  strip  tubes  or  plates  held  in  chilled aluminum  blocks.    Doublets  and  dead  cells  were  excluded  based  on  forward  scatter,  side  scatter  and  DAPI fluorescence. Sorting was done using the 130  \u03bcm nozzle with the sort mode set to single cell. Accuracy of single-cell  sorts  was  confirmed  by  sorting  DAPI-stained  fixed  cells  onto  a  dry  well  of  a  96-well  plate  and  analyzing  by fluorescence microscopy."
+        },
+        "enrichment_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "markers": "DAPI",
+        "provenance": {
+            "document_id": "958d38c4-fd0a-4352-9b1d-d95e28e2085e",
+            "submission_date": "2019-04-17T16:52:10.900Z",
+            "update_date": "2019-04-17T16:52:16.605Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "D54Dn15E01"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/7.0.0/process",
+        "provenance": {
+            "document_id": "3d88118e-44df-4c1a-a364-bf92ff2ca0e6",
+            "submission_date": "2019-04-17T16:54:54.638Z",
+            "update_date": "2019-04-17T17:02:01.452Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_601"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/7.0.0/process",
+        "provenance": {
+            "document_id": "2fbc1012-55ae-4fde-9069-fbf5376ca535",
+            "submission_date": "2019-04-17T16:53:46.016Z",
+            "update_date": "2019-04-17T17:00:21.013Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_4"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/7.0.0/process",
+        "provenance": {
+            "document_id": "466050f5-213c-4554-939e-4bb8298130dd",
+            "submission_date": "2019-04-17T16:53:30.594Z",
+            "update_date": "2019-04-17T16:59:59.704Z"
+        }
+    },
+    "process_3.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/7.0.0/process",
+        "provenance": {
+            "document_id": "4276c1dd-50aa-4ffa-a618-dee757bff479",
+            "submission_date": "2019-04-17T16:53:30.570Z",
+            "update_date": "2019-04-17T16:59:59.680Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+            {
+                "process": "3d88118e-44df-4c1a-a364-bf92ff2ca0e6",
+                "inputs": [
+                    "e4c205cd-746f-4665-8c29-149c6e109e9d"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "a31d51c9-7354-4c8c-91e6-a9d2a2e10616",
+                    "a2db643f-decd-426d-94db-13c3279ea80a"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "60085aee-e5a6-40ac-bda1-855c052550b5"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "9ccabcf3-7203-4f07-837f-6dde903d4cec"
+                    }
+                ]
+            },
+            {
+                "process": "2fbc1012-55ae-4fde-9069-fbf5376ca535",
+                "inputs": [
+                    "961092cd-dcff-4b59-a0d2-ceeef0aece74"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "e4c205cd-746f-4665-8c29-149c6e109e9d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "348b04e9-d131-4d45-b198-0c75300ee4a3"
+                    },
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "31b89ceb-0625-4f88-9623-85a18bbb84ee"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "958d38c4-fd0a-4352-9b1d-d95e28e2085e"
+                    }
+                ]
+            },
+            {
+                "process": "466050f5-213c-4554-939e-4bb8298130dd",
+                "inputs": [
+                    "a72a2ac2-c91b-406a-968c-28c8e15a2eaf"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "961092cd-dcff-4b59-a0d2-ceeef0aece74"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "4276c1dd-50aa-4ffa-a618-dee757bff479",
+                "inputs": [
+                    "6c6973d5-9b4a-426d-9d88-825b464500f8"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "a72a2ac2-c91b-406a-968c-28c8e15a2eaf"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    }
+}
