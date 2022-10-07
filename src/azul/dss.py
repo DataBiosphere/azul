@@ -19,10 +19,6 @@ from botocore.response import (
 from hca.dss import (
     DSSClient,
 )
-# noinspection PyProtectedMember
-from humancellatlas.data.metadata.helpers.dss import (
-    _DSSClient,
-)
 from urllib3 import (
     Timeout,
 )
@@ -35,6 +31,10 @@ from azul.deployment import (
 )
 from azul.types import (
     JSON,
+)
+# noinspection PyProtectedMember
+from humancellatlas.data.metadata.helpers.dss import (
+    _DSSClient,
 )
 
 logger = logging.getLogger(__name__)

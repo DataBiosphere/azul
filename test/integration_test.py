@@ -77,9 +77,6 @@ from hca.dss import (
 from hca.util import (
     SwaggerAPIException,
 )
-from humancellatlas.data.metadata.helpers.dss import (
-    download_bundle_metadata,
-)
 from more_itertools import (
     first,
     grouper,
@@ -165,6 +162,9 @@ from azul.types import (
 from azul_test_case import (
     AlwaysTearDownTestCase,
     AzulTestCase,
+)
+from humancellatlas.data.metadata.helpers.dss import (
+    download_bundle_metadata,
 )
 
 log = get_test_logger(__name__)

@@ -39,7 +39,7 @@ from humancellatlas.data.metadata.helpers.exception import (
     require,
 )
 from humancellatlas.data.metadata.helpers.schema_validation import (
-    SchemaValidator
+    SchemaValidator,
 )
 
 log = logging.getLogger(__name__)

@@ -6,7 +6,9 @@ from datetime import (
     timezone,
 )
 import doctest
-from itertools import chain
+from itertools import (
+    chain,
+)
 import json
 import logging
 import os
@@ -15,12 +17,20 @@ from unittest import (
     TestCase,
     skip,
 )
-from unittest.mock import Mock
-from uuid import UUID
+from unittest.mock import (
+    Mock,
+)
+from uuid import (
+    UUID,
+)
 import warnings
 
-from atomicwrites import atomic_write
-from more_itertools import one
+from atomicwrites import (
+    atomic_write,
+)
+from more_itertools import (
+    one,
+)
 
 from humancellatlas.data.metadata.api import (
     Accession,
@@ -42,16 +52,21 @@ from humancellatlas.data.metadata.api import (
     SupplementaryFile,
     entity_types as api_entity_types,
 )
-from humancellatlas.data.metadata.helpers.staging_area import (
-    GitHubStagingAreaFactory,
-)
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
 )
-from humancellatlas.data.metadata.helpers.json import as_json
-from humancellatlas.data.metadata.helpers.schema_examples import download_example_bundle
+from humancellatlas.data.metadata.helpers.json import (
+    as_json,
+)
+from humancellatlas.data.metadata.helpers.schema_examples import (
+    download_example_bundle,
+)
+from humancellatlas.data.metadata.helpers.staging_area import (
+    GitHubStagingAreaFactory,
+)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s %(name)s %(threadName)s: %(message)s", )

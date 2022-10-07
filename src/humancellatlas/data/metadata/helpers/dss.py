@@ -1,21 +1,35 @@
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
+from concurrent.futures import (
+    ThreadPoolExecutor,
+)
+from functools import (
+    lru_cache,
+)
 import logging
 import os
 from typing import (
+    Any,
     List,
+    Mapping,
     Optional,
     Tuple,
-    Mapping,
-    Any,
 )
-from unittest.mock import patch
+from unittest.mock import (
+    patch,
+)
 
-from hca.dss import DSSClient
-from requests import Session
-from urllib3 import Timeout
+from hca.dss import (
+    DSSClient,
+)
+from requests import (
+    Session,
+)
+from urllib3 import (
+    Timeout,
+)
 
-from humancellatlas.data.metadata.api import JSON
+from humancellatlas.data.metadata.api import (
+    JSON,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +175,9 @@ class _DSSClient(DSSClient):
         if self._adapter_args is None:
             super()._set_retry_policy(session)
         else:
-            from requests.sessions import HTTPAdapter
+            from requests.sessions import (
+                HTTPAdapter,
+            )
 
             class MyHTTPAdapter(HTTPAdapter):
 

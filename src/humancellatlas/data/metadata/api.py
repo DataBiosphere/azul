@@ -2,7 +2,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from collections import defaultdict
+from collections import (
+    defaultdict,
+)
 from dataclasses import (
     dataclass,
     field,
@@ -12,7 +14,9 @@ from datetime import (
     datetime,
     timezone,
 )
-from itertools import chain
+from itertools import (
+    chain,
+)
 from typing import (
     Any,
     Dict,
@@ -28,7 +32,9 @@ from typing import (
     TypeVar,
     Union,
 )
-from uuid import UUID
+from uuid import (
+    UUID,
+)
 import warnings
 
 from humancellatlas.data.metadata.age_range import (
@@ -247,14 +253,14 @@ class ProjectPublication:
 
     @property
     def publication_title(self):
-        warnings.warn(f"ProjectPublication.publication_title is deprecated. "
-                      f"Use ProjectPublication.title instead.", DeprecationWarning)
+        warnings.warn("ProjectPublication.publication_title is deprecated. "
+                      "Use ProjectPublication.title instead.", DeprecationWarning)
         return self.title
 
     @property
     def publication_url(self):
-        warnings.warn(f"ProjectPublication.publication_url is deprecated. "
-                      f"Use ProjectPublication.url instead.", DeprecationWarning)
+        warnings.warn("ProjectPublication.publication_url is deprecated. "
+                      "Use ProjectPublication.url instead.", DeprecationWarning)
         return self.url
 
 
@@ -280,8 +286,8 @@ class ProjectContact:
 
     @property
     def contact_name(self) -> str:
-        warnings.warn(f"ProjectContact.contact_name is deprecated. "
-                      f"Use ProjectContact.name instead.", DeprecationWarning)
+        warnings.warn("ProjectContact.contact_name is deprecated. "
+                      "Use ProjectContact.name instead.", DeprecationWarning)
         return self.name
 
 
@@ -427,14 +433,14 @@ class DonorOrganism(Biomaterial):
 
     @property
     def biological_sex(self):
-        warnings.warn(f"DonorOrganism.biological_sex is deprecated. "
-                      f"Use DonorOrganism.sex instead.", DeprecationWarning)
+        warnings.warn("DonorOrganism.biological_sex is deprecated. "
+                      "Use DonorOrganism.sex instead.", DeprecationWarning)
         return self.sex
 
     @property
     def disease(self):
-        warnings.warn(f"DonorOrganism.disease is deprecated. "
-                      f"Use DonorOrganism.diseases instead.", DeprecationWarning)
+        warnings.warn("DonorOrganism.disease is deprecated. "
+                      "Use DonorOrganism.diseases instead.", DeprecationWarning)
         return self.diseases
 
 
@@ -466,8 +472,8 @@ class SpecimenFromOrganism(Biomaterial):
 
     @property
     def disease(self):
-        warnings.warn(f"SpecimenFromOrganism.disease is deprecated. "
-                      f"Use SpecimenFromOrganism.diseases instead.", DeprecationWarning)
+        warnings.warn("SpecimenFromOrganism.disease is deprecated. "
+                      "Use SpecimenFromOrganism.diseases instead.", DeprecationWarning)
         return self.diseases
 
     @property
@@ -507,14 +513,14 @@ class CellSuspension(Biomaterial):
 
     @property
     def total_estimated_cells(self) -> int:
-        warnings.warn(f"CellSuspension.total_estimated_cells is deprecated. "
-                      f"Use CellSuspension.estimated_cell_count instead.", DeprecationWarning)
+        warnings.warn("CellSuspension.total_estimated_cells is deprecated. "
+                      "Use CellSuspension.estimated_cell_count instead.", DeprecationWarning)
         return self.estimated_cell_count
 
     @property
     def selected_cell_type(self) -> Set[str]:
-        warnings.warn(f"CellSuspension.selected_cell_type is deprecated. "
-                      f"Use CellSuspension.selected_cell_types instead.", DeprecationWarning)
+        warnings.warn("CellSuspension.selected_cell_type is deprecated. "
+                      "Use CellSuspension.selected_cell_types instead.", DeprecationWarning)
         return self.selected_cell_types
 
 
@@ -534,8 +540,8 @@ class CellLine(Biomaterial):
 
     @property
     def cell_line_type(self) -> str:
-        warnings.warn(f"CellLine.cell_line_type is deprecated. "
-                      f"Use CellLine.type instead.", DeprecationWarning)
+        warnings.warn("CellLine.cell_line_type is deprecated. "
+                      "Use CellLine.type instead.", DeprecationWarning)
         return self.type
 
 
@@ -705,8 +711,8 @@ class LibraryPreparationProtocol(Protocol):
 
     @property
     def library_construction_approach(self) -> str:
-        warnings.warn(f"LibraryPreparationProtocol.library_construction_approach is deprecated. "
-                      f"Use LibraryPreparationProtocol.library_construction_method instead.", DeprecationWarning)
+        warnings.warn("LibraryPreparationProtocol.library_construction_approach is deprecated. "
+                      "Use LibraryPreparationProtocol.library_construction_method instead.", DeprecationWarning)
         return self.library_construction_method
 
 
@@ -845,8 +851,8 @@ class File(LinkedEntity):
 
     @property
     def file_format(self) -> str:
-        warnings.warn(f"File.file_format is deprecated. "
-                      f"Use File.format instead.", DeprecationWarning)
+        warnings.warn("File.file_format is deprecated. "
+                      "Use File.format instead.", DeprecationWarning)
         return self.format
 
     @property

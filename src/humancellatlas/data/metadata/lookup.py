@@ -1,9 +1,11 @@
+from enum import (
+    Enum,
+)
 from typing import (
-    TypeVar,
     Mapping,
+    TypeVar,
     Union,
 )
-from enum import Enum
 
 K = TypeVar('K')
 V = TypeVar('V')

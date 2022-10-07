@@ -1,10 +1,14 @@
-from io import BytesIO
+from io import (
+    BytesIO,
+)
+import json
 import tarfile
 import urllib.request
 import uuid
-import json
 
-from dcplib.checksumming_io import ChecksummingSink
+from dcplib.checksumming_io import (
+    ChecksummingSink,
+)
 
 
 def download_example_bundle(repo, branch, path='/'):  # pragma: no cover (because of canning)
@@ -31,22 +35,26 @@ def download_example_bundle(repo, branch, path='/'):  # pragma: no cover (becaus
                         sink.write(contents)
                         md_file_type = member_path.partition('.')[2]
                         checksums = sink.get_checksums()
-                        manifest.append({**checksums,
-                                         'content-type': f'application/json; dcp-type="metadata/{md_file_type}"',
-                                         'indexed': True,
-                                         'name': member_path,
-                                         'size': member.size,
-                                         'uuid': str(uuid.uuid4()),
-                                         'version': '1'})
+                        manifest.append({
+                            **checksums,
+                            'content-type': f'application/json; dcp-type="metadata/{md_file_type}"',
+                            'indexed': True,
+                            'name': member_path,
+                            'size': member.size,
+                            'uuid': str(uuid.uuid4()),
+                            'version': '1'
+                        })
                         schema_name, _, suffix = member_path[:-5].rpartition('_')
                         if schema_name.endswith('_file') or schema_name == 'file':
                             # Fake the manifest entry for the data file as best as we can. Reuse the metadata file's
                             # checksums for the data file.
-                            manifest.append({**checksums,
-                                             'content-type': 'application/octet-stream',
-                                             'indexed': False,
-                                             'name': json_contents['file_core']['file_name'],
-                                             'size': member.size,
-                                             'uuid': str(uuid.uuid4()),
-                                             'version': '1'})
+                            manifest.append({
+                                **checksums,
+                                'content-type': 'application/octet-stream',
+                                'indexed': False,
+                                'name': json_contents['file_core']['file_name'],
+                                'size': member.size,
+                                'uuid': str(uuid.uuid4()),
+                                'version': '1'
+                            })
     return manifest, metadata_files

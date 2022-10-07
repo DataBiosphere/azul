@@ -1,13 +1,16 @@
 import copy
-from uuid import UUID
-
 from dataclasses import (
     field,
     fields,
     is_dataclass,
 )
+from uuid import (
+    UUID,
+)
 
-from humancellatlas.data.metadata.api import Entity
+from humancellatlas.data.metadata.api import (
+    Entity,
+)
 
 
 def as_json(obj, fld: field = None):
