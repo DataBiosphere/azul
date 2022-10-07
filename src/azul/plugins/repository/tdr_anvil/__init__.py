@@ -339,16 +339,6 @@ class Plugin(TDRPlugin):
                 ON f.file_id IN UNNEST(ama.generated_file_id)
             UNION ALL SELECT
                   f.file_id,
-                  'analysisactivity',
-                  asa.analysisactivity_id,
-                  asa.used_file_id,
-                  [],
-                  []
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'analysisactivity'))} AS asa
-                ON f.file_id IN UNNEST(asa.generated_file_id)
-            UNION ALL SELECT
-                  f.file_id,
                   'assayactivity',
                   aya.assayactivity_id,
                   [],
@@ -486,13 +476,6 @@ class Plugin(TDRPlugin):
         rows = self._run_sql(f'''
             WITH activities AS (
                 SELECT
-                    asa.analysisactivity_id as activity_id,
-                    'analysisactivity' as activity_type,
-                    asa.used_file_id,
-                    asa.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'analysisactivity'))} AS asa
-                UNION ALL
-                SELECT
                     ala.alignmentactivity_id,
                     'alignmentactivity',
                     ala.used_file_id,
@@ -602,11 +585,6 @@ class Plugin(TDRPlugin):
             'alignmentactivity_id',
             'data_modality',
             'date_created',
-            'xref'
-        },
-        'analysisactivity': {
-            'analysisactivity_id',
-            'analysis_type',
             'xref'
         },
         'assayactivity': {

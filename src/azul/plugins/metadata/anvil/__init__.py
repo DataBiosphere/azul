@@ -103,7 +103,6 @@ class Plugin(MetadataPlugin):
                     f: f for f in [
                         'activity_id',
                         'activity_type',
-                        'analysis_type',
                         'assay_category',
                         'data_modality',
                         'date_submitted',
@@ -190,7 +189,6 @@ class Plugin(MetadataPlugin):
     def facets(self) -> Sequence[str]:
         return [
             'activity_type',
-            'analysis_type',
             'anatomical_site',
             'assay_category',
             'biosample_type',

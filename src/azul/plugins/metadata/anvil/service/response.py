@@ -185,7 +185,6 @@ class AnvilSearchResponseStage(SearchResponseStage):
     _non_pivotal_fields_by_entity_type = {
         'activities': {
             'activity_type',
-            'analysis_type'
             'assay_category',
             'data_modality'
         },

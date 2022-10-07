@@ -197,7 +197,6 @@ class BaseTransformer(Transformer, ABC):
             **cls._entity_types(),
             'activity_id': null_str,
             'activity_type': null_str,
-            'analysis_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
             'started_at_time': null_datetime,
@@ -373,7 +372,6 @@ class BaseTransformer(Transformer, ABC):
 
     _activity_polymorphic_types = {
         'alignmentactivity',
-        'analysisactivity',
         'assayactivity',
         'librarypreparationactivity',
         'sequencingactivity'
