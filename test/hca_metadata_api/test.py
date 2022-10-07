@@ -57,9 +57,6 @@ from humancellatlas.data.metadata.helpers.dss import (
 from humancellatlas.data.metadata.helpers.json import (
     as_json,
 )
-from humancellatlas.data.metadata.helpers.schema_examples import (
-    download_example_bundle,
-)
 from humancellatlas.data.metadata.helpers.staging_area import (
     GitHubStagingAreaFactory,
 )
@@ -144,12 +141,7 @@ class TestAccessorApi(TestCase):
         version = '2018-08-03T082009.272868Z'
         canning_directory = os.path.join('examples', directory)
         manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
-        if manifest is None:  # pragma: no cover
-            manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
-                                                               branch='develop',
-                                                               path=f'examples/bundles/public-beta/{directory}/')
-            self._can_bundle(canning_directory, uuid, version, manifest, metadata_files)
-            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        self.assertIsNotNone(manifest)
         self._assert_bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
