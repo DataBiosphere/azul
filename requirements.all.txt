@@ -1,8 +1,6 @@
-argcomplete==1.12.3
 argh==0.26.2
 arrow==0.12.1
 asn1crypto==0.24.0
-atomicwrites==1.4.1
 attrs==19.3.0
 aws-requests-auth==0.4.2
 awscli==1.19.33
@@ -22,12 +20,9 @@ charset-normalizer==2.0.12
 chevron==0.14.0
 click==8.1.3
 colorama==0.4.3
-commonmark==0.9.1
 configargparse==1.5.3
 coverage==5.1
-crc32c==2.3
 cryptography==38.0.1
-dcplib==2.1.2
 deprecated==1.2.9
 docker==3.4.1
 docker-pycreds==0.4.0
@@ -49,7 +44,6 @@ google-api-core==2.10.1
 google-api-python-client==1.7.8
 google-auth==1.28.0
 google-auth-httplib2==0.1.0
-google-auth-oauthlib==0.5.3
 google-cloud-bigquery==1.28.2
 google-cloud-bigquery-reservation==1.6.3
 google-cloud-core==2.3.2
@@ -59,7 +53,6 @@ google-resumable-media==1.3.3
 googleapis-common-protos==1.56.4
 greenlet==1.1.3
 grpcio==1.34.1
-hca==7.0.1
 httplib2==0.20.4
 idna==3.1
 importlib-metadata==5.0.0
@@ -67,7 +60,6 @@ inquirer==2.10.0
 itsdangerous==2.1.2
 jinja2==3.0.1
 jmespath==0.9.5
-jsonpointer==1.14
 jsonschema==3.2.0
 locust==1.2.3
 markupsafe==2.1.1
@@ -79,7 +71,6 @@ mypy-boto3-lambda==1.17.29.0
 mypy-boto3-s3==1.17.29.0
 mypy-boto3-sqs==1.17.29.0
 mypy-extensions==0.4.3
-oauthlib==3.2.1
 openapi-spec-validator==0.2.8
 orderedmultidict==1.0.1
 pathtools==0.1.2
@@ -88,7 +79,6 @@ ply==3.10
 proto-plus==1.22.1
 protobuf==3.20.3
 psutil==5.9.2
-puremagic==1.4
 py==1.11.0
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
@@ -110,7 +100,6 @@ pyzmq==24.0.1
 readchar==4.0.3
 requests==2.26.0
 requests-http-signature==0.0.3
-requests-oauthlib==1.3.1
 requirements-parser==0.2.0+1
 responses==0.10.2
 rsa==4.7
@@ -120,11 +109,8 @@ six==1.16.0
 smmap==5.0.0
 smmap2==3.0.1
 strict-rfc3339==0.7
-tenacity==5.0.4
 text-unidecode==1.3
 tinyquery==1.2+1
-tqdm==4.64.1
-tweak==1.0.4
 typing-extensions==3.7.4
 tzdata==2022.4
 tzlocal==4.2

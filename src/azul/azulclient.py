@@ -54,9 +54,6 @@ from azul.indexer.index_service import (
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.plugins.repository import (
-    dss,
-)
 from azul.queues import (
     Queues,
 )
@@ -132,21 +129,6 @@ class AzulClient(object):
         ]
         self.index(catalog, notifications)
         return len(notifications)
-
-    def bundle_has_project_json(self,
-                                catalog: CatalogName,
-                                bundle_fqid: SourcedBundleFQID
-                                ) -> bool:
-        plugin = self.repository_plugin(catalog)
-        if isinstance(plugin, dss.Plugin):
-            manifest = plugin.fetch_bundle_manifest(bundle_fqid)
-            # Since we now use DSS' GET /bundles/all which doesn't support
-            # filtering, we need to filter by hand.
-            return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest)
-        else:
-            # Other plugins don't support the method and we'll just assume that
-            # every bundle references a project.
-            return True
 
     def index(self, catalog: CatalogName, notifications: Iterable[JSON], delete: bool = False):
         errors = defaultdict(int)

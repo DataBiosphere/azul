@@ -1,3 +1,4 @@
+atomicwrites==1.4.1
 awscli==1.19.33
 git+https://github.com/DataBiosphere/azul-chalice@1.27.0+8#egg=chalice
 coverage==5.1
