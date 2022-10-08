@@ -220,15 +220,6 @@ other_public_keys = {
     'prod': []
 }
 
-# AWS accounts we trust enough to assume roles in
-#
-friend_accounts = {
-    861229788715: 'hca-dev',
-    109067257620: 'hca-prod',
-    122796619775: 'platform-hca-dev',
-    542754589326: 'platform-hca-prod'
-}
-
 logs_path_prefix = 'logs/alb'
 gitlab_logs_path = f'{logs_path_prefix}/AWSLogs/{aws.account}/*'
 
@@ -334,16 +325,6 @@ def allow_service(service: str,
 def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
-
-dss_direct_access_policy_statement = {
-    'actions': [
-        'sts:AssumeRole',
-    ],
-    'resources': [
-        f'arn:aws:iam::{account}:role/azul-*'
-        for account in friend_accounts.keys()
-    ]
-}
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:20.10.18-dind'
@@ -490,8 +471,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    RoleNameWithPath='*',
                                    UserNameWithPath='*'),
 
-                    dss_direct_access_policy_statement,
-
                     *allow_service('Certificate Manager',
                                    # ACM ARNs refer to certificates by ID so we
                                    # cannot restrict to name or prefix
@@ -616,8 +595,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'values': [aws.permissions_boundary_arn]
                         }
                     },
-
-                    dss_direct_access_policy_statement,
 
                     {
                         'actions': [
