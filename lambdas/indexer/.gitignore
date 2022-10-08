@@ -3,5 +3,6 @@
 /lambda-policy.json
 /vendor/*
 !/vendor/azul
+!/vendor/humancellatlas
 !/vendor/resources/static
 !/vendor/resources/*.template.py

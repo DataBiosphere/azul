@@ -152,6 +152,11 @@ format: check_venv check_docker
 test: check_python
 	coverage run -m unittest discover test --verbose
 
+.PHONY: test_list
+test_list: check_python
+	python scripts/list_unit_tests.py test
+
+
 .PHONY: tag
 tag: check_branch
 	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \

@@ -28,10 +28,6 @@ from typing import (
 from furl import (
     furl,
 )
-from humancellatlas.data.metadata.helpers.staging_area import (
-    GitHubStagingAreaFactory,
-    StagingArea,
-)
 
 from azul import (
     CatalogName,
@@ -59,6 +55,10 @@ from azul.types import (
 )
 from azul.uuids import (
     validate_uuid_prefix,
+)
+from humancellatlas.data.metadata.helpers.staging_area import (
+    GitHubStagingAreaFactory,
+    StagingArea,
 )
 
 log = logging.getLogger(__name__)

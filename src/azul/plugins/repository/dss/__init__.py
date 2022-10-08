@@ -24,9 +24,6 @@ from deprecated import (
 from furl import (
     furl,
 )
-from humancellatlas.data.metadata.helpers.dss import (
-    download_bundle_metadata,
-)
 from more_itertools import (
     one,
 )
@@ -67,6 +64,9 @@ from azul.types import (
 )
 from azul.uuids import (
     validate_uuid_prefix,
+)
+from humancellatlas.data.metadata.helpers.dss import (
+    download_bundle_metadata,
 )
 
 log = logging.getLogger(__name__)

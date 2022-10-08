@@ -154,6 +154,7 @@ class TestUnexpectedWarnings(TestCase):
                 suite.run(result)
 
                 self.assertEqual(1, result.testsRun)
+                self.assertEqual(1, len(result.errors), repr(result.errors))
                 failed_test, trace_back = cast(tuple[Any, str], one(result.errors))
                 self.assertEqual(f'tearDownClass ({__name__}.{Test.__qualname__})', str(failed_test))
                 error_line = trace_back.splitlines()[-1]

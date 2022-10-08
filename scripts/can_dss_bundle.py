@@ -9,16 +9,6 @@ import logging
 import os
 import sys
 
-from humancellatlas.data.metadata.api import (
-    Bundle,
-)
-from humancellatlas.data.metadata.helpers.dss import (
-    download_bundle_metadata,
-)
-from humancellatlas.data.metadata.helpers.json import (
-    as_json,
-)
-
 from azul import (
     config,
 )
@@ -28,6 +18,15 @@ from azul.files import (
 )
 from azul.logging import (
     configure_script_logging,
+)
+from humancellatlas.data.metadata.api import (
+    Bundle,
+)
+from humancellatlas.data.metadata.helpers.dss import (
+    download_bundle_metadata,
+)
+from humancellatlas.data.metadata.helpers.json import (
+    as_json,
 )
 
 logger = logging.getLogger(__name__)
