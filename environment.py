@@ -444,6 +444,9 @@ def env() -> Mapping[str, Optional[str]]:
 
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
+        # FIXME: Remove once we upgrade to botocore 1.28.x
+        #        https://github.com/DataBiosphere/azul/issues/4560
+        'BOTO_DISABLE_COMMONNAME': 'true',
 
         # The path of the directory where the public key infrastructure files
         # are managed on developer, operator and administrator machines. The
