@@ -73,6 +73,10 @@ _deauth () {
 
 _deauth
 
+_revenv () {
+  deactivate && make virtualenv && source .venv/bin/activate && make envhook requirements
+}
+
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
 # `export_environment.py`, too. We could also pass -S to `python3` but that
 # causes problems on Travis (`importlib.util` failing to import `contextlib`).
