@@ -212,7 +212,7 @@ class AzulUnitTestCase(AzulTestCase):
         # because it resets all backends and therefore requires that all Moto
         # extras are installed. The backends listed here need to match the
         #  extras specified for the `moto` dependency in `requirements.dev.txt`.
-        for name in ('s3', 'sqs', 'sns', 'dynamodb2'):
+        for name in ('s3', 'sqs', 'sns', 'dynamodb'):
             backends = moto.backends.get_backend(name)
             for region_name, backend in backends.items():
                 backend.reset()

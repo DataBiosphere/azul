@@ -1,5 +1,9 @@
 import unittest
 
+from moto import (
+    mock_dynamodb,
+)
+
 from azul.logging import (
     configure_test_logging,
 )
@@ -17,6 +21,7 @@ def setUpModule():
     configure_test_logging()
 
 
+@mock_dynamodb
 class TestVersionService(VersionTableTestCase):
 
     def setUp(self):
