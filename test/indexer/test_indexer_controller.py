@@ -252,7 +252,7 @@ class TestIndexController(IndexerTestCase):
                     fqid = self._fqid_from_notification(n)
                     partition = BundlePartition.from_json(n['notification']['partition'])
                     partitions[fqid].add(partition)
-                # Assert that each bundle was paritioned ...
+                # Assert that each bundle was partitioned ...
                 self.assertEqual(partitions.keys(), set(fqids))
                 # ... into two partitions. The number of partitions depends on
                 # the patched max_partition_size above and the number of
