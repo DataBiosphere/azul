@@ -35,17 +35,17 @@ log = logging.getLogger(__name__)
 
 @enum.unique
 class ImportErrors(Enum):
-    same_line = 'AZUL101 more than one symbol imported per line'
-    not_joined = 'AZUL102 symbols from the same module imported in separate statements'
+    same_line = 'AZL101 more than one symbol imported per line'
+    not_joined = 'AZL102 symbols from the same module imported in separate statements'
 
-    statement_not_ordered = 'AZUL111 import statements are not correctly ordered'
-    symbol_not_ordered = 'AZUL112 symbols in from import are not correctly ordered'
+    statement_not_ordered = 'AZL111 import statements are not correctly ordered'
+    symbol_not_ordered = 'AZL112 symbols in from import are not correctly ordered'
 
-    not_wrapped = 'AZUL131 from import lacks parentheses'
-    missing_breaks = 'AZUL132 missing newline between parentheses and imported symbols'
-    no_trailing_comma = 'AZUL133 symbol in from import lacks trailing comma'
+    not_wrapped = 'AZL131 from import lacks parentheses'
+    missing_breaks = 'AZL132 missing newline between parentheses and imported symbols'
+    no_trailing_comma = 'AZL133 symbol in from import lacks trailing comma'
 
-    unresolvable = 'AZUL141 cannot resolve import statement from project root'
+    unresolvable = 'AZL141 cannot resolve import statement from project root'
 
 
 @enum.unique
@@ -137,14 +137,20 @@ class ModuleOrderInfo:
         return module_name, is_from_import
 
     @classmethod
+    def from_stmt(cls, src: str) -> 'ModuleOrderInfo':
+        s = one(ast.parse(src).body)
+        assert isinstance(s, (ast.Import, ast.ImportFrom))
+        return ModuleOrderInfo.from_ast(s)
+
+    @classmethod
     def from_ast(cls, node: EitherImport) -> 'ModuleOrderInfo':
         """
-        >>> def from_stmt(src): return ModuleOrderInfo.from_ast(one(ast.parse(src).body))
+        >>> from_stmt = ModuleOrderInfo.from_stmt
 
-        >>> from_stmt('import azul.indexer, azul.service')
+        >>> from_stmt('import azul.indexer, azul.service')  # doctest: +ELLIPSIS
         Traceback (most recent call last):
         ...
-        ValueError: too many items in iterable (expected 1)
+        ValueError: Expected exactly one item in iterable, ...
 
         >>> from_stmt('import does_not_exist')
         Traceback (most recent call last):
