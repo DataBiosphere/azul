@@ -63,8 +63,8 @@ class AzulTestCase(TestCase):
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: {
-                RE(r'.*<ssl.SSLSocket.*>'),
-                RE(r'.*<socket.socket.*>')
+                RE(r'.*<ssl\.SSLSocket.*>'),
+                RE(r'.*<socket\.socket.*>'),
             },
             DeprecationWarning: {
                 RE(r'Call to deprecated method .*\. \(DOS support will be removed\)'),
