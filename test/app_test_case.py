@@ -127,7 +127,7 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         return ChaliceConfig.create(lambda_timeout=config.api_gateway_lambda_timeout)
 
     def tearDown(self):
-        log.debug("Tearing Down Data")
+        log.debug('Tearing down server thread …')
         self.server_thread.kill_thread()
         self.server_thread.join(timeout=10)
         if self.server_thread.is_alive():
