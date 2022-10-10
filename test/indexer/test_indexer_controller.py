@@ -101,7 +101,7 @@ class TestIndexController(IndexerTestCase, SqsTestCase):
             'receiptHandle': 'ThisWasARandomString',
             'attributes': {'ApproximateReceiveCount': attempts}
         }
-        return SQSRecord(event_dict=event_dict, context='controller_test')
+        return SQSRecord(event_dict=event_dict, context={})
 
     @property
     def _notifications_queue(self):

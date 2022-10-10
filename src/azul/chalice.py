@@ -72,6 +72,10 @@ C = TypeVar('C', bound='AppController')
 
 
 class AzulChaliceApp(Chalice):
+    # FIXME: Remove these two class attributes once upstream issue is fixed
+    #        https://github.com/DataBiosphere/azul/issues/4558
+    lambda_context = None
+    current_request = None
 
     def __init__(self,
                  app_name: str,
