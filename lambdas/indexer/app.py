@@ -10,7 +10,6 @@ from azul import (
     CatalogName,
     cached_property,
     config,
-    hmac,
 )
 from azul.chalice import (
     AzulChaliceApp,
@@ -20,6 +19,7 @@ from azul.health import (
 )
 from azul.hmac import (
     HMACAuthentication,
+    SignatureHelper,
 )
 from azul.indexer.index_controller import (
     IndexController,
@@ -31,7 +31,7 @@ from azul.logging import (
 log = logging.getLogger(__name__)
 
 
-class IndexerApp(AzulChaliceApp):
+class IndexerApp(AzulChaliceApp, SignatureHelper):
 
     @cached_property
     def health_controller(self):
@@ -48,7 +48,7 @@ class IndexerApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False))
 
     def _authenticate(self) -> Optional[HMACAuthentication]:
-        return hmac.auth_from_request(self.current_request)
+        return self.auth_from_request(self.current_request)
 
 
 app = IndexerApp()

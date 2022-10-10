@@ -1,16 +1,27 @@
+import hashlib
 import logging
 from typing import (
     Optional,
 )
 
 import chalice
-import requests
-from requests_http_signature import (
-    HTTPSignatureAuth,
+from http_message_signatures import (
+    HTTPMessageSigner,
+    HTTPMessageVerifier,
+    HTTPSignatureKeyResolver,
 )
+from http_message_signatures.algorithms import (
+    HMAC_SHA256,
+)
+import http_sfv
+from more_itertools import (
+    one,
+)
+import requests
+import requests.sessions
 
 from azul import (
-    require,
+    cached_property,
 )
 from azul.auth import (
     HMACAuthentication,
@@ -19,59 +30,72 @@ from azul.deployment import (
     aws,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
-def auth_from_request(request: chalice.app.Request
-                      ) -> Optional[HMACAuthentication]:
-    try:
-        header = request.headers['Authorization']
-    except KeyError:
-        return None
-    else:
-        prefix = 'Signature '
-        if header.startswith(prefix):
-            key_id = verify(request)
-            return HMACAuthentication(key_id)
+class SignatureHelper(HTTPSignatureKeyResolver):
+    """
+    Client-side signing of HTTP requests and server-side checking of the
+    resulting signatures. On the  client, requests are represented as instances
+    of requests.Request. On the server, chalice.Request is used. Internally
+    though, the latter is converted back to the former.
+
+    This class should work as both a mix-in, and stand-alone.
+    """
+
+    @cached_property
+    def verifier(self):
+        return HTTPMessageVerifier(signature_algorithm=HMAC_SHA256,
+                                   key_resolver=self)
+
+    @cached_property
+    def signer(self):
+        return HTTPMessageSigner(signature_algorithm=HMAC_SHA256,
+                                 key_resolver=self)
+
+    def auth_from_request(self, request: chalice.app.Request) -> Optional[HMACAuthentication]:
+        try:
+            request.headers['signature']
+        except KeyError:
+            return None
         else:
-            raise chalice.UnauthorizedError(header)
+            key_id = self.verify(request)
+            return HMACAuthentication(key_id)
 
+    def resolve_public_key(self, key_id: str) -> bytes:
+        return self.resolve_private_key(key_id)
 
-def verify(current_request: chalice.app.Request) -> str:
-    try:
-        current_request.headers['authorization']
-    except KeyError as e:
-        logger.warning('Missing authorization header: ', exc_info=e)
-        chalice.UnauthorizedError('Not Authorized')
-
-    base_url = current_request.headers['host']
-    path = current_request.context['resourcePath']
-    endpoint = f'{base_url}{path}'
-    method = current_request.context['httpMethod']
-    headers = current_request.headers
-    _key_id: Optional[str] = None
-
-    def key_resolver(*, key_id, algorithm):
-        require(algorithm == 'hmac-sha256', algorithm)
-        key, _ = aws.get_hmac_key_and_id_cached(key_id)
-        key = key.encode()
-        # Since HTTPSignatureAuth.verify doesn't return anything we need to
-        # extract the key ID in this round-about way.
-        nonlocal _key_id
-        _key_id = key_id
+    def resolve_private_key(self, key_id: str) -> bytes:
+        key, actual_key_id = aws.get_hmac_key_and_id()
+        assert actual_key_id == key_id
         return key
 
-    try:
-        HTTPSignatureAuth.verify(requests.Request(method, endpoint, headers),
-                                 key_resolver=key_resolver)
-    except BaseException as e:
-        logger.warning('Exception while validating HMAC: ', exc_info=e)
-        raise chalice.UnauthorizedError('Invalid authorization credentials')
-    else:
-        assert _key_id is not None
-        return _key_id
+    def verify(self, current_request: chalice.app.Request) -> str:
+        try:
+            base_url = current_request.headers['host']
+            path = current_request.context['path']
+            endpoint = f'http://{base_url}{path}'
+            method = current_request.context['httpMethod']
+            headers = current_request.headers
+            request = requests.Request(method, endpoint, headers, data=current_request.raw_body).prepare()
+            result = one(self.verifier.verify(request))
+        except BaseException as e:
+            log.warning('Exception while validating HMAC: ', exc_info=e)
+            raise chalice.UnauthorizedError('Invalid authorization credentials')
+        else:
+            return result.parameters
 
+    def sign_and_send(self, request: requests.Request) -> requests.Response:
+        request = request.prepare()
+        self.sign(request)
+        with requests.sessions.Session() as session:
+            response = session.send(request)
+        return response
 
-def prepare():
-    key, key_id = aws.get_hmac_key_and_id()
-    return HTTPSignatureAuth(key=key.encode(), key_id=key_id)
+    def sign(self, request: requests.PreparedRequest):
+        digest = hashlib.sha256(request.body).digest()
+        request.headers['Content-Digest'] = str(http_sfv.Dictionary({'sha-256': digest}))
+        key, key_id = aws.get_hmac_key_and_id()
+        self.signer.sign(request,
+                         key_id=key_id,
+                         covered_component_ids=("@method", "@path", "content-digest"))

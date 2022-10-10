@@ -10,20 +10,18 @@ from moto import (
     mock_sts,
 )
 import requests
-from requests_http_signature import (
-    HTTPSignatureAuth,
-)
 
 from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
     JSON,
-    config,
-    hmac,
 )
 from azul.deployment import (
     aws,
+)
+from azul.hmac import (
+    SignatureHelper,
 )
 
 
@@ -117,17 +115,15 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 response = self._test(body, delete, valid_auth=False)
                 self.assertEqual(401, response.status_code)
 
-    def _test(self, body: JSON, delete: bool, valid_auth: bool) -> requests.Response:
-        hmac_creds = {'key': b'good key', 'key_id': 'the id'}
-        with patch('azul.deployment.aws.get_hmac_key_and_id', return_value=hmac_creds):
-            if valid_auth:
-                auth = hmac.prepare()
-            else:
-                auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
+    def _test(self, body: JSON, delete: bool, *, valid_auth: bool) -> requests.Response:
+        with patch.object(aws, 'get_hmac_key_and_id') as get_hmac_key_and_id:
+            get_hmac_key_and_id.return_value = b'good key', 'the id'
             url = self.base_url.set(path=(self.catalog, 'delete' if delete else 'add'))
-            return requests.post(str(url), json=body, auth=auth)
-
-    @staticmethod
-    def _create_mock_notifications_queue():
-        sqs = aws.resource('sqs')
-        sqs.create_queue(QueueName=config.notifications_queue_name())
+            request = requests.Request(method='POST', url=str(url), json=body)
+            hmac_support = SignatureHelper()
+            if valid_auth:
+                return hmac_support.sign_and_send(request)
+            else:
+                with patch.object(hmac_support, 'resolve_private_key') as p:
+                    p.return_value = b'bad key'
+                    return hmac_support.sign_and_send(request)

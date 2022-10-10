@@ -39,10 +39,12 @@ from azul import (
     cache,
     cached_property,
     config,
-    hmac,
 )
 from azul.es import (
     ESClientFactory,
+)
+from azul.hmac import (
+    SignatureHelper,
 )
 from azul.indexer import (
     SourceRef,
@@ -68,7 +70,7 @@ logger = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class AzulClient(object):
+class AzulClient(SignatureHelper):
     num_workers: int = 16
 
     @cache
@@ -79,7 +81,8 @@ class AzulClient(object):
         """
         Send a mock DSS notification to the indexer
         """
-        response = requests.post(str(indexer_url), json=notification, auth=hmac.prepare())
+        request = requests.Request('POST', str(indexer_url), json=notification)
+        response = self.sign_and_send(request)
         response.raise_for_status()
         return response.content
 
