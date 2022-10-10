@@ -272,7 +272,7 @@ class AzulUnitTestCase(AzulTestCase):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
         cls._aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.ACCOUNT_ID
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.DEFAULT_ACCOUNT_ID
 
     @classmethod
     def _restore_aws_account_id(cls):
