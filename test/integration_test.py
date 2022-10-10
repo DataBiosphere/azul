@@ -33,7 +33,6 @@ from random import (
     Random,
     randint,
 )
-import re
 import sys
 import tempfile
 import threading
@@ -71,12 +70,6 @@ from google.cloud import (
 from google.oauth2 import (
     service_account,
 )
-from hca.dss import (
-    DSSClient,
-)
-from hca.util import (
-    SwaggerAPIException,
-)
 from more_itertools import (
     first,
     grouper,
@@ -90,6 +83,7 @@ import urllib3
 
 from azul import (
     CatalogName,
+    Config,
     RequirementError,
     cache,
     cached_property,
@@ -106,7 +100,6 @@ from azul.azulclient import (
 from azul.drs import (
     AccessMethod,
 )
-import azul.dss
 from azul.es import (
     ESClientFactory,
 )
@@ -162,9 +155,6 @@ from azul.types import (
 from azul_test_case import (
     AlwaysTearDownTestCase,
     AzulTestCase,
-)
-from humancellatlas.data.metadata.helpers.dss import (
-    download_bundle_metadata,
 )
 
 log = get_test_logger(__name__)
@@ -733,7 +723,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(200, response.status, response.data)
         self.assertEqual(size, int(response.headers['Content-Length']))
 
-    def _check_terra_pfb(self, _: CatalogName, response: bytes):
+    def _check_terra_pfb(self, _catalog: CatalogName, response: bytes):
         reader = fastavro.reader(BytesIO(response))
         for record in reader:
             fastavro.validate(record, reader.writer_schema)
@@ -1364,155 +1354,6 @@ class OpenAPIIntegrationTest(AzulTestCase):
         validate_spec(spec)
 
 
-@unittest.skipIf(config.dss_endpoint is None,
-                 'DSS endpoint is not configured')
-class DSSIntegrationTest(AzulTestCase):
-
-    def test_patched_dss_client(self):
-        query = {
-            "query": {
-                "bool": {
-                    "must_not": [
-                        {
-                            "term": {
-                                "admin_deleted": True
-                            }
-                        }
-                    ],
-                    "must": [
-                        {
-                            "exists": {
-                                "field": "files.project_json"
-                            }
-                        },
-                        {
-                            "range": {
-                                "manifest.version": {
-                                    "gte": "2019-04-01"
-                                }
-                            }
-                        }
-
-                    ]
-                }
-            }
-        }
-        self.maxDiff = None
-        for direct in {config.dss_direct_access, False}:
-            for replica in 'aws', 'gcp':
-                if direct:
-                    with self._failing_s3_get_object():
-                        dss_client = azul.dss.direct_access_client()
-                        self._test_dss_client(direct, query, dss_client, replica, fallback=True)
-                    dss_client = azul.dss.direct_access_client()
-                    self._test_dss_client(direct, query, dss_client, replica, fallback=False)
-                else:
-                    dss_client = azul.dss.client()
-                    self._test_dss_client(direct, query, dss_client, replica, fallback=False)
-
-    class SpecialError(Exception):
-        pass
-
-    def _failing_s3_get_object(self):
-        def make_mock(**kwargs):
-            original = kwargs['spec']
-
-            def mock_boto3_client(service, *args, **kwargs):
-                if service == 's3':
-                    mock_s3 = mock.MagicMock()
-                    mock_s3.get_object.side_effect = self.SpecialError()
-                    return mock_s3
-                else:
-                    return original(service, *args, **kwargs)
-
-            return mock_boto3_client
-
-        return mock.patch('azul.deployment.aws.client', spec=True, new_callable=make_mock)
-
-    def _test_dss_client(self, direct: bool, query: JSON, dss_client: DSSClient, replica: str, fallback: bool):
-        with self.subTest(direct=direct, replica=replica, fallback=fallback):
-            response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
-            bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
-            with mock.patch('azul.dss.logger') as captured_log:
-                _, manifest, metadata = download_bundle_metadata(client=dss_client,
-                                                                 replica=replica,
-                                                                 uuid=bundle_uuid,
-                                                                 version=bundle_version,
-                                                                 num_workers=config.num_dss_workers)
-            log.info('Captured log calls: %r', captured_log.mock_calls)
-            self.assertGreater(len(metadata), 0)
-            self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
-            for f in manifest:
-                self.assertIn('s3_etag', f)
-            # Extract the log method name and the first three words of log
-            # message logged. Note that the PyCharm debugger will call
-            # certain dunder methods on the variable, leading to failed
-            # assertions.
-            actual = [(m, ' '.join(re.split(r'[\s,]', a[0])[:3])) for m, a, k in captured_log.mock_calls]
-            if direct:
-                if replica == 'aws':
-                    if fallback:
-                        expected = [
-                                       ('debug', 'Loading bundle %s'),
-                                       ('debug', 'Loading object %s'),
-                                       ('warning', 'Error accessing bundle'),
-                                       ('warning', 'Failed getting bundle')
-                                   ] + [
-                                       ('debug', 'Loading file %s'),
-                                       ('debug', 'Loading object %s'),
-                                       ('warning', 'Error accessing file'),
-                                       ('warning', 'Failed getting file')
-                                   ] * len(metadata)
-                    else:
-                        expected = [
-                                       ('debug', 'Loading bundle %s'),
-                                       ('debug', 'Loading object %s')
-                                   ] + [
-                                       ('debug', 'Loading file %s'),
-                                       ('debug', 'Loading object %s'),  # file
-                                       ('debug', 'Loading object %s')  # blob
-                                   ] * len(metadata)
-
-                else:
-                    # On `gcp` the precondition check fails right away, preventing any attempts of direct access
-                    expected = [
-                                   ('warning', 'Failed getting bundle')
-                               ] + [
-                                   ('warning', 'Failed getting file')
-                               ] * len(metadata)
-            else:
-                expected = []
-            self.assertSequenceEqual(sorted(expected), sorted(actual))
-
-    def test_get_file_fail(self):
-        for direct in {config.dss_direct_access, False}:
-            with self.subTest(direct=direct):
-                dss_client = azul.dss.direct_access_client() if direct else azul.dss.client()
-                with self.assertRaises(SwaggerAPIException) as e:
-                    dss_client.get_file(uuid='acafefed-beef-4bad-babe-feedfa11afe1',
-                                        version='2018-11-19T23:27:56.056947Z',
-                                        replica='aws')
-                self.assertEqual(e.exception.reason, 'not_found')
-
-    def test_mini_dss_failures(self):
-        uuid = 'acafefed-beef-4bad-babe-feedfa11afe1'
-        version = '2018-11-19T23:27:56.056947Z'
-        with self._failing_s3_get_object():
-            mini_dss = azul.dss.MiniDSS(config.dss_endpoint)
-            with self.assertRaises(self.SpecialError):
-                mini_dss._get_file_object(uuid, version)
-            with self.assertRaises(KeyError):
-                mini_dss._get_blob_key({})
-            with self.assertRaises(self.SpecialError):
-                mini_dss._get_blob('/blobs/foo', {'content-type': 'application/json'})
-            with self.assertRaises(self.SpecialError):
-                mini_dss.get_bundle(uuid, version, 'aws')
-            with self.assertRaises(self.SpecialError):
-                mini_dss.get_file(uuid, version, 'aws')
-            with self.assertRaises(self.SpecialError):
-                mini_dss.get_native_file_url(uuid, version, 'aws')
-
-
 class AzulChaliceLocalIntegrationTest(AzulTestCase):
     url = furl(scheme='http', host='127.0.0.1', port=8000)
     server = None
@@ -1629,7 +1470,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                                           'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests:/0'
                                       })
 
-        with mock.patch.object(azul.Config,
+        with mock.patch.object(Config,
                                'catalogs',
                                new=PropertyMock(return_value={
                                    mock_catalog.name: mock_catalog

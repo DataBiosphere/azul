@@ -12,13 +12,9 @@ from itertools import (
 import json
 import logging
 import os
-import re
 from unittest import (
     TestCase,
     skip,
-)
-from unittest.mock import (
-    Mock,
 )
 from uuid import (
     UUID,
@@ -51,14 +47,8 @@ from humancellatlas.data.metadata.api import (
     SupplementaryFile,
     entity_types as api_entity_types,
 )
-from humancellatlas.data.metadata.helpers.dss import (
-    download_bundle_metadata,
-)
 from humancellatlas.data.metadata.helpers.json import (
     as_json,
-)
-from humancellatlas.data.metadata.helpers.schema_examples import (
-    download_example_bundle,
 )
 from humancellatlas.data.metadata.helpers.staging_area import (
     GitHubStagingAreaFactory,
@@ -144,12 +134,7 @@ class TestAccessorApi(TestCase):
         version = '2018-08-03T082009.272868Z'
         canning_directory = os.path.join('examples', directory)
         manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
-        if manifest is None:  # pragma: no cover
-            manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
-                                                               branch='develop',
-                                                               path=f'examples/bundles/public-beta/{directory}/')
-            self._can_bundle(canning_directory, uuid, version, manifest, metadata_files)
-            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        self.assertIsNotNone(manifest)
         self._assert_bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
@@ -183,50 +168,6 @@ class TestAccessorApi(TestCase):
             return manifest, metadata_files
         else:
             return None, None
-
-    def _mock_get_bundle(self, file_uuid, file_version, content_type):
-        client = Mock()
-        client.get_bundle.paginate.return_value = [
-            {
-                'bundle': {
-                    'version': '2018-09-20T232924.687620Z',
-                    'files': [
-                        {
-                            'name': 'name.json',
-                            'uuid': file_uuid,
-                            'version': file_version,
-                            'indexed': True,
-                            'content-type': content_type
-                        }
-                    ]
-                }
-            }
-        ]
-        return client
-
-    def test_bad_content(self):
-        uuid = 'bad1bad1-bad1-bad1-bad1-bad1bad1bad1'
-        file_uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
-        file_version = '2018-09-20T232924.687620Z'
-        client = self._mock_get_bundle(file_uuid=file_uuid, file_version=file_version, content_type='application/json')
-        client.get_file.return_value = b'{}'
-        with self.assertRaises(TypeError) as cm:
-            download_bundle_metadata(client, 'aws', uuid)
-        self.assertRegex(cm.exception.args[0],
-                         "Expecting file .* to contain a JSON object " +
-                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
-
-    def test_bad_content_type(self):
-        uuid = 'bad1bad1-bad1-bad1-bad1-bad1bad1bad1'
-        file_uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
-        file_version = '2018-09-20T232924.687620Z'
-        client = self._mock_get_bundle(file_uuid=file_uuid, file_version=file_version, content_type='bad')
-        with self.assertRaises(NotImplementedError) as cm:
-            # noinspection PyTypeChecker
-            download_bundle_metadata(client, 'aws', uuid)
-        self.assertEqual(cm.exception.args[0],
-                         f"Expecting file {file_uuid}.{file_version} "
-                         "to have content type 'application/json', not 'bad'")
 
     def test_v5_bundle(self):
         """

@@ -38,9 +38,6 @@ from uuid import (
 )
 
 import attr
-from humancellatlas.data.metadata import (
-    api,
-)
 from more_itertools import (
     ilen,
     one,
@@ -118,6 +115,9 @@ from azul.types import (
     JSON,
     JSONs,
     MutableJSON,
+)
+from humancellatlas.data.metadata import (
+    api,
 )
 
 log = logging.getLogger(__name__)

@@ -8,10 +8,6 @@ from typing import (
     Type,
 )
 
-from humancellatlas.data.metadata import (
-    api,
-)
-
 from azul.indexer import (
     Bundle,
 )
@@ -51,6 +47,9 @@ from azul.service.manifest_service import (
 )
 from azul.types import (
     MutableJSON,
+)
+from humancellatlas.data.metadata import (
+    api,
 )
 
 
