@@ -65,6 +65,9 @@ class AzulTestCase(TestCase):
             ResourceWarning: {
                 RE(r'.*<ssl\.SSLSocket.*>'),
                 RE(r'.*<socket\.socket.*>'),
+                # FIXME: Remove expectation
+                #        https://github.com/DataBiosphere/azul/issues/4564
+                RE(r'unclosed file <_io\.BufferedRandom name=\d+'),
             },
             DeprecationWarning: {
                 RE(r'Call to deprecated method .*\. \(DOS support will be removed\)'),
