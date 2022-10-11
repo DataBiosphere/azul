@@ -241,7 +241,13 @@ class Main:
         return PinnedRequirements(parsed_reqs - {None})
 
     def get_reqs(self, qualfier: Qualifier) -> PinnedRequirements:
-        command = '.venv/bin/pip freeze --all'
+        # Some major version of pip between 19 and 22 changed the format of the
+        # output of `pip freeze` for VCS dependencies. We'll likely have to
+        # upgrade the dependency parser to absorb that. For now we'll just use
+        # `pip list --format=freeze` which resolves VCS dependencies to the
+        # name==version format.
+        #
+        command = '.venv/bin/pip list --format=freeze'
         log.info('Getting direct and transitive %s requirements by running %s on image %s',
                  qualfier.name, command, qualfier.image)
         stdout = self.docker.containers.run(image=qualfier.image,

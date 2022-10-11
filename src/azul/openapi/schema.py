@@ -177,10 +177,10 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
         ]
     }
 
-    >>> enum('foo', 1.0)
+    >>> enum('foo', 1.0)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: too many items in iterable (expected 1)
+    ValueError: Expected exactly one item in iterable, but got <class '...'>, <class '...'>, and perhaps more.
 
     >>> enum('foo', 'bar', type_=int)
     Traceback (most recent call last):

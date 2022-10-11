@@ -1054,28 +1054,28 @@ class PagedManifestGenerator(ManifestGenerator):
                                                         upload_id=partition.multipart_upload_id)
         if partition.page_index is None:
             partition = partition.first_page()
-        buffer = BytesIO()
-        text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-        while True:
-            partition = self.write_page_to(partition, output=text_buffer)
-            if partition.is_last_page or buffer.tell() > self.part_size:
-                break
+        with BytesIO() as buffer:
+            with TextIOWrapper(buffer, encoding='utf-8', write_through=True) as text_buffer:
+                while True:
+                    partition = self.write_page_to(partition, output=text_buffer)
+                    if partition.is_last_page or buffer.tell() > self.part_size:
+                        break
 
-        def upload_part():
-            buffer.seek(0)
-            return self.storage.upload_multipart_part(buffer, partition.index + 1, upload)
+                def upload_part():
+                    buffer.seek(0)
+                    return self.storage.upload_multipart_part(buffer, partition.index + 1, upload)
 
-        if partition.is_last_page:
-            if buffer.tell() > 0:
-                partition = partition.next(part_etag=upload_part())
-            self.storage.complete_multipart_upload(upload, partition.part_etags)
-            file_name = self.file_name(object_key, partition.file_name)
-            tagging = self.tagging(file_name)
-            if tagging is not None:
-                self.storage.put_object_tagging(object_key, tagging)
-            return partition.last(file_name)
-        else:
-            return partition.next(part_etag=upload_part())
+                if partition.is_last_page:
+                    if buffer.tell() > 0:
+                        partition = partition.next(part_etag=upload_part())
+                    self.storage.complete_multipart_upload(upload, partition.part_etags)
+                    file_name = self.file_name(object_key, partition.file_name)
+                    tagging = self.tagging(file_name)
+                    if tagging is not None:
+                        self.storage.put_object_tagging(object_key, tagging)
+                    return partition.last(file_name)
+                else:
+                    return partition.next(part_etag=upload_part())
 
     page_size = 500
 

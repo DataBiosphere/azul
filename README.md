@@ -1016,7 +1016,75 @@ If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
 
 
-## Installing Python 3.8.12 on macOS 11 or later
+## Setting up the Azul build environment on macOS 12 (Monterey)
+
+Make `bash` the default shell. Google it.
+
+Install Homebrew. Google it. 
+
+Install pyenv:
+
+```
+brew install zlib pyenv
+```
+
+Install python
+
+```
+pyenv install 3.9.12
+```
+
+Set `PYENV_VERSION` to `3.9.12` in `environment.local.py` at the project root.
+Do not set `SYSTEM_VERSION_COMPAT`.
+
+Install Docker Desktop. Google it.
+
+On Intel Macs, install Terraform 0.12.31 by downloading the binary to a 
+directory on the PATH and that should be it. On Apple Silicon, buckle up … 
+
+### Terraform on Apple Silicon (M1, …) Macs
+
+On Apple Silicon (ARM64) Macs such as a M1 MacBook Pro, no binaries for 
+Terraform 0.12.31 are available. You must install Terraform from source. 
+
+First, install Go:
+
+```
+brew install go
+export PATH="$PATH:$(go env GOPATH)/bin"  
+```
+
+Add the `export` line to `.bashrc` or `.profile`.
+
+Clone Terraform, check out the desired release tag and build it. 
+
+```
+git clone git@github.com:hashicorp/terraform.git
+cd terraform
+git checkout v0.12.31
+go install .
+```
+
+Invoking `terraform` will likely raise error messages like this one: 
+
+```
+Error installing provider "template": no available version is compatible for the requested platform.
+```
+
+To fix this, every provider must be built locally. Luckily, someone already did 
+the [leg work](https://github.com/kreuzwerker/m1-terraform-provider-helper):
+
+```
+brew install kreuzwerker/taps/m1-terraform-provider-helper
+m1-terraform-provider-helper activate
+m1-terraform-provider-helper install hashicorp/template -v 2.2.0
+m1-terraform-provider-helper install hashicorp/null -v v2.1.2
+m1-terraform-provider-helper install hashicorp/google -v v3.90.1 --custom-build-command 'make fmt build'
+m1-terraform-provider-helper install hashicorp/aws -v v4.30.0
+```
+
+
+## Installing Python 3.8.12 on macOS 11
 
 [pyenv macOS 11 GitHub issue](https://github.com/pyenv/pyenv/issues/1740)
 

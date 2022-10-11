@@ -5,6 +5,7 @@ from botocore.exceptions import (
     ClientError,
 )
 from moto import (
+    mock_dynamodb,
     mock_s3,
     mock_sts,
 )
@@ -43,6 +44,7 @@ def setUpModule():
 
 @mock_s3
 @mock_sts
+@mock_dynamodb
 class TestPortalService(VersionTableTestCase):
     dummy_db = [
         {

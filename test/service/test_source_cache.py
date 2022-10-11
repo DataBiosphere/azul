@@ -3,6 +3,10 @@ from unittest import (
     mock,
 )
 
+from moto import (
+    mock_dynamodb,
+)
+
 from azul.service.source_service import (
     Expired,
     NotFound,
@@ -13,6 +17,7 @@ from dynamodb_test_case import (
 )
 
 
+@mock_dynamodb
 class TestSourceCache(DynamoDBTestCase):
     ddb_table_name = SourceService.table_name
     ddb_attrs = {SourceService.key_attribute: 'S'}
@@ -27,7 +32,7 @@ class TestSourceCache(DynamoDBTestCase):
         service = SourceService()
 
         with self.assertRaises(NotFound):
-            service._get('')
+            service._get('nil')
 
         service._put(key, value)
         self.assertEqual(service._get(key), value)

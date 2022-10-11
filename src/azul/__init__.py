@@ -854,7 +854,14 @@ class Config:
         return {
             k: v
             for k, v in os.environ.items()
-            if k.startswith('AZUL_') and (len(v) > 128) == outsource
+            if (
+                (
+                    k.startswith('AZUL_')
+                    # FIXME: Remove once we upgrade to botocore 1.28.x
+                    #        https://github.com/DataBiosphere/azul/issues/4560
+                    or k == 'BOTO_DISABLE_COMMONNAME'
+                )
+                and (len(v) > 128) == outsource)
         }
 
     @cached_property

@@ -32,9 +32,6 @@ from app_test_case import (
 from azul import (
     config,
 )
-from azul.deployment import (
-    aws,
-)
 from azul.logging import (
     configure_test_logging,
 )
@@ -49,6 +46,9 @@ from es_test_case import (
 )
 from service import (
     StorageServiceTestCase,
+)
+from sqs_test_case import (
+    SqsTestCase,
 )
 
 
@@ -67,6 +67,7 @@ def setUpModule():
 class HealthCheckTestCase(LocalAppTestCase,
                           ElasticsearchTestCase,
                           StorageServiceTestCase,
+                          SqsTestCase,
                           metaclass=ABCMeta):
     endpoints = (
         '/index/files?size=1',
@@ -206,8 +207,8 @@ class HealthCheckTestCase(LocalAppTestCase,
                         }
                     } if up else {
                         'up': False,
-                        'error': f'The specified queue {queue_name} does not exist for'
-                                 f' this wsdl version.'
+                        'error': 'The specified queue does not exist for'
+                                 ' this wsdl version.'
                     }
                     for queue_name in config.all_queue_names
                 })
@@ -303,11 +304,6 @@ class HealthCheckTestCase(LocalAppTestCase,
                                           url=str(url),
                                           status=200 if up else 500,
                                           json={'up': up}))
-
-    def _create_mock_queues(self):
-        sqs = aws.resource('sqs')
-        for queue_name in config.all_queue_names:
-            sqs.create_queue(QueueName=queue_name)
 
     def _endpoint_states(self,
                          up_endpoints: tuple[str, ...] = endpoints,
