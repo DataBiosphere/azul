@@ -314,8 +314,13 @@ To determine the prefix:
 Adding snapshots to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PRs which update or add new snapshots to ``prod`` should be filed against the
-``prod`` branch instead of ``develop``.
+Unless specifically agreed with the system admin (tech lead), PRs which update or
+add new snapshots to ``prod`` should be filed against the ``prod`` branch instead
+of ``develop``. When deciding whether to perform snapshot channges directly to
+``prod`` or include them in a routine promotion, the system admin considers the
+scope of changes to be promoted. It would be a mistake to promote large changes in
+combination with snapshots because that would make it difficult to diagnose whether
+indexing failures are caused by the changes or the snapshots.
 
 Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
 with regular promotions.
