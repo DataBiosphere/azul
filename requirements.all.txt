@@ -65,6 +65,7 @@ inquirer==2.10.0
 itsdangerous==2.1.2
 jinja2==3.1.2
 jmespath==1.0.1
+jq==1.2.2
 jsonschema==4.16.0
 jsonschema-spec==0.1.2
 lazy-object-proxy==1.7.1
