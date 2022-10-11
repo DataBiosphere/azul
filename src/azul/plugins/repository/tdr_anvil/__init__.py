@@ -250,7 +250,6 @@ class Plugin(TDRPlugin):
         return set.union(
             self._upstream_from_files(source, entities['file']),
             self._upstream_from_biosamples(source, entities['biosample']),
-            self._upstream_from_libraries(source, entities['library'])
             # Should we also follow donor.parent_donor?
         )
 
@@ -260,7 +259,6 @@ class Plugin(TDRPlugin):
                            ) -> Links:
         return set.union(
             self._downstream_from_biosamples(source, entities['biosample']),
-            self._downstream_from_libraries(source, entities['library']),
             self._downstream_from_files(source, entities['files'])
         )
 
@@ -271,7 +269,7 @@ class Plugin(TDRPlugin):
         if not biosample_ids:
             return set()
         rows = self._run_sql(f'''
-            SELECT b.biosample_id, b.derived_from, b.donor_id, b.part_of_dataset_id
+            SELECT b.biosample_id, b.donor_id, b.part_of_dataset_id
             FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
             WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
@@ -286,35 +284,7 @@ class Plugin(TDRPlugin):
                 result.add(Link.create(outputs=downstream_ref,
                                        inputs=KeyReference(entity_type='donor',
                                                            key=donor_id)))
-            for upstream_biosample_id in row['derived_from']:
-                result.add(Link.create(outputs=downstream_ref,
-                                       inputs=KeyReference(entity_type='biosample',
-                                                           key=upstream_biosample_id)))
         return result
-
-    def _upstream_from_libraries(self,
-                                 source: TDRSourceSpec,
-                                 library_ids: AbstractSet[Key]
-                                 ) -> Links:
-        if not library_ids:
-            return set()
-        rows = self._run_sql(f'''
-            SELECT lpa.generated_library_id, lpa.librarypreparationactivity_id, lpa.used_biosample_id
-            FROM {backtick(self._full_table_name(source, 'librarypreparationactivity'))} AS lpa
-            WHERE lpa.generated_library_id IN ({', '.join(map(repr, library_ids))})
-        ''')
-        return {
-            Link.create(inputs=[
-                KeyReference(entity_type='biosample',
-                             key=biosample_id)
-                for biosample_id in row['used_biosample_id']
-            ],
-                activity=KeyReference(entity_type='librarypreparationactivity',
-                                      key=row['librarypreparationactivity_id']),
-                outputs=KeyReference(entity_type='library',
-                                     key=row['generated_library_id']))
-            for row in rows
-        }
 
     def _upstream_from_files(self,
                              source: TDRSourceSpec,
@@ -333,27 +303,15 @@ class Plugin(TDRPlugin):
                   ama.alignmentactivity_id AS activity_id,
                   ama.used_file_id AS uses_file_id,
                   [] AS uses_biosample_id,
-                  [] AS library_id
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ama
                 ON f.file_id IN UNNEST(ama.generated_file_id)
-            UNION ALL SELECT
-                  f.file_id,
-                  'analysisactivity',
-                  asa.analysisactivity_id,
-                  asa.used_file_id,
-                  [],
-                  []
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'analysisactivity'))} AS asa
-                ON f.file_id IN UNNEST(asa.generated_file_id)
             UNION ALL SELECT
                   f.file_id,
                   'assayactivity',
                   aya.assayactivity_id,
                   [],
                   aya.used_biosample_id,
-                  aya.library_id
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
                 ON f.file_id IN UNNEST(aya.generated_file_id)
@@ -363,20 +321,9 @@ class Plugin(TDRPlugin):
                   sqa.sequencingactivity_id,
                   [],
                   sqa.used_biosample_id,
-                  sqa.library_id
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
                 ON f.file_id IN UNNEST(sqa.generated_file_id)
-            UNION ALL SELECT
-                  f.file_id,
-                  'experimentactivity',
-                  exa.experimentactivity_id,
-                  exa.used,
-                  exa.used_biosample_id,
-                  []
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                ON f.file_id IN UNNEST(exa.generated)
         ''')
         return {
             Link.create(
@@ -388,8 +335,7 @@ class Plugin(TDRPlugin):
                 inputs=[
                     KeyReference(entity_type=entity_type, key=key)
                     for entity_type, column in [('file', 'uses_file_id'),
-                                                ('biosample', 'uses_biosample_id'),
-                                                ('library', 'library_id')]
+                                                ('biosample', 'uses_biosample_id')]
                     for key in row[column]
                 ]
             )
@@ -405,19 +351,10 @@ class Plugin(TDRPlugin):
         rows = self._run_sql(f'''
             WITH activities AS (
                 SELECT
-                    exa.experimentactivity_id AS activity_id,
-                    'experimentactivity' AS activity_type,
-                    exa.used_biosample_id AS biosample_ids,
-                    exa.generated AS output_ids,
-                    'file' AS output_type
-                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                UNION ALL
-                SELECT
-                    sqa.sequencingactivity_id,
-                    'sequencingactivity',
+                    sqa.sequencingactivity_id as activity_id,
+                    'sequencingactivity' as activity_type,
                     sqa.used_biosample_id,
-                    sqa.generated_file_id,
-                    'file'
+                    sqa.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
                 UNION ALL
                 SELECT
@@ -425,78 +362,21 @@ class Plugin(TDRPlugin):
                     'assayactivity',
                     aya.used_biosample_id,
                     aya.generated_file_id,
-                    'file'
                 FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
-                UNION ALL
-                SELECT
-                    lpa.librarypreparationactivity_id,
-                    'librarypreparationactivity',
-                    lpa.used_biosample_id,
-                    lpa.generated_library_id,
-                    'library'
-                FROM {backtick(self._full_table_name(source, 'librarypreparationactivity'))} AS lpa
             )
             SELECT
                 biosample_id,
                 a.activity_id,
                 a.activity_type,
-                a.output_ids,
-                a.output_type
-            FROM activities AS a, UNNEST(a.biosample_ids) AS biosample_id
+                a.generated_file_id
+            FROM activities AS a, UNNEST(a.used_biosample_id) AS biosample_id
             WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
         ''')
         return {
             Link.create(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
                         outputs=[
-                            KeyReference(key=output_id, entity_type=row['output_type'])
-                            for output_id in row['output_ids']
-                        ],
-                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
-            for row in rows
-        }
-
-    def _downstream_from_libraries(self,
-                                   source: TDRSourceSpec,
-                                   library_ids: AbstractSet[Key]
-                                   ) -> Links:
-        if not library_ids:
-            return set()
-        rows = self._run_sql(f'''
-            WITH activities AS (
-                SELECT
-                    exa.experimentactivity_id AS activity_id,
-                    'experimentactivity' AS activity_type,
-                    exa.library_id AS library_ids,
-                    exa.generated AS file_ids
-                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                UNION ALL
-                SELECT
-                    sqa.sequencingactivity_id,
-                    'sequencingactivity',
-                    sqa.library_id,
-                    sqa.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
-                UNION ALL
-                SELECT
-                    aya.assayactivity_id,
-                    'assayactivity',
-                    aya.library_id,
-                    aya.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
-            )
-            SELECT
-                library_id,
-                a.activity_id,
-                a.activity_type,
-                a.file_ids
-            FROM activities AS a, UNNEST(a.library_ids) AS library_id
-            WHERE library_id IN ({', '.join(map(repr, library_ids))})
-        ''')
-        return {
-            Link.create(inputs=KeyReference(key=row['library_id'], entity_type='library'),
-                        outputs=[
-                            KeyReference(key=file_id, entity_type='file')
-                            for file_id in row['file_ids']
+                            KeyReference(key=output_id, entity_type='file')
+                            for output_id in row['generated_file_id']
                         ],
                         activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
             for row in rows
@@ -511,20 +391,6 @@ class Plugin(TDRPlugin):
         rows = self._run_sql(f'''
             WITH activities AS (
                 SELECT
-                    exa.experimentactivity_id AS activity_id,
-                    'experimentactivity' AS activity_type,
-                    exa.used AS used_file_ids,
-                    exa.generated AS generated_file_ids
-                FROM {backtick(self._full_table_name(source, 'experimentactivity'))} AS exa
-                UNION ALL
-                SELECT
-                    asa.analysisactivity_id,
-                    'analysisactivity',
-                    asa.used_file_id,
-                    asa.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'analysisactivity'))} AS asa
-                UNION ALL
-                SELECT
                     ala.alignmentactivity_id,
                     'alignmentactivity',
                     ala.used_file_id,
@@ -533,17 +399,17 @@ class Plugin(TDRPlugin):
             )
             SELECT
                 used_file_id,
-                a.generated_file_ids,
+                a.generated_file_id,
                 a.activity_id,
                 a.activity_type
-            FROM activities AS a, UNNEST(a.used_file_ids) AS used_file_id
+            FROM activities AS a, UNNEST(a.used_file_id) AS used_file_id
             WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
         ''')
         return {
             Link.create(inputs=KeyReference(key=row['used_file_id'], entity_type='file'),
                         outputs=[
                             KeyReference(key=file_id, entity_type='file')
-                            for file_id in row['generated_file_ids']
+                            for file_id in row['generated_file_id']
                         ],
                         activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_type']))
             for row in rows
@@ -591,30 +457,23 @@ class Plugin(TDRPlugin):
             'biosample_id',
             'biosample_type',
             'anatomical_site',
-            'date_collected',
             'donor_age_at_collection_lower_bound',
             'donor_age_at_collection_upper_bound',
-            'donor_age_at_collection_life_stage',
             'donor_age_at_collection_unit',
             'disease',
-            'preservation_state',
-            'xref'
         },
         'dataset': {
             'dataset_id',
-            'contact_point',
-            'custodian',
-            'last_modified_date',
-            'entity_description',
-            'entity_title',
+            'consent_group',
+            'data_use_permission',
+            'registered_identifier',
+            'title'
         },
         'donor': {
             'donor_id',
-            'birth_date',
             'organism_type',
             'phenotypic_sex',
             'reported_ethnicity',
-            'xref'
         },
         'file': {
             'file_id',
@@ -624,44 +483,20 @@ class Plugin(TDRPlugin):
             'file_format',
             'reference_assembly'
         },
-        'library': {
-            'library_id',
-            'date_created',
-            'prep_material_name',
-            'xref'
-        },
         'alignmentactivity': {
             'alignmentactivity_id',
             'data_modality',
             'date_created',
-            'xref'
-        },
-        'analysisactivity': {
-            'analysisactivity_id',
-            'analysis_type',
-            'xref'
         },
         'assayactivity': {
             'assayactivity_id',
             'assay_category',
             'data_modality',
             'date_created',
-            'xref'
-        },
-        'experimentactivity': {
-            'experimentactivity_id',
-            'date_created',
-            'date_submitted',
-            'xref'
-        },
-        'librarypreparationactivity': {
-            'librarypreparationactivity_id',
-            'date_created'
         },
         'sequencingactivity': {
             'sequencingactivity_id',
             'data_modality',
-            'started_at_time',
         }
     }
 

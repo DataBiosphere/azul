@@ -1,0 +1,66 @@
+[
+    {
+        "uuid": "3fdc952d-7eec-48d9-be70-876aa4377a53",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "biosample_0005be72-222f-46d9-1b8e-d2fa0ac86cc9",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "0a7f1fed-409b-4f98-b650-dedddfc8a1bf",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "dataset_b65abdb5-65dd-da20-2eae-71d282ace9c4",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "f1404624-bbba-4290-b7b7-d99b58e6bd51",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "donor_089f733e-9122-e6a2-ff7c-84d102fbcdd9",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "f422c79e-33e1-4f0c-b39b-e698a1b564d0",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "file_23d57a3c-dc24-596a-8142-1215fc2ffa74",
+        "indexed": true,
+        "crc32": "",
+        "sha256": "",
+        "drs_path": "v1_dc43e80b-566e-4893-92c0-d5f482ce0279_010c2a21-0156-4e71-8967-b6b7a25aef09"
+    },
+    {
+        "uuid": "1035f90f-e1ce-4102-9528-7a9227d361cc",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "file_8822d3c7-0498-50a3-b717-a6acef5a8588",
+        "indexed": true,
+        "crc32": "",
+        "sha256": "",
+        "drs_path": "v1_dc43e80b-566e-4893-92c0-d5f482ce0279_19d2148c-0a47-4a75-9319-8842d721ca5f"
+    },
+    {
+        "uuid": "73614c20-f669-430d-a3af-821ec0d27a7a",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "sequencingactivity_248a08b2-6399-4f7a-74b3-4cced17726da",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "4377bef8-3ac3-4b71-856b-a6888323ffa2",
+        "version": "2022-06-01T00:00:00.000000Z",
+        "name": "sequencingactivity_e92568f3-590e-4a0c-3694-a4f9259abc5d",
+        "indexed": true,
+        "crc32": "",
+        "sha256": ""
+    },
+    {
+        "uuid": "3fdc952d-7eec-a8d9-be70-876aa4377a53",
+        "version": null,
+        "name": "links",
+        "indexed": true
+    }
+]
