@@ -13,7 +13,6 @@ import json
 import logging
 import os
 from unittest import (
-    TestCase,
     skip,
 )
 from uuid import (
@@ -27,6 +26,9 @@ from more_itertools import (
     one,
 )
 
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 from humancellatlas.data.metadata.api import (
     Accession,
     AgeRange,
@@ -62,7 +64,7 @@ def setUpModule():
     logging.getLogger('humancellatlas').setLevel(logging.DEBUG)
 
 
-class TestAccessorApi(TestCase):
+class TestAccessorApi(AzulUnitTestCase):
 
     def _rename_keys(self, d, **kwargs):
         for new_name, old_name in kwargs.items():
