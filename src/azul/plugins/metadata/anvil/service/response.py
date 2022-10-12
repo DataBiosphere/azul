@@ -37,19 +37,19 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
         return {
             'activities': [
-                'activity_type'
+                'activities.activity_type'
             ],
             'biosamples': [
-                'anatomical_site'
+                'biosamples.anatomical_site'
             ],
             'datasets': [
-                'title'
+                'datasets.title'
             ],
             'donors': [
-                'organism_type'
+                'donors.organism_type'
             ],
             'files': [
-                'file_format'
+                'files.file_format'
             ]
         }
 
@@ -69,10 +69,10 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             }
 
         return dict_merge([
-            bucket_count('file_format', 'fileCount', 'fileFormats', 'format'),
-            bucket_count('activity_type', 'activityCount', 'activityTypes', 'type'),
-            bucket_count('organism_type', 'donorCount', 'donorSpecies', 'species'),
-            count('anatomical_site', 'biosampleCount')
+            bucket_count('files.file_format', 'fileCount', 'fileFormats', 'format'),
+            bucket_count('activities.activity_type', 'activityCount', 'activityTypes', 'type'),
+            bucket_count('donors.organism_type', 'donorCount', 'donorSpecies', 'species'),
+            count('biosamples.anatomical_site', 'biosampleCount')
         ])
 
 
