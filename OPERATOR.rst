@@ -16,7 +16,7 @@ Getting started as operator
 
   - add you to the ``Azul Operators`` GitHub group on DataBiosphere
 
-  - give you Maintainer access to the Gitlab ``dev`` and ``prod`` instances
+  - give you Maintainer access to the Gitlab ``dev``, ``prod`` and ``anvildev`` instances
 
   - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
@@ -39,6 +39,9 @@ Getting started as operator
          [remote "gitlab.dcp2.prod"]
              url = git@ssh.gitlab.azul.data.humancellatlas.org:ucsc/azul.git
              fetch = +refs/heads/*:refs/remotes/gitlab.dcp2.prod/*
+         [remote "gitlab.anvil.dev"]
+             url = git@ssh.gitlab.anvil.gi.ucsc.edu:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.anvil.dev/*
 
   #. Confirm access to fetch branches::
 
