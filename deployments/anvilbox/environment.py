@@ -58,6 +58,7 @@ anvil_sources = mkdict([
     mksrc('datarepo-bd281341', 'ANVIL_CMG_UWASH_DS_EP_20220921_202209211403', 49),
     mksrc('datarepo-17fcd708', 'ANVIL_CMG_UWASH_GRU_20220919_202209211317', 2113),
     mksrc('datarepo-1dfe694b', 'ANVIL_CMG_UWASH_HMB_IRB_20220921_202209211635', 41),
+    mksrc('datarepo-723028da', 'ANVIL_GTEx_V8_hg38_20221005_202210070119', 18361)
 ])
 
 
