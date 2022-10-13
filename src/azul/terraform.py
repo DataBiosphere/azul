@@ -62,8 +62,9 @@ class Terraform:
         schema = self.schema.document
         require(schema['format_version'] == '0.1')
         resources = chain.from_iterable(
-            schema['provider_schemas'][provider]['resource_schemas'].items()
-            for provider in schema['provider_schemas']
+            provider['resource_schemas'].items()
+            for provider in schema['provider_schemas'].values()
+            if 'resource_schemas' in provider
         )
         return [
             resource_type

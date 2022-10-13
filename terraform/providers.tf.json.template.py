@@ -8,6 +8,11 @@ from azul.terraform import (
 emit_tf({
     "provider": [
         {
+            "external": {
+                'version': '2.2.0'
+            }
+        },
+        {
             "template": {
                 'version': '2.2.0'
             }
