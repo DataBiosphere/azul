@@ -61,7 +61,7 @@ class Lambda:
             except AttributeError:
                 return False
             else:
-                resource_name, _ = config.unqualified_resource_name(queue)
+                resource_name, _, _ = config.unqualified_resource_name_and_suffix(queue)
                 return resource_name in notification_queue_names
 
         return frozenset((
