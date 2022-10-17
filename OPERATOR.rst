@@ -239,28 +239,36 @@ Change the target branch of the blocked PR to ``develop`` and remove the ``chain
 label from that PR. Remove the ``base`` label from the blocking PR. Lastly, remove the blocking
 relationship.
 
-Upgrading GitLab
-^^^^^^^^^^^^^^^^
+Upgrading GitLab & ClamAV
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Operators must check for updates to GitLab on a monthly basis in addition to
-triaging GitLab security releases that occur during the month. An email
-notification is sent to ``azul-group@ucsc.edu`` when a GitLab security release
-is available. Discuss with the lead the **Table of Fixes** referenced in the
-release blog post to determine the urgency of the update.
-The current version of GitLab installed can be found on the ``/help`` endpoint
-of `GitLab dev`_, and the available releases can be found on the
+Operators must check for updates to GitLab and ClamAV on a monthly basis in
+addition to triaging GitLab security releases that occur during the month.
+An email notification is sent to ``azul-group@ucsc.edu`` when a GitLab security
+release is available. Discuss with the lead the **Table of Fixes** referenced in
+the release blog post to determine the urgency of the update. An email
+notification should also be received when ClamAV releases become available. The
+current version of GitLab installed can be found on the ``/help`` endpoint of
+`GitLab dev`_, and the available releases can be found on the
 `GitLab Docker image`_ page. When updating the GitLab instance, check if there
 are applicable updates to the `GitLab runner image`_. Use the latest runner
-image whose major and minor version match that of the GitLab image.
+image whose major and minor version match that of the GitLab image. Similarly,
+check for available releases to ClamAV in the `ClamAV image`_. The current
+version of ClamAV image being used can be found by running::
 
-Before starting the update process, check the `GitLab release notes`_ for
-upgrading instructions. When upgrading across multiple GitLab versions, follow
-the prescribed GitLab `upgrade path`_.
+    cat $project_root/terraform/gitlab/gitlab.tf.json.template.py | grep 'clamav_image ='
+
+Before starting the update process, check the `GitLab release notes`_ and
+`ClamAV release notes`_ for any additional upgrading instructions. When
+upgrading across multiple GitLab versions, follow the prescribed GitLab
+`upgrade path`_.
 
 .. _GitLab dev: https://gitlab.dev.singlecell.gi.ucsc.edu/help
 .. _GitLab Docker image: https://hub.docker.com/r/gitlab/gitlab-ce/tags
 .. _GitLab runner image: https://hub.docker.com/r/gitlab/gitlab-runner/tags
+.. _ClamAV image: https://hub.docker.com/r/clamav/clamav/tags
 .. _GitLab release notes: https://about.gitlab.com/releases/categories/releases/
+.. _ClamAV release notes: https://blog.clamav.net/search/label/release
 .. _upgrade path: https://docs.gitlab.com/ee/update/index.html#upgrade-paths
 
 Before any changes are applied, run::
