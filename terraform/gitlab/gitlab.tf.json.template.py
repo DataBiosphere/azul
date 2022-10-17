@@ -1282,7 +1282,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
                 'root_block_device': {
-                    'volume_size': 64
+                    'volume_size': 20
                 },
                 'key_name': '${aws_key_pair.gitlab.key_name}',
                 'network_interface': {
@@ -1428,7 +1428,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     qq(
                                         'freshclam',
                                         '&& echo freshclam succeeded',
-                                        '|| echo freshclam failed',
+                                        '|| (echo freshclam failed; false)',
                                         '&& clamscan',
                                         '--recursive',
                                         '--infected',  # Only print infected files
@@ -1441,7 +1441,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                         '--exclude-dir=^/scan/dev',
                                         '/scan',
                                         '&& echo clamscan succeeded',
-                                        '|| echo clamscan failed'
+                                        '|| (echo clamscan failed; false)'
                                     )
                                 ),
                                 '[Install]',
