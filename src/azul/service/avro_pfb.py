@@ -90,6 +90,8 @@ def write_pfb_entities(entities: Iterable[JSON], pfb_schema: JSON, path: str):
             fastavro.writer(fh, parsed_schema, entities, validator=True)
 
 
+# FIXME: Unit tests do not cover PFB handover using an AnVIL catalog
+#        https://github.com/DataBiosphere/azul/issues/4606
 class PFBConverter:
     """
     Converts documents from Elasticsearch into PFB entities. A document's inner
