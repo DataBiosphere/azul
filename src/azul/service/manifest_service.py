@@ -1518,13 +1518,13 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         transformers = self.service.transformer_types(self.catalog)
         transformer = one(t for t in transformers if t.entity_type() == 'files')
         field_types = transformer.field_types()
-        entity = avro_pfb.pfb_metadata_entity(field_types)
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
         converter = avro_pfb.PFBConverter(pfb_schema, self.repository_plugin)
         for doc in self._all_docs_sorted():
             converter.add_doc(doc)
 
+        entity = avro_pfb.pfb_metadata_entity(field_types)
         entities = itertools.chain([entity], converter.entities())
 
         fd, path = mkstemp(suffix='.avro')

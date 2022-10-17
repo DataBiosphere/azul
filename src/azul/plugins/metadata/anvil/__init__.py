@@ -144,6 +144,7 @@ class Plugin(MetadataPlugin):
                             'file_format',
                             'file_id',
                             'reference_assembly',
+                            'source_datarepo_row_ids',
                             'crc32',
                             'sha256',
                             'drs_path',

@@ -90,6 +90,8 @@ def write_pfb_entities(entities: Iterable[JSON], pfb_schema: JSON, path: str):
             fastavro.writer(fh, parsed_schema, entities, validator=True)
 
 
+# FIXME: Unit tests do not cover PFB handover using an AnVIL catalog
+#        https://github.com/DataBiosphere/azul/issues/4606
 class PFBConverter:
     """
     Converts documents from Elasticsearch into PFB entities. A document's inner
@@ -134,6 +136,7 @@ class PFBConverter:
         related_files = file_entity.pop('related_files', [])
         for entity in chain([file_entity], related_files):
             entity['drs_uri'] = self.repository_plugin.drs_uri(entity.pop('drs_path'))
+            _inject_reference_handover_values(entity, doc)
             # File entities are assumed to be unique
             pfb_entity = PFBEntity.from_json(name=self.entity_type,
                                              object_=entity,
@@ -304,6 +307,7 @@ def pfb_metadata_entity(field_types: FieldTypes):
 
 
 def pfb_schema_from_field_types(field_types: FieldTypes) -> JSON:
+    field_types = _inject_reference_handover_columns(field_types)
     entity_schemas = (
         {
             "name": entity_type,
@@ -472,6 +476,22 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
             },
         ],
     }
+
+
+def _inject_reference_handover_columns(field_types: FieldTypes) -> FieldTypes:
+    file_types = field_types['files']
+    if 'source_datarepo_row_ids' in file_types:
+        field_types = dict(field_types,
+                           files=dict(file_types,
+                                      datarepo_row_id=null_str,
+                                      source_datarepo_snapshot_id=null_str))
+    return field_types
+
+
+def _inject_reference_handover_values(entity: MutableJSON, doc: JSON):
+    if 'source_datarepo_row_ids' in entity:
+        entity['datarepo_row_id'] = entity['document_id']
+        entity['source_datarepo_snapshot_id'] = one(doc['sources'])['id']
 
 
 # FIXME: It's not obvious as to why these are union types. Explain or change.

@@ -39,7 +39,10 @@
         "file_format": ".gvcf.gz",
         "file_id": "23d57a3c-dc24-596a-8142-1215fc2ffa74",
         "file_ref": "drs://data.terra.bio/v1_dc43e80b-566e-4893-92c0-d5f482ce0279_010c2a21-0156-4e71-8967-b6b7a25aef09",
-        "reference_assembly": []
+        "reference_assembly": [],
+        "source_datarepo_row_ids": [
+            "ws_file_inventory:6fbebc1d-cbe7-40ae-8141-dfee6367dee0"
+        ]
     },
     "file_8822d3c7-0498-50a3-b717-a6acef5a8588": {
         "byte_size": 7455178165,
@@ -48,7 +51,10 @@
         "file_format": ".bam",
         "file_id": "8822d3c7-0498-50a3-b717-a6acef5a8588",
         "file_ref": "drs://data.terra.bio/v1_dc43e80b-566e-4893-92c0-d5f482ce0279_19d2148c-0a47-4a75-9319-8842d721ca5f",
-        "reference_assembly": []
+        "reference_assembly": [],
+        "source_datarepo_row_ids": [
+            "ws_file_inventory:d8342a7c-bfae-41fd-b0f9-b3fc300d866b"
+        ]
     },
     "sequencingactivity_248a08b2-6399-4f7a-74b3-4cced17726da": {
         "data_modality": [],

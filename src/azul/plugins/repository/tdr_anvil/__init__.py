@@ -481,7 +481,8 @@ class Plugin(TDRPlugin):
             'byte_size',
             'data_modality',
             'file_format',
-            'reference_assembly'
+            'reference_assembly',
+            'source_datarepo_row_ids'
         },
         'alignmentactivity': {
             'alignmentactivity_id',
