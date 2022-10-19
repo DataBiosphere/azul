@@ -7,7 +7,10 @@
         "disease": null,
         "donor_age_at_collection_lower_bound": null,
         "donor_age_at_collection_unit": null,
-        "donor_age_at_collection_upper_bound": null
+        "donor_age_at_collection_upper_bound": null,
+        "source_datarepo_row_ids": [
+            "ws_sample:2f5f6139-e561-447d-aa00-f2dce80e4c4b"
+        ]
     },
     "dataset_b65abdb5-65dd-da20-2eae-71d282ace9c4": {
         "consent_group": [
@@ -21,6 +24,9 @@
         "registered_identifier": [
             "phs000693"
         ],
+        "source_datarepo_row_ids": [
+            "ws_workspace_attributes:236fadab-7a00-4274-8a56-973e794cc823"
+        ],
         "title": "ANVIL_CMG_UWASH_GRU"
     },
     "donor_089f733e-9122-e6a2-ff7c-84d102fbcdd9": {
@@ -30,6 +36,9 @@
         "phenotypic_sex": "redacted-t8F+l9PW",
         "reported_ethnicity": [
             "redacted-N2GfwTBT"
+        ],
+        "source_datarepo_row_ids": [
+            "ws_subject:22a139d1-c842-4563-82e3-ea320861a816"
         ]
     },
     "file_23d57a3c-dc24-596a-8142-1215fc2ffa74": {
@@ -59,12 +68,18 @@
     "sequencingactivity_248a08b2-6399-4f7a-74b3-4cced17726da": {
         "data_modality": [],
         "datarepo_row_id": "73614c20-f669-430d-a3af-821ec0d27a7a",
-        "sequencingactivity_id": "248a08b2-6399-4f7a-74b3-4cced17726da"
+        "sequencingactivity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
+        "source_datarepo_row_ids": [
+            "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
+        ]
     },
     "sequencingactivity_e92568f3-590e-4a0c-3694-a4f9259abc5d": {
         "data_modality": [],
         "datarepo_row_id": "4377bef8-3ac3-4b71-856b-a6888323ffa2",
-        "sequencingactivity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d"
+        "sequencingactivity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
+        "source_datarepo_row_ids": [
+            "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
+        ]
     },
     "links": [
         {
