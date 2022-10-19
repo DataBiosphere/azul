@@ -1,6 +1,6 @@
 arrow==1.2.3
 blessed==1.19.1
-botocore-stubs==1.27.89
+botocore-stubs==1.27.93
 brotli==1.0.9
 click==8.1.3
 colorama==0.4.4
@@ -9,7 +9,7 @@ docutils==0.16
 flask==2.1.3
 flask-basicauth==0.2.0
 flask-cors==3.0.10
-geventhttpclient==2.0.2
+geventhttpclient==2.0.8
 gitdb==4.0.9
 google-auth-httplib2==0.1.0
 httplib2==0.20.4
@@ -28,7 +28,7 @@ mypy-boto3-sqs==1.24.60
 openapi-schema-validator==0.3.4
 pathable==0.4.3
 ply==3.11
-psutil==5.9.2
+psutil==5.9.3
 pycodestyle==2.9.1
 pyflakes==2.5.0
 pynacl==1.5.0

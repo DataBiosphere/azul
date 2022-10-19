@@ -11,7 +11,7 @@ blessed==1.19.1
 boto3==1.24.89
 boto3-stubs==1.24.89
 botocore==1.27.89
-botocore-stubs==1.27.89
+botocore-stubs==1.27.93
 brotli==1.0.9
 cachetools==5.2.0
 certifi==2022.9.24
@@ -38,7 +38,7 @@ flask-cors==3.0.10
 furl==2.1.3
 future==0.18.2
 gevent==22.8.0
-geventhttpclient==2.0.2
+geventhttpclient==2.0.8
 gitdb==4.0.9
 gitpython==3.1.28
 google-api-core==2.10.2
@@ -87,8 +87,8 @@ pathable==0.4.3
 pip==22.2.2
 ply==3.11
 proto-plus==1.22.1
-protobuf==4.21.7
-psutil==5.9.2
+protobuf==4.21.8
+psutil==5.9.3
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycodestyle==2.9.1
@@ -102,7 +102,7 @@ pyparsing==3.0.9
 pyrsistent==0.18.1
 python-dateutil==2.8.2
 python-editor==1.0.4
-pytz==2022.4
+pytz==2022.5
 pyyaml==5.4.1
 pyzmq==24.0.1
 readchar==4.0.3
