@@ -396,37 +396,149 @@ class Config:
             stage = self.deployment_stage
         return f"{self.resource_prefix}-{resource_name}-{stage}{suffix}"
 
+    # FIXME: Eliminate hard-coded separator
+    #        https://github.com/databiosphere/azul/issues/2964
+    resource_name_separator = '-'
+
     def unqualified_resource_name(self,
-                                  qualified_resource_name: str,
+                                  qualified_name: str,
                                   suffix: str = ''
                                   ) -> tuple[str, str]:
         """
-        >>> config.unqualified_resource_name('azul-foo-dev')
+        Extract the unqualified resource name, deployment name and suffix from
+        given qualified resource name, assuming that the qualified resource name
+        has no suffix (the default) or the given suffix.
+
+        >>> f = config.unqualified_resource_name
+        >>> f('azul-foo-dev')
         ('foo', 'dev')
 
-        >>> config.unqualified_resource_name('azul-foo')
+        >>> f('foo-bar-dev')
         Traceback (most recent call last):
-        ...
-        azul.RequirementError: ['azul', 'foo']
+            ...
+        azul.RequirementError: ("Expected prefix 'azul'", 'foo', 'foo-bar-dev')
 
-        >>> config.unqualified_resource_name('azul-object_versions-dev')
+        >>> f('azul-foo')  # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: \
+            ('Expected 3 name components', \
+            ['azul', 'foo'], \
+            'azul-foo')
+
+        >>> f('azul-object_versions-dev')
         ('object_versions', 'dev')
 
-        >>> config.unqualified_resource_name('azul-object-versions-dev')
+        >>> f('azul-object-versions-dev')  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
-        ...
-        azul.RequirementError: ['azul', 'object', 'versions', 'dev']
+            ...
+        azul.RequirementError:
+            ('Expected 3 name components', \
+            ['azul', 'object', 'versions', 'dev'], \
+            'azul-object-versions-dev')
+
+        >>> f('azul-tallies_retry-dev0.fifo')  # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: \
+            ('Invalid deployment name', \
+            'dev0.fifo', \
+            'azul-tallies_retry-dev0.fifo')
+
+        >>> f('azul-tallies_retry-dev0.fifo', suffix='.fifo')
+        ('tallies_retry', 'dev0')
+
+        >>> f('azul-tallies_retry-dev0', suffix='.fifo')
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: ("Expected suffix '.fifo'", 'azul-tallies_retry-dev0')
         """
-        require(qualified_resource_name.endswith(suffix))
+        # We could implement this using unqualified_resource_name_and_suffix
+        # and that would be equivalent semantically but the error messages would
+        # be less obvious.
+        require(qualified_name.endswith(suffix),
+                f'Expected suffix {suffix!r}', qualified_name)
         if suffix:
-            qualified_resource_name = qualified_resource_name[:-len(suffix)]
-        # FIXME: Eliminate hardcoded separator
-        #        https://github.com/databiosphere/azul/issues/2964
-        components = qualified_resource_name.split('-')
-        require(len(components) == 3, components)
+            qualified_name = qualified_name[:-len(suffix)]
+        components = qualified_name.split(self.resource_name_separator)
+        num_components = 3
+        require(len(components) == num_components,
+                f'Expected {num_components!r} name components', components, qualified_name)
         prefix, resource_name, deployment_stage = components
-        require(prefix == self.resource_prefix)
+        require(prefix == self.resource_prefix,
+                f'Expected prefix {self.resource_prefix!r}', prefix, qualified_name)
+        require(self._is_valid_qualifier(deployment_stage),
+                'Invalid deployment name', deployment_stage, qualified_name)
+        require(self._is_valid_term(resource_name),
+                'Invalid resource name', resource_name, qualified_name)
         return resource_name, deployment_stage
+
+    def unqualified_resource_name_and_suffix(self,
+                                             qualified_name: str
+                                             ) -> tuple[str, str, str]:
+        """
+        Extract the unqualified resource name, deployment name and suffix from
+        the given qualified resource name.
+
+        >>> f = config.unqualified_resource_name_and_suffix
+        >>> f('azul-foo-dev')
+        ('foo', 'dev', '')
+
+        >>> f('foo-bar-dev')  # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: ("Expected prefix 'azul'", 'foo', 'foo-bar-dev')
+
+        >>> f('azul-foo')  # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: ('Expected 3 name components', \
+            ['azul', 'foo'], \
+            'azul-foo')
+
+        >>> f('azul-object_versions-dev')
+        ('object_versions', 'dev', '')
+
+        This syntax is ambiguous. It would be better to flag this as an invalid
+        resource name (`object-versions`) but that would require knowing that
+        `versions` isn't a deployment name.
+
+        >>> f('azul-object-versions-dev')
+        ('object', 'versions', '-dev')
+
+        >>> f('azul-tallies_retry-dev0.fifo')
+        ('tallies_retry', 'dev0', '.fifo')
+
+        >>> f('azul-tallies_retry-dev0')
+        ('tallies_retry', 'dev0', '')
+
+        >>> f('azul-0foo-dev')
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: ('Invalid resource name', '0foo')
+
+        >>> f('azul-tallies_retry-0dev.fifo')
+        Traceback (most recent call last):
+            ...
+        azul.RequirementError: ('Invalid deployment name', '0dev.fifo')
+        """
+        num_components = 3
+        components = qualified_name.split(self.resource_name_separator,
+                                          maxsplit=num_components - 1)
+        require(len(components) == num_components,
+                f'Expected {num_components!r} name components', components, qualified_name)
+        prefix, resource_name, deployment_stage = components
+        require(prefix == self.resource_prefix,
+                f'Expected prefix {self.resource_prefix!r}', prefix, qualified_name)
+        require(self._is_valid_term(resource_name),
+                'Invalid resource name', resource_name)
+        match = self.qualifier_re.match(deployment_stage)
+        reject(match is None,
+               'Invalid deployment name', deployment_stage)
+        index = match.end()
+        deployment_stage, suffix = deployment_stage[0:index], deployment_stage[index:]
+        assert self._is_valid_term(deployment_stage), qualified_name
+        return resource_name, deployment_stage, suffix
 
     def subdomain(self, lambda_name):
         return self.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
@@ -487,17 +599,23 @@ class Config:
             #        https://github.com/databiosphere/azul/issues/2964
             return self.qualified_resource_name(lambda_name, suffix='-' + handler_name)
 
-    deployment_name_re = re.compile(r'[a-z][a-z0-9]{1,16}')
+    qualifier_re = re.compile(r'[a-z][a-z0-9]{1,16}')
 
     @classmethod
     def validate_prefix(cls, prefix):
-        reject(cls.deployment_name_re.fullmatch(prefix) is None,
-               f"Prefix '{prefix}' is to short, too long or contains invalid characters.")
+        require(Config._is_valid_qualifier(prefix),
+                f'Prefix {prefix!r} is to short, '
+                f'too long or contains invalid characters.')
 
     @classmethod
     def validate_deployment_name(cls, deployment_name):
-        reject(cls.deployment_name_re.fullmatch(deployment_name) is None,
-               f"Deployment name '{deployment_name}' is to short, too long or contains invalid characters.")
+        require(Config._is_valid_qualifier(deployment_name),
+                f'Deployment name {deployment_name!r} is to short, '
+                f'too long or contains invalid characters.')
+
+    @classmethod
+    def _is_valid_qualifier(cls, deployment_name: str) -> bool:
+        return cls.qualifier_re.fullmatch(deployment_name) is not None
 
     @property
     def deployment_stage(self) -> str:
@@ -596,7 +714,7 @@ class Config:
         plugins: Mapping[str, Plugin]
         sources: Set[str]
 
-        _catalog_re = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
+        _catalog_re: str = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
         _catalog_re = r'(?=.{1,64}$)' + _catalog_re
         _it_catalog_suffix: ClassVar[str] = '-it'
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(
@@ -854,7 +972,14 @@ class Config:
         return {
             k: v
             for k, v in os.environ.items()
-            if k.startswith('AZUL_') and (len(v) > 128) == outsource
+            if (
+                (
+                    k.startswith('AZUL_')
+                    # FIXME: Remove once we upgrade to botocore 1.28.x
+                    #        https://github.com/DataBiosphere/azul/issues/4560
+                    or k == 'BOTO_DISABLE_COMMONNAME'
+                )
+                and (len(v) > 128) == outsource)
         }
 
     @cached_property
@@ -918,7 +1043,7 @@ class Config:
     def terra_client_retries(self) -> int:
         return 0 if self._timing_is_restricted else 2
 
-    term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
+    term_re = re.compile(r'[a-z][a-z0-9_]{1,28}[a-z0-9]')
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
         value = self.environ.get(env_var_name, default='')
@@ -930,8 +1055,12 @@ class Config:
 
     @classmethod
     def _validate_term(cls, term: str, name: str = 'Term') -> None:
-        require(cls.term_re.fullmatch(term) is not None,
+        require(cls._is_valid_term(term),
                 f"{name} is either too short, too long or contains invalid characters: '{term}'")
+
+    @classmethod
+    def _is_valid_term(cls, term):
+        return cls.term_re.fullmatch(term) is not None
 
     @classmethod
     def validate_entity_type(cls, entity_type: str) -> None:
@@ -947,6 +1076,8 @@ class Config:
         indexer = ''
         public = '_public'
         unregistered = '_unregistered'
+
+        value: str  # avoid type warning in PyCharm
 
         @property
         def id(self) -> str:
@@ -1149,6 +1280,18 @@ class Config:
     @property
     def cloudtrail_trail_region(self) -> str:
         return self.environ['azul_cloudtrail_trail_region']
+
+    @property
+    def azul_monitoring_email(self) -> str:
+        return self.environ['AZUL_MONITORING_EMAIL']
+
+    @property
+    def monitoring_topic_name(self):
+        return self.qualified_resource_name('monitoring')
+
+    @property
+    def cloudwatch_dashboard_template(self) -> str:
+        return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm

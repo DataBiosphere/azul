@@ -1,0 +1,107 @@
+{
+    "biosample_0005be72-222f-46d9-1b8e-d2fa0ac86cc9": {
+        "anatomical_site": "redacted-l/tyQmjC",
+        "biosample_id": "0005be72-222f-46d9-1b8e-d2fa0ac86cc9",
+        "biosample_type": "redacted-pAEltchG",
+        "datarepo_row_id": "3fdc952d-7eec-48d9-be70-876aa4377a53",
+        "disease": null,
+        "donor_age_at_collection_lower_bound": null,
+        "donor_age_at_collection_unit": null,
+        "donor_age_at_collection_upper_bound": null
+    },
+    "dataset_b65abdb5-65dd-da20-2eae-71d282ace9c4": {
+        "consent_group": [
+            "GRU"
+        ],
+        "data_use_permission": [
+            "GRU"
+        ],
+        "datarepo_row_id": "0a7f1fed-409b-4f98-b650-dedddfc8a1bf",
+        "dataset_id": "b65abdb5-65dd-da20-2eae-71d282ace9c4",
+        "registered_identifier": [
+            "phs000693"
+        ],
+        "title": "ANVIL_CMG_UWASH_GRU"
+    },
+    "donor_089f733e-9122-e6a2-ff7c-84d102fbcdd9": {
+        "datarepo_row_id": "f1404624-bbba-4290-b7b7-d99b58e6bd51",
+        "donor_id": "089f733e-9122-e6a2-ff7c-84d102fbcdd9",
+        "organism_type": null,
+        "phenotypic_sex": "redacted-t8F+l9PW",
+        "reported_ethnicity": [
+            "redacted-N2GfwTBT"
+        ]
+    },
+    "file_23d57a3c-dc24-596a-8142-1215fc2ffa74": {
+        "byte_size": 64526928,
+        "data_modality": [],
+        "datarepo_row_id": "f422c79e-33e1-4f0c-b39b-e698a1b564d0",
+        "file_format": ".gvcf.gz",
+        "file_id": "23d57a3c-dc24-596a-8142-1215fc2ffa74",
+        "file_ref": "drs://data.terra.bio/v1_dc43e80b-566e-4893-92c0-d5f482ce0279_010c2a21-0156-4e71-8967-b6b7a25aef09",
+        "reference_assembly": [],
+        "source_datarepo_row_ids": [
+            "ws_file_inventory:6fbebc1d-cbe7-40ae-8141-dfee6367dee0"
+        ]
+    },
+    "file_8822d3c7-0498-50a3-b717-a6acef5a8588": {
+        "byte_size": 7455178165,
+        "data_modality": [],
+        "datarepo_row_id": "1035f90f-e1ce-4102-9528-7a9227d361cc",
+        "file_format": ".bam",
+        "file_id": "8822d3c7-0498-50a3-b717-a6acef5a8588",
+        "file_ref": "drs://data.terra.bio/v1_dc43e80b-566e-4893-92c0-d5f482ce0279_19d2148c-0a47-4a75-9319-8842d721ca5f",
+        "reference_assembly": [],
+        "source_datarepo_row_ids": [
+            "ws_file_inventory:d8342a7c-bfae-41fd-b0f9-b3fc300d866b"
+        ]
+    },
+    "sequencingactivity_248a08b2-6399-4f7a-74b3-4cced17726da": {
+        "data_modality": [],
+        "datarepo_row_id": "73614c20-f669-430d-a3af-821ec0d27a7a",
+        "sequencingactivity_id": "248a08b2-6399-4f7a-74b3-4cced17726da"
+    },
+    "sequencingactivity_e92568f3-590e-4a0c-3694-a4f9259abc5d": {
+        "data_modality": [],
+        "datarepo_row_id": "4377bef8-3ac3-4b71-856b-a6888323ffa2",
+        "sequencingactivity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d"
+    },
+    "links": [
+        {
+            "inputs": [
+                "dataset/0a7f1fed-409b-4f98-b650-dedddfc8a1bf"
+            ],
+            "activity": null,
+            "outputs": [
+                "biosample/3fdc952d-7eec-48d9-be70-876aa4377a53"
+            ]
+        },
+        {
+            "inputs": [
+                "donor/f1404624-bbba-4290-b7b7-d99b58e6bd51"
+            ],
+            "activity": null,
+            "outputs": [
+                "biosample/3fdc952d-7eec-48d9-be70-876aa4377a53"
+            ]
+        },
+        {
+            "inputs": [
+                "biosample/3fdc952d-7eec-48d9-be70-876aa4377a53"
+            ],
+            "activity": "sequencingactivity/4377bef8-3ac3-4b71-856b-a6888323ffa2",
+            "outputs": [
+                "file/1035f90f-e1ce-4102-9528-7a9227d361cc"
+            ]
+        },
+        {
+            "inputs": [
+                "biosample/3fdc952d-7eec-48d9-be70-876aa4377a53"
+            ],
+            "activity": "sequencingactivity/73614c20-f669-430d-a3af-821ec0d27a7a",
+            "outputs": [
+                "file/f422c79e-33e1-4f0c-b39b-e698a1b564d0"
+            ]
+        }
+    ]
+}

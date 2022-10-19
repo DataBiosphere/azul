@@ -36,9 +36,6 @@ from azul import (
 from azul.azulclient import (
     AzulClient,
 )
-from azul.deployment import (
-    aws,
-)
 from azul.indexer import (
     BundlePartition,
     SourcedBundleFQID,
@@ -67,6 +64,9 @@ from azul.types import (
 from indexer import (
     IndexerTestCase,
 )
+from sqs_test_case import (
+    SqsTestCase,
+)
 
 log = get_test_logger(__name__)
 
@@ -78,7 +78,7 @@ def setUpModule():
 
 @mock_sts
 @mock_sqs
-class TestIndexController(IndexerTestCase):
+class TestIndexController(IndexerTestCase, SqsTestCase):
     partition_prefix_length = 0
 
     def setUp(self) -> None:
@@ -95,18 +95,13 @@ class TestIndexController(IndexerTestCase):
         self.index_service.delete_indices(self.catalog)
         super().tearDown()
 
-    def _create_mock_queues(self):
-        sqs = aws.resource('sqs')
-        for queue_name in config.all_queue_names:
-            sqs.create_queue(QueueName=queue_name)
-
     def _mock_sqs_record(self, body, *, attempts: int = 1):
         event_dict = {
             'body': json.dumps(body),
             'receiptHandle': 'ThisWasARandomString',
             'attributes': {'ApproximateReceiveCount': attempts}
         }
-        return SQSRecord(event_dict=event_dict, context='controller_test')
+        return SQSRecord(event_dict=event_dict, context={})
 
     @property
     def _notifications_queue(self):
@@ -126,6 +121,10 @@ class TestIndexController(IndexerTestCase):
 
     def _read_queue(self, queue) -> JSONs:
         messages = self.queue_manager.read_messages(queue)
+        # For unknown reasons, Moto 4.0.6 requires reading the queues a second
+        # time whereas 2.0.6 didn't. It *is* more realistic but I am not sure
+        # how reliable this is.
+        messages += self.queue_manager.read_messages(queue)
         tallies = [json.loads(m.body) for m in messages]
         return tallies
 
@@ -252,7 +251,7 @@ class TestIndexController(IndexerTestCase):
                     fqid = self._fqid_from_notification(n)
                     partition = BundlePartition.from_json(n['notification']['partition'])
                     partitions[fqid].add(partition)
-                # Assert that each bundle was paritioned ...
+                # Assert that each bundle was partitioned ...
                 self.assertEqual(partitions.keys(), set(fqids))
                 # ... into two partitions. The number of partitions depends on
                 # the patched max_partition_size above and the number of

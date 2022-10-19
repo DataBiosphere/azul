@@ -7,7 +7,6 @@ import time
 from typing import (
     Optional,
     Type,
-    cast,
 )
 import urllib
 from urllib.parse import (
@@ -18,14 +17,8 @@ from uuid import (
     uuid5,
 )
 
-from deprecated import (
-    deprecated,
-)
 from furl import (
     furl,
-)
-from humancellatlas.data.metadata.helpers.dss import (
-    download_bundle_metadata,
 )
 from more_itertools import (
     one,
@@ -34,7 +27,6 @@ import requests
 
 from azul import (
     CatalogName,
-    cached_property,
     config,
 )
 from azul.auth import (
@@ -45,10 +37,6 @@ from azul.collections import (
 )
 from azul.deployment import (
     aws,
-)
-from azul.dss import (
-    client,
-    direct_access_client,
 )
 from azul.indexer import (
     Bundle,
@@ -62,11 +50,6 @@ from azul.plugins import (
 )
 from azul.types import (
     JSON,
-    MutableJSON,
-    MutableJSONs,
-)
-from azul.uuids import (
-    validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
@@ -120,65 +103,15 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
             for spec in self.sources
         ]
 
-    @cached_property
-    def dss_client(self):
-        return client(dss_endpoint=config.dss_endpoint)
-
     def list_bundles(self, source: DSSSourceRef, prefix: str) -> list[DSSBundleFQID]:
-        self._assert_source(source)
-        prefix = source.spec.prefix.common + prefix
-        validate_uuid_prefix(prefix)
-        log.info('Listing bundles with prefix %r in source %r.', prefix, source)
-        bundle_fqids = []
-        response = self.dss_client.get_bundles_all.iterate(prefix=prefix,
-                                                           replica='aws',
-                                                           per_page=500)
-        for bundle in response:
-            bundle_fqids.append(SourcedBundleFQID(source=source,
-                                                  uuid=bundle['uuid'],
-                                                  version=bundle['version']))
-        log.info('There are %i bundle(s) with prefix %r in source %r.',
-                 len(bundle_fqids), prefix, source)
-        return bundle_fqids
-
-    @deprecated
-    def fetch_bundle_manifest(self, bundle_fqid: DSSBundleFQID) -> MutableJSONs:
-        """
-        Only used by integration test to filter out bad bundles.
-
-        https://github.com/DataBiosphere/azul/issues/1784 should make this
-        unnecessary in DCP/2.
-
-        See Bundle.manifest for the shape of the return value.
-        """
-        # noinspection PyProtectedMember
-        response = self.dss_client.get_bundle._auto_page(uuid=bundle_fqid.uuid,
-                                                         version=bundle_fqid.version,
-                                                         replica='aws')
-        return response['bundle']['files']
+        assert False, 'DSS is EOL'
+        # noinspection PyUnreachableCode
+        return []
 
     def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> Bundle:
-        self._assert_source(bundle_fqid.source)
-        now = time.time()
-        # One client per invocation. That's OK because the client will be used
-        # for many requests and a typical lambda invocation calls this only once.
-        dss_client = direct_access_client(num_workers=config.num_dss_workers)
-        version, manifest, metadata_files = download_bundle_metadata(
-            client=dss_client,
-            replica='aws',
-            uuid=bundle_fqid.uuid,
-            version=bundle_fqid.version,
-            num_workers=config.num_dss_workers
-        )
-        bundle = DSSBundle(fqid=bundle_fqid,
-                           # FIXME: remove need for cast by fixing declaration in metadata API
-                           #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
-                           manifest=cast(MutableJSONs, manifest),
-                           metadata_files=cast(MutableJSON, metadata_files))
-        assert version == bundle.version
-        log.info("It took %.003fs to download bundle %s.%s",
-                 time.time() - now, bundle.uuid, bundle.version)
-        return bundle
+        assert False, 'DSS is EOL'
+        # noinspection PyUnreachableCode
+        return DSSBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
 
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {
@@ -469,6 +402,7 @@ class DSSFileDownload(RepositoryFileDownload):
         if self.replica is None:
             self.replica = 'aws'
         assert isinstance(plugin, Plugin)
+        # noinspection PyProtectedMember
         dss_url = plugin._direct_file_url(file_uuid=self.file_uuid,
                                           file_version=self.file_version,
                                           replica=self.replica,

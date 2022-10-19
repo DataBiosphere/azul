@@ -72,6 +72,10 @@ C = TypeVar('C', bound='AppController')
 
 
 class AzulChaliceApp(Chalice):
+    # FIXME: Remove these two class attributes once upstream issue is fixed
+    #        https://github.com/DataBiosphere/azul/issues/4558
+    lambda_context = None
+    current_request = None
 
     def __init__(self,
                  app_name: str,
@@ -379,10 +383,10 @@ class AzulChaliceApp(Chalice):
     @property
     def catalog(self) -> str:
         request = self.current_request
-        # A request is only present when this Lambda Function is invoked by
-        # API Gateway (or a simulation like `make local`). Prominient examples
-        # of when the request None are `chalice package` or when the Lambda
-        # Function is invoked via an event schedule.
+        # A request is only present when this Lambda function is invoked by API
+        # Gateway (or a simulation like `make local`). Prominient examples of
+        # when the request is absent are `chalice package` or when the Lambda
+        # function is invoked via an event schedule.
         if request is not None:
             params = request.query_params
             if params is not None:

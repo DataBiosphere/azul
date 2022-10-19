@@ -17,6 +17,7 @@ import threading
 from typing import (
     Callable,
     Optional,
+    Tuple,
     TypeVar,
     cast,
 )
@@ -115,6 +116,10 @@ class AWS:
     @property
     def s3(self):
         return self.client('s3')
+
+    @property
+    def sns(self):
+        return self.client('sns')
 
     @property
     def sts(self):
@@ -216,17 +221,14 @@ class AWS:
             'permissions_boundary': self.permissions_boundary['Arn']
         }
 
-    def get_hmac_key_and_id(self):
-        # Note: dict contains 'key' and 'key_id' as keys and is provisioned in scripts/provision_credentials.py
-        response = self.secretsmanager.get_secret_value(SecretId=config.secrets_manager_secret_name('indexer', 'hmac'))
-        secret_dict = json.loads(response['SecretString'])
-        return secret_dict['key'], secret_dict['key_id']
-
     @_cache
-    def get_hmac_key_and_id_cached(self, cache_key_id):
-        key, key_id = self.get_hmac_key_and_id()
-        assert cache_key_id == key_id
-        return key, key_id
+    def get_hmac_key_and_id(self) -> Tuple[bytes, str]:
+        # Note: dict contains 'key' and 'key_id' as keys and is provisioned in
+        # scripts/provision_credentials.py
+        secret_id = config.secrets_manager_secret_name('indexer', 'hmac')
+        response = self.secretsmanager.get_secret_value(SecretId=secret_id)
+        secret_dict = json.loads(response['SecretString'])
+        return secret_dict['key'].encode(), secret_dict['key_id']
 
     def dss_main_bucket(self, dss_endpoint: str) -> str:
         return self._dss_bucket(dss_endpoint, lambda_name='indexer')

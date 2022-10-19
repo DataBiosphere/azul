@@ -220,15 +220,6 @@ other_public_keys = {
     'prod': []
 }
 
-# AWS accounts we trust enough to assume roles in
-#
-friend_accounts = {
-    861229788715: 'hca-dev',
-    109067257620: 'hca-prod',
-    122796619775: 'platform-hca-dev',
-    542754589326: 'platform-hca-prod'
-}
-
 logs_path_prefix = 'logs/alb'
 gitlab_logs_path = f'{logs_path_prefix}/AWSLogs/{aws.account}/*'
 
@@ -334,16 +325,6 @@ def allow_service(service: str,
 def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
-
-dss_direct_access_policy_statement = {
-    'actions': [
-        'sts:AssumeRole',
-    ],
-    'resources': [
-        f'arn:aws:iam::{account}:role/azul-*'
-        for account in friend_accounts.keys()
-    ]
-}
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:20.10.18-dind'
@@ -490,8 +471,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    RoleNameWithPath='*',
                                    UserNameWithPath='*'),
 
-                    dss_direct_access_policy_statement,
-
                     *allow_service('Certificate Manager',
                                    # ACM ARNs refer to certificates by ID so we
                                    # cannot restrict to name or prefix
@@ -617,8 +596,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         }
                     },
 
-                    dss_direct_access_policy_statement,
-
                     {
                         'actions': [
                             'iam:UpdateAssumeRolePolicy',
@@ -726,6 +703,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': ['elasticloadbalancing:*'],
                         'resources': ['*']
+                    },
+
+                    # SNS
+                    {
+                        "actions": [
+                            'sns:*'
+                        ],
+                        "resources": aws_service_arns('SNS',
+                                                      TopicName='azul-*')
                     }
                 ]
             }
@@ -1296,7 +1282,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
                 'root_block_device': {
-                    'volume_size': 64
+                    'volume_size': 20
                 },
                 'key_name': '${aws_key_pair.gitlab.key_name}',
                 'network_interface': {
@@ -1442,7 +1428,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     qq(
                                         'freshclam',
                                         '&& echo freshclam succeeded',
-                                        '|| echo freshclam failed',
+                                        '|| (echo freshclam failed; false)',
                                         '&& clamscan',
                                         '--recursive',
                                         '--infected',  # Only print infected files
@@ -1455,7 +1441,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                         '--exclude-dir=^/scan/dev',
                                         '/scan',
                                         '&& echo clamscan succeeded',
-                                        '|| echo clamscan failed'
+                                        '|| (echo clamscan failed; false)'
                                     )
                                 ),
                                 '[Install]',

@@ -22,7 +22,6 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     DatasetTransformer,
     DonorTransformer,
     FileTransformer,
-    LibraryTransformer,
 )
 from azul.plugins.metadata.anvil.service.aggregation import (
     AnvilAggregationStage,
@@ -53,7 +52,6 @@ class Plugin(MetadataPlugin):
             datasets=Sorting(field_name='dataset_id'),
             donors=Sorting(field_name='donor_id'),
             files=Sorting(field_name='file_id'),
-            libraries=Sorting(field_name='library_id')
         )
 
     @property
@@ -67,7 +65,6 @@ class Plugin(MetadataPlugin):
             DatasetTransformer,
             DonorTransformer,
             FileTransformer,
-            LibraryTransformer
         )
 
     def transformers(self, bundle: Bundle, *, delete: bool) -> Iterable[BaseTransformer]:
@@ -103,13 +100,10 @@ class Plugin(MetadataPlugin):
                     f: f for f in [
                         'activity_id',
                         'activity_type',
-                        'analysis_type',
                         'assay_category',
                         'data_modality',
-                        'date_created',
                         'date_submitted',
                         'document_id',
-                        'xref'
                     ]
                 },
                 'biosamples': {
@@ -117,36 +111,29 @@ class Plugin(MetadataPlugin):
                         'anatomical_site',
                         'biosample_id',
                         'biosample_type',
-                        'date_collected',
                         'document_id',
                         'donor_age_at_collection_age_range',
-                        'donor_age_at_collection_life_stage',
                         'donor_age_at_collection_unit',
                         'disease',
-                        'preservation_state',
-                        'xref'
                     ]
                 },
                 'datasets': {
                     f: f for f in [
                         'dataset_id',
-                        'contact_point',
-                        'custodian',
+                        'consent_group',
+                        'data_use_permission',
                         'document_id',
-                        'last_modified_date',
-                        'entity_description',
-                        'entity_title'
+                        'registered_identifier',
+                        'title',
                     ]
                 },
                 'donors': {
                     f: f for f in [
-                        'date_created',
                         'document_id',
                         'donor_id',
                         'organism_type',
                         'phenotypic_sex',
                         'reported_ethnicity',
-                        'xref'
                     ]
                 },
                 'files': {
@@ -157,6 +144,7 @@ class Plugin(MetadataPlugin):
                             'file_format',
                             'file_id',
                             'reference_assembly',
+                            'source_datarepo_row_ids',
                             'crc32',
                             'sha256',
                             'drs_path',
@@ -170,15 +158,6 @@ class Plugin(MetadataPlugin):
                         'uuid': 'fileId',
                         'byte_size': 'size'
                     }
-                },
-                'libraries': {
-                    f: f for f in [
-                        'date_created',
-                        'document_id',
-                        'library_id',
-                        'prep_material_name',
-                        'xref'
-                    ]
                 }
             }
         }
@@ -191,19 +170,15 @@ class Plugin(MetadataPlugin):
     def facets(self) -> Sequence[str]:
         return [
             'activity_type',
-            'analysis_type',
             'anatomical_site',
             'assay_category',
             'biosample_type',
             'data_modality',
-            'entity_title',
-            'donor_age_at_collection_life_stage',
+            'title',
             'file_format',
             'disease',
             'organism_type',
             'phenotypic_sex',
-            'prep_material_name',
-            'preservation_state',
             'reference_assembly',
             'reported_ethnicity',
         ]
@@ -231,7 +206,7 @@ class Plugin(MetadataPlugin):
             ('contents', 'datasets'): {
                 'document_id': 'dataset_document_id',
                 'dataset_id': 'dataset_id',
-                'entity_title': 'dataset_title'
+                'title': 'dataset_title'
             },
             ('contents', 'donors'): {
                 'phenotypic_sex': 'phenotypic_sex',
@@ -246,10 +221,6 @@ class Plugin(MetadataPlugin):
                 'sha256': 'file_sha256',
                 'drs_path': 'file_drs_uri',
                 'file_url': 'file_url'
-            },
-            ('contents', 'libraries'): {
-                'document_id': 'library_document_id',
-                'library_id': 'library_id'
             }
         }
 

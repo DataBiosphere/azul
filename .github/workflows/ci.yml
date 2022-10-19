@@ -41,7 +41,7 @@ jobs:
         make openapi
         make check_clean
         make pep8
-        AZUL_DEBUG=0 make test
+        AZUL_DEBUG=0 GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} make test
         make check_clean
     - uses: actions/upload-artifact@v2
       with:

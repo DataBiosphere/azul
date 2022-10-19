@@ -63,8 +63,11 @@ class AzulTestCase(TestCase):
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: {
-                RE(r'.*<ssl.SSLSocket.*>'),
-                RE(r'.*<socket.socket.*>')
+                RE(r'.*<ssl\.SSLSocket.*>'),
+                RE(r'.*<socket\.socket.*>'),
+                # FIXME: Remove expectation
+                #        https://github.com/DataBiosphere/azul/issues/4564
+                RE(r'unclosed file <_io\.BufferedRandom name=\d+'),
             },
             DeprecationWarning: {
                 RE(r'Call to deprecated method .*\. \(DOS support will be removed\)'),
@@ -212,7 +215,7 @@ class AzulUnitTestCase(AzulTestCase):
         # because it resets all backends and therefore requires that all Moto
         # extras are installed. The backends listed here need to match the
         #  extras specified for the `moto` dependency in `requirements.dev.txt`.
-        for name in ('s3', 'sqs', 'sns', 'dynamodb2'):
+        for name in ('s3', 'sqs', 'sns', 'dynamodb'):
             backends = moto.backends.get_backend(name)
             for region_name, backend in backends.items():
                 backend.reset()
@@ -272,7 +275,7 @@ class AzulUnitTestCase(AzulTestCase):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
         cls._aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.ACCOUNT_ID
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.DEFAULT_ACCOUNT_ID
 
     @classmethod
     def _restore_aws_account_id(cls):

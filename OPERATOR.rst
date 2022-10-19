@@ -16,7 +16,7 @@ Getting started as operator
 
   - add you to the ``Azul Operators`` GitHub group on DataBiosphere
 
-  - give you Maintainer access to the Gitlab ``dev`` and ``prod`` instances
+  - give you Maintainer access to the Gitlab ``dev``, ``prod`` and ``anvildev`` instances
 
   - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
@@ -39,6 +39,9 @@ Getting started as operator
          [remote "gitlab.dcp2.prod"]
              url = git@ssh.gitlab.azul.data.humancellatlas.org:ucsc/azul.git
              fetch = +refs/heads/*:refs/remotes/gitlab.dcp2.prod/*
+         [remote "gitlab.anvil.dev"]
+             url = git@ssh.gitlab.anvil.gi.ucsc.edu:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.anvil.dev/*
 
   #. Confirm access to fetch branches::
 
@@ -236,28 +239,36 @@ Change the target branch of the blocked PR to ``develop`` and remove the ``chain
 label from that PR. Remove the ``base`` label from the blocking PR. Lastly, remove the blocking
 relationship.
 
-Upgrading GitLab
-^^^^^^^^^^^^^^^^
+Upgrading GitLab & ClamAV
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Operators must check for updates to GitLab on a monthly basis in addition to
-triaging GitLab security releases that occur during the month. An email
-notification is sent to ``azul-group@ucsc.edu`` when a GitLab security release
-is available. Discuss with the lead the **Table of Fixes** referenced in the
-release blog post to determine the urgency of the update.
-The current version of GitLab installed can be found on the ``/help`` endpoint
-of `GitLab dev`_, and the available releases can be found on the
+Operators must check for updates to GitLab and ClamAV on a monthly basis in
+addition to triaging GitLab security releases that occur during the month.
+An email notification is sent to ``azul-group@ucsc.edu`` when a GitLab security
+release is available. Discuss with the lead the **Table of Fixes** referenced in
+the release blog post to determine the urgency of the update. An email
+notification should also be received when ClamAV releases become available. The
+current version of GitLab installed can be found on the ``/help`` endpoint of
+`GitLab dev`_, and the available releases can be found on the
 `GitLab Docker image`_ page. When updating the GitLab instance, check if there
 are applicable updates to the `GitLab runner image`_. Use the latest runner
-image whose major and minor version match that of the GitLab image.
+image whose major and minor version match that of the GitLab image. Similarly,
+check for available releases to ClamAV in the `ClamAV image`_. The current
+version of ClamAV image being used can be found by running::
 
-Before starting the update process, check the `GitLab release notes`_ for
-upgrading instructions. When upgrading across multiple GitLab versions, follow
-the prescribed GitLab `upgrade path`_.
+    cat $project_root/terraform/gitlab/gitlab.tf.json.template.py | grep 'clamav_image ='
+
+Before starting the update process, check the `GitLab release notes`_ and
+`ClamAV release notes`_ for any additional upgrading instructions. When
+upgrading across multiple GitLab versions, follow the prescribed GitLab
+`upgrade path`_.
 
 .. _GitLab dev: https://gitlab.dev.singlecell.gi.ucsc.edu/help
 .. _GitLab Docker image: https://hub.docker.com/r/gitlab/gitlab-ce/tags
 .. _GitLab runner image: https://hub.docker.com/r/gitlab/gitlab-runner/tags
+.. _ClamAV image: https://hub.docker.com/r/clamav/clamav/tags
 .. _GitLab release notes: https://about.gitlab.com/releases/categories/releases/
+.. _ClamAV release notes: https://blog.clamav.net/search/label/release
 .. _upgrade path: https://docs.gitlab.com/ee/update/index.html#upgrade-paths
 
 Before any changes are applied, run::
@@ -314,8 +325,13 @@ To determine the prefix:
 Adding snapshots to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PRs which update or add new snapshots to ``prod`` should be filed against the
-``prod`` branch instead of ``develop``.
+Unless specifically agreed with the system admin (tech lead), PRs which update or
+add new snapshots to ``prod`` should be filed against the ``prod`` branch instead
+of ``develop``. When deciding whether to perform snapshot channges directly to
+``prod`` or include them in a routine promotion, the system admin considers the
+scope of changes to be promoted. It would be a mistake to promote large changes in
+combination with snapshots because that would make it difficult to diagnose whether
+indexing failures are caused by the changes or the snapshots.
 
 Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
 with regular promotions.
@@ -348,26 +364,23 @@ We promote at 3pm to give a cushion of time in case anything goes wrong.
 
 To do a promotion:
 
+#. Decide together with lead up to which commit to promote. This commit will be
+   the HEAD of the promotions branch.
+
 #. Create a new GitHub issue with the title ``Promotion yyyy-mm-dd``
 
-#. Announce in the `#team-boardwalk Slack channel`_ that you plan to promote to ``prod``
+#. Make sure your ``prod`` branch is up to date with the remote.
 
-#. Make sure your ``develop`` and ``prod`` branches are up to date. Run::
-
-	git checkout develop
-	git pull -ff-only
-	git checkout prod
-	git pull -ff-only
-
-#. Then run::
-
-      git checkout -b promotions/yyyy-mm-dd develop
-      git push github --set-upstream promotions/yyyy-mm-dd
+#. Create a branch at the commit chosen above. Name the branch correctly. See
+   `promotion PR template`_ for what the correct branch name is.
 
 #. File a PR on GitHub from the new promotion branch and connect it to the issue.
-   The PR must target ``prod``.
+   The PR must target ``prod``. Use the `promotion PR template`_.
 
 #. Request a review from the primary reviewer.
+
+#. Once PR is approved, announce in the `#team-boardwalk Slack channel`_ that
+   you plan to promote to ``prod``
 
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 
@@ -377,6 +390,8 @@ To do a promotion:
    rebase the promotion branch and don't push the promotion branch to GitLab.
    Merge the promotion branch into ``prod`` and push the merge commit on the
    ``prod`` branch first to GitHub and then to the ``prod`` instance of GitLab.
+
+.. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/promotion.md
 
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

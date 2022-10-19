@@ -62,6 +62,7 @@ requirements_update: check_venv check_docker
 # 	image. This makes the pin removal injective. If we truncated the file, we
 # 	might inadvertently reuse a stale image layer despite the .trans file
 # 	having been updated. Not using sed because Darwin's sed does not do -i.
+	git restore requirements.trans.txt requirements.dev.trans.txt
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
 	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
@@ -88,7 +89,8 @@ auto_deploy: check_env
 
 .PHONY: post_deploy
 post_deploy: check_python
-	python $(project_root)/scripts/post_deploy.py
+	python $(project_root)/scripts/post_deploy_sns.py
+	python $(project_root)/scripts/post_deploy_tdr.py
 
 .PHONY: create
 create: check_python check_branch
@@ -149,6 +151,11 @@ format: check_venv check_docker
 .PHONY: test
 test: check_python
 	coverage run -m unittest discover test --verbose
+
+.PHONY: test_list
+test_list: check_python
+	python scripts/list_unit_tests.py test
+
 
 .PHONY: tag
 tag: check_branch

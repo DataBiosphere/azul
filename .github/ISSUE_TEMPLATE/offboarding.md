@@ -24,143 +24,83 @@ ticket has been completed. At that time, put the ticket back to triage.
 - [ ] UCSC account: [INSERT-ACCOUNT-HERE]
 - [ ] GitHub handle: [INSERT-HANDLE-HERE]
 - [ ] AWS IAM user name: [INSERT-IAM-USER-NAME-HERE]
+- [ ] Employee/contractor is leaving UCSC? [ANSWER-YES-OR-NO]
 
 
 ## Offboarded employee/contractor actions
 
-- [ ] Destroyed all personal deployments that had been created or attempted.
-      This includes all cloud resources created for use during the offboarded
-      employee/contractor's work on the system, **except** for log resources,
-      specifically CloudWatch logs, CloudTrail audit logs and S3 access logs.
-- [ ] Assigned ticket to the organization administrator.
+- [ ] Destroyed all personal deployments that had been created or attempted. This includes all cloud resources created for use during the offboarded employee/contractor's work on the system, **except** for log resources, specifically CloudWatch logs, CloudTrail audit logs and S3 access logs
+- [ ] Assigned ticket to the project manager
 
 
-## System administrator role
+## Project manager actions
 
-- [ ] The offboarded employee/contractor did not perform the
-      `system administrator` role.
+- [ ] Nominated [INSERT-NAME-HERE] as a replacement system administrator <sub>or the offboarded employee/contractor was not the sole system administrator</sub>
+- [ ] Assigned ticket to the offboarded employee/contractor
 
-or:
 
-- [ ] An organization administrator has removed the `system administrator` role
-      from the offboarded employee/contractor's accounts.
-- [ ] A system administrator has changed the credentials of all GitLab root
-      accounts.
+## Offboarded employee/contractor actions
 
-Additionally, if none of the remaining team members perform the `system
-administrator` role:
-
-- [ ] A project manager nominated [INSERT-NAME-HERE] as a replacement system
-      administrator.
-- [ ] An organization administrator assigned the `system administrator` role
-      to the replacement's accounts.
-- [ ] The offboarded employee/contractor handed over credentials to all GitLab
-      root accounts they owned to the replacement.
+- [ ] Handed over credentials of all GitLab root accounts to the replacement system administrator <sub>or the offboarded employee/contractor was not the sole system administrator</sub>
+- [ ] Assigned ticket to the organization administrator
 
 
 ## Organization administrator actions
 
-- [ ] Removed the offboarded employee/contractor's GitHub account from the
-      `Azul Developers` team in the DataBiosphere organization on GitHub.
-- [ ] Removed the offboarded employee/contractor's Google workspace account from
-      the Google project used for the deployment.
-- [ ] Deleted the Google service account (name derived from the Google workspace
-      account name) in the Google project used for the deployment.
-
-In the `gi-gateway` AWS account:
-
-- [ ] Removed the offboarded employee/contractor's AWS IAM user account from
-      the `platform-hca-dev-developer` group.
-- [ ] Removed the offboarded employee/contractor's AWS IAM user account from
-      the `platform-hca-prod-developer` group.
-- [ ] Removed the offboarded employee/contractor's AWS IAM user account from
-      the `platform-anvil-dev-developer` group.
-- [ ] Removed the offboarded employee/contractor's AWS IAM user account from
-      the `platform-anvil-dev-developer` group.
-- [ ] Removed the offboarded employee/contractor's Google workspace account and
-      the Google service account deleted above from the `azul-dev` Terra group.
-
-Additionally, if the employee/contractor is leaving UCSC:
-
-- [ ] Removed the offboarded employee/contractor from the `HumanCellAtlas`
-      GitHub organization.
-- [ ] Removed the offboarded employee/contractor from the `DataBiosphere` GitHub
-      organization.
-- [ ] Removed the offboarded employee/contractor from the `ucsc-cgp` GitHub
-      organization.
-
-Lastly:
-
-- [ ] Assigned ticket to the system administrator.
+- [ ] Removed the `system administrator` role from the offboarded employee/contractor's accounts <sub>or the offboarded employee/contractor did not perform the `system administrator` role</sub>
+- [ ] Assigned the `system administrator` role to the replacement nominated by the project manager <sub>or the offboarded employee/contractor was not the sole `system administrator`</sub> 
+- [ ] Removed the offboarded employee/contractor's GitHub account from the `Azul Developers` team in the DataBiosphere organization on GitHub
+- [ ] Removed the offboarded employee/contractor's Google workspace account from the Google project used for the deployment
+- [ ] Deleted the Google service account (name derived from the Google workspace account name) in the Google project used for the deployment
+- [ ] Removed the offboarded employee/contractor's Google workspace account and the Google service account deleted above from the `azul-dev` group in Terra
+- [ ] Removed the offboarded employee/contractor from the `HumanCellAtlas` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
+- [ ] Removed the offboarded employee/contractor from the `DataBiosphere` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
+- [ ] Removed the offboarded employee/contractor from the `ucsc-cgp` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-dev-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-prod-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-dev-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-dev-developer` group in the `gi-gateway` AWS account
+- [ ] Assigned ticket to the system administrator
 
 
 ## System administrator actions
 
-- [ ] Removed the offboarded employee/contractor's account from the `Azul
-      Operators` team on [GitHub](https://github.com/orgs/DataBiosphere/teams/azul-operators/members).
-- [ ] _____ (TODO: Fill in step(s) to remove `GitLab maintainer` role).
-- [ ] Removed the offboarded employee/contractor from the `azul-dev` Terra group.
-- [ ] Removed the offboarded employee/contractor from the `azul-prod` Terra
-      group.
-- [ ] Removed the offboarded employee/contractor from the `azul-anvil-prod`
-      Terra group.
-- [ ] Removed the offboarded employee/contractor from the `Azul Admins` GitHub
-      team.
-- [ ] Removed the offboarded employee/contractor from the `Azul Operators`
-      GitHub team.
-- [ ] Removed the offboarded employee/contractor from the `Azul Managers`
-      GitHub team.
-- [ ] Removed the offboarded employee/contractor from the `Azul Developers`
-      GitHub team.
-- [ ] Removed all role assignments from the offboarded employee/contractor in
-      the `dev` instance of GitLab.
-- [ ] Removed all role assignments from the offboarded employee/contractor in
-      the `prod` instance of GitLab.
-- [ ] Removed all role assignments from the offboarded employee/contractor in
-      the `anvildev` instance of GitLab.
-- [ ] Removed all role assignments from the offboarded employee/contractor in
-      the `anvilprod` instance of GitLab.
-- [ ] Blocked the GitLab account owned by the offboarded employee/contractor on
-      every GitLab instance in the system.
-- [ ] Removed the Google Service accounts owned by the offboarded
-      employee/contractor in the `platform-hca-dev` Google Cloud project.
-- [ ] Removed the Google Service accounts owned by the offboarded
-      employee/contractor in the `platform-hca-prod` Google Cloud project.
-- [ ] Removed the Google Service accounts owned by the offboarded
-      employee/contractor in the `platform-anvil-dev` Google Cloud project.
-- [ ] Removed the Google Service accounts owned by the offboarded
-      employee/contractor in the `platform-anvil-prod` Google Cloud project.
-- [ ] Performed an account review and disabled any accounts owned by the
-      offboarded employee/contractor.
-- [ ] Performed a resource inventory and deleted any resources owned by the
-      offboarded employee/contractor.
-- [ ] Removed the offboarded employee/contractor from the `azul-group` Google
-      group.
-- [ ] Removed any IAM accounts owned by the employee/contractor created for
-      AWS CodeCommit.
-- [ ] Revoked the offboarded employee/contractor's VPN certificate for
-      `azul-gitlab-dev`
-- [ ] Revoked the offboarded employee/contractor's VPN certificate for
-      `azul-gitlab-anvildev`
-- [ ] Revoked the offboarded employee/contractor's VPN certificate for
-      `azul-gitlab-prod`
-- [ ] Revoked the offboarded employee/contractor's VPN certificate for
-      `azul-gitlab-anvilprod`
-- [ ] Assigned ticket to the project manager.
+- [ ] Changed the credentials of all GitLab root accounts <sub>or the offboarded employee/contractor did not perform the `system administrator` role</sub>
+- [ ] Removed the offboarded employee/contractor's account from the `Azul Operators` team on [GitHub](https://github.com/orgs/DataBiosphere/teams/azul-operators/members)
+- [ ] Removed the `GitLab maintainer` role from the offboarded employee/contractor (TODO: Fill in details of steps required to do this)
+- [ ] Removed the offboarded employee/contractor from the `azul-dev` group in Terra
+- [ ] Removed the offboarded employee/contractor from the `azul-prod` group in Terra
+- [ ] Removed the offboarded employee/contractor from the `azul-anvil-prod` group in Terra
+- [ ] Removed the offboarded employee/contractor from the `Azul Admins` GitHub team
+- [ ] Removed the offboarded employee/contractor from the `Azul Operators` GitHub team
+- [ ] Removed the offboarded employee/contractor from the `Azul Triagers` GitHub team
+- [ ] Removed the offboarded employee/contractor from the `Azul Developers` GitHub team
+- [ ] Removed all role assignments from the offboarded employee/contractor in the `dev` instance of GitLab
+- [ ] Removed all role assignments from the offboarded employee/contractor in the `prod` instance of GitLab
+- [ ] Removed all role assignments from the offboarded employee/contractor in the `anvildev` instance of GitLab
+- [ ] Removed all role assignments from the offboarded employee/contractor in the `anvilprod` instance of GitLab
+- [ ] Blocked the GitLab account owned by the offboarded employee/contractor on every GitLab instance in the system
+- [ ] Removed the Google Service accounts owned by the offboarded employee/contractor in the `platform-hca-dev` Google Cloud project
+- [ ] Removed the Google Service accounts owned by the offboarded employee/contractor in the `platform-hca-prod` Google Cloud project
+- [ ] Removed the Google Service accounts owned by the offboarded employee/contractor in the `platform-anvil-dev` Google Cloud project
+- [ ] Removed the Google Service accounts owned by the offboarded employee/contractor in the `platform-anvil-prod` Google Cloud project
+- [ ] Performed an account review and disabled any accounts owned by the offboarded employee/contractor
+- [ ] Performed a resource inventory and deleted any resources owned by the offboarded employee/contractor
+- [ ] Removed the offboarded employee/contractor from the `azul-group` group in Google
+- [ ] Removed any IAM accounts owned by the employee/contractor created for AWS CodeCommit
+- [ ] Revoked the offboarded employee/contractor's VPN certificate for `dev`
+- [ ] Revoked the offboarded employee/contractor's VPN certificate for `anvildev`
+- [ ] Revoked the offboarded employee/contractor's VPN certificate for `prod`
+- [ ] Revoked the offboarded employee/contractor's VPN certificate for `anvilprod`
+- [ ] Assigned ticket to the project manager
 
 
 ## ITS actions
 
-- [ ] The employee/contractor's employment with the organization is not being
-      terminated.
-
-or:
-
-- [ ] Disabled the offboarded employee/contractor's UCSC account.
-- [ ] All shared credentials have been rotated and redistributed to all
-      remaining eligible employees and contractors.
+- [ ] Disabled the offboarded employee/contractor's UCSC account <sub>or the employee/contractor's employment with the organization is not being terminated</sub>
+- [ ] Rotated and redistributed all shared credentials to all remaining eligible employees and contractors <sub>or the employee/contractor's employment with the organization is not being terminated</sub>
 
 
 ## Conclusion
 
-- [ ] Close & unassign ticket.
+- [ ] Close & unassign ticket

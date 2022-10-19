@@ -1054,28 +1054,28 @@ class PagedManifestGenerator(ManifestGenerator):
                                                         upload_id=partition.multipart_upload_id)
         if partition.page_index is None:
             partition = partition.first_page()
-        buffer = BytesIO()
-        text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-        while True:
-            partition = self.write_page_to(partition, output=text_buffer)
-            if partition.is_last_page or buffer.tell() > self.part_size:
-                break
+        with BytesIO() as buffer:
+            with TextIOWrapper(buffer, encoding='utf-8', write_through=True) as text_buffer:
+                while True:
+                    partition = self.write_page_to(partition, output=text_buffer)
+                    if partition.is_last_page or buffer.tell() > self.part_size:
+                        break
 
-        def upload_part():
-            buffer.seek(0)
-            return self.storage.upload_multipart_part(buffer, partition.index + 1, upload)
+                def upload_part():
+                    buffer.seek(0)
+                    return self.storage.upload_multipart_part(buffer, partition.index + 1, upload)
 
-        if partition.is_last_page:
-            if buffer.tell() > 0:
-                partition = partition.next(part_etag=upload_part())
-            self.storage.complete_multipart_upload(upload, partition.part_etags)
-            file_name = self.file_name(object_key, partition.file_name)
-            tagging = self.tagging(file_name)
-            if tagging is not None:
-                self.storage.put_object_tagging(object_key, tagging)
-            return partition.last(file_name)
-        else:
-            return partition.next(part_etag=upload_part())
+                if partition.is_last_page:
+                    if buffer.tell() > 0:
+                        partition = partition.next(part_etag=upload_part())
+                    self.storage.complete_multipart_upload(upload, partition.part_etags)
+                    file_name = self.file_name(object_key, partition.file_name)
+                    tagging = self.tagging(file_name)
+                    if tagging is not None:
+                        self.storage.put_object_tagging(object_key, tagging)
+                    return partition.last(file_name)
+                else:
+                    return partition.next(part_etag=upload_part())
 
     page_size = 500
 
@@ -1518,13 +1518,13 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         transformers = self.service.transformer_types(self.catalog)
         transformer = one(t for t in transformers if t.entity_type() == 'files')
         field_types = transformer.field_types()
-        entity = avro_pfb.pfb_metadata_entity(field_types)
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
         converter = avro_pfb.PFBConverter(pfb_schema, self.repository_plugin)
         for doc in self._all_docs_sorted():
             converter.add_doc(doc)
 
+        entity = avro_pfb.pfb_metadata_entity(field_types)
         entities = itertools.chain([entity], converter.entities())
 
         fd, path = mkstemp(suffix='.avro')

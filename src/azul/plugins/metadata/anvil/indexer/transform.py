@@ -57,7 +57,6 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
     DatasetAggregator,
     DonorAggregator,
     FileAggregator,
-    LibraryAggregator,
 )
 from azul.plugins.repository.tdr_hca import (
     EntitiesByType,
@@ -125,7 +124,6 @@ class BaseTransformer(Transformer, ABC):
             'datasets': cls._dataset_types(),
             'donors': cls._donor_types(),
             'files': cls._aggregate_file_types(),
-            'libraries': cls._library_types()
         }
 
     @classmethod
@@ -140,8 +138,6 @@ class BaseTransformer(Transformer, ABC):
             return DonorAggregator()
         if entity_type == 'files':
             return FileAggregator()
-        if entity_type == 'libraries':
-            return LibraryAggregator()
         else:
             assert False, entity_type
 
@@ -197,12 +193,9 @@ class BaseTransformer(Transformer, ABC):
             **cls._entity_types(),
             'activity_id': null_str,
             'activity_type': null_str,
-            'analysis_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
-            'started_at_time': null_datetime,
             'date_submitted': null_datetime,
-            'xref': [null_str]
         }
 
     @classmethod
@@ -212,13 +205,9 @@ class BaseTransformer(Transformer, ABC):
             'anatomical_site': null_str,
             'biosample_id': null_str,
             'biosample_type': null_str,
-            'date_collected': null_datetime,
             'donor_age_at_collection_age_range': pass_thru_json,
-            'donor_age_at_collection_life_stage': null_str,
             'donor_age_at_collection_unit': null_str,
             'disease': null_str,
-            'preservation_state': null_str,
-            'xref': [null_str]
         }
 
     @classmethod
@@ -226,23 +215,20 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._entity_types(),
             'dataset_id': null_str,
-            'contact_point': [null_str],
-            'custodian': [null_str],
-            'entity_description': null_str,
-            'entity_title': null_str,
-            'last_modified_date': null_datetime
+            'consent_group': [null_str],
+            'data_use_permission': [null_str],
+            'registered_identifier': [null_str],
+            'title': null_str,
         }
 
     @classmethod
     def _donor_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'birth_date': null_datetime,
             'donor_id': null_str,
             'organism_type': null_str,
             'phenotypic_sex': null_str,
             'reported_ethnicity': null_str,
-            'xref': [null_str]
         }
 
     @classmethod
@@ -258,6 +244,7 @@ class BaseTransformer(Transformer, ABC):
             'size': null_int,
             'name': null_str,
             'reference_assembly': [null_str],
+            'source_datarepo_row_ids': [null_str],
             'crc32': null_str,
             'sha256': null_str,
             'drs_path': null_str
@@ -268,16 +255,6 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._file_types(),
             'count': pass_thru_int  # Added by FileAggregator, ever null
-        }
-
-    @classmethod
-    def _library_types(cls) -> FieldTypes:
-        return {
-            **cls._entity_types(),
-            'date_created': null_datetime,
-            'library_id': null_str,
-            'prep_material_name': null_str,
-            'xref': [null_str]
         }
 
     def _contribution(self,
@@ -365,18 +342,12 @@ class BaseTransformer(Transformer, ABC):
                             self._file_types(),
                             size=metadata['byte_size'])
 
-    def _library(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry, self._library_types())
-
     def _only_dataset(self) -> MutableJSON:
         return self._dataset(self._entries_by_entity_id[one(self._entities_by_type['dataset'])])
 
     _activity_polymorphic_types = {
         'alignmentactivity',
-        'analysisactivity',
         'assayactivity',
-        'experimentactivity',
-        'librarypreparationactivity',
         'sequencingactivity'
     }
 
@@ -395,7 +366,6 @@ class ActivityTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
-            libraries=self._entities(self._library, linked['library'])
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -417,7 +387,6 @@ class BiosampleTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
-            libraries=self._entities(self._library, linked['library'])
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -438,7 +407,6 @@ class DatasetTransformer(BaseTransformer):
             datasets=[self._dataset(manifest_entry)],
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file']),
-            libraries=self._entities(self._library, self._entities_by_type['library'])
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -460,7 +428,6 @@ class DonorTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             donors=[self._donor(manifest_entry)],
             files=self._entities(self._file, linked['file']),
-            libraries=self._entities(self._library, linked['library']),
         )
         return self._contribution(contents, manifest_entry['uuid'])
 
@@ -482,28 +449,5 @@ class FileTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             files=[self._file(manifest_entry)],
             donors=self._entities(self._donor, linked['donor']),
-            libraries=self._entities(self._library, linked['library'])
-        )
-        return self._contribution(contents, manifest_entry['uuid'])
-
-
-class LibraryTransformer(BaseTransformer):
-
-    @classmethod
-    def entity_type(cls) -> str:
-        return 'libraries'
-
-    def _transform(self, manifest_entry: JSON) -> Contribution:
-        linked = self._linked_entities(manifest_entry)
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['biosample']),
-            datasets=[self._only_dataset()],
-            files=self._entities(self._file, linked['file']),
-            donors=self._entities(self._donor, linked['donor']),
-            libraries=[self._library(manifest_entry)]
         )
         return self._contribution(contents, manifest_entry['uuid'])

@@ -59,7 +59,3 @@ class FileAggregator(GroupingAggregator):
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._get_accumulator(field)
-
-
-class LibraryAggregator(SimpleAggregator):
-    pass

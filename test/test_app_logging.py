@@ -78,7 +78,7 @@ class TestAppLogging(TestCase):
                     self.assertEqual(len(azul_log.output), 3)
                     headers = {
                         'host': f'{host}:{port}',
-                        'user-agent': 'python-requests/2.26.0',
+                        'user-agent': 'python-requests/2.28.1',
                         'accept-encoding': 'gzip, deflate, br',
                         'accept': '*/*',
                         'connection': 'keep-alive'
@@ -154,6 +154,7 @@ class TestUnexpectedWarnings(TestCase):
                 suite.run(result)
 
                 self.assertEqual(1, result.testsRun)
+                self.assertEqual(1, len(result.errors), repr(result.errors))
                 failed_test, trace_back = cast(tuple[Any, str], one(result.errors))
                 self.assertEqual(f'tearDownClass ({__name__}.{Test.__qualname__})', str(failed_test))
                 error_line = trace_back.splitlines()[-1]

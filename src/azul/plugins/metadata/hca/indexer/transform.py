@@ -38,9 +38,6 @@ from uuid import (
 )
 
 import attr
-from humancellatlas.data.metadata import (
-    api,
-)
 from more_itertools import (
     ilen,
     one,
@@ -118,6 +115,9 @@ from azul.types import (
     JSON,
     JSONs,
     MutableJSON,
+)
+from humancellatlas.data.metadata import (
+    api,
 )
 
 log = logging.getLogger(__name__)
@@ -248,7 +248,7 @@ class ValueAndUnit(FieldType[JSON, str]):
         >>> a.from_index('20  ')
         Traceback (most recent call last):
         ...
-        ValueError: too many items in iterable (expected 1)
+        ValueError: Expected exactly one item in iterable, but got '', '', and perhaps more.
 
         >>> a.from_index(' year')
         Traceback (most recent call last):

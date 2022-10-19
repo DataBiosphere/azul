@@ -140,7 +140,7 @@ publish_revocations: _admin
 		--client-vpn-endpoint-id $${endpoint_id} \
 		--region $${AWS_DEFAULT_REGION}
 
-.PHONY: publish_revocations
+.PHONY: list_published_revocations
 list_published_revocations: _admin
 	@export endpoint_id=$$( \
 		aws ec2 describe-client-vpn-endpoints \

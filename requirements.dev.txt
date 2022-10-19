@@ -1,25 +1,24 @@
-awscli==1.19.33
-git+https://github.com/DataBiosphere/azul-chalice@1.27.0+8#egg=chalice
-coverage==5.1
-docker==3.4.1
-flake8==3.8.2
-gevent==20.9.0
-gitdb2==3.0.1  # Not a direct dependency but https://github.com/gitpython-developers/GitPython/issues/983
-gitpython==2.1.11
-google-api-python-client==1.7.8
-locust==1.2.3
-# FIXME: Update Moto when decorator ordering issue is resovled
-# 		 https://github.com/DataBiosphere/azul/issues/3035
-moto[s3,sqs,sns,dynamodb2]==2.0.6  # match the extras with the backends listed in AzulUnitTestCase._resetMoto
-boto3-stubs[s3,sqs,lambda,dynamo]==1.17.29  # match this with the version of the `boto3` runtime dependency
-openapi-spec-validator==0.2.8
-pygithub==1.43.5
-pytest==3.2.3
-pyyaml==5.4
+atomicwrites==1.4.1
+awscli==1.25.90
+git+https://github.com/DataBiosphere/azul-chalice@1.27.3+9#egg=chalice
+coverage==6.5.0
+docker==6.0.0
+flake8==5.0.4
+gevent==22.8.0
+gitpython==3.1.28
+google-api-python-client==2.64.0
+greenlet==1.1.3 # FIXME: https://github.com/DataBiosphere/azul/issues/4561
+jq==1.2.2
+locust==2.12.1
+moto[s3,sqs,sns,dynamodb]==4.0.7  # match the extras with the backends listed in AzulUnitTestCase._resetMoto
+boto3-stubs[s3,sqs,lambda,dynamodb]==1.24.89  # match this with the version of the `boto3` runtime dependency
+openapi-spec-validator==0.5.1
+pygithub==1.55
+pyyaml==5.4.1
 git+https://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
-responses==0.10.2
+responses==0.21.0
 strict-rfc3339==0.7
-watchdog==0.9.0
-git+https://github.com/DataBiosphere/azul-tinyquery@1.2+1#egg=tinyquery
+watchdog==2.1.9
+git+https://github.com/DataBiosphere/azul-tinyquery@1.2+2#egg=tinyquery
 -r requirements.dev.trans.txt
 -r requirements.txt

@@ -66,9 +66,6 @@ from azul.types import (
     JSONs,
     MutableJSON,
 )
-from azul.uuids import (
-    validate_uuid,
-)
 
 if TYPE_CHECKING:
     from azul.service.elasticsearch_service import (
@@ -474,9 +471,6 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         repository for the source's spec.
         """
         raise NotImplementedError
-
-    def validate_entity_id(self, entity_id: str) -> None:
-        validate_uuid(entity_id)
 
     @abstractmethod
     def lookup_source_id(self, spec: SOURCE_SPEC) -> str:
