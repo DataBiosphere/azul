@@ -20,7 +20,6 @@ google-cloud-storage==2.5.0
 google-cloud-bigquery-reservation==1.7.2
 grpcio==1.49.1
 http-message-signatures==0.4.4
-# idna==3.1  # resolve ambiguity with build-time dependency
 jinja2==3.1.2  # resolve ambiguity with build-time dependency
 jmespath==1.0.1
 jsonschema==4.16.0  # resolve ambiguity with build-time dependency
