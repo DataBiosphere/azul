@@ -37,6 +37,7 @@ from azul import (
     cache,
     cached_property,
     config,
+    require,
 )
 from azul.types import (
     JSON,
@@ -408,6 +409,13 @@ class AWS:
         `boto3.client()`.
         """
         return self.boto3_session.resource(*args, **kwargs)
+
+    def qualified_bucket_name(self, bucket_name: str) -> str:
+        """
+        Return a qualified bucket name.
+        """
+        require(len(bucket_name) > 0, bucket_name)
+        return f'edu-ucsc-gi-{aws.account_name}-{bucket_name}.{aws.region_name}'
 
 
 aws = AWS()

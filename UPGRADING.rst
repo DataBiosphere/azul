@@ -11,6 +11,41 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4174 Enable GuardDuty and SecurityHub
+======================================
+
+This change enables the AWS Config, GuardDuty, and SecurityHub services,
+deployed as part of the ``shared`` Terraform component. Prior to deploy, the
+operator must ensure these services are currently not active and disable/remove
+any that are. Use the AWS CLI's _list_ and _describe_ functionality to obtain
+the status of each service, and the CLI's _delete_ and _disable_ functionality
+to remove the ones that are active ::
+
+    _select dev.shared
+
+    aws configservice describe-configuration-recorders
+    aws configservice delete-configuration-recorder --configuration-recorder-name <value>
+
+    aws configservice describe-delivery-channels
+    aws configservice delete-delivery-channel --delivery-channel-name <value>
+
+    aws guardduty list-detectors
+    aws guardduty delete-detector --detector-id <value>
+
+    aws securityhub get-enabled-standards
+    aws securityhub batch-disable-standards --standards-subscription-arns <value>
+
+    aws securityhub describe-hub
+    aws securityhub disable-security-hub
+
+After ensuring the services are disabled, follow these steps to deploy for the
+``dev.shared``, ``anvildev.shared``, and ``prod.shared`` deployments ::
+
+    _select dev.shared
+    cd $project_root/terraform/shared
+    make apply
+
+
 #4190 Create SNS topic for monitoring and security notifications
 ================================================================
 
