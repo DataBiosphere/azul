@@ -18,6 +18,8 @@ importlib-metadata==5.0.0
 importlib-resources==5.10.0
 inquirer==2.10.0
 itsdangerous==2.1.2
+jinja2==3.1.2
+jsonschema==4.16.0
 jsonschema-spec==0.1.2
 lazy-object-proxy==1.7.1
 mccabe==0.7.0
@@ -34,6 +36,7 @@ pycodestyle==2.9.1
 pyflakes==2.5.0
 pyjwt==2.6.0
 pynacl==1.5.0
+pyrsistent==0.18.1
 python-editor==1.0.4
 pyzmq==24.0.1
 readchar==4.0.3
