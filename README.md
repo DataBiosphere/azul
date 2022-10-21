@@ -52,7 +52,7 @@ generic with minimal need for project-specific behavior.
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
 - Users of macOS 11 (Big Sur) or later should follow additional steps mentioned 
-  in [Troubleshooting](#installing-python-3812-on-macos-11-or-later)
+  in [Troubleshooting](#installing-python-3812-on-macos-11)
 
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
 [Docker]: https://docs.docker.com/install/overview/
@@ -111,7 +111,7 @@ end.
    concurrently and allows for easily switching between them.
 
    Ubuntu users using their system's default Python 3.9 installation must
-   install `python3-dev` before the wheel requirements can be built.
+   install `python3-dev` before any wheel requirements can be built.
 
    ```
    sudo apt install python3-dev
