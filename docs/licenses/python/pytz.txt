@@ -1,0 +1,10 @@
+https://pythonhosted.org/pytz/#license
+
+License
+
+MIT license.
+
+This code is also available as part of Zope 3 under the Zope Public License, Version 2.1 (ZPL).
+
+I’m happy to relicense this code if necessary for inclusion in other open source projects.
+

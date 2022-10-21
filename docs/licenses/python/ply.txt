@@ -1,0 +1,5 @@
+http://www.dabeaz.com/ply/
+
+Copyright
+PLY-3.2 and newer releases are distributed under a BSD-license. Older versions are licensed under the terms of the Lesser GPL (LGPL).
+
