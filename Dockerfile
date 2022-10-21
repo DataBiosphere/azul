@@ -25,6 +25,9 @@ ENV project_root /build
 
 COPY requirements*.txt common.mk Makefile ./
 
+ARG PIP_DISABLE_PIP_VERSION_CHECK
+ENV PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK}
+
 ARG make_target
 
 ARG cache_seed

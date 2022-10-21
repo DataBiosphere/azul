@@ -34,10 +34,11 @@ define docker
 .PHONY: docker$1
 docker$1: check_docker
 	docker build \
-		--build-arg make_target=requirements$2 \
-		--build-arg cache_seed=${CACHE_SEED} \
-		-t $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
-		.
+	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
+	       --build-arg make_target=requirements$2 \
+	       --build-arg cache_seed=${CACHE_SEED} \
+	       --tag $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
+	       .
 
 .PHONY: docker$1_push
 docker$1_push: docker$1

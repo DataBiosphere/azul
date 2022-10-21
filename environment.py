@@ -444,6 +444,13 @@ def env() -> Mapping[str, Optional[str]]:
 
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
+
+        # Stop `pip` from nagging us about updates. We update pip regularly like
+        # any other dependency. There is nothing special about `pip` that would
+        # warrant the distraction.
+        #
+        'PIP_DISABLE_PIP_VERSION_CHECK': '1',
+
         # FIXME: Remove once we upgrade to botocore 1.28.x
         #        https://github.com/DataBiosphere/azul/issues/4560
         'BOTO_DISABLE_COMMONNAME': 'true',
