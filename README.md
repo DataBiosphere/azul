@@ -2287,6 +2287,10 @@ or transitive requirements in that category.
 
 # 12. Making wheels
 
+_Note: Support for custom wheels is currently disabled. We don't currently have 
+any dependencies for which a binary wheel is unavailable. We'll leave this 
+section in place until support is needed and enabled again_  
+
 Some of Azul's dependencies contain native code that needs to be compiled into
 a binary executable which is then dynamically loaded into the Python
 interpreter process when the package is imported. These dependencies are

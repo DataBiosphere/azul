@@ -1,15 +1,11 @@
 from collections import (
     defaultdict,
 )
-from collections.abc import (
-    Iterable,
-)
 import hashlib
 import logging
 from pathlib import (
     Path,
 )
-import re
 import shutil
 import subprocess
 from zipfile import (
@@ -17,12 +13,9 @@ from zipfile import (
     ZipInfo,
 )
 
-import attr
-
 from azul import (
     cached_property,
     config,
-    require,
 )
 from azul.deployment import (
     aws,
@@ -34,41 +27,6 @@ from azul.files import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
-class Requirement:
-    name: str
-    version: str
-    git: bool
-
-    wheel_re = re.compile(r'(?P<distribution>[^-]+)-'
-                          r'(?P<version>[^-]+)-'
-                          r'(?:(?P<build_tag>\d[^-]*)-)?'
-                          r'(?P<python_tag>[^-]+)-'
-                          r'(?P<abi_tag>[^-]+)-'
-                          r'(?P<platform_tag>[^-]+).whl')
-
-    @classmethod
-    def from_pin(cls, line: str):
-        if line.startswith('git+'):
-            line = line[len('git+'):]
-            version, name = line.split('#egg=')
-            return cls(name=name, version=version, git=True)
-        else:
-            name, version = line.split('==')
-            return cls(name=name, version=version, git=False)
-
-    @classmethod
-    def from_wheel(cls, wheel: str):
-        wheel = cls.wheel_re.fullmatch(wheel)
-        return cls(name=wheel['distribution'], version=wheel['version'], git=False)
-
-    def to_pin(self) -> str:
-        if self.git:
-            return f'git+{self.version}#egg={self.name}'
-        else:
-            return f'{self.name}=={self.version}'
-
-
 class DependenciesLayer:
     root = Path(config.project_root)
     lambda_dir = root / 'lambdas'
@@ -76,7 +34,6 @@ class DependenciesLayer:
     reqs_trans_file = root / 'requirements.trans.txt'
     reqs_pip_file = root / 'requirements.pip.txt'
     reqs_dev_file = root / 'requirements.dev.txt'
-    wheel_dir = lambda_dir / '.wheels'
     layer_dir = lambda_dir / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
 
@@ -104,7 +61,6 @@ class DependenciesLayer:
             log.info('Generating new layer package ...')
             input_zip = self.out_dir / 'deployment.zip'
             layer_zip = self.out_dir / 'layer.zip'
-            self._generate_requirements()
             self._build_package(input_zip, layer_zip)
             self._validate_layer(layer_zip)
             log.info('Uploading layer package to S3 ...')
@@ -112,27 +68,6 @@ class DependenciesLayer:
             log.info('Successfully staged updated layer package.')
         else:
             log.info('Layer package already up-to-date.')
-
-    def _generate_requirements(self):
-        log.debug('Generating requirements file for layer ...')
-        reqs = self._all_reqs()
-        vendored_reqs = [
-            Requirement.from_wheel(f.name)
-            for f in self.wheel_dir.iterdir()
-            if f.is_file() and f.name.endswith('.whl')
-        ]
-        log.debug('Filtering out vendored requirements %r', vendored_reqs)
-        require(set(vendored_reqs).issubset(reqs), vendored_reqs, reqs)
-        # Keep reqs a list to preserve ordering
-        non_vendored_reqs = [r for r in reqs if r not in vendored_reqs]
-        reqs_by_name = defaultdict(list)
-        for req in non_vendored_reqs:
-            reqs_by_name[req.name].append(req)
-        duplicates = {k: v for k, v in reqs_by_name.items() if len(v) > 1}
-        assert not duplicates, duplicates
-        with open(self.layer_dir / 'requirements.txt', 'w') as f:
-            for req in non_vendored_reqs:
-                f.write(req.to_pin() + '\n')
 
     def _build_package(self, input_zip: Path, output_zip: Path):
         # Delete Chalice's build cache because our layer cache eviction rules
@@ -170,35 +105,16 @@ class DependenciesLayer:
         duplicates = {k: v for k, v in files.items() if len(v) > 1}
         assert not duplicates, duplicates
 
-    def _all_reqs(self) -> Iterable[Requirement]:
-        reqs = []
-        for file in (self.reqs_file, self.reqs_trans_file):
-            reqs += self._parse_reqs(file)
-        return reqs
-
-    def _parse_reqs(self, reqs: Path) -> Iterable[Requirement]:
-        with reqs.open('r') as f:
-            for line in f:
-                if line.startswith('#') or line.startswith('-r'):
-                    continue
-                else:
-                    if ' #' in line:
-                        line, *_ = line.split(' #')
-                    line = line.strip()
-                    yield Requirement.from_pin(line)
-
     @cached_property
     def object_key(self):
-        # We include requirements.txt, requirements.trans.txt, and vendored
-        # wheels in the hash to keep the layer content-addressable. The other
-        # files don't reference content in the layer, but we include them
-        # regardless since they may affect how the layer is generated. For
-        # example, Chalice is a dev-requirement, but updating may affect how
-        # dependencies are packaged.
+        # We include requirements.txt and requirements.trans.txt to keep the
+        # layer content-addressable. The other files don't reference content in
+        # the layer, but we include them regardless since they may affect how
+        # the layer is generated. For example, Chalice is a dev-requirement,
+        # but updating may affect how dependencies are packaged.
         relevant_files = (
             self.reqs_file,
             self.reqs_trans_file,
-            *self.wheel_dir.iterdir(),
             self.reqs_pip_file,
             self.reqs_dev_file,
             __file__,
