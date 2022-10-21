@@ -69,6 +69,12 @@ requirements_update: check_venv check_docker
 	python scripts/manage_requirements.py \
 	       --image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
 	       --build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
+	# Download wheels (source and binary) for the Lambda runtime
+	pip download \
+	    --platform=manylinux2014_x86_64 \
+	    --no-deps \
+	    -r requirements.txt \
+	    --dest=${azul_chalice_bin}
 
 .PHONY: requirements_update_force
 requirements_update_force: check_venv check_docker

@@ -445,6 +445,15 @@ def env() -> Mapping[str, Optional[str]]:
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
 
+        # The path of a directory containing a wheel for each runtime
+        # dependency. Settng this variable causes our fork of Chalice to skip
+        # the downloading and building of wheels and instead install the wheels
+        # from that directory. The wheels must be compatible with the AWS
+        # Lambda platform.
+        #
+        'azul_chalice_bin': '{project_root}/bin/wheels/runtime',
+
+
         # Stop `pip` from nagging us about updates. We update pip regularly like
         # any other dependency. There is nothing special about `pip` that would
         # warrant the distraction.

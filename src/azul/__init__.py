@@ -154,6 +154,10 @@ class Config:
         return self.environ['project_root']
 
     @property
+    def chalice_bin(self) -> str:
+        return self.environ['azul_chalice_bin']
+
+    @property
     def es_domain(self) -> str:
         return self.environ['AZUL_ES_DOMAIN']
 
