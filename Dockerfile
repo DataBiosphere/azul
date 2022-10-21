@@ -10,8 +10,8 @@ RUN mkdir terraform \
     && (cd terraform \
         && wget --quiet https://releases.hashicorp.com/terraform/0.12.31/terraform_0.12.31_linux_amd64.zip \
         && unzip terraform_0.12.31_linux_amd64.zip \
-        && mv terraform /usr/local/bin/ \
-        && rm -rf terraform)
+        && mv terraform /usr/local/bin) \
+    && rm -rf terraform
 
 # Install `docker` client binary. Installing from distribution packages (.deb)
 # is too much of a hassle. The version should roughly match that of the docker
@@ -19,7 +19,8 @@ RUN mkdir terraform \
 #
 RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz \
         | tar -xvzf - --strip-components=1 docker/docker \
-    && install -g root -o root -m 755 docker /usr/bin
+    && install -g root -o root -m 755 docker /usr/bin \
+    && rm docker
 
 ENV project_root /build
 
