@@ -193,6 +193,7 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._entity_types(),
             'activity_id': null_str,
+            'activity_table': null_str,
             'activity_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
@@ -297,12 +298,12 @@ class BaseTransformer(Transformer, ABC):
         return entities
 
     def _activity(self, manifest_entry: JSON) -> MutableJSON:
-        activity_type = self._entity_type(manifest_entry)
+        activity_table = self._entity_type(manifest_entry)
         metadata = self.bundle.metadata_files[manifest_entry['name']]
         field_types = self._activity_types()
         common_fields = {
-            'activity_type': activity_type,
-            'activity_id': metadata[f'{activity_type}_id']
+            'activity_table': activity_table,
+            'activity_id': metadata[f'{activity_table}_id']
         }
         # Activities are unique in that they may not contain every field defined
         # in their field types due to polymorphism, so we need to pad the field

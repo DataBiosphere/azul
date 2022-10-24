@@ -299,7 +299,7 @@ class Plugin(TDRPlugin):
             )
             SELECT
                   f.file_id AS generated_file_id,
-                  'alignmentactivity' AS activity_type,
+                  'alignmentactivity' AS activity_table,
                   ama.alignmentactivity_id AS activity_id,
                   ama.used_file_id AS uses_file_id,
                   [] AS uses_biosample_id,
@@ -327,7 +327,7 @@ class Plugin(TDRPlugin):
         ''')
         return {
             Link.create(
-                activity=KeyReference(entity_type=row['activity_type'], key=row['activity_id']),
+                activity=KeyReference(entity_type=row['activity_table'], key=row['activity_id']),
                 # The generated link is not a complete representation of the
                 # upstream activity because it does not include generated files
                 # that are not ancestors of the downstream file
@@ -352,7 +352,7 @@ class Plugin(TDRPlugin):
             WITH activities AS (
                 SELECT
                     sqa.sequencingactivity_id as activity_id,
-                    'sequencingactivity' as activity_type,
+                    'sequencingactivity' as activity_table,
                     sqa.used_biosample_id,
                     sqa.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
@@ -367,7 +367,7 @@ class Plugin(TDRPlugin):
             SELECT
                 biosample_id,
                 a.activity_id,
-                a.activity_type,
+                a.activity_table,
                 a.generated_file_id
             FROM activities AS a, UNNEST(a.used_biosample_id) AS biosample_id
             WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
@@ -378,7 +378,7 @@ class Plugin(TDRPlugin):
                             KeyReference(key=output_id, entity_type='file')
                             for output_id in row['generated_file_id']
                         ],
-                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
+                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
             for row in rows
         }
 
@@ -401,7 +401,7 @@ class Plugin(TDRPlugin):
                 used_file_id,
                 a.generated_file_id,
                 a.activity_id,
-                a.activity_type
+                a.activity_table
             FROM activities AS a, UNNEST(a.used_file_id) AS used_file_id
             WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
         ''')
@@ -411,7 +411,7 @@ class Plugin(TDRPlugin):
                             KeyReference(key=file_id, entity_type='file')
                             for file_id in row['generated_file_id']
                         ],
-                        activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_type']))
+                        activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_table']))
             for row in rows
         }
 
@@ -494,17 +494,20 @@ class Plugin(TDRPlugin):
         },
         'alignmentactivity': {
             'alignmentactivity_id',
+            'activity_type',
             'data_modality',
             'date_created',
         },
         'assayactivity': {
             'assayactivity_id',
+            'activity_type',
             'assay_category',
             'data_modality',
             'date_created',
         },
         'sequencingactivity': {
             'sequencingactivity_id',
+            'activity_type',
             'data_modality',
         }
     }
