@@ -623,7 +623,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_OWNER': 'hannes@ucsc.edu',
 
-        'AZUL_MONITORING_EMAIL': '{AZUL_OWNER}',
+        'AZUL_MONITORING_EMAIL': 'azul-group@ucsc.edu',
 
         'AZUL_AWS_ACCOUNT_ID': '542754589326',
         'AWS_DEFAULT_REGION': 'us-east-1',
