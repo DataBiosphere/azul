@@ -421,7 +421,10 @@ class Plugin(TDRPlugin):
                            keys: AbstractSet[Key],
                            ) -> MutableJSONs:
         table_name = self._full_table_name(source, entity_type)
-        columns = self.indexed_columns_by_entity_type[entity_type] | {'datarepo_row_id'}
+        columns = set.union(
+            self.common_indexed_columns,
+            self.indexed_columns_by_entity_type[entity_type]
+        )
         pk_column = entity_type + '_id'
         assert pk_column in columns, entity_type
         log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
@@ -450,6 +453,11 @@ class Plugin(TDRPlugin):
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
         return rows
+
+    common_indexed_columns = {
+        'datarepo_row_id',
+        'source_datarepo_row_ids'
+    }
 
     # This could be consolidated with similar info from the metadata plugin?
     indexed_columns_by_entity_type = {

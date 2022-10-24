@@ -184,7 +184,8 @@ class BaseTransformer(Transformer, ABC):
     @classmethod
     def _entity_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str
+            'document_id': null_str,
+            'source_datarepo_row_ids': [null_str]
         }
 
     @classmethod
@@ -244,7 +245,6 @@ class BaseTransformer(Transformer, ABC):
             'size': null_int,
             'name': null_str,
             'reference_assembly': [null_str],
-            'source_datarepo_row_ids': [null_str],
             'crc32': null_str,
             'sha256': null_str,
             'drs_path': null_str
