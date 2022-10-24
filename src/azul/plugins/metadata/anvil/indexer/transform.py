@@ -347,6 +347,7 @@ class BaseTransformer(Transformer, ABC):
         return self._dataset(self._entries_by_entity_id[one(self._entities_by_type['dataset'])])
 
     _activity_polymorphic_types = {
+        'activity',
         'alignmentactivity',
         'assayactivity',
         'sequencingactivity'

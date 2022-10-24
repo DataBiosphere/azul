@@ -324,6 +324,15 @@ class Plugin(TDRPlugin):
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
                 ON f.file_id IN UNNEST(sqa.generated_file_id)
+            UNION ALL SELECT
+                f.file_id,
+                'activity',
+                a.activity_id,
+                a.used_file_id,
+                a.used_biosample_id,
+              FROM file AS f
+              JOIN {backtick(self._full_table_name(source, 'activity'))} AS a
+                ON f.file_id IN UNNEST(a.generated_file_id)
         ''')
         return {
             Link.create(
@@ -363,6 +372,13 @@ class Plugin(TDRPlugin):
                     aya.used_biosample_id,
                     aya.generated_file_id,
                 FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                UNION ALL
+                SELECT
+                    a.activity_id,
+                    'activity',
+                    a.used_biosample_id,
+                    a.generated_file_id,
+                FROM {backtick(self._full_table_name(source, 'activity'))} AS a
             )
             SELECT
                 biosample_id,
@@ -396,6 +412,12 @@ class Plugin(TDRPlugin):
                     ala.used_file_id,
                     ala.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
+                UNION ALL SELECT
+                    a.activity_id,
+                    'activity',
+                    a.used_file_id,
+                    a.generated_file_id
+                FROM {backtick(self._full_table_name(source, 'activity'))} AS a
             )
             SELECT
                 used_file_id,
@@ -491,6 +513,10 @@ class Plugin(TDRPlugin):
             'file_format',
             'reference_assembly',
             'source_datarepo_row_ids'
+        },
+        'activity': {
+            'activity_id',
+            'activity_type',
         },
         'alignmentactivity': {
             'alignmentactivity_id',
