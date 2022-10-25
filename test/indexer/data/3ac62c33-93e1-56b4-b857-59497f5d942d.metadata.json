@@ -1,6 +1,6 @@
 {
     "links.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.0.0/links",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.1.0/links",
         "links": [
             {
                 "inputs": [
@@ -73,7 +73,7 @@
             }
         ],
         "schema_type": "links",
-        "schema_version": "3.0.0"
+        "schema_version": "3.1.0"
     },
     "project_0.json": {
         "array_express_accessions": [
@@ -84,7 +84,7 @@
                 "corresponding_contributor": true,
                 "email": "m.a.haniffa@ncl.ac.uk",
                 "institution": "Newcastle University",
-                "name": "Muzlifah Hannifa",
+                "name": "Muzlifah,,Hannifa",
                 "project_role": {
                     "text": "principal investigator"
                 }
@@ -94,7 +94,7 @@
             "phs001997.v1.p1",
             "phs001836"
         ],
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/16.0.0/project",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/17.0.0/project",
         "ega_accessions": [
             "EGAS00000000001",
             "EGAD00000000002"
@@ -173,7 +173,8 @@
         },
         "provenance": {
             "document_id": "90bf705c-d891-5ce2-aa54-094488b445c6",
-            "schema_major_version": 16,
+            "schema_major_version": 17,
+            "schema_minor_version": 0,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
@@ -253,7 +254,7 @@
         "slice_thickness": 10.0
     },
     "image_file_0.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/2.3.0/image_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/2.5.0/image_file",
         "file_core": {
             "content_description": [
                 {
@@ -269,14 +270,14 @@
         "provenance": {
             "document_id": "b29a331e-2d7b-507f-8e47-d6151bfeeb21",
             "schema_major_version": 2,
-            "schema_minor_version": 3,
+            "schema_minor_version": 5,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
         "schema_type": "file"
     },
     "imaging_protocol_0.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/11.3.0/imaging_protocol",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/11.4.0/imaging_protocol",
         "magnification": "40x",
         "microscopy_technique": {
             "ontology": "FBbi:00000246",
@@ -294,7 +295,7 @@
         "provenance": {
             "document_id": "50150415-898c-5dff-826e-55f9cb937b93",
             "schema_major_version": 11,
-            "schema_minor_version": 3,
+            "schema_minor_version": 4,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
@@ -308,7 +309,7 @@
                 9606
             ]
         },
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
         "diseases": [
             {
                 "ontology": "MONDO:0100096",
@@ -331,14 +332,14 @@
         "provenance": {
             "document_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
             "schema_major_version": 10,
-            "schema_minor_version": 4,
+            "schema_minor_version": 5,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
         "schema_type": "biomaterial"
     },
     "imaging_preparation_protocol_0.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/2.2.0/imaging_preparation_protocol",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/2.3.0/imaging_preparation_protocol",
         "protocol_core": {
             "protocol_description": "All tissues were sectioned using the Leica CX3050S cryostat and were cut at 10um. Tissue optimization was performed to obtain permeabilization time for fetal tissue (12 min).",
             "protocol_id": "HumanVisiumSpatialLibraryPrep"
@@ -346,7 +347,7 @@
         "provenance": {
             "document_id": "7cd840db-f395-5a61-bd17-72c2b2319c23",
             "schema_major_version": 2,
-            "schema_minor_version": 2,
+            "schema_minor_version": 3,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
@@ -360,7 +361,7 @@
                 9606
             ]
         },
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.0/donor_organism",
         "development_stage": {
             "ontology": "HsapDv:0000087",
             "ontology_label": "human adult stage",
@@ -388,7 +389,7 @@
         "provenance": {
             "document_id": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
             "schema_major_version": 15,
-            "schema_minor_version": 5,
+            "schema_minor_version": 6,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },

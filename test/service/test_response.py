@@ -2372,7 +2372,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     def bundles(cls) -> list[BundleFQID]:
         return [
             # Bundles for project 90bf705c
-            # https://github.com/HumanCellAtlas/schema-test-data/tree/2a62a7f4
+            # https://github.com/HumanCellAtlas/schema-test-data/tree/eb8f7d34
             cls.bundle_fqid(uuid='1f6afb64-fa14-5c6f-a474-a742540108a3',
                             version='2021-01-01T00:00:00.000000Z'),
             cls.bundle_fqid(uuid='3ac62c33-93e1-56b4-b857-59497f5d942d',
