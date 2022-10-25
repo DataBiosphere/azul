@@ -9,7 +9,8 @@ TF component
 		prod
 		anvildev
 		anvilprod
-			edu-ucsc-gi-{aws.account_name}-cloudtrail
+			# Copy contents from old bucket. Delete the old bucket.
+			edu-ucsc-gi-{aws.account_name}-cloudtrail.{aws.region_name}
 	versioned
 		dev
 			edu-ucsc-gi-singlecell-azul-config-dev.{aws.region_name}
