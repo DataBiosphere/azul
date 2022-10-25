@@ -43,6 +43,11 @@ TF component
 			edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/alb/access/{config.deployment_stage}/gitlab
 
 {dev, prod, anvildev, anvilprod, sandbox, anvilbox, <personal>}
+	# This now a datasource referring to the `logs` resource in .shared
+	logs
+		# Note the path prefix. The fact that we didn't have ALB access logs on
+		# private APIs was an oversight.
+		edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/azul/{config.deployment_stage}/alb/access
 	storage
 		dev
 		sandbox
