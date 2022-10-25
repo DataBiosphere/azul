@@ -42,18 +42,3 @@ TF component
 		<personal>
 		anvilprod
 			edu-ucsc-gi-{aws.account_name}-{config.deployment_stage}
-	urls
-		dev
-			dev.url.singlecell.gi.ucsc.edu
-		sandbox
-		<personal>
-			{config.deployment_stage}.dev.url.singlecell.gi.ucsc.edu
-		prod
-			url.azul.data.humancellatlas.org
-		anvildev:
-			url.anvil.gi.ucsc.edu
-		anvilbox
-		<personal>
-			url.{config.deployment_stage}.anvil.gi.ucsc.edu
-		anvilprod:
-			url.prod.anvil.gi.ucsc.edu
