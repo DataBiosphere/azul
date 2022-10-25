@@ -18,6 +18,12 @@ TF component
 		anvildev
 		anvilprod
 			edu-ucsc-gi-{aws.account_name}.{aws.region_name}
+	logs
+		dev
+		prod
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}
 	aws_config
 		dev
 		prod
@@ -26,14 +32,15 @@ TF component
 			edu-ucsc-gi-{aws.account_name}-awsconfig.{aws.region_name}
 
 {dev, prod, anvildev, anvilprod}.gitlab
-	gitlab
+	# This now a datasource referring to the `logs` resource in .shared
+	logs
 		dev
 		prod
-			edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}
 		anvildev
 		anvilprod
-			edu-ucsc-gi-{aws.account_name}-gitlab.{aws.region_name}
-
+			# Note the path prefix.
+			# Copy content from old bucket. Delete the old bucket.
+			edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/alb/access/{config.deployment_stage}/gitlab
 
 {dev, prod, anvildev, anvilprod, sandbox, anvilbox, <personal>}
 	storage
