@@ -13,8 +13,10 @@ TF component
 			edu-ucsc-gi-{aws.account_name}-cloudtrail.{aws.region_name}
 	versioned
 		dev
+			# These are too hard to change. We'll live with the inconsistency.
 			edu-ucsc-gi-singlecell-azul-config-dev.{aws.region_name}
 		prod
+			# These are too hard to change. We'll live with the inconsistency.
 			edu-ucsc-gi-azul-dcp2-prod-config.{aws.region_name}
 		anvildev
 		anvilprod
