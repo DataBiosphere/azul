@@ -1,0 +1,59 @@
+TF component
+	TF resource/datasource
+		deployment
+			bucket
+
+{dev, prod, anvildev, anvilprod}.shared
+	shared_cloudtrail
+		dev
+		prod
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-cloudtrail
+	versioned
+		dev
+			edu-ucsc-gi-singlecell-azul-config-dev.{aws.region_name}
+		prod
+			edu-ucsc-gi-azul-dcp2-prod-config.{aws.region_name}
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}.{aws.region_name}
+
+{dev, prod, anvildev, anvilprod}.gitlab
+	gitlab
+		dev
+		prod
+			edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-gitlab.{aws.region_name}
+
+
+{dev, prod, anvildev, anvilprod, sandbox, anvilbox, <personal>}
+	storage
+		dev
+		sandbox
+		<personal>
+			edu-ucsc-gi-singlecell-azul-storage-{config.deployment_stage}
+		prod
+			edu-ucsc-gi-azul-dcp2-prod-storage-{config.deployment_stage}
+		anvildev
+		anvilbox
+		<personal>
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-{config.deployment_stage}
+	urls
+		dev
+			dev.url.singlecell.gi.ucsc.edu
+		sandbox
+		<personal>
+			{config.deployment_stage}.dev.url.singlecell.gi.ucsc.edu
+		prod
+			url.azul.data.humancellatlas.org
+		anvildev:
+			url.anvil.gi.ucsc.edu
+		anvilbox
+		<personal>
+			url.{config.deployment_stage}.anvil.gi.ucsc.edu
+		anvilprod:
+			url.prod.anvil.gi.ucsc.edu
