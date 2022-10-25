@@ -33,12 +33,10 @@ TF component
 	storage
 		dev
 		sandbox
-		<personal>
-			edu-ucsc-gi-singlecell-azul-storage-{config.deployment_stage}
 		prod
-			edu-ucsc-gi-azul-dcp2-prod-storage-{config.deployment_stage}
 		anvildev
 		anvilbox
 		<personal>
 		anvilprod
+			# No need to copy content from old bucket. Delete old bucket.
 			edu-ucsc-gi-{aws.account_name}-{config.deployment_stage}
