@@ -18,6 +18,12 @@ TF component
 		anvildev
 		anvilprod
 			edu-ucsc-gi-{aws.account_name}.{aws.region_name}
+	aws_config
+		dev
+		prod
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-awsconfig.{aws.region_name}
 
 {dev, prod, anvildev, anvilprod}.gitlab
 	gitlab
