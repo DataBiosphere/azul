@@ -21,8 +21,11 @@
                             "248a08b2-6399-4f7a-74b3-4cced17726da",
                             "e92568f3-590e-4a0c-3694-a4f9259abc5d"
                         ],
-                        "activity_type": [
+                        "activity_table": [
                             "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
                         ],
                         "assay_category": [
                             "~null"
@@ -242,7 +245,8 @@
                             "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
                         ],
                         "activity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -255,7 +259,8 @@
                             "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
                         ],
                         "activity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -393,8 +398,11 @@
                         "activity_id": [
                             "e92568f3-590e-4a0c-3694-a4f9259abc5d"
                         ],
-                        "activity_type": [
+                        "activity_table": [
                             "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
                         ],
                         "assay_category": [
                             "~null"
@@ -542,7 +550,8 @@
                             "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
                         ],
                         "activity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -659,8 +668,11 @@
                             "248a08b2-6399-4f7a-74b3-4cced17726da",
                             "e92568f3-590e-4a0c-3694-a4f9259abc5d"
                         ],
-                        "activity_type": [
+                        "activity_table": [
                             "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
                         ],
                         "assay_category": [
                             "~null"
@@ -872,7 +884,8 @@
                             "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
                         ],
                         "activity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -885,7 +898,8 @@
                             "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
                         ],
                         "activity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1019,7 +1033,8 @@
                             "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
                         ],
                         "activity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1189,7 +1204,8 @@
                             "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
                         ],
                         "activity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1299,7 +1315,8 @@
                             "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
                         ],
                         "activity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1469,7 +1486,8 @@
                             "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
                         ],
                         "activity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1586,8 +1604,11 @@
                             "248a08b2-6399-4f7a-74b3-4cced17726da",
                             "e92568f3-590e-4a0c-3694-a4f9259abc5d"
                         ],
-                        "activity_type": [
+                        "activity_table": [
                             "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
                         ],
                         "assay_category": [
                             "~null"
@@ -1805,7 +1826,8 @@
                             "ws_sequencing:7ad0ed1c-c62a-4440-b186-862a6b5af4d2"
                         ],
                         "activity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1818,7 +1840,8 @@
                             "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
                         ],
                         "activity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"
@@ -1956,8 +1979,11 @@
                         "activity_id": [
                             "248a08b2-6399-4f7a-74b3-4cced17726da"
                         ],
-                        "activity_type": [
+                        "activity_table": [
                             "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
                         ],
                         "assay_category": [
                             "~null"
@@ -2105,7 +2131,8 @@
                             "ws_sequencing:564cc578-9678-41d6-ac37-7bf754555083"
                         ],
                         "activity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
-                        "activity_type": "sequencingactivity",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
                         "assay_category": "~null",
                         "data_modality": [
                             "~null"

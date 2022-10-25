@@ -99,6 +99,7 @@ class Plugin(MetadataPlugin):
                 'activities': {
                     f: f'activities.{f}' for f in [
                         'activity_id',
+                        'activity_table',
                         'activity_type',
                         'assay_category',
                         'data_modality',

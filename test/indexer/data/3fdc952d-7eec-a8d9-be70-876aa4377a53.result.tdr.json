@@ -133,6 +133,7 @@
       ]
     },
     "sequencingactivity_248a08b2-6399-4f7a-74b3-4cced17726da": {
+      "activity_type": "Sequencing",
       "data_modality": [],
       "datarepo_row_id": "73614c20-f669-430d-a3af-821ec0d27a7a",
       "sequencingactivity_id": "248a08b2-6399-4f7a-74b3-4cced17726da",
@@ -141,6 +142,7 @@
       ]
     },
     "sequencingactivity_e92568f3-590e-4a0c-3694-a4f9259abc5d": {
+      "activity_type": "Sequencing",
       "data_modality": [],
       "datarepo_row_id": "4377bef8-3ac3-4b71-856b-a6888323ffa2",
       "sequencingactivity_id": "e92568f3-590e-4a0c-3694-a4f9259abc5d",
