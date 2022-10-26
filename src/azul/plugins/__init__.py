@@ -342,7 +342,13 @@ class MetadataPlugin(Plugin):
             else:
                 assert False, v
 
-        return dict(invert(self._field_mapping))
+        inversion = {}
+        for v, path in invert(self._field_mapping):
+            other_path = inversion.setdefault(v, path)
+            assert other_path == path, (
+                f'Field {v!r} has conflicting paths', path, other_path
+            )
+        return inversion
 
     @property
     @abstractmethod

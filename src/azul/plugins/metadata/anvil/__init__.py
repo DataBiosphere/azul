@@ -47,11 +47,11 @@ class Plugin(MetadataPlugin):
     @property
     def exposed_indices(self) -> Mapping[str, Sorting]:
         return dict(
-            activities=Sorting(field_name='activity_id'),
-            biosamples=Sorting(field_name='biosample_id'),
-            datasets=Sorting(field_name='dataset_id'),
-            donors=Sorting(field_name='donor_id'),
-            files=Sorting(field_name='file_id'),
+            activities=Sorting(field_name='activities.activity_id'),
+            biosamples=Sorting(field_name='biosamples.biosample_id'),
+            datasets=Sorting(field_name='datasets.dataset_id'),
+            donors=Sorting(field_name='donors.donor_id'),
+            files=Sorting(field_name='files.file_id'),
         )
 
     @property
@@ -97,7 +97,7 @@ class Plugin(MetadataPlugin):
             },
             'contents': {
                 'activities': {
-                    f: f for f in [
+                    f: f'activities.{f}' for f in [
                         'activity_id',
                         'activity_type',
                         'assay_category',
@@ -107,7 +107,7 @@ class Plugin(MetadataPlugin):
                     ]
                 },
                 'biosamples': {
-                    f: f for f in [
+                    f: f'biosamples.{f}' for f in [
                         'anatomical_site',
                         'biosample_id',
                         'biosample_type',
@@ -118,7 +118,7 @@ class Plugin(MetadataPlugin):
                     ]
                 },
                 'datasets': {
-                    f: f for f in [
+                    f: f'datasets.{f}' for f in [
                         'dataset_id',
                         'consent_group',
                         'data_use_permission',
@@ -128,7 +128,7 @@ class Plugin(MetadataPlugin):
                     ]
                 },
                 'donors': {
-                    f: f for f in [
+                    f: f'donors.{f}' for f in [
                         'document_id',
                         'donor_id',
                         'organism_type',
@@ -138,7 +138,7 @@ class Plugin(MetadataPlugin):
                 },
                 'files': {
                     **{
-                        f: f for f in [
+                        f: f'files.{f}' for f in [
                             'data_modality',
                             'document_id',
                             'file_format',
@@ -169,18 +169,19 @@ class Plugin(MetadataPlugin):
     @property
     def facets(self) -> Sequence[str]:
         return [
-            'activity_type',
-            'anatomical_site',
-            'assay_category',
-            'biosample_type',
-            'data_modality',
-            'title',
-            'file_format',
-            'disease',
-            'organism_type',
-            'phenotypic_sex',
-            'reference_assembly',
-            'reported_ethnicity',
+            'activities.activity_type',
+            'activities.assay_category',
+            'activities.data_modality',
+            'biosamples.anatomical_site',
+            'biosamples.biosample_type',
+            'biosamples.disease',
+            'datasets.title',
+            'donors.organism_type',
+            'donors.phenotypic_sex',
+            'donors.reported_ethnicity',
+            'files.data_modality',
+            'files.file_format',
+            'files.reference_assembly',
         ]
 
     @property

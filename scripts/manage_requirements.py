@@ -222,15 +222,15 @@ class Main:
         transitive_runtime_reqs = runtime_reqs - direct_runtime_reqs
         assert not transitive_build_reqs & transitive_runtime_reqs
         # Assert that all_reqs really includes everyting
-        for reqs in [
+        for i, reqs in enumerate([
             pip_reqs,
             direct_runtime_reqs,
             transitive_runtime_reqs,
             direct_build_reqs,
             transitive_build_reqs,
             all_runtime_reqs
-        ]:
-            assert reqs <= all_reqs, reqs - all_reqs
+        ]):
+            assert reqs <= all_reqs, (i, reqs - all_reqs)
         self.write_transitive_reqs(transitive_build_reqs, self.build)
         self.write_transitive_reqs(transitive_runtime_reqs, self.runtime)
         self.write_all_reqs(all_reqs)
@@ -248,8 +248,9 @@ class Main:
         # name==version format.
         #
         command = '.venv/bin/pip list --format=freeze'
-        log.info('Getting direct and transitive %s requirements by running %s on image %s',
-                 qualfier.name, command, qualfier.image)
+        docker_command = f'docker run {qualfier.image} {command}'
+        log.info('Getting direct and transitive %s requirements using %r',
+                 qualfier.name, docker_command)
         stdout = self.docker.containers.run(image=qualfier.image,
                                             command=command,
                                             detach=False,

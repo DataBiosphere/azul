@@ -1,0 +1,6 @@
+# Ignoring a directory will stop CodeQL from scanning every file in that
+# directory but it'll still report findings for files in that directory if they
+# are being imported by files in other directories that are being scanned.
+# exhaustively.
+paths-ignore:
+  - 'attic'

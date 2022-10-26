@@ -24,11 +24,11 @@ requirements$1: check_venv $2
 	pip install $3 -Ur requirements$4.txt
 endef
 
-$(eval $(call requirements,_pip,,,.pip))
-$(eval $(call requirements,,requirements_pip,,.dev))
-$(eval $(call requirements,_runtime,requirements_pip,,))
-$(eval $(call requirements,_no_deps,requirements_pip,--no-deps,.dev))
-$(eval $(call requirements,_runtime_no_deps,requirements_pip,--no-deps,))
+$(eval $(call requirements,_pip,,--no-deps,.pip))
+$(eval $(call requirements,,requirements_pip,--no-deps,.dev))
+$(eval $(call requirements,_runtime,requirements_pip,--no-deps,))
+$(eval $(call requirements,_deps,requirements_pip,,.dev))
+$(eval $(call requirements,_runtime_deps,requirements_pip,,))
 
 define docker
 .PHONY: docker$1
@@ -44,10 +44,10 @@ docker$1_push: docker$1
 	docker push $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG)
 endef
 
-$(eval $(call docker,,_runtime_no_deps,))  # runtime image w/o dependency resolution
-$(eval $(call docker,_dev,_no_deps,/dev))  # development image w/o dependency resolution
-$(eval $(call docker,_deps,_runtime,/deps))  # runtime image with automatic dependency resolution
-$(eval $(call docker,_dev_deps,,/dev-deps))  # development image with automatic dependency resolution
+$(eval $(call docker,,_runtime,))  # runtime image w/o dependency resolution
+$(eval $(call docker,_dev,,/dev))  # development image w/o dependency resolution
+$(eval $(call docker,_deps,_runtime_deps,/deps))  # runtime image with automatic dependency resolution
+$(eval $(call docker,_dev_deps,_deps,/dev-deps))  # development image with automatic dependency resolution
 
 .gitlab.env:
 	echo BUILD_IMAGE=$(DOCKER_IMAGE)/dev:$(DOCKER_TAG) > .gitlab.env

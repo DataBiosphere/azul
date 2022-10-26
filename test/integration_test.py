@@ -574,7 +574,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if config.is_hca_enabled(catalog):
             facet = 'fileFormat'
         elif config.is_anvil_enabled(catalog):
-            facet = 'file_format'
+            facet = 'files.file_format'
         else:
             assert False, catalog
         return {facet: {'is': ['fastq', 'fastq.gz']}}
@@ -1400,7 +1400,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         if config.is_hca_enabled(self.catalog):
             species_facet = 'genusSpecies'
         elif config.is_anvil_enabled(self.catalog):
-            species_facet = 'organism_type'
+            species_facet = 'donors.organism_type'
         else:
             assert False, self.catalog
         filters = {species_facet: {'is': ['Homo sapiens']}}
