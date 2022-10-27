@@ -9,6 +9,7 @@ import json
 import logging
 from time import (
     sleep,
+    time,
 )
 from typing import (
     ClassVar,
@@ -334,6 +335,7 @@ class TerraClient(OAuth2Client):
         retries = config.terra_client_retries
         log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
+        start = time()
         try:
             # Limited retries on I/O errors such as refused or dropped
             # connections. The latter are actually very likely if connections
@@ -357,8 +359,8 @@ class TerraClient(OAuth2Client):
 
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('_request(…) -> %r %r',
-                      response.status, trunc_ellipses(response.data, 256))
+            log.debug('_request(…) -> %.3fs %r %r',
+                      time() - start, response.status, trunc_ellipses(response.data, 256))
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]
