@@ -17,6 +17,7 @@ import threading
 from typing import (
     Callable,
     Optional,
+    TYPE_CHECKING,
     Tuple,
     TypeVar,
     cast,
@@ -41,6 +42,11 @@ from azul import (
 from azul.types import (
     JSON,
 )
+
+if TYPE_CHECKING:
+    from mypy_boto3_iam import (
+        IAMClient,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -155,7 +161,7 @@ class AWS:
         return self.client('stepfunctions')
 
     @property
-    def iam(self):
+    def iam(self) -> 'IAMClient':
         return self.client('iam')
 
     @property
@@ -408,6 +414,11 @@ class AWS:
         `boto3.client()`.
         """
         return self.boto3_session.resource(*args, **kwargs)
+
+    def qualified_bucket_name(self, bucket_name: str) -> str:
+        return config.qualified_bucket_name(account_name=self.account_name,
+                                            region_name=self.region_name,
+                                            bucket_name=bucket_name)
 
 
 aws = AWS()

@@ -169,6 +169,15 @@ class Config:
     def s3_bucket(self) -> str:
         return self.environ['AZUL_S3_BUCKET']
 
+    def qualified_bucket_name(self,
+                              *,
+                              account_name: str,
+                              region_name: str,
+                              bucket_name: str
+                              ) -> str:
+        self._validate_term(bucket_name, name='bucket_name')
+        return f'edu-ucsc-gi-{account_name}-{bucket_name}.{region_name}'
+
     @property
     def manifest_expiration(self) -> int:
         """

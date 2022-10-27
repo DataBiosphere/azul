@@ -26,6 +26,12 @@ emit_tf({
                 'lifecycle': {
                     'prevent_destroy': True
                 }
+            },
+            'aws_config': {
+                'bucket': aws.qualified_bucket_name('awsconfig'),
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
             }
         },
         'aws_s3_bucket_policy': {
@@ -54,6 +60,43 @@ emit_tf({
                             'Condition': {
                                 'StringEquals': {
                                     's3:x-amz-acl': 'bucket-owner-full-control'
+                                }
+                            }
+                        }
+                    ]
+                })
+            },
+            'aws_config': {
+                # https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
+                'bucket': '${aws_s3_bucket.aws_config.id}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 'config.amazonaws.com'
+                            },
+                            'Action': ['s3:GetBucketAcl', 's3:ListBucket'],
+                            'Resource': '${aws_s3_bucket.aws_config.arn}',
+                            'Condition': {
+                                'StringEquals': {
+                                    'AWS:SourceAccount': config.aws_account_id
+                                }
+                            }
+                        },
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 'config.amazonaws.com'
+                            },
+                            'Action': 's3:PutObject',
+                            'Resource': '${aws_s3_bucket.aws_config.arn}'
+                                        f'/*/AWSLogs/{config.aws_account_id}/Config/*',
+                            'Condition': {
+                                'StringEquals': {
+                                    's3:x-amz-acl': 'bucket-owner-full-control',
+                                    'AWS:SourceAccount': config.aws_account_id
                                 }
                             }
                         }
@@ -113,6 +156,23 @@ emit_tf({
                         ]
                     }
                 )
+            },
+            'aws_config': {
+                'name': 'azul-aws_config',
+                'assume_role_policy': json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Action': 'sts:AssumeRole',
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'config.amazonaws.com'
+                                }
+                            }
+                        ]
+                    }
+                )
             }
         },
         'aws_iam_role_policy': {
@@ -137,11 +197,105 @@ emit_tf({
                         }
                     ]
                 })
+            },
+            'aws_config': {
+                'name': 'azul-aws_config',
+                'role': '${aws_iam_role.aws_config.id}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Action': [
+                                's3:*'
+                            ],
+                            'Effect': 'Allow',
+                            'Resource': [
+                                '${aws_s3_bucket.aws_config.arn}',
+                                '${aws_s3_bucket.aws_config.arn}/*'
+                            ]
+                        }
+                    ]
+                })
             }
         },
         'aws_api_gateway_account': {
             'shared': {
                 'cloudwatch_role_arn': '${aws_iam_role.api_gateway.arn}'
+            }
+        },
+        'aws_config_configuration_recorder': {
+            'shared': {
+                'name': config.qualified_resource_name('awsconfig'),
+                'role_arn': '${aws_iam_role.aws_config.arn}',
+                'recording_group': {
+                    'all_supported': True,
+                    'include_global_resource_types': True
+                }
+            }
+        },
+        'aws_config_configuration_recorder_status': {
+            'shared': {
+                'name': '${aws_config_configuration_recorder.shared.name}',
+                'is_enabled': True,
+                'depends_on': [
+                    'aws_config_delivery_channel.shared'
+                ]
+            }
+        },
+        'aws_iam_role_policy_attachment': {
+            'aws_config': {
+                'role': '${aws_iam_role.aws_config.name}',
+                'policy_arn': 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'
+            }
+        },
+        'aws_config_delivery_channel': {
+            'shared': {
+                'name': config.qualified_resource_name('awsconfig'),
+                's3_bucket_name': '${aws_s3_bucket.aws_config.bucket}',
+                'depends_on': [
+                    'aws_config_configuration_recorder.shared'
+                ]
+            }
+        },
+        'aws_guardduty_detector': {
+            'shared': {
+                'enable': True,
+                # All data sources are enabled in a new detector by default.
+                'datasources': {
+                    'kubernetes': {
+                        'audit_logs': {
+                            'enable': False
+                        }
+                    }
+                }
+            }
+        },
+        'aws_securityhub_account': {
+            'shared': {}
+
+        },
+        'aws_securityhub_finding_aggregator': {
+            'shared': {
+                'linking_mode': 'ALL_REGIONS',
+                'depends_on': [
+                    'aws_securityhub_account.shared'
+                ]
+            }
+        },
+        'aws_securityhub_standards_subscription': {
+            'best_practices': {
+                'standards_arn': 'arn:aws:securityhub:us-east-1::standards'
+                                 '/aws-foundational-security-best-practices/v/1.0.0',
+                'depends_on': [
+                    'aws_securityhub_account.shared'
+                ]
+            },
+            'cis': {
+                'standards_arn': 'arn:aws:securityhub:::ruleset'
+                                 '/cis-aws-foundations-benchmark/v/1.2.0',
+                'depends_on': [
+                    'aws_securityhub_account.shared'
+                ]
             }
         }
     }
