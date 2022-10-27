@@ -404,32 +404,52 @@ class TestTDRSourceList(AzulTestCase):
                 self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
 
     def test_list_snapshots_paging(self):
-        tdr_client = TDRClient.for_anonymous_user()
-        page_size = 100
-        snapshots = [
-            {'id': str(n), 'name': f'{n}_snapshot'}
-            for n in range(page_size * 2 + 2)
-        ]
-        expected = {
-            snapshot['id']: snapshot['name']
-            for snapshot in snapshots
-        }
+        for page_size in [1, 10]:
+            for num_full_pages in [0, 1, 2]:
+                for last_page_size in [0, 1, 2]:
+                    for filter in (None, 'snapshot'):
+                        with self.subTest(page_size=page_size,
+                                          num_full_pages=num_full_pages,
+                                          last_page_size=last_page_size,
+                                          filter=filter):
+                            tdr_client = TDRClient.for_anonymous_user()
+                            page_size = 1000
+                            snapshots = [
+                                {'id': str(n), 'name': f'snapshot_{n}'}
+                                for n in range(page_size * num_full_pages + last_page_size)
+                            ]
+                            expected = {
+                                snapshot['id']: snapshot['name']
+                                for snapshot in snapshots
+                            }
 
-        def responses():
-            iterator = iter(snapshots)
-            while True:
-                items = take(page_size, iterator)
-                yield HTTPResponse(status=200, body=json.dumps({
-                    'total': len(snapshots),
-                    'filteredTotal': len(snapshots),
-                    'items': list(items)
-                }))
-                if not items:
-                    break
+                            def responses():
+                                iterator = iter(snapshots)
+                                while True:
+                                    items = take(page_size, iterator)
+                                    yield HTTPResponse(status=200, body=json.dumps({
+                                        'total': len(snapshots) + (0 if filter is None else 42),
+                                        'filteredTotal': len(snapshots),
+                                        'items': list(items)
+                                    }))
+                                    if not items:
+                                        break
 
-        with mock.patch.object(TerraClient, '_request', side_effect=responses()):
-            actual = tdr_client.snapshot_names_by_id()
-        self.assertEqual(expected, actual)
+                            with mock.patch.object(TDRClient, 'page_size', new=page_size):
+                                self.assertEqual(page_size, tdr_client.page_size)
+                                with mock.patch.object(TerraClient, '_request') as _request:
+                                    _request.side_effect = responses()
+                                    actual = tdr_client.snapshot_names_by_id(filter=filter)
+                            self.assertEqual(expected, actual)
+                            num_expected_calls = max(1, num_full_pages + (1 if last_page_size else 0))
+                            self.assertEqual(num_expected_calls, _request.call_count)
+                            for call in _request.mock_calls:
+                                method, url = call.args
+                                assert isinstance(url, furl)
+                                if filter:
+                                    self.assertEqual('snapshot', url.args['filter'])
+                                else:
+                                    self.assertNotIn('filter', url.args)
 
 
 if __name__ == '__main__':
