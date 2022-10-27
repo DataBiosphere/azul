@@ -1,6 +1,11 @@
 from typing import (
+    Iterable,
     Optional,
     TypeVar,
+)
+
+from more_itertools import (
+    minmax,
 )
 
 
@@ -163,3 +168,32 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
         s = s[:max_len - len(ellipses)] + ellipses
     assert len(s) <= max_len, (len(s), max_len)
     return s
+
+
+def longest_common_prefix(strings: Iterable[str]) -> Optional[str]:
+    """
+    >>> lcs = longest_common_prefix
+    >>> lcs([])
+    >>> lcs([''])
+    ''
+    >>> lcs(['','a'])
+    ''
+    >>> lcs(['a', 'b'])
+    ''
+    >>> lcs(['aa', 'a'])
+    'a'
+    >>> lcs(['abc', 'ab', 'a'])
+    'a'
+
+    Input is traversed exactly once, so an iterator can be passed as well.
+
+    >>> lcs(iter(['abc', 'ab', 'a']))
+    'a'
+    """
+    s1, s2 = minmax(strings, default=(None, None))
+    if s1 is None:
+        return None
+    for i, c in enumerate(s1):
+        if s2[i] != c:
+            return s1[:i]
+    return s1

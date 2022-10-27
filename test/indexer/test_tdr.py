@@ -90,6 +90,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulTestCase,
+    AzulUnitTestCase,
 )
 from indexer import (
     CannedBundleTestCase,
@@ -123,14 +124,11 @@ class TestPlugin(TDRPlugin, ABC):
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.bq_name + '.' + table_name
 
-    def _in(self,
+    @classmethod
+    def _in(cls,
             columns: tuple[str, ...],
             values: Iterable[tuple[str, ...]]
             ) -> str:
-        """
-        >>> TestPlugin._in(None, ('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
-        '(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)'
-        """
         return ' OR '.join(
             '(' + ' AND '.join(
                 f'{column} = {inner_value}'
@@ -138,6 +136,13 @@ class TestPlugin(TDRPlugin, ABC):
             ) + ')'
             for value in values
         )
+
+
+class TestTestPlugin(AzulUnitTestCase):
+
+    def test_in(self):
+        self.assertEqual('(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)',
+                         TestPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
 class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
@@ -399,32 +404,52 @@ class TestTDRSourceList(AzulTestCase):
                 self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
 
     def test_list_snapshots_paging(self):
-        tdr_client = TDRClient.for_anonymous_user()
-        page_size = 100
-        snapshots = [
-            {'id': str(n), 'name': f'{n}_snapshot'}
-            for n in range(page_size * 2 + 2)
-        ]
-        expected = {
-            snapshot['id']: snapshot['name']
-            for snapshot in snapshots
-        }
+        for page_size in [1, 10]:
+            for num_full_pages in [0, 1, 2]:
+                for last_page_size in [0, 1, 2]:
+                    for filter in (None, 'snapshot'):
+                        with self.subTest(page_size=page_size,
+                                          num_full_pages=num_full_pages,
+                                          last_page_size=last_page_size,
+                                          filter=filter):
+                            tdr_client = TDRClient.for_anonymous_user()
+                            page_size = 1000
+                            snapshots = [
+                                {'id': str(n), 'name': f'snapshot_{n}'}
+                                for n in range(page_size * num_full_pages + last_page_size)
+                            ]
+                            expected = {
+                                snapshot['id']: snapshot['name']
+                                for snapshot in snapshots
+                            }
 
-        def responses():
-            iterator = iter(snapshots)
-            while True:
-                items = take(page_size, iterator)
-                yield HTTPResponse(status=200, body=json.dumps({
-                    'total': len(snapshots),
-                    'filteredTotal': len(snapshots),
-                    'items': list(items)
-                }))
-                if not items:
-                    break
+                            def responses():
+                                iterator = iter(snapshots)
+                                while True:
+                                    items = take(page_size, iterator)
+                                    yield HTTPResponse(status=200, body=json.dumps({
+                                        'total': len(snapshots) + (0 if filter is None else 42),
+                                        'filteredTotal': len(snapshots),
+                                        'items': list(items)
+                                    }))
+                                    if not items:
+                                        break
 
-        with mock.patch.object(TerraClient, '_request', side_effect=responses()):
-            actual = tdr_client.snapshot_names_by_id()
-        self.assertEqual(expected, actual)
+                            with mock.patch.object(TDRClient, 'page_size', new=page_size):
+                                self.assertEqual(page_size, tdr_client.page_size)
+                                with mock.patch.object(TerraClient, '_request') as _request:
+                                    _request.side_effect = responses()
+                                    actual = tdr_client.snapshot_names_by_id(filter=filter)
+                            self.assertEqual(expected, actual)
+                            num_expected_calls = max(1, num_full_pages + (1 if last_page_size else 0))
+                            self.assertEqual(num_expected_calls, _request.call_count)
+                            for call in _request.mock_calls:
+                                method, url = call.args
+                                assert isinstance(url, furl)
+                                if filter:
+                                    self.assertEqual('snapshot', url.args['filter'])
+                                else:
+                                    self.assertNotIn('filter', url.args)
 
 
 if __name__ == '__main__':
