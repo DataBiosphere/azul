@@ -90,6 +90,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulTestCase,
+    AzulUnitTestCase,
 )
 from indexer import (
     CannedBundleTestCase,
@@ -123,14 +124,11 @@ class TestPlugin(TDRPlugin, ABC):
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.bq_name + '.' + table_name
 
-    def _in(self,
+    @classmethod
+    def _in(cls,
             columns: tuple[str, ...],
             values: Iterable[tuple[str, ...]]
             ) -> str:
-        """
-        >>> TestPlugin._in(None, ('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
-        '(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)'
-        """
         return ' OR '.join(
             '(' + ' AND '.join(
                 f'{column} = {inner_value}'
@@ -138,6 +136,13 @@ class TestPlugin(TDRPlugin, ABC):
             ) + ')'
             for value in values
         )
+
+
+class TestTestPlugin(AzulUnitTestCase):
+
+    def test_in(self):
+        self.assertEqual('(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)',
+                         TestPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
 class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
