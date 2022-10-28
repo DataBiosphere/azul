@@ -28,7 +28,7 @@ emit_tf({
                 }
             },
             'aws_config': {
-                'bucket': aws.qualified_bucket_name('awsconfig'),
+                'bucket': aws.qualified_bucket_name(config.aws_config_term),
                 'lifecycle': {
                     'prevent_destroy': True
                 }
@@ -225,7 +225,7 @@ emit_tf({
         },
         'aws_config_configuration_recorder': {
             'shared': {
-                'name': config.qualified_resource_name('awsconfig'),
+                'name': config.qualified_resource_name(config.aws_config_term),
                 'role_arn': '${aws_iam_role.aws_config.arn}',
                 'recording_group': {
                     'all_supported': True,
@@ -250,7 +250,7 @@ emit_tf({
         },
         'aws_config_delivery_channel': {
             'shared': {
-                'name': config.qualified_resource_name('awsconfig'),
+                'name': config.qualified_resource_name(config.aws_config_term),
                 's3_bucket_name': '${aws_s3_bucket.aws_config.bucket}',
                 'depends_on': [
                     'aws_config_configuration_recorder.shared'

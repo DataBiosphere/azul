@@ -178,6 +178,8 @@ class Config:
         self._validate_term(bucket_name, name='bucket_name')
         return f'edu-ucsc-gi-{account_name}-{bucket_name}.{region_name}'
 
+    aws_config_term = 'awsconfig'
+
     @property
     def manifest_expiration(self) -> int:
         """
