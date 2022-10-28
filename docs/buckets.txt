@@ -51,6 +51,8 @@ TF component
 		# Note the path prefix. The fact that we didn't have ALB access logs on
 		# private APIs was an oversight.
 		edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/azul/{config.deployment_stage}/alb/access
+		# Note the path prefix.
+		edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/s3/access/{config.deployment_stage}/storage
 	storage
 		dev
 		sandbox
