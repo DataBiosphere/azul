@@ -11,6 +11,56 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4625 Disable URL shortener
+===========================
+
+Everyone
+~~~~~~~~
+
+In personal deployments, remove ``AZUL_URL_REDIRECT_BASE_DOMAIN_NAME``. As
+always, use the sandbox deployment's ``environment.py`` as a model when
+upgrading personal deployments.
+
+Operator
+~~~~~~~~
+
+Follow these instructions for ``dev`` :
+
+#. From the AWS console, navigate to *Route53 service* -> *Hosted zones*.
+
+#. Click on domain name ``dev.url.singlecell.gi.ucsc.edu``, check the boxes for
+   all records of type ``CNAME`` and delete them, then delete the hosted zone.
+
+#. Click on the ``url.singlecell.gi.ucsc.edu`` domain name and delete the
+   ``dev.url.singlecell.gi.ucsc.edu`` record name, then delete the hosted zone.
+
+#. Click on the domain name ``singlecell.gi.ucsc.edu`` and only delete the
+   ``url.singlecell.gi.ucsc.edu`` record name.
+
+Follow these instructions for ``anvildev`` :
+
+#. From the AWS console, navigate to *Route53 service* -> *Hosted zones*.
+
+#. Click on ``anvil.gi.ucsc.edu`` domain name and delete the record names
+   prefixed with ``url.*``, there should only be four.
+
+Follow these instructions for ``prod`` :
+
+#. From the AWS console, navigate to *Route53 service* -> *Hosted zones*.
+
+#. Click on domain name ``azul.data.humancellatlas.org`` and only delete the
+   ``url.azul.data.humancellatlas.org`` record name.
+
+#. From the *Hosted zones* view, click on ``data.humancellatlas.org`` domain
+   name and delete the ``url.data.humancellatlas.org`` record only.
+
+
+Deploy the ``dev.gitlab``, and ``anvildev.gitlab`` components to apply the
+needed changes, this is not required for ``prod.gitlab``. These changes require
+updates to the ``gitlab_boundary``, ask lead to deploy the gitlab components if
+running into permission issues.
+
+
 #4648 Move GitLab ALB access logs to shared bucket
 ==================================================
 

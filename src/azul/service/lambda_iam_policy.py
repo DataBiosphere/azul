@@ -77,7 +77,6 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/*",
-                f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*",
                 f"arn:aws:s3:::{config.versioned_bucket}/*"
             ]
         },
@@ -98,7 +97,6 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}",
-                f"arn:aws:s3:::{config.url_redirect_full_domain_name}",
                 f"arn:aws:s3:::{config.versioned_bucket}"
             ]
         },

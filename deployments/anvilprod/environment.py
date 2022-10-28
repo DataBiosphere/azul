@@ -77,8 +77,6 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
         'AZUL_PRIVATE_API': '1',
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
         'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-platform-anvil-prod.{AWS_DEFAULT_REGION}',
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-{AZUL_DEPLOYMENT_STAGE}',

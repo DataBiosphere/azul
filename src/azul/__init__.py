@@ -219,14 +219,6 @@ class Config:
         return 60 * 15
 
     @property
-    def url_redirect_full_domain_name(self) -> str:
-        return self.environ['AZUL_URL_REDIRECT_FULL_DOMAIN_NAME']
-
-    @property
-    def url_redirect_base_domain_name(self) -> str:
-        return self.environ['AZUL_URL_REDIRECT_BASE_DOMAIN_NAME']
-
-    @property
     def es_timeout(self) -> int:
         return int(self.environ['AZUL_ES_TIMEOUT'])
 
