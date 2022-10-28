@@ -3,7 +3,9 @@ from collections import (
 )
 from collections.abc import (
     Iterable,
+    Iterator,
     Mapping,
+    MutableSet,
 )
 from functools import (
     partial,
@@ -271,3 +273,64 @@ class NestedDict(defaultdict):
             k: v.to_dict() if isinstance(v, NestedDict) else v
             for k, v in self.items()
         }
+
+
+class OrderedSet(MutableSet[K]):
+    """
+    A mutable set that maintains insertion order. It is not a sequence.
+
+    >>> OrderedSet() == set()
+    True
+    >>> 'a' in OrderedSet(['a', 'b'])
+    True
+    >>> OrderedSet(['a', 'b', 'c', 'b'])
+    OrderedSet(['a', 'b', 'c'])
+    """
+
+    def __init__(self, members: Iterable[K] = (), /) -> None:
+        self.inner: dict[K, None] = dict.fromkeys(members)
+
+    def __repr__(self) -> str:
+        contents = repr(list(self)) if self else ''
+        return f'{self.__class__.__name__}({contents})'
+
+    def __iter__(self) -> Iterator[K]:
+        return iter(self.inner)
+
+    def __len__(self) -> int:
+        return len(self.inner)
+
+    def __eq__(self, other: Any) -> bool:
+        return self.inner.keys() == other
+
+    def __contains__(self, member: K) -> bool:
+        return member in self.inner
+
+    def discard(self, member: K) -> None:
+        """
+        >>> os = OrderedSet(['1', 'a', '2'])
+        >>> os.discard('a')
+        >>> os
+        OrderedSet(['1', '2'])
+        >>> os.discard('a')
+        """
+        self.inner.pop(member, None)
+
+    def add(self, member: K) -> None:
+        """
+        >>> os = OrderedSet(['a', 'b'])
+        >>> os.add('a')
+        >>> os.add('c')
+        >>> os
+        OrderedSet(['a', 'b', 'c'])
+        """
+        self.inner[member] = None
+
+    def update(self, members: Iterable[K] = (), /) -> None:
+        """
+        >>> os = OrderedSet(['a', 'b'])
+        >>> os.update(['1', 'a', 'b', '2'])
+        >>> os
+        OrderedSet(['a', 'b', '1', '2'])
+        """
+        self.inner |= dict.fromkeys(members)
