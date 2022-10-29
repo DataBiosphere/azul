@@ -1,6 +1,9 @@
 from azul import (
     config,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.terraform import (
     emit_tf,
 )
@@ -18,7 +21,12 @@ emit_tf({
                 if config.url_redirect_base_domain_name else
                 {}
             )
-        }
+        },
+        'aws_s3_bucket': {
+            'logs': {
+                'bucket': aws.qualified_bucket_name(config.logs_term),
+            }
+        },
     },
     'resource': {
         'aws_s3_bucket': {
@@ -47,6 +55,15 @@ emit_tf({
                         'days_after_initiation': 1
                     }
                 }
+            }
+        },
+        'aws_s3_bucket_logging': {
+            'storage': {
+                'bucket': '${aws_s3_bucket.storage.id}',
+                'target_bucket': '${data.aws_s3_bucket.logs.id}',
+                # Other S3 log delivieries, like ELB, implicitly put a slash
+                # after the prefix. S3 doesn't, so we add one explicitly.
+                'target_prefix': config.s3_access_log_path_prefix('storage') + '/'
             }
         },
         'aws_s3_bucket_acl': {

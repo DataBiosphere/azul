@@ -484,6 +484,58 @@ class AWS:
             },
         ]
 
+    def s3_access_log_bucket_policy(self,
+                                    *,
+                                    source_bucket_arn: str,
+                                    target_bucket_arn: str,
+                                    path_prefix: str
+                                    ) -> JSONs:
+        """
+        The S3 bucket policy statements needed for S3 to write server access
+        logs to a bucket. Note that this method returns only policy
+        statements to allow for easier merging of policies.
+
+        :param source_bucket_arn: the ARN of the bucket that is generating logs
+                                  or a Terraform (TF) expression yielding it.
+                                  If a TF expression is passed, the return value
+                                  of this method must be used inside TF config
+                                  and won't work as a plain policy. The ARN may
+                                  contain wildcards but only buckets owned by
+                                  the current AWS account will match.
+
+        :param target_bucket_arn: the ARN of the bucket to write the logs to
+                                  or a Terraform (TF) expression yielding it.
+                                  If a TF expression is passed, the return value
+                                  of this method must be used inside TF config
+                                  and won't work as a plain policy.
+
+        :param path_prefix: the path prefix of log objects, relative to the
+                            target bucket root. ELB appends additional prefix
+                            elements at the end of the given prefix. Must not
+                            begin or end in a slash.
+        """
+        self._validate_bucket_path_prefix(path_prefix)
+        return [
+            {
+                'Effect': 'Allow',
+                'Principal': {
+                    'Service': 'logging.s3.amazonaws.com'
+                },
+                'Action': [
+                    's3:PutObject'
+                ],
+                'Resource': f'{target_bucket_arn}/{path_prefix}/*',
+                'Condition': {
+                    'ArnLike': {
+                        'aws:SourceArn': source_bucket_arn
+                    },
+                    'StringEquals': {
+                        'aws:SourceAccount': self.account
+                    }
+                }
+            }
+        ]
+
     def _validate_bucket_path_prefix(self, path_prefix):
         reject(path_prefix.startswith('/') or path_prefix.endswith('/'), path_prefix)
 

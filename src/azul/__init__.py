@@ -188,6 +188,12 @@ class Config:
                                    ) -> str:
         return self._log_path_prefix(['alb', 'access'], deployment, *component)
 
+    def s3_access_log_path_prefix(self,
+                                  *component: str,
+                                  deployment: Optional[str] = None,
+                                  ) -> str:
+        return self._log_path_prefix(['s3', 'access'], deployment, *component)
+
     def _log_path_prefix(self,
                          prefix: list[str],
                          deployment: Optional[str],
