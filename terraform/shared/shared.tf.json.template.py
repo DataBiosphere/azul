@@ -35,8 +35,6 @@ emit_tf({
             },
             'logs': {
                 'bucket': aws.qualified_bucket_name(config.logs_term),
-                # FIXME:  Expire old logs using lifecycle policy
-                #         https://github.com/DataBiosphere/azul/issues/3620
                 'lifecycle': {
                     'prevent_destroy': True
                 }
@@ -138,6 +136,18 @@ emit_tf({
                     },
                     'noncurrent_version_expiration': {
                         'noncurrent_days': 30
+                    }
+                }
+            },
+            'logs': {
+                'bucket': '${aws_s3_bucket.logs.id}',
+                'rule': {
+                    'id': 'expire',
+                    'status': 'Enabled',
+                    'filter': {
+                    },
+                    'expiration': {
+                        'days': 90
                     }
                 }
             }
