@@ -11,6 +11,35 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4648 Move GitLab ALB access logs to shared bucket
+==================================================
+
+A new bucket in the ``shared`` component will reveived the GitLab ALB access
+logs previously hosted in a dedicated bucket in the ``gitlab`` component. The
+steps below have already been performed on ``dev`` and ``anvildev`` but need to
+be run for ``prod`` before pushing the merge commit::
+
+    _select prod.shared
+    cd terraform/shared
+    make
+    cd ../gitlab
+    _select prod.gitlab
+    make
+
+This will fail to destroy the non-empty bucket. Move the contents of the old
+bucket to the new one::
+
+    aws s3 sync s3://edu-ucsc-gi-singlecell-azul-gitlab-prod-us-east-1/logs/alb s3://edu-ucsc-gi-platform-hca-prod-logs.us-east-1/alb/access/prod/gitlab/
+    aws s3 rm --recursive s3://edu-ucsc-gi-singlecell-azul-gitlab-prod-us-east-1/logs/alb
+    make
+
+If this fails with an error message about a non-empty state for an orphaned
+bucket resource, the following will fix that::
+
+    terraform state rm aws_s3_bucket.gitlab
+    make
+
+
 #4174 Enable GuardDuty and SecurityHub
 ======================================
 

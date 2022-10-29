@@ -180,6 +180,23 @@ class Config:
 
     aws_config_term = 'awsconfig'
 
+    logs_term = 'logs'
+
+    def alb_access_log_path_prefix(self,
+                                   *component: str,
+                                   deployment: Optional[str] = None
+                                   ) -> str:
+        return self._log_path_prefix(['alb', 'access'], deployment, *component)
+
+    def _log_path_prefix(self,
+                         prefix: list[str],
+                         deployment: Optional[str],
+                         *component: str,
+                         ):
+        if deployment is None:
+            deployment = self.deployment_stage
+        return '/'.join([*prefix, deployment, *component])
+
     @property
     def manifest_expiration(self) -> int:
         """

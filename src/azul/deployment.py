@@ -38,9 +38,11 @@ from azul import (
     cache,
     cached_property,
     config,
+    reject,
 )
 from azul.types import (
     JSON,
+    JSONs,
 )
 
 if TYPE_CHECKING:
@@ -419,6 +421,71 @@ class AWS:
         return config.qualified_bucket_name(account_name=self.account_name,
                                             region_name=self.region_name,
                                             bucket_name=bucket_name)
+
+    # An ELB account ID, which varies depending on region, is needed to specify
+    # the principal in bucket policies for buckets storing LB access logs.
+    #
+    # https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
+    #
+    elb_region_account_id = {
+        'us-east-1': '127311923021',
+        'us-east-2': '033677994240',
+        'us-west-1': '027434742980',
+        'us-west-2': '797873946194',
+        'af-south-1': '098369216593',
+        'ca-central-1': '985666609251',
+        'eu-central-1': '054676820928',
+        'eu-west-1': '156460612806',
+        'eu-west-2': '652711504416',
+        'eu-south-1': '635631232127',
+        'eu-west-3': '009996457667',
+        'eu-north-1': '897822967062',
+        'ap-east-1': '754344448648',
+        'ap-northeast-1': '582318560864',
+        'ap-northeast-2': '600734575887',
+        'ap-northeast-3': '383597477331',
+        'ap-southeast-1': '114774131450',
+        'ap-southeast-2': '783225319266',
+        'ap-south-1': '718504428378',
+        'me-south-1': '076674570225',
+        'sa-east-1': '507241528517'
+    }
+
+    def elb_access_log_bucket_policy(self,
+                                     *,
+                                     bucket_arn: str,
+                                     path_prefix: str
+                                     ) -> JSONs:
+        """
+        The S3 bucket policy statements needed for ELB load balancers to write
+        access logs to a bucket. Note that this method returns only policy
+        statements to allow for easier merging of policies.
+
+        :param bucket_arn: the ARN of the bucket or a Terraform (TF) expression
+                           yielding it. If a TF expression is passed the
+                           return value of this method must be used inside TF
+                           config and won't work as a plain policy.
+
+        :param path_prefix: the path prefix of log objects, relative to the
+                            bucket root. ELB appends additional prefix elements
+                            at the end of the given prefix. Must not begin or
+                            end in a slash.
+        """
+        self._validate_bucket_path_prefix(path_prefix)
+        path = f'{path_prefix}/AWSLogs/{aws.account}'
+        return [
+            {
+                'Effect': 'Allow',
+                'Principal': {
+                    'AWS': f'arn:aws:iam::{self.elb_region_account_id[self.region_name]}:root'
+                },
+                'Action': 's3:PutObject',
+                'Resource': f'{bucket_arn}/{path}/*'
+            },
+        ]
+
+    def _validate_bucket_path_prefix(self, path_prefix):
+        reject(path_prefix.startswith('/') or path_prefix.endswith('/'), path_prefix)
 
 
 aws = AWS()

@@ -32,6 +32,14 @@ emit_tf({
                 'lifecycle': {
                     'prevent_destroy': True
                 }
+            },
+            'logs': {
+                'bucket': aws.qualified_bucket_name(config.logs_term),
+                # FIXME:  Expire old logs using lifecycle policy
+                #         https://github.com/DataBiosphere/azul/issues/3620
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
             }
         },
         'aws_s3_bucket_policy': {
@@ -100,6 +108,18 @@ emit_tf({
                                 }
                             }
                         }
+                    ]
+                })
+            },
+            'logs': {
+                'bucket': '${aws_s3_bucket.logs.id}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        *aws.elb_access_log_bucket_policy(
+                            bucket_arn='${aws_s3_bucket.logs.arn}',
+                            path_prefix=config.alb_access_log_path_prefix('*', deployment='*')
+                        )
                     ]
                 })
             }
