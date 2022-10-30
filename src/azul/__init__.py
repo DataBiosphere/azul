@@ -178,6 +178,31 @@ class Config:
         self._validate_term(bucket_name, name='bucket_name')
         return f'edu-ucsc-gi-{account_name}-{bucket_name}.{region_name}'
 
+    aws_config_term = 'awsconfig'
+
+    logs_term = 'logs'
+
+    def alb_access_log_path_prefix(self,
+                                   *component: str,
+                                   deployment: Optional[str] = None
+                                   ) -> str:
+        return self._log_path_prefix(['alb', 'access'], deployment, *component)
+
+    def s3_access_log_path_prefix(self,
+                                  *component: str,
+                                  deployment: Optional[str] = None,
+                                  ) -> str:
+        return self._log_path_prefix(['s3', 'access'], deployment, *component)
+
+    def _log_path_prefix(self,
+                         prefix: list[str],
+                         deployment: Optional[str],
+                         *component: str,
+                         ):
+        if deployment is None:
+            deployment = self.deployment_stage
+        return '/'.join([*prefix, deployment, *component])
+
     @property
     def manifest_expiration(self) -> int:
         """
