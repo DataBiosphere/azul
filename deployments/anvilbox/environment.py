@@ -112,8 +112,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
         'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
         'AZUL_PRIVATE_API': '1',
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
         'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-platform-anvil-dev.{AWS_DEFAULT_REGION}',
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-dev-{AZUL_DEPLOYMENT_STAGE}',

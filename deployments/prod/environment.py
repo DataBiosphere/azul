@@ -584,8 +584,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_STAGE': 'prod',
 
         'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'azul.data.humancellatlas.org',
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
         'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-config.{AWS_DEFAULT_REGION}',
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',

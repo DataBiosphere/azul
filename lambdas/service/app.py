@@ -9,7 +9,6 @@ from inspect import (
 )
 import json
 import logging.config
-import re
 from typing import (
     Any,
     Callable,
@@ -20,9 +19,6 @@ from typing import (
 import urllib.parse
 
 import attr
-from botocore.exceptions import (
-    ClientError,
-)
 import chalice
 from chalice import (
     BadRequestError as BRE,
@@ -104,9 +100,6 @@ from azul.service.manifest_service import (
 )
 from azul.service.repository_controller import (
     RepositoryController,
-)
-from azul.service.storage_service import (
-    StorageService,
 )
 from azul.strings import (
     pluralize,
@@ -1711,69 +1704,6 @@ def list_sources() -> Response:
     sources = app.repository_controller.list_sources(app.catalog,
                                                      app.current_request.authentication)
     return Response(body={'sources': sources}, status_code=200)
-
-
-@app.route('/url', methods=['POST'], cors=True)
-def shorten_query_url():
-    """
-    Take a URL as input and return a (potentially) shortened URL that will redirect to the given URL
-
-    parameters:
-        - name: url
-          in: body
-          type: string
-          description: URL to shorten
-
-    :return: A 200 response with JSON body containing the shortened URL:
-
-    ```
-    {
-        "url": "http://url.singlecell.gi.ucsc.edu/b3N"
-    }
-    ```
-
-    A 400 error is returned if an invalid URL is given.  This could be a URL that is not whitelisted
-    or a string that is not a valid web URL.
-    """
-    try:
-        url = app.current_request.json_body['url']
-    except KeyError:
-        raise BRE('`url` must be given in the request body')
-
-    url_hostname = urllib.parse.urlparse(url).netloc
-    if 0 == len(list(filter(
-        lambda whitelisted_url: re.fullmatch(whitelisted_url, url_hostname),
-        config.url_shortener_whitelist
-    ))):
-        raise BRE('Invalid URL given')
-
-    url_hash = hash_url(url)
-    storage_service = StorageService(config.url_redirect_full_domain_name)
-
-    def get_url_response(path):
-        return {'url': f'http://{config.url_redirect_full_domain_name}/{path}'}
-
-    key_length = 3
-    while key_length <= len(url_hash):
-        key = url_hash[:key_length]
-        try:
-            existing_url = storage_service.get(key).decode(encoding='utf-8')
-        except storage_service.client.exceptions.NoSuchKey:
-            try:
-                storage_service.put(key,
-                                    data=bytes(url, encoding='utf-8'),
-                                    ACL='public-read',
-                                    WebsiteRedirectLocation=url)
-            except ClientError as e:
-                if e.response['Error']['Code'] == 'InvalidRedirectLocation':
-                    raise BRE('Invalid URL given')
-                else:
-                    raise
-            return get_url_response(key)
-        if existing_url == url:
-            return get_url_response(key)
-        key_length += 1
-    raise ChaliceViewError('Could not create shortened URL')
 
 
 def hash_url(url):
