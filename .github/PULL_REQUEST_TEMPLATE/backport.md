@@ -42,8 +42,10 @@ checklists.
 - [ ] Pushed PR branch to GitHub
 - [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label    <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment                          <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build logs for anomalies in `sandbox` deployment     <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev`                         <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment                         <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build logs for anomalies in `anvilbox` deployment    <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Added PR reference (this PR) to merge commit title
 - [ ] Collected commit title tags in merge commit title
 - [ ] Pushed merge commit to GitHub
@@ -54,7 +56,9 @@ checklists.
 - [ ] Pushed merge commit to GitLab `dev`                            <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed merge commit to GitLab `anvildev`                       <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>
+- [ ] Reviewed build log for anomalies on GitLab `dev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvildev`<sup>1</sup>
+- [ ] Reviewed build log for anomalies on GitLab `anvildev`<sup>1</sup>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`

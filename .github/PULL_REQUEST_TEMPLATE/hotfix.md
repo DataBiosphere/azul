@@ -61,8 +61,9 @@ Connected issue: #0000
 ### Operator (after pushing the merge commit)
 
 - [ ] Pushed merge commit to GitLab `prod`
+- [ ] Build passes on GitLab `prod`
+- [ ] Reviewed build log for anomalies on GitLab `prod`
 - [ ] Deleted PR branch from GitHub and GitLab `prod`
-- [ ] Build passes on GitLab
 
 
 ### Operator (reindex) 

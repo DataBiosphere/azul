@@ -109,11 +109,13 @@ checklists. Update the `N reviews` label.
 - [ ] Pushed PR branch to GitHub
 - [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label    <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment                          <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build log for anomalies in `sandbox` deployment      <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `sandbox`                     <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `sandbox`                                  <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                             <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev`                         <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment                         <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build log for anomalies in `anvilbox` deployment     <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `anvilbox`                    <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `anvilbox`                                 <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `anvilbox`                            <sub>or this PR does not require reindexing `sandbox`</sub>
@@ -129,7 +131,9 @@ checklists. Update the `N reviews` label.
 - [ ] Pushed merge commit to GitLab `dev`                           <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed merge commit to GitLab `anvildev`                      <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>
+- [ ] Reviewed build log for anomalies on GitLab `dev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvildev`<sup>1</sup>
+- [ ] Reviewed build log for anomalies on GitLab `anvildev`<sup>1</sup>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
