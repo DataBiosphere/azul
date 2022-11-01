@@ -17,48 +17,64 @@ have too many entries in this file.
 Everyone
 ~~~~~~~~
 
-In personal deployments, remove ``AZUL_URL_REDIRECT_BASE_DOMAIN_NAME``. As
-always, use the sandbox deployment's ``environment.py`` as a model when
-upgrading personal deployments.
+In personal deployments, remove ``AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`` and
+``AZUL_URL_REDIRECT_FULL_DOMAIN_NAME``. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
 
 Operator
 ~~~~~~~~
 
-Follow these instructions for ``dev`` :
+After this change lands in ``dev``, follow these instructions for the AWS
+account ``platform-hca-dev``:
 
-#. From the AWS console, navigate to *Route53 service* -> *Hosted zones*.
+#. Ask everyone to upgrade their personal deployments in that account.
 
-#. Click on domain name ``dev.url.singlecell.gi.ucsc.edu``, check the boxes for
-   all records of type ``CNAME`` and delete them, then delete the hosted zone.
+#. In the AWS console, navigate to *Route53 service* → *Hosted zones*.
 
-#. Click on the ``url.singlecell.gi.ucsc.edu`` domain name and delete the
-   ``dev.url.singlecell.gi.ucsc.edu`` record name, then delete the hosted zone.
+#. Open the hosted zone ``dev.url.singlecell.gi.ucsc.edu`` and check for
+   records of type ``CNAME``. If there are any, contact the owner of the
+   corresponding deployment. Their deployment wasn't upgraded properly. As a
+   last resort, remove the CNAME record. If there are records for the
+   ``sandbox`` or ``dev`` deployments, contact the lead. Ultimately, there
+   should only be SOA and NS records left.
 
-#. Click on the domain name ``singlecell.gi.ucsc.edu`` and only delete the
-   ``url.singlecell.gi.ucsc.edu`` record name.
+#. Delete the hosted zone ``dev.url.singlecell.gi.ucsc.edu``.
 
-Follow these instructions for ``anvildev`` :
+#. Delete the hosted zone ``url.singlecell.gi.ucsc.edu``.
 
-#. From the AWS console, navigate to *Route53 service* -> *Hosted zones*.
+#. In the ``singlecell.gi.ucsc.edu`` zone, delete the record for
+   ``url.singlecell.gi.ucsc.edu``.
 
-#. Click on ``anvil.gi.ucsc.edu`` domain name and delete the record names
-   prefixed with ``url.*``, there should only be four.
+After this change lands in ``anvildev``, follow these instructions for the AWS
+account ``platform-anvil-dev``:
 
-Follow these instructions for ``prod`` :
+#. Ask everyone to bring their personal deployments in that account
+   up to date with ``develop``.
 
-#. From the AWS console, navigate to *Route53 service* -> *Hosted zones*.
+#. In the AWS console, navigate to *Route53 service* → *Hosted zones*.
 
-#. Click on domain name ``azul.data.humancellatlas.org`` and only delete the
-   ``url.azul.data.humancellatlas.org`` record name.
+#. Select ``anvil.gi.ucsc.edu`` and check for records beginning with ``url.``.
+   If there are any, contact the owner of the corresponding deployment. Their
+   deployment wasn't upgraded properly. If there are records for the
+   ``anvilbox`` or ``anvildev`` deployments, contact the lead. As a last
+   resort, remove the record.
 
-#. From the *Hosted zones* view, click on ``data.humancellatlas.org`` domain
-   name and delete the ``url.data.humancellatlas.org`` record only.
+After completing the above two sections, ask the lead to deploy the
+``dev.gitlab``, and ``anvildev.gitlab`` components. Nothing needs to be done
+for ``prod.gitlab``.
 
+After this change lands in ``prod``, follow these instructions for AWS account
+``platform-hca-prod``:
 
-Deploy the ``dev.gitlab``, and ``anvildev.gitlab`` components to apply the
-needed changes, this is not required for ``prod.gitlab``. These changes require
-updates to the ``gitlab_boundary``, ask lead to deploy the gitlab components if
-running into permission issues.
+#. In the AWS console, navigate to *Route53 service* → *Hosted zones*.
+
+#. Open the hosted zone ``azul.data.humancellatlas.org`` and check for a
+   record called ``url.azul.data.humancellatlas.org`` record. There should be
+   none. If there is, contact the lead. 
+
+#. In the ``data.humancellatlas.org`` zone, delete the record for
+   ``url.data.humancellatlas.org``.
+
 
 
 #4648 Move GitLab ALB access logs to shared bucket
