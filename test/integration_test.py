@@ -312,11 +312,21 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                       catalog: CatalogName,
                       *,
                       min_bundles: int,
-                      check_all: bool
+                      check_all: bool,
+                      public_1st: bool
                       ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
+        if public_1st:
+            managed_access_sources = frozenset(
+                map(str, self.managed_access_sources_by_catalog[catalog])
+            )
+            index = first(
+                i for i, source in enumerate(sources)
+                if source not in managed_access_sources
+            )
+            sources[0], sources[index] = sources[index], sources[0]
         # This iteration prefers sources occurring first, so we shuffle them
         # above to neutralize the bias.
         for source in sources:
@@ -904,12 +914,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                                   prefix))
 
         list(starmap(update, self._list_managed_access_bundles(catalog)))
-        num_bundles = self.min_bundles - len(bundle_fqids)
+        num_bundles = max(self.min_bundles - len(bundle_fqids), 1)
         log.info('Selected %d bundles to satisfy managed access coverage; '
                  'selecting at least %d more', len(bundle_fqids), num_bundles)
+        # _list_bundles selects both public and managed access sources at random.
+        # If we don't index at least one public source, every request would need
+        # service account credentials and we couldn't compare the responses for
+        # public and managed access data. `public_1st` ensures that at least
+        # one of the sources will be public because sources are indexed starting
+        # with the first one yielded by the iteration.
         list(starmap(update, self._list_bundles(catalog,
                                                 min_bundles=num_bundles,
-                                                check_all=True)))
+                                                check_all=True,
+                                                public_1st=True)))
 
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
@@ -1469,7 +1486,6 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                                       sources={
                                           'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests:/0'
                                       })
-
         with mock.patch.object(Config,
                                'catalogs',
                                new=PropertyMock(return_value={
@@ -1480,7 +1496,8 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
         source, prefix, bundle_fqids = next(self._list_bundles(catalog,
                                                                min_bundles=1,
-                                                               check_all=False))
+                                                               check_all=False,
+                                                               public_1st=False))
         return self.random.choice(bundle_fqids)
 
     def _can_bundle(self,
