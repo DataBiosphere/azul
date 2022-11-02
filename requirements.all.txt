@@ -10,7 +10,7 @@ blessed==1.19.1
 boto3==1.24.94
 boto3-stubs==1.24.94
 botocore==1.27.94
-botocore-stubs==1.27.96
+botocore-stubs==1.29.4
 brotli==1.0.9
 cachetools==5.2.0
 certifi==2022.9.24
@@ -22,7 +22,7 @@ click==8.1.3
 colorama==0.4.4
 configargparse==1.5.3
 coverage==6.5.0
-cryptography==38.0.1
+cryptography==38.0.3
 deprecated==1.2.13
 docker==6.0.0
 docutils==0.16
@@ -54,7 +54,7 @@ grpcio==1.50.0
 grpcio-status==1.50.0
 http-message-signatures==0.4.4
 http-sfv==0.9.8
-httplib2==0.20.4
+httplib2==0.21.0
 idna==3.4
 importlib-metadata==5.0.0
 importlib-resources==5.10.0
@@ -63,9 +63,9 @@ itsdangerous==2.1.2
 jinja2==3.1.2
 jmespath==1.0.1
 jq==1.3.0
-jsonschema==4.16.0
+jsonschema==4.17.0
 jsonschema-spec==0.1.2
-lazy-object-proxy==1.7.1
+lazy-object-proxy==1.8.0
 locust==2.12.2
 markupsafe==2.1.1
 mccabe==0.7.0
@@ -85,8 +85,8 @@ pathable==0.4.3
 pip==22.2.2
 ply==3.11
 proto-plus==1.22.1
-protobuf==4.21.8
-psutil==5.9.3
+protobuf==4.21.9
+psutil==5.9.4
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycodestyle==2.9.1
@@ -97,10 +97,10 @@ pyjwt==2.6.0
 pynacl==1.5.0
 pyopenssl==22.1.0
 pyparsing==3.0.9
-pyrsistent==0.18.1
+pyrsistent==0.19.2
 python-dateutil==2.8.2
 python-editor==1.0.4
-pytz==2022.5
+pytz==2022.6
 pyyaml==5.4.1
 pyzmq==24.0.1
 readchar==4.0.3
@@ -117,7 +117,7 @@ smmap==5.0.0
 strict-rfc3339==0.7
 tinyquery==1.2+2
 toml==0.10.2
-types-awscrt==0.14.7
+types-awscrt==0.15.2
 types-s3transfer==0.6.0.post4
 types-toml==0.10.8
 typing_extensions==4.4.0
@@ -126,11 +126,11 @@ uritemplate==4.1.1
 urllib3==1.26.12
 watchdog==2.1.9
 wcwidth==0.2.5
-websocket-client==1.4.1
+websocket-client==1.4.2
 werkzeug==2.2.2
 wheel==0.38.0
 wrapt==1.14.1
 xmltodict==0.13.0
 zipp==3.10.0
 zope.event==4.5.0
-zope.interface==5.5.0
+zope.interface==5.5.1
