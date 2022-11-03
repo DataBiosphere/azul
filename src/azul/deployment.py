@@ -126,6 +126,10 @@ class AWS:
         return self.client('s3')
 
     @property
+    def securityhub(self):
+        return self.client('securityhub')
+
+    @property
     def sns(self):
         return self.client('sns')
 
