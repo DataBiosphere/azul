@@ -299,7 +299,7 @@ class Plugin(TDRPlugin):
             )
             SELECT
                   f.file_id AS generated_file_id,
-                  'alignmentactivity' AS activity_type,
+                  'alignmentactivity' AS activity_table,
                   ama.alignmentactivity_id AS activity_id,
                   ama.used_file_id AS uses_file_id,
                   [] AS uses_biosample_id,
@@ -324,10 +324,19 @@ class Plugin(TDRPlugin):
               FROM file AS f
               JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
                 ON f.file_id IN UNNEST(sqa.generated_file_id)
+            UNION ALL SELECT
+                f.file_id,
+                'activity',
+                a.activity_id,
+                a.used_file_id,
+                a.used_biosample_id,
+              FROM file AS f
+              JOIN {backtick(self._full_table_name(source, 'activity'))} AS a
+                ON f.file_id IN UNNEST(a.generated_file_id)
         ''')
         return {
             Link.create(
-                activity=KeyReference(entity_type=row['activity_type'], key=row['activity_id']),
+                activity=KeyReference(entity_type=row['activity_table'], key=row['activity_id']),
                 # The generated link is not a complete representation of the
                 # upstream activity because it does not include generated files
                 # that are not ancestors of the downstream file
@@ -352,7 +361,7 @@ class Plugin(TDRPlugin):
             WITH activities AS (
                 SELECT
                     sqa.sequencingactivity_id as activity_id,
-                    'sequencingactivity' as activity_type,
+                    'sequencingactivity' as activity_table,
                     sqa.used_biosample_id,
                     sqa.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
@@ -363,11 +372,18 @@ class Plugin(TDRPlugin):
                     aya.used_biosample_id,
                     aya.generated_file_id,
                 FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                UNION ALL
+                SELECT
+                    a.activity_id,
+                    'activity',
+                    a.used_biosample_id,
+                    a.generated_file_id,
+                FROM {backtick(self._full_table_name(source, 'activity'))} AS a
             )
             SELECT
                 biosample_id,
                 a.activity_id,
-                a.activity_type,
+                a.activity_table,
                 a.generated_file_id
             FROM activities AS a, UNNEST(a.used_biosample_id) AS biosample_id
             WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
@@ -378,7 +394,7 @@ class Plugin(TDRPlugin):
                             KeyReference(key=output_id, entity_type='file')
                             for output_id in row['generated_file_id']
                         ],
-                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_type']))
+                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
             for row in rows
         }
 
@@ -396,12 +412,18 @@ class Plugin(TDRPlugin):
                     ala.used_file_id,
                     ala.generated_file_id
                 FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
+                UNION ALL SELECT
+                    a.activity_id,
+                    'activity',
+                    a.used_file_id,
+                    a.generated_file_id
+                FROM {backtick(self._full_table_name(source, 'activity'))} AS a
             )
             SELECT
                 used_file_id,
                 a.generated_file_id,
                 a.activity_id,
-                a.activity_type
+                a.activity_table
             FROM activities AS a, UNNEST(a.used_file_id) AS used_file_id
             WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
         ''')
@@ -411,7 +433,7 @@ class Plugin(TDRPlugin):
                             KeyReference(key=file_id, entity_type='file')
                             for file_id in row['generated_file_id']
                         ],
-                        activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_type']))
+                        activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_table']))
             for row in rows
         }
 
@@ -421,7 +443,10 @@ class Plugin(TDRPlugin):
                            keys: AbstractSet[Key],
                            ) -> MutableJSONs:
         table_name = self._full_table_name(source, entity_type)
-        columns = self.indexed_columns_by_entity_type[entity_type] | {'datarepo_row_id'}
+        columns = set.union(
+            self.common_indexed_columns,
+            self.indexed_columns_by_entity_type[entity_type]
+        )
         pk_column = entity_type + '_id'
         assert pk_column in columns, entity_type
         log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
@@ -450,6 +475,11 @@ class Plugin(TDRPlugin):
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
         return rows
+
+    common_indexed_columns = {
+        'datarepo_row_id',
+        'source_datarepo_row_ids'
+    }
 
     # This could be consolidated with similar info from the metadata plugin?
     indexed_columns_by_entity_type = {
@@ -484,19 +514,26 @@ class Plugin(TDRPlugin):
             'reference_assembly',
             'source_datarepo_row_ids'
         },
+        'activity': {
+            'activity_id',
+            'activity_type',
+        },
         'alignmentactivity': {
             'alignmentactivity_id',
+            'activity_type',
             'data_modality',
             'date_created',
         },
         'assayactivity': {
             'assayactivity_id',
+            'activity_type',
             'assay_category',
             'data_modality',
             'date_created',
         },
         'sequencingactivity': {
             'sequencingactivity_id',
+            'activity_type',
             'data_modality',
         }
     }

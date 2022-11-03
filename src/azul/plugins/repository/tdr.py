@@ -44,6 +44,9 @@ from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
 )
+from azul.strings import (
+    longest_common_prefix,
+)
 from azul.terra import (
     SourceRef as TDRSourceRef,
     TDRClient,
@@ -92,8 +95,15 @@ class TDRPlugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                      authentication: Optional[Authentication]
                      ) -> list[TDRSourceRef]:
         tdr = self._user_authenticated_tdr(authentication)
+        configured_specs_by_name = {spec.name: spec for spec in self.sources}
+        # Filter by prefix of snapshot names in an attempt to speed up the
+        # listing by limiting the number of irrelevant snapshots returned. Note
+        # that TDR does a substring match, not a prefix match, but determining
+        # the longest common substring is complicated and, as of yet, I haven't
+        # found a trustworthy, reusable implementation.
+        filter = longest_common_prefix(configured_specs_by_name.keys())
         try:
-            snapshots = tdr.snapshot_names_by_id()
+            snapshots = tdr.snapshot_names_by_id(filter=filter)
         except UnauthorizedError:
             if tdr.is_registered():
                 raise
@@ -105,7 +115,6 @@ class TDRPlugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                 reject(authentication is None)
                 return self.list_sources(None)
 
-        configured_specs_by_name = {spec.name: spec for spec in self.sources}
         snapshot_ids_by_name = {
             name: id
             for id, name in snapshots.items()

@@ -99,11 +99,13 @@ class Plugin(MetadataPlugin):
                 'activities': {
                     f: f'activities.{f}' for f in [
                         'activity_id',
+                        'activity_table',
                         'activity_type',
                         'assay_category',
                         'data_modality',
                         'date_submitted',
                         'document_id',
+                        'source_datarepo_row_ids',
                     ]
                 },
                 'biosamples': {
@@ -115,6 +117,7 @@ class Plugin(MetadataPlugin):
                         'donor_age_at_collection_age_range',
                         'donor_age_at_collection_unit',
                         'disease',
+                        'source_datarepo_row_ids',
                     ]
                 },
                 'datasets': {
@@ -124,6 +127,7 @@ class Plugin(MetadataPlugin):
                         'data_use_permission',
                         'document_id',
                         'registered_identifier',
+                        'source_datarepo_row_ids',
                         'title',
                     ]
                 },
@@ -134,6 +138,7 @@ class Plugin(MetadataPlugin):
                         'organism_type',
                         'phenotypic_sex',
                         'reported_ethnicity',
+                        'source_datarepo_row_ids',
                     ]
                 },
                 'files': {

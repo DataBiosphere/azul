@@ -78,6 +78,19 @@ class AzulTestCase(TestCase):
                 'ProjectPublication.publication_title is deprecated',
                 'ProjectPublication.publication_url is deprecated',
                 'CellLine.cell_line_type is deprecated',
+                'CellSuspension.selected_cell_type is deprecated',
+                'CellSuspension.total_estimated_cells is deprecated',
+                'DonorOrganism.biological_sex is deprecated',
+                'DonorOrganism.disease is deprecated',
+                'LibraryPreparationProtocol.library_construction_approach is deprecated',
+                'SpecimenFromOrganism.disease is deprecated',
+                'SpecimenFromOrganism.organ_part has been removed',
+                'Project.laboratory_names is deprecated',
+                'Project.project_shortname is deprecated',
+                'Project.insdc_project_accessions is deprecated',
+                'Project.geo_series_accessions is deprecated',
+                'Project.array_express_accessions is deprecated',
+                'Project.insdc_study_accessions is deprecated',
 
                 RE(r'.*humancellatlas\.data\.metadata\.api\.DissociationProcess'),
                 RE(r'.*humancellatlas\.data\.metadata\.api\.EnrichmentProcess'),
@@ -215,7 +228,7 @@ class AzulUnitTestCase(AzulTestCase):
         # because it resets all backends and therefore requires that all Moto
         # extras are installed. The backends listed here need to match the
         #  extras specified for the `moto` dependency in `requirements.dev.txt`.
-        for name in ('s3', 'sqs', 'sns', 'dynamodb'):
+        for name in ('s3', 'sqs', 'sns', 'dynamodb', 'iam'):
             backends = moto.backends.get_backend(name)
             for region_name, backend in backends.items():
                 backend.reset()

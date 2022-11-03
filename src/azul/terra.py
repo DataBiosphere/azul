@@ -9,9 +9,11 @@ import json
 import logging
 from time import (
     sleep,
+    time,
 )
 from typing import (
     ClassVar,
+    Optional,
 )
 
 import attr
@@ -316,6 +318,12 @@ class TerraNameConflictException(TerraClientException):
                          str(url), response_json)
 
 
+class TerraConcurrentModificationException(TerraClientException):
+
+    def __init__(self) -> None:
+        super().__init__('Snapshot listing changed while we were paging through it')
+
+
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class TerraClient(OAuth2Client):
     """
@@ -334,6 +342,7 @@ class TerraClient(OAuth2Client):
         retries = config.terra_client_retries
         log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
+        start = time()
         try:
             # Limited retries on I/O errors such as refused or dropped
             # connections. The latter are actually very likely if connections
@@ -357,8 +366,8 @@ class TerraClient(OAuth2Client):
 
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('_request(…) -> %r %r',
-                      response.status, trunc_ellipses(response.data, 256))
+            log.debug('_request(…) -> %.3fs %r %r',
+                      time() - start, response.status, trunc_ellipses(response.data, 256))
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]
@@ -558,36 +567,57 @@ class TDRClient(SAMClient):
         else:
             raise TerraStatusException(endpoint, response)
 
-    page_size: ClassVar[int] = 200
+    page_size: ClassVar[int] = 1000
 
-    def snapshot_names_by_id(self) -> dict[str, str]:
+    def snapshot_names_by_id(self,
+                             *,
+                             filter: Optional[str] = None
+                             ) -> dict[str, str]:
         """
         List the TDR snapshots accessible to the current credentials.
+
+        :param filter: Unless None, a string that must occur in the description
+                       or name of the snapshots to be listed
         """
+        # For reference: https://github.com/DataBiosphere/jade-data-repo/blob
+        # /22ff5c57d46db42c874639e1ffa6ad833c51e29f
+        # /src/main/java/bio/terra/service/snapshot/SnapshotDao.java#L550
+        #
+        # The creation of a snapshot is only one of the two ways a snapshot is
+        # added to the list. The other way is making an existing snapshot
+        # accessible. Sorting by creation date only defends against the first
+        # scenario, not the second. Also note that as we page through
+        # snapshots, a snapshot we already retrieved might be removed and
+        # another one added. If the added one precedes the current page, we
+        # won't notice at all.
+        #
         endpoint = self._repository_endpoint('snapshots')
-        snapshots = []
-        # FIXME: Defend against concurrent changes while listing snapshots
-        #        https://github.com/DataBiosphere/azul/issues/3979
+        snapshots = {}
+        before = 0
         while True:
-            endpoint.set(args={
-                'offset': len(snapshots),
-                'limit': self.page_size,
-                'sort': 'created_date',
-                'direction': 'asc'
-            })
+            args = dict(offset=before,
+                        limit=self.page_size,
+                        sort='created_date',
+                        direction='asc')
+            if filter is not None:
+                args['filter'] = filter
+            endpoint.set(args=args)
             response = self._request('GET', endpoint)
             response = self._check_response(endpoint, response)
-            new_snapshots = response['items']
-            if new_snapshots:
-                snapshots += new_snapshots
-            else:
-                total = response['filteredTotal']
-                require(len(snapshots) == total, snapshots, total)
+            snapshots.update({
+                snapshot['id']: snapshot['name']
+                for snapshot in response['items']
+            })
+            after = len(snapshots)
+            total = response['filteredTotal']
+            if after == total:
                 break
-        return {
-            snapshot['id']: snapshot['name']
-            for snapshot in snapshots
-        }
+            elif after > total or after == before:
+                # Something is off if we got more snapshots than reported by TDR
+                # or if there was no progress even though we got fewer than that.
+                raise TerraConcurrentModificationException()
+            before = after
+        return snapshots
 
     @classmethod
     def for_indexer(cls) -> 'TDRClient':

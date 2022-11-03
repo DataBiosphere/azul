@@ -126,6 +126,7 @@ class PFBConverter:
             # during aggregation, which happens to be non-deterministic.
             for entity in sorted(entities, key=itemgetter('document_id')):
                 if entity_type != self.entity_type:
+                    _inject_reference_handover_values(entity, doc)
                     pfb_entity = PFBEntity.from_json(name=entity_type,
                                                      object_=entity,
                                                      schema=self.schema)
@@ -479,13 +480,14 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
 
 
 def _inject_reference_handover_columns(field_types: FieldTypes) -> FieldTypes:
-    file_types = field_types['files']
-    if 'source_datarepo_row_ids' in file_types:
-        field_types = dict(field_types,
-                           files=dict(file_types,
-                                      datarepo_row_id=null_str,
-                                      source_datarepo_snapshot_id=null_str))
-    return field_types
+    return {
+        entity_type: (
+            dict(fields, datarepo_row_id=null_str, source_datarepo_snapshot_id=null_str)
+            if isinstance(fields, dict) and 'source_datarepo_row_ids' in fields
+            else fields
+        )
+        for entity_type, fields in field_types.items()
+    }
 
 
 def _inject_reference_handover_values(entity: MutableJSON, doc: JSON):
@@ -551,6 +553,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 'donor_count',
                 'estimated_cell_count',
                 'total_estimated_cells',
+                'source_datarepo_snapshot_id'
             )
             # FIXME: The first term is not self-explanatory
             #        https://github.com/DataBiosphere/azul/issues/4094

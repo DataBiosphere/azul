@@ -34,10 +34,11 @@ define docker
 .PHONY: docker$1
 docker$1: check_docker
 	docker build \
-		--build-arg make_target=requirements$2 \
-		--build-arg cache_seed=${CACHE_SEED} \
-		-t $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
-		.
+	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
+	       --build-arg make_target=requirements$2 \
+	       --build-arg cache_seed=${CACHE_SEED} \
+	       --tag $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
+	       .
 
 .PHONY: docker$1_push
 docker$1_push: docker$1
@@ -68,6 +69,12 @@ requirements_update: check_venv check_docker
 	python scripts/manage_requirements.py \
 	       --image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
 	       --build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
+	# Download wheels (source and binary) for the Lambda runtime
+	pip download \
+	    --platform=manylinux2014_x86_64 \
+	    --no-deps \
+	    -r requirements.txt \
+	    --dest=${azul_chalice_bin}
 
 .PHONY: requirements_update_force
 requirements_update_force: check_venv check_docker
