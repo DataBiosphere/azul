@@ -93,7 +93,8 @@ def none_safe_key(none_last: bool = False) -> Callable[[Any], Any]:
     return inner_func
 
 
-def none_safe_tuple_key(none_last: bool = False) -> Callable[[tuple[Any]], Any]:
+def none_safe_tuple_key(none_last: bool = False) -> Callable[[tuple[Any, ...]],
+                                                             Any]:
     """
     Returns a sort key that handles tuples containing None values.
 
