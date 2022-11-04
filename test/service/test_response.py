@@ -1811,6 +1811,24 @@ class TestResponse(WebServiceTestCase):
                     ]
                     self.assertEqual(expected, actual)
 
+    def test_contributors_order(self):
+        # Test that indexing preserves the order of project contributors
+        expected = [
+            "eyald.david@weizmann.ac.il",
+            "guy.ledergor@weizmann.ac.il",
+            "assaf.weiner@weizmann.ac.il",
+            "ido.amit@weizmann.ac.il",
+            "hewgreen@ebi.ac.uk"
+        ]
+
+        project_id = '250aef61-a15b-4d97-b8b4-54bb997c1d7d'
+        url = self.base_url.set(path=('index', 'projects', project_id))
+        response = requests.get(str(url))
+        response.raise_for_status()
+        response_json = response.json()
+        actual = [r['email'] for r in one(response_json['projects'])['contributors']]
+        self.assertEqual(expected, actual)
+
     def test_disease_facet(self):
         """
         Verify the values of the different types of disease facets
