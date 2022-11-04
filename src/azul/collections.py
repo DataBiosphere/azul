@@ -277,14 +277,21 @@ class NestedDict(defaultdict):
 
 class OrderedSet(MutableSet[K]):
     """
-    A mutable set that maintains insertion order. It is not a sequence.
+    A mutable set that maintains insertion order. Unlike similar implementations
+    of the same name that are floating around on the internet, it is not a
+    sequence.
 
-    >>> OrderedSet() == set()
-    True
-    >>> 'a' in OrderedSet(['a', 'b'])
-    True
-    >>> OrderedSet(['a', 'b', 'c', 'b'])
-    OrderedSet(['a', 'b', 'c'])
+    >>> s = OrderedSet(['b', 'a', 'c', 'b'])
+    >>> s
+    OrderedSet(['b', 'a', 'c'])
+
+    >>> s.discard('a')
+    >>> s
+    OrderedSet(['b', 'c'])
+
+    >>> s.add('a')
+    >>> s
+    OrderedSet(['b', 'c', 'a'])
     """
 
     def __init__(self, members: Iterable[K] = (), /) -> None:
@@ -292,7 +299,7 @@ class OrderedSet(MutableSet[K]):
 
     def __repr__(self) -> str:
         contents = repr(list(self)) if self else ''
-        return f'{self.__class__.__name__}({contents})'
+        return f'{type(self).__name__}({contents})'
 
     def __iter__(self) -> Iterator[K]:
         return iter(self.inner)
@@ -301,36 +308,59 @@ class OrderedSet(MutableSet[K]):
         return len(self.inner)
 
     def __eq__(self, other: Any) -> bool:
+        """
+        >>> OrderedSet() == set()
+        True
+
+        >>> s1 = OrderedSet(['3', '1', '3'])
+        >>> s2 = {'1', '3', '1'}
+        >>> (s1 and s2) == (s2 and s1)
+        True
+
+        >>> (s2 or s1) == (s1 or s2)
+        True
+
+        >>> (s1 == s2) == (s2 == s1)
+        True
+
+        >>> s1 == s2 and s2 == s1
+        True
+        """
         return self.inner.keys() == other
 
     def __contains__(self, member: K) -> bool:
+        """
+        >>> 'a' in OrderedSet(['a', 'b'])
+        True
+        """
         return member in self.inner
 
     def discard(self, member: K) -> None:
         """
-        >>> os = OrderedSet(['1', 'a', '2'])
-        >>> os.discard('a')
-        >>> os
+        >>> s = OrderedSet(['1', 'a', '2'])
+        >>> s.discard('a')
+        >>> s
         OrderedSet(['1', '2'])
-        >>> os.discard('a')
+
+        >>> s.discard('a')
         """
         self.inner.pop(member, None)
 
     def add(self, member: K) -> None:
         """
-        >>> os = OrderedSet(['a', 'b'])
-        >>> os.add('a')
-        >>> os.add('c')
-        >>> os
+        >>> s = OrderedSet(['a', 'b'])
+        >>> s.add('a')
+        >>> s.add('c')
+        >>> s
         OrderedSet(['a', 'b', 'c'])
         """
         self.inner[member] = None
 
     def update(self, members: Iterable[K] = (), /) -> None:
         """
-        >>> os = OrderedSet(['a', 'b'])
-        >>> os.update(['1', 'a', 'b', '2'])
-        >>> os
+        >>> s = OrderedSet(['a', 'b'])
+        >>> s.update(['1', 'a', 'b', '2'])
+        >>> s
         OrderedSet(['a', 'b', '1', '2'])
         """
         self.inner |= dict.fromkeys(members)
