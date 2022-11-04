@@ -1,0 +1,4 @@
+https://www.elastic.co/guide/en/kibana/7.10/docker.html
+
+These images are free to use under the Elastic license. They contain open source and free commercial features and access to paid commercial features. Start a 30-day trial to try out all of the paid commercial features. See the Subscriptions page for information about Elastic license levels.
+
