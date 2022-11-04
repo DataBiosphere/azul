@@ -191,8 +191,17 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
                                    for val in cast(JSONs, data)
                                    for k, v in val.items())
                     elif isinstance(data[0], (type(None), bool, int, float, str)):
-                        self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
-                        return 1
+                        ordered_fields = {
+                            'laboratory',
+                            'institutions',
+                            'contact_names',
+                            'publication_titles'
+                        }
+                        if path[-2] == 'projects' and path[-1] in ordered_fields:
+                            return 0
+                        else:
+                            self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
+                            return 1
                     elif isinstance(data[0], list):
                         # In lieu of tuples, a range in JSON is a list of two values
                         self.assertEqual(data, list(map(list, sorted(map(tuple, data)))))
