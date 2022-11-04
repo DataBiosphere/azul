@@ -37,6 +37,9 @@ from uuid import (
 )
 import warnings
 
+from azul.collections import (
+    OrderedSet,
+)
 from humancellatlas.data.metadata.age_range import (
     AgeRange,
 )
@@ -302,10 +305,10 @@ class Project(Entity):
     project_short_name: str
     project_title: str
     project_description: Optional[str]  # optional up to core/project/5.2.2/project_core
-    publications: Set[ProjectPublication]
-    contributors: Set[ProjectContact]
-    accessions: Set[Accession]
-    supplementary_links: Set[str]
+    publications: OrderedSet[ProjectPublication]
+    contributors: OrderedSet[ProjectContact]
+    accessions: OrderedSet[Accession]
+    supplementary_links: OrderedSet[str]
     estimated_cell_count: Optional[int]
 
     def __init__(self,
@@ -318,12 +321,13 @@ class Project(Entity):
         self.project_short_name = lookup(core, 'project_short_name', 'project_shortname')
         self.project_title = core['project_title']
         self.project_description = core.get('project_description')
-        self.publications = set(ProjectPublication.from_json(publication)
-                                for publication in content.get('publications', []))
-        self.contributors = {ProjectContact.from_json(contributor) for contributor in content.get('contributors', [])}
-        self.supplementary_links = set(content.get('supplementary_links', []))
+        self.publications = OrderedSet(ProjectPublication.from_json(publication)
+                                       for publication in content.get('publications', []))
+        self.contributors = OrderedSet(ProjectContact.from_json(contributor)
+                                       for contributor in content.get('contributors', []))
+        self.supplementary_links = OrderedSet(content.get('supplementary_links', []))
         self.estimated_cell_count = content.get('estimated_cell_count')
-        accessions = set()
+        accessions = OrderedSet()
         for name, value in content.items():
             prefix, _, suffix = name.rpartition('_')
             if suffix == 'accessions':
