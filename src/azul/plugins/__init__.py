@@ -471,13 +471,6 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         id = self._lookup_source_id(spec)
         return ref_cls(id=id, spec=spec)
 
-    def verify_source(self, ref: SOURCE_REF) -> None:
-        """
-        Verify that the source's ID matches that defined in the
-        repository for the source's spec.
-        """
-        raise NotImplementedError
-
     @abstractmethod
     def _lookup_source_id(self, spec: SOURCE_SPEC) -> str:
         """
