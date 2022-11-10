@@ -5,7 +5,7 @@ browser's location bar, appending either `&template=promotion.md`,
 switch the template.
 -->
 
-Connected issue: #0000
+Connected issues: #0000
 
 
 ## Checklist
@@ -15,14 +15,14 @@ Connected issue: #0000
 
 - [ ] Target branch is `develop`
 - [ ] Name of PR branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
-- [ ] PR title references the connected issue
-- [ ] PR title matches<sup>1</sup> title of connected issue         <sub>or comment in PR explains why they're different</sub>
-- [ ] Title of at least one commit references connected issue
-- [ ] PR is connected to issue via Zenhub 
-- [ ] PR description links to connected issue
-- [ ] Added `partial` label to PR                                   <sub>or this PR completely resolves the connected issue</sub>
+- [ ] PR title references all connected issues
+- [ ] PR title matches<sup>1</sup> that of a connected issue        <sub>or comment in PR explains why they're different</sub>
+- [ ] For each connected issue, there is at least one commit whose title references that issue
+- [ ] PR is connected to all connected issues via Zenhub 
+- [ ] PR description links to connected issues
+- [ ] Added `partial` label to PR                                   <sub>or this PR completely resolves all connected issues</sub>
 
-<sup>1</sup> when the issue title describes a problem, the PR title is `Fix: ` followed by the issue title   
+<sup>1</sup> when the issue title describes a problem, the corresponding PR title is `Fix: ` followed by the issue title   
 
 
 ### Author (reindex)
@@ -53,7 +53,7 @@ Connected issue: #0000
 ### Author (hotfixes)
 
 - [ ] Added `F` tag to main commit title                            <sub>or this PR does not include permanent fix for a temporary hotfix</sub>
-- [ ] Reverted the temporary hotfix connected to the issue          <sub>or there is no temporary hotfix for the connected issue on the `prod` branch</sub>
+- [ ] Reverted the temporary hotfixes for any connected issues      <sub>or the `prod` branch has no temporary hotfixes for any connected issues</sub>
 
 
 ### Author (requirements, before every review)
@@ -91,8 +91,8 @@ checklists. Update the `N reviews` label.
 ### Primary reviewer (after approval)
 
 - [ ] Actually approved the PR
-- [ ] Labeled connected issue as `demo` or `no demo`
-- [ ] Commented on connected issue about demo expectations          <sub>or labelled connected issue as `no demo`</sub>
+- [ ] Labeled connected issues as `demo` or `no demo`
+- [ ] Commented on connected issues about demo expectations         <sub>or all connected issues are labeled `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] `N reviews` label is accurate
@@ -103,23 +103,25 @@ checklists. Update the `N reviews` label.
 ### Operator (before pushing merge the commit)
 
 - [ ] Checked `reindex` label and `r` commit title tag
-- [ ] Checked that demo expectations are clear                      <sub>or connected issue is labeled as `no demo`</sub>
+- [ ] Checked that demo expectations are clear                      <sub>or all connected issues are labeled `no demo`</sub>
 - [ ] Rebased and squashed PR branch
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label    <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment                          <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build log for anomalies in `sandbox` deployment      <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `sandbox`                     <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `sandbox`                                  <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                             <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev`                         <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment                         <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build log for anomalies in `anvilbox` deployment     <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `anvilbox`                    <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `anvilbox`                                 <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `anvilbox`                            <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title
-- [ ] Moved connected issue to Merged column
+- [ ] Moved connected issues to Merged column
 - [ ] Pushed merge commit to GitHub
 
 
@@ -129,7 +131,9 @@ checklists. Update the `N reviews` label.
 - [ ] Pushed merge commit to GitLab `dev`                           <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed merge commit to GitLab `anvildev`                      <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>
+- [ ] Reviewed build log for anomalies on GitLab `dev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvildev`<sup>1</sup>
+- [ ] Reviewed build log for anomalies on GitLab `anvildev`<sup>1</sup>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`

@@ -1,0 +1,198 @@
+https://www.sparklabs.com/company/legal/
+
+Viscosity End User License Agreement (EULA)
+
+By installing, operating, distributing, or otherwise using Viscosity you agree to the terms of this End User License Agreement. If you do not agree to the terms of this License Agreement, do not install or use Viscosity.
+
+1. LICENSE. Your rights and obligations with respect to the use of Viscosity are as follows. You may: (a) make copies of Viscosity for archival purposes, or copy Viscosity onto the hard disk of your computer and retain the original for archival purposes; and (b) use Viscosity in accordance with any additional permitted uses set forth below. You may not: (a) sublicense, rent, or lease any portion of Viscosity; reverse engineer, decompile, disassemble, modify, translate, make any attempt to discover the source code of Viscosity, or create derivative works from Viscosity; (b) use Viscosity in any manner not authorized by this license; nor (c) use Viscosity in any manner that contradicts any additional restrictions set forth below.
+
+2. EVALUATION. Viscosity is not free software. You may use this software for evaluation purposes without charge for a period of 30 days. To continue using the software beyond the 30 day evaluation period, you must register it.
+
+3. REGISTRATION. (a) Individual Registration. If you have purchased an individual registration, also known as a "single user" and "single person" registration, you may install and register Viscosity on up to three computers, provided that you are the sole user of Viscosity on these computer/s. (b) Volume Registration. A company or other organization may purchase a volume registration, also known as a "volume license" and a "site license". A volume registration permits either (i) Viscosity to be installed and registered on multiple computers owned or operated by the company or organization, where each installation counts as an allocated seat; or (ii) Viscosity to be installed and registered by a number of users, where each user counts as an allocated seat, and each user may install and register Viscosity on up to three computers owned or operated by the company or organization provided that they are the sole user of Viscosity on these computer/s. As long as the total number of seat allocations do not exceed the registered number of seats, you may: (i) distribute Viscosity to users as governed by section 4 below; and (ii) allow an employee to install and register Viscosity on their personal computer for use in the course of their employment, where the user or their computer is as an allocated seat. (c) Server-Locked Registration. If you have purchased a server-locked registration, also known as a "server-locked license", as long as the total number of seat allocations do not exceed the registered number of seats, you may: (i) distribute Viscosity to users as governed by section 4 below; and (ii) allow any user associated with your company or organization, including, but not limited to, employees, students, parents, contractors, and visitors, to install and register Viscosity on their work or personal computer/s for the sole use of connecting to the server DNS or IP addresses associated with the registration. You may not have VPN server/s available at the DNS or IP addresses associated with the registration that are part of a commercial VPN service of which the registered users are customers.
+
+4. REDISTRIBUTION. You may provide unmodified copies of Viscosity under these conditions: (a) distribute only the unregistered version of Viscosity; (b) provide exact, unmodified copies of Viscosity including all accompanying files, this License Agreement, and all copyright, trademark, proprietary, and other notices; (c) reference the official Viscosity website of https://www.sparklabs.com/viscosity/; and (d) the total price of a compilation (such as a DVD-Disc) that includes Viscosity must be no more than $1 USD per package in the compilation. You may provide modified copies of Viscosity under these conditions: (a) Viscosity is only modified by bundling it to include connection files and/or preference settings; and (b) You have a Volume Registration or Server-Locked Registration and are distributing Viscosity only to users or machines covered by this registration.
+
+5. UPGRADES. Upgraded versions of Viscosity are announced on the Viscosity website. Upgrades may include additional features and/or bug fixes over previous releases. Registered users are entitled to receive free upgrades for all minor-point (1.x) version releases.
+
+6. SUPPORT. Support is available online via the Viscosity website and email under these conditions: (a) we guarantee that we will respond to the best of our ability, and as promptly as is reasonably possible, to all reasonable queries received from registered users; and (b) in the case of registrations that cover multiple users, we may ask that the organization designate one user as the contact point to receive support requests from other users and filter out duplicates.
+
+7. THIRD-PARTY SOFTWARE. Portions of the code included in or with Viscosity may contain, or may be derived from, third-party code, including without limitation, open source software. All use of third-party software is subject to and governed by the respective licenses for the third-party software. These licenses are available at the third-party licenses page (https://www.sparklabs.com/company/legal/thirdparty/) for the most recent version of the software, as well available as part of the software installation. Where a third-party license requires that the source code of the covered software or components be made available such as, but not limited to, the GNU General Public License, you may request a copy of the source code by following the offer instructions included with the third-party license.
+
+8. LIMITED WARRANTY AND LIMITATION OF REMEDIES. The software and documentation for Viscosity are offered AS IS and WITHOUT ANY WARRANTY express or implied, including but not limited to warranty of design, merchantability, or fitness for a particular purpose. In no event will SparkLabs be liable for any damages, including lost profits, lost savings, data theft, or other incidental or consequential damages, even if SparkLabs is advised of the possibility of such damages, or for any claim by you or any third party.
+
+9. ACKNOWLEDGMENT. You acknowledge that you have read this agreement, understand it, and agree to be bound by its terms and conditions.
+
+SparkLabs® and Viscosity® are registered trademarks of SparkLabs Pty Ltd. Any unauthorized use is expressly prohibited.
+
+Privacy Policy
+
+We at SparkLabs are committed to maintaining the trust and confidence of the users of our software and of visitors to our website. We strongly support the right to privacy, and where possible we prefer to avoid collecting data from you.
+
+Our Privacy Policy is designed to give a transparent overview of the cases where we do collect data, why we collect it, how it is used, and how long it is kept for. By using our website or products, you consent to our Privacy Policy.
+
+ONLINE STORE
+
+If you make a purchase of a product from our website your full name, company name (optional), address, and email address are collected. If the gift option is enabled, an additional full name, company name (optional) and email address are also collected to be used instead for billing information.
+
+This information is collected for a number of reasons: a) We are legally required to collect some or all of this information to assess taxation obligations (such as the collection of GST) and to meet record-keeping requirements; b) To verify you are the license owner in the event you contact us for support; c) To verify you are the license owner if you request we re-send your license information; d) To verify you are the license owner when upgrading an existing license; and e) To help prevent fraudulent purchases.
+
+We do not sell or provide any of your collected details to third-parties beyond what is required to process your payment. To process a payment, some of your billing details may be provided to the payment processor. Please see the Third-Party Data Processors section for further information.
+
+We do not collect or retain your credit card number, expiration date, or security code. These details are sent directly to the payment processor and do not pass through our servers or network.
+
+We retain data related to the purchase of a product as long as is legally required to meet record-keeping obligations under taxation law and related legislation. Beyond that, we may continue to retain purchase-related data while the product is still considered active by us. An active product is one that is available for purchase, or technical support is still available, or upgrades from the product are still offered.
+
+SUPPORT AND CORRESPONDENCE
+
+We provide the ability to get in contact with us for product support, feedback, and for other general correspondence. When contacting us we will collect the email address (for emails or forum posts), username (if contacting us via our website forum or Twitter), and any information you provide. This information is used to resolve your support inquiry.
+
+We may elect to delete support emails shortly after they are resolved if we believe they contain highly sensitive data, for example if an email contains the credentials needed to access a user's VPN server. Other support emails and correspondence are retained indefinitely, however you may request we remove support emails you have sent.
+
+PRODUCTS
+
+Our software products may need to contact our servers as part of their operation, such as when checking for an updated version, submitting a crash log, or checking the authenticity of a license.
+
+Update Checking
+
+By default, our products will periodically check to see if an updated version is available. To perform these checks our products will send, via an encrypted connection, the product name, currently installed version, the operating system name, and operating system version.
+
+Our products do not send any "system profiling" data (detailed information about your computer's system) as part of these checks. If desired, update checking can be disabled by using the appropriate setting in the product's preferences window.
+
+Further technical details regarding Update Checking can be found in our support section.
+
+We do not retain any data sent as part of an update check. However, data about the network request itself may be logged by the server (please see Server Logging below).
+
+Crash Logs
+
+If one of our products crash while using it, you'll be given the option to send along data about the crash to us. This is used to help us identify the cause of the crash, and where possible, fix it in a future update. Crash data is anonymised, you can view it prior to sending, and the report is sent via an encrypted connection.
+
+The submission of a crash report is optional, and you can choose not to send a crash report. You can optionally provide additional comments about the crash, as well as provide an email address. If providing an email address, it will only ever be used to contact you if we need to seek more information about the cause of the crash.
+
+If we are actively working to fix the cause of a crash, we may retain the crash report until the problem has been resolved. Otherwise crash reports are retained for up to 60 days. Data about the network request when sending the report may be logged by the server (please see Server Logging below).
+
+License Checks
+
+Our products may contact our servers to check that the license details used to register the product are valid. This may occur when entering your license details into the product, and occasionally repeated.
+
+A license check sends a secure irreversible hash of your license details over an encrypted connection, and the server will return either a valid or invalid status. Your actual license details are not sent. Like with update checks, our products do not collect or send any "system profiling" data as part of a license check.
+
+In addition, Viscosity will endeavour to perform these checks in a fashion that prevents monitoring for these checks by a malicious administrator or country level actor in an attempt to identify someone as a Viscosity user. Further technical details regarding License Checks can be found in our support section.
+
+We retain a log of license checks for 60 days. Data about the network request when sending the report may be logged by the server (please see Server Logging below).
+
+Core Operation
+
+Our products may need to send some private data as part of their core operation. For example, Viscosity may need to send your username and password to the VPN server you are connecting to as part of the authentication process, and subsequently send network traffic to the VPN server. Such data will be sent to the configured party, and not to us or any other third-party. It is your responsibility to be aware of the security and privacy implications for the VPN configurations you use (such as encryption options and network routes) and the VPN servers you connect to.
+
+Data Not Collected
+
+With the exception of the operations listed in the sections above, our products do not collect or send out any private data. For example, our products will not send any interactions (such as keyboard and mouse input), network traffic, usernames, passwords, settings, encryption keys, microphone or camera recordings, VPN connection names, VPN connection configuration data, or VPN traffic.
+
+EMAIL LISTS
+
+We maintain a low-volume email newsletter that you may subscribe to through our website. This newsletter is completely optional, and you will never be automatically subscribed.
+
+If you subscribe to our newsletter, we will retain your email address until you ask to be unsubscribed. Instructions on how to unsubscribe are included in all newsletter emails.
+
+SERVER LOGGING
+
+When you visit our website or interact with one of our servers via a network request, some basic data about the request is logged. This may include data such as your IP address, date and time, the URL or path of the resource or file accessed, browser/software information contained in HTTP/HTTPS request headers (such as your browser/software name and version and operating system information), and request status.
+
+We may also log additional user-entered data when using features of our website that allow for access to customer data, such as the Lost License and View Invoice features. This extra data is used to help protect against malicious users attempting to gain access, for example by using brute-force attacks.
+
+Server logs are typically only examined when diagnosing a server problem and to monitor for malicious access or use. Server logs may be kept for up to 90 days.
+
+THIRD-PARTY DATA PROCESSORS
+
+We use a small number of third-party service providers that may process your personal data. Who these are, and what they are used for, can be found below:
+
+* Credit card and Apple Pay processing for purchases and payments made using our website is provided by Braintree. Braintree are provided with your payment and billing details when making a payment. Privacy Policy.
+* PayPal is used to accept PayPal and Discover card payments for purchases and payments made using our website. PayPal are provided with your billing details when making a payment. Privacy Policy.
+* Coinbase Commerce is used to accept Bitcoin payments. Privacy Policy.
+* Fraud prevention is performed by MaxMind. They are provided with your IP address and email address. Privacy Policy.
+* Mailroute is used for spam email filtering. Emails you send to us will pass through their email filtering servers. Privacy Policy.
+* CDN and DDoS protection services are provided by Cloudflare. When using our website your requests may be proxied through their servers. Privacy Policy.
+
+BACKUPS
+
+We keep archived backups of company data so that a data loss event, such as a significant hardware failure, doesn't have an adverse business impact. Archived backups have strictly limited access, they are not readily accessible, and they are not used in "production" environments. Backups of data will only be used in the event of data loss, and they are not otherwise accessed.
+
+Archived backups may be kept for up to 12 months. Archived data may persist in backups for up to this length of time even if it has otherwise been removed from our production data.
+
+RIGHTS UNDER GDPR
+
+European Union citizens may exercise their rights under the GDPR (General Data Protection Regulation), such as access to their personal information, by contacting us via email with their request.
+
+QUESTIONS
+
+This privacy policy may be updated or edited in the future. The most up-to-date information will always be available from our legal information page on our website.
+
+If you have any questions about our privacy policy or collection of data, please don't hesitate to get in touch via email with our support staff.
+
+GDPR Erasure Requests
+
+As outlined in our Privacy Policy, we may collect certain personal data from you when using our website or products, such as when purchasing one of our products, making a support request, or subscribing to our newsletter. Under Article 17 of the GDPR individual citizens of the European Union (EU) have the right to have certain personal data erased, commonly known as the "right to be forgotten".
+
+This document outlines what personal data we can erase, how to submit an erasure request if you're an EU citizen and you'd like certain personal data permanently removed, and the timeframe you can expect for it to be processed.
+
+Special Note: We are not your VPN Provider. We do not run or operate the VPN server/s you connect to using Viscosity. We have no knowledge, data, or logs regarding your VPN connection/s or the use of your VPN connection/s.
+
+DATA WE CAN'T ERASE
+
+Before submitting an erasure request it's important to realise that not all personal data can be erased. The GDPR outlines a number of circumstances where the right to erasure does not apply.
+
+In particular, we can only erase personal data if we no longer have a legal obligation to retain it, and that the data is no longer necessary for the purpose it was collected or processed. We have outlined where this applies and why below:
+
+* We cannot erase any financial, billing, purchase, or other associated data for store purchases, refunds, or other transactions that occurred during the current Australian financial year or the previous five (5) financial years. This is a legal obligation to comply with the record keeping provisions of the Australian Tax Office (ATO).
+* We cannot erase purchase or billing data that is included on invoices for purchases less than ten (10) years old. All online store purchases have an invoice associated with them. Personal data on an invoice includes your name, address, and tax identifier (if applicable). This is a legal obligation to comply with the record keeping requirements of the EU's VAT Mini One Stop Shop (MOSS) scheme.
+* We cannot erase personal data which wasn't collected or stored by us (for example, if you have created an account with PayPal, we cannot erase the data they directly collected from you).
+* We cannot erase data which isn't considered personal data. This includes non-identifying data we have generated, such as product serial numbers.
+
+Please note that this is not an exhaustive list. When processing a request we may find there is a legal or other obligation that prevents erasure of certain data. You will be notified if this is the case.
+
+DATA WE CAN ERASE
+
+The following is a list of personal data we collect:
+
+* Newsletter subscriptions (includes email address and IP address used for signup)
+* Forum accounts (includes username, email address, posts, and IP addresses)
+* Crash logs (if submitted with a contact email address)
+* Email and written correspondence (subject to the conditions in the section above)
+* Support requests (subject to the conditions in the section above)
+* License and receipt emails (subject to the conditions in the section above)
+* A purchase or quote billing name, address, email address, and IP address (subject to the conditions in the section above)
+* Personal data from website logs
+
+You can request the erasure of any or all of the above information. We do not retain any other personal information.
+
+SUBMITTING AN ERASURE REQUEST
+
+To submit an Erasure Request under Article 17 of the GDPR please send an email titled "GDPR Erasure Request" to our support email address. This request must contain the following information to allow us to locate your personal data, confirm your identity, and identify the scope of the request:
+
+* Identify the information you wish erased, for example "all personal data associated with me", "only data related to my store purchase", "only support requests I have submitted", etc.
+* Include the email address/es associated with your data (e.g. the billing email address used when making a purchase, the email address used when signing up to our newsletter, the email address used when creating a forum account, etc.). We may send an email to these addresses to verify you as the owner. If these email addresses are no longer active we may request additional verification.
+* Include the transaction/receipt number and/or serial number of any purchases.
+
+Please note that the erasure of personal data relating to a product license (such as the license name or email address) will result in that license ceasing to function. Any software products using that license will be unregistered. This cannot be reverted.
+
+TIMEFRAME
+
+We will reply to all erasure requests within 30 days. If further information or correspondence is required to confirm your identity the erasure request will be processed within 30-days of confirmation. Otherwise all requests will be processed within 30 days of the initial request.
+
+When an erasure request is processed, all personal data it applies to is immediately and permanently deleted from our production systems. However please note that some of this data may temporarily persist in archived backup data for an additional period of time. For more information please refer to Backups section of our Privacy Policy.
+
+Refund Policy
+
+In certain instances you may be eligible for a refund if desired. We hope our products exceed your expectations, but in the rare instance they don't please read this document to ensure you understand our Refund Policy.
+
+As SparkLabs is based in NSW, Australia, we comply with the refund regulations of the NSW Fair Trading Act. Refund requests must be received in writing. Refunds will be given at the discretion of SparkLabs management.
+
+Our products can be downloaded and used at no cost for a trial-period of 30-days. The products are fully functional during this time and not restricted in any way. This provides the ability to completely test out the product to ensure it is fit for purpose and understand the job the product is designed to do. Hence:
+
+* Refunds will not be given if a customer changes their mind.
+* Refunds will not be given if the customer believed the product performed a different job than it actually does.
+* Refunds will not be given if we have incurred significant support costs.
+
+We do understand that mistakes can be made, and generally we will try to refund a purchase regardless of the reason. However we do ask that customers make use of the 30-day trial period, and we reserve the right to adhere to the refund rules specified above.
+
+If a refund is given, the license serial/key for the purchase will be disabled.

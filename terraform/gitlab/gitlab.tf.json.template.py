@@ -220,38 +220,6 @@ other_public_keys = {
     'prod': []
 }
 
-logs_path_prefix = 'logs/alb'
-gitlab_logs_path = f'{logs_path_prefix}/AWSLogs/{aws.account}/*'
-
-# An ELB account ID, which varies depending on region, is needed to specify a
-# principal in log bucket policy.
-#
-# https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
-#
-elb_region_account_id = {
-    'us-east-1': '127311923021',
-    'us-east-2': '033677994240',
-    'us-west-1': '027434742980',
-    'us-west-2': '797873946194',
-    'af-south-1': '098369216593',
-    'ca-central-1': '985666609251',
-    'eu-central-1': '054676820928',
-    'eu-west-1': '156460612806',
-    'eu-west-2': '652711504416',
-    'eu-south-1': '635631232127',
-    'eu-west-3': '009996457667',
-    'eu-north-1': '897822967062',
-    'ap-east-1': '754344448648',
-    'ap-northeast-1': '582318560864',
-    'ap-northeast-2': '600734575887',
-    'ap-northeast-3': '383597477331',
-    'ap-southeast-1': '114774131450',
-    'ap-southeast-2': '783225319266',
-    'ap-south-1': '718504428378',
-    'me-south-1': '076674570225',
-    'sa-east-1': '507241528517'
-}
-
 
 @lru_cache(maxsize=1)
 def iam() -> JSON:
@@ -328,8 +296,8 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.4.1-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.4.0'
+gitlab_image = 'gitlab/gitlab-ce:15.5.2-ce.0'
+runner_image = 'gitlab/gitlab-runner:v15.5.0'
 
 # There are ways to dynamically determine the latest Amazon Linux AMI but in the
 # spirit of reproducable builds we would rather pin the AMI and adopt updates at
@@ -404,6 +372,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'private_zone': False
             }
         },
+        'aws_s3_bucket': {
+            'logs': {
+                'bucket': aws.qualified_bucket_name(config.logs_term),
+            }
+        },
         'aws_iam_policy_document': {
             # This policy is really close to the policy size limit, if you get
             # LimitExceeded: Cannot exceed quota for PolicySize: 6144, you need
@@ -420,16 +393,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
                             for bucket_name in (
                                 [
+                                    'edu-ucsc-gi-platform-hca-dev-*',
                                     'edu-ucsc-gi-singlecell-azul-*',
-                                    '*.url.singlecell.gi.ucsc.edu',
-                                    'url.singlecell.gi.ucsc.edu',
                                 ] if 'singlecell' in config.domain_name else [
                                     'edu-ucsc-gi-platform-anvil-dev.*',
                                     'edu-ucsc-gi-platform-anvil-dev-*',
-                                    'url.*.anvil.gi.ucsc.edu',
-                                    'url.anvil.gi.ucsc.edu',
                                     'edu-ucsc-gi-platform-anvil-anvilbox',
                                 ] if 'anvil' in config.domain_name else [
+                                    'edu-ucsc-gi-platform-hca-prod-*',
                                     'edu-ucsc-gi-azul-*',
                                     '*.azul.data.humancellatlas.org',
                                 ]
@@ -909,59 +880,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 ]
             }
         },
-        'aws_s3_bucket': {
-            'gitlab': {
-                'bucket':
-                    f'edu-ucsc-gi-{aws.account_name}-gitlab.{aws.region_name}'
-                    if 'anvil' in config.domain_name else
-                    f'edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}'
-            }
-        },
-        'aws_s3_bucket_policy': {
-            'gitlab': {
-                'bucket': '${aws_s3_bucket.gitlab.id}',
-                # FIXME:  Expire old logs using lifecycle policy
-                #         https://github.com/DataBiosphere/azul/issues/3620
-                'policy': json.dumps({
-                    'Version': '2012-10-17',
-                    'Statement': [
-                        {
-                            'Effect': 'Allow',
-                            'Principal': {
-                                'AWS': f'arn:aws:iam::{elb_region_account_id[aws.region_name]}:root'
-                            },
-                            'Action': 's3:PutObject',
-                            'Resource': f'${{aws_s3_bucket.gitlab.arn}}/{gitlab_logs_path}'
-                        },
-                        *[
-                            {
-                                'Effect': 'Allow',
-                                'Principal': {
-                                    'Service': 'delivery.logs.amazonaws.com'
-                                },
-                                'Action': f's3:{action}',
-                                'Resource': resource,
-                                **(
-                                    {
-                                        'Condition': {
-                                            'StringEquals': {
-                                                's3:x-amz-acl': 'bucket-owner-full-control'
-                                            }
-                                        }
-                                    }
-                                    if action == 'PutObject' else
-                                    {}
-                                )
-                            }
-                            for action, resource in [
-                                ('PutObject', f'${{aws_s3_bucket.gitlab.arn}}/{gitlab_logs_path}'),
-                                ('GetBucketAcl', '${aws_s3_bucket.gitlab.arn}')
-                            ]
-                        ]
-                    ]
-                })
-            }
-        },
         'aws_cloudwatch_log_group': {
             'gitlab_vpn': {
                 'name': '/aws/vpn/azul-gitlab',
@@ -1022,11 +940,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'security_groups': [
                     '${aws_security_group.gitlab_alb.id}'
                 ],
-                'access_logs': {
-                    'bucket': '${aws_s3_bucket.gitlab.id}',
-                    'prefix': logs_path_prefix,
-                    'enabled': True
-                }
+                'access_logs': [
+                    {
+                        'bucket': '${data.aws_s3_bucket.logs.id}',
+                        'prefix': config.alb_access_log_path_prefix('gitlab'),
+                        'enabled': True
+                    }
+                ]
             }
         },
         'aws_lb_listener': {

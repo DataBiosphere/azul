@@ -22,6 +22,7 @@ renamed = {
     'aws_s3_bucket_policy.cloudtrail_shared': 'aws_s3_bucket_policy.shared_cloudtrail',
     'aws_s3_bucket.gitlab_logs': 'aws_s3_bucket.gitlab',
     'aws_s3_bucket_policy.gitlab_logs': 'aws_s3_bucket_policy.gitlab',
+    'aws_s3_bucket_policy.gitlab': 'aws_s3_bucket_policy.gitlab_alb',
 }
 
 

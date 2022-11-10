@@ -31,7 +31,7 @@ Connected issue: #4014
 - [ ] Verified background migrations for `prod.gitlab` are complete
 - [ ] Actually approved the PR
 - [ ] Labeled connected issue as `no demo`
-- [ ] Labeled connected PR as `no sandbox`
+- [ ] Labeled PR as `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] Assigned PR to current operator

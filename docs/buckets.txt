@@ -1,0 +1,65 @@
+TF component
+	TF resource/datasource
+		deployment
+			bucket
+
+{dev, prod, anvildev, anvilprod}.shared
+	shared_cloudtrail
+		dev
+		prod
+		anvildev
+		anvilprod
+			# Copy contents from old bucket. Delete the old bucket.
+			edu-ucsc-gi-{aws.account_name}-cloudtrail.{aws.region_name}
+	versioned
+		dev
+			# These are too hard to change. We'll live with the inconsistency.
+			edu-ucsc-gi-singlecell-azul-config-dev.{aws.region_name}
+		prod
+			# These are too hard to change. We'll live with the inconsistency.
+			edu-ucsc-gi-azul-dcp2-prod-config.{aws.region_name}
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}.{aws.region_name}
+	logs
+		dev
+		prod
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}
+	aws_config
+		dev
+		prod
+		anvildev
+		anvilprod
+			edu-ucsc-gi-{aws.account_name}-awsconfig.{aws.region_name}
+
+{dev, prod, anvildev, anvilprod}.gitlab
+	# This now a datasource referring to the `logs` resource in .shared
+	logs
+		dev
+		prod
+		anvildev
+		anvilprod
+			# Note the path prefix.
+			# Copy content from old bucket. Delete the old bucket.
+			edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/alb/access/{config.deployment_stage}/gitlab
+
+{dev, prod, anvildev, anvilprod, sandbox, anvilbox, <personal>}
+	# This now a datasource referring to the `logs` resource in .shared
+	logs
+		# Note the path prefix. The fact that we didn't have ALB access logs on
+		# private APIs was an oversight.
+		edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/azul/{config.deployment_stage}/alb/access
+		# Note the path prefix.
+		edu-ucsc-gi-{aws.account_name}-logs.{aws.region_name}/s3/access/{config.deployment_stage}/storage
+	storage
+		dev
+		sandbox
+		prod
+		anvildev
+		anvilbox
+		<personal>
+		anvilprod
+			# No need to copy content from old bucket. Delete old bucket.
+			edu-ucsc-gi-{aws.account_name}-{config.deployment_stage}

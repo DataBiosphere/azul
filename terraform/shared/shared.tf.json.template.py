@@ -28,7 +28,13 @@ emit_tf({
                 }
             },
             'aws_config': {
-                'bucket': aws.qualified_bucket_name('awsconfig'),
+                'bucket': aws.qualified_bucket_name(config.aws_config_term),
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
+            },
+            'logs': {
+                'bucket': aws.qualified_bucket_name(config.logs_term),
                 'lifecycle': {
                     'prevent_destroy': True
                 }
@@ -102,6 +108,23 @@ emit_tf({
                         }
                     ]
                 })
+            },
+            'logs': {
+                'bucket': '${aws_s3_bucket.logs.id}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        *aws.elb_access_log_bucket_policy(
+                            bucket_arn='${aws_s3_bucket.logs.arn}',
+                            path_prefix=config.alb_access_log_path_prefix('*', deployment='*')
+                        ),
+                        *aws.s3_access_log_bucket_policy(
+                            source_bucket_arn='arn:aws:s3:::*',
+                            target_bucket_arn='${aws_s3_bucket.logs.arn}',
+                            path_prefix=config.s3_access_log_path_prefix('*', deployment='*')
+                        )
+                    ]
+                })
             }
         },
         'aws_s3_bucket_lifecycle_configuration': {
@@ -118,6 +141,18 @@ emit_tf({
                     },
                     'noncurrent_version_expiration': {
                         'noncurrent_days': 30
+                    }
+                }
+            },
+            'logs': {
+                'bucket': '${aws_s3_bucket.logs.id}',
+                'rule': {
+                    'id': 'expire',
+                    'status': 'Enabled',
+                    'filter': {
+                    },
+                    'expiration': {
+                        'days': 90
                     }
                 }
             }
@@ -225,7 +260,7 @@ emit_tf({
         },
         'aws_config_configuration_recorder': {
             'shared': {
-                'name': config.qualified_resource_name('awsconfig'),
+                'name': config.qualified_resource_name(config.aws_config_term),
                 'role_arn': '${aws_iam_role.aws_config.arn}',
                 'recording_group': {
                     'all_supported': True,
@@ -250,7 +285,7 @@ emit_tf({
         },
         'aws_config_delivery_channel': {
             'shared': {
-                'name': config.qualified_resource_name('awsconfig'),
+                'name': config.qualified_resource_name(config.aws_config_term),
                 's3_bucket_name': '${aws_s3_bucket.aws_config.bucket}',
                 'depends_on': [
                     'aws_config_configuration_recorder.shared'

@@ -390,22 +390,6 @@ def env() -> Mapping[str, Optional[str]]:
         # content requested by client.
         'AZUL_S3_BUCKET': None,
 
-        # Name of the Route 53 zone to be used for shortened URLs.
-        #
-        # This hosted zone will have to be created manually prior to running
-        # `make deploy` in any deployment. Personal deployments typically share
-        # a zone with the `dev` deployment.
-        #
-        # If this variable is empty, no Route 53 record will be created and it
-        # is assumed that record and containing zone have been created manually.
-        #
-        'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': None,
-
-        # Full domain name to be used in the URL redirection URLs
-        # This is also used as the name of the S3 bucket used to store URL
-        # redirection objects
-        'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
-
         # Collect and monitor important health metrics of the deployment (1 yes, 0 no).
         # Typically only enabled on main deployments.
         'AZUL_ENABLE_MONITORING': '0',

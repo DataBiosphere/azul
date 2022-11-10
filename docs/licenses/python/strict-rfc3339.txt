@@ -1,0 +1,4 @@
+https://pypi.org/project/strict-rfc3339/
+
+License: GNU General Public License v3 (GPLv3) (GNU General Public License Version 3)
+
