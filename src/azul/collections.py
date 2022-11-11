@@ -3,7 +3,9 @@ from collections import (
 )
 from collections.abc import (
     Iterable,
+    Iterator,
     Mapping,
+    MutableSet,
 )
 from functools import (
     partial,
@@ -93,7 +95,7 @@ def none_safe_key(none_last: bool = False) -> Callable[[Any], Any]:
     return inner_func
 
 
-def none_safe_tuple_key(none_last: bool = False) -> Callable[[tuple[Any]], Any]:
+def none_safe_tuple_key(none_last: bool = False) -> Callable[[tuple[Any, ...]], Any]:
     """
     Returns a sort key that handles tuples containing None values.
 
@@ -271,3 +273,94 @@ class NestedDict(defaultdict):
             k: v.to_dict() if isinstance(v, NestedDict) else v
             for k, v in self.items()
         }
+
+
+class OrderedSet(MutableSet[K]):
+    """
+    A mutable set that maintains insertion order. Unlike similar implementations
+    of the same name that are floating around on the internet, it is not a
+    sequence.
+
+    >>> s = OrderedSet(['b', 'a', 'c', 'b'])
+    >>> s
+    OrderedSet(['b', 'a', 'c'])
+
+    >>> s.discard('a')
+    >>> s
+    OrderedSet(['b', 'c'])
+
+    >>> s.add('a')
+    >>> s
+    OrderedSet(['b', 'c', 'a'])
+    """
+
+    def __init__(self, members: Iterable[K] = (), /) -> None:
+        self.inner: dict[K, None] = dict.fromkeys(members)
+
+    def __repr__(self) -> str:
+        contents = repr(list(self)) if self else ''
+        return f'{type(self).__name__}({contents})'
+
+    def __iter__(self) -> Iterator[K]:
+        return iter(self.inner)
+
+    def __len__(self) -> int:
+        return len(self.inner)
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        >>> OrderedSet() == set()
+        True
+
+        >>> s1 = OrderedSet(['3', '1', '3'])
+        >>> s2 = {'1', '3', '1'}
+        >>> (s1 and s2) == (s2 and s1)
+        True
+
+        >>> (s2 or s1) == (s1 or s2)
+        True
+
+        >>> (s1 == s2) == (s2 == s1)
+        True
+
+        >>> s1 == s2 and s2 == s1
+        True
+        """
+        return self.inner.keys() == other
+
+    def __contains__(self, member: K) -> bool:
+        """
+        >>> 'a' in OrderedSet(['a', 'b'])
+        True
+        """
+        return member in self.inner
+
+    def discard(self, member: K) -> None:
+        """
+        >>> s = OrderedSet(['1', 'a', '2'])
+        >>> s.discard('a')
+        >>> s
+        OrderedSet(['1', '2'])
+
+        >>> s.discard('a')
+        """
+        self.inner.pop(member, None)
+
+    def add(self, member: K) -> None:
+        """
+        >>> s = OrderedSet(['a', 'b'])
+        >>> s.add('a')
+        >>> s.add('c')
+        >>> s
+        OrderedSet(['a', 'b', 'c'])
+        """
+        self.inner[member] = None
+
+    def update(self, members: Iterable[K] = (), /) -> None:
+        """
+        >>> s = OrderedSet(['a', 'b'])
+        >>> s.update(['1', 'a', 'b', '2'])
+        >>> s
+        OrderedSet(['a', 'b', '1', '2'])
+        """
+        self.inner |= dict.fromkeys(members)
