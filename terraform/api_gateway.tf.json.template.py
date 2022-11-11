@@ -92,30 +92,30 @@ emit_tf({
                 } for zone in set(zones_by_domain.values())
             ]
         ),
+        {
+            "aws_vpc": {
+                "gitlab": {
+                    "filter": {
+                        "name": "tag:Name",
+                        "values": ["azul-gitlab"]
+                    }
+                }
+            },
+        },
+        {
+            "aws_subnet": {
+                f"gitlab_{vpc.subnet_name(public)}_{zone}": {
+                    "filter": {
+                        "name": "tag:Name",
+                        "values": [f"azul-gitlab_{vpc.subnet_name(public)}_{zone}"]
+                    }
+                }
+                for public in (False, True)
+                for zone in range(vpc.num_zones)
+            }
+        },
         *(
             [
-                {
-                    "aws_vpc": {
-                        "gitlab": {
-                            "filter": {
-                                "name": "tag:Name",
-                                "values": ["azul-gitlab"]
-                            }
-                        }
-                    },
-                },
-                {
-                    "aws_subnet": {
-                        f"gitlab_{vpc.subnet_name(public)}_{zone}": {
-                            "filter": {
-                                "name": "tag:Name",
-                                "values": [f"azul-gitlab_{vpc.subnet_name(public)}_{zone}"]
-                            }
-                        }
-                        for public in (False, True)
-                        for zone in range(vpc.num_zones)
-                    }
-                },
                 {
                     # To allow the network interface IDs to be iterated here, the
                     # `apply` target in `$project_root/terraform/Makefile` creates
@@ -338,6 +338,67 @@ emit_tf({
                         "web_acl_arn": "${aws_wafv2_web_acl.api_gateway.arn}"
                     }
                 },
+                "aws_security_group": {
+                    lambda_.name: {
+                        "name": config.qualified_resource_name(lambda_.name),
+                        "vpc_id": "${data.aws_vpc.gitlab.id}",
+                        "ingress": [
+                            vpc.security_rule(description="Any traffic from the VPC",
+                                              cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
+                                              protocol=-1,
+                                              from_port=0,
+                                              to_port=0)
+                        ],
+                        "egress": [
+                            vpc.security_rule(description="Any traffic",
+                                              cidr_blocks=["0.0.0.0/0"],
+                                              protocol=-1,
+                                              from_port=0,
+                                              to_port=0)
+                        ],
+                    },
+                    **(
+                        {
+                            f"{lambda_.name}_alb": {
+                                "name": config.qualified_resource_name(lambda_.name, suffix="_alb"),
+                                "vpc_id": "${data.aws_vpc.gitlab.id}",
+                                "ingress": [
+                                    vpc.security_rule(description="Any traffic from the VPC",
+                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
+                                                      protocol=-1,
+                                                      from_port=0,
+                                                      to_port=0)
+                                ],
+                                "egress": [
+                                    vpc.security_rule(description="Any traffic to the VPC",
+                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
+                                                      protocol=-1,
+                                                      from_port=0,
+                                                      to_port=0)
+                                ],
+                            },
+                            f"{lambda_.name}_vpce": {
+                                "name": config.qualified_resource_name(lambda_.name, suffix="_vpce"),
+                                "vpc_id": "${data.aws_vpc.gitlab.id}",
+                                "ingress": [
+                                    vpc.security_rule(description="Any traffic from the VPC",
+                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
+                                                      protocol=-1,
+                                                      from_port=0,
+                                                      to_port=0)
+                                ],
+                                "egress": [
+                                    vpc.security_rule(description="Any traffic to the VPC",
+                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
+                                                      protocol=-1,
+                                                      from_port=0,
+                                                      to_port=0)
+                                ],
+                            }
+                        } if config.private_api else {
+                        }
+                    )
+                },
                 **(
                     {
                         "aws_lb": {
@@ -346,7 +407,8 @@ emit_tf({
                                 "load_balancer_type": "application",
                                 "internal": "true",
                                 "subnets": [
-                                    "${data.aws_subnet.gitlab_%s_%s.id}" % (vpc.subnet_name(public=True), zone)
+                                    "${data.aws_subnet.gitlab_%s_%s.id}" % (
+                                        vpc.subnet_name(public=True), zone)
                                     for zone in range(vpc.num_zones)
                                 ],
                                 "security_groups": [
@@ -413,62 +475,6 @@ emit_tf({
                         "aws_vpc_endpoint_policy": {
                             lambda_.name: {
                                 "vpc_endpoint_id": "${aws_vpc_endpoint.%s.id}" % lambda_.name,
-                            }
-                        },
-                        "aws_security_group": {
-                            lambda_.name: {
-                                "name": config.qualified_resource_name(lambda_.name),
-                                "vpc_id": "${data.aws_vpc.gitlab.id}",
-                                "ingress": [
-                                    vpc.security_rule(description="Any traffic from the VPC",
-                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
-                                                      protocol=-1,
-                                                      from_port=0,
-                                                      to_port=0)
-                                ],
-                                "egress": [
-                                    vpc.security_rule(description="Any traffic",
-                                                      cidr_blocks=["0.0.0.0/0"],
-                                                      protocol=-1,
-                                                      from_port=0,
-                                                      to_port=0)
-                                ],
-                            },
-                            f"{lambda_.name}_alb": {
-                                "name": config.qualified_resource_name(lambda_.name, suffix="_alb"),
-                                "vpc_id": "${data.aws_vpc.gitlab.id}",
-                                "ingress": [
-                                    vpc.security_rule(description="Any traffic from the VPC",
-                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
-                                                      protocol=-1,
-                                                      from_port=0,
-                                                      to_port=0)
-                                ],
-                                "egress": [
-                                    vpc.security_rule(description="Any traffic to the VPC",
-                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
-                                                      protocol=-1,
-                                                      from_port=0,
-                                                      to_port=0)
-                                ],
-                            },
-                            f"{lambda_.name}_vpce": {
-                                "name": config.qualified_resource_name(lambda_.name, suffix="_vpce"),
-                                "vpc_id": "${data.aws_vpc.gitlab.id}",
-                                "ingress": [
-                                    vpc.security_rule(description="Any traffic from the VPC",
-                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
-                                                      protocol=-1,
-                                                      from_port=0,
-                                                      to_port=0)
-                                ],
-                                "egress": [
-                                    vpc.security_rule(description="Any traffic to the VPC",
-                                                      cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
-                                                      protocol=-1,
-                                                      from_port=0,
-                                                      to_port=0)
-                                ],
                             }
                         }
                     }
