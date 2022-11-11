@@ -5,6 +5,7 @@ from azul import (
 )
 from azul.terraform import (
     emit_tf,
+    vpc,
 )
 
 logs = {
@@ -74,7 +75,9 @@ emit_tf(None if config.share_es_domain else {
                     },
                     "cluster_config": {
                         "instance_count": config.es_instance_count,
-                        "instance_type": config.es_instance_type
+                        "instance_type": config.es_instance_type,
+                        # Needed for using multiple subnets (1 per zone) in the VPC
+                        "zone_awareness_enabled": True
                     },
                     "domain_name": domain,
                     "ebs_options": {
@@ -83,6 +86,13 @@ emit_tf(None if config.share_es_domain else {
                         "volume_type": "gp2"
                     } if config.es_volume_size else {
                         "ebs_enabled": "false",
+                    },
+                    "vpc_options": {
+                        "subnet_ids": [
+                            f"${{data.aws_subnet.gitlab_private_{zone}.id}}"
+                            for zone in range(vpc.num_zones)
+                        ],
+                        "security_group_ids": ["${aws_security_group.elasticsearch.id}"]
                     },
                     "elasticsearch_version": "7.10",
                     "log_publishing_options": [
@@ -120,6 +130,18 @@ emit_tf(None if config.share_es_domain else {
                             "snapshot_options"
                         ]
                     }
+                }
+            },
+            "aws_security_group": {
+                "elasticsearch": {
+                    "name": config.qualified_resource_name("elasticsearch"),
+                    "vpc_id": "${data.aws_vpc.gitlab.id}",
+                    "ingress": [
+                        vpc.security_rule(cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
+                                          protocol="tcp",
+                                          from_port=443,
+                                          to_port=443)
+                    ],
                 }
             }
         } if domain else {}

@@ -195,7 +195,7 @@ class AWS:
         if config.es_endpoint:
             return config.es_endpoint
         else:
-            return self._es_domain_status['Endpoint'], 443
+            return self._es_domain_status['Endpoints']['vpc'], 443
 
     @property
     def es_instance_count(self) -> Optional[int]:
