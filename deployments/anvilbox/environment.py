@@ -164,8 +164,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_AWS_ACCOUNT_ID': '289950828509',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        # Set `GOOGLE_APPLICATION_CREDENTIALS` in `environment.local.py`
-        #
         'GOOGLE_PROJECT': 'platform-anvil-dev',
 
         'AZUL_DEPLOYMENT_INCARNATION': '2',

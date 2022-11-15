@@ -10,6 +10,30 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4224 Eliminate personal service accounts
+=========================================
+
+1) Delete your personal Google service account. Go to the Google Cloud console,
+   navigate to ``IAM & Admin`` -> ``Service Accounts`` and select your personal
+   service account (this is the one where the part before the ``@`` symbol
+   exactly matches your email address; it does not include the string "azul").
+   Click ``DISABLE SERVICE ACCOUNT`` -> ``DISABLE``. Then click
+   ``DELETE SERVICE ACCOUNT`` -> ``DELETE``.
+
+2) Delete the file containing the private key of the deleted service
+   account from your local machine. By default, such files are stored in
+   ``~/.gcp/``.
+
+3) Remove the ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from
+   ``environment.local.py`` for all Azul deployments where such a file exists
+   (including non-personal deployments).
+
+4) For clarity's sake, remove comments referencing the
+   ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from your
+   ``environment.py`` file(s) for all personal deployments. As always, use the
+   sandbox deployment's ``environment.py`` as a model when upgrading personal
+   deployments.
+
 
 #4690 Fix: EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)
 ================================================================================

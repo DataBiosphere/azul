@@ -31,10 +31,4 @@ def env() -> Mapping[str, Optional[str]]:
         # `~/.aws/credentials`. Specify the name of the profile here.
         #
         'AWS_PROFILE': 'yourprofile',
-
-        # Create a personal Google service account and obtain a private key for
-        # it (as described in the README). Then modify this variable such that
-        # it points to the file containing that private key.
-        #
-        'GOOGLE_APPLICATION_CREDENTIALS': '/path/to/your/private-key.json'
     }
