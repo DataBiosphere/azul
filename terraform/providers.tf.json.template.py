@@ -6,29 +6,29 @@ from azul.terraform import (
 )
 
 emit_tf({
-    "provider": [
+    'provider': [
         {
-            "external": {
+            'external': {
                 'version': '2.2.0'
             }
         },
         {
-            "template": {
+            'template': {
                 'version': '2.2.0'
             }
         },
         {
-            "null": {
+            'null': {
                 'version': '2.1.2'
             }
         },
         {
-            "google": {
+            'google': {
                 'version': '3.90.1'
             }
         },
         *({
-            "aws": {
+            'aws': {
                 'version': '4.30.0',
                 **(
                     {
