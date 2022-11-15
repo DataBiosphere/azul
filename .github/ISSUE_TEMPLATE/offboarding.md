@@ -49,17 +49,25 @@ ticket has been completed. At that time, put the ticket back to triage.
 
 - [ ] Removed the `system administrator` role from the offboarded employee/contractor's accounts <sub>or the offboarded employee/contractor did not perform the `system administrator` role</sub>
 - [ ] Assigned the `system administrator` role to the replacement nominated by the project manager <sub>or the offboarded employee/contractor was not the sole `system administrator`</sub> 
-- [ ] Removed the offboarded employee/contractor's GitHub account from the `Azul Developers` team in the DataBiosphere organization on GitHub
-- [ ] Removed the offboarded employee/contractor's Google workspace account from the Google project used for the deployment
-- [ ] Deleted the Google service account (name derived from the Google workspace account name) in the Google project used for the deployment
+- [ ] Removed the offboarded employee/contractor's GitHub account from the `Azul Admins` team in the DataBiosphere organization on GitHub
+- [ ] Removed the offboarded employee/contractor's Google workspace account from all Google projects used in any deployment zones
+- [ ] Deleted the Google service account (name derived from the Google workspace account name) in all Google projects used in any deployment zones
 - [ ] Removed the offboarded employee/contractor's Google workspace account and the Google service account deleted above from the `azul-dev` group in Terra
 - [ ] Removed the offboarded employee/contractor from the `HumanCellAtlas` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
 - [ ] Removed the offboarded employee/contractor from the `DataBiosphere` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
 - [ ] Removed the offboarded employee/contractor from the `ucsc-cgp` GitHub organization <sub>or the offboarded employee/contractor is not leaving UCSC</sub>
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-dev-viewer` group in the `gi-gateway` AWS account
 - [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-dev-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-dev-administrator` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-prod-viewer` group in the `gi-gateway` AWS account
 - [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-prod-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-hca-prod-administrator` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-dev-viewer` group in the `gi-gateway` AWS account
 - [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-dev-developer` group in the `gi-gateway` AWS account
-- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-dev-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-dev-administrator` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-prod-viewer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-prod-developer` group in the `gi-gateway` AWS account
+- [ ] Removed the offboarded employee/contractor's AWS IAM user account from the `platform-anvil-prod-administrator` group in the `gi-gateway` AWS account
 - [ ] Assigned ticket to the system administrator
 
 
