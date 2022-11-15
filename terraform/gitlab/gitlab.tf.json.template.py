@@ -1201,6 +1201,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'iam_instance_profile': '${aws_iam_instance_profile.gitlab.name}',
                 'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
+                'metadata_options': {
+                    'http_tokens': 'required',
+                    # This value was empirically determined. With a lower value
+                    # builds in GitLab failed with NoCredentialsError.
+                    'http_put_response_hop_limit': 3
+                },
                 'root_block_device': {
                     'volume_size': 20
                 },
