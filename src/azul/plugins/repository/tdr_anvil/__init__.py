@@ -228,6 +228,11 @@ class Plugin(TDRPlugin):
                  bundle_uuid, bundle_entity.key, entity_type)
         return bundle_entity
 
+    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
+        if not table_name.startswith('INFORMATION_SCHEMA'):
+            table_name = 'anvil_' + table_name
+        return super()._full_table_name(source, table_name)
+
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
         result = {entity_type: set() for entity_type in self.indexed_columns_by_entity_type}
         for e in entities:
