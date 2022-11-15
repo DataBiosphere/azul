@@ -61,12 +61,16 @@ tf_config = {
 
 tf_config['resource']['aws_s3_bucket_public_access_block'] = {
     bucket: {
+        **(
+            {'provider': srs['provider']}
+            if 'provider' in srs else {}
+        ),
         'bucket': '${aws_s3_bucket.%s.id}' % bucket,
         'block_public_acls': True,
         'block_public_policy': True,
         'ignore_public_acls': True,
         'restrict_public_buckets': True
-    } for bucket in tf_config['resource']['aws_s3_bucket']
+    } for bucket, srs in tf_config['resource']['aws_s3_bucket'].items()
 }
 
 emit_tf(tf_config)
