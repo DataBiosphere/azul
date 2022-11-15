@@ -92,15 +92,12 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
                      authentication: Optional[Authentication]
                      ) -> list[CannedSourceRef]:
         return [
-            CannedSourceRef(id=self.lookup_source_id(spec), spec=spec)
+            CannedSourceRef(id=self._lookup_source_id(spec), spec=spec)
             for spec in self._sources
         ]
 
-    def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
+    def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return spec.name
-
-    def verify_source(self, ref: CannedSourceRef) -> None:
-        pass
 
     @lru_cache
     def staging_area(self, source_spec: SimpleSourceSpec) -> StagingArea:
