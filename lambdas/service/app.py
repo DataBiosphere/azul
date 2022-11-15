@@ -434,7 +434,11 @@ def swagger_ui():
 
 @app.route('/static/{file}', cors=True)
 def static_resource(file):
-    swagger_resources = {'swagger-ui.css', 'swagger-ui-bundle.js', 'swagger-ui-standalone-preset.js'}
+    swagger_resources = {
+        'swagger-ui.css',
+        'swagger-ui-bundle.js',
+        'swagger-ui-standalone-preset.js'
+    }
     if file not in swagger_resources:
         raise NotFoundError(file)
     else:
