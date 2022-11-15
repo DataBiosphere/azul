@@ -21,7 +21,7 @@ from azul.aws_service_model import (
     ServiceActionType,
 )
 from azul.chalice import (
-    private_api_policy,
+    vpc_lambda_iam_policy,
 )
 from azul.collections import (
     dict_merge,
@@ -465,7 +465,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    UUID='*',
                                    LayerVersion='*'),
 
-                    *private_api_policy(for_tf=True),
+                    *vpc_lambda_iam_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level
                     # permissions

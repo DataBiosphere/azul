@@ -11,6 +11,23 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4688 Fix: Elasticsearch domains should be in a VPC
+===================================================
+
+All elasticsearch domains must be manually destroyed. The Operator will handle
+the shared domains; other developers only need to perform these steps for
+any deployments of theirs that do not share an ES domain with one of the main
+deployments.
+
+The deletion of the ES domain will cascade to many other resources that depend
+on it. Once the deletion is complete, it is necessary to re-deploy the missing
+resources and perform a reindex to populate the newly created ES domain. ::
+
+    (cd terraform/ && terraform destroy -target aws_elasticsearch_domain.index)
+    make deploy
+    make reindex
+
+
 #4690 Fix: EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)
 ================================================================================
 
