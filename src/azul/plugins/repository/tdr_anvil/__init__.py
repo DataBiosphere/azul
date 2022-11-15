@@ -228,6 +228,9 @@ class Plugin(TDRPlugin):
                  bundle_uuid, bundle_entity.key, entity_type)
         return bundle_entity
 
+    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
+        return super()._full_table_name(source, 'anvil_' + table_name)
+
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
         result = defaultdict(set)
         for e in entities:
