@@ -4,6 +4,7 @@ export project_root
 # A little helper to make re-sourcing this script easier.
 #
 _refresh () {
+    _deauth
     source "${project_root}/environment"
     _preauth
 }
@@ -70,18 +71,20 @@ _preauth () {
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
 		EOF
 	)"
-	>&2 echo "Temporary session credentials are in effect. Use '_deauth' " \
-	"or run 'source environment' again to revert the effect of this command."
+	>&2 echo "Temporary session credentials are in effect. Use '_deauth'" \
+	"to revert the effect of this command."
 }
 
 _deauth () {
   unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
   if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
+    echo "Google Cloud application default credentials are system-global." \
+    "You should revoke the existing credentials unless you are *certain* that" \
+    "you are already logged in using the appropriate account and project." \
+    "If in doubt, enter 'y'."
     gcloud auth application-default revoke
   fi
 }
-
-_deauth
 
 _revenv () {
   deactivate && make virtualenv && source .venv/bin/activate && make envhook requirements
