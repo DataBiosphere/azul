@@ -11,6 +11,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4334 Upgrade Terraform CLI to 1.3.4
+====================================
+
+Before upgrading personal deployments, install Terraform 1.3.4 as `described
+<./README.md#21-development-prerequisites>`_ in our README. Then run ``make
+deploy``.
+
+
 #4690 Fix: EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)
 ================================================================================
 
