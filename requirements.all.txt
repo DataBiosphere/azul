@@ -110,7 +110,7 @@ responses==0.22.0
 roundrobin==0.0.4
 rsa==4.7.2
 s3transfer==0.6.0
-setuptools==65.4.1
+setuptools==65.5.1
 setuptools-scm==5.0.2
 six==1.16.0
 smmap==5.0.0
