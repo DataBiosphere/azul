@@ -14,11 +14,17 @@ config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py)) lambdas
 
 .PHONY: init
 init: providers config
-	terraform init
+	terraform init -reconfigure
 
 .PHONY: rename_resources
 rename_resources: init
 	python $(project_root)/scripts/rename_resources.py
+	# FIXME: Remove after all deployments have been upgraded to 1.3.x
+	#        https://github.com/DataBiosphere/azul/issues/4744
+	terraform state replace-provider -auto-approve registry.terraform.io/-/aws registry.terraform.io/hashicorp/aws
+	terraform state replace-provider -auto-approve registry.terraform.io/-/external registry.terraform.io/hashicorp/external
+	terraform state replace-provider -auto-approve registry.terraform.io/-/google registry.terraform.io/hashicorp/google
+	terraform state replace-provider -auto-approve registry.terraform.io/-/null registry.terraform.io/hashicorp/null
 
 .PHONY: validate
 validate: init
