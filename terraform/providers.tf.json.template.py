@@ -5,7 +5,7 @@ from azul.terraform import (
     emit_tf,
 )
 
-emit_tf({
+emit_tf(tag_resources=False, config={
     'provider': [
         {
             'external': {

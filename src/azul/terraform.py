@@ -207,11 +207,12 @@ def populate_tags(tf_config: JSON) -> JSON:
         }
 
 
-def emit_tf(tf_config: Optional[JSON]):
-    if tf_config is None:
-        return emit(tf_config)
-    else:
-        return emit(_sanitize_tf(populate_tags(tf_config)))
+def emit_tf(config: Optional[JSON], *, tag_resources: bool = True) -> None:
+    if config is not None:
+        if tag_resources:
+            config = populate_tags(config)
+        config = _sanitize_tf(config)
+    emit(config)
 
 
 def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
