@@ -124,7 +124,7 @@ reindex_no_slots: check_python check_branch
 .PHONY: clean
 clean: check_env
 	rm -rf .cache .config
-	for d in lambdas terraform terraform/gitlab; do $(MAKE) -C $$d clean; done
+	for d in lambdas terraform terraform/{gitlab,shared}; do $(MAKE) -C $$d clean; done
 
 absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/scripts \
