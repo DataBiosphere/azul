@@ -9,9 +9,10 @@ from azul.deployment import (
 from azul.terraform import (
     emit_tf,
     provider_fragment,
+    provision_s3_bucket_public_access_block,
 )
 
-tf_config = {
+emit_tf(provision_s3_bucket_public_access_block({
     'resource': {
         'aws_s3_bucket': {
             'shared_cloudtrail': {
@@ -334,16 +335,4 @@ tf_config = {
             }
         }
     }
-}
-
-tf_config['resource']['aws_s3_bucket_public_access_block'] = {
-    bucket: {
-        'bucket': '${aws_s3_bucket.%s.id}' % bucket,
-        'block_public_acls': True,
-        'block_public_policy': True,
-        'ignore_public_acls': True,
-        'restrict_public_buckets': True
-    } for bucket in tf_config['resource']['aws_s3_bucket']
-}
-
-emit_tf(tf_config)
+}))

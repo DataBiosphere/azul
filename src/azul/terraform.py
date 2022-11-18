@@ -290,6 +290,27 @@ def provider_fragment(region: str) -> JSON:
         return {'provider': f'aws.{region}'}
 
 
+def provision_s3_bucket_public_access_block(tf_config: dict) -> JSON:
+    """
+    Return a public access block for each of buckets defined in the Terraform
+    configuration JSON.
+    """
+    tf_config['resource']['aws_s3_bucket_public_access_block'] = {
+        resource_name: {
+            **(
+                {'provider': resource['provider']}
+                if 'provider' in resource else {}
+            ),
+            'bucket': '${aws_s3_bucket.%s.id}' % resource_name,
+            'block_public_acls': True,
+            'block_public_policy': True,
+            'ignore_public_acls': True,
+            'restrict_public_buckets': True
+        } for resource_name, resource in tf_config['resource']['aws_s3_bucket'].items()
+    }
+    return tf_config
+
+
 U = TypeVar('U', bound=AnyJSON)
 
 
