@@ -31,6 +31,7 @@ from azul.types import (
     AnyJSON,
     JSON,
     JSONs,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ class Terraform:
     def taggable_resource_types(self) -> Sequence[str]:
         schema = self.schema.document
         version = schema['format_version']
-        require(version == '0.1', 'Unexpected format version', version)
+        require(version == '1.0', 'Unexpected format version', version)
         resources = chain.from_iterable(
             provider['resource_schemas'].items()
             for provider in schema['provider_schemas'].values()
@@ -105,14 +106,14 @@ class Terraform:
             pass
 
     @cached_property
-    def versions(self) -> Sequence[str]:
-        # `terraform -version` prints a warning if you are not running the latest
-        # release of Terraform; we discard it, otherwise, we would need to update
-        # the tracked schema every time a new version of Terraform is released
-        output = self.run('-version')
+    def versions(self) -> MutableJSON:
+        output = self.run('version', '-json')
         log.info('Terraform output:\n%s', output)
-        versions = output.split('\n\n')[0]
-        return sorted(versions.splitlines())
+        versions = json.loads(output)
+        return {
+            'terraform': versions['terraform_version'],
+            'providers': versions['provider_selections']
+        }
 
 
 terraform = Terraform()
