@@ -60,7 +60,8 @@ class Terraform:
 
     def taggable_resource_types(self) -> Sequence[str]:
         schema = self.schema.document
-        require(schema['format_version'] == '0.1')
+        version = schema['format_version']
+        require(version == '0.1', 'Unexpected format version', version)
         resources = chain.from_iterable(
             provider['resource_schemas'].items()
             for provider in schema['provider_schemas'].values()
