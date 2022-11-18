@@ -70,13 +70,9 @@ update_schema: init
 	python $(project_root)/scripts/terraform_schema.py update
 
 .PHONY: check_schema
-# Depend on init to ensure provider plugins are installed. Without it
-# we wouldn't be able to check their versions against those in the schema.
 check_schema: providers
-	@if ! python $(project_root)/scripts/terraform_schema.py check; then \
-		echo -e "\nRun '$(MAKE) update_schema'.\n"; \
-		false; \
-	fi
+	python $(project_root)/scripts/terraform_schema.py check \
+	|| (echo "Schema is stale. Run 'make update_schema' and commit." ; false)
 
 .PHONY: lambdas
 lambdas:
