@@ -110,7 +110,7 @@ class Terraform:
         # the tracked schema every time a new version of Terraform is released
         output = self.run('-version')
         log.info('Terraform output:\n%s', output)
-        versions, footer = output.split('\n\n')
+        versions = output.split('\n\n')[0]
         return sorted(versions.splitlines())
 
 
