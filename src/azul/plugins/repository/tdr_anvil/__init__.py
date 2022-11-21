@@ -456,18 +456,16 @@ class Plugin(TDRPlugin):
             WHERE {pk_column} IN ({', '.join(map(repr, keys))})
         ''')
 
-        def convert_column(key, value):
+        def convert_column(value):
             if isinstance(value, list):
                 value.sort()
-            if key == 'byte_size':
-                value = int(value)
             if isinstance(value, datetime.datetime):
                 return self.format_version(value)
             else:
                 return value
 
         rows = [
-            {k: convert_column(k, v) for k, v in row.items()}
+            {k: convert_column(v) for k, v in row.items()}
             for row in rows
         ]
         log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
