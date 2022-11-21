@@ -14,18 +14,33 @@ have too many entries in this file.
 #4688 Fix: Elasticsearch domains should be in a VPC
 ===================================================
 
-All elasticsearch domains must be manually destroyed. The Operator will handle
-the shared domains; other developers only need to perform these steps for
-any deployments of theirs that do not share an ES domain with one of the main
-deployments.
+Everyone
+~~~~~~~~
 
-The deletion of the ES domain will cascade to many other resources that depend
-on it. Once the deletion is complete, it is necessary to re-deploy the missing
-resources and perform a reindex to populate the newly created ES domain. ::
+Perform the steps listed below for all personal deployments that don't share an
+ES domain with a shared deployment. The deletion of the ES domain will cascade
+to many other resources that depend on it. Once the deletion is complete, it is
+necessary to re-deploy the missing resources and perform a reindex to repopulate
+the newly created ES domain::
 
-    (cd terraform/ && terraform destroy -target aws_elasticsearch_domain.index)
+    (cd terraform && make validate && terraform destroy -target aws_elasticsearch_domain.index)
     make deploy
     make reindex
+
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to ``sandbox`` or ``anvilbox``, notify the team
+that personal deployments sharing the Elasticsearch domain with that deployment
+will lose their indices.
+
+For any shared deployment, perform the first of the above steps after the
+GitLab ``deploy`` job fails in that deployment. Then retry the ``deploy`` job.
+When that succeeds, start the ``reindex`` or ``early_reindex`` job.
+
+When reindexing completes in the ``sandbox`` or ``anvilbox`` deployments,
+request that team members re-deploy and reindex all personal deployments that
+share the Elasticsearch domain with that deployment.
 
 
 #4334 Upgrade Terraform CLI to 1.3.4
