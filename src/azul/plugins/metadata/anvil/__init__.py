@@ -162,7 +162,7 @@ class Plugin(MetadataPlugin):
                     # These field names are hard-coded in the implementation of
                     # the repository service/controller.
                     **{
-                        'byte_size': 'size',
+                        'file_size': 'size',
                         # Not in schema
                         'version': 'fileVersion',
                         'uuid': 'fileId',

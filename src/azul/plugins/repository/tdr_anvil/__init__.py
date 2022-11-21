@@ -519,7 +519,7 @@ class Plugin(TDRPlugin):
             'file_id',
             'data_modality',
             'file_format',
-            'byte_size',
+            'file_size',
             'reference_assembly',
             'file_ref',
         },

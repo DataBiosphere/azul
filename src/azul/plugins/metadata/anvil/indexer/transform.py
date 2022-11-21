@@ -241,7 +241,7 @@ class BaseTransformer(Transformer, ABC):
             'file_id': null_str,
             'data_modality': [null_str],
             'file_format': null_str,
-            'byte_size': null_int,
+            'file_size': null_int,
             'reference_assembly': [null_str],
             # Not in schema
             'version': null_str,
@@ -343,7 +343,7 @@ class BaseTransformer(Transformer, ABC):
         metadata = self.bundle.metadata_files[manifest_entry['name']]
         return self._entity(manifest_entry,
                             self._file_types(),
-                            size=metadata['byte_size'])
+                            size=metadata['file_size'])
 
     def _only_dataset(self) -> MutableJSON:
         return self._dataset(self._entries_by_entity_id[one(self._entities_by_type['dataset'])])
