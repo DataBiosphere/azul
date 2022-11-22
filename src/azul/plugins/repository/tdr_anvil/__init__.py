@@ -512,7 +512,6 @@ class Plugin(TDRPlugin):
             'data_modality',
             'file_format',
             'reference_assembly',
-            'source_datarepo_row_ids'
         },
         'activity': {
             'activity_id',
