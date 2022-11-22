@@ -146,7 +146,7 @@ class KibanaProxy:
         log.info('Getting domain endpoint')
         es = aws.es
         domain = es.describe_elasticsearch_domain(DomainName=self.options.domain)
-        return 'https://' + domain['DomainStatus']['Endpoint']
+        return 'https://' + domain['DomainStatus']['Endpoints']['vpc']
 
 
 def main(argv):

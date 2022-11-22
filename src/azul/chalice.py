@@ -428,25 +428,23 @@ def private_api_stage_config():
     }
 
 
-def private_api_lambda_config():
+def vpc_lambda_config():
     """
     Returns the Lambda-specific fragment of Chalice configuration JSON that
-    configures the Lambda function to be invoked by a private API Gateway, if
-    enabled.
+    configures the Lambda function to connect to the VPC.
     """
     return {
         'subnet_ids': '${var.%s}' % config.var_vpc_subnet_ids,
         'security_group_ids': [
             '${var.%s}' % config.var_vpc_security_group_id
         ],
-    } if config.private_api else {
     }
 
 
-def private_api_policy(for_tf: bool = False):
+def vpc_lambda_iam_policy(for_tf: bool = False):
     """
     Returns the fragment of IAM policy JSON needed for placing a Lambda function
-    into a VPC so that it can be invoked by a private API Gateway, if enabled.
+    into a VPC.
     """
     actions = [
         'ec2:CreateNetworkInterface',

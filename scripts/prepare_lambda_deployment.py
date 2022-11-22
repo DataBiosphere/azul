@@ -43,12 +43,14 @@ def transform_tf(input_json):
         'es_endpoint': {},
         'es_instance_count': {},
         'cloudwatch_log_group_provisioner': {},
-        **({
-               config.var_vpc_endpoint_id: {},
-               config.var_vpc_subnet_ids: {},
-               config.var_vpc_security_group_id: {},
-           } if config.private_api else {
-        })
+        config.var_vpc_subnet_ids: {},
+        config.var_vpc_security_group_id: {},
+        **(
+            {
+                config.var_vpc_endpoint_id: {},
+            } if config.private_api else {
+            }
+        )
     }
 
     input_json['output']['stage_name'] = {

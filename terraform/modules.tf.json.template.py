@@ -27,15 +27,17 @@ emit_tf({
                 if config.share_es_domain else
                 "${aws_elasticsearch_domain.index.cluster_config[0].instance_count}",
             "cloudwatch_log_group_provisioner": f"{lambda_name}_log_group_provisioner",
-            **({
-                   config.var_vpc_endpoint_id: f"${{aws_vpc_endpoint.{lambda_name}.id}}",
-                   config.var_vpc_subnet_ids: [
-                       f"${{data.aws_subnet.gitlab_{vpc.subnet_name(public=False)}_{zone}.id}}"
-                       for zone in range(vpc.num_zones)
-                   ],
-                   config.var_vpc_security_group_id: f"${{aws_security_group.{lambda_name}.id}}"
-               } if config.private_api else {
-            }),
+            config.var_vpc_security_group_id: f"${{aws_security_group.{lambda_name}.id}}",
+            config.var_vpc_subnet_ids: ([
+                f"${{data.aws_subnet.gitlab_{vpc.subnet_name(public=False)}_{zone}.id}}"
+                for zone in range(vpc.num_zones)
+            ]),
+            **((
+                {
+                    config.var_vpc_endpoint_id: f"${{aws_vpc_endpoint.{lambda_name}.id}}"
+                } if config.private_api else {
+                }
+            ))
         } for lambda_name in config.lambda_names()
     }
 })
