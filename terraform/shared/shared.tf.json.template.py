@@ -9,10 +9,10 @@ from azul.deployment import (
 from azul.terraform import (
     emit_tf,
     provider_fragment,
-    provision_s3_bucket_public_access_block,
+    block_public_s3_bucket_access,
 )
 
-emit_tf(provision_s3_bucket_public_access_block({
+emit_tf(block_public_s3_bucket_access({
     'resource': {
         'aws_s3_bucket': {
             'shared_cloudtrail': {

@@ -5,11 +5,11 @@ from azul.deployment import (
     aws,
 )
 from azul.terraform import (
+    block_public_s3_bucket_access,
     emit_tf,
-    provision_s3_bucket_public_access_block,
 )
 
-emit_tf(provision_s3_bucket_public_access_block({
+emit_tf(block_public_s3_bucket_access({
     'data': {
         'aws_s3_bucket': {
             'logs': {
