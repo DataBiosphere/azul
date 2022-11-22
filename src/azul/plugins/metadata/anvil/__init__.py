@@ -107,9 +107,9 @@ class Plugin(MetadataPlugin):
                         'activity_table',
                         'activity_type',
                         'assay_category',
+                        'assay_type',
                         'data_modality',
-                        'document_id',
-                        'source_datarepo_row_ids',
+                        'reference_assembly',
                         # Not in schema
                         'date_created',
                     ]
@@ -119,6 +119,7 @@ class Plugin(MetadataPlugin):
                         *common_fields,
                         'biosample_id',
                         'anatomical_site',
+                        'apriori_cell_type',
                         'biosample_type',
                         'disease',
                         'donor_age_at_collection_unit',
@@ -131,8 +132,11 @@ class Plugin(MetadataPlugin):
                         'dataset_id',
                         'consent_group',
                         'data_use_permission',
+                        'owner',
+                        'principal_investigator',
                         'registered_identifier',
                         'title',
+                        'data_modality',
                     ]
                 },
                 'donors': {
@@ -142,6 +146,7 @@ class Plugin(MetadataPlugin):
                         'organism_type',
                         'phenotypic_sex',
                         'reported_ethnicity',
+                        'genetic_ancestry',
                     ]
                 },
                 'files': {
@@ -151,7 +156,9 @@ class Plugin(MetadataPlugin):
                             'file_id',
                             'data_modality',
                             'file_format',
+                            'file_md5sum',
                             'reference_assembly',
+                            'file_name',
                             # Not in schema
                             'crc32',
                             'sha256',
@@ -180,6 +187,7 @@ class Plugin(MetadataPlugin):
         return [
             'activities.activity_type',
             'activities.assay_category',
+            'activities.assay_type',
             'activities.data_modality',
             'biosamples.anatomical_site',
             'biosamples.biosample_type',

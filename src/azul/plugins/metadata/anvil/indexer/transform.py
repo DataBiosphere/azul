@@ -196,7 +196,9 @@ class BaseTransformer(Transformer, ABC):
             'activity_table': null_str,
             'activity_type': null_str,
             'assay_category': null_str,
+            'assay_type': null_str,
             'data_modality': null_str,
+            'reference_assembly': [null_str],
             # Not in schema
             'date_created': null_datetime,
         }
@@ -207,6 +209,7 @@ class BaseTransformer(Transformer, ABC):
             **cls._entity_types(),
             'biosample_id': null_str,
             'anatomical_site': null_str,
+            'apriori_cell_type': [null_str],
             'biosample_type': null_str,
             'disease': null_str,
             'donor_age_at_collection_unit': null_str,
@@ -220,8 +223,11 @@ class BaseTransformer(Transformer, ABC):
             'dataset_id': null_str,
             'consent_group': [null_str],
             'data_use_permission': [null_str],
+            'owner': [null_str],
+            'principal_investigator': [null_str],
             'registered_identifier': [null_str],
             'title': null_str,
+            'data_modality': [null_str],
         }
 
     @classmethod
@@ -232,6 +238,7 @@ class BaseTransformer(Transformer, ABC):
             'organism_type': null_str,
             'phenotypic_sex': null_str,
             'reported_ethnicity': null_str,
+            'genetic_ancestry': [null_str],
         }
 
     @classmethod
@@ -242,7 +249,9 @@ class BaseTransformer(Transformer, ABC):
             'data_modality': [null_str],
             'file_format': null_str,
             'file_size': null_int,
+            'file_md5sum': null_str,
             'reference_assembly': [null_str],
+            'file_name': null_str,
             # Not in schema
             'version': null_str,
             'uuid': null_str,

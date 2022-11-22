@@ -182,6 +182,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
         'activities': {
             'activity_type',
             'assay_category',
+            'assay_type',
             'data_modality'
         },
         'biosamples': {
@@ -198,7 +199,8 @@ class AnvilSearchResponseStage(SearchResponseStage):
         'donors': {
             'organism_type',
             'phenotypic_sex',
-            'reported_ethnicity'
+            'reported_ethnicity',
+            'genetic_ancestry'
         },
         'files': {
             'count',

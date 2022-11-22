@@ -496,6 +496,7 @@ class Plugin(TDRPlugin):
         'biosample': {
             'biosample_id',
             'anatomical_site',
+            'apriori_cell_type',
             'biosample_type',
             'disease',
             'donor_age_at_collection_unit',
@@ -506,21 +507,27 @@ class Plugin(TDRPlugin):
             'dataset_id',
             'consent_group',
             'data_use_permission',
+            'owner',
+            'principal_investigator',
             'registered_identifier',
-            'title'
+            'title',
+            'data_modality'
         },
         'donor': {
             'donor_id',
             'organism_type',
             'phenotypic_sex',
             'reported_ethnicity',
+            'genetic_ancestry',
         },
         'file': {
             'file_id',
             'data_modality',
             'file_format',
             'file_size',
+            'file_md5sum',
             'reference_assembly',
+            'file_name',
             'file_ref',
         },
         'activity': {
@@ -531,12 +538,14 @@ class Plugin(TDRPlugin):
             'alignmentactivity_id',
             'activity_type',
             'data_modality',
+            'reference_assembly',
             # Not in schema
             'date_created',
         },
         'assayactivity': {
             'assayactivity_id',
             'activity_type',
+            'assay_type',
             'data_modality',
             # Not in schema
             'assay_category',
@@ -545,6 +554,7 @@ class Plugin(TDRPlugin):
         'sequencingactivity': {
             'sequencingactivity_id',
             'activity_type',
+            'assay_type',
             'data_modality',
         }
     }
