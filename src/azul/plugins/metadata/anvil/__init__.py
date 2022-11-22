@@ -157,18 +157,17 @@ class Plugin(MetadataPlugin):
                             'file_format',
                             'file_md5sum',
                             'reference_assembly',
-                            'file_name',
                             # Not in schema
                             'crc32',
                             'sha256',
                             'drs_path',
-                            'name'
                         ]
                     },
                     # These field names are hard-coded in the implementation of
                     # the repository service/controller.
                     **{
                         'file_size': 'size',
+                        'file_name': 'name',
                         # Not in schema
                         'version': 'fileVersion',
                         'uuid': 'fileId',
