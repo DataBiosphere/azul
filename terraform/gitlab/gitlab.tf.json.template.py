@@ -695,15 +695,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
     },
     'resource': {
-        'aws_default_vpc': {
-            'default': {
-                'tags': {
-                    "name": "AWS Default VPC"
-                }
-            }
-        },
         'aws_vpc': {
-
             'gitlab': {
                 'cidr_block': vpc_cidr
             }
@@ -780,13 +772,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_default_security_group': {
             'gitlab': {
-                # Terraform provides this resource to manage the default Security
-                # Group defined by AWS. When this resource is initialized, all
-                # ingress and egress rules are immediately removed.
-                'vpc_id': '${aws_default_vpc.default.id}',
-                'tags': {
-                    'name': 'AWS Default Security Group'
-                }
+                'vpc_id': '${aws_vpc.gitlab.id}',
+                'egress': [],
+                'ingress': []
             }
         },
         'aws_security_group': {

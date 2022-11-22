@@ -685,6 +685,10 @@ chalice = Chalice()
 class VPC:
     num_zones = 2  # An ALB needs at least two availability zones
 
+    # These are TF resource names, the real-world resource names are fixed by AWS.
+    default_vpc_name = 'default'
+    default_security_group_name = 'default'
+
     @classmethod
     def subnet_name(cls, public: bool) -> str:
         return 'public' if public else 'private'

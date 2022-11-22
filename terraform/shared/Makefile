@@ -28,8 +28,15 @@ plan: validate
 rename_resources: config
 	python $(project_root)/scripts/rename_resources.py
 
+.PHONY: import_resources
+import_resources: rename_resources
+	python $(project_root)/scripts/import_default_vpc.py
+	# FIXME: https://github.com/DataBiosphere/azul/issues/4824
+	#        Remove import of the GitLab default security group once completed
+	python $(project_root)/scripts/import_gitlab_security_group.py
+
 .PHONY: apply
-apply: validate rename_resources
+apply: validate import_resources
 	terraform apply
 
 .PHONY: destroy
