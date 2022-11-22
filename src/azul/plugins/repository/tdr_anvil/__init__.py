@@ -490,12 +490,12 @@ class Plugin(TDRPlugin):
     indexed_columns_by_entity_type = {
         'biosample': {
             'biosample_id',
-            'biosample_type',
             'anatomical_site',
+            'biosample_type',
+            'disease',
+            'donor_age_at_collection_unit',
             'donor_age_at_collection_lower_bound',
             'donor_age_at_collection_upper_bound',
-            'donor_age_at_collection_unit',
-            'disease',
         },
         'dataset': {
             'dataset_id',
@@ -512,11 +512,11 @@ class Plugin(TDRPlugin):
         },
         'file': {
             'file_id',
-            'file_ref',
-            'byte_size',
             'data_modality',
             'file_format',
+            'byte_size',
             'reference_assembly',
+            'file_ref',
         },
         'activity': {
             'activity_id',
@@ -526,13 +526,15 @@ class Plugin(TDRPlugin):
             'alignmentactivity_id',
             'activity_type',
             'data_modality',
+            # Not in schema
             'date_created',
         },
         'assayactivity': {
             'assayactivity_id',
             'activity_type',
-            'assay_category',
             'data_modality',
+            # Not in schema
+            'assay_category',
             'date_created',
         },
         'sequencingactivity': {

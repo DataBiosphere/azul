@@ -197,6 +197,7 @@ class BaseTransformer(Transformer, ABC):
             'activity_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
+            # Not in schema
             'date_created': null_datetime,
         }
 
@@ -204,12 +205,12 @@ class BaseTransformer(Transformer, ABC):
     def _biosample_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'anatomical_site': null_str,
             'biosample_id': null_str,
+            'anatomical_site': null_str,
             'biosample_type': null_str,
-            'donor_age_at_collection_age_range': pass_thru_json,
-            'donor_age_at_collection_unit': null_str,
             'disease': null_str,
+            'donor_age_at_collection_unit': null_str,
+            'donor_age_at_collection_age_range': pass_thru_json,
         }
 
     @classmethod
@@ -237,15 +238,16 @@ class BaseTransformer(Transformer, ABC):
     def _file_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'version': null_str,
-            'uuid': null_str,
+            'file_id': null_str,
             'data_modality': [null_str],
             'file_format': null_str,
-            'file_id': null_str,
             'byte_size': null_int,
+            'reference_assembly': [null_str],
+            # Not in schema
+            'version': null_str,
+            'uuid': null_str,
             'size': null_int,
             'name': null_str,
-            'reference_assembly': [null_str],
             'crc32': null_str,
             'sha256': null_str,
             'drs_path': null_str

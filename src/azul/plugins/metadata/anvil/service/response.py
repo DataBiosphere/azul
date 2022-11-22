@@ -187,9 +187,9 @@ class AnvilSearchResponseStage(SearchResponseStage):
         'biosamples': {
             'anatomical_site',
             'biosample_type',
-            'donor_age_at_collection_age_range',
-            'donor_age_at_collection_unit',
             'disease',
+            'donor_age_at_collection_unit',
+            'donor_age_at_collection_age_range',
         },
         'datasets': {
             'dataset_id',
