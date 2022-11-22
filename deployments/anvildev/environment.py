@@ -114,7 +114,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # $0.382/h × 3 × 24h/d × 30d/mo = $825.12/mo
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-        'AZUL_ES_INSTANCE_COUNT': '3',
+        'AZUL_ES_INSTANCE_COUNT': '4',
 
         'AZUL_DEBUG': '1',
 
