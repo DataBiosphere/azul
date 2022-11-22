@@ -548,7 +548,6 @@ class Plugin(TDRPlugin):
             'assay_type',
             'data_modality',
             # Not in schema
-            'assay_category',
             'date_created',
         },
         'sequencingactivity': {

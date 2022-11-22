@@ -195,7 +195,6 @@ class BaseTransformer(Transformer, ABC):
             'activity_id': null_str,
             'activity_table': null_str,
             'activity_type': null_str,
-            'assay_category': null_str,
             'assay_type': null_str,
             'data_modality': null_str,
             'reference_assembly': [null_str],

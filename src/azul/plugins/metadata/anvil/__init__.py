@@ -106,7 +106,6 @@ class Plugin(MetadataPlugin):
                         'activity_id',
                         'activity_table',
                         'activity_type',
-                        'assay_category',
                         'assay_type',
                         'data_modality',
                         'reference_assembly',
@@ -186,7 +185,6 @@ class Plugin(MetadataPlugin):
     def facets(self) -> Sequence[str]:
         return [
             'activities.activity_type',
-            'activities.assay_category',
             'activities.assay_type',
             'activities.data_modality',
             'biosamples.anatomical_site',
