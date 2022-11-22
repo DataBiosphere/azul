@@ -254,6 +254,11 @@ emit_tf(block_public_s3_bucket_access({
                 })
             }
         },
+        "aws_iam_service_linked_role": {
+            "opensearch": {
+                "aws_service_name": "opensearchservice.amazonaws.com"
+            }
+        },
         'aws_api_gateway_account': {
             'shared': {
                 'cloudwatch_role_arn': '${aws_iam_role.api_gateway.arn}'
