@@ -1,3 +1,7 @@
+# Relative paths are based on the CWD, not the directory containing this file.
+# project_root is not defined if the user forgot to source environment. This
+# solution is based on comments in https://stackoverflow.com/questions/322936.
+include $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/../common.mk
 
 # The compile target is used during packaging of lambdas. The target ensures
 # that a .pyc file is present for every .py file in the package.

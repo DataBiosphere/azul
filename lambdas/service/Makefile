@@ -1,7 +1,6 @@
 .PHONY: all
 all: package
 
-include ../../common.mk
 include ../lambdas.mk
 
 .PHONY: package
