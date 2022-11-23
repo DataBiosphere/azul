@@ -360,7 +360,8 @@ class BaseTransformer(Transformer, ABC):
         'activity',
         'alignmentactivity',
         'assayactivity',
-        'sequencingactivity'
+        'sequencingactivity',
+        'variantcallingactivity'
     }
 
 

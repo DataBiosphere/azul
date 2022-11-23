@@ -331,6 +331,15 @@ class Plugin(TDRPlugin):
                     ON f.file_id IN UNNEST(sqa.generated_file_id)
                 UNION ALL SELECT
                     f.file_id,
+                    'variantcallingactivity',
+                    vca.variantcallingactivity_id,
+                    vca.used_file_id,
+                    []
+                  FROM file AS f
+                  JOIN {backtick(self._full_table_name(source, 'variantcallingactivity'))} AS vca
+                    ON f.file_id IN UNNEST(vca.generated_file_id)
+                UNION ALL SELECT
+                    f.file_id,
                     'activity',
                     a.activity_id,
                     a.used_file_id,
@@ -419,6 +428,12 @@ class Plugin(TDRPlugin):
                         ala.used_file_id,
                         ala.generated_file_id
                     FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
+                    UNION ALL SELECT
+                        vca.variantcallingactivity_id,
+                        'variantcallingactivity',
+                        vca.used_file_id,
+                        vca.generated_file_id
+                    FROM {backtick(self._full_table_name(source, 'variantcallingactivity'))} AS vca
                     UNION ALL SELECT
                         a.activity_id,
                         'activity',
@@ -555,6 +570,12 @@ class Plugin(TDRPlugin):
             'activity_type',
             'assay_type',
             'data_modality',
+        },
+        'variantcallingactivity': {
+            'variatncallingactivity_id',
+            'activity_type',
+            'reference_assembly',
+            'data_modality'
         }
     }
 
