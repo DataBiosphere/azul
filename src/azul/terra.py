@@ -452,15 +452,13 @@ class TDRClient(SAMClient):
                               id=source['id'],
                               location=storage['region'])
 
-    def verify_source(self, source: SourceRef):
-        actual_name = self._retrieve_source(source)['name']
-        require(source.spec.name == actual_name,
-                'Source name changed unexpectedly', source, actual_name)
-
     def _retrieve_source(self, source: SourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint(source.spec.type_name + 's', source.id)
         response = self._request('GET', endpoint)
-        return self._check_response(endpoint, response)
+        response = self._check_response(endpoint, response)
+        require(source.spec.name == response['name'],
+                'Source name changed unexpectedly', source, response)
+        return response
 
     def check_api_access(self, source: TDRSourceSpec) -> None:
         """

@@ -89,17 +89,14 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
             SimpleSourceSpec.parse(config.dss_source)
         }
 
-    def verify_source(self, ref: DSSSourceRef) -> None:
-        pass
-
-    def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
+    def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
 
     def list_sources(self,
                      authentication: Optional[Authentication]
                      ) -> list[DSSSourceRef]:
         return [
-            DSSSourceRef(id=self.lookup_source_id(spec), spec=spec)
+            DSSSourceRef(id=self._lookup_source_id(spec), spec=spec)
             for spec in self.sources
         ]
 

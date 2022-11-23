@@ -8,7 +8,7 @@ from azul.terraform import (
     emit_tf,
 )
 
-emit_tf({
+tf_config = {
     'data': {
         'aws_s3_bucket': {
             'logs': {
@@ -57,4 +57,16 @@ emit_tf({
             }
         }
     }
-})
+}
+
+tf_config['resource']['aws_s3_bucket_public_access_block'] = {
+    bucket: {
+        'bucket': '${aws_s3_bucket.%s.id}' % bucket,
+        'block_public_acls': True,
+        'block_public_policy': True,
+        'ignore_public_acls': True,
+        'restrict_public_buckets': True
+    } for bucket in tf_config['resource']['aws_s3_bucket']
+}
+
+emit_tf(tf_config)

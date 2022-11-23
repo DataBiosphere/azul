@@ -147,10 +147,7 @@ class TDRPlugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def _tdr(cls):
         return TDRClient.for_indexer()
 
-    def verify_source(self, ref: TDRSourceRef) -> None:
-        return self.tdr.verify_source(ref)
-
-    def lookup_source_id(self, spec: TDRSourceSpec) -> str:
+    def _lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id
 
     def list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:

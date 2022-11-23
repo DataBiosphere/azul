@@ -11,6 +11,41 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4690 Fix: EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)
+================================================================================
+
+Operator
+~~~~~~~~
+
+The steps below have already been performed on ``anvildev.gitlab``, but need to
+be run for ``dev.gitlab`` and ``prod.gitlab``, run::
+
+    _select dev.gitlab
+    make -C terraform/gitlab
+
+
+#4691 Fix: S3 Block Public Access setting should be enabled at the bucket-level
+===============================================================================
+
+This change blocks public access for all S3 buckets in the shared component and
+in all deployments.
+
+Everyone
+~~~~~~~~
+
+Run `make deploy` to update personal deployments as soon as your are notified on
+Slack by the operator.
+
+Operator
+~~~~~~~~
+
+Follow these steps to deploy for ``dev.shared``, ``anvildev.shared``, and
+``prod.shared``::
+
+    _select dev.shared
+    make -C $project_root/terraform/shared apply
+
+
 #4625 Disable URL shortener
 ===========================
 
