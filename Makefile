@@ -177,28 +177,6 @@ integration_test: check_python check_branch $(project_root)/lambdas/service/.cha
 check_clean: check_env
 	git diff --exit-code && git diff --cached --exit-code
 
-.PHONY: check_autosquash
-check_autosquash: check_env
-	@if [[ -z "$${TRAVIS_BRANCH}" || "$${TRAVIS_BRANCH}" == "develop" ]]; then \
-	    _azul_merge_base=$$(git merge-base HEAD develop) \
-	    ; if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
-	        git reset --hard ORIG_HEAD \
-	        ; echo "The current branch is automatically squashable" \
-	        ; true \
-	    ; else \
-	        git rebase --abort \
-	        ; echo "The current branch doesn't appear to be automatically squashable" \
-	        ; false \
-	    ; fi \
-	; else \
-	    echo "Can only check squashability against default branch on Travis" \
-	; fi
-
-.PHONY: readme
-readme: check_docker
-	docker pull evkalinin/gh-md-toc:0.7.0
-	docker run -it -v $$PWD:/build evkalinin/gh-md-toc:0.7.0 --no-backup /build/README.md
-
 .PHONY: openapi
 openapi:
 	python $(project_root)/scripts/generate_openapi_document.py
