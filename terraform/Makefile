@@ -8,7 +8,7 @@ clean: check_env git_clean
 	rm -rvf $(TF_DATA_DIR)/modules
 
 .PHONY: state
-state: check_terraform check_branch check_aws clean
+state: check_terraform check_branch check_aws
 	@# FIXME: Remove after all deployments have been upgraded to 1.3.x
 	@#        https://github.com/DataBiosphere/azul/issues/4744
 	python $(project_root)/scripts/migrate_terraform_state.py
@@ -28,12 +28,9 @@ update_schema: init
 
 .PHONY: modules
 modules: modules.tf.json
-	$(MAKE) -C $(project_root)/lambdas
 	terraform init  # to "install" modules
 
 .PHONY: config
-# FIXME: Lambda layers shouldn't be uploaded when `plan` target is run
-#        https://github.com/DataBiosphere/azul/issues/3652
 config: check_schema modules $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
 .PHONY: validate
@@ -68,11 +65,11 @@ endif
 	terraform apply -auto-approve plan.bin
 
 .PHONY: destroy
-destroy: validate
+destroy: validate rename_resources
 	terraform destroy
 
 .PHONY: auto_destroy
-auto_destroy: validate
+auto_destroy: validate rename_resources
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
 

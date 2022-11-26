@@ -84,20 +84,27 @@ requirements_update_force: check_venv check_docker
 hello: check_python
 	@echo Looking good!
 
-.PHONY: deploy
-deploy: check_env
-	$(MAKE) -C terraform apply
-	$(MAKE) post_deploy
+.PHONY: lambdas
+lambdas: check_env
+	$(MAKE) -C lambdas
 
-.PHONY: auto_deploy
-auto_deploy: check_env
-	$(MAKE) -C terraform auto_apply
-	$(MAKE) post_deploy
+define deploy
+.PHONY: $(1)terraform
+$(1)terraform: lambdas
+	$(MAKE) -C terraform $(1)apply
 
-.PHONY: post_deploy
-post_deploy: check_python
+.PHONY: $(1)deploy
+$(1)deploy: check_python $(1)terraform
 	python $(project_root)/scripts/post_deploy_sns.py
 	python $(project_root)/scripts/post_deploy_tdr.py
+endef
+
+$(eval $(call deploy,))
+$(eval $(call deploy,auto_))
+
+.PHONY: destroy
+destroy:
+	$(MAKE) -C terraform destroy
 
 .PHONY: create
 create: check_python check_branch
