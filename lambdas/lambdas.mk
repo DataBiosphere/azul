@@ -29,7 +29,7 @@ include $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/../common.mk
 # is set. For a full explanation see http://benno.id.au/blog/2013/01/15/python-determinism
 #
 .PHONY: compile
-compile: check_env
+compile: check_python
 	PYTHONHASHSEED=0 python -m compileall -f -q --invalidation-mode checked-hash vendor vendor/azul
 
 .PHONY: config
