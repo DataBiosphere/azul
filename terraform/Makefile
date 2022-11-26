@@ -4,8 +4,8 @@ all: apply
 include ../common.mk
 
 .PHONY: clean
-clean: check_env
-	rm -rf *.tf.json service indexer $(TF_DATA_DIR)/modules
+clean: check_env git_clean
+	rm -rvf $(TF_DATA_DIR)/modules
 
 .PHONY: state
 state: check_terraform check_branch check_aws clean

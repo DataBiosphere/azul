@@ -78,6 +78,16 @@ check_aws: check_python
 check_branch: check_python
 	python $(project_root)/scripts/check_branch.py
 
+.PHONY: git_clean_recursive
+git_clean_recursive: check_env
+	git clean -Xdf
+
+.PHONY: git_clean
+git_clean: check_env
+	git ls-files --ignored --others --directory --exclude-standard \
+		| grep -v '/[^/]' \
+		| xargs -r rm -rv
+
 %.json: %.json.template.py check_python .FORCE
 	python $< $@
 .FORCE:

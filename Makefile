@@ -121,10 +121,43 @@ reindex: check_python check_branch
 reindex_no_slots: check_python check_branch
 	python scripts/reindex.py ${reindex_args} --no-slots
 
+# By our own convention, a line starting with `##` in the top-level `.gitignore`
+# file separates rules for build products from those for local configuration.
+# Build products can be removed by the clean target, local configuration must
+# not. The convention only applies to the top-level `.gitignore` file, in
+# lower-level files, all rules are assumed to be for build products.
+# 
+# Implementation details: First, we run `git ls-files` to list *all* ignored
+# files, and then run it again to list only files ignored by rules for local
+# configuration. We use `comm` to subtract the two results, yielding a list of
+# build products only, and remove them. We repeat the process for directories,
+# passing `--directory` to `git ls-files` and `-r` to `rm`. Note that any files
+# in matching directories have been already been removed in the first pass,
+# rendering the directories empty. That's how we can avoid having to pass `-f`
+# to `rm`. 
+#
+# We can't handle directories and files together because that would complicate
+# the rules of subtraction: subtracting a directory could mean the removal of
+# multiple files. If we do them separately, a simple set difference suffices.
+#
+define clean
+comm -23 \
+    <(git ls-files --others --ignored --exclude-standard $1 \
+        | sort) \
+    <(sed -e '1,/^##/d' .gitignore \
+        | git ls-files --others --ignored --exclude-from /dev/stdin $1 \
+        | sort) \
+    | xargs -r rm -v $2
+endef
+
 .PHONY: clean
 clean: check_env
-	rm -rf .cache .config
-	for d in lambdas terraform terraform/{gitlab,shared}; do $(MAKE) -C $$d clean; done
+	for d in lambdas terraform terraform/{gitlab,shared}; \
+	    do $(MAKE) -C $$d clean; \
+	done
+	$(call clean,,)
+	$(call clean,--directory,-r)
+
 
 absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/scripts \

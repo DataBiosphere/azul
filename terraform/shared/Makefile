@@ -4,8 +4,7 @@ all: apply
 include ../../common.mk
 
 .PHONY: clean
-clean: check_env
-	rm -rf *.tf.json
+clean: git_clean
 
 .PHONY: state
 state: check_terraform check_branch check_aws clean
