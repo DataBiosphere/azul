@@ -80,19 +80,14 @@ zones_by_domain = {
 
 emit_tf({
     "data": [
-        *(
-            [
-                {
-                    "aws_route53_zone": {
-                        zone.slug: {
-                            "name": zone.name,
-                            "private_zone": False
-                        }
-                    }
-                } for zone in set(zones_by_domain.values())
-            ]
-        ),
         {
+            "aws_route53_zone": {
+                zone.slug: {
+                    "name": zone.name,
+                    "private_zone": False
+                }
+                for zone in set(zones_by_domain.values())
+            },
             "aws_vpc": {
                 "gitlab": {
                     "filter": {
@@ -101,8 +96,6 @@ emit_tf({
                     }
                 }
             },
-        },
-        {
             "aws_subnet": {
                 f"gitlab_{vpc.subnet_name(public)}_{zone}": {
                     "filter": {
@@ -112,10 +105,8 @@ emit_tf({
                 }
                 for public in (False, True)
                 for zone in range(vpc.num_zones)
-            }
-        },
-        *(
-            [
+            },
+            **(
                 {
                     # To allow the network interface IDs to be iterated here, the
                     # `apply` target in `$project_root/terraform/Makefile` creates
@@ -127,9 +118,9 @@ emit_tf({
                         } for lambda_ in lambdas
                     }
                 }
-            ] if config.private_api else [
-            ]
-        )
+                if config.private_api else {}
+            )
+        }
     ],
     # Note that ${} references exist to interpolate a value AND express a dependency.
     "resource": [
