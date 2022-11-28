@@ -38,7 +38,7 @@ validate: config
 	terraform validate
 
 .PHONY: plan
-plan: validate
+plan: validate rename_resources
 	terraform plan
 
 .PHONY: rename_resources
