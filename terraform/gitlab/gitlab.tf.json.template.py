@@ -1202,6 +1202,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
                 'metadata_options': {
+                    'http_endpoint': 'enabled',
                     'http_tokens': 'required',
                     # This value was empirically determined. With a lower value
                     # builds in GitLab failed with NoCredentialsError.
