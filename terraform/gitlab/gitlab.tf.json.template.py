@@ -294,7 +294,7 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-clamav_image = 'clamav/clamav:0.104'
+clamav_image = 'clamav/clamav:0.105'
 dind_image = 'docker:20.10.18-dind'
 gitlab_image = 'gitlab/gitlab-ce:15.6.0-ce.0'
 runner_image = 'gitlab/gitlab-runner:v15.6.1'
