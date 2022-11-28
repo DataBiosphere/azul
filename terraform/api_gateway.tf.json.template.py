@@ -24,13 +24,15 @@ from azul.terraform import (
 
 
 @dataclass(frozen=True)
-class Lambda:
+class Application:
     """
-    Represents a AWS Lambda function fronted by an AWS API Gateway.
+    An application is set of AWS Lambda functions that cooperate to serve a
+    particular purpose. One of the functions is fronted by AWS API Gateway so
+    as to expose the application via HTTP.
     """
-    name: str  # the name of the Lambda, e.g. 'service'
-    domains: list[str]  # a list of public domain names that the Lambda should be exposed at
-    policy: str  # AWS Policy for the lambda function
+    name: str  # the name of the application, e.g. 'service'
+    domains: list[str]  # a list of public domain names that the application is exposed at
+    policy: str  # the AWS IAM policy defining the permissions of the application
 
     @classmethod
     def for_name(cls, name):
@@ -43,9 +45,9 @@ class Lambda:
                    policy=json.dumps(getattr(policy_module, 'policy')))
 
 
-lambdas = [
-    Lambda.for_name('indexer'),
-    Lambda.for_name('service')
+apps = [
+    Application.for_name('indexer'),
+    Application.for_name('service')
 ]
 
 
@@ -74,8 +76,8 @@ class Zone(metaclass=InternMeta):
 
 zones_by_domain = {
     domain: Zone.for_domain(domain)
-    for lambda_ in lambdas
-    for domain in lambda_.domains
+    for app in apps
+    for domain in app.domains
 }
 
 emit_tf({
@@ -112,10 +114,10 @@ emit_tf({
                     # `apply` target in `$project_root/terraform/Makefile` creates
                     # the VPC endpoints first before all other resources.
                     "aws_network_interface": {
-                        lambda_.name: {
-                            "for_each": "${aws_vpc_endpoint.%s.network_interface_ids}" % lambda_.name,
+                        app.name: {
+                            "for_each": "${aws_vpc_endpoint.%s.network_interface_ids}" % app.name,
                             "id": "${each.key}"
-                        } for lambda_ in lambdas
+                        } for app in apps
                     }
                 }
                 if config.private_api else {}
@@ -145,33 +147,33 @@ emit_tf({
         *(
             {
                 "aws_api_gateway_base_path_mapping": {
-                    f"{lambda_.name}_{i}": {
-                        "api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
-                        "stage_name": "${module.chalice_%s.stage_name}" % lambda_.name,
-                        "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i)
+                    f"{app.name}_{i}": {
+                        "api_id": "${module.chalice_%s.RestAPIId}" % app.name,
+                        "stage_name": "${module.chalice_%s.stage_name}" % app.name,
+                        "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (app.name, i)
                     }
-                    for i, domain in enumerate(lambda_.domains)
+                    for i, domain in enumerate(app.domains)
                 },
                 "aws_api_gateway_domain_name": {
-                    f"{lambda_.name}_{i}": {
-                        "domain_name": "${aws_acm_certificate.%s_%i.domain_name}" % (lambda_.name, i),
-                        "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}" % (lambda_.name, i)
-                    } for i, domain in enumerate(lambda_.domains)
+                    f"{app.name}_{i}": {
+                        "domain_name": "${aws_acm_certificate.%s_%i.domain_name}" % (app.name, i),
+                        "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}" % (app.name, i)
+                    } for i, domain in enumerate(app.domains)
                 },
                 "aws_api_gateway_method_settings": {
-                    f"{lambda_.name}_{i}": {
-                        "rest_api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
-                        "stage_name": "${module.chalice_%s.stage_name}" % lambda_.name,
+                    f"{app.name}_{i}": {
+                        "rest_api_id": "${module.chalice_%s.RestAPIId}" % app.name,
+                        "stage_name": "${module.chalice_%s.stage_name}" % app.name,
                         "method_path": "*/*",  # every URL path, every HTTP method
                         "settings": {
                             "metrics_enabled": True,
                             "data_trace_enabled": config.debug == 2,
                             "logging_level": "ERROR" if config.debug == 0 else "INFO"
                         }
-                    } for i, domain in enumerate(lambda_.domains)
+                    } for i, domain in enumerate(app.domains)
                 },
                 "aws_acm_certificate": {
-                    f"{lambda_.name}_{i}": {
+                    f"{app.name}_{i}": {
                         "domain_name": domain,
                         "validation_method": "DNS",
                         "provider": "aws.us-east-1",
@@ -195,24 +197,24 @@ emit_tf({
                         "lifecycle": {
                             "create_before_destroy": True
                         }
-                    } for i, domain in enumerate(lambda_.domains)
+                    } for i, domain in enumerate(app.domains)
                 },
                 "aws_acm_certificate_validation": {
-                    f"{lambda_.name}_{i}": {
-                        "certificate_arn": "${aws_acm_certificate.%s_%i.arn}" % (lambda_.name, i),
+                    f"{app.name}_{i}": {
+                        "certificate_arn": "${aws_acm_certificate.%s_%i.arn}" % (app.name, i),
                         "validation_record_fqdns": [
-                            "${aws_route53_record.%s_domain_validation_%i.fqdn}" % (lambda_.name, i)],
+                            "${aws_route53_record.%s_domain_validation_%i.fqdn}" % (app.name, i)],
                         "provider": "aws.us-east-1"
-                    } for i, domain in enumerate(lambda_.domains)
+                    } for i, domain in enumerate(app.domains)
                 },
                 "aws_route53_record": {
                     **{
-                        f"{lambda_.name}_domain_validation_{i}": {
+                        f"{app.name}_domain_validation_{i}": {
                             **{
                                 # We know there is only one. See comment above.
                                 key: "${tolist(aws_acm_certificate.%s_%i.domain_validation_options)"
                                      ".0.resource_record_%s}"
-                                     % (lambda_.name, i, key)
+                                     % (app.name, i, key)
                                 for key in ('name', 'type')
                             },
                             "zone_id": "${data.aws_route53_zone.%s.id}" % zones_by_domain[domain].slug,
@@ -220,20 +222,20 @@ emit_tf({
                                 # We know there is only one. See comment above.
                                 "${tolist(aws_acm_certificate.%s_%i.domain_validation_options)"
                                 ".0.resource_record_value}"
-                                % (lambda_.name, i)
+                                % (app.name, i)
                             ],
                             "ttl": 60
-                        } for i, domain in enumerate(lambda_.domains)
+                        } for i, domain in enumerate(app.domains)
                     },
                     **{
-                        f"{lambda_.name}_{i}": {
+                        f"{app.name}_{i}": {
                             "zone_id": "${data.aws_route53_zone.%s.id}" % zones_by_domain[domain].slug,
-                            "name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i),
+                            "name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (app.name, i),
                             "type": "A",
                             **({
                                    "alias": {
-                                       "name": "${aws_lb.%s.dns_name}" % lambda_.name,
-                                       "zone_id": "${aws_lb.%s.zone_id}" % lambda_.name,
+                                       "name": "${aws_lb.%s.dns_name}" % app.name,
+                                       "zone_id": "${aws_lb.%s.zone_id}" % app.name,
                                        "evaluate_target_health": False
                                    }
                                }
@@ -241,26 +243,26 @@ emit_tf({
                                {
                                    "alias": {
                                        "name": "${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}" % (
-                                           lambda_.name, i),
+                                           app.name, i),
                                        "zone_id": "${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}" % (
-                                           lambda_.name, i),
+                                           app.name, i),
                                        "evaluate_target_health": True,
                                    }
                                })
-                        } for i, domain in enumerate(lambda_.domains)
+                        } for i, domain in enumerate(app.domains)
                     }
                 },
                 "aws_cloudwatch_log_group": {
-                    lambda_.name: {
-                        "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_.name),
+                    app.name: {
+                        "name": "/aws/apigateway/" + config.qualified_resource_name(app.name),
                         "retention_in_days": 1827,
                     }
                 },
                 "null_resource": {
-                    f'{lambda_.name}_log_group_provisioner': {
+                    f'{app.name}_log_group_provisioner': {
                         "triggers": {
                             "file_sha1": file_sha1(config.project_root + "/scripts/log_api_gateway.py"),
-                            "log_group_id": f"${{aws_cloudwatch_log_group.{lambda_.name}.id}}"
+                            "log_group_id": f"${{aws_cloudwatch_log_group.{app.name}.id}}"
                         },
                         # FIXME: Use Terraform to configure API Gateway access logs
                         #        https://github.com/DataBiosphere/azul/issues/3412
@@ -269,17 +271,17 @@ emit_tf({
                                 "command": ' '.join(map(shlex.quote, [
                                     "python",
                                     config.project_root + "/scripts/log_api_gateway.py",
-                                    "${module.chalice_%s.RestAPIId}" % lambda_.name,
+                                    "${module.chalice_%s.RestAPIId}" % app.name,
                                     config.deployment_stage,
-                                    "${aws_cloudwatch_log_group.%s.arn}" % lambda_.name
+                                    "${aws_cloudwatch_log_group.%s.arn}" % app.name
                                 ]))
                             }
                         }
                     }
                 },
                 "aws_iam_role": {
-                    lambda_.name: {
-                        "name": config.qualified_resource_name(lambda_.name),
+                    app.name: {
+                        "name": config.qualified_resource_name(app.name),
                         "assume_role_policy": json.dumps({
                             "Version": "2012-10-17",
                             "Statement": [
@@ -313,25 +315,25 @@ emit_tf({
                     }
                 },
                 "aws_iam_role_policy": {
-                    lambda_.name: {
-                        "name": lambda_.name,
-                        "policy": lambda_.policy,
-                        "role": "${aws_iam_role.%s.id}" % lambda_.name
+                    app.name: {
+                        "name": app.name,
+                        "policy": app.policy,
+                        "role": "${aws_iam_role.%s.id}" % app.name
                     },
                 },
                 "aws_wafv2_web_acl_association": {
-                    lambda_.name: {
+                    app.name: {
                         # Chalice doesn't expose the ARN of the API Gateway stages, so we
                         # construct the ARN manually using this workaround.
                         # https://github.com/aws/chalice/issues/1816#issuecomment-1012231084
-                        "resource_arn": f"${{module.chalice_{lambda_.name}.rest_api_arn}}"
-                                        f"/stages/${{module.chalice_{lambda_.name}.stage_name}}",
+                        "resource_arn": f"${{module.chalice_{app.name}.rest_api_arn}}"
+                                        f"/stages/${{module.chalice_{app.name}.stage_name}}",
                         "web_acl_arn": "${aws_wafv2_web_acl.api_gateway.arn}"
                     }
                 },
                 "aws_security_group": {
-                    lambda_.name: {
-                        "name": config.qualified_resource_name(lambda_.name),
+                    app.name: {
+                        "name": config.qualified_resource_name(app.name),
                         "vpc_id": "${data.aws_vpc.gitlab.id}",
                         "ingress": [
                             vpc.security_rule(description="Any traffic from the VPC",
@@ -350,8 +352,8 @@ emit_tf({
                     },
                     **(
                         {
-                            f"{lambda_.name}_alb": {
-                                "name": config.qualified_resource_name(lambda_.name, suffix="_alb"),
+                            f"{app.name}_alb": {
+                                "name": config.qualified_resource_name(app.name, suffix="_alb"),
                                 "vpc_id": "${data.aws_vpc.gitlab.id}",
                                 "ingress": [
                                     vpc.security_rule(description="Any traffic from the VPC",
@@ -368,8 +370,8 @@ emit_tf({
                                                       to_port=0)
                                 ],
                             },
-                            f"{lambda_.name}_vpce": {
-                                "name": config.qualified_resource_name(lambda_.name, suffix="_vpce"),
+                            f"{app.name}_vpce": {
+                                "name": config.qualified_resource_name(app.name, suffix="_vpce"),
                                 "vpc_id": "${data.aws_vpc.gitlab.id}",
                                 "ingress": [
                                     vpc.security_rule(description="Any traffic from the VPC",
@@ -393,8 +395,8 @@ emit_tf({
                 **(
                     {
                         "aws_lb": {
-                            lambda_.name: {
-                                "name": config.qualified_resource_name(lambda_.name),
+                            app.name: {
+                                "name": config.qualified_resource_name(app.name),
                                 "load_balancer_type": "application",
                                 "internal": "true",
                                 "subnets": [
@@ -403,28 +405,28 @@ emit_tf({
                                     for zone in range(vpc.num_zones)
                                 ],
                                 "security_groups": [
-                                    "${aws_security_group.%s_alb.id}" % lambda_.name
+                                    "${aws_security_group.%s_alb.id}" % app.name
                                 ]
                             }
                         },
                         "aws_lb_listener": {
-                            lambda_.name: {
+                            app.name: {
                                 "port": 443,
                                 "protocol": "HTTPS",
                                 "ssl_policy": "ELBSecurityPolicy-2016-08",
-                                "certificate_arn": "${aws_acm_certificate.%s_0.arn}" % lambda_.name,
+                                "certificate_arn": "${aws_acm_certificate.%s_0.arn}" % app.name,
                                 "default_action": [
                                     {
-                                        "target_group_arn": "${aws_lb_target_group.%s.id}" % lambda_.name,
+                                        "target_group_arn": "${aws_lb_target_group.%s.id}" % app.name,
                                         "type": "forward"
                                     }
                                 ],
-                                "load_balancer_arn": "${aws_lb.%s.id}" % lambda_.name
+                                "load_balancer_arn": "${aws_lb.%s.id}" % app.name
                             }
                         },
                         "aws_lb_target_group": {
-                            lambda_.name: {
-                                "name": config.qualified_resource_name(lambda_.name),
+                            app.name: {
+                                "name": config.qualified_resource_name(app.name),
                                 "port": 443,
                                 "protocol": "HTTPS",
                                 "target_type": "ip",
@@ -442,20 +444,20 @@ emit_tf({
                             }
                         },
                         "aws_lb_target_group_attachment": {
-                            lambda_.name: {
+                            app.name: {
                                 "for_each": "${{for i in data.aws_network_interface.%s : i.id => i.private_ip}}" % (
-                                    lambda_.name),
-                                "target_group_arn": "${aws_lb_target_group.%s.arn}" % lambda_.name,
+                                    app.name),
+                                "target_group_arn": "${aws_lb_target_group.%s.arn}" % app.name,
                                 "target_id": "${each.value}"
                             }
                         },
                         "aws_vpc_endpoint": {
-                            lambda_.name: {
+                            app.name: {
                                 "vpc_id": "${data.aws_vpc.gitlab.id}",
                                 "service_name": f"com.amazonaws.{config.region}.execute-api",
                                 "vpc_endpoint_type": "Interface",
                                 "security_group_ids": [
-                                    "${aws_security_group.%s_vpce.id}" % lambda_.name
+                                    "${aws_security_group.%s_vpce.id}" % app.name
                                 ],
                                 "subnet_ids": [
                                     f"${{data.aws_subnet.gitlab_{vpc.subnet_name(public=False)}_{zone}.id}}"
@@ -464,15 +466,15 @@ emit_tf({
                             }
                         },
                         "aws_vpc_endpoint_policy": {
-                            lambda_.name: {
-                                "vpc_endpoint_id": "${aws_vpc_endpoint.%s.id}" % lambda_.name,
+                            app.name: {
+                                "vpc_endpoint_id": "${aws_vpc_endpoint.%s.id}" % app.name,
                             }
                         }
                     }
                     if config.private_api else {
                     }
                 )
-            } for lambda_ in lambdas
+            } for app in apps
         )
     ]
 })
