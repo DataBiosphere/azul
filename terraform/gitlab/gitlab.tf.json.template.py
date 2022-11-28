@@ -296,8 +296,8 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
 
 clamav_image = 'clamav/clamav:0.104'
 dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.5.2-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.5.0'
+gitlab_image = 'gitlab/gitlab-ce:15.6.0-ce.0'
+runner_image = 'gitlab/gitlab-runner:v15.6.1'
 
 # There are ways to dynamically determine the latest Amazon Linux AMI but in the
 # spirit of reproducable builds we would rather pin the AMI and adopt updates at
