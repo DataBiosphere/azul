@@ -72,6 +72,7 @@ Connected issue: #0000
 - [ ] Started reindex in `prod`                                     <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Checked for and triaged indexing failures                     <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Emptied fail queues in target deployment                      <sub>or neither this PR nor a prior failed promotion requires it</sub>
+- [ ] Created backport PR and linked to it in a comment on this PR
 
 
 ### Operator
