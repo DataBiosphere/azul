@@ -229,7 +229,7 @@ class Plugin(TDRPlugin):
         return bundle_entity
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
-        result = defaultdict(set)
+        result = {entity_type: set() for entity_type in self.indexed_columns_by_entity_type}
         for e in entities:
             result[e.entity_type].add(e.key)
         return result
@@ -259,7 +259,7 @@ class Plugin(TDRPlugin):
                            ) -> Links:
         return set.union(
             self._downstream_from_biosamples(source, entities['biosample']),
-            self._downstream_from_files(source, entities['files'])
+            self._downstream_from_files(source, entities['file'])
         )
 
     def _upstream_from_biosamples(self,
@@ -446,37 +446,40 @@ class Plugin(TDRPlugin):
                            entity_type: EntityType,
                            keys: AbstractSet[Key],
                            ) -> MutableJSONs:
-        table_name = self._full_table_name(source, entity_type)
-        columns = set.union(
-            self.common_indexed_columns,
-            self.indexed_columns_by_entity_type[entity_type]
-        )
-        pk_column = entity_type + '_id'
-        assert pk_column in columns, entity_type
-        log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
-        rows = self._run_sql(f'''
-            SELECT {', '.join(sorted(columns))}
-            FROM {backtick(table_name)}
-            WHERE {pk_column} IN ({', '.join(map(repr, keys))})
-        ''')
+        if keys:
+            table_name = self._full_table_name(source, entity_type)
+            columns = set.union(
+                self.common_indexed_columns,
+                self.indexed_columns_by_entity_type[entity_type]
+            )
+            pk_column = entity_type + '_id'
+            assert pk_column in columns, entity_type
+            log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
+            rows = self._run_sql(f'''
+                SELECT {', '.join(sorted(columns))}
+                FROM {backtick(table_name)}
+                WHERE {pk_column} IN ({', '.join(map(repr, keys))})
+            ''')
 
-        def convert_column(value):
-            if isinstance(value, list):
-                value.sort()
-            if isinstance(value, datetime.datetime):
-                return self.format_version(value)
-            else:
-                return value
+            def convert_column(value):
+                if isinstance(value, list):
+                    value.sort()
+                if isinstance(value, datetime.datetime):
+                    return self.format_version(value)
+                else:
+                    return value
 
-        rows = [
-            {k: convert_column(v) for k, v in row.items()}
-            for row in rows
-        ]
-        log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
-        missing = keys - {row[pk_column] for row in rows}
-        require(not missing,
-                f'Required entities not found in {table_name}: {missing}')
-        return rows
+            rows = [
+                {k: convert_column(v) for k, v in row.items()}
+                for row in rows
+            ]
+            log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
+            missing = keys - {row[pk_column] for row in rows}
+            require(not missing,
+                    f'Required entities not found in {table_name}: {missing}')
+            return rows
+        else:
+            return []
 
     common_indexed_columns = {
         'datarepo_row_id',
