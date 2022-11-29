@@ -14,18 +14,27 @@ have too many entries in this file.
 #4752 On replacement, Terraform creates ES domain before deleting it
 ====================================================================
 
-The ``apply`` and ``auto_apply`` targets in ``terraform/Makefile`` do not
+Note: The ``apply`` and ``auto_apply`` targets in ``terraform/Makefile`` do not
 recurse into the sibling ``lambdas`` directory anymore. The only way to get a
 proper deployment is to run ``make deploy`` or ``make auto_deploy`` in the
 project root. This change speeds up the ``apply`` and ``auto_apply`` targets
 for those who know what they are doing™.
 
-The ``post_deploy`` target is gone. The ``deploy`` target has been renamed to
-``terraform``. The ``deploy`` target depends on the ``terraform`` target and
-invokes the post-deplot scripts directly. The same goes for ``auto_deploy``
-and ``auto_terraform``.
+Note: The ``post_deploy`` target is gone. The ``deploy`` target has been renamed
+to ``terraform``. The new ``deploy`` target depends on the ``terraform`` target
+and invokes the post-deplot scripts directly. The same goes for ``auto_deploy``
+and ``auto_terraform`` respectively.
 
+Ensure that the ``comm`` utility is installed. The `clean` target in most
+Makefiles depends on it.
 
+This is a complicated change that involves renaming lots of resources, both in
+TF config and in state. If a deployment is stale or borked, upgrading to this
+change is just going to make things worse. Before upgrading any deployment to
+this commit, or more precisely, the merge commit that introduces this change,
+first check out the previous merge commit, and deploy while following any
+upgrade instructions up to that commit. Then run ``make clean``, check out this
+commit and run ``make deploy``.
 
 
 #4688 Fix: Elasticsearch domains should be in a VPC

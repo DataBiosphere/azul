@@ -20,9 +20,13 @@ from typing import (
 import attr
 
 from azul import (
+    cache,
     cached_property,
     config,
     require,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.json import (
     copy_json,
@@ -324,38 +328,35 @@ U = TypeVar('U', bound=AnyJSON)
 
 class Chalice:
 
-    @property
-    def private_api_stage_config(self):
+    def private_api_stage_config(self, lambda_name: str) -> JSON:
         """
         Returns the stage-specific fragment of Chalice configuration JSON that
-        configures the Lambda function to be invoked by a private API Gateway, if
-        enabled.
+        configures the Lambda function to be invoked by a private API Gateway,
+        if enabled.
         """
         return {
             'api_gateway_endpoint_type': 'PRIVATE',
-            'api_gateway_endpoint_vpce': [
-                '${var.%s}' % config.var_vpc_endpoint_id
-            ]
+            'api_gateway_endpoint_vpce': ['${aws_vpc_endpoint.%s.id}' % lambda_name]
         } if config.private_api else {
         }
 
-    @property
-    def vpc_lambda_config(self):
+    def vpc_lambda_config(self, lambda_name: str) -> JSON:
         """
         Returns the Lambda-specific fragment of Chalice configuration JSON that
         configures the Lambda function to connect to the VPC.
         """
         return {
-            'subnet_ids': '${var.%s}' % config.var_vpc_subnet_ids,
-            'security_group_ids': [
-                '${var.%s}' % config.var_vpc_security_group_id
+            'subnet_ids': [
+                '${data.aws_subnet.gitlab_%s_%s.id}' % (vpc.subnet_name(public=False), zone)
+                for zone in range(vpc.num_zones)
             ],
+            'security_group_ids': ['${aws_security_group.%s.id}' % lambda_name],
         }
 
-    def vpc_lambda_iam_policy(self, for_tf: bool = False):
+    def vpc_lambda_iam_policy(self, for_tf: bool = False) -> JSONs:
         """
-        Returns the fragment of IAM policy JSON needed for placing a Lambda function
-        into a VPC.
+        Returns the fragment of IAM policy JSON needed for placing a Lambda
+        function into a VPC.
         """
         actions = [
             'ec2:CreateNetworkInterface',
@@ -373,44 +374,39 @@ class Chalice:
             }
         ]
 
-    def package_dir(self, lambda_name):
-        return Path(config.project_root) / 'lambdas' / lambda_name / '.chalice' / 'terraform'
+    def package_dir_path(self, app_name) -> Path:
+        root = Path(config.project_root)
+        return root / 'lambdas' / app_name / '.chalice' / 'terraform'
 
-    def module_dir(self, lambda_name):
-        return Path(config.project_root) / 'terraform' / lambda_name
+    def package_zip_path(self, app_name) -> Path:
+        return self.package_dir_path(app_name) / 'deployment.zip'
 
-    package_zip_name = 'deployment.zip'
+    def tf_config_path(self, app_name) -> Path:
+        return self.package_dir_path(app_name) / 'chalice.tf.json'
 
-    tf_config_name = 'chalice.tf.json'
-
-    resource_name_suffix = '-event'
-
-    def resource_name_mapping(self, tf_config: JSON) -> dict[tuple[str, str], str]:
+    def patch_resource_names(self, app_name: str, tf_config: JSON) -> MutableJSON:
         """
-        Some Chalice-generated resources have names that are incompatible with
-        our convention for generating fully qualified resource names. This
-        method returns a dictionary that, for each affected resource in the
-        given configuration, maps the resource's type and current name to a name
-        that's compatible with the convention.
-        """
-        mapping = {}
-        for resource_type, resources in tf_config['resource'].items():
-            for name in resources:
-                if name.endswith(self.resource_name_suffix):
-                    new_name = name[:-len(self.resource_name_suffix)]
-                    mapping[resource_type, name] = new_name
-        return mapping
-
-    def patch_resource_names(self, tf_config: JSON) -> JSON:
-        """
-        Some Chalice-generated resources have names that are incompatible with
-        our convention for generating fully qualified resource names. This
-        method transforms the given Terraform configuration to use names that
-        are compatible with the convention.
+        Patch the names of local variables, resources and data source in the
+        given Chalice-generated Terraform config. Definitions and references
+        will be patched.
 
         >>> from azul.doctests import assert_json
-        >>> assert_json(chalice.patch_resource_names({
+
+        >>> assert_json(chalice.patch_resource_names('indexer', {
+        ...     'locals': {
+        ...         'foo': ''
+        ...     },
+        ...     'data': {
+        ...         'aws_foo': {
+        ...             'bar': ''
+        ...         }
+        ...     },
         ...     "resource": {
+        ...         "aws_lambda_function": {
+        ...              "indexercachehealth": {  # patch
+        ...                 "foo": "${data.aws_foo.bar}${md5(local.foo)}"
+        ...              }
+        ...         },
         ...         "aws_cloudwatch_event_rule": {
         ...             "indexercachehealth-event": {  # patch
         ...                 "name": "indexercachehealth-event"  # leave
@@ -437,66 +433,233 @@ class Chalice:
         ...     }
         ... }))
         {
+            "locals": {
+                "indexer_foo": ""
+            },
+            "data": {
+                "aws_foo": {
+                    "indexer_bar": ""
+                }
+            },
             "resource": {
+                "aws_lambda_function": {
+                    "indexer_indexercachehealth": {
+                        "foo": "${data.aws_foo.indexer_bar}${md5(local.indexer_foo)}"
+                    }
+                },
                 "aws_cloudwatch_event_rule": {
-                    "indexercachehealth": {
+                    "indexer_indexercachehealth": {
                         "name": "indexercachehealth-event"
                     }
                 },
                 "aws_cloudwatch_event_target": {
-                    "indexercachehealth": {
-                        "rule": "${aws_cloudwatch_event_rule.indexercachehealth.name}",
+                    "indexer_indexercachehealth": {
+                        "rule": "${aws_cloudwatch_event_rule.indexer_indexercachehealth.name}",
                         "target_id": "indexercachehealth-event",
-                        "arn": "${aws_lambda_function.indexercachehealth.arn}"
+                        "arn": "${aws_lambda_function.indexer_indexercachehealth.arn}"
                     }
                 },
                 "aws_lambda_permission": {
-                    "indexercachehealth": {
+                    "indexer_indexercachehealth": {
                         "function_name": "azul-indexer-prod-indexercachehealth",
-                        "source_arn": "${aws_cloudwatch_event_rule.indexercachehealth.arn}"
+                        "source_arn": "${aws_cloudwatch_event_rule.indexer_indexercachehealth.arn}"
                     }
                 },
                 "aws_lambda_event_source_mapping": {
-                    "contribute-sqs-event-source": {
+                    "indexer_contribute": {
                         "batch_size": 1
                     }
                 }
             }
         }
         """
-        mapping = self.resource_name_mapping(tf_config)
 
+        renamed = {}
+
+        def rename(block_name, resource_type, old):
+            # Rename and track the renaming as a side-effect
+            new = self._rename_chalice_resource(app_name, old)
+            renamed[(block_name, resource_type, old)] = new
+            return new
+
+        # Translate the definitions
         tf_config = {
             block_name: {
                 resource_type: {
-                    mapping.get((resource_type, name), name): resource
-                    for name, resource in resources.items()
+                    rename(block_name, resource_type, resource_name): resource
+                    for resource_name, resource in resources.items()
                 }
                 for resource_type, resources in block.items()
-            } if block_name == 'resource' else block
+            }
+            if block_name in ('resource', 'data') else
+            {
+                rename(block_name, None, name): value
+                for name, value in block.items()
+            }
+            if block_name == 'locals' else
+            block
             for block_name, block in tf_config.items()
         }
 
-        def ref(resource_type, name):
-            return '${' + resource_type + '.' + name + '.'
+        def ref(block_name, resource_type, name):
+            if block_name == 'resource':
+                return '.'.join([resource_type, name])
+            elif block_name == 'locals':
+                return '.'.join(['local', name])
+            else:
+                return '.'.join([block_name, resource_type, name])
 
         ref_map = {
-            ref(resource_type, name): ref(resource_type, new_name)
-            for (resource_type, name), new_name in mapping.items()
+            ref(block_name, resource_type, name): ref(block_name, resource_type, new_name)
+            for (block_name, resource_type, name), new_name in renamed.items()
         }
+        assert len(ref_map) == len(renamed)
+        # Sort in reverse so that keys that are prefixes of other keys go last
+        ref_map = sorted(ref_map.items(), reverse=True)
 
         def patch_refs(v: U) -> U:
             if isinstance(v, dict):
                 return {k: patch_refs(v) for k, v in v.items()}
+            elif isinstance(v, list):
+                return list(map(patch_refs, v))
             elif isinstance(v, str):
-                for old_ref, new_ref in ref_map.items():
-                    if old_ref in v:
-                        return v.replace(old_ref, new_ref)
-                return v
-            else:
-                return v
+                for old_ref, new_ref in ref_map:
+                    v = v.replace(old_ref, new_ref)
+            return v
 
         return patch_refs(tf_config)
+
+    def rename_chalice_resource_in_tf_state(self, reference: str) -> str:
+        """
+        Translate the resource and data references found Terraform state that
+        resulted from applying Terraform configuration generated by Chalice.
+        The configuration is assumed to have been applied as a module,  which
+        is how we used to incorporate the Chalice-generated TF config into our
+        own. The returned references omit the module prefix and instead
+        disambiguate between indexer and service lambda directly in the
+        resource name, eliminating the need to apply the config as a module.
+
+        >>> f = chalice.rename_chalice_resource_in_tf_state
+
+        >>> f('module.chalice_indexer.aws_foo.rest_api')
+        'aws_foo.indexer'
+
+        >>> f('module.chalice_indexer.aws_foo.api_handler')
+        'aws_foo.indexer'
+
+        >>> f('module.chalice_indexer.aws_foo.rest_api_invoke')
+        'aws_foo.indexer'
+
+        >>> f('module.chalice_indexer.data.aws_foo.chalice')
+        'data.aws_foo.indexer'
+
+        >>> f('module.chalice_indexer.aws_foo.aggregate-sqs-event-source')
+        'aws_foo.indexer_aggregate'
+        """
+        prefix, module, *reference = reference.split('.')
+        assert prefix == 'module', prefix
+        prefix, module = module.split('_')
+        assert prefix == 'chalice'
+        return self.rename_chalice_resource(module, reference)
+
+    def rename_chalice_resource(self, app_name: str, reference: str) -> str:
+        """
+        Translate the resource and data references found in Terraform
+        configuration generated by Chalice.
+
+        :param reference: the reference to translate
+
+        :param app_name: the name of the Lambda function to which the resource
+                            belongs.
+        """
+        assert app_name in ('service', 'indexer'), app_name
+        *reference, resource_type, resource_name = reference
+        if reference:
+            assert reference == ['data']
+        resource_name = self._rename_chalice_resource(app_name, resource_name)
+        return '.'.join([*reference, resource_type, resource_name])
+
+    def _rename_chalice_resource(self, app_name: str, resource_name: str) -> str:
+        singletons = {
+            'rest_api',
+            'api_handler',
+            'rest_api_invoke',
+            'chalice',
+            'chalice_api_swagger'
+        }
+        if resource_name in singletons:
+            resource_name = app_name
+        else:
+            resource_name = resource_name.removesuffix('-sqs-event-source')
+            resource_name = resource_name.removesuffix('-event')
+            resource_name = app_name + '_' + resource_name
+        return resource_name
+
+    @cache
+    def tf_config(self, app_name):
+        with open(self.tf_config_path(app_name)) as f:
+            tf_config = json.load(f)
+        tf_config = self.patch_resource_names(app_name, tf_config)
+        resources = tf_config['resource']
+        data = tf_config['data']
+        locals = tf_config['locals']
+
+        # null_data_source has been deprecated and locals should be used instead.
+        # However the data sources defined underneath it aren't actually used
+        # anywhere so we can just the delete the entry.
+        del data['null_data_source']
+
+        if config.private_api:
+            # Hack to inject the VPC endpoint IDs that Chalice doesn't (but should)
+            # add when the `api_gateway_endpoint_vpce` config is used.
+            rest_api = resources['aws_api_gateway_rest_api'][app_name]
+            rest_api['endpoint_configuration']['vpc_endpoint_ids'] = [
+                '${aws_vpc_endpoint.%s.id}' % app_name
+            ]
+
+        for resource in resources['aws_lambda_function'].values():
+            assert 'layers' not in resource
+            resource['layers'] = ["${aws_lambda_layer_version.dependencies.arn}"]
+            env = config.es_endpoint_env(
+                es_endpoint=(
+                    aws.es_endpoint
+                    if config.share_es_domain else
+                    '${aws_elasticsearch_domain.index.endpoint}:443'
+                ),
+                es_instance_count=(
+                    aws.es_instance_count
+                    if config.share_es_domain else
+                    "${aws_elasticsearch_domain.index.cluster_config[0].instance_count}"
+                )
+            )
+            resource['environment']['variables'].update(env)
+            package_zip = str(self.package_zip_path(app_name))
+            resource['source_code_hash'] = '${filebase64sha256("%s")}' % package_zip
+            resource['filename'] = package_zip
+
+        for resource_type, argument in [
+            ('aws_cloudwatch_event_rule', 'name'),
+            ('aws_cloudwatch_event_target', 'target_id')
+        ]:
+            # Currently, Chalice fails to prefix the names of some resources. We
+            # need them to be prefixed with `azul-` to allow for limiting the
+            # scope of certain IAM permissions for Gitlab and, more importantly,
+            # the deployment stage so these resources are segregated by deployment.
+            for resource in resources[resource_type].values():
+                function_name, _, suffix = resource[argument].partition('-')
+                assert suffix == 'event', suffix
+                assert function_name, function_name
+                resource[argument] = config.qualified_resource_name(function_name)
+
+        resources['aws_api_gateway_deployment'][app_name]['depends_on'] = [
+            f'null_resource.{app_name}_log_group_provisioner'
+        ]
+
+        return {
+            'resource': resources,
+            'data': data,
+            'locals': locals
+        }
 
 
 chalice = Chalice()

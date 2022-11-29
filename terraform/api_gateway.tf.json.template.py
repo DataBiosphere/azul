@@ -18,6 +18,7 @@ from azul.objects import (
     InternMeta,
 )
 from azul.terraform import (
+    chalice,
     emit_tf,
     vpc,
 )
@@ -107,24 +108,34 @@ emit_tf({
                 }
                 for public in (False, True)
                 for zone in range(vpc.num_zones)
-            },
-            **(
-                {
-                    # To allow the network interface IDs to be iterated here, the
-                    # `apply` target in `$project_root/terraform/Makefile` creates
-                    # the VPC endpoints first before all other resources.
-                    'aws_network_interface': {
-                        app.name: {
-                            'for_each': '${aws_vpc_endpoint.%s.network_interface_ids}' % app.name,
-                            'id': '${each.key}'
-                        } for app in apps
+            }
+        },
+        *(
+            {
+                **chalice.tf_config(app.name)['data'],
+                **(
+                    {
+                        # To allow the network interface IDs to be iterated here, the
+                        # `apply` target in `$project_root/terraform/Makefile` creates
+                        # the VPC endpoints first before all other resources.
+                        'aws_network_interface': {
+                            app.name: {
+                                'for_each': '${aws_vpc_endpoint.%s.network_interface_ids}' % app.name,
+                                'id': '${each.key}'
+                            }
+                        }
                     }
-                }
-                if config.private_api else {}
-            )
-        }
+                    if config.private_api else
+                    {}
+                )
+            }
+            for app in apps
+        )
     ],
-    # Note that ${} references exist to interpolate a value AND express a dependency.
+    'locals': [
+        chalice.tf_config(app.name)['locals']
+        for app in apps
+    ],
     'resource': [
         {
             'aws_wafv2_web_acl': {
@@ -146,10 +157,11 @@ emit_tf({
         },
         *(
             {
+                **chalice.tf_config(app.name)['resource'],
                 'aws_api_gateway_base_path_mapping': {
                     f'{app.name}_{i}': {
-                        'api_id': '${module.chalice_%s.RestAPIId}' % app.name,
-                        'stage_name': '${module.chalice_%s.stage_name}' % app.name,
+                        'api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
+                        'stage_name': '${aws_api_gateway_deployment.%s.stage_name}' % app.name,
                         'domain_name': '${aws_api_gateway_domain_name.%s_%i.domain_name}' % (app.name, i)
                     }
                     for i, domain in enumerate(app.domains)
@@ -162,8 +174,8 @@ emit_tf({
                 },
                 'aws_api_gateway_method_settings': {
                     f'{app.name}_{i}': {
-                        'rest_api_id': '${module.chalice_%s.RestAPIId}' % app.name,
-                        'stage_name': '${module.chalice_%s.stage_name}' % app.name,
+                        'rest_api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
+                        'stage_name': '${aws_api_gateway_deployment.%s.stage_name}' % app.name,
                         'method_path': '*/*',  # every URL path, every HTTP method
                         'settings': {
                             'metrics_enabled': True,
@@ -271,7 +283,7 @@ emit_tf({
                                 'command': ' '.join(map(shlex.quote, [
                                     'python',
                                     config.project_root + '/scripts/log_api_gateway.py',
-                                    '${module.chalice_%s.RestAPIId}' % app.name,
+                                    '${aws_api_gateway_rest_api.%s.id}' % app.name,
                                     config.deployment_stage,
                                     '${aws_cloudwatch_log_group.%s.arn}' % app.name
                                 ]))
@@ -326,8 +338,8 @@ emit_tf({
                         # Chalice doesn't expose the ARN of the API Gateway stages, so we
                         # construct the ARN manually using this workaround.
                         # https://github.com/aws/chalice/issues/1816#issuecomment-1012231084
-                        'resource_arn': f'${{module.chalice_{app.name}.rest_api_arn}}'
-                                        f'/stages/${{module.chalice_{app.name}.stage_name}}',
+                        'resource_arn': '${aws_api_gateway_rest_api.%s.arn}/stages/'
+                                        '${aws_api_gateway_deployment.%s.stage_name}' % (app.name, app.name),
                         'web_acl_arn': '${aws_wafv2_web_acl.api_gateway.arn}'
                     }
                 },

@@ -44,3 +44,8 @@ local: check_python config
 
 .PHONY: clean
 clean: git_clean_recursive
+
+.PHONY: package
+package: check_branch check_python check_aws config environ compile
+	python -m azul.changelog vendor
+	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform

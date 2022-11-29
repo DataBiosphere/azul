@@ -1,6 +1,3 @@
-from azul.deployment import (
-    aws,
-)
 from azul.terraform import (
     emit_tf,
 )
@@ -30,21 +27,9 @@ emit_tf(tag_resources=False, config={
     'provider': [
         {
             'aws': {
-                **(
-                    {
-                        'region': region,
-                        'alias': region
-                    } if region else {
-                    }
-                ),
-                **(
-                    {
-                        'assume_role': {
-                            'role_arn': aws.profile['role_arn']
-                        }
-                    } if 'role_arn' in aws.profile else {
-                    }
-                )
+                'region': region,
+                'alias': region
+            } if region else {
             }
         } for region in (None, 'us-east-1', 'us-west-2')
         # Generate a default `aws` provider and one that pins the region for the certificates of the API Gateway

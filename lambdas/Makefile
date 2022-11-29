@@ -5,7 +5,7 @@ include ../common.mk
 
 .PHONY: layer
 layer: check_env
-	$(MAKE) -C layer package
+	$(MAKE) -C layer layer
 
 .PHONY: indexer
 indexer: check_env

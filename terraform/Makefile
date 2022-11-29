@@ -5,7 +5,6 @@ include ../common.mk
 
 .PHONY: clean
 clean: check_env git_clean
-	rm -rvf $(TF_DATA_DIR)/modules
 
 .PHONY: state
 state: check_terraform check_branch check_aws
@@ -14,7 +13,7 @@ state: check_terraform check_branch check_aws
 	python $(project_root)/scripts/migrate_terraform_state.py
 
 .PHONY: init
-init: state providers.tf.json backend.tf.json
+init: clean state providers.tf.json backend.tf.json
 	terraform init -reconfigure
 
 .PHONY: check_schema
@@ -26,12 +25,8 @@ check_schema: init
 update_schema: init
 	python $(project_root)/scripts/terraform_schema.py update
 
-.PHONY: modules
-modules: modules.tf.json
-	terraform init  # to "install" modules
-
 .PHONY: config
-config: check_schema modules $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
+config: check_schema $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
 .PHONY: validate
 validate: config
