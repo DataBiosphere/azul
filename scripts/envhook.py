@@ -1,3 +1,16 @@
+"""
+Install a hook into Python that modifies os.environ to emulate the effect of
+sourcing `environment` in a shell so that Python interpreters started by PyCharm
+(or other IDEs that don't their environment from a shell) have an environment
+similar to that of interpreters started from that shell. The hook is also active
+in Python interpreters launched by the shell but it doesn't modify os.environ in
+that case. Instead, it prints a warning to stderr if the environment it
+inherited from the shell is stale.
+
+The hook also propagates AWS credentials cached by the AWS CLI to botocore and
+boto3.
+"""
+
 from collections.abc import (
     Mapping,
 )
@@ -15,120 +28,177 @@ from typing import (
     TypeVar,
 )
 
-__all__ = ('setenv', 'main')
 
+class EnvHook:
 
-def main(argv):
-    import argparse
-    parser = argparse.ArgumentParser(description='Install a hook into Python that automatically sources `environment`')
-    parser.add_argument('action', choices=['install', 'remove'])
-    options = parser.parse_args(argv)
+    @classmethod
+    def main(cls):
+        self = cls()
+        try:
+            self._main(sys.argv[1:])
+        except EnvhookError as e:
+            self._print(e.args[0])
+            sys.exit(1)
 
-    # Confirm virtual environment is active `venv || virtualenv`
-    if 'VIRTUAL_ENV' in os.environ:
-        import site
-        if hasattr(site, 'getsitepackages'):
-            # Both plain Python and `venv` have `getsitepackages()`
-            sys_prefix = Path(sys.prefix).resolve()
-            link_dir = next(p for p in map(Path, site.getsitepackages())
-                            if sys_prefix.is_prefix_of(p))
+    @classmethod
+    def sitecustomize(cls):
+        self = cls()
+        enabled = int(os.environ.get('ENVHOOK', '1'))
+        if enabled == 0:
+            self._print('Currently disabled because the ENVHOOK environment variable is set to 0.')
         else:
-            # virtualenv's `site` does not have getsitepackages()
-            link_dir = (Path(site.__file__).parent / 'site-packages').resolve()
-    else:
-        raise NoActiveVirtualenv
+            self.setenv()
+            self.share_aws_cli_credential_cache()
 
-    dst = Path(__file__).absolute()
+    def _main(self, argv):
+        import argparse
+        parser = argparse.ArgumentParser(description='Install a hook into Python that automatically sources `environment`')
+        parser.add_argument('action', choices=['install', 'remove'])
+        options = parser.parse_args(argv)
 
-    # This is the least invasive way of looking up `sitecustomize`, AFAIK. The
-    # alternative is `import sitecustomize` which would propagate exceptions
-    # occurring in that module and trigger the side effects of loading that
-    # module. This approach is really only safe when that module was already
-    # loaded which is not the case if -S was passed or PYTHONNOUSERSITE is set.
-    # We really only want to know if it's us or a different module. Another
-    # alternative would be sys.modules.get('sitecustomize') but that would yield
-    # None with -S or PYTHONNOUSERSITE even when there is a sitecustomize.py,
-    # potentially one different from us.
-    sitecustomize = importlib.util.find_spec('sitecustomize')
-    if sitecustomize is not None:
-        sitecustomize = Path(sitecustomize.origin)
-        if sitecustomize.resolve() != dst.resolve():
-            raise ThirdPartySiteCustomize(sitecustomize)
-
-    link = link_dir / 'sitecustomize.py'
-    if link.exists():
-        if link.is_symlink():
-            cur_dst = link.follow()
-        else:
-            raise NotASymbolicLinkError(link)
-    else:
-        cur_dst = None
-
-    if options.action == 'install':
-        if cur_dst is None:
-            _print(f'Installing by creating symbolic link from {link} to {dst}.')
-            link.symlink_to(dst)
-        elif dst == cur_dst:
-            _print(f'Already installed. Symbolic link from {link} to {dst} exists.')
-        else:
-            raise BadSymlinkDestination(link, cur_dst, dst)
-    elif options.action == 'remove':
-        if cur_dst is None:
-            _print(f'Not currently installed. Symbolic link {link} does not exist.')
-        elif cur_dst == dst:
-            _print(f'Uninstalling by removing {link}.')
-            link.unlink()
-        else:
-            raise BadSymlinkDestination(link, cur_dst, dst)
-    else:
-        assert False
-
-
-def setenv():
-    export_environment = _import_export_environment()
-    redact = getattr(export_environment, 'redact')
-    resolve_env = getattr(export_environment, 'resolve_env')
-    load_env = getattr(export_environment, 'load_env')
-    new, _ = load_env()
-    new = resolve_env(new)
-    old = os.environ
-    pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
-
-    for k, (o, n) in sorted(zip_dict(old, new).items()):
-        if o is None:
-            if pycharm_hosted:
-                _print(f"Setting {k} to '{redact(k, n)}'")
-                os.environ[k] = n
+        # Confirm virtual environment is active `venv || virtualenv`
+        if 'VIRTUAL_ENV' in os.environ:
+            import site
+            if hasattr(site, 'getsitepackages'):
+                # Both plain Python and `venv` have `getsitepackages()`
+                sys_prefix = Path(sys.prefix).resolve()
+                link_dir = next(p for p in map(Path, site.getsitepackages())
+                                if sys_prefix.is_prefix_of(p))
             else:
-                _print(f"Warning: {k} is not set but should be {redact(k, n)}, "
-                       f"you should run `source environment`")
-        elif n is None:
-            pass
-        elif n != o:
-            if k.startswith('PYTHON'):
-                _print(f"Ignoring change in {k} from '{redact(k, o)}' to '{redact(k, n)}'")
+                # virtualenv's `site` does not have getsitepackages()
+                link_dir = (Path(site.__file__).parent / 'site-packages').resolve()
+        else:
+            raise NoActiveVirtualenv
+
+        dst = Path(__file__).absolute()
+
+        # This is the least invasive way of looking up `sitecustomize`, AFAIK. The
+        # alternative is `import sitecustomize` which would propagate exceptions
+        # occurring in that module and trigger the side effects of loading that
+        # module. This approach is really only safe when that module was already
+        # loaded which is not the case if -S was passed or PYTHONNOUSERSITE is set.
+        # We really only want to know if it's us or a different module. Another
+        # alternative would be sys.modules.get('sitecustomize') but that would yield
+        # None with -S or PYTHONNOUSERSITE even when there is a sitecustomize.py,
+        # potentially one different from us.
+        sitecustomize = importlib.util.find_spec('sitecustomize')
+        if sitecustomize is not None:
+            sitecustomize = Path(sitecustomize.origin)
+            if sitecustomize.resolve() != dst.resolve():
+                raise ThirdPartySiteCustomize(sitecustomize)
+
+        link = link_dir / 'sitecustomize.py'
+        if link.exists():
+            if link.is_symlink():
+                cur_dst = link.follow()
             else:
-                if pycharm_hosted:
-                    _print(f"Changing {k} from '{redact(k, o)}' to '{redact(k, n)}'")
+                raise NotASymbolicLinkError(link)
+        else:
+            cur_dst = None
+
+        if options.action == 'install':
+            if cur_dst is None:
+                self._print(f'Installing by creating symbolic link from {link} to {dst}.')
+                link.symlink_to(dst)
+            elif dst == cur_dst:
+                self._print(f'Already installed. Symbolic link from {link} to {dst} exists.')
+            else:
+                raise BadSymlinkDestination(link, cur_dst, dst)
+        elif options.action == 'remove':
+            if cur_dst is None:
+                self._print(f'Not currently installed. Symbolic link {link} does not exist.')
+            elif cur_dst == dst:
+                self._print(f'Uninstalling by removing {link}.')
+                link.unlink()
+            else:
+                raise BadSymlinkDestination(link, cur_dst, dst)
+        else:
+            assert False
+
+    def setenv(self):
+        export_environment = self._import_export_environment()
+        redact = getattr(export_environment, 'redact')
+        resolve_env = getattr(export_environment, 'resolve_env')
+        load_env = getattr(export_environment, 'load_env')
+        new, _ = load_env()
+        new = resolve_env(new)
+        old = os.environ
+        for k, (o, n) in sorted(zip_dict(old, new).items()):
+            if o is None:
+                if self.pycharm_hosted:
+                    self._print(f"Setting {k} to '{redact(k, n)}'")
                     os.environ[k] = n
                 else:
-                    _print(f"Warning: {k} is '{redact(k, o)}' but should be '{redact(k, n)}', "
-                           f"you must run `source environment`")
+                    self._print(f"Warning: {k} is not set but should be {redact(k, n)}, "
+                                f"you should run `source environment`")
+            elif n is None:
+                pass
+            elif n != o:
+                if k.startswith('PYTHON'):
+                    self._print(f"Ignoring change in {k} from '{redact(k, o)}' to '{redact(k, n)}'")
+                else:
+                    if self.pycharm_hosted:
+                        self._print(f"Changing {k} from '{redact(k, o)}' to '{redact(k, n)}'")
+                        os.environ[k] = n
+                    else:
+                        self._print(f"Warning: {k} is '{redact(k, o)}' but should be '{redact(k, n)}', "
+                                    f"you must run `source environment`")
 
+    @property
+    def pycharm_hosted(self):
+        return bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
 
-def _import_export_environment():
-    # When this module is loaded from the `sitecustomize.py` symbolic link, the
-    # directory containing the physical file may not be on the sys.path so we
-    # cannot use a normal import to load the `export_environment` module.
-    module_name = 'export_environment'
-    file_name = module_name + '.py'
-    parent_dir = Path(__file__).follow().parent
-    spec = importlib.util.spec_from_file_location(name=module_name,
-                                                  location=parent_dir / file_name)
-    export_environment = importlib.util.module_from_spec(spec)
-    assert isinstance(spec.loader, Loader)
-    spec.loader.exec_module(export_environment)
-    return export_environment
+    def _import_export_environment(self):
+        # When this module is loaded from the `sitecustomize.py` symbolic link, the
+        # directory containing the physical file may not be on the sys.path so we
+        # cannot use a normal import to load the `export_environment` module.
+        module_name = 'export_environment'
+        file_name = module_name + '.py'
+        parent_dir = Path(__file__).follow().parent
+        spec = importlib.util.spec_from_file_location(name=module_name,
+                                                      location=parent_dir / file_name)
+        export_environment = importlib.util.module_from_spec(spec)
+        assert isinstance(spec.loader, Loader)
+        spec.loader.exec_module(export_environment)
+        return export_environment
+
+    @classmethod
+    def _print(cls, msg):
+        print(Path(__file__).resolve().name + ':', msg, file=sys.stderr)
+
+    def _parse(self, env: str) -> dict[str, str]:
+        return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
+
+    def share_aws_cli_credential_cache(self):
+        """
+        By default, boto3 and botocore do not use a cache for the assume-role
+        provider even though the credentials cache mechanism exists in botocore.
+        This means that if assuming a role requires you to enter a MFA code, you
+        will have to enter it every time you instantiate a boto3 or botocore client,
+        even if your previous session would have lasted longer.
+
+        This function connects the assume-role provider with the cache used by the
+        AWS CLI, saving tedious code reentry. It does so only for boto3.
+        """
+        try:
+            import boto3
+            import botocore.credentials
+            import botocore.session
+        except ImportError:
+            self._print('Looks like boto3 is not installed. Skipping credential sharing with AWS CLI.')
+        else:
+            # Get the AssumeRole credential provider
+            session = botocore.session.get_session()
+            resolver = session.get_component('credential_provider')
+            assume_role_provider = resolver.get_provider('assume-role')
+
+            # Make the provider use the same cache as the AWS CLI
+            cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
+            assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+
+            # Calls to boto3.client() and .resource() use the default session and
+            # therefore hit the cached credentials
+            boto3.setup_default_session(botocore_session=session)
 
 
 K = TypeVar('K')
@@ -164,46 +234,6 @@ def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> dict[K, 
     removed = ((k, o) for k, o in old.items() if k not in new)
     removed = ((k, (o, missing)) for k, o in removed)
     return dict(chain(removed, result))
-
-
-def _print(msg):
-    print(Path(__file__).resolve().name + ':', msg, file=sys.stderr)
-
-
-def _parse(env: str) -> dict[str, str]:
-    return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
-
-
-def share_aws_cli_credential_cache():
-    """
-    By default, boto3 and botocore do not use a cache for the assume-role
-    provider even though the credentials cache mechanism exists in botocore.
-    This means that if assuming a role requires you to enter a MFA code, you
-    will have to enter it every time you instantiate a boto3 or botocore client,
-    even if your previous session would have lasted longer.
-
-    This function connects the assume-role provider with the cache used by the
-    AWS CLI, saving tedious code reentry. It does so only for boto3.
-    """
-    try:
-        import boto3
-        import botocore.credentials
-        import botocore.session
-    except ImportError:
-        _print('Looks like boto3 is not installed. Skipping credential sharing with AWS CLI.')
-    else:
-        # Get the AssumeRole credential provider
-        session = botocore.session.get_session()
-        resolver = session.get_component('credential_provider')
-        assume_role_provider = resolver.get_provider('assume-role')
-
-        # Make the provider use the same cache as the AWS CLI
-        cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
-        assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
-
-        # Calls to boto3.client() and .resource() use the default session and
-        # therefore hit the cached credentials
-        boto3.setup_default_session(botocore_session=session)
 
 
 class Path(pathlib.PosixPath):
@@ -294,14 +324,6 @@ class ThirdPartySiteCustomize(EnvhookError):
 
 
 if __name__ == '__main__':
-    try:
-        main(sys.argv[1:])
-    except EnvhookError as e:
-        _print(e.args[0])
-        sys.exit(1)
+    EnvHook.main()
 elif __name__ == 'sitecustomize':
-    if int(os.environ.get('ENVHOOK', '1')) == 0:
-        _print('Currently disabled because the ENVHOOK environment variable is set to 0.')
-    else:
-        setenv()
-        share_aws_cli_credential_cache()
+    EnvHook.sitecustomize()
