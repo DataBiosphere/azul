@@ -1,15 +1,14 @@
 from azul import (
     config,
 )
-from azul.chalice import (
-    private_api_stage_config,
-    vpc_lambda_config,
-)
 from azul.modules import (
     load_app_module,
 )
 from azul.template import (
     emit,
+)
+from azul.terraform import (
+    chalice,
 )
 
 suffix = '-' + config.deployment_stage
@@ -27,12 +26,12 @@ emit({
     "minimum_compression_size": config.minimum_compression_size,
     "lambda_timeout": config.api_gateway_lambda_timeout,
     "lambda_memory_size": 128,
-    **vpc_lambda_config(),
+    **chalice.vpc_lambda_config,
     "stages": {
         config.deployment_stage: {
-            **private_api_stage_config(),
+            **chalice.private_api_stage_config,
             "lambda_functions": {
-                "api_handler": vpc_lambda_config(),
+                "api_handler": chalice.vpc_lambda_config,
                 indexer.contribute.name: {
                     "reserved_concurrency": config.contribution_concurrency(retry=False),
                     "lambda_memory_size": 256,

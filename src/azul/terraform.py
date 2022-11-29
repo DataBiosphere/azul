@@ -324,6 +324,55 @@ U = TypeVar('U', bound=AnyJSON)
 
 class Chalice:
 
+    @property
+    def private_api_stage_config(self):
+        """
+        Returns the stage-specific fragment of Chalice configuration JSON that
+        configures the Lambda function to be invoked by a private API Gateway, if
+        enabled.
+        """
+        return {
+            'api_gateway_endpoint_type': 'PRIVATE',
+            'api_gateway_endpoint_vpce': [
+                '${var.%s}' % config.var_vpc_endpoint_id
+            ]
+        } if config.private_api else {
+        }
+
+    @property
+    def vpc_lambda_config(self):
+        """
+        Returns the Lambda-specific fragment of Chalice configuration JSON that
+        configures the Lambda function to connect to the VPC.
+        """
+        return {
+            'subnet_ids': '${var.%s}' % config.var_vpc_subnet_ids,
+            'security_group_ids': [
+                '${var.%s}' % config.var_vpc_security_group_id
+            ],
+        }
+
+    def vpc_lambda_iam_policy(self, for_tf: bool = False):
+        """
+        Returns the fragment of IAM policy JSON needed for placing a Lambda function
+        into a VPC.
+        """
+        actions = [
+            'ec2:CreateNetworkInterface',
+            'ec2:DescribeNetworkInterfaces',
+            'ec2:DeleteNetworkInterface',
+        ]
+        return [
+            {
+                'actions': actions,
+                'resources': ['*'],
+            } if for_tf else {
+                'Effect': 'Allow',
+                'Action': actions,
+                'Resource': ['*']
+            }
+        ]
+
     def package_dir(self, lambda_name):
         return Path(config.project_root) / 'lambdas' / lambda_name / '.chalice' / 'terraform'
 

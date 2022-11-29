@@ -20,9 +20,6 @@ from azul import (
 from azul.aws_service_model import (
     ServiceActionType,
 )
-from azul.chalice import (
-    vpc_lambda_iam_policy,
-)
 from azul.collections import (
     dict_merge,
     explode_dict,
@@ -34,6 +31,7 @@ from azul.strings import (
     departition,
 )
 from azul.terraform import (
+    chalice,
     emit_tf,
     vpc,
 )
@@ -465,7 +463,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    UUID='*',
                                    LayerVersion='*'),
 
-                    *vpc_lambda_iam_policy(for_tf=True),
+                    *chalice.vpc_lambda_iam_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level
                     # permissions
