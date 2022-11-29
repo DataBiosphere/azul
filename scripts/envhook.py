@@ -25,6 +25,7 @@ import os
 import pathlib
 import sys
 from typing import (
+    Optional,
     TypeVar,
 )
 
@@ -115,13 +116,14 @@ class EnvHook:
         else:
             assert False
 
-    def setenv(self):
+    def setenv(self, new: Optional[Mapping[str, str]] = None):
         export_environment = self._import_export_environment()
         redact = getattr(export_environment, 'redact')
-        resolve_env = getattr(export_environment, 'resolve_env')
-        load_env = getattr(export_environment, 'load_env')
-        new, _ = load_env()
-        new = resolve_env(new)
+        if new is None:
+            resolve_env = getattr(export_environment, 'resolve_env')
+            load_env = getattr(export_environment, 'load_env')
+            new, _ = load_env()
+            new = resolve_env(new)
         old = os.environ
         for k, (o, n) in sorted(zip_dict(old, new).items()):
             if o is None:
@@ -199,6 +201,13 @@ class EnvHook:
             # Calls to boto3.client() and .resource() use the default session and
             # therefore hit the cached credentials
             boto3.setup_default_session(botocore_session=session)
+
+            if self.pycharm_hosted:
+                # The equivalent of the _preauth function in `environment`
+                credentials = session.get_credentials()
+                self.setenv(dict(AWS_ACCESS_KEY_ID=credentials.access_key,
+                                 AWS_SECRET_ACCESS_KEY=credentials.secret_key,
+                                 AWS_SESSION_TOKEN=credentials.token))
 
 
 K = TypeVar('K')
