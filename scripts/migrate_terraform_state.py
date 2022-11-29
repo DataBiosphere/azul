@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 def main():
     coordinates = dict(Bucket=config.versioned_bucket,
-                       Key=f'azul--{config.deployment_stage}.tfstate')
+                       Key=f'azul-{config.terraform_component}-{config.deployment_stage}.tfstate')
     log.info('Migrating Terraform state at %r', coordinates)
     response = aws.s3.get_object(**coordinates)
     state = json.load(response['Body'])

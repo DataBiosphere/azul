@@ -9,9 +9,10 @@ from azul.deployment import (
 from azul.terraform import (
     emit_tf,
     provider_fragment,
+    block_public_s3_bucket_access,
 )
 
-tf_config = {
+emit_tf(block_public_s3_bucket_access({
     'resource': {
         'aws_s3_bucket': {
             'shared_cloudtrail': {
@@ -253,6 +254,11 @@ tf_config = {
                 })
             }
         },
+        "aws_iam_service_linked_role": {
+            "opensearch": {
+                "aws_service_name": "opensearchservice.amazonaws.com"
+            }
+        },
         'aws_api_gateway_account': {
             'shared': {
                 'cloudwatch_role_arn': '${aws_iam_role.api_gateway.arn}'
@@ -334,16 +340,4 @@ tf_config = {
             }
         }
     }
-}
-
-tf_config['resource']['aws_s3_bucket_public_access_block'] = {
-    bucket: {
-        'bucket': '${aws_s3_bucket.%s.id}' % bucket,
-        'block_public_acls': True,
-        'block_public_policy': True,
-        'ignore_public_acls': True,
-        'restrict_public_buckets': True
-    } for bucket in tf_config['resource']['aws_s3_bucket']
-}
-
-emit_tf(tf_config)
+}))

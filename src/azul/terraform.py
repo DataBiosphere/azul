@@ -24,6 +24,9 @@ from azul import (
     config,
     require,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.template import (
     emit,
 )
@@ -288,6 +291,32 @@ def provider_fragment(region: str) -> JSON:
         return {}
     else:
         return {'provider': f'aws.{region}'}
+
+
+def block_public_s3_bucket_access(tf_config: JSON) -> JSON:
+    """
+    Return a shallow copy of the given TerraForm configuration embellished with
+    an aws_s3_bucket_public_access_block resource for each of the aws_s3_bucket
+    resources in the argument. This is a convenient way to block public access
+    to every bucket in a given Terraform configuration. The argument is not
+    modified but the return value may share parts of the argument.
+    """
+    key = 'resource'
+    tf_config = copy_json(tf_config, key)
+    tf_config[key]['aws_s3_bucket_public_access_block'] = {
+        resource_name: {
+            **(
+                {'provider': resource['provider']}
+                if 'provider' in resource else {}
+            ),
+            'bucket': '${aws_s3_bucket.%s.id}' % resource_name,
+            'block_public_acls': True,
+            'block_public_policy': True,
+            'ignore_public_acls': True,
+            'restrict_public_buckets': True
+        } for resource_name, resource in tf_config[key]['aws_s3_bucket'].items()
+    }
+    return tf_config
 
 
 U = TypeVar('U', bound=AnyJSON)
