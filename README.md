@@ -41,6 +41,8 @@ generic with minimal need for project-specific behavior.
 
 - The `bash` shell
 
+- GNU make 3.81 or newer
+
 - [Docker] for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
@@ -53,11 +55,21 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-- Users of macOS 12 (Monterey) or later should follow the steps outlined in 
+- [jq](https://stedolan.github.io/jq/)
+
+- The build process relies on numerous utilities that are pretty much standard 
+  on any modern Unix. Things like `perl`, `sort`, `comm`, `uniq`, `sed`, `cp`, 
+  `mv` and `rm`.
+
+- For VPN support: OpenSSL (version 1.1.10 and 3.0.5 are known to work but other 
+  versions should work, too). LibreSSL, which became the default on macOS at 
+  some point, is an acceptible replacement. Version 2.8.3 is known to work.  
+
+- Users of macOS 12 (Monterey) should follow additional steps outlined in 
   [Troubleshooting](#setting-up-the-azul-build-prerequisites-on-macos-12-monterey)
 
-- Users of macOS 11 (Big Sur) or later should follow additional steps outlined 
-  in [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
+- Users of macOS 11 (Big Sur) should follow additional steps outlined in 
+  [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
