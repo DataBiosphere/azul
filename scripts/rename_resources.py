@@ -1,10 +1,10 @@
-import json
+import argparse
 import logging
 import subprocess
 import sys
 
-from azul import (
-    config,
+from azul.args import (
+    AzulArgumentHelpFormatter,
 )
 from azul.logging import (
     configure_script_logging,
@@ -57,7 +57,15 @@ def terraform_state(command: str, *args: str) -> bytes:
         proc.check_returncode()
 
 
-def main():
+def main(argv: list[str]):
+    configure_script_logging(log)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=AzulArgumentHelpFormatter,
+                                     add_help=True)
+    parser.add_argument('--dry-run',
+                        action='store_true',
+                        help='Report status without altering resources')
+    args = parser.parse_args(argv)
     renamed.update(dict(chalice_renamed()))
     current_names = terraform_state('list').decode().splitlines()
     for current_name in current_names:
@@ -67,10 +75,12 @@ def main():
             if current_name in renamed.values():
                 log.info('Found %r, already renamed', current_name)
         else:
-            log.info('Found %r, renaming to %r', current_name, new_name)
-            terraform_state('mv', current_name, new_name)
+            if args.dry_run:
+                log.info('Found %r, would be renaming it to %r', current_name, new_name)
+            else:
+                log.info('Found %r, renaming it to %r', current_name, new_name)
+                terraform_state('mv', current_name, new_name)
 
 
 if __name__ == '__main__':
-    configure_script_logging(log)
-    main()
+    main(sys.argv[1:])
