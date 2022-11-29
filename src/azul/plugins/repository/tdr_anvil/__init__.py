@@ -409,8 +409,8 @@ class Plugin(TDRPlugin):
             rows = self._run_sql(f'''
                 WITH activities AS (
                     SELECT
-                        ala.alignmentactivity_id,
-                        'alignmentactivity',
+                        ala.alignmentactivity_id AS activity_id,
+                        'alignmentactivity' AS activity_table,
                         ala.used_file_id,
                         ala.generated_file_id
                     FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
@@ -435,7 +435,7 @@ class Plugin(TDRPlugin):
                                 KeyReference(key=file_id, entity_type='file')
                                 for file_id in row['generated_file_id']
                             ],
-                            activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_table']))
+                            activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
                 for row in rows
             }
         else:
