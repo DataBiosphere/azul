@@ -21,7 +21,7 @@ from azul.aws_service_model import (
     ServiceActionType,
 )
 from azul.chalice import (
-    private_api_policy,
+    vpc_lambda_iam_policy,
 )
 from azul.collections import (
     dict_merge,
@@ -294,10 +294,10 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-clamav_image = 'clamav/clamav:0.104'
+clamav_image = 'clamav/clamav:0.105'
 dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.5.2-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.5.0'
+gitlab_image = 'gitlab/gitlab-ce:15.6.0-ce.0'
+runner_image = 'gitlab/gitlab-runner:v15.6.1'
 
 # There are ways to dynamically determine the latest Amazon Linux AMI but in the
 # spirit of reproducable builds we would rather pin the AMI and adopt updates at
@@ -465,7 +465,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    UUID='*',
                                    LayerVersion='*'),
 
-                    *private_api_policy(for_tf=True),
+                    *vpc_lambda_iam_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level
                     # permissions
@@ -1202,6 +1202,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'ami': ami_id[config.region],
                 'instance_type': 't3a.xlarge',
                 'metadata_options': {
+                    'http_endpoint': 'enabled',
                     'http_tokens': 'required',
                     # This value was empirically determined. With a lower value
                     # builds in GitLab failed with NoCredentialsError.

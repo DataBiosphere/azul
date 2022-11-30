@@ -49,6 +49,9 @@ if TYPE_CHECKING:
     from mypy_boto3_iam import (
         IAMClient,
     )
+    from mypy_boto3_s3 import (
+        S3Client,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -122,7 +125,7 @@ class AWS:
         return self.sts.meta.region_name
 
     @property
-    def s3(self):
+    def s3(self) -> 'S3Client':
         return self.client('s3')
 
     @property
@@ -192,7 +195,7 @@ class AWS:
         if config.es_endpoint:
             return config.es_endpoint
         else:
-            return self._es_domain_status['Endpoint'], 443
+            return self._es_domain_status['Endpoints']['vpc'], 443
 
     @property
     def es_instance_count(self) -> Optional[int]:

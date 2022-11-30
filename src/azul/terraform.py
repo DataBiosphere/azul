@@ -24,6 +24,9 @@ from azul import (
     config,
     require,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.template import (
     emit,
 )
@@ -31,6 +34,7 @@ from azul.types import (
     AnyJSON,
     JSON,
     JSONs,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -60,7 +64,8 @@ class Terraform:
 
     def taggable_resource_types(self) -> Sequence[str]:
         schema = self.schema.document
-        require(schema['format_version'] == '0.1')
+        version = schema['format_version']
+        require(version == '1.0', 'Unexpected format version', version)
         resources = chain.from_iterable(
             provider['resource_schemas'].items()
             for provider in schema['provider_schemas'].values()
@@ -104,14 +109,14 @@ class Terraform:
             pass
 
     @cached_property
-    def versions(self) -> Sequence[str]:
-        # `terraform -version` prints a warning if you are not running the latest
-        # release of Terraform; we discard it, otherwise, we would need to update
-        # the tracked schema every time a new version of Terraform is released
-        output = self.run('-version')
+    def versions(self) -> MutableJSON:
+        output = self.run('version', '-json')
         log.info('Terraform output:\n%s', output)
-        versions, footer = output.split('\n\n')
-        return sorted(versions.splitlines())
+        versions = json.loads(output)
+        return {
+            'terraform': versions['terraform_version'],
+            'providers': versions['provider_selections']
+        }
 
 
 terraform = Terraform()
@@ -207,11 +212,12 @@ def populate_tags(tf_config: JSON) -> JSON:
         }
 
 
-def emit_tf(tf_config: Optional[JSON]):
-    if tf_config is None:
-        return emit(tf_config)
-    else:
-        return emit(_sanitize_tf(populate_tags(tf_config)))
+def emit_tf(config: Optional[JSON], *, tag_resources: bool = True) -> None:
+    if config is not None:
+        if tag_resources:
+            config = populate_tags(config)
+        config = _sanitize_tf(config)
+    emit(config)
 
 
 def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
@@ -285,6 +291,32 @@ def provider_fragment(region: str) -> JSON:
         return {}
     else:
         return {'provider': f'aws.{region}'}
+
+
+def block_public_s3_bucket_access(tf_config: JSON) -> JSON:
+    """
+    Return a shallow copy of the given TerraForm configuration embellished with
+    an aws_s3_bucket_public_access_block resource for each of the aws_s3_bucket
+    resources in the argument. This is a convenient way to block public access
+    to every bucket in a given Terraform configuration. The argument is not
+    modified but the return value may share parts of the argument.
+    """
+    key = 'resource'
+    tf_config = copy_json(tf_config, key)
+    tf_config[key]['aws_s3_bucket_public_access_block'] = {
+        resource_name: {
+            **(
+                {'provider': resource['provider']}
+                if 'provider' in resource else {}
+            ),
+            'bucket': '${aws_s3_bucket.%s.id}' % resource_name,
+            'block_public_acls': True,
+            'block_public_policy': True,
+            'ignore_public_acls': True,
+            'restrict_public_buckets': True
+        } for resource_name, resource in tf_config[key]['aws_s3_bucket'].items()
+    }
+    return tf_config
 
 
 U = TypeVar('U', bound=AnyJSON)

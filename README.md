@@ -45,16 +45,21 @@ generic with minimal need for project-specific behavior.
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
 
-- Terraform (optional, to create new deployments). Refer the official
-  documentation on how to [install terraform]. On macOS with Homebrew installed,
-  'brew install terraform' works, too.
+- Terraform 1.3.4 (optional, to manage deployments). Refer the official
+  documentation on how to [install terraform]. Terraform is written in Go which 
+  produces single, statically linked binaries, so the easiest way to install 
+  Terraform is to download the binary and put it in a directory that mentioned 
+  in the `PATH` environment variable. 
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-- Users of macOS 11 (Big Sur) or later should follow additional steps mentioned 
-  in [Troubleshooting](#installing-python-3812-on-macos-11)
+- Users of macOS 12 (Monterey) or later should follow the steps outlined in 
+  [Troubleshooting](#setting-up-the-azul-build-prerequisites-on-macos-12-monterey)
 
-[install terraform]: https://www.terraform.io/intro/getting-started/install.html
+- Users of macOS 11 (Big Sur) or later should follow additional steps outlined 
+  in [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
+
+[install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 
 
@@ -1009,7 +1014,7 @@ If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
 
 
-## Setting up the Azul build environment on macOS 12 (Monterey)
+## Setting up the Azul build prerequisites on macOS 12 (Monterey)
 
 Make `bash` the default shell. Google it.
 
@@ -1032,52 +1037,12 @@ Do not set `SYSTEM_VERSION_COMPAT`.
 
 Install Docker Desktop. Google it.
 
-On Intel Macs, install Terraform 0.12.31 by downloading the binary to a 
-directory on the PATH and that should be it. On Apple Silicon, buckle up … 
-
-### Terraform on Apple Silicon (M1, …) Macs
-
-On Apple Silicon (ARM64) Macs such as a M1 MacBook Pro, no binaries for 
-Terraform 0.12.31 are available. You must install Terraform from source. 
-
-First, install Go:
-
-```
-brew install go
-export PATH="$PATH:$(go env GOPATH)/bin"  
-```
-
-Add the `export` line to `.bashrc` or `.profile`.
-
-Clone Terraform, check out the desired release tag and build it. 
-
-```
-git clone git@github.com:hashicorp/terraform.git
-cd terraform
-git checkout v0.12.31
-go install .
-```
-
-Invoking `terraform` will likely raise error messages like this one: 
-
-```
-Error installing provider "template": no available version is compatible for the requested platform.
-```
-
-To fix this, every provider must be built locally. Luckily, someone already did 
-the [leg work](https://github.com/kreuzwerker/m1-terraform-provider-helper):
-
-```
-brew install kreuzwerker/taps/m1-terraform-provider-helper
-m1-terraform-provider-helper activate
-m1-terraform-provider-helper install hashicorp/template -v 2.2.0
-m1-terraform-provider-helper install hashicorp/null -v v2.1.2
-m1-terraform-provider-helper install hashicorp/google -v v3.90.1 --custom-build-command 'make fmt build'
-m1-terraform-provider-helper install hashicorp/aws -v v4.30.0
-```
+Install Terraform by downloading and unziping the binary to a directory on the 
+`PATH`. Be sure to download the file for the architecture of your Mac. For Apple 
+Silicon the file name contains `arm64`, for older Intel Macs it's `amd64`.
 
 
-## Installing Python 3.8.12 on macOS 11
+## Installing Python 3.8.12 on macOS 11 (Big Sur)
 
 [pyenv macOS 11 GitHub issue](https://github.com/pyenv/pyenv/issues/1740)
 

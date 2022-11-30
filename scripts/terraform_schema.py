@@ -17,24 +17,20 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 
-def check_schema() -> None:
-    schema = terraform.schema
-    if schema.versions != terraform.versions:
-        raise RuntimeError(f"Cached Terraform schema is out of date. "
-                           f"Run '{sys.executable} {__file__} update' "
-                           f"and commit {schema.path}")
+def check_schema() -> bool:
+    return terraform.schema.versions == terraform.versions
+
+
+def update_schema() -> bool:
+    terraform.update_schema()
+    return True
 
 
 if __name__ == '__main__':
     configure_script_logging()
-    commands = {
-        'update': terraform.update_schema,
-        'check': check_schema
-    }
-    # https://youtrack.jetbrains.com/issue/PY-41806
-    # noinspection PyTypeChecker
+    commands = dict(update=update_schema, check=check_schema)
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('command', choices=commands)
     arguments = parser.parse_args()
-    commands[arguments.command]()
+    sys.exit(0 if commands[arguments.command]() else 1)
