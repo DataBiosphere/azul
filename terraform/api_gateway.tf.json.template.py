@@ -158,11 +158,28 @@ emit_tf({
         *(
             {
                 **chalice.tf_config(app.name)['resource'],
+                'aws_api_gateway_stage': {
+                    app.name: {
+                        'rest_api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
+                        'deployment_id': '${aws_api_gateway_deployment.%s.id}' % app.name,
+                        'stage_name': config.deployment_stage,
+                        'lifecycle': {
+                            'replace_triggered_by': [
+                                'aws_api_gateway_deployment.%s.id' % app.name
+                            ]
+                        }
+                    }
+                },
                 'aws_api_gateway_base_path_mapping': {
                     f'{app.name}_{i}': {
                         'api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
-                        'stage_name': '${aws_api_gateway_deployment.%s.stage_name}' % app.name,
-                        'domain_name': '${aws_api_gateway_domain_name.%s_%i.domain_name}' % (app.name, i)
+                        'stage_name': '${aws_api_gateway_stage.%s.stage_name}' % app.name,
+                        'domain_name': '${aws_api_gateway_domain_name.%s_%i.domain_name}' % (app.name, i),
+                        'lifecycle': {
+                            'replace_triggered_by': [
+                                'aws_api_gateway_stage.%s.id' % app.name
+                            ]
+                        }
                     }
                     for i, domain in enumerate(app.domains)
                 },
@@ -175,12 +192,17 @@ emit_tf({
                 'aws_api_gateway_method_settings': {
                     f'{app.name}_{i}': {
                         'rest_api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
-                        'stage_name': '${aws_api_gateway_deployment.%s.stage_name}' % app.name,
+                        'stage_name': '${aws_api_gateway_stage.%s.stage_name}' % app.name,
                         'method_path': '*/*',  # every URL path, every HTTP method
                         'settings': {
                             'metrics_enabled': True,
                             'data_trace_enabled': config.debug == 2,
                             'logging_level': 'ERROR' if config.debug == 0 else 'INFO'
+                        },
+                        'lifecycle': {
+                            'replace_triggered_by': [
+                                'aws_api_gateway_stage.%s.id' % app.name
+                            ]
                         }
                     } for i, domain in enumerate(app.domains)
                 },
@@ -338,9 +360,14 @@ emit_tf({
                         # Chalice doesn't expose the ARN of the API Gateway stages, so we
                         # construct the ARN manually using this workaround.
                         # https://github.com/aws/chalice/issues/1816#issuecomment-1012231084
-                        'resource_arn': '${aws_api_gateway_rest_api.%s.arn}/stages/'
-                                        '${aws_api_gateway_deployment.%s.stage_name}' % (app.name, app.name),
-                        'web_acl_arn': '${aws_wafv2_web_acl.api_gateway.arn}'
+                        'resource_arn': '${aws_api_gateway_rest_api.%s.arn}/stages/' % app.name
+                                        + '${aws_api_gateway_stage.%s.stage_name}' % app.name,
+                        'web_acl_arn': '${aws_wafv2_web_acl.api_gateway.arn}',
+                        'lifecycle': {
+                            'replace_triggered_by': [
+                                'aws_api_gateway_stage.%s.id' % app.name
+                            ]
+                        }
                     }
                 },
                 'aws_security_group': {

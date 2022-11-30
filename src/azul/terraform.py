@@ -651,9 +651,32 @@ class Chalice:
                 assert function_name, function_name
                 resource[argument] = config.qualified_resource_name(function_name)
 
-        resources['aws_api_gateway_deployment'][app_name]['depends_on'] = [
+        deployment = resources['aws_api_gateway_deployment'][app_name]
+        deployment['depends_on'] = [
             f'null_resource.{app_name}_log_group_provisioner'
         ]
+
+        # The fix for https://github.com/aws/chalice/issues/1237 introduced the
+        # create_before_destroy hack and it may have helped but has far-ranging
+        # implications such as pushing create-before-destroy semantics upstream
+        # to the dependencies.
+        #
+        # This is what caused https://github.com/DataBiosphere/azul/issues/4752
+        #
+        # Managing the stage as an explicit resource as per TF recommendation
+        #
+        # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment
+        #
+        # and using the new `replace_triggered_by` lifecycle property introduced
+        # in TF 1.2 to propagate the replacement downstream is a more intuitive
+        # and less intrusive fix.
+        #
+        del deployment['lifecycle']['create_before_destroy']
+        assert not deployment['lifecycle'], deployment
+        del deployment['lifecycle']
+        stage_name = deployment.pop('stage_name')
+        assert stage_name == config.deployment_stage, stage_name
+        deployment['triggers'] = {'redeployment': deployment.pop('stage_description')}
 
         return {
             'resource': resources,

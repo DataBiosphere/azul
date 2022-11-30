@@ -32,16 +32,22 @@ config: check_schema $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py
 validate: config
 	terraform validate
 
-.PHONY: plan
-plan: validate rename_resources
-	terraform plan
-
 .PHONY: rename_resources
 rename_resources: config
 	python $(project_root)/scripts/rename_resources.py
 
+.PHONY: import_resources
+import_resources: rename_resources
+	@# FIXME: Remove once the stage has been imported into all deployments
+	@#        https://github.com/DataBiosphere/azul/issues/4772
+	python $(project_root)/scripts/import_api_gateway_stage.py
+
+.PHONY: plan
+plan: validate import_resources
+	terraform plan
+
 .PHONY: apply
-apply: validate rename_resources
+apply: validate import_resources
 ifeq ($(AZUL_PRIVATE_API),1)
 	# For private API we need the VPC endpoints to be created first so that the
 	# aws_lb_target_group_attachment can iterate over the network_interface_ids.
@@ -50,7 +56,7 @@ endif
 	terraform apply
 
 .PHONY: auto_apply
-auto_apply: validate rename_resources
+auto_apply: validate import_resources
 ifeq ($(AZUL_PRIVATE_API),1)
 	# See `apply` above
 	terraform apply -auto-approve -target aws_vpc_endpoint.indexer -target aws_vpc_endpoint.service
@@ -60,11 +66,11 @@ endif
 	terraform apply -auto-approve plan.bin
 
 .PHONY: destroy
-destroy: validate rename_resources
+destroy: validate import_resources
 	terraform destroy
 
 .PHONY: auto_destroy
-auto_destroy: validate rename_resources
+auto_destroy: validate import_resources
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
 
