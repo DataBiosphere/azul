@@ -128,23 +128,23 @@ class EnvHook:
         for k, (o, n) in sorted(zip_dict(old, new).items()):
             if o is None:
                 if self.pycharm_hosted:
-                    self._print(f"Setting {k} to '{redact(k, n)}'")
+                    self._print(f'Setting {k} to {redact(k, n)!r}')
                     os.environ[k] = n
                 else:
-                    self._print(f"Warning: {k} is not set but should be {redact(k, n)}, "
-                                f"you should run `source environment`")
+                    self._print(f'Warning: {k} is not set but should be {redact(k, n)!r}, '
+                                f'you should run `source environment`')
             elif n is None:
                 pass
             elif n != o:
                 if k.startswith('PYTHON'):
-                    self._print(f"Ignoring change in {k} from '{redact(k, o)}' to '{redact(k, n)}'")
+                    self._print(f'Ignoring change in {k} from {redact(k, o)!r} to {redact(k, n)!r}')
                 else:
                     if self.pycharm_hosted:
-                        self._print(f"Changing {k} from '{redact(k, o)}' to '{redact(k, n)}'")
+                        self._print(f'Changing {k} from {redact(k, o)!r} to {redact(k, n)!r}')
                         os.environ[k] = n
                     else:
-                        self._print(f"Warning: {k} is '{redact(k, o)}' but should be '{redact(k, n)}', "
-                                    f"you must run `source environment`")
+                        self._print(f'Warning: {k} is {redact(k, o)!r} but should be {redact(k, n)!r}, '
+                                    f'you must run `source environment`')
 
     @property
     def pycharm_hosted(self):
