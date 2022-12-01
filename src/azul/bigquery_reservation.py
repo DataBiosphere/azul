@@ -159,12 +159,13 @@ class BigQueryReservation:
                                                                      parent=self._reservation_parent_path)
                 log.info('Purchased %d BigQuery slots in location %r, commitment name: %r',
                          commitment.slot_count, self.location, commitment.name)
-                # Assign the name first so that we may delete it if it fails to
-                # activate
+                # Record state before waiting for activation so that we can delete it on failure
                 self.capacity_commitment = commitment
-                commitment = self._await_active_commitment(commitment)
+                self.capacity_commitment = self._await_active_commitment(commitment)
 
-    def _await_active_commitment(self, commitment: CapacityCommitment):
+    def _await_active_commitment(self,
+                                 commitment: CapacityCommitment
+                                 ) -> CapacityCommitment:
         """
         Poll for a minute or until commitment is active. Fail gracefully if we
         are unable to get commitment. See Google's docs for more info:
@@ -173,29 +174,28 @@ class BigQueryReservation:
         start = time.time()
         deadline = start + 60
         now = start
-        while True:
-            if commitment.state == commitment.State.PENDING:
-                log.info('Commitment %r pending. Trying again in 10 seconds...',
-                         commitment.name)
-                time.sleep(10)
-                commitment = self._client.get_capacity_commitment(name=commitment.name)
-                now = time.time()
-            elif commitment.state == commitment.State.ACTIVE:
-                log.info('Commitment %r is active after %.3fs seconds',
-                         commitment.name, now - start)
-                return commitment
-            elif commitment.state == commitment.State.FAILED:
-                self.deactivate()
-                raise RuntimeError('Slot commitment failed to activate',
-                                   commitment.failure_status)
-            elif now > deadline:
+        while commitment.state != commitment.State.ACTIVE:
+            if now > deadline:
                 self.deactivate()
                 log.error('Commitment %r in state %r after %.3fs seconds. '
                           'Commitment was deleted. Try again later.',
                           commitment.name, commitment.state.name, now - start)
                 raise RuntimeError('Slot commitment not active in time')
+            elif commitment.state == commitment.State.FAILED:
+                self.deactivate()
+                raise RuntimeError('Slot commitment failed to activate',
+                                   commitment.failure_status)
+            elif commitment.state == commitment.State.PENDING:
+                log.info('Commitment %r pending. Trying again in 10 seconds...',
+                         commitment.name)
+                time.sleep(10)
+                commitment = self._client.get_capacity_commitment(name=commitment.name)
+                now = time.time()
             else:
                 assert False, commitment.state
+        log.info('Commitment %r is active after %.3fs seconds',
+                 commitment.name, now - start)
+        return commitment
 
     def _create_reservation(self) -> None:
         """
