@@ -233,8 +233,9 @@ class BigQueryReservation:
             assignment = Assignment(dict(assignee=f'projects/{self._project}',
                                          job_type=Assignment.JobType.QUERY))
             if self.dry_run:
+                reservation_name = None if self.reservation is None else self.reservation.name
                 log.info('Would assign slots to reservation %r in location %r',
-                         self.reservation.name, self.location)
+                         reservation_name, self.location)
             else:
                 require(self.reservation is not None)
                 log.info('Assigning slots to reservation %r in location %r',
