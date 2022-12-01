@@ -204,7 +204,6 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'count',
             'data_modality',
             'file_format',
-            'file_type',
             'reference_assembly'
         }
     }

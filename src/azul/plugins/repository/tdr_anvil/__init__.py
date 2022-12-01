@@ -229,7 +229,7 @@ class Plugin(TDRPlugin):
         return bundle_entity
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
-        result = defaultdict(set)
+        result = {entity_type: set() for entity_type in self.indexed_columns_by_entity_type}
         for e in entities:
             result[e.entity_type].add(e.key)
         return result
@@ -259,222 +259,227 @@ class Plugin(TDRPlugin):
                            ) -> Links:
         return set.union(
             self._downstream_from_biosamples(source, entities['biosample']),
-            self._downstream_from_files(source, entities['files'])
+            self._downstream_from_files(source, entities['file'])
         )
 
     def _upstream_from_biosamples(self,
                                   source: TDRSourceSpec,
                                   biosample_ids: AbstractSet[Key]
                                   ) -> Links:
-        if not biosample_ids:
-            return set()
-        rows = self._run_sql(f'''
-            SELECT b.biosample_id, b.donor_id, b.part_of_dataset_id
-            FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
-            WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
-        ''')
-        result: Links = set()
-        for row in rows:
-            downstream_ref = KeyReference(entity_type='biosample',
-                                          key=row['biosample_id'])
-            result.add(Link.create(outputs=downstream_ref,
-                                   inputs=KeyReference(entity_type='dataset',
-                                                       key=one(row['part_of_dataset_id']))))
-            for donor_id in row['donor_id']:
+        if biosample_ids:
+            rows = self._run_sql(f'''
+                SELECT b.biosample_id, b.donor_id, b.part_of_dataset_id
+                FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
+                WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
+            ''')
+            result: Links = set()
+            for row in rows:
+                downstream_ref = KeyReference(entity_type='biosample',
+                                              key=row['biosample_id'])
                 result.add(Link.create(outputs=downstream_ref,
-                                       inputs=KeyReference(entity_type='donor',
-                                                           key=donor_id)))
-        return result
+                                       inputs=KeyReference(entity_type='dataset',
+                                                           key=one(row['part_of_dataset_id']))))
+                for donor_id in row['donor_id']:
+                    result.add(Link.create(outputs=downstream_ref,
+                                           inputs=KeyReference(entity_type='donor',
+                                                               key=donor_id)))
+            return result
+        else:
+            return set()
 
     def _upstream_from_files(self,
                              source: TDRSourceSpec,
                              file_ids: AbstractSet[Key]
                              ) -> Links:
-        if not file_ids:
+        if file_ids:
+            rows = self._run_sql(f'''
+                WITH file AS (
+                  SELECT f.file_id FROM {backtick(self._full_table_name(source, 'file'))} AS f
+                  WHERE f.file_id IN ({', '.join(map(repr, file_ids))})
+                )
+                SELECT
+                      f.file_id AS generated_file_id,
+                      'alignmentactivity' AS activity_table,
+                      ama.alignmentactivity_id AS activity_id,
+                      ama.used_file_id AS uses_file_id,
+                      [] AS uses_biosample_id,
+                  FROM file AS f
+                  JOIN {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ama
+                    ON f.file_id IN UNNEST(ama.generated_file_id)
+                UNION ALL SELECT
+                      f.file_id,
+                      'assayactivity',
+                      aya.assayactivity_id,
+                      [],
+                      aya.used_biosample_id,
+                  FROM file AS f
+                  JOIN {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                    ON f.file_id IN UNNEST(aya.generated_file_id)
+                UNION ALL SELECT
+                      f.file_id,
+                      'sequencingactivity',
+                      sqa.sequencingactivity_id,
+                      [],
+                      sqa.used_biosample_id,
+                  FROM file AS f
+                  JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
+                    ON f.file_id IN UNNEST(sqa.generated_file_id)
+                UNION ALL SELECT
+                    f.file_id,
+                    'activity',
+                    a.activity_id,
+                    a.used_file_id,
+                    a.used_biosample_id,
+                  FROM file AS f
+                  JOIN {backtick(self._full_table_name(source, 'activity'))} AS a
+                    ON f.file_id IN UNNEST(a.generated_file_id)
+            ''')
+            return {
+                Link.create(
+                    activity=KeyReference(entity_type=row['activity_table'], key=row['activity_id']),
+                    # The generated link is not a complete representation of the
+                    # upstream activity because it does not include generated files
+                    # that are not ancestors of the downstream file
+                    outputs=KeyReference(entity_type='file', key=row['generated_file_id']),
+                    inputs=[
+                        KeyReference(entity_type=entity_type, key=key)
+                        for entity_type, column in [('file', 'uses_file_id'),
+                                                    ('biosample', 'uses_biosample_id')]
+                        for key in row[column]
+                    ]
+                )
+                for row in rows
+            }
+        else:
             return set()
-        rows = self._run_sql(f'''
-            WITH file AS (
-              SELECT f.file_id FROM {backtick(self._full_table_name(source, 'file'))} AS f
-              WHERE f.file_id IN ({', '.join(map(repr, file_ids))})
-            )
-            SELECT
-                  f.file_id AS generated_file_id,
-                  'alignmentactivity' AS activity_table,
-                  ama.alignmentactivity_id AS activity_id,
-                  ama.used_file_id AS uses_file_id,
-                  [] AS uses_biosample_id,
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ama
-                ON f.file_id IN UNNEST(ama.generated_file_id)
-            UNION ALL SELECT
-                  f.file_id,
-                  'assayactivity',
-                  aya.assayactivity_id,
-                  [],
-                  aya.used_biosample_id,
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
-                ON f.file_id IN UNNEST(aya.generated_file_id)
-            UNION ALL SELECT
-                  f.file_id,
-                  'sequencingactivity',
-                  sqa.sequencingactivity_id,
-                  [],
-                  sqa.used_biosample_id,
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
-                ON f.file_id IN UNNEST(sqa.generated_file_id)
-            UNION ALL SELECT
-                f.file_id,
-                'activity',
-                a.activity_id,
-                a.used_file_id,
-                a.used_biosample_id,
-              FROM file AS f
-              JOIN {backtick(self._full_table_name(source, 'activity'))} AS a
-                ON f.file_id IN UNNEST(a.generated_file_id)
-        ''')
-        return {
-            Link.create(
-                activity=KeyReference(entity_type=row['activity_table'], key=row['activity_id']),
-                # The generated link is not a complete representation of the
-                # upstream activity because it does not include generated files
-                # that are not ancestors of the downstream file
-                outputs=KeyReference(entity_type='file', key=row['generated_file_id']),
-                inputs=[
-                    KeyReference(entity_type=entity_type, key=key)
-                    for entity_type, column in [('file', 'uses_file_id'),
-                                                ('biosample', 'uses_biosample_id')]
-                    for key in row[column]
-                ]
-            )
-            for row in rows
-        }
 
     def _downstream_from_biosamples(self,
                                     source: TDRSourceSpec,
                                     biosample_ids: AbstractSet[Key],
                                     ) -> Links:
-        if not biosample_ids:
-            return set()
-        rows = self._run_sql(f'''
-            WITH activities AS (
+        if biosample_ids:
+            rows = self._run_sql(f'''
+                WITH activities AS (
+                    SELECT
+                        sqa.sequencingactivity_id as activity_id,
+                        'sequencingactivity' as activity_table,
+                        sqa.used_biosample_id,
+                        sqa.generated_file_id
+                    FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
+                    UNION ALL
+                    SELECT
+                        aya.assayactivity_id,
+                        'assayactivity',
+                        aya.used_biosample_id,
+                        aya.generated_file_id,
+                    FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                    UNION ALL
+                    SELECT
+                        a.activity_id,
+                        'activity',
+                        a.used_biosample_id,
+                        a.generated_file_id,
+                    FROM {backtick(self._full_table_name(source, 'activity'))} AS a
+                )
                 SELECT
-                    sqa.sequencingactivity_id as activity_id,
-                    'sequencingactivity' as activity_table,
-                    sqa.used_biosample_id,
-                    sqa.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
-                UNION ALL
-                SELECT
-                    aya.assayactivity_id,
-                    'assayactivity',
-                    aya.used_biosample_id,
-                    aya.generated_file_id,
-                FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
-                UNION ALL
-                SELECT
+                    biosample_id,
                     a.activity_id,
-                    'activity',
-                    a.used_biosample_id,
-                    a.generated_file_id,
-                FROM {backtick(self._full_table_name(source, 'activity'))} AS a
-            )
-            SELECT
-                biosample_id,
-                a.activity_id,
-                a.activity_table,
-                a.generated_file_id
-            FROM activities AS a, UNNEST(a.used_biosample_id) AS biosample_id
-            WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
-        ''')
-        return {
-            Link.create(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
-                        outputs=[
-                            KeyReference(key=output_id, entity_type='file')
-                            for output_id in row['generated_file_id']
-                        ],
-                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
-            for row in rows
-        }
+                    a.activity_table,
+                    a.generated_file_id
+                FROM activities AS a, UNNEST(a.used_biosample_id) AS biosample_id
+                WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
+            ''')
+            return {
+                Link.create(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
+                            outputs=[
+                                KeyReference(key=output_id, entity_type='file')
+                                for output_id in row['generated_file_id']
+                            ],
+                            activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
+                for row in rows
+            }
+        else:
+            return set()
 
     def _downstream_from_files(self,
                                source: TDRSourceSpec,
                                file_ids: AbstractSet[Key]
                                ) -> Links:
-        if not file_ids:
-            return set()
-        rows = self._run_sql(f'''
-            WITH activities AS (
+        if file_ids:
+            rows = self._run_sql(f'''
+                WITH activities AS (
+                    SELECT
+                        ala.alignmentactivity_id AS activity_id,
+                        'alignmentactivity' AS activity_table,
+                        ala.used_file_id,
+                        ala.generated_file_id
+                    FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
+                    UNION ALL SELECT
+                        a.activity_id,
+                        'activity',
+                        a.used_file_id,
+                        a.generated_file_id
+                    FROM {backtick(self._full_table_name(source, 'activity'))} AS a
+                )
                 SELECT
-                    ala.alignmentactivity_id,
-                    'alignmentactivity',
-                    ala.used_file_id,
-                    ala.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
-                UNION ALL SELECT
+                    used_file_id,
+                    a.generated_file_id,
                     a.activity_id,
-                    'activity',
-                    a.used_file_id,
-                    a.generated_file_id
-                FROM {backtick(self._full_table_name(source, 'activity'))} AS a
-            )
-            SELECT
-                used_file_id,
-                a.generated_file_id,
-                a.activity_id,
-                a.activity_table
-            FROM activities AS a, UNNEST(a.used_file_id) AS used_file_id
-            WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
-        ''')
-        return {
-            Link.create(inputs=KeyReference(key=row['used_file_id'], entity_type='file'),
-                        outputs=[
-                            KeyReference(key=file_id, entity_type='file')
-                            for file_id in row['generated_file_id']
-                        ],
-                        activity=KeyReference(key=row['actvity_id'], entity_type=row['activity_table']))
-            for row in rows
-        }
+                    a.activity_table
+                FROM activities AS a, UNNEST(a.used_file_id) AS used_file_id
+                WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
+            ''')
+            return {
+                Link.create(inputs=KeyReference(key=row['used_file_id'], entity_type='file'),
+                            outputs=[
+                                KeyReference(key=file_id, entity_type='file')
+                                for file_id in row['generated_file_id']
+                            ],
+                            activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
+                for row in rows
+            }
+        else:
+            return set()
 
     def _retrieve_entities(self,
                            source: TDRSourceSpec,
                            entity_type: EntityType,
                            keys: AbstractSet[Key],
                            ) -> MutableJSONs:
-        table_name = self._full_table_name(source, entity_type)
-        columns = set.union(
-            self.common_indexed_columns,
-            self.indexed_columns_by_entity_type[entity_type]
-        )
-        pk_column = entity_type + '_id'
-        assert pk_column in columns, entity_type
-        log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
-        rows = self._run_sql(f'''
-            SELECT {', '.join(sorted(columns))}
-            FROM {backtick(table_name)}
-            WHERE {pk_column} IN ({', '.join(map(repr, keys))})
-        ''')
+        if keys:
+            table_name = self._full_table_name(source, entity_type)
+            columns = set.union(
+                self.common_indexed_columns,
+                self.indexed_columns_by_entity_type[entity_type]
+            )
+            pk_column = entity_type + '_id'
+            assert pk_column in columns, entity_type
+            log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
+            rows = self._run_sql(f'''
+                SELECT {', '.join(sorted(columns))}
+                FROM {backtick(table_name)}
+                WHERE {pk_column} IN ({', '.join(map(repr, keys))})
+            ''')
 
-        def convert_column(key, value):
-            if isinstance(value, list):
-                value.sort()
-            if key == 'byte_size':
-                value = int(value)
-            if isinstance(value, datetime.datetime):
-                return self.format_version(value)
-            else:
-                return value
+            def convert_column(value):
+                if isinstance(value, list):
+                    value.sort()
+                if isinstance(value, datetime.datetime):
+                    return self.format_version(value)
+                else:
+                    return value
 
-        rows = [
-            {k: convert_column(k, v) for k, v in row.items()}
-            for row in rows
-        ]
-        log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
-        missing = keys - {row[pk_column] for row in rows}
-        require(not missing,
-                f'Required entities not found in {table_name}: {missing}')
-        return rows
+            rows = [
+                {k: convert_column(v) for k, v in row.items()}
+                for row in rows
+            ]
+            log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
+            missing = keys - {row[pk_column] for row in rows}
+            require(not missing,
+                    f'Required entities not found in {table_name}: {missing}')
+            return rows
+        else:
+            return []
 
     common_indexed_columns = {
         'datarepo_row_id',
@@ -512,7 +517,6 @@ class Plugin(TDRPlugin):
             'data_modality',
             'file_format',
             'reference_assembly',
-            'source_datarepo_row_ids'
         },
         'activity': {
             'activity_id',

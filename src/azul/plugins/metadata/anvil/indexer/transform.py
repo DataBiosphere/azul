@@ -197,7 +197,7 @@ class BaseTransformer(Transformer, ABC):
             'activity_type': null_str,
             'assay_category': null_str,
             'data_modality': null_str,
-            'date_submitted': null_datetime,
+            'date_created': null_datetime,
         }
 
     @classmethod

@@ -103,7 +103,7 @@ class Plugin(MetadataPlugin):
                         'activity_type',
                         'assay_category',
                         'data_modality',
-                        'date_submitted',
+                        'date_created',
                         'document_id',
                         'source_datarepo_row_ids',
                     ]
