@@ -147,14 +147,18 @@ reindex_no_slots: check_python check_branch
 # the rules of subtraction: subtracting a directory could mean the removal of
 # multiple files. If we do them separately, a simple set difference suffices.
 #
+# The temporary file has to be stored on disk (i.e. instead of using a redirect)
+# due to https://github.com/DataBiosphere/azul/issues/4785
 define clean
-comm -23 \
-    <(git ls-files --others --ignored --exclude-standard $1 \
-        | sort) \
-    <(sed -e '1,/^##/d' .gitignore \
-        | git ls-files --others --ignored --exclude-from /dev/stdin $1 \
-        | sort) \
-    | xargs -r rm -v $2
+tmp=$$(mktemp) \
+    ; sed -e '1,/^##/d' .gitignore >"$$tmp" \
+    ; comm -23 \
+        <(git ls-files --others --ignored --exclude-standard $1 \
+            | sort) \
+        <(git ls-files --others --ignored --exclude-from "$$tmp" $1 \
+            | sort) \
+        | xargs -r rm -v $2 \
+    ; rm "$$tmp"
 endef
 
 .PHONY: clean
