@@ -1,27 +1,31 @@
+# This file uses Bash Here Documents that have to be indented with tabs so we
+# uniformly use tabs for unaligned indent and tabs followed by spaces for
+# aligned indent.
+
 project_root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export project_root
 
 # A little helper to make re-sourcing this script easier.
 #
 _refresh () {
-    _deauth
-    source "${project_root}/environment"
-    _preauth
+	_deauth
+	source "${project_root}/environment"
+	_preauth
 }
 
 # Manage the symlink to the active deployment
 #
 _select () {
-    if [[ $1 != "" ]]; then
-        ( # use sub-shell so `cd` is temporary
-            cd "${project_root}/deployments" &&
-            test -d "$1" &&
-            { [ ! -e .active ] || { [ -L .active ] && rm .active ;} ;} &&
-            ln -s "$1" .active
-        ) || { echo error: "$1" && return ;}
-        _refresh
-    fi
-    (cd "${project_root}/deployments" && ls -l .active)
+	if [[ $1 != "" ]]; then
+		( # use sub-shell so `cd` is temporary
+			cd "${project_root}/deployments" &&
+			test -d "$1" &&
+			{ [ ! -e .active ] || { [ -L .active ] && rm .active ;} ;} &&
+			ln -s "$1" .active
+		) || { echo error: "$1" && return ;}
+		_refresh
+	fi
+	(cd "${project_root}/deployments" && ls -l .active)
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them
@@ -72,22 +76,22 @@ _preauth () {
 		EOF
 	)"
 	>&2 echo "Temporary session credentials are in effect. Use '_deauth'" \
-	"to revert the effect of this command."
+	         "to revert the effect of this command."
 }
 
 _deauth () {
-  unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-  if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
-    echo "Google Cloud application default credentials are system-global." \
-    "You should revoke the existing credentials unless you are *certain* that" \
-    "you are already logged in using the appropriate account and project." \
-    "If in doubt, enter 'y'."
-    gcloud auth application-default revoke
-  fi
+	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
+		echo "Google Cloud application default credentials are system-global." \
+		     "You should revoke the existing credentials unless you are *certain* that" \
+		     "you are already logged in using the appropriate account and project." \
+		     "If in doubt, enter 'y'."
+	gcloud auth application-default revoke
+	fi
 }
 
 _revenv () {
-  deactivate && make virtualenv && source .venv/bin/activate && make envhook requirements
+	deactivate && make virtualenv && source .venv/bin/activate && make envhook requirements
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
@@ -100,12 +104,12 @@ eval "$(ENVHOOK=0 python3 "${project_root}/scripts/export_environment.py" || ech
 # Auto-completion for _select
 #
 _complete_env() {
-    # https://stuff-things.net/2016/05/11/bash-autocompletion/
-    local env="${COMP_WORDS[COMP_CWORD]}"
-    # * because of https://unix.stackexchange.com/a/537241/448602
-    local envs=$(cd "${project_root}/deployments" && find * -maxdepth 0 -type d)
-    COMPREPLY=( $(compgen -W "$envs" -- ${env}) )
-    return 0
+	# https://stuff-things.net/2016/05/11/bash-autocompletion/
+	local env="${COMP_WORDS[COMP_CWORD]}"
+	# * because of https://unix.stackexchange.com/a/537241/448602
+	local envs=$(cd "${project_root}/deployments" && find * -maxdepth 0 -type d)
+	COMPREPLY=( $(compgen -W "$envs" -- ${env}) )
+	return 0
 }
 
 complete -F _complete_env _select
