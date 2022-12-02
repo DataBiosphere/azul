@@ -9,6 +9,8 @@ from inspect import (
 )
 import json
 import logging.config
+import mimetypes
+import pathlib
 from typing import (
     Any,
     Callable,
@@ -426,8 +428,24 @@ def swagger_ui():
         ])
     })
     return Response(status_code=200,
-                    headers={"Content-Type": "text/html"},
+                    headers={'Content-Type': 'text/html'},
                     body=swagger_ui_html)
+
+
+@app.route('/static/{file}', cors=True)
+def static_resource(file):
+    swagger_resources = {
+        'swagger-ui.css',
+        'swagger-ui-bundle.js',
+        'swagger-ui-standalone-preset.js'
+    }
+    if file not in swagger_resources:
+        raise NotFoundError(file)
+    else:
+        suffix = pathlib.Path(file).suffix
+        return Response(status_code=200,
+                        headers={"Content-Type": mimetypes.types_map[suffix]},
+                        body=app.load_static_resource(file))
 
 
 @app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)
