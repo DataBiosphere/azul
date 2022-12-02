@@ -43,7 +43,8 @@ class ElasticsearchTestCase(DockerContainerTestCase):
                                                          'ES_JAVA_OPTS=-Xms512m -Xmx512m',
                                                          'indices.breaker.total.use_real_memory=false'])
         try:
-            new_env = config.es_endpoint_env(es_endpoint=es_endpoint, es_instance_count=2)
+            new_env = config.es_endpoint_env(es_endpoint=es_endpoint,
+                                             es_instance_count=2)
             cls._env_patch = mock.patch.dict(os.environ, **new_env)
             cls._env_patch.start()
             cls.es_client = ESClientFactory.get()
