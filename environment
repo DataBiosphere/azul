@@ -40,12 +40,13 @@ _preauth () {
 		if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
 			gcloud auth application-default login
 			if ! gcloud auth application-default print-access-token > /dev/null; then
-				>&2 echo "Login failed"
+				>&2 echo "Google login failed!"
 				return 1
 			fi
 		fi
 	fi
-	eval "$(
+	local env
+	if ! env="$(
 		python - <<- "EOF"
 			from pathlib import Path
 			import sys
@@ -74,13 +75,19 @@ _preauth () {
 			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
 		EOF
-	)"
-	>&2 echo "Temporary session credentials are in effect. Use '_deauth'" \
-	         "to revert the effect of this command."
+	)"; then
+		>&2 echo "AWS login failed!"
+		return 2
+	fi
+	eval "$env"
+	>&2 echo "Temporary session credentials are in effect for AWS and Google." \
+	         "Use '_deauth' to revert the effect of this command."
+	return 0
 }
 
 _deauth () {
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+	>&2 echo "Revoked temporary AWS credentials."
 	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
 		echo "Google Cloud application default credentials are system-global." \
 		     "You should revoke the existing credentials unless you are *certain* that" \
@@ -88,6 +95,7 @@ _deauth () {
 		     "If in doubt, enter 'y'."
 	gcloud auth application-default revoke
 	fi
+	>&2 echo "Revoked temporary Google credentials."
 }
 
 _revenv () {
