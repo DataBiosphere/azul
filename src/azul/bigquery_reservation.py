@@ -43,8 +43,6 @@ log = logging.getLogger(__name__)
 
 
 class BigQueryReservation:
-    slots = config.bigquery_reserved_slots
-
     _reservation_id = 'default'
 
     _rest_api_url = 'https://content-bigqueryreservation.googleapis.com/v1/'
@@ -65,12 +63,14 @@ class BigQueryReservation:
     def __init__(self,
                  *,
                  location: str = config.tdr_source_location,
+                 slots: int = config.bigquery_reserved_slots,
                  dry_run: bool = False):
         """
         :param dry_run: If true, methods will not create/update/destroy any
                         cloud resources.
         """
         self.location = location
+        self.slots = slots
         self.dry_run = dry_run
         self.refresh()
 
