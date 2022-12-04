@@ -147,14 +147,37 @@ reindex_no_slots: check_python check_branch
 # the rules of subtraction: subtracting a directory could mean the removal of
 # multiple files. If we do them separately, a simple set difference suffices.
 #
-define clean
+# We can't use `sed … | git ls-files … --exclude-from /dev/stdin` because the
+# --exclude-from option doesn't work with pipes. It calls `stat` to determine
+# the file's size prior to reading the determined amount of data from the
+# file. If the file is a pipe, there is a race with the writer, a race that,
+# if lost, causes no or partial data to be read from the pipe. Instead we use
+# sed to further massage the lines in .gitignore so that we can interpolate the
+# result into the command line as repeats of the -x (--exclude) option.
+#
+define show_clean
 comm -23 \
-    <(git ls-files --others --ignored --exclude-standard $1 \
+    <(git ls-files --others --ignored \
+        --exclude-standard \
+        $1 \
         | sort) \
-    <(sed -e '1,/^##/d' .gitignore \
-        | git ls-files --others --ignored --exclude-from /dev/stdin $1 \
-        | sort) \
-    | xargs -r rm -v $2
+    <(git ls-files --others --ignored \
+        $$(sed -e '1,/^##/d' \
+               -e 's/#.*//' \
+               -e '/^ *$$/d' \
+               -e 's/.*/-x &/' \
+               .gitignore) \
+        $1 \
+        | sort)
+endef
+
+.PHONY: show_clean
+show_clean: check_env
+	@$(call show_clean,)
+	@$(call show_clean,--directory)
+
+define clean
+$(call show_clean,$1) | xargs -r rm -v $2
 endef
 
 .PHONY: clean
@@ -162,8 +185,8 @@ clean: check_env
 	for d in lambdas terraform terraform/{gitlab,shared}; \
 	    do $(MAKE) -C $$d clean; \
 	done
-	$(call clean,,)
-	$(call clean,--directory,-r)
+	@$(call clean,,)
+	@$(call clean,--directory,-r)
 
 
 absolute_sources = $(shell echo $(project_root)/src \
