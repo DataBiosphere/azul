@@ -10,7 +10,7 @@ blessed==1.19.1
 boto3==1.24.94
 boto3-stubs==1.24.94
 botocore==1.27.94
-botocore-stubs==1.29.21
+botocore-stubs==1.29.22
 brotli==1.0.9
 cachetools==5.2.0
 certifi==2022.9.24
@@ -117,7 +117,7 @@ smmap==5.0.0
 strict-rfc3339==0.7
 tinyquery==1.2+2
 toml==0.10.2
-types-awscrt==0.15.3
+types-awscrt==0.16.0
 types-s3transfer==0.6.0.post5
 types-toml==0.10.8.1
 typing_extensions==4.4.0
