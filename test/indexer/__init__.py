@@ -191,6 +191,8 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
                                    for val in cast(JSONs, data)
                                    for k, v in val.items())
                     elif isinstance(data[0], (type(None), bool, int, float, str)):
+                        # FIXME: Field types don't express ordering requirements
+                        #        https://github.com/DataBiosphere/azul/issues/4664
                         ordered_fields = {
                             'laboratory',
                             'institutions',
