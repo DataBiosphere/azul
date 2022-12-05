@@ -932,7 +932,7 @@ class Config:
     def is_main_deployment(self, deployment: Optional[str] = None) -> bool:
         """
         Returns `True` if the deployment of the specified name is a main
-        deployment, or `False` if it is a shared deployment. If no argument is
+        deployment, or `False` if it is a personal deployment. If no argument is
         passed or if the argument is `None`, the current deployment's name is
         used instead.
         """
