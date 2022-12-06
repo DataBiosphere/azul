@@ -150,12 +150,17 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
         return expected_hits
 
     @classmethod
-    def _index_canned_bundle(cls, bundle_fqid: SourcedBundleFQID, delete=False):
+    def _index_canned_bundle(cls,
+                             bundle_fqid: SourcedBundleFQID,
+                             *,
+                             delete=False
+                             ) -> Bundle:
         bundle = cls._load_canned_bundle(bundle_fqid)
         cls._index_bundle(bundle, delete=delete)
+        return bundle
 
     @classmethod
-    def _index_bundle(cls, bundle: Bundle, delete: bool = False):
+    def _index_bundle(cls, bundle: Bundle, *, delete: bool = False) -> None:
         if delete:
             cls.index_service.delete(cls.catalog, bundle)
         else:
@@ -186,8 +191,19 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
                                    for val in cast(JSONs, data)
                                    for k, v in val.items())
                     elif isinstance(data[0], (type(None), bool, int, float, str)):
-                        self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
-                        return 1
+                        # FIXME: Field types don't express ordering requirements
+                        #        https://github.com/DataBiosphere/azul/issues/4664
+                        ordered_fields = {
+                            'laboratory',
+                            'institutions',
+                            'contact_names',
+                            'publication_titles'
+                        }
+                        if path[-2] == 'projects' and path[-1] in ordered_fields:
+                            return 0
+                        else:
+                            self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
+                            return 1
                     elif isinstance(data[0], list):
                         # In lieu of tuples, a range in JSON is a list of two values
                         self.assertEqual(data, list(map(list, sorted(map(tuple, data)))))
