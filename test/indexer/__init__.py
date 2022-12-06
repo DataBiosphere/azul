@@ -150,12 +150,17 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
         return expected_hits
 
     @classmethod
-    def _index_canned_bundle(cls, bundle_fqid: SourcedBundleFQID, delete=False):
+    def _index_canned_bundle(cls,
+                             bundle_fqid: SourcedBundleFQID,
+                             *,
+                             delete=False
+                             ) -> Bundle:
         bundle = cls._load_canned_bundle(bundle_fqid)
         cls._index_bundle(bundle, delete=delete)
+        return bundle
 
     @classmethod
-    def _index_bundle(cls, bundle: Bundle, delete: bool = False):
+    def _index_bundle(cls, bundle: Bundle, *, delete: bool = False) -> None:
         if delete:
             cls.index_service.delete(cls.catalog, bundle)
         else:
