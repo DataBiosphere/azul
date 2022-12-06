@@ -279,31 +279,25 @@ class NestedDict(defaultdict):
 class OrderedSet(MutableSet[K]):
     """
     A mutable set that maintains insertion order. Unlike similar implementations
-    of the same name that are floating around on the internet, it is not a
-    sequence.
+    of the same name floating around on the internet, it is not a sequence.
 
-    >>> s = OrderedSet(['b', 'a', 'c', 'b'])
-    >>> s
+    >>> s = OrderedSet(['b', 'a', 'c', 'b']); s
     OrderedSet(['b', 'a', 'c'])
 
-    >>> s.discard('a')
-    >>> s
+    >>> s.discard('a'); s
     OrderedSet(['b', 'c'])
 
-    >>> s.add('a')
-    >>> s
+    >>> s.add('a'); s
     OrderedSet(['b', 'c', 'a'])
 
-    Commutativity of sets, union and intersection
+    Commutativity of set union and intersection
+
     >>> s1, s2 = OrderedSet([1, 2, 3]), {3, 4}
-    >>> s1 | s2
-    OrderedSet([1, 2, 3, 4])
-    >>> s2 | s1
-    OrderedSet([1, 2, 3, 4])
-    >>> s1 & s2
-    OrderedSet([3])
-    >>> s2 & s1
-    OrderedSet([3])
+    >>> s1 | s2, s2 | s1
+    (OrderedSet([1, 2, 3, 4]), OrderedSet([1, 2, 3, 4]))
+
+    >>> s1 & s2, s2 & s1
+    (OrderedSet([3]), OrderedSet([3]))
     """
 
     def __init__(self, members: Iterable[K] = (), /) -> None:
@@ -321,26 +315,25 @@ class OrderedSet(MutableSet[K]):
 
     def __eq__(self, other: Any) -> bool:
         """
-        Symmetric property
-        >>> s1, s2 = OrderedSet(), set()
-        >>> s1 == s2
-        True
-        >>> s2 == s1
-        True
-        >>> s1, s2 = OrderedSet([3, 1, 3]), {1, 3, 1}
-        >>> s1 == s2
-        True
-        >>> s2 == s1
-        True
+        Symmetry:
 
-        Transitive property
+        >>> s1, s2 = OrderedSet(), set()
+        >>> s1 == s2, s2 == s1
+        (True, True)
+
+        >>> s1, s2 = OrderedSet([3, 1, 3]), {1, 3, 1}
+        >>> s1 == s2, s2 == s1
+        (True, True)
+
+        Transitivity:
+
         >>> s3 = OrderedSet([1, 3, 1])
-        >>> s1 == s2
-        True
-        >>> s2 == s3
-        True
-        >>> s1 == s3
-        True
+        >>> (s1 == s2, s2 == s3, s1 == s3)
+        (True, True, True)
+
+        >>> s4 = OrderedSet([1])
+        >>> (s2 == s4, s1 == s4)
+        (False, False)
         """
         return self.inner.keys() == other
 
@@ -349,34 +342,36 @@ class OrderedSet(MutableSet[K]):
         >>> 'a' in OrderedSet(['a', 'b'])
         True
 
-        Transitive subset relation
+        Transitivity of subset relation:
+
         >>> s1, s2, s3 = OrderedSet([1]), {1, 3}, OrderedSet([1, 3, 4])
-        >>> s1 < s2
-        True
-        >>> s2 < s3
-        True
-        >>> s1 < s3
-        True
+        >>> s1 < s2, s2 < s3, s1 < s3
+        (True, True, True)
+
+        >>> s4 = OrderedSet([1, 4])
+        >>> s2 < s4, s1 < s4
+        (False, True)
         """
         return member in self.inner
 
     def discard(self, member: K) -> None:
         """
         >>> s = OrderedSet([1, 'a', 2])
-        >>> s.discard('a')
-        >>> s
+        >>> s.discard('a'); s
         OrderedSet([1, 2])
 
-        >>> s.discard('a')
+        >>> s.discard('a'); s
+        OrderedSet([1, 2])
         """
         self.inner.pop(member, None)
 
     def add(self, member: K) -> None:
         """
         >>> s = OrderedSet(['a', 'b'])
-        >>> s.add('a')
-        >>> s.add('c')
-        >>> s
+        >>> s.add('a'); s
+        OrderedSet(['a', 'b'])
+
+        >>> s.add('c'); s
         OrderedSet(['a', 'b', 'c'])
         """
         self.inner[member] = None
