@@ -1814,19 +1814,29 @@ class TestResponse(WebServiceTestCase):
     def test_contributors_order(self):
         # Test that indexing preserves the order of project contributors
         expected = [
-            "eyald.david@weizmann.ac.il",
-            "guy.ledergor@weizmann.ac.il",
-            "assaf.weiner@weizmann.ac.il",
-            "ido.amit@weizmann.ac.il",
-            "hewgreen@ebi.ac.uk"
+            'eyald.david@weizmann.ac.il',
+            'guy.ledergor@weizmann.ac.il',
+            'assaf.weiner@weizmann.ac.il',
+            'ido.amit@weizmann.ac.il',
+            'hewgreen@ebi.ac.uk'
         ]
-
         project_id = '250aef61-a15b-4d97-b8b4-54bb997c1d7d'
+        bundle_uuid = 'd0e17014-9a58-4763-9e66-59894efbdaa8'
+
+        # First assert the order of the contributors in the indexed bundle
+        bundle = self.indexed_bundles[bundle_uuid]
+        project = bundle.metadata_files['project_0.json']
+        self.assertEqual(project_id, project['provenance']['document_id'])
+        actual = [c['email'] for c in project['contributors']]
+        self.assertEqual(expected, actual)
+
+        # Next assert the order of contributors in the service response
         url = self.base_url.set(path=('index', 'projects', project_id))
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
-        actual = [r['email'] for r in one(response_json['projects'])['contributors']]
+        project = one(response_json['projects'])
+        actual = [r['email'] for r in project['contributors']]
         self.assertEqual(expected, actual)
 
     def test_disease_facet(self):
@@ -2507,10 +2517,12 @@ class CellCounts:
 
     @classmethod
     def from_response(cls, hit: JSON) -> 'CellCounts':
-        return cls(estimated_cell_count=one(hit['projects'])['estimatedCellCount'],
+        projects: JSONs = hit['projects']
+        cell_suspensions: JSONs = hit['cellSuspensions']
+        return cls(estimated_cell_count=one(projects)['estimatedCellCount'],
                    total_cells={
                        one(cell_suspension['organ']): cell_suspension['totalCells']
-                       for cell_suspension in cast(JSONs, hit['cellSuspensions'])
+                       for cell_suspension in cell_suspensions
                    })
 
 
