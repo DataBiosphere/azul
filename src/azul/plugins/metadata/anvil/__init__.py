@@ -85,6 +85,10 @@ class Plugin(MetadataPlugin):
 
     @property
     def _field_mapping(self) -> MetadataPlugin._FieldMapping:
+        common_fields = [
+            'document_id',
+            'source_datarepo_row_ids'
+        ]
         return {
             'entity_id': 'entryId',
             'bundles': {
@@ -98,70 +102,75 @@ class Plugin(MetadataPlugin):
             'contents': {
                 'activities': {
                     f: f'activities.{f}' for f in [
+                        *common_fields,
                         'activity_id',
                         'activity_table',
                         'activity_type',
-                        'assay_category',
+                        'assay_type',
                         'data_modality',
+                        'reference_assembly',
+                        # Not in schema
                         'date_created',
-                        'document_id',
-                        'source_datarepo_row_ids',
                     ]
                 },
                 'biosamples': {
                     f: f'biosamples.{f}' for f in [
-                        'anatomical_site',
+                        *common_fields,
                         'biosample_id',
+                        'anatomical_site',
+                        'apriori_cell_type',
                         'biosample_type',
-                        'document_id',
-                        'donor_age_at_collection_age_range',
-                        'donor_age_at_collection_unit',
                         'disease',
-                        'source_datarepo_row_ids',
+                        'donor_age_at_collection_unit',
+                        'donor_age_at_collection_age_range',
                     ]
                 },
                 'datasets': {
                     f: f'datasets.{f}' for f in [
+                        *common_fields,
                         'dataset_id',
                         'consent_group',
                         'data_use_permission',
-                        'document_id',
+                        'owner',
+                        'principal_investigator',
                         'registered_identifier',
-                        'source_datarepo_row_ids',
                         'title',
+                        'data_modality',
                     ]
                 },
                 'donors': {
                     f: f'donors.{f}' for f in [
-                        'document_id',
+                        *common_fields,
                         'donor_id',
                         'organism_type',
                         'phenotypic_sex',
                         'reported_ethnicity',
-                        'source_datarepo_row_ids',
+                        'genetic_ancestry',
                     ]
                 },
                 'files': {
                     **{
                         f: f'files.{f}' for f in [
-                            'data_modality',
-                            'document_id',
-                            'file_format',
+                            *common_fields,
                             'file_id',
+                            'data_modality',
+                            'file_format',
+                            'file_md5sum',
                             'reference_assembly',
-                            'source_datarepo_row_ids',
+                            # Not in schema
                             'crc32',
                             'sha256',
                             'drs_path',
-                            'name'
                         ]
                     },
                     # These field names are hard-coded in the implementation of
                     # the repository service/controller.
                     **{
+                        'file_size': 'size',
+                        'file_name': 'name',
+                        # Not in schema
                         'version': 'fileVersion',
                         'uuid': 'fileId',
-                        'byte_size': 'size'
                     }
                 }
             }
@@ -175,7 +184,7 @@ class Plugin(MetadataPlugin):
     def facets(self) -> Sequence[str]:
         return [
             'activities.activity_type',
-            'activities.assay_category',
+            'activities.assay_type',
             'activities.data_modality',
             'biosamples.anatomical_site',
             'biosamples.biosample_type',

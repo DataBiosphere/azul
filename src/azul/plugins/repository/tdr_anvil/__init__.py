@@ -228,6 +228,11 @@ class Plugin(TDRPlugin):
                  bundle_uuid, bundle_entity.key, entity_type)
         return bundle_entity
 
+    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
+        if not table_name.startswith('INFORMATION_SCHEMA'):
+            table_name = 'anvil_' + table_name
+        return super()._full_table_name(source, table_name)
+
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
         result = {entity_type: set() for entity_type in self.indexed_columns_by_entity_type}
         for e in entities:
@@ -326,6 +331,15 @@ class Plugin(TDRPlugin):
                     ON f.file_id IN UNNEST(sqa.generated_file_id)
                 UNION ALL SELECT
                     f.file_id,
+                    'variantcallingactivity',
+                    vca.variantcallingactivity_id,
+                    vca.used_file_id,
+                    []
+                  FROM file AS f
+                  JOIN {backtick(self._full_table_name(source, 'variantcallingactivity'))} AS vca
+                    ON f.file_id IN UNNEST(vca.generated_file_id)
+                UNION ALL SELECT
+                    f.file_id,
                     'activity',
                     a.activity_id,
                     a.used_file_id,
@@ -415,6 +429,12 @@ class Plugin(TDRPlugin):
                         ala.generated_file_id
                     FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
                     UNION ALL SELECT
+                        vca.variantcallingactivity_id,
+                        'variantcallingactivity',
+                        vca.used_file_id,
+                        vca.generated_file_id
+                    FROM {backtick(self._full_table_name(source, 'variantcallingactivity'))} AS vca
+                    UNION ALL SELECT
                         a.activity_id,
                         'activity',
                         a.used_file_id,
@@ -490,33 +510,40 @@ class Plugin(TDRPlugin):
     indexed_columns_by_entity_type = {
         'biosample': {
             'biosample_id',
-            'biosample_type',
             'anatomical_site',
+            'apriori_cell_type',
+            'biosample_type',
+            'disease',
+            'donor_age_at_collection_unit',
             'donor_age_at_collection_lower_bound',
             'donor_age_at_collection_upper_bound',
-            'donor_age_at_collection_unit',
-            'disease',
         },
         'dataset': {
             'dataset_id',
             'consent_group',
             'data_use_permission',
+            'owner',
+            'principal_investigator',
             'registered_identifier',
-            'title'
+            'title',
+            'data_modality'
         },
         'donor': {
             'donor_id',
             'organism_type',
             'phenotypic_sex',
             'reported_ethnicity',
+            'genetic_ancestry',
         },
         'file': {
             'file_id',
-            'file_ref',
-            'byte_size',
             'data_modality',
             'file_format',
+            'file_size',
+            'file_md5sum',
             'reference_assembly',
+            'file_name',
+            'file_ref',
         },
         'activity': {
             'activity_id',
@@ -526,19 +553,29 @@ class Plugin(TDRPlugin):
             'alignmentactivity_id',
             'activity_type',
             'data_modality',
+            'reference_assembly',
+            # Not in schema
             'date_created',
         },
         'assayactivity': {
             'assayactivity_id',
             'activity_type',
-            'assay_category',
+            'assay_type',
             'data_modality',
+            # Not in schema
             'date_created',
         },
         'sequencingactivity': {
             'sequencingactivity_id',
             'activity_type',
+            'assay_type',
             'data_modality',
+        },
+        'variantcallingactivity': {
+            'variatncallingactivity_id',
+            'activity_type',
+            'reference_assembly',
+            'data_modality'
         }
     }
 
