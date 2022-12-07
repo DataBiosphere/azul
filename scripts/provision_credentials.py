@@ -6,15 +6,14 @@ import os
 import time
 import uuid
 
-from google.oauth2 import (
-    service_account,
-)
+import google.auth
 import googleapiclient.discovery
 from googleapiclient.errors import (
     HttpError,
 )
 
 from azul import (
+    cached_property,
     config,
 )
 from azul.deployment import (
@@ -31,14 +30,14 @@ def parse_google_key(response):
     return base64.decodebytes(bytes(response['privateKeyData'], 'ascii')).decode()
 
 
-def get_google_service():
-    credentials = service_account.Credentials.from_service_account_file(
-        filename=os.environ['GOOGLE_APPLICATION_CREDENTIALS'],
-        scopes=['https://www.googleapis.com/auth/cloud-platform'])
-    return googleapiclient.discovery.build('iam', 'v1', credentials=credentials)
-
-
 class CredentialsProvisioner:
+
+    @cached_property
+    def google_iam(self):
+        credentials, project_id = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+        return googleapiclient.discovery.build('iam', 'v1', credentials=credentials)
 
     @property
     def secrets_manager(self):
@@ -103,8 +102,8 @@ class CredentialsProvisioner:
             return False
 
     def _create_service_account_creds(self, service_account_email):
-        service = get_google_service()
-        key = service.projects().serviceAccounts().keys().create(
+        iam = self.google_iam()
+        key = iam.projects().serviceAccounts().keys().create(
             name='projects/-/serviceAccounts/' + service_account_email, body={}
         ).execute()
         logger.info("Successfully created service account key for user '%s'", service_account_email)
@@ -149,9 +148,9 @@ class CredentialsProvisioner:
             return
         else:
             key_id = json.loads(creds['SecretString'])['private_key_id']
-            service = get_google_service()
+            iam = self.google_iam()
             try:
-                service.projects().serviceAccounts().keys().delete(
+                iam.projects().serviceAccounts().keys().delete(
                     name='projects/-/serviceAccounts/' + service_account_email + '/keys/' + key_id).execute()
             except HttpError as e:
                 if e.resp.reason != 'Not Found':
