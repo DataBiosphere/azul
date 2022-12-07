@@ -3,16 +3,12 @@ from dataclasses import (
 )
 import importlib
 import json
-import shlex
 
 from azul import (
     config,
 )
 from azul.deployment import (
     aws,
-)
-from azul.files import (
-    file_sha1,
 )
 from azul.objects import (
     InternMeta,
@@ -79,6 +75,61 @@ zones_by_domain = {
     domain: Zone.for_domain(domain)
     for app in apps
     for domain in app.domains
+}
+
+api_gateway_log_format = {
+    'accountId': '$context.accountId',
+    'apiId': '$context.apiId',
+    'authorizer_claims_property': '$context.authorizer.claims.property',
+    'authorizer_error': '$context.authorizer.error',
+    'authorizer_principalId': '$context.authorizer.principalId',
+    'authorizer_property': '$context.authorizer.property',
+    'awsEndpointRequestId': '$context.awsEndpointRequestId',
+    'awsEndpointRequestId2': '$context.awsEndpointRequestId2',
+    'customDomain_basePathMatched': '$context.customDomain.basePathMatched',
+    'dataProcessed': '$context.dataProcessed',
+    'domainName': '$context.domainName',
+    'domainPrefix': '$context.domainPrefix',
+    'error_message': '$context.error.message',
+    'error_messageString': '$context.error.messageString',
+    'error_responseType': '$context.error.responseType',
+    'extendedRequestId': '$context.extendedRequestId',
+    'httpMethod': '$context.httpMethod',
+    'identity_accountId': '$context.identity.accountId',
+    'identity_caller': '$context.identity.caller',
+    'identity_cognitoAuthenticationProvider': '$context.identity.cognitoAuthenticationProvider',
+    'identity_cognitoAuthenticationType': '$context.identity.cognitoAuthenticationType',
+    'identity_cognitoIdentityId': '$context.identity.cognitoIdentityId',
+    'identity_cognitoIdentityPoolId': '$context.identity.cognitoIdentityPoolId',
+    'identity_principalOrgId': '$context.identity.principalOrgId',
+    'identity_clientCert_clientCertPem': '$context.identity.clientCert.clientCertPem',
+    'identity_clientCert_subjectDN': '$context.identity.clientCert.subjectDN',
+    'identity_clientCert_issuerDN': '$context.identity.clientCert.issuerDN',
+    'identity_clientCert_serialNumber': '$context.identity.clientCert.serialNumber',
+    'identity_clientCert_validity_notBefore': '$context.identity.clientCert.validity.notBefore',
+    'identity_clientCert_validity_notAfter': '$context.identity.clientCert.validity.notAfter',
+    'identity_sourceIp': '$context.identity.sourceIp',
+    'identity_user': '$context.identity.user',
+    'identity_userAgent': '$context.identity.userAgent',
+    'identity_userArn': '$context.identity.userArn',
+    'integration_error': '$context.integration.error',
+    'integration_integrationStatus': '$context.integration.integrationStatus',
+    'integration_latency': '$context.integration.latency',
+    'integration_requestId': '$context.integration.requestId',
+    'integration_status': '$context.integration.status',
+    'integrationErrorMessage': '$context.integrationErrorMessage',
+    'integrationLatency': '$context.integrationLatency',
+    'integrationStatus': '$context.integrationStatus',
+    'path': '$context.path',
+    'protocol': '$context.protocol',
+    'requestId': '$context.requestId',
+    'requestTime': '$context.requestTime',
+    'requestTimeEpoch': '$context.requestTimeEpoch',
+    'responseLatency': '$context.responseLatency',
+    'responseLength': '$context.responseLength',
+    'routeKey': '$context.routeKey',
+    'stage': '$context.stage',
+    'status': '$context.status'
 }
 
 emit_tf({
@@ -163,6 +214,10 @@ emit_tf({
                         'rest_api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
                         'deployment_id': '${aws_api_gateway_deployment.%s.id}' % app.name,
                         'stage_name': config.deployment_stage,
+                        'access_log_settings': {
+                            'destination_arn': '${aws_cloudwatch_log_group.%s.arn}' % app.name,
+                            'format': json.dumps(api_gateway_log_format)
+                        },
                         'lifecycle': {
                             'replace_triggered_by': [
                                 'aws_api_gateway_deployment.%s.id' % app.name
@@ -290,27 +345,6 @@ emit_tf({
                     app.name: {
                         'name': '/aws/apigateway/' + config.qualified_resource_name(app.name),
                         'retention_in_days': 1827,
-                    }
-                },
-                'null_resource': {
-                    f'{app.name}_log_group_provisioner': {
-                        'triggers': {
-                            'file_sha1': file_sha1(config.project_root + '/scripts/log_api_gateway.py'),
-                            'log_group_id': f'${{aws_cloudwatch_log_group.{app.name}.id}}'
-                        },
-                        # FIXME: Use Terraform to configure API Gateway access logs
-                        #        https://github.com/DataBiosphere/azul/issues/3412
-                        'provisioner': {
-                            'local-exec': {
-                                'command': ' '.join(map(shlex.quote, [
-                                    'python',
-                                    config.project_root + '/scripts/log_api_gateway.py',
-                                    '${aws_api_gateway_rest_api.%s.id}' % app.name,
-                                    config.deployment_stage,
-                                    '${aws_cloudwatch_log_group.%s.arn}' % app.name
-                                ]))
-                            }
-                        }
                     }
                 },
                 'aws_iam_role': {
