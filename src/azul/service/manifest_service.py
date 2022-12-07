@@ -109,9 +109,6 @@ from azul.service import (
     Filters,
     avro_pfb,
 )
-from azul.service.buffer import (
-    FlushableBuffer,
-)
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     Pagination,
@@ -969,38 +966,6 @@ class ManifestGenerator(metaclass=ABCMeta):
     @property
     def storage(self):
         return self.service.storage_service
-
-
-class StreamingManifestGenerator(ManifestGenerator):
-    """
-    A manifest generator that writes its output to an IO stream.
-    """
-
-    @abstractmethod
-    def write_to(self, output: IO[str]) -> Optional[str]:
-        """
-        Write the entire generator output to the given stream and return an
-        optional string that should be used to name the output when persisting
-        it to an object store or file system.
-
-        :param output: the stream to write to
-        """
-        raise NotImplementedError
-
-    def write(self,
-              object_key: str,
-              partition: ManifestPartition,
-              ) -> ManifestPartition:
-        assert partition.index == 0 and partition.page_index is None, partition
-        with self.storage.put_multipart(object_key, content_type=self.content_type) as upload:
-            with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, upload.push) as buffer:
-                text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-                base_name = self.write_to(text_buffer)
-        file_name = self.file_name(object_key, base_name)
-        tagging = self.tagging(file_name)
-        if tagging is not None:
-            self.storage.put_object_tagging(object_key, tagging)
-        return partition.last(file_name)
 
 
 class PagedManifestGenerator(ManifestGenerator):
