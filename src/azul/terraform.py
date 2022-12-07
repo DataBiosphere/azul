@@ -651,11 +651,6 @@ class Chalice:
                 assert function_name, function_name
                 resource[argument] = config.qualified_resource_name(function_name)
 
-        deployment = resources['aws_api_gateway_deployment'][app_name]
-        deployment['depends_on'] = [
-            f'null_resource.{app_name}_log_group_provisioner'
-        ]
-
         # The fix for https://github.com/aws/chalice/issues/1237 introduced the
         # create_before_destroy hack and it may have helped but has far-ranging
         # implications such as pushing create-before-destroy semantics upstream
@@ -671,6 +666,7 @@ class Chalice:
         # in TF 1.2 to propagate the replacement downstream is a more intuitive
         # and less intrusive fix.
         #
+        deployment = resources['aws_api_gateway_deployment'][app_name]
         del deployment['lifecycle']['create_before_destroy']
         assert not deployment['lifecycle'], deployment
         del deployment['lifecycle']
