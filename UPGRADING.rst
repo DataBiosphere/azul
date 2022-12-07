@@ -10,6 +10,15 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4196 Enable sending of CloudTrail events to CloudWatch logs
+============================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
 #4224 Eliminate personal service accounts
 =========================================
 

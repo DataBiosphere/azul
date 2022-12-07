@@ -172,7 +172,16 @@ emit_tf(block_public_s3_bucket_access({
                 'name': 'azul-shared',
                 's3_bucket_name': '${aws_s3_bucket.shared_cloudtrail.id}',
                 'enable_log_file_validation': True,
-                'is_multi_region_trail': True
+                'is_multi_region_trail': True,
+                'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.cloudtrail.arn}:*',
+                'cloud_watch_logs_role_arn': '${aws_iam_role.cloudtrail.arn}'
+            }
+        },
+        'aws_cloudwatch_log_group': {
+            'cloudtrail': {
+                **provider_fragment(config.cloudtrail_trail_region),
+                'name': config.qualified_resource_name('cloudtrail'),
+                'retention_in_days': config.audit_log_retention_days
             }
         },
         'aws_iam_role': {
@@ -204,6 +213,23 @@ emit_tf(block_public_s3_bucket_access({
                                 'Effect': 'Allow',
                                 'Principal': {
                                     'Service': 'config.amazonaws.com'
+                                }
+                            }
+                        ]
+                    }
+                )
+            },
+            'cloudtrail': {
+                'name': 'azul-cloudtrail',
+                'assume_role_policy': json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Action': 'sts:AssumeRole',
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'cloudtrail.amazonaws.com',
                                 }
                             }
                         ]
@@ -248,6 +274,26 @@ emit_tf(block_public_s3_bucket_access({
                             'Resource': [
                                 '${aws_s3_bucket.aws_config.arn}',
                                 '${aws_s3_bucket.aws_config.arn}/*'
+                            ]
+                        }
+                    ]
+                })
+            },
+            'cloudtrail': {
+                'name': 'azul-cloudtrail',
+                'role': '${aws_iam_role.cloudtrail.id}',
+                # Adapted from https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-required-policy-for-cloudwatch-logs.html
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Action': [
+                                'logs:CreateLogStream',
+                                'logs:PutLogEvents'
+                            ],
+                            'Resource': [
+                                '${aws_cloudwatch_log_group.cloudtrail.arn}:*'
                             ]
                         }
                     ]
