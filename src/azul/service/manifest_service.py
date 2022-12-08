@@ -11,7 +11,6 @@ from collections.abc import (
     Mapping,
 )
 from copy import (
-    copy,
     deepcopy,
 )
 import csv
@@ -89,6 +88,9 @@ from azul.auth import (
 from azul.indexer.document import (
     FieldTypes,
     null_str,
+)
+from azul.json import (
+    copy_json,
 )
 from azul.json_freeze import (
     freeze,
@@ -808,7 +810,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _extract_fields(self,
                         *,
                         field_path: FieldPath,
-                        entities: list[JSON],
+                        entities: JSONs,
                         column_mapping: ColumnMapping,
                         row: Cells) -> None:
         """
@@ -866,7 +868,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             column_value = self.column_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
-    def _get_entities(self, field_path: FieldPath, doc: JSON) -> list[JSON]:
+    def _get_entities(self, field_path: FieldPath, doc: JSON) -> JSONs:
         """
         Given a document and a dotted path into that document, return the list
         of entities designated by that path.
@@ -1245,7 +1247,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             hit = None
             for hit in response.hits:
                 doc = self._hit_to_doc(hit)
-                file = one(doc['contents']['files'])
+                file = one(cast(JSONs, doc['contents']['files']))
                 _write(file)
                 for related_file in file['related_files']:
                     _write(related_file, is_related_file=True)
@@ -1396,7 +1398,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                 assert isinstance(doc, dict)
                 contents = doc['contents']
                 if len(project_short_names) < 2 and 'projects' in contents:
-                    project = one(contents['projects'])
+                    project = one(cast(JSONs, contents['projects']))
                     short_names = project['project_short_name']
                     project_short_names.update(short_names)
                 row = {}
@@ -1404,7 +1406,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                 for field_path, column_mapping in self.manifest_config.items():
                     entities = self._get_entities(field_path, doc)
                     if field_path == ('contents', 'files'):
-                        file = copy(one(entities))
+                        file = copy_json(one(entities))
                         file['file_url'] = self._azul_file_url(file)
                         entities = [file]
                     self._extract_fields(field_path=field_path,
@@ -1412,7 +1414,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                                          column_mapping=column_mapping,
                                          row=row)
                     if field_path == ('contents', 'files'):
-                        file = copy(one(entities))
+                        file = copy_json(one(entities))
                         if 'related_files' in file:
                             field_path = (*field_path, 'related_files')
                             for related_file in file['related_files']:
@@ -1623,7 +1625,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                                      row=other_cells)
 
             # Extract fields from the sole inner file entity_type
-            file = copy(one(doc['contents']['files']))
+            file = copy_json(one(cast(JSONs, doc['contents']['files'])))
             file['file_url'] = self._azul_file_url(file)
             file_cells = {}
             self._extract_fields(field_path=('contents', 'files'),
