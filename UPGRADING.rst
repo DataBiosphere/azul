@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4692 Ensure IAM password policies have strong configurations
+=============================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #4793 Create support role to manage incidents with AWS support
 ==============================================================
 
