@@ -1335,6 +1335,17 @@ class Config:
     def cloudwatch_dashboard_template(self) -> str:
         return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
 
+    @property
+    def security_contact(self) -> Optional[dict[str]]:
+        value = self.environ.get('azul_security_contact')
+        if value is None:
+            return None
+        else:
+            # FIXME: Eliminate local import
+            #        https://github.com/DataBiosphere/azul/issues/3133
+            import json
+            return json.loads(value)
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 
