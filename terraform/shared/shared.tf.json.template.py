@@ -2,6 +2,7 @@ import json
 
 from azul import (
     config,
+    require,
 )
 from azul.deployment import (
     aws,
@@ -11,6 +12,11 @@ from azul.terraform import (
     emit_tf,
     provider_fragment,
 )
+
+require(config.cloudtrail_s3_bucket_region == config.region
+        or config.deployment_stage == 'dev',  # grand-father in an exception for `dev`
+        'The Cloudtrail bucket must reside in the default region',
+        config.cloudtrail_s3_bucket_region, config.region)
 
 emit_tf(block_public_s3_bucket_access({
     'data': {
@@ -57,6 +63,21 @@ emit_tf(block_public_s3_bucket_access({
                 }
             }
         },
+        **(
+            {}
+            if config.deployment_stage == 'dev' else
+            {
+                'aws_s3_bucket_logging': {
+                    'trail': {
+                        'bucket': '${aws_s3_bucket.trail.id}',
+                        'target_bucket': '${aws_s3_bucket.logs.id}',
+                        # Other S3 log deliveries, like ELB, implicitly put a slash
+                        # after the prefix. S3 doesn't, so we add one explicitly.
+                        'target_prefix': config.s3_access_log_path_prefix('cloudtrail') + '/'
+                    }
+                }
+            }
+        ),
         'aws_s3_bucket_policy': {
             **{
                 bucket: {
