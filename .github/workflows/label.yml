@@ -7,7 +7,7 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-    - uses: DataBiosphere/azul-github-labeler-action@releases/v5
+    - uses: DataBiosphere/azul-github-labeler-action@master
       with:
         repo-token: "${{secrets.GITHUB_TOKEN}}"
         label: orange
