@@ -445,7 +445,7 @@ with. Two deployments are colocated if they use the same AWS account. The
 `shared` component contains the resources shared by all deployments in an AWS 
 account.
 
-To deploy he remaining shared resources, run: 
+To deploy the remaining shared resources, run: 
 
 ```
 _select dev.shared  # or prod.shared

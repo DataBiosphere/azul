@@ -381,20 +381,20 @@ emit_tf(block_public_s3_bucket_access({
                 'name': 'azul-api_gateway',
                 'role': '${aws_iam_role.api_gateway.id}',
                 'policy': json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
+                    'Version': '2012-10-17',
+                    'Statement': [
                         {
-                            "Effect": "Allow",
-                            "Action": [
-                                "logs:CreateLogGroup",
-                                "logs:CreateLogStream",
-                                "logs:DescribeLogGroups",
-                                "logs:DescribeLogStreams",
-                                "logs:PutLogEvents",
-                                "logs:GetLogEvents",
-                                "logs:FilterLogEvents"
+                            'Effect': 'Allow',
+                            'Action': [
+                                'logs:CreateLogGroup',
+                                'logs:CreateLogStream',
+                                'logs:DescribeLogGroups',
+                                'logs:DescribeLogStreams',
+                                'logs:PutLogEvents',
+                                'logs:GetLogEvents',
+                                'logs:FilterLogEvents'
                             ],
-                            "Resource": "*"
+                            'Resource': '*'
                         }
                     ]
                 })
@@ -439,9 +439,9 @@ emit_tf(block_public_s3_bucket_access({
                 })
             }
         },
-        "aws_iam_service_linked_role": {
-            "opensearch": {
-                "aws_service_name": "opensearchservice.amazonaws.com"
+        'aws_iam_service_linked_role': {
+            'opensearch': {
+                'aws_service_name': 'opensearchservice.amazonaws.com'
             }
         },
         'aws_api_gateway_account': {
