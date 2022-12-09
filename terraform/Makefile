@@ -35,9 +35,6 @@ rename_resources: config
 
 .PHONY: import_resources
 import_resources: rename_resources
-	@# FIXME: Remove once the stage has been imported into all deployments
-	@#        https://github.com/DataBiosphere/azul/issues/4772
-	python $(project_root)/scripts/import_api_gateway_stage.py
 
 .PHONY: plan
 plan: validate import_resources
