@@ -9,9 +9,6 @@ from azul.args import (
 from azul.logging import (
     configure_script_logging,
 )
-from azul.terraform import (
-    chalice,
-)
 
 log = logging.getLogger(__name__)
 
@@ -55,13 +52,6 @@ def main(argv: list[str]):
                         help='Report status without altering resources')
     args = parser.parse_args(argv)
     current_names = terraform_state('list').decode().splitlines()
-    # FIXME: Remove once all deployments have been upgraded
-    #        https://github.com/DataBiosphere/azul/issues/4769
-    renamed.update({
-        current_name: chalice.rename_chalice_resource_in_tf_state(current_name)
-        for current_name in current_names
-        if current_name.startswith('module.')
-    })
     for current_name in current_names:
         try:
             new_name = renamed[current_name]
