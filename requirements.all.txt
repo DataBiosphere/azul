@@ -10,7 +10,7 @@ blessed==1.19.1
 boto3==1.24.94
 boto3-stubs==1.24.94
 botocore==1.27.94
-botocore-stubs==1.29.22
+botocore-stubs==1.29.26
 brotli==1.0.9
 cachetools==5.2.0
 certifi==2022.12.7
@@ -57,7 +57,7 @@ http-sfv==0.9.8
 httplib2==0.21.0
 idna==3.4
 importlib-metadata==5.1.0
-importlib-resources==5.10.0
+importlib-resources==5.10.1
 inquirer==2.10.1
 itsdangerous==2.1.2
 jinja2==3.1.2
@@ -80,12 +80,12 @@ mypy-boto3-sqs==1.24.60
 openapi-schema-validator==0.3.4
 openapi-spec-validator==0.5.1
 orderedmultidict==1.0.1
-packaging==21.3
+packaging==22.0
 pathable==0.4.3
 pip==22.2.2
 ply==3.11
 proto-plus==1.22.1
-protobuf==4.21.10
+protobuf==4.21.11
 psutil==5.9.4
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -117,7 +117,7 @@ smmap==5.0.0
 strict-rfc3339==0.7
 tinyquery==1.2+2
 toml==0.10.2
-types-awscrt==0.16.0
+types-awscrt==0.16.1
 types-s3transfer==0.6.0.post5
 types-toml==0.10.8.1
 typing_extensions==4.4.0
