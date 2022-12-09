@@ -44,19 +44,23 @@ def main(argv: list[str]):
                         action='store_true',
                         help='Report status without altering resources')
     args = parser.parse_args(argv)
-    current_names = terraform_state('list').decode().splitlines()
-    for current_name in current_names:
-        try:
-            new_name = renamed[current_name]
-        except KeyError:
-            if current_name in renamed.values():
-                log.info('Found %r, already renamed', current_name)
-        else:
-            if args.dry_run:
-                log.info('Found %r, would be renaming it to %r', current_name, new_name)
+
+    if renamed:
+        current_names = terraform_state('list').decode().splitlines()
+        for current_name in current_names:
+            try:
+                new_name = renamed[current_name]
+            except KeyError:
+                if current_name in renamed.values():
+                    log.info('Found %r, already renamed', current_name)
             else:
-                log.info('Found %r, renaming it to %r', current_name, new_name)
-                terraform_state('mv', current_name, new_name)
+                if args.dry_run:
+                    log.info('Found %r, would be renaming it to %r', current_name, new_name)
+                else:
+                    log.info('Found %r, renaming it to %r', current_name, new_name)
+                    terraform_state('mv', current_name, new_name)
+    else:
+        log.info('No renamings defined')
 
 
 if __name__ == '__main__':
