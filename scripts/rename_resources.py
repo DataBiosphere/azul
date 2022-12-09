@@ -13,13 +13,6 @@ from azul.logging import (
 log = logging.getLogger(__name__)
 
 renamed = {
-    'aws_cloudwatch_log_metric_filter.azul-service-5xx': 'aws_cloudwatch_log_metric_filter.service_5xx',
-    'aws_cloudwatch_log_metric_filter.azul-indexer-5xx': 'aws_cloudwatch_log_metric_filter.indexer_5xx',
-    'aws_s3_bucket.cloudtrail_shared': 'aws_s3_bucket.shared_cloudtrail',
-    'aws_s3_bucket_policy.cloudtrail_shared': 'aws_s3_bucket_policy.shared_cloudtrail',
-    'aws_s3_bucket.gitlab_logs': 'aws_s3_bucket.gitlab',
-    'aws_s3_bucket_policy.gitlab_logs': 'aws_s3_bucket_policy.gitlab',
-    'aws_s3_bucket_policy.gitlab': 'aws_s3_bucket_policy.gitlab_alb',
 }
 
 
