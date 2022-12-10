@@ -80,24 +80,30 @@ _preauth () {
 		return 2
 	fi
 	eval "$env"
+	>&2 echo
 	>&2 echo "Temporary session credentials are in effect for AWS and Google." \
 	         "Use '_deauth' to revert the effect of this command."
+	>&2 echo
 	return 0
 }
 
 _deauth () {
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+	>&2 echo
 	>&2 echo "Revoked temporary AWS credentials."
+	>&2 echo
 	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
-		echo
-		echo "Google Cloud application default credentials are system-global." \
-		     "You should revoke the existing credentials unless you are *certain* that" \
-		     "you are already logged in using the appropriate account and project." \
-		     "If in doubt, enter 'y'."
-		echo
-	gcloud auth application-default revoke
+		>&2 echo
+		>&2 echo "Google Cloud application default credentials are system-global." \
+		         "You should revoke the existing credentials unless you are *certain* that" \
+		         "you are already logged in using the appropriate account and project." \
+		         "If in doubt, enter 'y'."
+		>&2 echo
+		gcloud auth application-default revoke
+		>&2 echo
+	  >&2 echo "Revoked temporary Google credentials."
+		>&2 echo
 	fi
-	>&2 echo "Revoked temporary Google credentials."
 }
 
 _revenv () {
