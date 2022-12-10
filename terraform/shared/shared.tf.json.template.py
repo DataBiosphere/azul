@@ -7,9 +7,9 @@ from azul.deployment import (
     aws,
 )
 from azul.terraform import (
+    block_public_s3_bucket_access,
     emit_tf,
     provider_fragment,
-    block_public_s3_bucket_access,
 )
 
 emit_tf(block_public_s3_bucket_access({
