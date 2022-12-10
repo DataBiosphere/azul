@@ -8,15 +8,14 @@ export project_root
 # A little helper to make re-sourcing this script easier.
 #
 _refresh () {
-	_deauth
 	source "${project_root}/environment"
-	_preauth
 }
 
 # Manage the symlink to the active deployment
 #
 _select () {
 	if [[ $1 != "" ]]; then
+		_deauth
 		( # use sub-shell so `cd` is temporary
 			cd "${project_root}/deployments" &&
 			test -d "$1" &&
@@ -24,8 +23,15 @@ _select () {
 			ln -s "$1" .active
 		) || { echo error: "$1" && return ;}
 		_refresh
+		_preauth
 	fi
 	(cd "${project_root}/deployments" && ls -l .active)
+}
+
+_deselect() {
+	_deauth
+	rm "${project_root}/deployments/.active"
+	_refresh
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them

@@ -282,7 +282,7 @@ emit_tf(block_public_s3_bucket_access({
             'cloudtrail': {
                 'name': 'azul-cloudtrail',
                 'role': '${aws_iam_role.cloudtrail.id}',
-                # Adapted from https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-required-policy-for-cloudwatch-logs.html
+                # noqa https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-required-policy-for-cloudwatch-logs.html
                 'policy': json.dumps({
                     'Version': '2012-10-17',
                     'Statement': [
