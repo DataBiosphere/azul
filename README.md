@@ -90,13 +90,19 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1. Activate the `dev` deployment:
+1. Load the environment defaults
 
    ```
-   (cd azul/deployments && ln -snf dev .active)
+   source environment
    ```
 
-2. Load the environment:
+2. Activate the `dev` deployment:
+
+   ```
+   _select dev
+   ```
+
+3. Load the environment:
 
    ```
    source environment
@@ -105,14 +111,14 @@ end.
    The output should indicate that the environment is being loaded from the
    selected deployment (in this case, `dev`).
 
-3. Create a Python virtual environment and activate it:
+4. Create a Python virtual environment and activate it:
 
    ```
    make virtualenv
    source .venv/bin/activate
    ```
 
-4. Install the development prerequisites:
+5. Install the development prerequisites:
 
    ```
    make requirements
@@ -136,10 +142,10 @@ end.
 
    [pyenv]: https://github.com/pyenv/pyenv
 
-5. Run `make`. It should say `Looking good!` If one of the check target fails,
+6. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
 
-6. Make sure Docker works without explicit root access. Run the following
+7. Make sure Docker works without explicit root access. Run the following
    command *without `sudo`*:
 
    ```
@@ -148,7 +154,7 @@ end.
 
    If that fails, you're on your own.
 
-7. Finally, confirm that everything is configured properly on your machine by
+8. Finally, confirm that everything is configured properly on your machine by
    running the unit tests:
 
    ```

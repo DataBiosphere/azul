@@ -8,15 +8,14 @@ export project_root
 # A little helper to make re-sourcing this script easier.
 #
 _refresh () {
-	_deauth
 	source "${project_root}/environment"
-	_preauth
 }
 
 # Manage the symlink to the active deployment
 #
 _select () {
 	if [[ $1 != "" ]]; then
+		_deauth
 		( # use sub-shell so `cd` is temporary
 			cd "${project_root}/deployments" &&
 			test -d "$1" &&
@@ -24,8 +23,15 @@ _select () {
 			ln -s "$1" .active
 		) || { echo error: "$1" && return ;}
 		_refresh
+		_preauth
 	fi
 	(cd "${project_root}/deployments" && ls -l .active)
+}
+
+_deselect() {
+	_deauth
+	rm "${project_root}/deployments/.active"
+	_refresh
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them
@@ -80,26 +86,34 @@ _preauth () {
 		return 2
 	fi
 	eval "$env"
+	>&2 echo
 	>&2 echo "Temporary session credentials are in effect for AWS and Google." \
 	         "Use '_deauth' to revert the effect of this command."
+	>&2 echo
 	return 0
 }
 
 _deauth () {
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+	>&2 echo
 	>&2 echo "Revoked temporary AWS credentials."
+	>&2 echo
 	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
-		echo "Google Cloud application default credentials are system-global." \
-		     "You should revoke the existing credentials unless you are *certain* that" \
-		     "you are already logged in using the appropriate account and project." \
-		     "If in doubt, enter 'y'."
-	gcloud auth application-default revoke
+		>&2 echo
+		>&2 echo "Google Cloud application default credentials are system-global." \
+		         "You should revoke the existing credentials unless you are *certain* that" \
+		         "you are already logged in using the appropriate account and project." \
+		         "If in doubt, enter 'y'."
+		>&2 echo
+		gcloud auth application-default revoke
+		>&2 echo
+	  >&2 echo "Revoked temporary Google credentials."
+		>&2 echo
 	fi
-	>&2 echo "Revoked temporary Google credentials."
 }
 
 _revenv () {
-	deactivate && make virtualenv && source .venv/bin/activate && make envhook requirements
+	deactivate && make virtualenv && source .venv/bin/activate && make requirements envhook
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
