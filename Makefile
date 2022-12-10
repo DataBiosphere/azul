@@ -70,6 +70,7 @@ requirements_update: check_venv check_docker
 	       --image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
 	       --build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
 	# Download wheels (source and binary) for the Lambda runtime
+	rm ${azul_chalice_bin}/*
 	pip download \
 	    --platform=manylinux2014_x86_64 \
 	    --no-deps \
