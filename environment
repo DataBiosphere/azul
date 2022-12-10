@@ -89,10 +89,12 @@ _deauth () {
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 	>&2 echo "Revoked temporary AWS credentials."
 	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
+		echo
 		echo "Google Cloud application default credentials are system-global." \
 		     "You should revoke the existing credentials unless you are *certain* that" \
 		     "you are already logged in using the appropriate account and project." \
 		     "If in doubt, enter 'y'."
+		echo
 	gcloud auth application-default revoke
 	fi
 	>&2 echo "Revoked temporary Google credentials."
