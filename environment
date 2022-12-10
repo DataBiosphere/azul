@@ -101,7 +101,7 @@ _deauth () {
 }
 
 _revenv () {
-	deactivate && make virtualenv && source .venv/bin/activate && make envhook requirements
+	deactivate && make virtualenv && source .venv/bin/activate && make requirements envhook
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
