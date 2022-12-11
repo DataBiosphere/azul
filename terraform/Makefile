@@ -8,9 +8,6 @@ clean: check_env git_clean
 
 .PHONY: state
 state: check_terraform check_branch check_aws
-	@# FIXME: Remove after all deployments have been upgraded to 1.3.x
-	@#        https://github.com/DataBiosphere/azul/issues/4744
-	python $(project_root)/scripts/migrate_terraform_state.py
 
 .PHONY: init
 init: clean state providers.tf.json backend.tf.json
@@ -38,9 +35,6 @@ rename_resources: config
 
 .PHONY: import_resources
 import_resources: rename_resources
-	@# FIXME: Remove once the stage has been imported into all deployments
-	@#        https://github.com/DataBiosphere/azul/issues/4772
-	python $(project_root)/scripts/import_api_gateway_stage.py
 
 .PHONY: plan
 plan: validate import_resources
