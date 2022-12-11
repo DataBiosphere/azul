@@ -13,6 +13,14 @@ from azul.terraform import (
 )
 
 emit_tf(block_public_s3_bucket_access({
+    'data': {
+        'aws_iam_role': {
+            f'support_{i}': {
+                'name': role
+            }
+            for i, role in enumerate(config.aws_support_roles)
+        }
+    },
     'resource': {
         'aws_s3_bucket': {
             'shared_cloudtrail': {
@@ -333,7 +341,14 @@ emit_tf(block_public_s3_bucket_access({
             'aws_config': {
                 'role': '${aws_iam_role.aws_config.name}',
                 'policy_arn': 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'
-            }
+            },
+            **{
+                f'support_{i}': {
+                    'role': '${data.aws_iam_role.support_%s.name}' % i,
+                    'policy_arn': 'arn:aws:iam::aws:policy/AWSSupportAccess'
+                }
+                for i, role in enumerate(config.aws_support_roles)
+            },
         },
         'aws_config_delivery_channel': {
             'shared': {

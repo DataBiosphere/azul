@@ -93,6 +93,19 @@ class Config:
     def owner(self):
         return self.environ['AZUL_OWNER']
 
+    @property
+    def aws_support_roles(self) -> list[str]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        variable = 'azul_aws_support_roles'
+        roles = json.loads(self.environ[variable])
+        require(isinstance(roles, list),
+                f'{variable} must be a list', roles)
+        require(all(isinstance(role, str) for role in roles),
+                f'{variable} must contain only strings', roles)
+        return roles
+
     def _boolean(self, value: str) -> bool:
         if value == "0":
             return False
