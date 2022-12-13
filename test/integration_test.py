@@ -564,7 +564,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if config.is_hca_enabled(catalog):
             file_size_facet = 'fileSize'
         elif config.is_anvil_enabled(catalog):
-            file_size_facet = 'size'
+            file_size_facet = 'files.file_size'
         else:
             assert False, catalog
         for filters in [self._fastq_filter(catalog), {}]:
