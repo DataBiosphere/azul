@@ -350,6 +350,11 @@ class Submitter(SubmitterBase, Enum):
         'DCP/2 Analysis',
         SubmitterCategory.internal
     )
+    dcp2_ingest = (
+        '8d59f7a5-6245-5e42-9bc0-a53dd8a10f28',
+        'DCP/2 Ingest',
+        SubmitterCategory.internal
+    )
     dcp1_matrix_service = (
         'c9efbb15-c50c-5796-8d15-35e9e1219dc5',
         'DCP/1 Matrix Service',
