@@ -399,6 +399,17 @@ emit_tf(block_public_s3_bucket_access({
                     'aws_securityhub_account.shared'
                 ]
             }
+        },
+        'aws_iam_account_password_policy': {
+            'cis': {
+                'require_uppercase_characters': True,
+                'require_lowercase_characters': True,
+                'require_symbols': True,
+                'require_numbers': True,
+                'minimum_password_length': 14,
+                'password_reuse_prevention': 24,
+                'max_password_age': 90,
+            }
         }
     }
 }))
