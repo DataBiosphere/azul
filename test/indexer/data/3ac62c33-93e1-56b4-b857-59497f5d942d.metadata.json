@@ -361,7 +361,7 @@
                 9606
             ]
         },
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.0/donor_organism",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
         "development_stage": {
             "ontology": "HsapDv:0000087",
             "ontology_label": "human adult stage",

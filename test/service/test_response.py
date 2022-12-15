@@ -2400,7 +2400,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     def bundles(cls) -> list[BundleFQID]:
         return [
             # Bundles for project 90bf705c
-            # https://github.com/HumanCellAtlas/schema-test-data/tree/eb8f7d34
+            # https://github.com/HumanCellAtlas/schema-test-data/tree/eb93f83b
             cls.bundle_fqid(uuid='1f6afb64-fa14-5c6f-a474-a742540108a3',
                             version='2021-01-01T00:00:00.000000Z'),
             cls.bundle_fqid(uuid='3ac62c33-93e1-56b4-b857-59497f5d942d',
@@ -2410,6 +2410,10 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
             cls.bundle_fqid(uuid='8c1773c3-1885-545f-9381-0dab1edf6074',
                             version='2021-01-01T00:00:00.000000Z'),
             cls.bundle_fqid(uuid='d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7',
+                            version='2021-01-01T00:00:00.000000Z'),
+            cls.bundle_fqid(uuid='1ed68210-eaba-531d-ba9e-db80164d65ef',
+                            version='2021-01-01T00:00:00.000000Z'),
+            cls.bundle_fqid(uuid='7a330531-ec7f-5aee-84d4-2ba24d66e93b',
                             version='2021-01-01T00:00:00.000000Z'),
         ]
 
@@ -2428,10 +2432,10 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         Verify the project 'estimatedCellCount' value across the various endpoints
         """
         expected_cell_counts = {
-            'files': [10000] * 7,
+            'files': [10000] * 10,
             'samples': [10000] * 3,
             'projects': [10000],
-            'bundles': [10000] * 5,
+            'bundles': [10000] * 7,
         }
         params = {'catalog': self.catalog}
         for entity_type in expected_cell_counts.keys():
@@ -2454,12 +2458,20 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         response.raise_for_status()
         summary = response.json()
         self.assertEqual(1, summary['projectCount'])
-        self.assertEqual(7, summary['fileCount'])
+        self.assertEqual(10, summary['fileCount'])
+        # There are four bundles with cell suspensions at play here. Three of
+        # these bundles have cell suspensions that are processed into other
+        # cell suspensions, and some cell suspensions are referenced in multiple
+        # bundles, resulting in three distinct leaf node cell suspensions.
+        # Bundle: 1ed68210, Cell Suspension: 119c4135 (40k) -> 6ff38054 (20k)
+        # Bundle: 7a330531, Cell Suspension: 119c4135 (40k) -> 6ff38054 (20k)
+        # Bundle: d7b8cbff, Cell Suspension: 119c4135 (40k) -> af3549f4 (20k)
+        # Bundle: 4da04038, Cell Suspension: d9eaaffe (20k)
         expected_summary_cell_counts = [
             {
                 'organType': ['blood'],
-                'countOfDocsWithOrganType': 2,
-                'totalCellCountByOrgan': 20000.0 + 20000.0
+                'countOfDocsWithOrganType': 4,
+                'totalCellCountByOrgan': 20000.0 * 3
             }
         ]
         self.assertEqual(expected_summary_cell_counts, summary['cellCountSummaries'])
