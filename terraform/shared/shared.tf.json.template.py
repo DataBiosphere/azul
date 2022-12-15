@@ -30,6 +30,13 @@ emit_tf(block_public_s3_bucket_access({
                     'prevent_destroy': True
                 }
             },
+            # This is intended to eventually replace the preceding bucket
+            'cloudtrail': {
+                'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail.{aws.region_name}',
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
+            },
             'versioned': {
                 'bucket': config.versioned_bucket,
                 'lifecycle': {
