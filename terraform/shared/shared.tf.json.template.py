@@ -30,6 +30,13 @@ emit_tf(block_public_s3_bucket_access({
                     'prevent_destroy': True
                 }
             },
+            # This is intended to eventually replace the preceding bucket
+            'cloudtrail': {
+                'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail.{aws.region_name}',
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
+            },
             'versioned': {
                 'bucket': config.versioned_bucket,
                 'lifecycle': {
@@ -50,36 +57,42 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_s3_bucket_policy': {
-            'shared_cloudtrail': {
-                **provider_fragment(config.cloudtrail_s3_bucket_region),
-                'bucket': '${aws_s3_bucket.shared_cloudtrail.id}',
-                'policy': json.dumps({
-                    'Version': '2012-10-17',
-                    'Statement': [
-                        {
-                            'Effect': 'Allow',
-                            'Principal': {
-                                'Service': 'cloudtrail.amazonaws.com'
+            **{
+                bucket: {
+                    **provider_fragment(region),
+                    'bucket': f'${{aws_s3_bucket.{bucket}.id}}',
+                    'policy': json.dumps({
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'cloudtrail.amazonaws.com'
+                                },
+                                'Action': 's3:GetBucketAcl',
+                                'Resource': f'${{aws_s3_bucket.{bucket}.arn}}'
                             },
-                            'Action': 's3:GetBucketAcl',
-                            'Resource': '${aws_s3_bucket.shared_cloudtrail.arn}'
-                        },
-                        {
-                            'Effect': 'Allow',
-                            'Principal': {
-                                'Service': 'cloudtrail.amazonaws.com'
-                            },
-                            'Action': 's3:PutObject',
-                            'Resource': '${aws_s3_bucket.shared_cloudtrail.arn}/AWSLogs/'
-                                        f'{config.aws_account_id}/*',
-                            'Condition': {
-                                'StringEquals': {
-                                    's3:x-amz-acl': 'bucket-owner-full-control'
+                            {
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'cloudtrail.amazonaws.com'
+                                },
+                                'Action': 's3:PutObject',
+                                'Resource': f'${{aws_s3_bucket.{bucket}.arn}}/AWSLogs/'
+                                            f'{config.aws_account_id}/*',
+                                'Condition': {
+                                    'StringEquals': {
+                                        's3:x-amz-acl': 'bucket-owner-full-control'
+                                    }
                                 }
                             }
-                        }
-                    ]
-                })
+                        ]
+                    })
+                }
+                for bucket, region in [
+                    ('shared_cloudtrail', config.cloudtrail_s3_bucket_region),
+                    ('cloudtrail', config.region)
+                ]
             },
             'aws_config': {
                 # https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
