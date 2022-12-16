@@ -183,6 +183,13 @@ emit_tf(block_public_s3_bucket_access({
                 'is_multi_region_trail': True,
                 'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.cloudtrail.arn}:*',
                 'cloud_watch_logs_role_arn': '${aws_iam_role.cloudtrail.arn}'
+            },
+            # This is intended to eventually replace the preceding trail
+            'cloudtrail': {
+                'name': config.qualified_resource_name('cloudtrail'),
+                's3_bucket_name': '${aws_s3_bucket.cloudtrail.id}',
+                'enable_log_file_validation': True,
+                'is_multi_region_trail': True,
             }
         },
         'aws_cloudwatch_log_group': {
