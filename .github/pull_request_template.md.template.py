@@ -519,7 +519,10 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed PR branch to GitHub'
             },
-            *flatten(
+            # zip() is used to interleave the steps for each deployment so
+            # that first, step 1 is done for all deployments, then step 2
+            # for all of them, and so on.
+            *flatten(zip(*(
                 [
                     {
                         'type': 'cli',
@@ -557,7 +560,7 @@ def main():
                 ]
                 for i, (d, s) in enumerate(t.deployments.items())
                 if s is not None
-            ),
+            ))),
             {
                 'type': 'cli',
                 'content': f"Added PR reference {iif(t is T.backport, '(this PR) ')}to merge commit title"

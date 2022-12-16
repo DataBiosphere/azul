@@ -42,10 +42,10 @@ checklists. Update the `N reviews` label.
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Added PR reference (this PR) to merge commit title
 - [ ] Collected commit title tags in merge commit title
