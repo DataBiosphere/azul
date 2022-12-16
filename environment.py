@@ -541,5 +541,14 @@ def env() -> Mapping[str, Optional[str]]:
         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.20
         #
         #
-        'azul_aws_support_roles': json.dumps([])
+        'azul_aws_support_roles': json.dumps([]),
+
+        # A dict containing the contact details of the AWS account alternate
+        # contact for security communications. The keys must include those
+        # required by the aws_account_alternate_contact Terraform resource,
+        # however should exclude the key alternate_contact_type.
+        #
+        # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_alternate_contact
+        #
+        'azul_security_contact': None,
     }

@@ -410,6 +410,18 @@ emit_tf(block_public_s3_bucket_access({
                 'password_reuse_prevention': 24,
                 'max_password_age': 90,
             }
-        }
+        },
+        **(
+            {
+                'aws_account_alternate_contact': {
+                    'security': {
+                        **config.security_contact,
+                        'alternate_contact_type': 'SECURITY'
+                    }
+                }
+            }
+            if config.security_contact else
+            {}
+        )
     }
 }))
