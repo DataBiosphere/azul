@@ -4,11 +4,10 @@ all: apply
 include ../../common.mk
 
 .PHONY: clean
-clean: check_env
-	rm -rf *.tf.json
+clean: git_clean
 
 .PHONY: state
-state: check_terraform check_branch check_aws clean
+state: check_terraform check_branch check_aws
 	@# FIXME: Remove after all deployments have been upgraded to 1.3.x
 	@#        https://github.com/DataBiosphere/azul/issues/4744
 	python $(project_root)/scripts/migrate_terraform_state.py

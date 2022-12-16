@@ -10,6 +10,66 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4224 Eliminate personal service accounts
+=========================================
+
+When this PR lands in the main deployment in a given Google cloud project, the
+operator should perform the following steps *in that project*, and then announce
+for the other developers to do the same *in that project*.
+
+1) Delete your personal Google service account:
+
+    1a) Go to the Google Cloud console, select the appropriate project, and
+        navigate to ``IAM & Admin`` -> ``Service Accounts``
+
+    1b) Select your personal service account. This is the one where the part
+        before the ``@`` symbol exactly matches your email address; it does not
+        include the string "azul").
+
+    1c) Click ``DISABLE SERVICE ACCOUNT`` -> ``DISABLE``.
+
+    1d) Click ``DELETE SERVICE ACCOUNT`` -> ``DELETE``.
+
+2) Delete the local file containing the private key of the service account that
+   you deleted during step 1. Such files are usually stored in ``~/.gcp/``.
+
+3) Remove the ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from
+   ``environment.local.py`` for all Azul deployments (including non-personal
+   deployments) where that variable references the key file that you deleted in
+   step 2.
+
+4) For clarity's sake, remove comments referencing the
+   ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from
+   ``environment.py`` for all personal deployments that were changed during step
+   3. As always, use the sandbox deployment's ``environment.py`` as a model when
+   upgrading personal deployments.
+
+
+#4752 On replacement, Terraform creates ES domain before deleting it
+====================================================================
+
+Note: The ``apply`` and ``auto_apply`` targets in ``terraform/Makefile`` do not
+recurse into the sibling ``lambdas`` directory anymore. The only way to get a
+proper deployment is to run ``make deploy`` or ``make auto_deploy`` in the
+project root. This change speeds up the ``apply`` and ``auto_apply`` targets
+for those who know what they are doing™.
+
+Note: The ``post_deploy`` target is gone. The ``deploy`` target has been renamed
+to ``terraform``. The new ``deploy`` target depends on the ``terraform`` target
+and invokes the post-deplot scripts directly. The same goes for ``auto_deploy``
+and ``auto_terraform`` respectively.
+
+Ensure that the ``comm`` utility is installed. The `clean` target in most
+Makefiles depends on it.
+
+This is a complicated change that involves renaming lots of resources, both in
+TF config and in state. If a deployment is stale or borked, upgrading to this
+change is just going to make things worse. Before upgrading any deployment to
+this commit, or more precisely, the merge commit that introduces this change,
+first check out the previous merge commit, and deploy while following any
+upgrade instructions up to that commit. Then run ``make clean``, check out this
+commit and run ``make deploy``.
+
 
 #4688 Fix: Elasticsearch domains should be in a VPC
 ===================================================

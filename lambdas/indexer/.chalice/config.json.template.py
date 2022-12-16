@@ -1,38 +1,39 @@
 from azul import (
     config,
 )
-from azul.chalice import (
-    private_api_stage_config,
-    vpc_lambda_config,
-)
 from azul.modules import (
     load_app_module,
 )
 from azul.template import (
     emit,
 )
+from azul.terraform import (
+    chalice,
+)
 
 suffix = '-' + config.deployment_stage
 assert config.indexer_name.endswith(suffix)
 
-indexer = load_app_module('indexer')
+app_name = 'indexer'
+
+indexer = load_app_module(app_name)
 
 emit({
     "version": "2.0",
     "app_name": config.indexer_name[:-len(suffix)],  # Chalice appends stage name implicitly
     "api_gateway_stage": config.deployment_stage,
     "manage_iam_role": False,
-    "iam_role_arn": "${var.role_arn}",
+    "iam_role_arn": "${aws_iam_role.%s.arn}" % app_name,
     "environment_variables": config.lambda_env,
     "minimum_compression_size": config.minimum_compression_size,
     "lambda_timeout": config.api_gateway_lambda_timeout,
     "lambda_memory_size": 128,
-    **vpc_lambda_config(),
+    **chalice.vpc_lambda_config(app_name),
     "stages": {
         config.deployment_stage: {
-            **private_api_stage_config(),
+            **chalice.private_api_stage_config(app_name),
             "lambda_functions": {
-                "api_handler": vpc_lambda_config(),
+                "api_handler": chalice.vpc_lambda_config(app_name),
                 indexer.contribute.name: {
                     "reserved_concurrency": config.contribution_concurrency(retry=False),
                     "lambda_memory_size": 256,

@@ -181,15 +181,15 @@ class AnvilSearchResponseStage(SearchResponseStage):
     _non_pivotal_fields_by_entity_type = {
         'activities': {
             'activity_type',
-            'assay_category',
+            'assay_type',
             'data_modality'
         },
         'biosamples': {
             'anatomical_site',
             'biosample_type',
-            'donor_age_at_collection_age_range',
-            'donor_age_at_collection_unit',
             'disease',
+            'donor_age_at_collection_unit',
+            'donor_age_at_collection_age_range',
         },
         'datasets': {
             'dataset_id',
@@ -198,13 +198,13 @@ class AnvilSearchResponseStage(SearchResponseStage):
         'donors': {
             'organism_type',
             'phenotypic_sex',
-            'reported_ethnicity'
+            'reported_ethnicity',
+            'genetic_ancestry'
         },
         'files': {
             'count',
             'data_modality',
             'file_format',
-            'file_type',
             'reference_assembly'
         }
     }

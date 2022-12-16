@@ -128,6 +128,7 @@ class Config:
             return host, int(port)
 
     def es_endpoint_env(self,
+                        *,
                         es_endpoint: Union[Netloc, str],
                         es_instance_count: Union[int, str]
                         ) -> Mapping[str, str]:
@@ -931,7 +932,7 @@ class Config:
     def is_main_deployment(self, deployment: Optional[str] = None) -> bool:
         """
         Returns `True` if the deployment of the specified name is a main
-        deployment, or `False` if it is a shared deployment. If no argument is
+        deployment, or `False` if it is a personal deployment. If no argument is
         passed or if the argument is `None`, the current deployment's name is
         used instead.
         """
@@ -1249,12 +1250,6 @@ class Config:
         return self._term_from_env('azul_terraform_component', optional=True)
 
     permissions_boundary_name = 'azul-boundary'
-
-    var_vpc_endpoint_id = 'vpc_endpoint_id'
-
-    var_vpc_subnet_ids = 'vpc_subnet_ids'
-
-    var_vpc_security_group_id = 'vpc_security_group_id'
 
     @property
     def github_project(self) -> str:

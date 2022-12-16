@@ -1,10 +1,10 @@
-import json
+import argparse
 import logging
 import subprocess
 import sys
 
-from azul import (
-    config,
+from azul.args import (
+    AzulArgumentHelpFormatter,
 )
 from azul.logging import (
     configure_script_logging,
@@ -26,18 +26,6 @@ renamed = {
 }
 
 
-def chalice_renamed():
-    for lambda_name in ('indexer', 'service'):
-        tf_config_path = chalice.package_dir(lambda_name) / chalice.tf_config_name
-        if not config.terraform_component:
-            with open(tf_config_path) as f:
-                tf_config_path = json.load(f)
-                mapping = chalice.resource_name_mapping(tf_config_path)
-                for (resource_type, name), new_name in mapping.items():
-                    prefix = f'module.chalice_{lambda_name}.{resource_type}.'
-                    yield prefix + name, prefix + new_name
-
-
 def terraform_state(command: str, *args: str) -> bytes:
     proc = subprocess.run(['terraform', 'state', command, *args],
                           check=False,
@@ -57,9 +45,23 @@ def terraform_state(command: str, *args: str) -> bytes:
         proc.check_returncode()
 
 
-def main():
-    renamed.update(dict(chalice_renamed()))
+def main(argv: list[str]):
+    configure_script_logging(log)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=AzulArgumentHelpFormatter,
+                                     add_help=True)
+    parser.add_argument('--dry-run',
+                        action='store_true',
+                        help='Report status without altering resources')
+    args = parser.parse_args(argv)
     current_names = terraform_state('list').decode().splitlines()
+    # FIXME: Remove once all deployments have been upgraded
+    #        https://github.com/DataBiosphere/azul/issues/4769
+    renamed.update({
+        current_name: chalice.rename_chalice_resource_in_tf_state(current_name)
+        for current_name in current_names
+        if current_name.startswith('module.')
+    })
     for current_name in current_names:
         try:
             new_name = renamed[current_name]
@@ -67,10 +69,12 @@ def main():
             if current_name in renamed.values():
                 log.info('Found %r, already renamed', current_name)
         else:
-            log.info('Found %r, renaming to %r', current_name, new_name)
-            terraform_state('mv', current_name, new_name)
+            if args.dry_run:
+                log.info('Found %r, would be renaming it to %r', current_name, new_name)
+            else:
+                log.info('Found %r, renaming it to %r', current_name, new_name)
+                terraform_state('mv', current_name, new_name)
 
 
 if __name__ == '__main__':
-    configure_script_logging(log)
-    main()
+    main(sys.argv[1:])

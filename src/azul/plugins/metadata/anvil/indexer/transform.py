@@ -195,21 +195,24 @@ class BaseTransformer(Transformer, ABC):
             'activity_id': null_str,
             'activity_table': null_str,
             'activity_type': null_str,
-            'assay_category': null_str,
+            'assay_type': null_str,
             'data_modality': null_str,
-            'date_submitted': null_datetime,
+            'reference_assembly': [null_str],
+            # Not in schema
+            'date_created': null_datetime,
         }
 
     @classmethod
     def _biosample_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'anatomical_site': null_str,
             'biosample_id': null_str,
+            'anatomical_site': null_str,
+            'apriori_cell_type': [null_str],
             'biosample_type': null_str,
-            'donor_age_at_collection_age_range': pass_thru_json,
-            'donor_age_at_collection_unit': null_str,
             'disease': null_str,
+            'donor_age_at_collection_unit': null_str,
+            'donor_age_at_collection_age_range': pass_thru_json,
         }
 
     @classmethod
@@ -219,8 +222,11 @@ class BaseTransformer(Transformer, ABC):
             'dataset_id': null_str,
             'consent_group': [null_str],
             'data_use_permission': [null_str],
+            'owner': [null_str],
+            'principal_investigator': [null_str],
             'registered_identifier': [null_str],
             'title': null_str,
+            'data_modality': [null_str],
         }
 
     @classmethod
@@ -231,21 +237,25 @@ class BaseTransformer(Transformer, ABC):
             'organism_type': null_str,
             'phenotypic_sex': null_str,
             'reported_ethnicity': null_str,
+            'genetic_ancestry': [null_str],
         }
 
     @classmethod
     def _file_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            'version': null_str,
-            'uuid': null_str,
+            'file_id': null_str,
             'data_modality': [null_str],
             'file_format': null_str,
-            'file_id': null_str,
-            'byte_size': null_int,
+            'file_size': null_int,
+            'file_md5sum': null_str,
+            'reference_assembly': [null_str],
+            'file_name': null_str,
+            # Not in schema
+            'version': null_str,
+            'uuid': null_str,
             'size': null_int,
             'name': null_str,
-            'reference_assembly': [null_str],
             'crc32': null_str,
             'sha256': null_str,
             'drs_path': null_str
@@ -341,7 +351,7 @@ class BaseTransformer(Transformer, ABC):
         metadata = self.bundle.metadata_files[manifest_entry['name']]
         return self._entity(manifest_entry,
                             self._file_types(),
-                            size=metadata['byte_size'])
+                            size=metadata['file_size'])
 
     def _only_dataset(self) -> MutableJSON:
         return self._dataset(self._entries_by_entity_id[one(self._entities_by_type['dataset'])])
@@ -350,7 +360,8 @@ class BaseTransformer(Transformer, ABC):
         'activity',
         'alignmentactivity',
         'assayactivity',
-        'sequencingactivity'
+        'sequencingactivity',
+        'variantcallingactivity'
     }
 
 
