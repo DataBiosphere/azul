@@ -1276,6 +1276,7 @@ class TransformerVisitor(api.EntityVisitor):
     analysis_protocols: dict[api.UUID4, api.AnalysisProtocol]
     imaging_protocols: dict[api.UUID4, api.ImagingProtocol]
     library_preparation_protocols: dict[api.UUID4, api.LibraryPreparationProtocol]
+    sequencing_inputs: dict[api.UUID4, api.Biomaterial]
     sequencing_protocols: dict[api.UUID4, api.SequencingProtocol]
     sequencing_processes: dict[api.UUID4, api.Process]
     files: dict[api.UUID4, api.File]
@@ -1289,11 +1290,19 @@ class TransformerVisitor(api.EntityVisitor):
         self.analysis_protocols = {}
         self.imaging_protocols = {}
         self.library_preparation_protocols = {}
+        self.sequencing_inputs = {}
         self.sequencing_protocols = {}
         self.sequencing_processes = {}
         self.files = {}
 
     def visit(self, entity: api.Entity) -> None:
+        if (
+            isinstance(entity, api.Biomaterial)
+            and any(isinstance(protocol, api.SequencingProtocol)
+                    for process in entity.to_processes.values()
+                    for protocol in process.protocols.values())
+        ):
+            self.sequencing_inputs[entity.document_id] = entity
         if isinstance(entity, api.SpecimenFromOrganism):
             self.specimens[entity.document_id] = entity
         elif isinstance(entity, api.CellSuspension):
@@ -1377,9 +1386,9 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     related_files = ()
                 visitor, samples = self._visit_file(file)
                 contents = dict(self._samples(samples.values()),
-                                # FIXME: Only list sequencing inputs connected to this file
-                                #        https://github.com/DataBiosphere/azul/issues/2907
-                                sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
+                                sequencing_inputs=list(
+                                    map(self._sequencing_input, visitor.sequencing_inputs.values())
+                                ),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
                                 cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
@@ -1478,9 +1487,9 @@ class CellSuspensionTransformer(PartitionedTransformer):
             cell_suspension.accept(visitor)
             cell_suspension.ancestors(visitor)
             contents = dict(self._samples(samples.values()),
-                            # FIXME: Only list sequencing inputs connected to this cell suspension
-                            #        https://github.com/DataBiosphere/azul/issues/2907
-                            sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
+                            sequencing_inputs=list(
+                                map(self._sequencing_input, visitor.sequencing_inputs.values())
+                            ),
                             specimens=list(map(self._specimen, visitor.specimens.values())),
                             cell_suspensions=[self._cell_suspension(cell_suspension)],
                             cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
@@ -1525,9 +1534,9 @@ class SampleTransformer(PartitionedTransformer):
             sample.accept(visitor)
             sample.ancestors(visitor)
             contents = dict(self._samples([sample]),
-                            # FIXME: Only list sequencing inputs connected to this sample
-                            #        https://github.com/DataBiosphere/azul/issues/2907
-                            sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
+                            sequencing_inputs=list(
+                                map(self._sequencing_input, visitor.sequencing_inputs.values())
+                            ),
                             specimens=list(map(self._specimen, visitor.specimens.values())),
                             cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
                             cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
@@ -1620,9 +1629,9 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
         ]
 
         contents = dict(self._samples(samples.values()),
-                        # FIXME: Only list sequencing inputs connected to this cell suspension
-                        #        https://github.com/DataBiosphere/azul/issues/2907
-                        sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
+                        sequencing_inputs=list(
+                            map(self._sequencing_input, visitor.sequencing_inputs.values())
+                        ),
                         specimens=list(map(self._specimen, visitor.specimens.values())),
                         cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
                         cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
