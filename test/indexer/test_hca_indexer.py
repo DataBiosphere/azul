@@ -1104,7 +1104,7 @@ class TestHCAIndexer(IndexerTestCase):
                 with ThreadPoolExecutor(max_workers=len(bundles)) as executor:
                     thread_results = executor.map(self._index_canned_bundle, bundles)
                     self.assertIsNotNone(thread_results)
-                    self.assertTrue(all(r is None for r in thread_results))
+                    self.assertEqual(set(bundles), set(r.fqid for r in thread_results))
 
                 self.assertIsNotNone(cm.records)
                 num_hits = sum(1 for log_msg in cm.output

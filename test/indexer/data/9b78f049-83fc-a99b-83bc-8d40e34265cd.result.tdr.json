@@ -1,0 +1,202 @@
+{
+  "manifest": [
+    {
+      "uuid": "96a1d163-121b-460f-bd4f-d9ffce4d18d0",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "activity_a28c31a8-76ea-018b-5a31-430d57a2033a",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
+      "uuid": "e085ea95-24f8-4e82-b688-ad55a3e8e4ed",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "activity_a710811a-cfe2-2b4d-b711-4be02108e5a3",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
+      "uuid": "9b78f049-83fc-499b-83bc-8d40e34265cd",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "biosample_0c72ef9f-aa81-b69f-d17a-aa265ccb319b",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
+      "uuid": "4d16321b-2a55-4008-afff-015d6a9f1a78",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "dataset_916a83e8-b2b0-28fa-14a1-f8cd0b716c2c",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
+      "uuid": "916287d2-570b-4a77-b6ae-a7105eb51507",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "donor_8ec10265-2066-acfa-d4c1-e80a07ae766b",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
+      "uuid": "0c565de7-9e78-4975-aea6-9208f5604149",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "file_70527236-8e1d-436d-9534-5a28fc2b0bbf",
+      "indexed": true,
+      "crc32": "",
+      "sha256": "",
+      "drs_path": "v1_37eb5ab7-2a37-4ab0-bfb2-720ba2c0bc5b_70527236-8e1d-436d-9534-5a28fc2b0bbf"
+    },
+    {
+      "uuid": "fd4ae68e-9290-4695-bb38-8c7b498205ea",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "file_ee54abda-b1d6-4780-8825-0cc3cde8fcd2",
+      "indexed": true,
+      "crc32": "",
+      "sha256": "",
+      "drs_path": "v1_37eb5ab7-2a37-4ab0-bfb2-720ba2c0bc5b_ee54abda-b1d6-4780-8825-0cc3cde8fcd2"
+    },
+    {
+      "uuid": "9b78f049-83fc-a99b-83bc-8d40e34265cd",
+      "version": null,
+      "name": "links",
+      "indexed": true
+    }
+  ],
+  "metadata": {
+    "activity_a28c31a8-76ea-018b-5a31-430d57a2033a": {
+      "activity_id": "a28c31a8-76ea-018b-5a31-430d57a2033a",
+      "activity_type": "Indexing",
+      "datarepo_row_id": "96a1d163-121b-460f-bd4f-d9ffce4d18d0",
+      "source_datarepo_row_ids": [
+        "file_inventory:4e1309bc-2f2d-4438-92d4-045fd30cc5c9",
+        "file_inventory:9fe5d84f-11b6-4dff-965d-c4933a46f2e4"
+      ]
+    },
+    "activity_a710811a-cfe2-2b4d-b711-4be02108e5a3": {
+      "activity_id": "a710811a-cfe2-2b4d-b711-4be02108e5a3",
+      "activity_type": "Unknown",
+      "datarepo_row_id": "e085ea95-24f8-4e82-b688-ad55a3e8e4ed",
+      "source_datarepo_row_ids": [
+        "sample:5e327af7-e56e-4569-8e5c-02eeea1e1679"
+      ]
+    },
+    "biosample_0c72ef9f-aa81-b69f-d17a-aa265ccb319b": {
+      "anatomical_site": "redacted-r0glWfQW",
+      "apriori_cell_type": [],
+      "biosample_id": "0c72ef9f-aa81-b69f-d17a-aa265ccb319b",
+      "biosample_type": "redacted-V07agJ9g",
+      "datarepo_row_id": "9b78f049-83fc-499b-83bc-8d40e34265cd",
+      "disease": null,
+      "donor_age_at_collection_lower_bound": 42190213764563310,
+      "donor_age_at_collection_unit": "redacted-7KxqBgyz",
+      "donor_age_at_collection_upper_bound": 42190213764563310,
+      "source_datarepo_row_ids": [
+        "participant:767ea74d-c6a4-496a-a43e-c1e1f278cfb4",
+        "sample:5e327af7-e56e-4569-8e5c-02eeea1e1679"
+      ]
+    },
+    "dataset_916a83e8-b2b0-28fa-14a1-f8cd0b716c2c": {
+      "consent_group": [
+        "GRU"
+      ],
+      "data_modality": [],
+      "data_use_permission": [
+        "GRU"
+      ],
+      "datarepo_row_id": "4d16321b-2a55-4008-afff-015d6a9f1a78",
+      "dataset_id": "916a83e8-b2b0-28fa-14a1-f8cd0b716c2c",
+      "owner": [
+        "Kristin Ardlie"
+      ],
+      "principal_investigator": [],
+      "registered_identifier": [
+        "phs000424"
+      ],
+      "source_datarepo_row_ids": [
+        "workspace_attributes:36f34631-5216-4466-a727-81b19b0304d9"
+      ],
+      "title": "ANVIL_GTEx_V8_hg38"
+    },
+    "donor_8ec10265-2066-acfa-d4c1-e80a07ae766b": {
+      "datarepo_row_id": "916287d2-570b-4a77-b6ae-a7105eb51507",
+      "donor_id": "8ec10265-2066-acfa-d4c1-e80a07ae766b",
+      "genetic_ancestry": [],
+      "organism_type": null,
+      "phenotypic_sex": "redacted-rDkyBmGV",
+      "reported_ethnicity": [],
+      "source_datarepo_row_ids": [
+        "participant:767ea74d-c6a4-496a-a43e-c1e1f278cfb4"
+      ]
+    },
+    "file_70527236-8e1d-436d-9534-5a28fc2b0bbf": {
+      "data_modality": [],
+      "datarepo_row_id": "0c565de7-9e78-4975-aea6-9208f5604149",
+      "file_format": ".bam",
+      "file_id": "70527236-8e1d-436d-9534-5a28fc2b0bbf",
+      "file_md5sum": "VoLGYQ0X4XN1S/7A8DnxOg==",
+      "file_name": "GTEX-11I78-1526-SM-5A5K7.Aligned.sortedByCoord.out.patched.md.bam",
+      "file_ref": "drs://data.terra.bio/v1_37eb5ab7-2a37-4ab0-bfb2-720ba2c0bc5b_70527236-8e1d-436d-9534-5a28fc2b0bbf",
+      "file_size": 5231540691,
+      "reference_assembly": [],
+      "source_datarepo_row_ids": [
+        "file_inventory:4e1309bc-2f2d-4438-92d4-045fd30cc5c9"
+      ]
+    },
+    "file_ee54abda-b1d6-4780-8825-0cc3cde8fcd2": {
+      "data_modality": [],
+      "datarepo_row_id": "fd4ae68e-9290-4695-bb38-8c7b498205ea",
+      "file_format": ".bai",
+      "file_id": "ee54abda-b1d6-4780-8825-0cc3cde8fcd2",
+      "file_md5sum": "dncIgUEDQyoQ5+Ttwag/7A==",
+      "file_name": "GTEX-11I78-1526-SM-5A5K7.Aligned.sortedByCoord.out.patched.md.bam.bai",
+      "file_ref": "drs://data.terra.bio/v1_37eb5ab7-2a37-4ab0-bfb2-720ba2c0bc5b_ee54abda-b1d6-4780-8825-0cc3cde8fcd2",
+      "file_size": 3728608,
+      "reference_assembly": [],
+      "source_datarepo_row_ids": [
+        "file_inventory:9fe5d84f-11b6-4dff-965d-c4933a46f2e4"
+      ]
+    },
+    "links": [
+      {
+        "inputs": [
+          "dataset/4d16321b-2a55-4008-afff-015d6a9f1a78"
+        ],
+        "activity": null,
+        "outputs": [
+          "biosample/9b78f049-83fc-499b-83bc-8d40e34265cd"
+        ]
+      },
+      {
+        "inputs": [
+          "donor/916287d2-570b-4a77-b6ae-a7105eb51507"
+        ],
+        "activity": null,
+        "outputs": [
+          "biosample/9b78f049-83fc-499b-83bc-8d40e34265cd"
+        ]
+      },
+      {
+        "inputs": [
+          "file/0c565de7-9e78-4975-aea6-9208f5604149"
+        ],
+        "activity": "activity/96a1d163-121b-460f-bd4f-d9ffce4d18d0",
+        "outputs": [
+          "file/fd4ae68e-9290-4695-bb38-8c7b498205ea"
+        ]
+      },
+      {
+        "inputs": [
+          "biosample/9b78f049-83fc-499b-83bc-8d40e34265cd"
+        ],
+        "activity": "activity/e085ea95-24f8-4e82-b688-ad55a3e8e4ed",
+        "outputs": [
+          "file/0c565de7-9e78-4975-aea6-9208f5604149",
+          "file/fd4ae68e-9290-4695-bb38-8c7b498205ea"
+        ]
+      }
+    ]
+  }
+}

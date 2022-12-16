@@ -271,8 +271,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_AWS_ACCOUNT_ID': '122796619775',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        # Set `GOOGLE_APPLICATION_CREDENTIALS` in `environment.local.py`
-        #
         'GOOGLE_PROJECT': 'platform-hca-dev',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-3bj4m7vnsbco82bke96idvg8cpdv6r9r.apps.googleusercontent.com',

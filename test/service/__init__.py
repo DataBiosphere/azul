@@ -7,6 +7,7 @@ from random import (
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Optional,
     Type,
     Union,
@@ -37,6 +38,8 @@ from azul import (
     config,
 )
 from azul.indexer import (
+    Bundle,
+    BundleUUID,
     SourcedBundleFQID,
 )
 from azul.logging import (
@@ -72,6 +75,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     for the indexer, we need them in order to send live indexer output to the
     webservice.
     """
+    indexed_bundles: ClassVar[Optional[dict[BundleUUID, Bundle]]] = None
 
     @classmethod
     def bundles(cls) -> list[SourcedBundleFQID]:
@@ -87,12 +91,19 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     @classmethod
     def _setup_indices(cls):
         cls.index_service.create_indices(cls.catalog)
-        for bundle in cls.bundles():
-            cls._index_canned_bundle(bundle)
+        bundle_fqids = cls.bundles()
+        bundles = {
+            bundle_fqid.uuid: cls._index_canned_bundle(bundle_fqid)
+            for bundle_fqid in bundle_fqids
+        }
+        # This class can't handle multiple versions of a bundle
+        assert len(bundle_fqids) == len(bundles)
+        cls.indexed_bundles = bundles
 
     @classmethod
     def _teardown_indices(cls):
         cls.index_service.delete_indices(cls.catalog)
+        cls.indexed_bundles = None
 
     def _params(self, filters: Optional[JSON] = None, **params: Any) -> dict[str, Any]:
         return {

@@ -1,11 +1,11 @@
 from azul import (
     config,
 )
-from azul.chalice import (
-    vpc_lambda_iam_policy,
-)
 from azul.deployment import (
     aws,
+)
+from azul.terraform import (
+    chalice,
 )
 
 direct_access_role = config.dss_direct_access_role('indexer')
@@ -125,6 +125,6 @@ policy = {
             ] if direct_access_role is not None else [
             ]
         ),
-        *vpc_lambda_iam_policy()
+        *chalice.vpc_lambda_iam_policy()
     ]
 }

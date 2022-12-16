@@ -70,6 +70,7 @@ requirements_update: check_venv check_docker
 	       --image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
 	       --build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
 	# Download wheels (source and binary) for the Lambda runtime
+	rm ${azul_chalice_bin}/*
 	pip download \
 	    --platform=manylinux2014_x86_64 \
 	    --no-deps \
@@ -84,20 +85,27 @@ requirements_update_force: check_venv check_docker
 hello: check_python
 	@echo Looking good!
 
-.PHONY: deploy
-deploy: check_env
-	$(MAKE) -C terraform apply
-	$(MAKE) post_deploy
+.PHONY: lambdas
+lambdas: check_env
+	$(MAKE) -C lambdas
 
-.PHONY: auto_deploy
-auto_deploy: check_env
-	$(MAKE) -C terraform auto_apply
-	$(MAKE) post_deploy
+define deploy
+.PHONY: $(1)terraform
+$(1)terraform: lambdas
+	$(MAKE) -C terraform $(1)apply
 
-.PHONY: post_deploy
-post_deploy: check_python
+.PHONY: $(1)deploy
+$(1)deploy: check_python $(1)terraform
 	python $(project_root)/scripts/post_deploy_sns.py
 	python $(project_root)/scripts/post_deploy_tdr.py
+endef
+
+$(eval $(call deploy,))
+$(eval $(call deploy,auto_))
+
+.PHONY: destroy
+destroy:
+	$(MAKE) -C terraform destroy
 
 .PHONY: create
 create: check_python check_branch
@@ -121,17 +129,73 @@ reindex: check_python check_branch
 reindex_no_slots: check_python check_branch
 	python scripts/reindex.py ${reindex_args} --no-slots
 
+# By our own convention, a line starting with `##` in the top-level `.gitignore`
+# file separates rules for build products from those for local configuration.
+# Build products can be removed by the clean target, local configuration must
+# not. The convention only applies to the top-level `.gitignore` file, in
+# lower-level files, all rules are assumed to be for build products.
+# 
+# Implementation details: First, we run `git ls-files` to list *all* ignored
+# files, and then run it again to list only files ignored by rules for local
+# configuration. We use `comm` to subtract the two results, yielding a list of
+# build products only, and remove them. We repeat the process for directories,
+# passing `--directory` to `git ls-files` and `-r` to `rm`. Note that any files
+# in matching directories have been already been removed in the first pass,
+# rendering the directories empty. That's how we can avoid having to pass `-f`
+# to `rm`. 
+#
+# We can't handle directories and files together because that would complicate
+# the rules of subtraction: subtracting a directory could mean the removal of
+# multiple files. If we do them separately, a simple set difference suffices.
+#
+# We can't use `sed … | git ls-files … --exclude-from /dev/stdin` because the
+# --exclude-from option doesn't work with pipes. It calls `stat` to determine
+# the file's size prior to reading the determined amount of data from the
+# file. If the file is a pipe, there is a race with the writer, a race that,
+# if lost, causes no or partial data to be read from the pipe. Instead we use
+# sed to further massage the lines in .gitignore so that we can interpolate the
+# result into the command line as repeats of the -x (--exclude) option.
+#
+define list_dirty
+comm -23 \
+    <(git ls-files --others --ignored \
+        --exclude-standard \
+        $1 \
+        | sort) \
+    <(git ls-files --others --ignored \
+        $$(sed -e '1,/^##/d' \
+               -e 's/#.*//' \
+               -e '/^ *$$/d' \
+               -e 's/.*/-x &/' \
+               .gitignore) \
+        $1 \
+        | sort)
+endef
+
+.PHONY: list_dirty
+list_dirty: check_env
+	@$(call list_dirty,)
+	@$(call list_dirty,--directory)
+
+define clean
+$(call list_dirty,$1) | xargs -r rm -v $2
+endef
+
 .PHONY: clean
 clean: check_env
-	rm -rf .cache .config
-	for d in lambdas terraform terraform/{gitlab,shared}; do $(MAKE) -C $$d clean; done
+	for d in lambdas terraform terraform/{gitlab,shared}; \
+	    do $(MAKE) -C $$d clean; \
+	done
+	@$(call clean,,)
+	@$(call clean,--directory,-r)
+
 
 absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/scripts \
                                 $(project_root)/test \
                                 $(project_root)/lambdas/{layer,indexer,service}/app.py \
                                 $(project_root)/.flake8/azul_flake8.py \
-                                $$(find $(project_root)/terraform{,/gitlab} \
+                                $$(find $(project_root)/terraform{,/gitlab,/shared} \
                                         $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         -maxdepth 1 \
                                         -name '*.template.py' \
@@ -176,28 +240,6 @@ integration_test: check_python check_branch $(project_root)/lambdas/service/.cha
 .PHONY: check_clean
 check_clean: check_env
 	git diff --exit-code && git diff --cached --exit-code
-
-.PHONY: check_autosquash
-check_autosquash: check_env
-	@if [[ -z "$${TRAVIS_BRANCH}" || "$${TRAVIS_BRANCH}" == "develop" ]]; then \
-	    _azul_merge_base=$$(git merge-base HEAD develop) \
-	    ; if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
-	        git reset --hard ORIG_HEAD \
-	        ; echo "The current branch is automatically squashable" \
-	        ; true \
-	    ; else \
-	        git rebase --abort \
-	        ; echo "The current branch doesn't appear to be automatically squashable" \
-	        ; false \
-	    ; fi \
-	; else \
-	    echo "Can only check squashability against default branch on Travis" \
-	; fi
-
-.PHONY: readme
-readme: check_docker
-	docker pull evkalinin/gh-md-toc:0.7.0
-	docker run -it -v $$PWD:/build evkalinin/gh-md-toc:0.7.0 --no-backup /build/README.md
 
 .PHONY: openapi
 openapi:

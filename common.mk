@@ -78,10 +78,21 @@ check_aws: check_python
 check_branch: check_python
 	python $(project_root)/scripts/check_branch.py
 
+.PHONY: git_clean_recursive
+git_clean_recursive: check_env
+	git clean -Xdf
+
+.PHONY: git_clean
+git_clean: check_env
+	git ls-files --ignored --others --directory --exclude-standard \
+		| grep -v '/[^/]' \
+		| xargs -r rm -rv
+
 %.json: %.json.template.py check_python .FORCE
 	python $< $@
 .FORCE:
 
-# The template output file depends on the template file, of course, as well as the environment. To be safe we force the
-# template creation. This is what the fake .FORCE target does. It still is necessary to declare a target's dependency on
-# a template to ensure correct ordering.
+# The template output file depends on the template file, of course, as well as
+# the environment. To be safe we force the template creation. This is what
+# the fake .FORCE target does. It still is necessary to declare a target's
+# dependency on a template to ensure correct ordering.

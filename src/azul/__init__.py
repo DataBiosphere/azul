@@ -93,6 +93,19 @@ class Config:
     def owner(self):
         return self.environ['AZUL_OWNER']
 
+    @property
+    def aws_support_roles(self) -> list[str]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        variable = 'azul_aws_support_roles'
+        roles = json.loads(self.environ[variable])
+        require(isinstance(roles, list),
+                f'{variable} must be a list', roles)
+        require(all(isinstance(role, str) for role in roles),
+                f'{variable} must contain only strings', roles)
+        return roles
+
     def _boolean(self, value: str) -> bool:
         if value == "0":
             return False
@@ -128,6 +141,7 @@ class Config:
             return host, int(port)
 
     def es_endpoint_env(self,
+                        *,
                         es_endpoint: Union[Netloc, str],
                         es_instance_count: Union[int, str]
                         ) -> Mapping[str, str]:
@@ -217,6 +231,10 @@ class Config:
         is considered too close to expiration for use
         """
         return 60 * 15
+
+    audit_log_retention_days = 180  # FedRAMP mandates 90 days
+
+    verbose_log_retention_days = 30
 
     @property
     def es_timeout(self) -> int:
@@ -931,7 +949,7 @@ class Config:
     def is_main_deployment(self, deployment: Optional[str] = None) -> bool:
         """
         Returns `True` if the deployment of the specified name is a main
-        deployment, or `False` if it is a shared deployment. If no argument is
+        deployment, or `False` if it is a personal deployment. If no argument is
         passed or if the argument is `None`, the current deployment's name is
         used instead.
         """
@@ -1249,12 +1267,6 @@ class Config:
         return self._term_from_env('azul_terraform_component', optional=True)
 
     permissions_boundary_name = 'azul-boundary'
-
-    var_vpc_endpoint_id = 'vpc_endpoint_id'
-
-    var_vpc_subnet_ids = 'vpc_subnet_ids'
-
-    var_vpc_security_group_id = 'vpc_security_group_id'
 
     @property
     def github_project(self) -> str:

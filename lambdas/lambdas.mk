@@ -1,3 +1,7 @@
+# Relative paths are based on the CWD, not the directory containing this file.
+# project_root is not defined if the user forgot to source environment. This
+# solution is based on comments in https://stackoverflow.com/questions/322936.
+include $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/../common.mk
 
 # The compile target is used during packaging of lambdas. The target ensures
 # that a .pyc file is present for every .py file in the package.
@@ -25,7 +29,7 @@
 # is set. For a full explanation see http://benno.id.au/blog/2013/01/15/python-determinism
 #
 .PHONY: compile
-compile: check_env
+compile: check_python
 	PYTHONHASHSEED=0 python -m compileall -f -q --invalidation-mode checked-hash vendor vendor/azul
 
 .PHONY: config
@@ -39,5 +43,9 @@ local: check_python config
 	chalice local
 
 .PHONY: clean
-clean: check_env
-	git clean -Xdf
+clean: git_clean_recursive
+
+.PHONY: package
+package: check_branch check_python check_aws config environ compile
+	python -m azul.changelog vendor
+	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform

@@ -18,9 +18,6 @@ from enum import (
     Enum,
 )
 import logging
-from operator import (
-    itemgetter,
-)
 import re
 from typing import (
     Callable,
@@ -50,6 +47,7 @@ from azul import (
     require,
 )
 from azul.collections import (
+    OrderedSet,
     none_safe_key,
 )
 from azul.enums import (
@@ -670,10 +668,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _project(self, project: api.Project) -> MutableJSON:
         # Store lists of all values of each of these facets to allow facet filtering
         # and term counting on the webservice
-        laboratories: set[str] = set()
-        institutions: set[str] = set()
-        contact_names: set[str] = set()
-        publication_titles: set[str] = set()
+        laboratories: OrderedSet[str] = OrderedSet()
+        institutions: OrderedSet[str] = OrderedSet()
+        contact_names: OrderedSet[str] = OrderedSet()
+        publication_titles: OrderedSet[str] = OrderedSet()
 
         for contributor in project.contributors:
             if contributor.laboratory:
@@ -696,16 +694,15 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'project_title': project.project_title,
             'project_description': project.project_description,
             'project_short_name': project.project_short_name,
-            'laboratory': sorted(laboratories),
-            'institutions': sorted(institutions),
-            'contact_names': sorted(contact_names),
+            'laboratory': list(laboratories),
+            'institutions': list(institutions),
+            'contact_names': list(contact_names),
             'contributors': list(map(self._contact, project.contributors)),
-            'publication_titles': sorted(publication_titles),
+            'publication_titles': list(publication_titles),
             'publications': list(map(self._publication, project.publications)),
             'supplementary_links': sorted(project.supplementary_links),
             '_type': 'project',
-            'accessions': sorted(map(self._accession, project.accessions),
-                                 key=itemgetter('namespace', 'accession')),
+            'accessions': list(map(self._accession, project.accessions)),
             'estimated_cell_count': project.estimated_cell_count
         }
 

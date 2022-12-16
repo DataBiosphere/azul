@@ -352,6 +352,13 @@ def env() -> Mapping[str, Optional[str]]:
         # the deployment's `environment.py` file.
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
+        # The name of the Google Cloud project to host the Azul deployment.
+        # There are two methods of authenticating with Google Cloud: setting the
+        # GOOGLE_APPLICATION_CREDENTIALS environment variable to point to the
+        # key file of a Google service account, or setting the application
+        # default credentials using the `gcloud` CLI interactive login.
+        'GOOGLE_PROJECT': None,
+
         # The name of the Google Cloud service account to represent the
         # deployment. It is used to access all (meta)data in Google-based
         # repositories. If unset, a canonical resource name will be used. That
@@ -526,5 +533,13 @@ def env() -> Mapping[str, Optional[str]]:
         # testing feature branches in GitLab before they are merged to the
         # develop branch, 0 otherwise. Personal deployments have this set to 0.
         #
-        'AZUL_IS_SANDBOX': '0'
+        'AZUL_IS_SANDBOX': '0',
+        
+        # A list of names of AWS IAM roles that should be given permission to
+        # manage incidents with AWS support as defined in CIS rule 1.20:
+        #
+        # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.20
+        #
+        #
+        'azul_aws_support_roles': json.dumps([])
     }

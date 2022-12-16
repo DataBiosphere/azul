@@ -41,6 +41,8 @@ generic with minimal need for project-specific behavior.
 
 - The `bash` shell
 
+- GNU make 3.81 or newer
+
 - [Docker] for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
@@ -53,11 +55,21 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-- Users of macOS 12 (Monterey) or later should follow the steps outlined in 
+- [jq](https://stedolan.github.io/jq/)
+
+- The build process relies on numerous utilities that are pretty much standard 
+  on any modern Unix. Things like `perl`, `sort`, `comm`, `uniq`, `sed`, `cp`, 
+  `mv` and `rm`.
+
+- For VPN support: OpenSSL (version 1.1.10 and 3.0.5 are known to work but other 
+  versions should work, too). LibreSSL, which became the default on macOS at 
+  some point, is an acceptible replacement. Version 2.8.3 is known to work.  
+
+- Users of macOS 12 (Monterey) should follow additional steps outlined in 
   [Troubleshooting](#setting-up-the-azul-build-prerequisites-on-macos-12-monterey)
 
-- Users of macOS 11 (Big Sur) or later should follow additional steps outlined 
-  in [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
+- Users of macOS 11 (Big Sur) should follow additional steps outlined in 
+  [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
@@ -78,13 +90,19 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1. Activate the `dev` deployment:
+1. Load the environment defaults
 
    ```
-   (cd azul/deployments && ln -snf dev .active)
+   source environment
    ```
 
-2. Load the environment:
+2. Activate the `dev` deployment:
+
+   ```
+   _select dev
+   ```
+
+3. Load the environment:
 
    ```
    source environment
@@ -93,14 +111,14 @@ end.
    The output should indicate that the environment is being loaded from the
    selected deployment (in this case, `dev`).
 
-3. Create a Python virtual environment and activate it:
+4. Create a Python virtual environment and activate it:
 
    ```
    make virtualenv
    source .venv/bin/activate
    ```
 
-4. Install the development prerequisites:
+5. Install the development prerequisites:
 
    ```
    make requirements
@@ -124,10 +142,10 @@ end.
 
    [pyenv]: https://github.com/pyenv/pyenv
 
-5. Run `make`. It should say `Looking good!` If one of the check target fails,
+6. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
 
-6. Make sure Docker works without explicit root access. Run the following
+7. Make sure Docker works without explicit root access. Run the following
    command *without `sudo`*:
 
    ```
@@ -136,7 +154,7 @@ end.
 
    If that fails, you're on your own.
 
-7. Finally, confirm that everything is configured properly on your machine by
+8. Finally, confirm that everything is configured properly on your machine by
    running the unit tests:
 
    ```
@@ -184,93 +202,25 @@ deployments with  `_select`.
 
 ### 2.3.3 Google Cloud credentials
 
-When it comes to Azul and Google Cloud, we distinguish between three types of 
+When it comes to Azul and Google Cloud, we distinguish between two types of
 accounts: an Azul deployment uses a *service account* to authenticate against
 Google Cloud and Azul developers use their *individual Google account* in a web
-browser and a *personal service account* for programmatic interactions. For
-the remainder of this section we'll refer to the individual Google account
-simply as "your account". For developers at UCSC this is their `…@ucsc.edu`
-account.
+browser. For the remainder of this section we'll refer to the individual Google
+account simply as "your account". For developers at UCSC this is their
+`…@ucsc.edu` account.
 
-1.  On Slack, ask for your account to be added as an owner of the Google Cloud
-    project that hosts—or will host—the Azul deployment you intend to work with. 
-    For the lower HCA DCP/2 deployments (`dev`, `sandbox` and personal
-    deployments), this is `platform-hca-dev`. The project name is configured
-    via the `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
-
-2.  Log into your account on https://console.cloud.google.com and select that
-    project.
-
-3.  Navigate to *IAM & Admin*, locate your account in the list, take note of
-    the email address found in the *Member* column (e.g. `alice@example.com`)
-
-4.  Create a service account for yourself in that project. Under *IAM & admin*,
-    *Service Accounts* click *CREATE SERVICE ACCOUNT* and 
-
-5.  For *Service account name* use the local part of the email address noted in 
-    step 3 above e.g. `alice`
-
-6.  For *Service account ID* use the provided default
-
-7.  Click *CREATE* to progress to *Grant this service account access to project*
-
-8.  Under *Select a role* click `Project`, then click `Owner`.
-
-9.  Click *CONTINUE* to progress to *Grant users access to this service account 
-    (optional)*
-
-10. Click *DONE*, to return to the list of service accounts
-
-11. Click on the newly created account to edit it
-
-12. Under *Keys* click *ADD KEY* and *Create new key* 
-
-13. Select *JSON* and click *CREATE* to download the private key file
-
-14. When prompted, store the private key file in a safe location
-
-    ```
-    mkdir /Users/alice/.gcp
-    mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
-    ```
-
-15. Edit the `environment.local.py` file for your personal deployment:
-
-    ```
-    vim /Users/alice/azul/deployments/alice.local/environment.local.py
-    ```
-
-    and modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
-
-    ```
-    'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
-    ```
-
-16. Repeat the previous step for other deployments as needed or alternatively
-    create a symlink to your deployment's `environment.local.py` file:
-
-    ```
-    cd /Users/alice/azul/deployments/dev
-    vim environment.local.py
-    ```
-
-    or, alternatively:
-
-    ```
-    cd /Users/alice/azul/deployments/dev
-    ln -snf ../alice.local/environment.local.py environment.local.py
-    ```
-
-Alternatively, create an `environment.local.py` file in the project root
-directory and specify a global default for `GOOGLE_APPLICATION_CREDENTIALS`
-there.
+On Slack, ask for your account to be added as an owner of the Google Cloud
+project that hosts—or will host—the Azul deployment you intend to work with.
+For the lower HCA DCP/2 deployments (`dev`, `sandbox` and personal deployments),
+this is `platform-hca-dev`. The project name is configured via the
+`GOOGLE_PROJECT` variable in `environment.py` for each deployment.
 
 
 ### 2.3.4 Google Cloud, TDR and SAM
 
 
 The Terra ecosystem is tightly integrated with Google's authentication
-infrastructure, and the same three types of accounts mentioned in the previous
+infrastructure, and the same two types of accounts mentioned in the previous
 section are used to authenticate against SAM and [Terra Data Repository]
 (TDR). However, because the production instances of Terra, SAM and TDR must
 not share user accounts with other instances of those services, we were asked
@@ -280,19 +230,17 @@ If you intend to work with an Azul deployment that uses non-production
 instances of SAM or TDR, you need to create such a burner account for
 yourself. Developers at UCSC, by convention, have been creating Google
 accounts called `….ucsc.edu@gmail.com`. This means that there are now at least
-four Google accounts at play: 
+three Google accounts at play:
 
 1) your individual Google account ("your account"),
 
-2) your personal Google service account, 
+2) your individual burner account ("your burner") and
 
-3) your individual burner account ("your burner") and
-
-4) a service account for each shared or personal Azul deployment.
+3) a service account for each shared or personal Azul deployment.
 
 You use your account to interact with Google Cloud in general and the
-production instance of Terra, SAM and TDR, assuming you have access. You use
-your personal service account for programmatic interactions with the above.
+production instance of Terra, SAM and TDR, assuming you have access. You also
+use your account for programmatic interactions with the above.
 You use your burner to interact with non-production instances of Terra, SAM
 and TDR and the Google Cloud resources they own, like the BiqQuery datasets
 and GCS buckets that TDR manages. For programmatic access to the latter, you

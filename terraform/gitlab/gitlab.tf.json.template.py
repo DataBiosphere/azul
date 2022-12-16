@@ -20,9 +20,6 @@ from azul import (
 from azul.aws_service_model import (
     ServiceActionType,
 )
-from azul.chalice import (
-    vpc_lambda_iam_policy,
-)
 from azul.collections import (
     dict_merge,
     explode_dict,
@@ -34,6 +31,7 @@ from azul.strings import (
     departition,
 )
 from azul.terraform import (
+    chalice,
     emit_tf,
     vpc,
 )
@@ -296,7 +294,7 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
 
 clamav_image = 'clamav/clamav:0.105'
 dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.6.0-ce.0'
+gitlab_image = 'gitlab/gitlab-ce:15.6.1-ce.0'
 runner_image = 'gitlab/gitlab-runner:v15.6.1'
 
 # There are ways to dynamically determine the latest Amazon Linux AMI but in the
@@ -465,7 +463,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    UUID='*',
                                    LayerVersion='*'),
 
-                    *vpc_lambda_iam_policy(for_tf=True),
+                    *chalice.vpc_lambda_iam_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level
                     # permissions
@@ -883,7 +881,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_cloudwatch_log_group': {
             'gitlab_vpn': {
                 'name': '/aws/vpn/azul-gitlab',
-                'retention_in_days': 1827,
+                'retention_in_days': config.audit_log_retention_days,
             }
         },
         'aws_ec2_client_vpn_endpoint': {
