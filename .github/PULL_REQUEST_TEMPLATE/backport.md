@@ -1,6 +1,7 @@
-<!-- 
+<!--
 This is the PR template for backport PRs against `develop`.
 -->
+
 
 ## Checklist
 
@@ -16,15 +17,15 @@ This is the PR template for backport PRs against `develop`.
 
 ### Author (requirements, before every review)
 
-- [ ] Ran `make requirements_update`                                <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
-- [ ] Added `R` tag to commit title                                 <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Added `reqs` label to PR                                      <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
 
 
 ### Primary reviewer (after requesting changes)
 
-Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* 
-checklists.
+Uncheck the *Author (requirements)* and *Author (rebasing, integration test)*
+checklists. Update the `N reviews` label.
 
 
 ### Primary reviewer (after approval)
@@ -40,12 +41,12 @@ checklists.
 
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label    <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes in `sandbox` deployment                          <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Reviewed build logs for anomalies in `sandbox` deployment     <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed PR branch to GitLab `anvildev`                         <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes in `anvilbox` deployment                         <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Reviewed build logs for anomalies in `anvilbox` deployment    <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Added PR reference (this PR) to merge commit title
 - [ ] Collected commit title tags in merge commit title
 - [ ] Pushed merge commit to GitHub
@@ -53,19 +54,20 @@ checklists.
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Pushed merge commit to GitLab `dev`                            <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed merge commit to GitLab `anvildev`                       <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed merge commit to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed merge commit to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>
-- [ ] Reviewed build log for anomalies on GitLab `dev`<sup>1</sup>
+- [ ] Reviewed build logs for anomalies on GitLab `dev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvildev`<sup>1</sup>
-- [ ] Reviewed build log for anomalies on GitLab `anvildev`<sup>1</sup>
+- [ ] Reviewed build logs for anomalies on GitLab `anvildev`<sup>1</sup>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
 
 <sup>1</sup> When pushing the merge commit is skipped due to the PR being
-labelled `no sandbox`, the next build triggered by a PR whose merge commit *is* 
+labelled `no sandbox`, the next build triggered by a PR whose merge commit *is*
 pushed determines this checklist item.
+
 
 ### Operator
 

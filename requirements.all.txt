@@ -10,7 +10,7 @@ blessed==1.19.1
 boto3==1.24.94
 boto3-stubs==1.24.94
 botocore==1.27.94
-botocore-stubs==1.29.27
+botocore-stubs==1.29.31
 brotli==1.0.9
 cachetools==5.2.0
 certifi==2022.12.7
@@ -85,7 +85,7 @@ pathable==0.4.3
 pip==22.2.2
 ply==3.11
 proto-plus==1.22.1
-protobuf==4.21.11
+protobuf==4.21.12
 psutil==5.9.4
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -132,5 +132,5 @@ wheel==0.38.0
 wrapt==1.14.1
 xmltodict==0.13.0
 zipp==3.11.0
-zope.event==4.5.0
+zope.event==4.6
 zope.interface==5.5.2
