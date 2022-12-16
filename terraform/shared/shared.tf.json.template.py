@@ -188,7 +188,7 @@ emit_tf(block_public_s3_bucket_access({
                 's3_bucket_name': '${aws_s3_bucket.shared_cloudtrail.id}',
                 'enable_log_file_validation': True,
                 'is_multi_region_trail': True,
-                'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.cloudtrail.arn}:*',
+                'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.shared.arn}:*',
                 'cloud_watch_logs_role_arn': '${aws_iam_role.cloudtrail.arn}'
             },
             # This is intended to eventually replace the preceding trail
@@ -200,7 +200,7 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudwatch_log_group': {
-            'cloudtrail': {
+            'shared': {
                 **provider_fragment(config.cloudtrail_trail_region),
                 'name': config.qualified_resource_name('cloudtrail'),
                 'retention_in_days': config.audit_log_retention_days
@@ -315,7 +315,7 @@ emit_tf(block_public_s3_bucket_access({
                                 'logs:PutLogEvents'
                             ],
                             'Resource': [
-                                '${aws_cloudwatch_log_group.cloudtrail.arn}:*'
+                                '${aws_cloudwatch_log_group.shared.arn}:*'
                             ]
                         }
                     ]

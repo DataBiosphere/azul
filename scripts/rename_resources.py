@@ -13,6 +13,7 @@ from azul.logging import (
 log = logging.getLogger(__name__)
 
 renamed = {
+    'aws_cloudwatch_log_group.cloudtrail': 'aws_cloudtrail.shared'
 }
 
 
