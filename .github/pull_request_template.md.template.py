@@ -349,10 +349,12 @@ def main():
                     'type': 'h2',
                     'content': 'Author (before every review)'
                 },
-                iif(t is not T.backport, {
+                {
                     'type': 'cli',
-                    'content': f'Rebased PR branch on `{t.target_branch}`, squashed old fixups'
-                }),
+                    'content': iif(t is T.backport,
+                                   f'Merged `{t.target_branch}` into PR branch to integrate upstream changes',
+                                   f'Rebased PR branch on `{t.target_branch}`, squashed old fixups')
+                },
                 {
                     'type': 'cli',
                     'content': 'Ran `make requirements_update`',
