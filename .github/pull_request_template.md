@@ -26,10 +26,12 @@ Connected issues: #0000
 title is `Fix: ` followed by the issue title
 
 
-### Author (reindex)
+### Author (reindex, API changes)
 
 - [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
 - [ ] Added `reindex` label to PR <sub>or this PR does not require reindexing</sub>
+- [ ] Added `a` (compatible changes) or `A` (incompatible ones) tag to commit title <sub>or this PR does not modify the Azul service API</sub>
+- [ ] Added `API` label to connected issues <sub>or this PR does not modify the Azul service API</sub>
 
 
 ### Author (chains)

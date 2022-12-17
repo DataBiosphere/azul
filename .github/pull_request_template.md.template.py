@@ -245,16 +245,28 @@ def main():
             *iif(t in (T.default, T.promotion), [
                 {
                     'type': 'h2',
-                    'content': 'Author (reindex)'
+                    'content': 'Author (reindex, API changes)'
                 },
                 iif(t is T.default, {
                     'type': 'cli',
-                    'content': 'Added `r` tag to commit title', 'alt': 'or this PR does not require reindexing'
+                    'content': 'Added `r` tag to commit title',
+                    'alt': 'or this PR does not require reindexing'
                 }),
                 {
                     'type': 'cli',
-                    'content': 'Added `reindex` label to PR', 'alt': 'or this PR does not require reindexing'
-                }
+                    'content': 'Added `reindex` label to PR',
+                    'alt': 'or this PR does not require reindexing'
+                },
+                iif(t is T.default, {
+                    'type': 'cli',
+                    'content': 'Added `a` (compatible changes) or `A` (incompatible ones) tag to commit title',
+                    'alt': 'or this PR does not modify the Azul service API'
+                }),
+                {
+                    'type': 'cli',
+                    'content': f'Added `API` label to connected {t.issues}',
+                    'alt': 'or this PR does not modify the Azul service API'
+                },
             ]),
             *iif(t is T.default, [
                 {

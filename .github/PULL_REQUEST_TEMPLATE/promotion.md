@@ -19,9 +19,10 @@ Connected issue: #0000
 - [ ] PR description links to connected issue
 
 
-### Author (reindex)
+### Author (reindex, API changes)
 
 - [ ] Added `reindex` label to PR <sub>or this PR does not require reindexing</sub>
+- [ ] Added `API` label to connected issue <sub>or this PR does not modify the Azul service API</sub>
 
 
 ### Author (upgrading)

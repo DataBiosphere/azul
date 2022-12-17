@@ -870,21 +870,26 @@ Commit title tags
   beginning of a commit message. Multiple tags are separated by space. The
   following tags are defined:
 
-  - ``u`` the commit requires following manual steps to upgrade a working copy
+  - ``u``: the commit requires following manual steps to upgrade a working copy
     or deployment. See `UPGRADING.rst`_ for details.
 
-  - ``r`` the commit represents a change that requires reindexing a deployment
+  - ``r``: the commit represents a change that requires reindexing a deployment
     after that commit is deployed there.
 
-  - ``R`` the commit requires running ``make requirements`` after switching a
+  - ``R``: the commit requires running ``make requirements`` after switching a
     working copy to a branch that includes that commit
 
-  - ``M/N`` number of parts and ordinal of part in `Split commits`_
+  - ``M/N``: number of parts and ordinal of part in `Split commits`_
 
-  - ``h`` the commit is a temporary hotfix. These commit should be reverted
-	before the commit that provides a permanent fix is merged.
+  - ``h``: the commit is a temporary hotfix. These commit should be reverted
+     before the commit that provides a permanent fix is merged.
 
-  - ``H`` the commit is a permanent hotfix.
+  - ``H``: the commit is a permanent hotfix.
+
+  - ``a``: the commit modifies the Azul service API (adding functionality)
+
+  - ``A``: the commit modifies the Azul service API in a way that is likely to
+    break existing clients (changing or removing functionality)
 
 * Tags must appear in a title in the order they are defined above, as in
   ``[u r R 1/2]``. This ensures that more consequential tags appear earlier.
