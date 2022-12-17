@@ -9,6 +9,9 @@ from azul.args import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.terraform import (
+    terraform,
+)
 
 log = logging.getLogger(__name__)
 
@@ -16,23 +19,17 @@ renamed = {
 }
 
 
-def terraform_state(command: str, *args: str) -> bytes:
-    proc = subprocess.run(['terraform', 'state', command, *args],
-                          check=False,
-                          capture_output=True,
-                          shell=False)
-    sys.stderr.buffer.write(proc.stderr)
-    if proc.returncode == 0:
-        return proc.stdout
-    elif (
-        proc.returncode == 1
-        and command == 'list'
-        and b'No state file was found!' in proc.stderr
-    ):
-        log.info('No state file was found, assuming empty list of resources.')
-        return b''
+def terraform_state_list() -> list[str]:
+    try:
+        output = terraform.run('state', 'list')
+    except subprocess.CalledProcessError as e:
+        if e.returncode == 1 and 'No state file was found' in e.stderr:
+            log.info('No state file was found, assuming empty list of resources.')
+            return []
+        else:
+            raise
     else:
-        proc.check_returncode()
+        return output.splitlines()
 
 
 def main(argv: list[str]):
@@ -46,7 +43,7 @@ def main(argv: list[str]):
     args = parser.parse_args(argv)
 
     if renamed:
-        current_names = terraform_state('list').decode().splitlines()
+        current_names = terraform_state_list()
         for current_name in current_names:
             try:
                 new_name = renamed[current_name]
@@ -58,7 +55,7 @@ def main(argv: list[str]):
                     log.info('Found %r, would be renaming it to %r', current_name, new_name)
                 else:
                     log.info('Found %r, renaming it to %r', current_name, new_name)
-                    terraform_state('mv', current_name, new_name)
+                    terraform.run('state', 'mv', current_name, new_name)
     else:
         log.info('No renamings defined')
 
