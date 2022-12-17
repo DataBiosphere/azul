@@ -59,11 +59,11 @@ title is `Fix: ` followed by the issue title
 
 ### Author (before every review)
 
+- [ ] Rebased PR branch on `develop`, squashed old fixups
 - [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
 - [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
-- [ ] Rebased PR branch on `develop`, squashed old fixups
 
 
 ### Peer reviewer (after requesting changes)

@@ -349,6 +349,10 @@ def main():
                     'type': 'h2',
                     'content': 'Author (before every review)'
                 },
+                iif(t is not T.backport, {
+                    'type': 'cli',
+                    'content': f'Rebased PR branch on `{t.target_branch}`, squashed old fixups'
+                }),
                 {
                     'type': 'cli',
                     'content': 'Ran `make requirements_update`',
@@ -366,10 +370,6 @@ def main():
                     'type': 'cli',
                     'content': '`make integration_test` passes in personal deployment',
                     'alt': 'or this PR does not touch functionality that could break the IT'
-                }),
-                iif(t is not T.backport, {
-                    'type': 'cli',
-                    'content': f'Rebased PR branch on `{t.target_branch}`, squashed old fixups'
                 })
             ]),
             *iif(t is T.default, [

@@ -28,10 +28,10 @@ Connected issue: #0000
 
 ### Author (before every review)
 
+- [ ] Rebased PR branch on `prod`, squashed old fixups
 - [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Rebased PR branch on `prod`, squashed old fixups
 
 
 ### Primary reviewer (after approval)
