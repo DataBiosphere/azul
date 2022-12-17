@@ -57,23 +57,18 @@ title is `Fix: ` followed by the issue title
 - [ ] Reverted the temporary hotfixes for any connected issues <sub>or the `prod` branch has no temporary hotfixes for any connected issues</sub>
 
 
-### Author (requirements, before every review)
+### Author (before every review)
 
 - [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
-
-
-### Author (rebasing, integration test)
-
 - [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
 - [ ] Rebased PR branch on `develop`, squashed old fixups
 
 
 ### Peer reviewer (after requesting changes)
 
-Uncheck the *Author (requirements)* and *Author (rebasing, integration test)*
-checklists.
+Uncheck the *Author (before every review)* checklists.
 
 
 ### Peer reviewer (after approval)
@@ -85,8 +80,7 @@ checklists.
 
 ### Primary reviewer (after requesting changes)
 
-Uncheck the *Author (requirements)* and *Author (rebasing, integration test)*
-checklists. Update the `N reviews` label.
+Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 
 ### Primary reviewer (after approval)

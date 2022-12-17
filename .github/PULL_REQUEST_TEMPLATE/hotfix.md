@@ -26,15 +26,11 @@ Connected issue: #0000
 - [ ] Added `partial` label to PR <sub>or this PR is a permanent hotfix</sub>
 
 
-### Author (requirements, before every review)
+### Author (before every review)
 
 - [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
-
-
-### Author (before every review)
-
 - [ ] Rebased PR branch on `prod`, squashed old fixups
 
 

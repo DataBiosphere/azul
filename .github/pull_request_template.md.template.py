@@ -344,10 +344,10 @@ def main():
                     ] if t is T.hotfix else [
                     ]),
             ]),
-            *iif(t in (T.default, T.backport, T.hotfix), [
+            *iif(t not in (T.gitlab, T.promotion), [
                 {
                     'type': 'h2',
-                    'content': 'Author (requirements, before every review)'
+                    'content': 'Author (before every review)'
                 },
                 {
                     'type': 'cli',
@@ -361,36 +361,17 @@ def main():
                 {
                     'type': 'cli',
                     'content': 'Added `reqs` label to PR', 'alt': 'or this PR does not touch requirements*.txt'
-                }
+                },
+                iif(t is T.default, {
+                    'type': 'cli',
+                    'content': '`make integration_test` passes in personal deployment',
+                    'alt': 'or this PR does not touch functionality that could break the IT'
+                }),
+                iif(t is not T.backport, {
+                    'type': 'cli',
+                    'content': f'Rebased PR branch on `{t.target_branch}`, squashed old fixups'
+                })
             ]),
-            *(
-                [
-                    {
-                        'type': 'h2',
-                        'content': 'Author (rebasing, integration test)'
-                    },
-                    {
-                        'type': 'cli',
-                        'content': '`make integration_test` passes in personal deployment',
-                        'alt': 'or this PR does not touch functionality that could break the IT'
-                    },
-                    {
-                        'type': 'cli',
-                        'content': 'Rebased PR branch on `develop`, squashed old fixups'
-                    }
-                ] if t is T.default else [
-                    {
-                        'type': 'h2',
-                        'content': 'Author (before every review)'
-                    },
-                    {
-                        'type': 'cli',
-                        'content': 'Rebased PR branch on `prod`, squashed old fixups'
-                    }
-                ]
-                if t is T.hotfix else
-                []
-            ),
             *iif(t is T.default, [
                 {
                     'type': 'h2',
@@ -398,8 +379,7 @@ def main():
                 },
                 {
                     'type': 'p',
-                    'content': 'Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* '
-                               'checklists.'
+                    'content': 'Uncheck the *Author (before every review)* checklists.'
                 },
                 {
                     'type': 'h2',
@@ -437,8 +417,8 @@ def main():
                 },
                 {
                     'type': 'p',
-                    'content': 'Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* '
-                               'checklists. Update the `N reviews` label.'
+                    'content': 'Uncheck the *before every review* checklists. '
+                               'Update the `N reviews` label.'
                 }
             ]),
             {

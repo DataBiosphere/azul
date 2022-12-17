@@ -15,7 +15,7 @@ This is the PR template for backport PRs against `develop`.
 - [ ] PR title references the PRs that introduced the backported commits
 
 
-### Author (requirements, before every review)
+### Author (before every review)
 
 - [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
@@ -24,8 +24,7 @@ This is the PR template for backport PRs against `develop`.
 
 ### Primary reviewer (after requesting changes)
 
-Uncheck the *Author (requirements)* and *Author (rebasing, integration test)*
-checklists. Update the `N reviews` label.
+Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 
 ### Primary reviewer (after approval)
