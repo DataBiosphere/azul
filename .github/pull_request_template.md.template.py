@@ -163,6 +163,10 @@ def main():
                 'type': 'h2',
                 'content': 'Author'
             },
+            iif(t is T.default, {
+                'type': 'cli',
+                'content': 'PR is a draft'
+            }),
             {
                 'type': 'cli',
                 'content': f'Target branch is `{t.target_branch}`'
@@ -398,6 +402,10 @@ def main():
                 {
                     'type': 'h2',
                     'content': 'Peer reviewer (after approval)'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'PR is not a draft'
                 },
                 {
                     'type': 'cli',

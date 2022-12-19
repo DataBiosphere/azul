@@ -13,6 +13,7 @@ Connected issues: #0000
 
 ### Author
 
+- [ ] PR is a draft
 - [ ] Target branch is `develop`
 - [ ] Name of PR branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] PR title references all connected issues
@@ -75,6 +76,7 @@ Uncheck the *Author (before every review)* checklists.
 
 ### Peer reviewer (after approval)
 
+- [ ] PR is not a draft
 - [ ] Ticket is in *Review requested* column
 - [ ] Requested review from primary reviewer
 - [ ] Assigned PR to primary reviewer
