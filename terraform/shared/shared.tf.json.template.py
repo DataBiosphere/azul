@@ -23,6 +23,8 @@ emit_tf(block_public_s3_bucket_access({
     },
     'resource': {
         'aws_s3_bucket': {
+            # FIXME: Disable original CloudTrail trail
+            #        https://github.com/databiosphere/azul/issues/4832
             'shared_cloudtrail': {
                 **provider_fragment(config.cloudtrail_s3_bucket_region),
                 'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail',
@@ -186,6 +188,8 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudtrail': {
+            # FIXME: Disable original CloudTrail trail
+            #        https://github.com/databiosphere/azul/issues/4832
             'shared': {
                 **provider_fragment(config.cloudtrail_trail_region),
                 'name': 'azul-shared',
@@ -202,6 +206,8 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudwatch_log_group': {
+            # FIXME: Disable original CloudTrail trail
+            #        https://github.com/databiosphere/azul/issues/4832
             'cloudtrail': {
                 **provider_fragment(config.cloudtrail_trail_region),
                 'name': config.qualified_resource_name('cloudtrail'),
