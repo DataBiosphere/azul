@@ -870,21 +870,26 @@ Commit title tags
   beginning of a commit message. Multiple tags are separated by space. The
   following tags are defined:
 
-  - ``u`` the commit requires following manual steps to upgrade a working copy
+  - ``u``: the commit requires following manual steps to upgrade a working copy
     or deployment. See `UPGRADING.rst`_ for details.
 
-  - ``r`` the commit represents a change that requires reindexing a deployment
+  - ``r``: the commit represents a change that requires reindexing a deployment
     after that commit is deployed there.
 
-  - ``R`` the commit requires running ``make requirements`` after switching a
+  - ``R``: the commit requires running ``make requirements`` after switching a
     working copy to a branch that includes that commit
 
-  - ``M/N`` number of parts and ordinal of part in `Split commits`_
+  - ``M/N``: number of parts and ordinal of part in `Split commits`_
 
-  - ``h`` the commit is a temporary hotfix. These commit should be reverted
-	before the commit that provides a permanent fix is merged.
+  - ``h``: the commit is a temporary hotfix. These commit should be reverted
+     before the commit that provides a permanent fix is merged.
 
-  - ``H`` the commit is a permanent hotfix.
+  - ``H``: the commit is a permanent hotfix.
+
+  - ``a``: the commit modifies the Azul service API (adding functionality)
+
+  - ``A``: the commit modifies the Azul service API in a way that is likely to
+    break existing clients (changing or removing functionality)
 
 * Tags must appear in a title in the order they are defined above, as in
   ``[u r R 1/2]``. This ensures that more consequential tags appear earlier.
@@ -937,6 +942,26 @@ Naming Branches
   
   ``DESCRIPTION`` is a short (no more than nine words) slug_ describing the
   branch
+
+.. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
+  
+
+Draft PRs
+---------
+
+GitHub has the option of creating draft_ PRs. Azul PRs, with the exception of
+GitLab updates, promotions, hotfixes and backports must be created as drafts.
+This prevents GitHub from immediately requesting a code review from the lead,
+who is the sole code owner. Peer review occurs during the draft state of a
+PR, primary review occurs when a PR is in the non-draft state, what GitHub
+calls "ready for review". A work-in-progress review (WIP) can be requested
+for PRs in any state as long as the request is accompanied with specific
+questions. The PR checklist contains an item for ensuring that PRs are
+initially created as draft. If you accidentially create a non-draft PR,
+convert the PR to a draft and cancel the review request.
+
+.. _draft: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
+
 
 Rebasing
 --------
@@ -1091,65 +1116,58 @@ PR dependencies
 ---------------
 
 * We use ZenHub dependencies between PRs to define constraints on the order in
-  which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
-  ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs must
-  not block issues. The only express relation we use between issues and PRs is
-  ZenHub's *Link to issue* feature. Note that an explicit dependency between
-  two issues implies a dependency between the PRs linked to the issues: if
-  issue ``#1`` blocks issue ``#2`` and PR ``#3`` is linked to ``#1`` while PR
-  ``#4`` is linked to ``#2``, then PR ``#4`` must be merged after ``#3``.
+  which they can be merged into ``develop``. If PR ``#3`` blocks PR ``#4``,
+  then ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs
+  must not block issues. The only express relation we use between issues and
+  PRs is ZenHub's *Connect to issue* feature. Note that an explicit
+  dependency between two issues implies a dependency between the PRs
+  connected to the issues: if issue ``#1`` blocks issue ``#2`` and PR ``#3``
+  is connected to ``#1`` while PR ``#4`` is connected to ``#2``, then PR
+  ``#4`` must be merged after PR ``#3``.
 
 Chained PRs
 -----------
 
-* If two PRs touch the same code, one can be chained to the other in order to
-  avoid excessive merge conflicts after one of them lands. The PR less likely to
-  land soon should be chained to the other one.
+* If two PRs touch the same code, or if one PR depends on changes in another
+  PR, the PRs may be chained. We say a PR ``#4`` is chained to PR ``#3``, if
+  the branch for PR ``#4`` is a continuation of the branch for PR ``#3``. We
+  refer to PR ``#3`` as the *base PR* and the branch for ``#3`` as the *base
+  branch*. 
 
-* Similarly, if one PR depends on changes in another PR, the first PR may be
-  chained to the second one so both can be worked on simultaneously.
+* The base PR blocks the chained PR (see `PR dependencies`_ for details). It
+  is rare for a PR to be blocked by another PR without also being chained to
+  it.
 
-* To chain PR ``#4`` to PR ``#3``
+* Only a draft PR may be chained to another PR. Note that this implies that
+  the primary reviewer generally does not review chained PRs unless they are
+  labeled `WIP` and the request is accompanied by specific questions.
 
-  1) Using ``git``, base the ``#4`` branch on the ``#3`` branch
+* To chain PR ``#4`` to PR ``#3`` …
+  
+  1) Make sure PR ``#4`` is a draft PR
 
-  2) In Github, set the base of PR ``#4`` to the ``#3`` branch
+  2) Using ``git``, base the ``#4`` branch on the ``#3`` branch
 
-  3) In Github, label ``#3`` as ``base``
+  3) In Github, set the base branch of PR ``#4`` to the PR branch of ``#3``
 
-  4) In Github, label ``#4`` as ``chained``
+  4) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``.
 
-  5) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``
-
-  This allows the primary reviewer to break the chain when they merge ``#3``.
-  The label catches their attention, the dependency lets them follow the chain
-  and the target branch setting allows reviewers to ignore changes in the base
-  branch.
+* A PR may be chained to a PR that is chained to another PR, creating a chain
+  of length 3. PR chains can be of arbirary length. All but the first PR in a
+  chain must be drafts.
 
   Note that in chains involving more than two PRs, the intermediate PRs carry
   both the ``chained`` and ``base`` labels.
 
-* Rebasing a chained PR involves rebasing its branch on the base branch, instead
-  of ``develop``.
+* Rebasing a chained PR involves rebasing its branch on the base branch
+  instead of ``develop``.
 
-* Once the base PR of a chain is merged, the chained PR needs to be rebased::
+* Once the base PR of a chain is merged, all chained PRs need to be rebased::
 
     git rebase --onto origin/develop $start_commit issues/joe/1234-foo
 
   where ``start_commit`` is the first commit in ``issues/joe/1234-foo`` that
   wasn't also on the base PR's branch.
-
-.. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
-  
-
-.. |ss| raw:: html
-
-   <strike>
-
-.. |se| raw:: html
-
-   </strike>
-
 
 Hotfixes
 --------
