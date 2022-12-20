@@ -7,12 +7,20 @@ from azul.deployment import (
     aws,
 )
 from azul.terraform import (
+    block_public_s3_bucket_access,
     emit_tf,
     provider_fragment,
-    block_public_s3_bucket_access,
 )
 
 emit_tf(block_public_s3_bucket_access({
+    'data': {
+        'aws_iam_role': {
+            f'support_{i}': {
+                'name': role
+            }
+            for i, role in enumerate(config.aws_support_roles)
+        }
+    },
     'resource': {
         'aws_s3_bucket': {
             'shared_cloudtrail': {
@@ -172,7 +180,16 @@ emit_tf(block_public_s3_bucket_access({
                 'name': 'azul-shared',
                 's3_bucket_name': '${aws_s3_bucket.shared_cloudtrail.id}',
                 'enable_log_file_validation': True,
-                'is_multi_region_trail': True
+                'is_multi_region_trail': True,
+                'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.cloudtrail.arn}:*',
+                'cloud_watch_logs_role_arn': '${aws_iam_role.cloudtrail.arn}'
+            }
+        },
+        'aws_cloudwatch_log_group': {
+            'cloudtrail': {
+                **provider_fragment(config.cloudtrail_trail_region),
+                'name': config.qualified_resource_name('cloudtrail'),
+                'retention_in_days': config.audit_log_retention_days
             }
         },
         'aws_iam_role': {
@@ -204,6 +221,23 @@ emit_tf(block_public_s3_bucket_access({
                                 'Effect': 'Allow',
                                 'Principal': {
                                     'Service': 'config.amazonaws.com'
+                                }
+                            }
+                        ]
+                    }
+                )
+            },
+            'cloudtrail': {
+                'name': 'azul-cloudtrail',
+                'assume_role_policy': json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Action': 'sts:AssumeRole',
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'cloudtrail.amazonaws.com',
                                 }
                             }
                         ]
@@ -252,6 +286,26 @@ emit_tf(block_public_s3_bucket_access({
                         }
                     ]
                 })
+            },
+            'cloudtrail': {
+                'name': 'azul-cloudtrail',
+                'role': '${aws_iam_role.cloudtrail.id}',
+                # noqa https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-required-policy-for-cloudwatch-logs.html
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Action': [
+                                'logs:CreateLogStream',
+                                'logs:PutLogEvents'
+                            ],
+                            'Resource': [
+                                '${aws_cloudwatch_log_group.cloudtrail.arn}:*'
+                            ]
+                        }
+                    ]
+                })
             }
         },
         "aws_iam_service_linked_role": {
@@ -287,7 +341,14 @@ emit_tf(block_public_s3_bucket_access({
             'aws_config': {
                 'role': '${aws_iam_role.aws_config.name}',
                 'policy_arn': 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'
-            }
+            },
+            **{
+                f'support_{i}': {
+                    'role': '${data.aws_iam_role.support_%s.name}' % i,
+                    'policy_arn': 'arn:aws:iam::aws:policy/AWSSupportAccess'
+                }
+                for i, role in enumerate(config.aws_support_roles)
+            },
         },
         'aws_config_delivery_channel': {
             'shared': {
@@ -338,6 +399,29 @@ emit_tf(block_public_s3_bucket_access({
                     'aws_securityhub_account.shared'
                 ]
             }
-        }
+        },
+        'aws_iam_account_password_policy': {
+            'cis': {
+                'require_uppercase_characters': True,
+                'require_lowercase_characters': True,
+                'require_symbols': True,
+                'require_numbers': True,
+                'minimum_password_length': 14,
+                'password_reuse_prevention': 24,
+                'max_password_age': 90,
+            }
+        },
+        **(
+            {
+                'aws_account_alternate_contact': {
+                    'security': {
+                        **config.security_contact,
+                        'alternate_contact_type': 'SECURITY'
+                    }
+                }
+            }
+            if config.security_contact else
+            {}
+        )
     }
 }))

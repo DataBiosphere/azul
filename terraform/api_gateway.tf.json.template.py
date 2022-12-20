@@ -344,7 +344,7 @@ emit_tf({
                 'aws_cloudwatch_log_group': {
                     app.name: {
                         'name': '/aws/apigateway/' + config.qualified_resource_name(app.name),
-                        'retention_in_days': 1827,
+                        'retention_in_days': config.audit_log_retention_days,
                     }
                 },
                 'aws_iam_role': {

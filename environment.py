@@ -533,5 +533,22 @@ def env() -> Mapping[str, Optional[str]]:
         # testing feature branches in GitLab before they are merged to the
         # develop branch, 0 otherwise. Personal deployments have this set to 0.
         #
-        'AZUL_IS_SANDBOX': '0'
+        'AZUL_IS_SANDBOX': '0',
+        
+        # A list of names of AWS IAM roles that should be given permission to
+        # manage incidents with AWS support as defined in CIS rule 1.20:
+        #
+        # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.20
+        #
+        #
+        'azul_aws_support_roles': json.dumps([]),
+
+        # A dict containing the contact details of the AWS account alternate
+        # contact for security communications. The keys must include those
+        # required by the aws_account_alternate_contact Terraform resource,
+        # however should exclude the key alternate_contact_type.
+        #
+        # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_alternate_contact
+        #
+        'azul_security_contact': None,
     }

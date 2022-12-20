@@ -1,6 +1,7 @@
 from collections.abc import (
     Mapping,
 )
+import json
 from typing import (
     Optional,
 )
@@ -26,4 +27,12 @@ def env() -> Mapping[str, Optional[str]]:
     """
     return {
         'azul_terraform_component': 'shared',
+        'azul_aws_support_roles': json.dumps(['administrator', 'developer']),
+
+        'azul_security_contact': json.dumps({
+            'name': 'Hannes Schmidt',
+            'title': 'Tech lead',
+            'email_address': 'azul-group@ucsc.edu',
+            'phone_number': '831-454-8200'
+        }),
     }

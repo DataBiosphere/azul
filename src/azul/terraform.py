@@ -82,11 +82,9 @@ class Terraform:
         ]
 
     def run(self, *args: str) -> str:
-        terraform_dir = Path(config.project_root) / 'terraform'
         args = ['terraform', *args]
         log.info('Running %r', args)
         cmd = subprocess.run(args,
-                             cwd=terraform_dir,
                              check=True,
                              stdout=subprocess.PIPE,
                              text=True,

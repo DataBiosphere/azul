@@ -93,6 +93,19 @@ class Config:
     def owner(self):
         return self.environ['AZUL_OWNER']
 
+    @property
+    def aws_support_roles(self) -> list[str]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        variable = 'azul_aws_support_roles'
+        roles = json.loads(self.environ[variable])
+        require(isinstance(roles, list),
+                f'{variable} must be a list', roles)
+        require(all(isinstance(role, str) for role in roles),
+                f'{variable} must contain only strings', roles)
+        return roles
+
     def _boolean(self, value: str) -> bool:
         if value == "0":
             return False
@@ -218,6 +231,10 @@ class Config:
         is considered too close to expiration for use
         """
         return 60 * 15
+
+    audit_log_retention_days = 180  # FedRAMP mandates 90 days
+
+    verbose_log_retention_days = 30
 
     @property
     def es_timeout(self) -> int:
@@ -1317,6 +1334,17 @@ class Config:
     @property
     def cloudwatch_dashboard_template(self) -> str:
         return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
+
+    @property
+    def security_contact(self) -> Optional[dict[str]]:
+        value = self.environ.get('azul_security_contact')
+        if value is None:
+            return None
+        else:
+            # FIXME: Eliminate local import
+            #        https://github.com/DataBiosphere/azul/issues/3133
+            import json
+            return json.loads(value)
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm

@@ -881,7 +881,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_cloudwatch_log_group': {
             'gitlab_vpn': {
                 'name': '/aws/vpn/azul-gitlab',
-                'retention_in_days': 1827,
+                'retention_in_days': config.audit_log_retention_days,
             }
         },
         'aws_ec2_client_vpn_endpoint': {

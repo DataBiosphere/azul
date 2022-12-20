@@ -217,7 +217,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
-        'AZUL_ENABLE_MONITORING': '1',
+        'AZUL_ENABLE_MONITORING': '0',
 
         # $0.382/h × 3 × 24h/d × 30d/mo = $825.12/mo
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
