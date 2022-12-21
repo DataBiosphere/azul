@@ -10,6 +10,43 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4673 Eliminate burner accounts
+===============================
+
+Operator
+~~~~~~~~
+
+Complete the steps in the next section. Then announce on `#team-boardwalk` for
+other developers to do the same.
+
+Everyone
+~~~~~~~~
+
+When notified by the operator, complete the following steps:
+
+#. Remove your burner account from the Google Cloud project:
+
+   #. Go to the Google Cloud console, select the `platform-hca-dev` project,
+      and navigate to ``IAM & Admin`` -> ``IAM``
+
+   #. Select your burner; it includes the string "…ucsc.edu@gmail.com"
+
+   #. Click ``REMOVE ACCESS`` -> ``CONFIRM``
+
+#. Close your burner Google account:
+
+   #. Sign in to Google using your burner email account. Click on the icon with
+      your burner's name initial (upper right-hand of the page), click the
+      ``Manage your Google Account`` button, and navigate to ``Data & Privacy``
+
+   #. At the bottom of the page, under ``More options``, click on the
+      ``Delete your Google Account`` button. Complete Google's requisites and
+      terminate your burner account by clicking on ``Delete Account``
+
+#. Make sure to register your UCSC account with SAM as `described
+   <./README.md#234-google-cloud-tdr-and-sam>`_ in the README.
+
+
 #4907 CIS 2.6 (S3 access logging on CloudTrail bucket) still flagged in dev
 ===========================================================================
 

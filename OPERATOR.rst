@@ -311,7 +311,8 @@ an appropriate prefix.
 
 To determine the prefix:
 
-#. Go to `TDR dev in the Google Cloud Console`_. Authenticate with your burner account.
+#. Go to `TDR dev in the Google Cloud Console`_. Authenticate with your personal
+(…@ucsc.edu) account.
 
 #. Run queries such as ::
 
