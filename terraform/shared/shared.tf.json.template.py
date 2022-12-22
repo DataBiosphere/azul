@@ -96,7 +96,12 @@ cis_alarms = [
                                    '($.eventName=DeleteVpcPeeringConnection) || '
                                    '($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || '
                                    '($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || '
-                                   '($.eventName=EnableVpcClassicLink)}')
+                                   '($.eventName=EnableVpcClassicLink)}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.1
+    CloudTrailAlarm(name='root_user',
+                    statistic='Average',
+                    filter_pattern='{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && '
+                                   '$.eventType !="AwsServiceEvent"}')
 ]
 
 emit_tf(block_public_s3_bucket_access({
