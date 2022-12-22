@@ -1447,25 +1447,20 @@ class TestHCAIndexer(IndexerTestCase):
         expected = NestedDict(1, dict)
         for aggregate in False, True:
             for entity_type in self.index_service.entity_types(self.catalog):
-                if entity_type == 'cell_suspensions':
-                    expected[aggregate][entity_type] = {
-                        'cell_suspensions': [0, 20000, 20000],
-                        'files': [2100, 15000, 15000],
-                        'projects': [10000, 10000, 10000]
-                    }
-                elif aggregate and entity_type == 'projects':
-                    expected[aggregate][entity_type] = {
-                        # project.estimated_cell_count is aggregated using max, not sum
-                        'cell_suspensions': [40000],
-                        'files': [17100],
-                        'projects': [10000]
-                    }
-                else:
-                    expected[aggregate][entity_type] = {
-                        'cell_suspensions': [20000, 20000] if aggregate else [0, 20000, 20000],
-                        'files': [2100, 15000],
-                        'projects': [10000, 10000]
-                    }
+                expected[aggregate][entity_type] = {
+                    'cell_suspensions': [0, 20000, 20000],
+                    'files': [2100, 15000, 15000],
+                    'projects': [10000, 10000, 10000]
+                } if entity_type == 'cell_suspensions' else {
+                    # project.estimated_cell_count is aggregated using max, not sum
+                    'cell_suspensions': [40000],
+                    'files': [17100],
+                    'projects': [10000]
+                } if aggregate and entity_type == 'projects' else {
+                    'cell_suspensions': [20000, 20000] if aggregate else [0, 20000, 20000],
+                    'files': [2100, 15000],
+                    'projects': [10000, 10000]
+                }
 
         self.assertEqual(expected.to_dict(), actual.to_dict())
 

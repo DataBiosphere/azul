@@ -503,6 +503,19 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             return SimpleAggregator()
 
+    def _has_child_cell_suspension(self,
+                                   entity: api.LinkedEntity
+                                   ) -> bool:
+        """
+        Return True if the given entity has a cell suspension descendant.
+
+        :param entity: the entity whose descendants should be checked
+        """
+        return any(
+            isinstance(child, api.CellSuspension) or self._has_child_cell_suspension(child)
+            for child in entity.children.values()
+        )
+
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,
                                samples: dict[str, Sample]
@@ -738,6 +751,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **cls._biomaterial_types(),
             'total_estimated_cells': null_int,
+            'total_estimated_cells_redundant': null_int,
             'selected_cell_type': [null_str],
             'organ': [null_str],
             'organ_part': [null_str]
@@ -760,9 +774,11 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 organ_parts.add(sample.model_organ_part)
             else:
                 assert False
+        is_leaf = not self._has_child_cell_suspension(cell_suspension)
         return {
             **self._biomaterial(cell_suspension),
-            'total_estimated_cells': cell_suspension.estimated_cell_count,
+            'total_estimated_cells': cell_suspension.estimated_cell_count if is_leaf else 0,
+            'total_estimated_cells_redundant': 0 if is_leaf else cell_suspension.estimated_cell_count,
             'selected_cell_type': sorted(cell_suspension.selected_cell_types),
             'organ': sorted(organs),
             # With multiple samples it is possible to have str and None values

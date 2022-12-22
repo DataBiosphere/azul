@@ -206,6 +206,7 @@ class TestResponse(WebServiceTestCase):
                         "organPart": ["islet of Langerhans"],
                         "selectedCellType": [None],
                         "totalCells": 1,
+                        "totalCellsRedundant": 0,
                     }
                 ],
                 "donorOrganisms": [
@@ -513,6 +514,7 @@ class TestResponse(WebServiceTestCase):
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [None],
                             "totalCells": 1,
+                            "totalCellsRedundant": 0,
                         }
                     ],
                     "donorOrganisms": [
@@ -741,6 +743,7 @@ class TestResponse(WebServiceTestCase):
                         "organPart": ["amygdala"],
                         "selectedCellType": [None],
                         "totalCells": 10001,
+                        "totalCellsRedundant": 0,
                     }
                 ],
                 "donorOrganisms": [
@@ -2463,6 +2466,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         # these bundles have cell suspensions that are processed into other
         # cell suspensions, and some cell suspensions are referenced in multiple
         # bundles, resulting in three distinct leaf node cell suspensions.
+        #
         # Bundle: 1ed68210, Cell Suspension: 119c4135 (40k) -> 6ff38054 (20k)
         # Bundle: 7a330531, Cell Suspension: 119c4135 (40k) -> 6ff38054 (20k)
         # Bundle: d7b8cbff, Cell Suspension: 119c4135 (40k) -> af3549f4 (20k)

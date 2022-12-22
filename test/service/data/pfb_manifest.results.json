@@ -416,6 +416,7 @@
             "selected_cell_type": [
                 ""
             ],
+            "total_estimated_cells_redundant": 0,
             "total_estimated_cells": ""
         },
         "relations": []
@@ -742,6 +743,7 @@
             "selected_cell_type": [
                 ""
             ],
+            "total_estimated_cells_redundant": 0,
             "total_estimated_cells": 1
         },
         "relations": []
@@ -3138,6 +3140,7 @@
             "selected_cell_type": [
                 "peripheral blood mononuclear cell"
             ],
+            "total_estimated_cells_redundant": 0,
             "total_estimated_cells": 20000
         },
         "relations": []
@@ -3161,6 +3164,7 @@
             "selected_cell_type": [
                 "peripheral blood mononuclear cell"
             ],
+            "total_estimated_cells_redundant": 0,
             "total_estimated_cells": 20000
         },
         "relations": []

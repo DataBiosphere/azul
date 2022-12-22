@@ -124,14 +124,17 @@ class CellSuspensionAggregator(GroupingAggregator):
     def _transform_entity(self, entity: JSON) -> JSON:
         return {
             **entity,
-            'total_estimated_cells': (entity['document_id'], entity['total_estimated_cells']),
+            **{
+                field: (entity['document_id'], entity[field])
+                for field in {'total_estimated_cells', 'total_estimated_cells_redundant'}
+            }
         }
 
     def _group_keys(self, entity) -> tuple[Any, ...]:
         return frozenset(entity['organ']),
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'total_estimated_cells':
+        if field in {'total_estimated_cells', 'total_estimated_cells_redundant'}:
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._get_accumulator(field)

@@ -553,6 +553,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 'donor_count',
                 'estimated_cell_count',
                 'total_estimated_cells',
+                'total_estimated_cells_redundant',
                 'source_datarepo_snapshot_id'
             )
             # FIXME: The first term is not self-explanatory

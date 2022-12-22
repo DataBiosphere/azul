@@ -439,7 +439,9 @@ class SearchResponseFactory:
             "organ": cell_suspension.get("organ", None),
             "organPart": cell_suspension.get("organ_part", None),
             "selectedCellType": cell_suspension.get("selected_cell_type", None),
-            "totalCells": cell_suspension.get("total_estimated_cells", None)
+            "totalCells": cell_suspension.get("total_estimated_cells", None),
+            "totalCellsRedundant": cell_suspension.get("total_estimated_cells_redundant",
+                                                       None)
         }
 
     def make_cell_suspensions(self, entry):
