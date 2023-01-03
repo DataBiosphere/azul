@@ -17,7 +17,7 @@ jmespath==1.0.1
 more-itertools==9.0.0
 requests==2.28.1
 rsa==4.7.2  # resolve ambiguity with build-time dependency
-urllib3==1.26.12
+urllib3==1.26.13
 werkzeug==2.2.2
 -r requirements.trans.txt
 setuptools==65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
