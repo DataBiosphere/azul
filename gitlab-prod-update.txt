@@ -1,0 +1,359 @@
+❯ CI_COMMIT_REF_NAME=prod make -C terraform/gitlab
+python /Users/achave11/Pycharm/Azul/azul.stable/scripts/check_branch.py
+python providers.tf.json.template.py providers.tf.json
+Creating providers.tf.json
+python backend.tf.json.template.py backend.tf.json
+Creating backend.tf.json
+terraform init -reconfigure
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/external from the dependency lock file
+- Reusing previous version of hashicorp/null from the dependency lock file
+- Reusing previous version of hashicorp/google from the dependency lock file
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Installing hashicorp/null v3.2.0...
+- Installed hashicorp/null v3.2.0 (signed by HashiCorp)
+- Installing hashicorp/google v3.90.1...
+- Installed hashicorp/google v3.90.1 (signed by HashiCorp)
+- Installing hashicorp/aws v4.30.0...
+- Installed hashicorp/aws v4.30.0 (signed by HashiCorp)
+- Installing hashicorp/external v2.2.0...
+- Installed hashicorp/external v2.2.0 (signed by HashiCorp)
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+python common.tf.json.template.py common.tf.json
+Creating common.tf.json
+python gitlab.tf.json.template.py gitlab.tf.json
+Creating gitlab.tf.json
+terraform validate
+Success! The configuration is valid.
+
+python /Users/achave11/Pycharm/Azul/azul.stable/scripts/rename_resources.py
+2023-01-03 17:29:12,456 INFO    MainThread: No renamings defined
+terraform apply
+data.google_client_config.current: Reading...
+google_project_iam_custom_role.gitlab: Refreshing state... [id=projects/platform-hca-prod/roles/azul_gitlab]
+data.google_client_config.current: Read complete after 0s [id=projects/platform-hca-prod/regions//zones/]
+google_service_account.gitlab: Refreshing state... [id=projects/platform-hca-prod/serviceAccounts/azul-gitlab@platform-hca-prod.iam.gserviceaccount.com]
+google_project_iam_member.gitlab_read: Refreshing state... [id=platform-hca-prod/roles/viewer/serviceaccount:azul-gitlab@platform-hca-prod.iam.gserviceaccount.com]
+data.aws_region.current: Reading...
+data.aws_region.current: Read complete after 0s [id=us-east-1]
+data.aws_s3_bucket.logs: Reading...
+data.aws_caller_identity.current: Reading...
+data.aws_route53_zone.gitlab: Reading...
+data.aws_ebs_volume.gitlab: Reading...
+data.aws_acm_certificate.gitlab_vpn: Reading...
+aws_vpc.gitlab: Refreshing state... [id=vpc-08d527bac65b976cc]
+data.aws_iam_policy_document.gitlab_iam: Reading...
+data.aws_iam_policy_document.gitlab_boundary: Reading...
+data.aws_iam_policy_document.gitlab_iam: Read complete after 0s [id=2685127943]
+aws_cloudwatch_log_group.gitlab_vpn: Refreshing state... [id=/aws/vpn/azul-gitlab]
+data.aws_iam_policy_document.gitlab_boundary: Read complete after 0s [id=4191254359]
+data.aws_availability_zones.available: Reading...
+aws_iam_role.gitlab: Refreshing state... [id=azul-gitlab]
+data.aws_ebs_volume.gitlab: Read complete after 1s [id=vol-0febee0e355bbcb15]
+aws_key_pair.gitlab: Refreshing state... [id=azul-gitlab]
+data.aws_caller_identity.current: Read complete after 1s [id=542754589326]
+aws_iam_policy.gitlab_iam: Refreshing state... [id=arn:aws:iam::542754589326:policy/azul-gitlab-iam]
+data.aws_availability_zones.available: Read complete after 1s [id=us-east-1]
+aws_iam_policy.gitlab_boundary: Refreshing state... [id=arn:aws:iam::542754589326:policy/azul-boundary]
+google_project_iam_member.gitlab_write: Refreshing state... [id=platform-hca-prod/projects/platform-hca-prod/roles/azul_gitlab/serviceaccount:azul-gitlab@platform-hca-prod.iam.gserviceaccount.com]
+data.aws_s3_bucket.logs: Read complete after 1s [id=edu-ucsc-gi-platform-hca-prod-logs.us-east-1]
+data.aws_acm_certificate.gitlab_vpn: Read complete after 1s [id=arn:aws:acm:us-east-1:542754589326:certificate/58d8180b-c62d-4a1f-b7a8-e175bb00c105]
+aws_iam_role_policy_attachment.gitlab_iam: Refreshing state... [id=azul-gitlab-20220309060812428000000001]
+aws_iam_role_policy_attachment.gitlab_boundary: Refreshing state... [id=azul-gitlab-20220309060812450200000002]
+aws_iam_instance_profile.gitlab: Refreshing state... [id=azul-gitlab]
+data.aws_route53_zone.gitlab: Read complete after 2s [id=Z09797681GQHO1OIIEBFJ]
+aws_internet_gateway.gitlab: Refreshing state... [id=igw-02efd038285e0f933]
+aws_subnet.gitlab_private_1: Refreshing state... [id=subnet-0289a2e6038da6d34]
+aws_lb_target_group.gitlab_http: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-http/68c29d6a4b706c87]
+aws_lb_target_group.gitlab_git: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-git/98d08d2e691f6649]
+aws_subnet.gitlab_public_1: Refreshing state... [id=subnet-0d235ce7f64828868]
+aws_lb_target_group.gitlab_ssh: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-ssh/08cd31a3c71affbd]
+aws_security_group.gitlab_vpn: Refreshing state... [id=sg-0c07a103a5f7aba0e]
+aws_security_group.gitlab: Refreshing state... [id=sg-0187f37496c2a3f38]
+aws_subnet.gitlab_public_0: Refreshing state... [id=subnet-0b6d839f1bba04f52]
+aws_subnet.gitlab_private_0: Refreshing state... [id=subnet-022adf85ca7ef0be5]
+aws_security_group.gitlab_alb: Refreshing state... [id=sg-09227c4aa6bb74d64]
+aws_route.gitlab: Refreshing state... [id=r-rtb-0368c402f7a11fa241080289494]
+aws_eip.gitlab_0: Refreshing state... [id=eipalloc-0a9ca780b5f78a5fc]
+aws_eip.gitlab_1: Refreshing state... [id=eipalloc-01f1c66a62b1c2ad6]
+aws_ec2_client_vpn_endpoint.gitlab: Refreshing state... [id=cvpn-endpoint-074b20d761cbd5589]
+aws_lb.gitlab_nlb: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:loadbalancer/net/azul-gitlab-nlb/da6a657cd12d6eb6]
+aws_lb.gitlab_alb: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:loadbalancer/app/azul-gitlab-alb/6b914e4478b8379f]
+aws_nat_gateway.gitlab_0: Refreshing state... [id=nat-0c1794ab53f9749f5]
+aws_nat_gateway.gitlab_1: Refreshing state... [id=nat-0034bb952c1941376]
+aws_network_interface.gitlab: Refreshing state... [id=eni-0c226dacf057a21f0]
+aws_ec2_client_vpn_network_association.gitlab_0: Refreshing state... [id=cvpn-assoc-08ddaf481ee2ec772]
+aws_ec2_client_vpn_network_association.gitlab_1: Refreshing state... [id=cvpn-assoc-006ff94b0b78cac4c]
+aws_ec2_client_vpn_authorization_rule.gitlab: Refreshing state... [id=cvpn-endpoint-074b20d761cbd5589,172.72.0.0/16]
+aws_route_table.gitlab_1: Refreshing state... [id=rtb-06890ae6229e93b27]
+aws_route_table.gitlab_0: Refreshing state... [id=rtb-0126cdc3e61d9b486]
+aws_route53_record.gitlab: Refreshing state... [id=Z09797681GQHO1OIIEBFJ_gitlab.azul.data.humancellatlas.org_A]
+aws_route53_record.gitlab_docker: Refreshing state... [id=Z09797681GQHO1OIIEBFJ_docker.gitlab.azul.data.humancellatlas.org_A]
+aws_route53_record.gitlab_ssh: Refreshing state... [id=Z09797681GQHO1OIIEBFJ_ssh.gitlab.azul.data.humancellatlas.org_A]
+aws_route_table_association.gitlab_1: Refreshing state... [id=rtbassoc-09b70ad48f2c24dcc]
+aws_route_table_association.gitlab_0: Refreshing state... [id=rtbassoc-00f427316f5366d47]
+aws_lb_listener.gitlab_git: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:listener/net/azul-gitlab-nlb/da6a657cd12d6eb6/43ed6c92a602c9e5]
+aws_lb_listener.gitlab_ssh: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:listener/net/azul-gitlab-nlb/da6a657cd12d6eb6/27477ff2daa5c3f7]
+aws_acm_certificate.gitlab: Refreshing state... [id=arn:aws:acm:us-east-1:542754589326:certificate/d507fa0f-b5da-41e5-a4f5-30c56ecad1dc]
+aws_instance.gitlab: Refreshing state... [id=i-077d2399a0f5faba4]
+aws_route53_record.gitlab_validation["gitlab.azul.data.humancellatlas.org"]: Refreshing state... [id=Z09797681GQHO1OIIEBFJ__28c7f7542dd2ef64075766d19a05571b.gitlab.azul.data.humancellatlas.org._CNAME]
+aws_lb_listener.gitlab_http: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:listener/app/azul-gitlab-alb/6b914e4478b8379f/e3a003d53f1fd40c]
+aws_route53_record.gitlab_validation["docker.gitlab.azul.data.humancellatlas.org"]: Refreshing state... [id=Z09797681GQHO1OIIEBFJ__5ef2dc2505f6b9ab737b0e01c5316a3e.docker.gitlab.azul.data.humancellatlas.org._CNAME]
+aws_acm_certificate_validation.gitlab: Refreshing state... [id=2022-03-09 06:12:35.944 +0000 UTC]
+aws_lb_target_group_attachment.gitlab_http: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-http/68c29d6a4b706c87-20221202180012421600000001]
+aws_lb_target_group_attachment.gitlab_ssh: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-ssh/08cd31a3c71affbd-20221202180012903200000003]
+aws_lb_target_group_attachment.gitlab_git: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-git/98d08d2e691f6649-20221202180012539300000002]
+aws_volume_attachment.gitlab: Refreshing state... [id=vai-608240298]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following
+symbols:
+  ~ update in-place
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # aws_cloudwatch_log_group.gitlab_vpn will be updated in-place
+  ~ resource "aws_cloudwatch_log_group" "gitlab_vpn" {
+        id                = "/aws/vpn/azul-gitlab"
+        name              = "/aws/vpn/azul-gitlab"
+      ~ retention_in_days = 1827 -> 180
+        tags              = {
+            "Name"                = "azul-gitlab_vpn"
+            "billing"             = "hca"
+            "component"           = "azul-gitlab_vpn"
+            "deployment"          = "prod"
+            "owner"               = "hannes@ucsc.edu"
+            "service"             = "azul"
+            "terraform_component" = "gitlab"
+        }
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_instance.gitlab must be replaced
+-/+ resource "aws_instance" "gitlab" {
+      ~ arn                                  = "arn:aws:ec2:us-east-1:542754589326:instance/i-077d2399a0f5faba4" -> (known after apply)
+      ~ associate_public_ip_address          = false -> (known after apply)
+      ~ availability_zone                    = "us-east-1a" -> (known after apply)
+      ~ cpu_core_count                       = 2 -> (known after apply)
+      ~ cpu_threads_per_core                 = 2 -> (known after apply)
+      ~ disable_api_stop                     = false -> (known after apply)
+      ~ disable_api_termination              = false -> (known after apply)
+      ~ ebs_optimized                        = false -> (known after apply)
+      - hibernation                          = false -> null
+      + host_id                              = (known after apply)
+      + host_resource_group_arn              = (known after apply)
+      ~ id                                   = "i-077d2399a0f5faba4" -> (known after apply)
+      ~ instance_initiated_shutdown_behavior = "stop" -> (known after apply)
+      ~ instance_state                       = "stopped" -> (known after apply)
+      ~ ipv6_address_count                   = 0 -> (known after apply)
+      ~ ipv6_addresses                       = [] -> (known after apply)
+      ~ monitoring                           = false -> (known after apply)
+      + outpost_arn                          = (known after apply)
+      + password_data                        = (known after apply)
+      + placement_group                      = (known after apply)
+      + placement_partition_number           = (known after apply)
+      ~ primary_network_interface_id         = "eni-0c226dacf057a21f0" -> (known after apply)
+      ~ private_dns                          = "ip-172-72-0-59.ec2.internal" -> (known after apply)
+      ~ private_ip                           = "172.72.0.59" -> (known after apply)
+      + public_dns                           = (known after apply)
+      + public_ip                            = (known after apply)
+      ~ secondary_private_ips                = [] -> (known after apply)
+      ~ security_groups                      = [] -> (known after apply)
+      - source_dest_check                    = true -> null
+      ~ subnet_id                            = "subnet-022adf85ca7ef0be5" -> (known after apply)
+        tags                                 = {
+            "Name"                = "azul-gitlab"
+            "Owner"               = "hannes@ucsc.edu"
+            "billing"             = "hca"
+            "component"           = "azul-gitlab"
+            "deployment"          = "prod"
+            "owner"               = "hannes@ucsc.edu"
+            "service"             = "azul"
+            "terraform_component" = "gitlab"
+        }
+      ~ tenancy                              = "default" -> (known after apply)
+      ~ user_data                            = "6c332b408232310e9614ac80fc1e10874c8e8c6f" -> "ba7daf28ef48404b8ef6a7e5fc2f8c9052188e1c" # forces replacement
+      + user_data_base64                     = (known after apply)
+      ~ vpc_security_group_ids               = [
+          - "sg-0187f37496c2a3f38",
+        ] -> (known after apply)
+        # (7 unchanged attributes hidden)
+
+      ~ capacity_reservation_specification {
+          ~ capacity_reservation_preference = "open" -> (known after apply)
+
+          + capacity_reservation_target {
+              + capacity_reservation_id                 = (known after apply)
+              + capacity_reservation_resource_group_arn = (known after apply)
+            }
+        }
+
+      - credit_specification {
+          - cpu_credits = "unlimited" -> null
+        }
+
+      + ebs_block_device {
+          + delete_on_termination = (known after apply)
+          + device_name           = (known after apply)
+          + encrypted             = (known after apply)
+          + iops                  = (known after apply)
+          + kms_key_id            = (known after apply)
+          + snapshot_id           = (known after apply)
+          + tags                  = (known after apply)
+          + throughput            = (known after apply)
+          + volume_id             = (known after apply)
+          + volume_size           = (known after apply)
+          + volume_type           = (known after apply)
+        }
+      - ebs_block_device {
+          - delete_on_termination = false -> null
+          - device_name           = "/dev/sdf" -> null
+          - encrypted             = false -> null
+          - iops                  = 300 -> null
+          - tags                  = {
+              - "Name"  = "azul-gitlab"
+              - "owner" = "hannes@ucsc.edu"
+            } -> null
+          - throughput            = 0 -> null
+          - volume_id             = "vol-0febee0e355bbcb15" -> null
+          - volume_size           = 100 -> null
+          - volume_type           = "gp2" -> null
+        }
+
+      ~ enclave_options {
+          ~ enabled = false -> (known after apply)
+        }
+
+      + ephemeral_block_device {
+          + device_name  = (known after apply)
+          + no_device    = (known after apply)
+          + virtual_name = (known after apply)
+        }
+
+      ~ maintenance_options {
+          ~ auto_recovery = "default" -> (known after apply)
+        }
+
+      ~ metadata_options {
+          ~ instance_metadata_tags      = "disabled" -> (known after apply)
+            # (3 unchanged attributes hidden)
+        }
+
+      ~ private_dns_name_options {
+          ~ enable_resource_name_dns_a_record    = false -> (known after apply)
+          ~ enable_resource_name_dns_aaaa_record = false -> (known after apply)
+          ~ hostname_type                        = "ip-name" -> (known after apply)
+        }
+
+      ~ root_block_device {
+          ~ device_name           = "/dev/xvda" -> (known after apply)
+          ~ encrypted             = false -> (known after apply)
+          ~ iops                  = 0 -> (known after apply)
+          + kms_key_id            = (known after apply)
+          - tags                  = {} -> null
+          ~ throughput            = 0 -> (known after apply)
+          ~ volume_id             = "vol-0d6758459e8f9b84b" -> (known after apply)
+          ~ volume_type           = "standard" -> (known after apply)
+            # (2 unchanged attributes hidden)
+        }
+
+        # (1 unchanged block hidden)
+    }
+
+  # aws_lb_target_group_attachment.gitlab_git must be replaced
+-/+ resource "aws_lb_target_group_attachment" "gitlab_git" {
+      ~ id               = "arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-git/98d08d2e691f6649-20221202180012539300000002" -> (known after apply)
+      ~ target_id        = "i-077d2399a0f5faba4" -> (known after apply) # forces replacement
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_lb_target_group_attachment.gitlab_http must be replaced
+-/+ resource "aws_lb_target_group_attachment" "gitlab_http" {
+      ~ id               = "arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-http/68c29d6a4b706c87-20221202180012421600000001" -> (known after apply)
+      ~ target_id        = "i-077d2399a0f5faba4" -> (known after apply) # forces replacement
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_lb_target_group_attachment.gitlab_ssh must be replaced
+-/+ resource "aws_lb_target_group_attachment" "gitlab_ssh" {
+      ~ id               = "arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-ssh/08cd31a3c71affbd-20221202180012903200000003" -> (known after apply)
+      ~ target_id        = "i-077d2399a0f5faba4" -> (known after apply) # forces replacement
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_volume_attachment.gitlab must be replaced
+-/+ resource "aws_volume_attachment" "gitlab" {
+      ~ id          = "vai-608240298" -> (known after apply)
+      ~ instance_id = "i-077d2399a0f5faba4" -> (known after apply) # forces replacement
+        # (2 unchanged attributes hidden)
+    }
+
+Plan: 5 to add, 1 to change, 5 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_lb_target_group_attachment.gitlab_http: Destroying... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-http/68c29d6a4b706c87-20221202180012421600000001]
+aws_lb_target_group_attachment.gitlab_ssh: Destroying... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-ssh/08cd31a3c71affbd-20221202180012903200000003]
+aws_volume_attachment.gitlab: Destroying... [id=vai-608240298]
+aws_lb_target_group_attachment.gitlab_git: Destroying... [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-git/98d08d2e691f6649-20221202180012539300000002]
+aws_volume_attachment.gitlab: Provisioning with 'local-exec'...
+aws_volume_attachment.gitlab (local-exec): Executing: ["/bin/sh" "-c" "aws ec2 stop-instances --instance-ids i-077d2399a0f5faba4 && aws ec2 wait instance-stopped --instance-ids i-077d2399a0f5faba4"]
+aws_cloudwatch_log_group.gitlab_vpn: Modifying... [id=/aws/vpn/azul-gitlab]
+aws_lb_target_group_attachment.gitlab_http: Destruction complete after 0s
+aws_lb_target_group_attachment.gitlab_git: Destruction complete after 0s
+aws_lb_target_group_attachment.gitlab_ssh: Destruction complete after 1s
+aws_cloudwatch_log_group.gitlab_vpn: Modifications complete after 1s [id=/aws/vpn/azul-gitlab]
+aws_volume_attachment.gitlab (local-exec): {
+aws_volume_attachment.gitlab (local-exec):     "StoppingInstances": [
+aws_volume_attachment.gitlab (local-exec):         {
+aws_volume_attachment.gitlab (local-exec):             "CurrentState": {
+aws_volume_attachment.gitlab (local-exec):                 "Code": 80,
+aws_volume_attachment.gitlab (local-exec):                 "Name": "stopped"
+aws_volume_attachment.gitlab (local-exec):             },
+aws_volume_attachment.gitlab (local-exec):             "InstanceId": "i-077d2399a0f5faba4",
+aws_volume_attachment.gitlab (local-exec):             "PreviousState": {
+aws_volume_attachment.gitlab (local-exec):                 "Code": 80,
+aws_volume_attachment.gitlab (local-exec):                 "Name": "stopped"
+aws_volume_attachment.gitlab (local-exec):             }
+aws_volume_attachment.gitlab (local-exec):         }
+aws_volume_attachment.gitlab (local-exec):     ]
+aws_volume_attachment.gitlab (local-exec): }
+aws_volume_attachment.gitlab: Still destroying... [id=vai-608240298, 10s elapsed]
+aws_volume_attachment.gitlab: Destruction complete after 13s
+aws_instance.gitlab: Destroying... [id=i-077d2399a0f5faba4]
+aws_instance.gitlab: Still destroying... [id=i-077d2399a0f5faba4, 10s elapsed]
+aws_instance.gitlab: Destruction complete after 11s
+aws_instance.gitlab: Creating...
+aws_instance.gitlab: Still creating... [10s elapsed]
+aws_instance.gitlab: Creation complete after 13s [id=i-0a5012ed908e2b249]
+aws_lb_target_group_attachment.gitlab_http: Creating...
+aws_lb_target_group_attachment.gitlab_ssh: Creating...
+aws_volume_attachment.gitlab: Creating...
+aws_lb_target_group_attachment.gitlab_git: Creating...
+aws_lb_target_group_attachment.gitlab_ssh: Creation complete after 1s [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-ssh/08cd31a3c71affbd-20230104013644573400000001]
+aws_lb_target_group_attachment.gitlab_http: Creation complete after 1s [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-http/68c29d6a4b706c87-20230104013644637500000002]
+aws_lb_target_group_attachment.gitlab_git: Creation complete after 1s [id=arn:aws:elasticloadbalancing:us-east-1:542754589326:targetgroup/azul-gitlab-git/98d08d2e691f6649-20230104013644669600000003]
+aws_volume_attachment.gitlab: Still creating... [10s elapsed]
+aws_volume_attachment.gitlab: Still creating... [20s elapsed]
+aws_volume_attachment.gitlab: Creation complete after 22s [id=vai-1321613350]
+
+Apply complete! Resources: 5 added, 1 changed, 5 destroyed.
