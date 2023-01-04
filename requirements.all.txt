@@ -26,7 +26,7 @@ cryptography==39.0.0
 deprecated==1.2.13
 docker==6.0.0
 docutils==0.16
-elasticsearch==7.10.1
+elasticsearch==7.17
 elasticsearch-dsl==7.4.0
 fastavro==1.6.1
 flake8==5.0.4
