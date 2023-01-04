@@ -546,6 +546,10 @@ class AWS:
     def _validate_bucket_path_prefix(self, path_prefix):
         reject(path_prefix.startswith('/') or path_prefix.endswith('/'), path_prefix)
 
+    @property
+    def monitoring_topic_name(self):
+        return config.qualified_resource_name('monitoring')
+
 
 aws = AWS()
 del AWS

@@ -4,6 +4,9 @@ from azul import (
     config,
     require,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.queues import (
     Queues,
 )
@@ -104,7 +107,7 @@ emit_tf({
                 {
                     'aws_sns_topic': {
                         'monitoring': {
-                            'name': config.monitoring_topic_name
+                            'name': aws.monitoring_topic_name
                         }
                     },
                     'aws_sns_topic_subscription': {

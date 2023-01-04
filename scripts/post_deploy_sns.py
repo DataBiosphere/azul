@@ -49,7 +49,7 @@ def sns_topic_arn() -> str:
         'sns',
         config.region,
         config.aws_account_id,
-        config.monitoring_topic_name
+        aws.monitoring_topic_name
     ])
 
 
