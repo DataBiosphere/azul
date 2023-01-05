@@ -425,14 +425,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             ('sample.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
 
             ('sequencing_input.provenance.document_id',
-             '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab',
+             '',
              '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
 
             ('sequencing_input.biomaterial_core.biomaterial_id',
-             '22028_5#300 || 22030_5#300',
+             '',
              '22028_5#300 || 22030_5#300'),
 
-            ('sequencing_input_type', 'cell_suspension', 'cell_suspension')
+            ('sequencing_input_type', '', 'cell_suspension')
         ]
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',

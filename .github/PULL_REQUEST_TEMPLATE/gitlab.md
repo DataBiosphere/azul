@@ -1,4 +1,4 @@
-<!-- 
+<!--
 This is the PR template for upgrading the GitLab instance.
 -->
 
@@ -39,18 +39,18 @@ Connected issue: #4014
 
 ### Operator (before pushing merge the commit)
 
-- [ ] Rebased and squashed PR branch
+- [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title
-- [ ] Moved connected issue to Merged column
+- [ ] Moved connected issue to Merged column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Shortened the PR chain                                        <sub>or this PR is not labeled `base`</sub>
+- [ ] Shortened the PR chain <sub>or this PR is not labeled `base`</sub>
 - [ ] Deleted PR branch from GitHub
 
 

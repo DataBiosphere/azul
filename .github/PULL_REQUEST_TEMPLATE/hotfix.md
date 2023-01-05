@@ -1,4 +1,4 @@
-<!-- 
+<!--
 This is the PR template for hotfix PRs against `prod`.
 -->
 
@@ -9,39 +9,35 @@ Connected issue: #0000
 
 
 ### Author
-- 
+
 - [ ] Target branch is `prod`
 - [ ] Name of PR branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] PR title references the connected issue
 - [ ] PR title is `Hotfix: ` followed by title of connected issue
-- [ ] PR is connected to issue via Zenhub 
+- [ ] PR is connected to issue via ZenHub
 - [ ] PR description links to connected issue
 
 
-## Author (hotfixes)
+### Author (hotfixes)
 
-- [ ] Added `h` tag to commit title                                 <sub>or this PR does not include a temporary hotfix</sub>
-- [ ] Added `H` tag to commit title                                 <sub>or this PR does not include a permanent hotfix</sub>
+- [ ] Added `h` tag to commit title <sub>or this PR does not include a temporary hotfix</sub>
+- [ ] Added `H` tag to commit title <sub>or this PR does not include a permanent hotfix</sub>
 - [ ] Added `hotfix` label to PR
-- [ ] Added `partial` label to PR                                   <sub>or this PR is a permanent hotfix</sub>
-
-
-### Author (requirements, before every review)
-
-- [ ] Ran `make requirements_update`                                <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
-- [ ] Added `R` tag to commit title                                 <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Added `reqs` label to PR                                      <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Added `partial` label to PR <sub>or this PR is a permanent hotfix</sub>
 
 
 ### Author (before every review)
 
 - [ ] Rebased PR branch on `prod`, squashed old fixups
+- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
 
 
 ### Primary reviewer (after approval)
 
 - [ ] Actually approved the PR
-- [ ] Labeled PR `no sandbox`
+- [ ] Labeled PR as `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] Assigned PR to current operator
@@ -49,7 +45,7 @@ Connected issue: #0000
 
 ### Operator (before pushing merge the commit)
 
-- [ ] Rebased and squashed PR branch onto `prod` 
+- [ ] Squashed PR branch and rebased onto `prod`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Added PR reference to merge commit title
@@ -62,16 +58,17 @@ Connected issue: #0000
 
 - [ ] Pushed merge commit to GitLab `prod`
 - [ ] Build passes on GitLab `prod`
-- [ ] Reviewed build log for anomalies on GitLab `prod`
-- [ ] Deleted PR branch from GitHub and GitLab `prod`
+- [ ] Reviewed build logs for anomalies on GitLab `prod`
+- [ ] Deleted PR branch from GitHub
+- [ ] Deleted PR branch from GitLab `prod`
 
 
-### Operator (reindex) 
+### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `prod`                        <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
-- [ ] Started reindex in `prod`                                     <sub>or neither this PR nor a prior failed promotion requires it</sub>
-- [ ] Checked for and triaged indexing failures                     <sub>or neither this PR nor a prior failed promotion requires it</sub>
-- [ ] Emptied fail queues in target deployment                      <sub>or neither this PR nor a prior failed promotion requires it</sub>
+- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
+- [ ] Started reindex in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
+- [ ] Checked for and triaged indexing failures in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
+- [ ] Emptied fail queues in `prod` deployment <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Created backport PR and linked to it in a comment on this PR
 
 

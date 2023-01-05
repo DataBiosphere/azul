@@ -1,6 +1,7 @@
 from typing import (
     Iterable,
     Optional,
+    Sequence,
     TypeVar,
 )
 
@@ -73,6 +74,31 @@ def pluralize(word: str, count: int = 0) -> str:
         return word[:-1] + 'ies'
     else:
         return word + 's'
+
+
+def join_grammatically(strings: Sequence[str],
+                       *,
+                       joiner: str = ', ',
+                       last_joiner: str = ' and '
+                       ) -> str:
+    """
+    >>> join_grammatically([])
+    ''
+
+    >>> join_grammatically(['a'])
+    'a'
+
+    >>> join_grammatically(['a','b'])
+    'a and b'
+
+    >>> join_grammatically(['a', 'b', 'c'])
+    'a, b and c'
+
+    >>> join_grammatically(['a', 'b', 'c'], last_joiner=' or ')
+    'a, b or c'
+    """
+    head, tail = strings[:-2], strings[-2:]
+    return joiner.join([*head, last_joiner.join(tail)])
 
 
 def splitter(sep: Optional[str] = None, maxsplit: int = -1):
