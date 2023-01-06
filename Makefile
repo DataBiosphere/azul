@@ -96,7 +96,6 @@ $(1)terraform: lambdas
 
 .PHONY: $(1)deploy
 $(1)deploy: check_python $(1)terraform
-	python $(project_root)/scripts/confirm_sns_subscription.py
 	python $(project_root)/scripts/post_deploy_tdr.py
 endef
 
