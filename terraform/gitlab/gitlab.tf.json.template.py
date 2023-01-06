@@ -681,6 +681,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ],
                         "resources": aws_service_arns('SNS',
                                                       TopicName='azul-*')
+
+                    },
+                    # Restricting the topic name prevents the SNS topic from
+                    # being used in data blocks.
+                    {
+                        'actions': ['sns:ListTopics'],
+                        'resources': aws_service_arns('SNS',
+                                                      TopicName='*'),
                     }
                 ]
             }

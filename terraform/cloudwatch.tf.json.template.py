@@ -1,5 +1,4 @@
 import json
-import shlex
 
 from azul import (
     config,
@@ -67,7 +66,18 @@ emit_tf({
                                    ['aws_elasticsearch_domain.index'])
                 }
             }
-        }
+        },
+        *(
+            (
+                {
+                    'aws_sns_topic': {
+                        'monitoring': {
+                            'name': aws.monitoring_topic_name
+                        }
+                    }
+                },
+            ) if config.enable_monitoring else ()
+        ),
     ],
     'locals': {
         'nodes': '${jsondecode(data.external.elasticsearch_nodes.result.nodes)}'
@@ -94,7 +104,7 @@ emit_tf({
                                 'ApiName': config.qualified_resource_name(lambda_),
                                 'Stage': config.deployment_stage,
                             },
-                            'alarm_actions': ['${aws_sns_topic.monitoring.arn}']
+                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}']
                         }
                     }
                 }
@@ -102,38 +112,6 @@ emit_tf({
             )
             if config.enable_monitoring else
             ()
-        ),
-        *(
-            [
-                {
-                    'aws_sns_topic': {
-                        'monitoring': {
-                            'name': aws.monitoring_topic_name
-                        }
-                    },
-                    'aws_sns_topic_subscription': {
-                        'monitoring': {
-                            'topic_arn': '${aws_sns_topic.monitoring.arn}',
-                            # The `email` protocol is only partially supported. Since
-                            # Terraform cannot confirm or delete pending subscriptions
-                            # (see link below), we use a separate script for this purpose.
-                            # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
-                            'protocol': 'email',
-                            'endpoint': config.azul_monitoring_email,
-                            'provisioner': {
-                                'local-exec': {
-                                    'command': ' '.join(map(shlex.quote, [
-                                        'python',
-                                        config.project_root + '/scripts/confirm_sns_subscription.py'
-                                    ]))
-                                }
-                            }
-                        }
-                    }
-                }
-            ]
-            if config.enable_monitoring else
-            []
         ),
         {
             'aws_cloudwatch_dashboard': {

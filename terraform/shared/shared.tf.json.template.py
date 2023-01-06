@@ -1,4 +1,5 @@
 import json
+import shlex
 
 from azul import (
     config,
@@ -469,6 +470,30 @@ emit_tf(block_public_s3_bucket_access({
             }
             if config.security_contact else
             {}
-        )
+        ),
+        'aws_sns_topic': {
+            'monitoring': {
+                'name': aws.monitoring_topic_name
+            }
+        },
+        'aws_sns_topic_subscription': {
+            'monitoring': {
+                'topic_arn': '${aws_sns_topic.monitoring.arn}',
+                # The `email` protocol is only partially supported. Since
+                # Terraform cannot confirm or delete pending subscriptions
+                # (see link below), we use a separate script for this purpose.
+                # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
+                'protocol': 'email',
+                'endpoint': config.azul_monitoring_email,
+                'provisioner': {
+                    'local-exec': {
+                        'command': ' '.join(map(shlex.quote, [
+                            'python',
+                            config.project_root + '/scripts/confirm_sns_subscription.py'
+                        ]))
+                    }
+                }
+            }
+        }
     }
 }))

@@ -10,6 +10,23 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4807 Move monitoring SNS topic to shared component
+===================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment immediately
+before the first time this change is pushed to the GitLab instance for that
+main deployment, regardless of whether the changes come as part of a feature
+branch, a merge commit or in a promotion. This is to ensure that the GitLab
+instance has sufficient permissions to deploy these changes.
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment. Expect to
+confirm the SNS subscription for each deployment while doing so.
+
+
 #4792 Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket
 ============================================================================
 
