@@ -12,6 +12,9 @@ server_cn = $(cn)-server-$(AZUL_DEPLOYMENT_STAGE)
 ca_cn = $(cn)-$(AZUL_DEPLOYMENT_STAGE)
 pki = $(azul_easyrsa_pki)/gitlab/$(AZUL_DEPLOYMENT_STAGE)
 
+export EASYRSA_CERT_EXPIRE = 365
+export EASYRSA_CRL_DAYS = 3650
+
 .PHONY: _client
 _client: check_env
 	$(eval export EASYRSA_PKI = $(pki)/client)
@@ -102,12 +105,12 @@ import/%: _check/%
 		&& rm $$request
 
 sign/%: _check/%
-	EASYRSA_CERT_EXPIRE=365 $(easyrsa) sign-req client $*
+	$(easyrsa) sign-req client $*
 	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
 	@echo
 
 renew/%: _admin
-	EASYRSA_CERT_EXPIRE=365 $(easyrsa) renew client $*
+	$(easyrsa) renew client $*
 	@cat $(EASYRSA_PKI)/issued/$*.crt | openssl x509 -inform pem
 	@echo
 
