@@ -1329,10 +1329,6 @@ class Config:
         return self.environ['AZUL_MONITORING_EMAIL']
 
     @property
-    def monitoring_topic_name(self):
-        return self.qualified_resource_name('monitoring')
-
-    @property
     def cloudwatch_dashboard_template(self) -> str:
         return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
 

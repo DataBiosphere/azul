@@ -6,8 +6,9 @@ delete the subscription, regardless if the subscription was for a group email
 address.
 """
 import logging
-import os
-import sys
+from unittest import (
+    mock,
+)
 
 from furl import (
     furl,
@@ -15,7 +16,6 @@ from furl import (
 
 from azul import (
     config,
-    require,
 )
 from azul.deployment import (
     aws,
@@ -31,8 +31,6 @@ def main() -> None:
     if config.disable_monitoring:
         print('SNS subscription confirmation skipped, monitoring is disabled.')
     elif subscription_pending_confirmation():
-        require(os.isatty(sys.stdout.fileno()),
-                'Stdout must be connected to a tty(-like) device')
         url = prompt_for_subscription_url()
         confirm_subscription(url)
     else:
@@ -49,7 +47,7 @@ def sns_topic_arn() -> str:
         'sns',
         config.region,
         config.aws_account_id,
-        config.monitoring_topic_name
+        aws.monitoring_topic_name
     ])
 
 
@@ -80,7 +78,7 @@ def prompt_for_subscription_url() -> furl:
         'link address, and paste it here.'
     ]))
     while True:
-        url = input('URL: ').strip()
+        url = input_tty('URL: ').strip()
         if url:
             return furl(url)
 
@@ -97,6 +95,17 @@ def confirm_subscription(url: furl) -> None:
                                  Token=token,
                                  AuthenticateOnUnsubscribe='true')
     print('Subscription confirmed for:', endpoint)
+
+
+def input_tty(prompt: str = '') -> str:
+    try:
+        return input(prompt)
+    except EOFError:
+        # Handles input when the script is invoked via Terraform with a
+        # local-exec provisioner
+        with open('/dev/tty', 'r') as f:
+            with mock.patch('sys.stdin', new=f):
+                return input(prompt)
 
 
 if __name__ == '__main__':

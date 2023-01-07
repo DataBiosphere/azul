@@ -4,6 +4,9 @@ from azul import (
     config,
     require,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.queues import (
     Queues,
 )
@@ -63,7 +66,18 @@ emit_tf({
                                    ['aws_elasticsearch_domain.index'])
                 }
             }
-        }
+        },
+        *(
+            (
+                {
+                    'aws_sns_topic': {
+                        'monitoring': {
+                            'name': aws.monitoring_topic_name
+                        }
+                    }
+                },
+            ) if config.enable_monitoring else ()
+        ),
     ],
     'locals': {
         'nodes': '${jsondecode(data.external.elasticsearch_nodes.result.nodes)}'
@@ -90,7 +104,7 @@ emit_tf({
                                 'ApiName': config.qualified_resource_name(lambda_),
                                 'Stage': config.deployment_stage,
                             },
-                            'alarm_actions': ['${aws_sns_topic.monitoring.arn}']
+                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}']
                         }
                     }
                 }
@@ -98,31 +112,6 @@ emit_tf({
             )
             if config.enable_monitoring else
             ()
-        ),
-        *(
-            [
-                {
-                    'aws_sns_topic': {
-                        'monitoring': {
-                            'name': config.monitoring_topic_name
-                        }
-                    },
-                    'aws_sns_topic_subscription': {
-                        'monitoring': {
-                            'topic_arn': '${aws_sns_topic.monitoring.arn}',
-                            # The `email` protocol is only partially supported. Since
-                            # Terraform cannot confirm or delete pending subscriptions
-                            # (see link below), a script is run during the final stages
-                            # of `make deploy` to facilitate confirmation process.
-                            # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
-                            'protocol': 'email',
-                            'endpoint': config.azul_monitoring_email
-                        }
-                    }
-                }
-            ]
-            if config.enable_monitoring else
-            []
         ),
         {
             'aws_cloudwatch_dashboard': {
