@@ -310,13 +310,14 @@ class AzulChaliceApp(Chalice):
     def _log_request(self):
         if log.isEnabledFor(logging.INFO):
             context = self.current_request.context
-            query = self.current_request.query_params
-            headers = self.current_request.headers
-            log.info('Received %s request for %r, with query %s and headers %s.',
+            request_info = {
+                'query': self.current_request.query_params,
+                'headers': self.current_request.headers
+            }
+            log.info('Received %s request for %r, with %s.',
                      context['httpMethod'],
                      context['path'],
-                     json.dumps(query, cls=self._LogJSONEncoder),
-                     json.dumps(headers, cls=self._LogJSONEncoder))
+                     json.dumps(request_info, cls=self._LogJSONEncoder))
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):
