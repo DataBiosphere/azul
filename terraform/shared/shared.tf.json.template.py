@@ -1,5 +1,8 @@
 import json
 import shlex
+from typing import (
+    NamedTuple,
+)
 
 from azul import (
     config,
@@ -18,6 +21,88 @@ require(config.cloudtrail_s3_bucket_region == config.region
         or config.deployment_stage == 'dev',  # grand-father in an exception for `dev`
         'The Cloudtrail bucket must reside in the default region',
         config.cloudtrail_s3_bucket_region, config.region)
+
+
+class CloudTrailAlarm(NamedTuple):
+    name: str
+    statistic: str
+    filter_pattern: str
+
+    @property
+    def metric_name(self) -> str:
+        return f'{self.name}_metric'
+
+
+cis_alarms = [
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
+    CloudTrailAlarm(name='api_unauthorized',
+                    statistic='Average',
+                    filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
+    CloudTrailAlarm(name='console_no_mfa',
+                    statistic='Sum',
+                    filter_pattern='{ ($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && '
+                                   '($.userIdentity.type = "IAMUser") && '
+                                   '($.responseElements.ConsoleLogin = "Success") }'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.3
+    CloudTrailAlarm(name='root_usage',
+                    statistic='Sum',
+                    filter_pattern='{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType '
+                                   '!="AwsServiceEvent"}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.4
+    CloudTrailAlarm(name='iam_policy_change',
+                    statistic='Average',
+                    filter_pattern='{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || '
+                                   '($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || '
+                                   '($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || '
+                                   '($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || '
+                                   '($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || '
+                                   '($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || '
+                                   '($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || '
+                                   '($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.5
+    CloudTrailAlarm(name='cloudtrail_config_change',
+                    statistic='Sum',
+                    filter_pattern='{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || '
+                                   '($.eventName=DeleteTrail) || ($.eventName=StartLogging) || '
+                                   '($.eventName=StopLogging)}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.8
+    CloudTrailAlarm(name='s3_policy_change',
+                    statistic='Average',
+                    filter_pattern='{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || '
+                                   '($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || '
+                                   '($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || '
+                                   '($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || '
+                                   '($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.12
+    CloudTrailAlarm(name='network_gateway_change',
+                    statistic='Sum',
+                    filter_pattern='{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || '
+                                   '($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || '
+                                   '($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.13
+    CloudTrailAlarm(name='route_table_change',
+                    statistic='Average',
+                    filter_pattern='{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || '
+                                   '($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || '
+                                   '($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || '
+                                   '($.eventName=DisassociateRouteTable)}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.14
+    CloudTrailAlarm(name='vpc_change',
+                    statistic='Average',
+                    filter_pattern='{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || '
+                                   '($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || '
+                                   '($.eventName=CreateVpcPeeringConnection) || '
+                                   '($.eventName=DeleteVpcPeeringConnection) || '
+                                   '($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || '
+                                   '($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || '
+                                   '($.eventName=EnableVpcClassicLink)}'),
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.1
+    CloudTrailAlarm(name='root_user',
+                    statistic='Average',
+                    filter_pattern='{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && '
+                                   '$.eventType !="AwsServiceEvent"}')
+]
 
 emit_tf(block_public_s3_bucket_access({
     'data': {
@@ -239,6 +324,36 @@ emit_tf(block_public_s3_bucket_access({
                 'name': config.qualified_resource_name('trail'),
                 'retention_in_days': config.audit_log_retention_days
             }
+        },
+        'aws_cloudwatch_log_metric_filter': {
+            a.name: {
+                'name': config.qualified_resource_name(a.name, suffix='.filter'),
+                'pattern': a.filter_pattern,
+                'log_group_name': '${aws_cloudwatch_log_group.trail.name}',
+                'metric_transformation': {
+                    'name': a.metric_name,
+                    'namespace': 'LogMetrics',
+                    'value': 1
+                }
+            }
+            for a in cis_alarms
+        },
+        'aws_cloudwatch_metric_alarm': {
+            a.name: {
+                'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
+                'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                'evaluation_periods': 1,
+                'metric_name': a.metric_name,
+                'namespace': 'LogMetrics',
+                'statistic': a.statistic,
+                'threshold': 1,
+                # The CIS documentation does not specify a period. 5 minutes is
+                # the default value when creating the alarm via the console UI.
+                'period': 5 * 60,
+                'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+            }
+            for a in cis_alarms
         },
         'aws_iam_role': {
             'api_gateway': {
