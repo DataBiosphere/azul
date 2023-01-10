@@ -24,6 +24,7 @@ from furl import (
     furl,
 )
 from google.api_core.exceptions import (
+    BadRequest,
     Forbidden,
     InternalServerError,
     ServiceUnavailable,
@@ -517,10 +518,13 @@ class TDRClient(SAMClient):
                 job: QueryJob = bigquery.query(query)
                 try:
                     result = job.result()
-                except (Forbidden, InternalServerError, ServiceUnavailable) as e:
+                except (BadRequest, Forbidden, InternalServerError, ServiceUnavailable) as e:
                     if delay is None:
                         raise e
                     elif isinstance(e, Forbidden) and 'Exceeded rate limits' not in e.message:
+                        raise e
+                    elif (isinstance(e, BadRequest)
+                          and 'project does not have the reservation in the data region' not in e.message):
                         raise e
                     else:
                         log.warning('BigQuery job error during attempt %i/%i. Retrying in %is.',
