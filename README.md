@@ -43,6 +43,8 @@ generic with minimal need for project-specific behavior.
 
 - GNU make 3.81 or newer
 
+- git 2.36.0 or newer
+
 - [Docker] for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
@@ -54,6 +56,8 @@ generic with minimal need for project-specific behavior.
   in the `PATH` environment variable. 
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
+
+- [git-secrets](#211-git-secrets)
 
 - [jq](https://stedolan.github.io/jq/)
 
@@ -73,6 +77,36 @@ generic with minimal need for project-specific behavior.
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
+
+
+### 2.1.1 git-secrets
+
+[git-secrets] helps prevent secrets (passwords, credentials, etc.) from being
+committed to a Git repository. See the *Installing git-secrets* section of the
+project's README for instructions how to install [git-secrets] on your OS.
+
+Once installed, git-secrets will need to be configured individually in each of
+your existing repository clones. To configure git-secrets in an existing clone,
+run:
+
+    cd /path/to/clone
+    git secrets --install
+    git secrets --register-aws
+    
+To automatically configure git-secrets in clones created subsequently, run:
+
+    git secrets --install ~/.git-templates/git-secrets
+    git config --global init.templateDir ~/.git-templates/git-secrets
+    git secrets --register-aws --global
+
+Finally, once configured you must verify the functionality of git-secrets in
+every clone individually. With a clean working copy, run these commands in each
+of your clones to verify a successful setup:
+
+    cd /path/to/clone
+    git hook 2>/dev/null; if [ $? == "1" ]; then ( echo "git-secrets test FAILED: Requires git v2.36.0 or higher."; false ) else ( echo -e 'AWS_ACCOUNT_ID=0000-0000-000\x30' > git_secrets_test_file.txt || ( echo 'git-secrets test FAILED: Unable to create test file.'; false ) && ( if [ ! -f .git/hooks/pre-commit ]; then ( echo "git-secrets test FAILED: pre-commit hook not found."; rm -f git_secrets_test_file.txt; false ) else ( git add git_secrets_test_file.txt; git hook run pre-commit 2>/dev/null; if [ $? == "0" ]; then ( git restore --staged git_secrets_test_file.txt; rm -f git_secrets_test_file.txt; echo 'git-secrets test FAILED'; false ) else ( git restore --staged git_secrets_test_file.txt; rm -f git_secrets_test_file.txt; echo 'git-secrets test PASSED.' ) fi ) fi ) ) fi 
+
+[git-secrets]: https://github.com/awslabs/git-secrets
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)

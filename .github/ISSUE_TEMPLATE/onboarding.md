@@ -20,6 +20,10 @@ Your next steps are to carefully read the following documents:
 
 - [ ] [AWS Credential Configuration](https://giwiki.gi.ucsc.edu/index.php/Overview_of_Getting_and_Using_an_AWS_IAM_Account)
 
+Install the following prerequisites:
+
+- [ ] [git-secrets](..#211-git-secrets)
+
 Request access to cloud infrastructure and tools:
 
 - [ ] @theathorn: [UCSC-CGL Slack](ucsc-cgl.slack.com) through your Project Manager
