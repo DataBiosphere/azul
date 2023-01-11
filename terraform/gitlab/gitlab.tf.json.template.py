@@ -770,6 +770,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
             for zone in range(num_zones)
         },
+        'aws_default_security_group': {
+            'gitlab': {
+                'vpc_id': '${aws_vpc.gitlab.id}',
+                'egress': [],
+                'ingress': []
+            }
+        },
         'aws_security_group': {
             'gitlab_vpn': {
                 'name': 'azul-gitlab-vpn',

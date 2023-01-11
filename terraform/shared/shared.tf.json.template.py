@@ -15,6 +15,7 @@ from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
     provider_fragment,
+    vpc,
 )
 
 require(config.cloudtrail_s3_bucket_region == config.region
@@ -114,6 +115,16 @@ emit_tf(block_public_s3_bucket_access({
         }
     },
     'resource': {
+        'aws_default_vpc': {
+            vpc.default_vpc_name: {}
+        },
+        'aws_default_security_group': {
+            vpc.default_security_group_name: {
+                'vpc_id': '${aws_default_vpc.%s.id}' % vpc.default_vpc_name,
+                'egress': [],
+                'ingress': []
+            }
+        },
         'aws_s3_bucket': {
             # FIXME: Disable original CloudTrail trail
             #        https://github.com/databiosphere/azul/issues/4832
