@@ -6,7 +6,6 @@ from typing import (
 
 from azul import (
     config,
-    require,
 )
 from azul.deployment import (
     aws,
@@ -14,14 +13,8 @@ from azul.deployment import (
 from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
-    provider_fragment,
     vpc,
 )
-
-require(config.cloudtrail_s3_bucket_region == config.region
-        or config.deployment_stage == 'dev',  # grand-father in an exception for `dev`
-        'The Cloudtrail bucket must reside in the default region',
-        config.cloudtrail_s3_bucket_region, config.region)
 
 
 class CloudTrailAlarm(NamedTuple):
@@ -126,15 +119,6 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_s3_bucket': {
-            # FIXME: Disable original CloudTrail trail
-            #        https://github.com/databiosphere/azul/issues/4832
-            'shared_cloudtrail': {
-                **provider_fragment(config.cloudtrail_s3_bucket_region),
-                'bucket': f'edu-ucsc-gi-{aws.account_name}-cloudtrail',
-                'lifecycle': {
-                    'prevent_destroy': True
-                }
-            },
             'trail': {
                 'bucket': f'edu-ucsc-gi-{aws.account_name}-trail.{aws.region_name}',
                 'lifecycle': {
@@ -176,41 +160,34 @@ emit_tf(block_public_s3_bucket_access({
             }
         ),
         'aws_s3_bucket_policy': {
-            **{
-                bucket: {
-                    **provider_fragment(region),
-                    'bucket': '${aws_s3_bucket.%s.id}' % bucket,
-                    'policy': json.dumps({
-                        'Version': '2012-10-17',
-                        'Statement': [
-                            {
-                                'Effect': 'Allow',
-                                'Principal': {
-                                    'Service': 'cloudtrail.amazonaws.com'
-                                },
-                                'Action': 's3:GetBucketAcl',
-                                'Resource': '${aws_s3_bucket.%s.arn}' % bucket,
+            'trail': {
+                'bucket': '${aws_s3_bucket.trail.id}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 'cloudtrail.amazonaws.com'
                             },
-                            {
-                                'Effect': 'Allow',
-                                'Principal': {
-                                    'Service': 'cloudtrail.amazonaws.com'
-                                },
-                                'Action': 's3:PutObject',
-                                'Resource': '${aws_s3_bucket.%s.arn}/AWSLogs/%s/*' % (bucket, config.aws_account_id),
-                                'Condition': {
-                                    'StringEquals': {
-                                        's3:x-amz-acl': 'bucket-owner-full-control'
-                                    }
+                            'Action': 's3:GetBucketAcl',
+                            'Resource': '${aws_s3_bucket.trail.arn}',
+                        },
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 'cloudtrail.amazonaws.com'
+                            },
+                            'Action': 's3:PutObject',
+                            'Resource': '${aws_s3_bucket.trail.arn}/AWSLogs/%s/*' % config.aws_account_id,
+                            'Condition': {
+                                'StringEquals': {
+                                    's3:x-amz-acl': 'bucket-owner-full-control'
                                 }
                             }
-                        ]
-                    })
-                }
-                for bucket, region in [
-                    ('shared_cloudtrail', config.cloudtrail_s3_bucket_region),
-                    ('trail', config.region)
-                ]
+                        }
+                    ]
+                })
             },
             'aws_config': {
                 # https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
@@ -306,14 +283,6 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudtrail': {
-            # FIXME: Disable original CloudTrail trail
-            #        https://github.com/databiosphere/azul/issues/4832
-            'shared': {
-                **provider_fragment(config.cloudtrail_trail_region),
-                'name': 'azul-shared',
-                's3_bucket_name': '${aws_s3_bucket.shared_cloudtrail.id}',
-                'enable_logging': False,
-            },
             'trail': {
                 'name': config.qualified_resource_name('trail'),
                 's3_bucket_name': '${aws_s3_bucket.trail.id}',
@@ -324,13 +293,6 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudwatch_log_group': {
-            # FIXME: Disable original CloudTrail trail
-            #        https://github.com/databiosphere/azul/issues/4832
-            'cloudtrail': {
-                **provider_fragment(config.cloudtrail_trail_region),
-                'name': config.qualified_resource_name('cloudtrail'),
-                'retention_in_days': config.audit_log_retention_days
-            },
             'trail': {
                 'name': config.qualified_resource_name('trail'),
                 'retention_in_days': config.audit_log_retention_days
