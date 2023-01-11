@@ -223,3 +223,7 @@ def longest_common_prefix(strings: Iterable[str]) -> Optional[str]:
         if s2[i] != c:
             return s1[:i]
     return s1
+
+
+def quote(s: str) -> str:
+    return f"'{s}'"
