@@ -43,7 +43,9 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
                 'datasets.title'
             ],
             'donors': [
-                'donors.organism_type'
+                'donors.organism_type',
+                'diagnoses.disease',
+                'diagnoses.phenotype'
             ],
             'files': [
                 'files.file_format'
@@ -69,6 +71,8 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             'biosampleCount': doc_count('biosamples.anatomical_site'),
             'datasetCount': doc_count('datasets.title'),
             'donorCount': doc_count('donors.organism_type'),
+            'donorDiagnosisDiseases': bucket_count('diagnoses.disease', 'disease'),
+            'donorDiagnosisPhenotypes': bucket_count('diagnoses.phenotype', 'phenotype'),
             'donorSpecies': bucket_count('donors.organism_type', 'species'),
             'fileCount': doc_count('files.file_format'),
             'fileFormats': bucket_count('files.file_format', 'format'),
@@ -193,6 +197,17 @@ class AnvilSearchResponseStage(SearchResponseStage):
         'datasets': {
             'dataset_id',
             'title'
+        },
+        'diagnoses': {
+            'disease',
+            'phenotype',
+            'phenopacket',
+            'onset_age_unit',
+            'diagnosis_age_unit',
+            # These fields are of high cardinality but only appear as inner
+            # entities for donors, so the aggregation size should still be low.
+            'diagnosis_age',
+            'onset_age',
         },
         'donors': {
             'organism_type',

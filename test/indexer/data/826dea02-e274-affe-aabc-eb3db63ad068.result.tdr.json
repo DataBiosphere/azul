@@ -17,6 +17,22 @@
       "sha256": ""
     },
     {
+      "uuid": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "diagnosis_25ff8d32-18c9-fc3e-020a-5de20d35d906",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
+      "uuid": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+      "version": "2022-06-01T00:00:00.000000Z",
+      "name": "diagnosis_5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+      "indexed": true,
+      "crc32": "",
+      "sha256": ""
+    },
+    {
       "uuid": "6708dc44-5232-44ca-a050-5dee58637284",
       "version": "2022-06-01T00:00:00.000000Z",
       "name": "donor_1e2bd7e5-f45e-a391-daea-7c060be76acd",
@@ -102,6 +118,46 @@
       ],
       "title": "ANVIL_CMG_UWASH_DS_BDIS"
     },
+    "diagnosis_25ff8d32-18c9-fc3e-020a-5de20d35d906": {
+      "datarepo_row_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+      "diagnosis_age_lower_bound": null,
+      "diagnosis_age_unit": null,
+      "diagnosis_age_upper_bound": null,
+      "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+      "disease": [
+        "redacted-g50ublm/"
+      ],
+      "onset_age_lower_bound": null,
+      "onset_age_unit": null,
+      "onset_age_upper_bound": null,
+      "phenopacket": [],
+      "phenotype": [
+        "redacted-acSYHZUr"
+      ],
+      "source_datarepo_row_ids": [
+        "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+      ]
+    },
+    "diagnosis_5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6": {
+      "datarepo_row_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+      "diagnosis_age_lower_bound": null,
+      "diagnosis_age_unit": null,
+      "diagnosis_age_upper_bound": null,
+      "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+      "disease": [
+        "redacted-A61iJlLx"
+      ],
+      "onset_age_lower_bound": null,
+      "onset_age_unit": null,
+      "onset_age_upper_bound": null,
+      "phenopacket": [],
+      "phenotype": [
+        "redacted-acSYHZUr"
+      ],
+      "source_datarepo_row_ids": [
+        "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+      ]
+    },
     "donor_1e2bd7e5-f45e-a391-daea-7c060be76acd": {
       "datarepo_row_id": "6708dc44-5232-44ca-a050-5dee58637284",
       "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
@@ -180,6 +236,24 @@
         "activity": null,
         "outputs": [
           "biosample/826dea02-e274-4ffe-aabc-eb3db63ad068"
+        ]
+      },
+      {
+        "inputs": [
+          "donor/6708dc44-5232-44ca-a050-5dee58637284"
+        ],
+        "activity": null,
+        "outputs": [
+          "diagnosis/15d85d30-ad4a-4f50-87a8-a27f59dd1b5f"
+        ]
+      },
+      {
+        "inputs": [
+          "donor/6708dc44-5232-44ca-a050-5dee58637284"
+        ],
+        "activity": null,
+        "outputs": [
+          "diagnosis/939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
         ]
       },
       {

@@ -844,6 +844,49 @@
                         ]
                     }
                 ],
+                "diagnoses": [
+                    {
+                        "document_id": [
+                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": [
+                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
+                        ],
+                        "disease": [
+                            "redacted-A61iJlLx",
+                            "redacted-g50ublm/"
+                        ],
+                        "diagnosis_age_unit": [
+                            "~null"
+                        ],
+                        "diagnosis_age": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "onset_age_unit": [
+                            "~null"
+                        ],
+                        "onset_age": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "datasets": [
                     {
                         "document_id": [
@@ -1093,6 +1136,60 @@
                             "gte": null,
                             "lte": null
                         }
+                    }
+                ],
+                "diagnoses": [
+                    {
+                        "document_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+                        "disease": [
+                            "redacted-A61iJlLx"
+                        ],
+                        "diagnosis_age_unit": "~null",
+                        "diagnosis_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "onset_age_unit": "~null",
+                        "onset_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    },
+                    {
+                        "document_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                        "disease": [
+                            "redacted-g50ublm/"
+                        ],
+                        "diagnosis_age_unit": "~null",
+                        "diagnosis_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "onset_age_unit": "~null",
+                        "onset_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
                     }
                 ],
                 "datasets": [

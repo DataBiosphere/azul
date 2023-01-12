@@ -42,6 +42,17 @@ class DatasetAggregator(SimpleAggregator):
     pass
 
 
+class DiagnosisAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field: str) -> Optional[Accumulator]:
+        if field in ('diagnosis_age', 'onset_age'):
+            return SetOfDictAccumulator(max_size=100,
+                                        key=compose_keys(none_safe_tuple_key(none_last=True),
+                                                         itemgetter('lte', 'gte')))
+        else:
+            return super()._get_accumulator(field)
+
+
 class DonorAggregator(SimpleAggregator):
     pass
 

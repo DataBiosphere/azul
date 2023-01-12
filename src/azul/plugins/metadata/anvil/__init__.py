@@ -75,12 +75,20 @@ class Plugin(MetadataPlugin):
 
     def mapping(self) -> MutableJSON:
         mapping = super().mapping()
-        mapping['dynamic_templates'].append({
-            'biosample_age_range': {
-                'path_match': 'contents.biosamples.donor_age_at_collection',
-                'mapping': self.range_mapping
+
+        def range_mapping(name: str, path: str) -> MutableJSON:
+            return {
+                name: {
+                    'path_match': path,
+                    'mapping': self.range_mapping
+                }
             }
-        })
+
+        mapping['dynamic_templates'].extend([
+            range_mapping('biosample_age_range', 'contents.biosamples.donor_age_at_collection'),
+            range_mapping('diagnosis_age_range', 'contents.diagnoses.diagnosis_age'),
+            range_mapping('diagnosis_onset_age_range', 'contents.diagnoses.diagnosis_onset_age')
+        ])
         return mapping
 
     @property
@@ -123,6 +131,19 @@ class Plugin(MetadataPlugin):
                         'disease',
                         'donor_age_at_collection_unit',
                         'donor_age_at_collection',
+                    ]
+                },
+                'diagnoses': {
+                    f: f'diagnoses.{f}' for f in [
+                        *common_fields,
+                        'diagnosis_id',
+                        'disease',
+                        'diagnosis_age_unit',
+                        'diagnosis_age',
+                        'onset_age_unit',
+                        'onset_age',
+                        'phenotype',
+                        'phenopacket'
                     ]
                 },
                 'datasets': {
@@ -189,6 +210,9 @@ class Plugin(MetadataPlugin):
             'biosamples.anatomical_site',
             'biosamples.biosample_type',
             'biosamples.disease',
+            'diagnoses.disease',
+            'diagnoses.phenotype',
+            'diagnoses.phenopacket',
             'datasets.consent_group',
             'datasets.data_use_permission',
             'datasets.registered_identifier',
