@@ -9,8 +9,10 @@ assignees: ''
 # Onboarding
 
 By creating this ticket, you are requesting to be onboarded as a developer on the Azul team.
-The action items in this ticket will be carried out by existing team members.
-Your next step is to carefully read the following documents:
+The action items in this ticket will be carried out by you and existing team
+members.
+
+Your next steps are to carefully read the following documents:
 
 - [ ] [Azul README.md](https://github.com/databiosphere/azul)
 
@@ -18,7 +20,7 @@ Your next step is to carefully read the following documents:
 
 - [ ] [AWS Credential Configuration](https://giwiki.gi.ucsc.edu/index.php/Overview_of_Getting_and_Using_an_AWS_IAM_Account)
 
-Provide access to cloud infrastructure and tools:
+Request access to cloud infrastructure and tools:
 
 - [ ] @theathorn: [UCSC-CGL Slack](ucsc-cgl.slack.com) through your Project Manager
  
