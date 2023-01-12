@@ -30,7 +30,7 @@ class ActivityAggregator(SimpleAggregator):
 class BiosampleAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field: str) -> Optional[Accumulator]:
-        if field == 'donor_age_at_collection_age_range':
+        if field == 'donor_age_at_collection':
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          itemgetter('lte', 'gte')))

@@ -189,7 +189,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             'biosample_type',
             'disease',
             'donor_age_at_collection_unit',
-            'donor_age_at_collection_age_range',
+            'donor_age_at_collection',
         },
         'datasets': {
             'dataset_id',

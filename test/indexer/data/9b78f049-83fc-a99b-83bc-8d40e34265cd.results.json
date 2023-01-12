@@ -70,7 +70,7 @@
                         "donor_age_at_collection_unit": [
                             "redacted-7KxqBgyz"
                         ],
-                        "donor_age_at_collection_age_range": [
+                        "donor_age_at_collection": [
                             {
                                 "gte": 4.219021376456331e+16,
                                 "lte": 4.219021376456331e+16
@@ -237,7 +237,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -398,7 +398,7 @@
                         "donor_age_at_collection_unit": [
                             "redacted-7KxqBgyz"
                         ],
-                        "donor_age_at_collection_age_range": [
+                        "donor_age_at_collection": [
                             {
                                 "gte": 4.219021376456331e+16,
                                 "lte": 4.219021376456331e+16
@@ -647,7 +647,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -834,7 +834,7 @@
                         "donor_age_at_collection_unit": [
                             "redacted-7KxqBgyz"
                         ],
-                        "donor_age_at_collection_age_range": [
+                        "donor_age_at_collection": [
                             {
                                 "gte": 4.219021376456331e+16,
                                 "lte": 4.219021376456331e+16
@@ -1081,7 +1081,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -1250,7 +1250,7 @@
                         "donor_age_at_collection_unit": [
                             "redacted-7KxqBgyz"
                         ],
-                        "donor_age_at_collection_age_range": [
+                        "donor_age_at_collection": [
                             {
                                 "gte": 4.219021376456331e+16,
                                 "lte": 4.219021376456331e+16
@@ -1490,7 +1490,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -1665,7 +1665,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -1918,7 +1918,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -2086,7 +2086,7 @@
                         "donor_age_at_collection_unit": [
                             "redacted-7KxqBgyz"
                         ],
-                        "donor_age_at_collection_age_range": [
+                        "donor_age_at_collection": [
                             {
                                 "gte": 4.219021376456331e+16,
                                 "lte": 4.219021376456331e+16
@@ -2325,7 +2325,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
@@ -2512,7 +2512,7 @@
                         "donor_age_at_collection_unit": [
                             "redacted-7KxqBgyz"
                         ],
-                        "donor_age_at_collection_age_range": [
+                        "donor_age_at_collection": [
                             {
                                 "gte": 4.219021376456331e+16,
                                 "lte": 4.219021376456331e+16
@@ -2679,7 +2679,7 @@
                         "biosample_type": "redacted-V07agJ9g",
                         "disease": "~null",
                         "donor_age_at_collection_unit": "redacted-7KxqBgyz",
-                        "donor_age_at_collection_age_range": {
+                        "donor_age_at_collection": {
                             "gte": 4.219021376456331e+16,
                             "lte": 4.219021376456331e+16
                         }
