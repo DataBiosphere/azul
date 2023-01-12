@@ -664,7 +664,4 @@ def env() -> Mapping[str, Optional[str]]:
         'GOOGLE_PROJECT': 'platform-hca-prod',
 
         'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
-
-        'azul_cloudtrail_bucket_region': 'us-east-1',
-        'azul_cloudtrail_trail_region': 'us-west-2',
     }
