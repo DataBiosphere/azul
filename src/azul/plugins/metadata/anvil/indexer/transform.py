@@ -130,13 +130,13 @@ class BaseTransformer(Transformer, ABC):
     def get_aggregator(cls, entity_type) -> EntityAggregator:
         if entity_type == 'activities':
             return ActivityAggregator()
-        if entity_type == 'biosamples':
+        elif entity_type == 'biosamples':
             return BiosampleAggregator()
-        if entity_type == 'datasets':
+        elif entity_type == 'datasets':
             return DatasetAggregator()
-        if entity_type == 'donors':
+        elif entity_type == 'donors':
             return DonorAggregator()
-        if entity_type == 'files':
+        elif entity_type == 'files':
             return FileAggregator()
         else:
             assert False, entity_type
