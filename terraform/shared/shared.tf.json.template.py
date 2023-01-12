@@ -1,7 +1,9 @@
 import json
+import shlex
 
 from azul import (
     config,
+    require,
 )
 from azul.deployment import (
     aws,
@@ -11,6 +13,11 @@ from azul.terraform import (
     emit_tf,
     provider_fragment,
 )
+
+require(config.cloudtrail_s3_bucket_region == config.region
+        or config.deployment_stage == 'dev',  # grand-father in an exception for `dev`
+        'The Cloudtrail bucket must reside in the default region',
+        config.cloudtrail_s3_bucket_region, config.region)
 
 emit_tf(block_public_s3_bucket_access({
     'data': {
@@ -57,6 +64,21 @@ emit_tf(block_public_s3_bucket_access({
                 }
             }
         },
+        **(
+            {}
+            if config.deployment_stage == 'dev' else
+            {
+                'aws_s3_bucket_logging': {
+                    'trail': {
+                        'bucket': '${aws_s3_bucket.trail.id}',
+                        'target_bucket': '${aws_s3_bucket.logs.id}',
+                        # Other S3 log deliveries, like ELB, implicitly put a slash
+                        # after the prefix. S3 doesn't, so we add one explicitly.
+                        'target_prefix': config.s3_access_log_path_prefix('cloudtrail') + '/'
+                    }
+                }
+            }
+        ),
         'aws_s3_bucket_policy': {
             **{
                 bucket: {
@@ -448,6 +470,30 @@ emit_tf(block_public_s3_bucket_access({
             }
             if config.security_contact else
             {}
-        )
+        ),
+        'aws_sns_topic': {
+            'monitoring': {
+                'name': aws.monitoring_topic_name
+            }
+        },
+        'aws_sns_topic_subscription': {
+            'monitoring': {
+                'topic_arn': '${aws_sns_topic.monitoring.arn}',
+                # The `email` protocol is only partially supported. Since
+                # Terraform cannot confirm or delete pending subscriptions
+                # (see link below), we use a separate script for this purpose.
+                # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
+                'protocol': 'email',
+                'endpoint': config.azul_monitoring_email,
+                'provisioner': {
+                    'local-exec': {
+                        'command': ' '.join(map(shlex.quote, [
+                            'python',
+                            config.project_root + '/scripts/confirm_sns_subscription.py'
+                        ]))
+                    }
+                }
+            }
+        }
     }
 }))
