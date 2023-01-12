@@ -268,6 +268,21 @@ class BaseTransformer(Transformer, ABC):
             'count': pass_thru_int  # Added by FileAggregator, ever null
         }
 
+    def _range(self, manifest_entry: JSON, *field_prefixes: str) -> MutableJSON:
+        metadata = self.bundle.metadata_files[manifest_entry['name']]
+
+        def get_bound(field_name: str) -> Optional[float]:
+            val = metadata[field_name]
+            return None if val is None else float(val)
+
+        return {
+            field_prefix: {
+                'gte': get_bound(field_prefix + '_lower_bound'),
+                'lte': get_bound(field_prefix + '_upper_bound')
+            }
+            for field_prefix in field_prefixes
+        }
+
     def _contribution(self,
                       contents: MutableJSON,
                       entity_id: EntityID
@@ -331,15 +346,9 @@ class BaseTransformer(Transformer, ABC):
         return activity
 
     def _biosample(self, manifest_entry: JSON) -> MutableJSON:
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
-        age_gte = metadata['donor_age_at_collection_lower_bound']
-        age_lte = metadata['donor_age_at_collection_upper_bound']
         return self._entity(manifest_entry,
                             self._biosample_types(),
-                            donor_age_at_collection={
-                                'gte': None if age_gte is None else float(age_gte),
-                                'lte': None if age_lte is None else float(age_lte)
-                            })
+                            **self._range(manifest_entry, 'donor_age_at_collection'))
 
     def _dataset(self, manifest_entry: JSON) -> MutableJSON:
         return self._entity(manifest_entry, self._dataset_types())
