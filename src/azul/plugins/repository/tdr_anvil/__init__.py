@@ -255,7 +255,6 @@ class Plugin(TDRPlugin):
         return set.union(
             self._upstream_from_files(source, entities['file']),
             self._upstream_from_biosamples(source, entities['biosample']),
-            # Should we also follow donor.parent_donor?
         )
 
     def _follow_downstream(self,
