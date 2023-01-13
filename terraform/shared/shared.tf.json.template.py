@@ -319,6 +319,7 @@ emit_tf(block_public_s3_bucket_access({
                 'metric_name': a.metric_name,
                 'namespace': 'LogMetrics',
                 'statistic': a.statistic,
+                'treat_missing_data': 'notBreaching',
                 'threshold': 1,
                 # The CIS documentation does not specify a period. 5 minutes is
                 # the default value when creating the alarm via the console UI.
