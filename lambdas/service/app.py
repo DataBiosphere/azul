@@ -353,7 +353,7 @@ class ServiceApp(AzulChaliceApp):
             if sa is None:
                 sb = tuple(json.loads(sb))
             else:
-                raise ChaliceViewError('Only one of search_after or search_before may be set')
+                raise BRE('Only one of search_after or search_before may be set')
         try:
             return self.Pagination(order=params.get('order', default_sorting.order),
                                    size=int(params.get('size', '10')),
