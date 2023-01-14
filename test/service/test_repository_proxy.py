@@ -127,7 +127,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
         client = http_client()
 
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
-        file_version = '2018-09-12T121154.054628Z'
+        file_version = '2018-09-12T12:11:54.054628Z'
         organic_file_name = 'foo.txt'
         drs_path_id = 'v1_c99baa6f-24ce-4837-8c4a-47ca4ec9d292_b967ecc9-98b2-43c6-8bac-28c0a4fa7812'
         file_doc = {
@@ -275,7 +275,7 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
                          })
         s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
-        file_version = '2018-09-12T121154.054628Z'
+        file_version = '2018-09-12T12:11:54.054628Z'
         organic_file_name = 'foo.txt'
         file_doc = {
             'name': organic_file_name,

@@ -48,6 +48,9 @@ from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
 )
+from azul.time import (
+    parse_dcp2_version,
+)
 from azul.types import (
     JSON,
 )
@@ -385,6 +388,13 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return DSSFileDownload
+
+    def validate_version(self, version: str) -> None:
+        # Note that this validates against the DCP2 format instead of the DSS
+        # format (azul.dss.version_format). This is necessary due to commit
+        # 48ef9388 which manually updated all the canned DSS bundles to use
+        # DCP/2 version format.
+        parse_dcp2_version(version)
 
 
 class DSSFileDownload(RepositoryFileDownload):

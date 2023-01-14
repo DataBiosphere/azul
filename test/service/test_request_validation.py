@@ -327,3 +327,19 @@ class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
                     self.assertBadRequest(url, arg)
                 else:
                     self.assertResponseStatus(url, 200)
+
+    def test_version(self):
+        for fetch in [False, True]:
+            for file_id, version, error in [
+                ('74897eb7-0701-4e4f-9e6b-8b9521b2816b', 'foo', 'Invalid value for `version`'),
+                ('foo', '2018-11-02T11:33:44.450442Z', 404)
+            ]:
+                with self.subTest(fetch=fetch, file_id=file_id, version=version, error=error):
+                    url = self.base_url.set(path=f'repository/files/{file_id}',
+                                            query_params={'version': version})
+                    if fetch:
+                        url.path.segments.insert(0, 'fetch')
+                    if isinstance(error, int):
+                        self.assertResponseStatus(url, error)
+                    else:
+                        self.assertBadRequest(url, error)

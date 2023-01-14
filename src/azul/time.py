@@ -6,6 +6,7 @@ from datetime import (
     datetime,
 )
 import email.utils
+import re
 import time
 from typing import (
     Optional,
@@ -159,3 +160,34 @@ def parse_dcp2_datetime(s: str) -> datetime:
     ValueError: time data '2020-01-01T00:00:00.000000' does not match format '%Y-%m-%dT%H:%M:%S.%f%z'
     """
     return datetime.strptime(s, dcp2_datetime_format)
+
+
+def parse_dcp2_version(s: str) -> datetime:
+    """
+    Convert a dcp2 `version` string into a tz-aware (UTC) datetime.
+
+    https://github.com/HumanCellAtlas/dcp2/blob/main/docs/dcp2_system_design.rst#312object-naming
+
+    >>> parse_dcp2_version('2020-01-01T00:00:00.123456Z')
+    datetime.datetime(2020, 1, 1, 0, 0, 0, 123456, tzinfo=datetime.timezone.utc)
+
+    >>> parse_dcp2_version('2020-01-01t00:00:00.123456Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid version value '2020-01-01t00:00:00.123456Z'
+
+    >>> parse_dcp2_version('2020-1-01T00:00:00.123456Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid version value '2020-1-01T00:00:00.123456Z'
+
+    >>> parse_dcp2_version('2020-01-01T00:00:00.12345Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid version value '2020-01-01T00:00:00.12345Z'
+    """
+    pattern = r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z'
+    if re.fullmatch(pattern, s):
+        return parse_dcp2_datetime(s)
+    else:
+        raise ValueError(f'Invalid version value {s!r}')
