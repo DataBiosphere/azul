@@ -36,6 +36,9 @@ check the checkboxes as you progress through this list.
 - [ ] Gave the onboarded developer push access to the Azul Repository on [#team-boardwalk](https://ucsc-cgl.slack.com/archives/C705Y6G9Z)
 - [ ] Gave the onboarded developer access to development CI/CD systems on [#team-boardwalk](https://ucsc-cgl.slack.com/archives/C705Y6G9Z)
 - [ ] Gave the onboarded developer [GCP Credentials](https://console.cloud.google.com/)
+- [ ] Added the onboarded developer's Google workspace account to the `azul-dev` group in Terra
+- [ ] Added the onboarded developer's Google workspace account to the `azul-prod` group in Terra
+- [ ] Added the onboarded developer's Google workspace account to the `azul-anvil-prod` group in Terra
 - [ ] Unassigned yourself from this ticket
 
 
