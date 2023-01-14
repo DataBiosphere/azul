@@ -32,7 +32,20 @@ def setUpModule():
     configure_test_logging()
 
 
+@patch_dss_source
+@patch_source_cache
 class RequestParameterValidationTest(WebServiceTestCase):
+    maxDiff = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def assertResponseStatus(self, url: furl, status: int) -> Response:
         response = requests.get(str(url))
@@ -328,3 +341,17 @@ class RequestParameterValidationTest(WebServiceTestCase):
             with self.subTest(size=size):
                 url.args.set('size', size)
                 test(url, arg)
+
+    def test_order(self):
+        url = self.base_url.set(path='/index/projects')
+        for order, arg in [
+            ('foo', "Unknown order `foo`. Must be one of ('asc', 'desc')"),
+            ('asc', None),
+            ('desc', None)
+        ]:
+            with self.subTest(order=order):
+                url.args.set('order', order)
+                if arg:
+                    self.assertBadRequest(url, arg)
+                else:
+                    self.assertResponseStatus(url, 200)
