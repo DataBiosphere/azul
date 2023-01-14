@@ -67,6 +67,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             'activityCount': doc_count('activities.activity_type'),
             'activityTypes': bucket_count('activities.activity_type', 'type'),
             'biosampleCount': doc_count('biosamples.anatomical_site'),
+            'datasetCount': doc_count('datasets.title'),
             'donorCount': doc_count('donors.organism_type'),
             'donorSpecies': bucket_count('donors.organism_type', 'species'),
             'fileCount': doc_count('files.file_format'),
