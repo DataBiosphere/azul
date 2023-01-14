@@ -77,7 +77,7 @@ class Plugin(MetadataPlugin):
         mapping = super().mapping()
         mapping['dynamic_templates'].append({
             'biosample_age_range': {
-                'path_match': 'contents.biosamples.donor_age_at_collection_age_range',
+                'path_match': 'contents.biosamples.donor_age_at_collection',
                 'mapping': self.range_mapping
             }
         })
@@ -122,7 +122,7 @@ class Plugin(MetadataPlugin):
                         'biosample_type',
                         'disease',
                         'donor_age_at_collection_unit',
-                        'donor_age_at_collection_age_range',
+                        'donor_age_at_collection',
                     ]
                 },
                 'datasets': {
