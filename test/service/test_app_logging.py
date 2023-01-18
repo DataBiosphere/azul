@@ -49,7 +49,7 @@ class TestServiceAppLogging(LocalAppTestCase):
                         (
                             INFO,
                             f"Received GET request for '/health/basic', "
-                            f"with query null and headers {json.dumps(headers)}."),
+                            f"with {json.dumps({'query': None, 'headers': headers})}."),
                         (
                             INFO,
                             "Authenticated request as OAuth2(access_token='foo_token')"

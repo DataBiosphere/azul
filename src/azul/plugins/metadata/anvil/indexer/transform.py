@@ -212,7 +212,7 @@ class BaseTransformer(Transformer, ABC):
             'biosample_type': null_str,
             'disease': null_str,
             'donor_age_at_collection_unit': null_str,
-            'donor_age_at_collection_age_range': pass_thru_json,
+            'donor_age_at_collection': pass_thru_json,
         }
 
     @classmethod
@@ -336,7 +336,7 @@ class BaseTransformer(Transformer, ABC):
         age_lte = metadata['donor_age_at_collection_upper_bound']
         return self._entity(manifest_entry,
                             self._biosample_types(),
-                            donor_age_at_collection_age_range={
+                            donor_age_at_collection={
                                 'gte': None if age_gte is None else float(age_gte),
                                 'lte': None if age_lte is None else float(age_lte)
                             })

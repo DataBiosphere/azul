@@ -85,7 +85,7 @@ class TestAppLogging(TestCase):
                     }
                     self.assertEqual(azul_log.output[0],
                                      f'INFO:azul.chalice:Received GET request for {path!r}, '
-                                     f'with query null and headers {json.dumps(headers)}.')
+                                     f"with {json.dumps({'query': None, 'headers': headers})}.")
                     self.assertEqual(azul_log.output[1],
                                      'INFO:azul.chalice:Did not authenticate request.')
 

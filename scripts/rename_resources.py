@@ -2,6 +2,9 @@ import argparse
 import logging
 import subprocess
 import sys
+from typing import (
+    Optional,
+)
 
 from azul.args import (
     AzulArgumentHelpFormatter,
@@ -15,7 +18,12 @@ from azul.terraform import (
 
 log = logging.getLogger(__name__)
 
-renamed = {
+renamed: dict[str, Optional[str]] = {
+    'aws_cloudtrail.shared': None,
+    'aws_cloudwatch_log_group.cloudtrail': None,
+    'aws_s3_bucket.shared_cloudtrail': None,
+    'aws_s3_bucket_policy.shared_cloudtrail': None,
+    'aws_s3_bucket_public_access_block.shared_cloudtrail': None
 }
 
 
@@ -51,11 +59,18 @@ def main(argv: list[str]):
                 if current_name in renamed.values():
                     log.info('Found %r, already renamed', current_name)
             else:
-                if args.dry_run:
-                    log.info('Found %r, would be renaming it to %r', current_name, new_name)
+                if new_name is None:
+                    if args.dry_run:
+                        log.info('Found %r, would be removing it from the Terraform state', current_name)
+                    else:
+                        log.info('Found %r, removing it from the Terraform state', current_name)
+                        terraform.run('state', 'rm', current_name)
                 else:
-                    log.info('Found %r, renaming it to %r', current_name, new_name)
-                    terraform.run('state', 'mv', current_name, new_name)
+                    if args.dry_run:
+                        log.info('Found %r, would be renaming it to %r', current_name, new_name)
+                    else:
+                        log.info('Found %r, renaming it to %r', current_name, new_name)
+                        terraform.run('state', 'mv', current_name, new_name)
     else:
         log.info('No renamings defined')
 

@@ -512,12 +512,6 @@ def env() -> Mapping[str, Optional[str]]:
         # 3.2 of the README
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
 
-        # The provider region used by the S3 bucket that holds the Cloudtrail logs.
-        'azul_cloudtrail_bucket_region': '{AWS_DEFAULT_REGION}',
-
-        # The provider region used by the CloudTrail trail.
-        'azul_cloudtrail_trail_region': '{AWS_DEFAULT_REGION}',
-
         # Maps a branch name to a list of names of deployments the branch may be
         # deployed to. When building a given branch, a GitLab instance uses this
         # variable to automatically determine the target deployment by using the
