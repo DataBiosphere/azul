@@ -10,6 +10,16 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4907 CIS 2.6 (S3 access logging on CloudTrail bucket) still flagged in dev
+===========================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``dev.shared`` component just before pushing the merge
+commit to GitLab ``dev``.
+
+
 #4880 Alarms for CIS recommendations treat missing data as OK
 =============================================================
 
