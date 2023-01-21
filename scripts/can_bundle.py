@@ -114,6 +114,7 @@ def save_bundle(bundle: Bundle, output_dir: str) -> None:
 
 redacted_entity_types = {
     'biosample',
+    'diagnosis',
     'donor'
 }
 

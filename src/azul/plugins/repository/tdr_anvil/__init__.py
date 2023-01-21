@@ -255,7 +255,17 @@ class Plugin(TDRPlugin):
         return set.union(
             self._upstream_from_files(source, entities['file']),
             self._upstream_from_biosamples(source, entities['biosample']),
-            # Should we also follow donor.parent_donor?
+            # In order to discover diagnoses during graph traversal, we need to
+            # follow links downstream from donors. However, performing a
+            # complete downstream search with donors as input would be
+            # tantamount to using donors as bundle entities instead of
+            # biosamples, leading to increased bundle size and increased overlap
+            # between bundles. To avoid this, we instead discover diagnoses
+            # during the upstream traversal. Each diagnosis is linked to exactly
+            # one other entity (the donor), so the direction in which the
+            # donor-diagnosis links are followed won't affect the discovery of
+            # other entities.
+            self._diagnoses_from_donors(source, entities['donor'])
         )
 
     def _follow_downstream(self,
@@ -362,6 +372,25 @@ class Plugin(TDRPlugin):
                         for key in row[column]
                     ]
                 )
+                for row in rows
+            }
+        else:
+            return set()
+
+    def _diagnoses_from_donors(self,
+                               source: TDRSourceSpec,
+                               donor_ids: AbstractSet[Key]
+                               ) -> Links:
+        if donor_ids:
+            rows = self._run_sql(f'''
+                SELECT dgn.donor_id, dgn.diagnosis_id
+                FROM {backtick(self._full_table_name(source, 'diagnosis'))} as dgn
+                WHERE dgn.donor_id IN ({', '.join(map(repr, donor_ids))})
+            ''')
+            return {
+                Link.create(inputs={KeyReference(key=row['donor_id'], entity_type='donor')},
+                            outputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
+                            activity=None)
                 for row in rows
             }
         else:
@@ -527,6 +556,18 @@ class Plugin(TDRPlugin):
             'registered_identifier',
             'title',
             'data_modality'
+        },
+        'diagnosis': {
+            'diagnosis_id',
+            'disease',
+            'diagnosis_age_unit',
+            'diagnosis_age_lower_bound',
+            'diagnosis_age_upper_bound',
+            'onset_age_unit',
+            'onset_age_lower_bound',
+            'onset_age_upper_bound',
+            'phenotype',
+            'phenopacket'
         },
         'donor': {
             'donor_id',
