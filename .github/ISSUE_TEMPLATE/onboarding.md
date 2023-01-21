@@ -14,9 +14,9 @@ members.
 
 Your next steps are to carefully read the following documents:
 
-- [ ] [Azul README.md](https://github.com/databiosphere/azul)
+- [ ] [Azul README.md](..)
 
-- [ ] [Contributing Guidelines](https://github.com/DataBiosphere/azul/blob/develop/CONTRIBUTING.rst)
+- [ ] [Contributing Guidelines](../blob/develop/CONTRIBUTING.rst)
 
 - [ ] [AWS Credential Configuration](https://giwiki.gi.ucsc.edu/index.php/Overview_of_Getting_and_Using_an_AWS_IAM_Account)
 
