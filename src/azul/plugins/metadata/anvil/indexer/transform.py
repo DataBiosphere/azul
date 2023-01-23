@@ -476,8 +476,8 @@ class DonorTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
-            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             datasets=[self._only_dataset()],
+            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=[self._donor(manifest_entry)],
             files=self._entities(self._file, linked['file']),
         )
@@ -499,7 +499,7 @@ class FileTransformer(BaseTransformer):
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
             datasets=[self._only_dataset()],
-            files=[self._file(manifest_entry)],
             donors=self._entities(self._donor, linked['donor']),
+            files=[self._file(manifest_entry)],
         )
         return self._contribution(contents, manifest_entry['uuid'])

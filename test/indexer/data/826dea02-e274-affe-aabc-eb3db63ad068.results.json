@@ -844,6 +844,40 @@
                         ]
                     }
                 ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "2370f948-2783-4eb6-afea-e022897f4dcf"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                        ],
+                        "dataset_id": [
+                            "52ee7665-7033-63f2-a8d9-ce8e32666739"
+                        ],
+                        "consent_group": [
+                            "DS-BDIS"
+                        ],
+                        "data_use_permission": [
+                            "DS-BDIS"
+                        ],
+                        "owner": [
+                            "Debbie Nickerson"
+                        ],
+                        "principal_investigator": [
+                            "~null"
+                        ],
+                        "registered_identifier": [
+                            "phs000693"
+                        ],
+                        "title": [
+                            "ANVIL_CMG_UWASH_DS_BDIS"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "diagnoses": [
                     {
                         "document_id": [
@@ -883,40 +917,6 @@
                             "redacted-acSYHZUr"
                         ],
                         "phenopacket": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "2370f948-2783-4eb6-afea-e022897f4dcf"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
-                        ],
-                        "dataset_id": [
-                            "52ee7665-7033-63f2-a8d9-ce8e32666739"
-                        ],
-                        "consent_group": [
-                            "DS-BDIS"
-                        ],
-                        "data_use_permission": [
-                            "DS-BDIS"
-                        ],
-                        "owner": [
-                            "Debbie Nickerson"
-                        ],
-                        "principal_investigator": [
-                            "~null"
-                        ],
-                        "registered_identifier": [
-                            "phs000693"
-                        ],
-                        "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
-                        ],
-                        "data_modality": [
                             "~null"
                         ]
                     }
@@ -1138,6 +1138,34 @@
                         }
                     }
                 ],
+                "datasets": [
+                    {
+                        "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+                        "source_datarepo_row_ids": [
+                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                        ],
+                        "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+                        "consent_group": [
+                            "DS-BDIS"
+                        ],
+                        "data_use_permission": [
+                            "DS-BDIS"
+                        ],
+                        "owner": [
+                            "Debbie Nickerson"
+                        ],
+                        "principal_investigator": [
+                            "~null"
+                        ],
+                        "registered_identifier": [
+                            "phs000693"
+                        ],
+                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "data_modality": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "diagnoses": [
                     {
                         "document_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
@@ -1188,34 +1216,6 @@
                             "redacted-acSYHZUr"
                         ],
                         "phenopacket": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
-                        "source_datarepo_row_ids": [
-                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
-                        ],
-                        "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
-                        "consent_group": [
-                            "DS-BDIS"
-                        ],
-                        "data_use_permission": [
-                            "DS-BDIS"
-                        ],
-                        "owner": [
-                            "Debbie Nickerson"
-                        ],
-                        "principal_investigator": [
-                            "~null"
-                        ],
-                        "registered_identifier": [
-                            "phs000693"
-                        ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
-                        "data_modality": [
                             "~null"
                         ]
                     }
@@ -1409,6 +1409,31 @@
                         ]
                     }
                 ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "6708dc44-5232-44ca-a050-5dee58637284"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": [
+                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-JfQ0b3xG"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "files": [
                     {
                         "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
@@ -1435,31 +1460,6 @@
                         "crc32": "",
                         "sha256": "",
                         "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-JfQ0b3xG"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
                     }
                 ]
             },
@@ -1555,6 +1555,23 @@
                         ]
                     }
                 ],
+                "donors": [
+                    {
+                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-JfQ0b3xG",
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "files": [
                     {
                         "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
@@ -1581,23 +1598,6 @@
                         "crc32": "",
                         "sha256": "",
                         "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-JfQ0b3xG",
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
                     }
                 ]
             },
@@ -1718,6 +1718,31 @@
                         ]
                     }
                 ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "6708dc44-5232-44ca-a050-5dee58637284"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": [
+                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
+                        ],
+                        "organism_type": [
+                            "~null"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-JfQ0b3xG"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "files": [
                     {
                         "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
@@ -1744,31 +1769,6 @@
                         "crc32": "",
                         "sha256": "",
                         "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-JfQ0b3xG"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
                     }
                 ]
             },
@@ -1864,6 +1864,23 @@
                         ]
                     }
                 ],
+                "donors": [
+                    {
+                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                        "organism_type": "~null",
+                        "phenotypic_sex": "redacted-JfQ0b3xG",
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
                 "files": [
                     {
                         "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
@@ -1890,23 +1907,6 @@
                         "crc32": "",
                         "sha256": "",
                         "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-JfQ0b3xG",
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
                     }
                 ]
             },
