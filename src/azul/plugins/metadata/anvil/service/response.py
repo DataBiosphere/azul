@@ -12,6 +12,7 @@ from more_itertools import (
 
 from azul import (
     JSON,
+    cached_property,
 )
 from azul.json import (
     copy_json,
@@ -181,44 +182,46 @@ class AnvilSearchResponseStage(SearchResponseStage):
             if k in fields
         }
 
-    _non_pivotal_fields_by_entity_type = {
-        'activities': {
-            'activity_type',
-            'assay_type',
-            'data_modality'
-        },
-        'biosamples': {
-            'anatomical_site',
-            'biosample_type',
-            'disease',
-            'donor_age_at_collection_unit',
-            'donor_age_at_collection',
-        },
-        'datasets': {
-            'dataset_id',
-            'title'
-        },
-        'diagnoses': {
-            'disease',
-            'phenotype',
-            'phenopacket',
-            'onset_age_unit',
-            'diagnosis_age_unit',
-            # These fields are of high cardinality but only appear as inner
-            # entities for donors, so the aggregation size should still be low.
-            'diagnosis_age',
-            'onset_age',
-        },
-        'donors': {
-            'organism_type',
-            'phenotypic_sex',
-            'reported_ethnicity',
-            'genetic_ancestry'
-        },
-        'files': {
-            'count',
-            'data_modality',
-            'file_format',
-            'reference_assembly'
+    @cached_property
+    def _non_pivotal_fields_by_entity_type(self) -> dict[str, set[str]]:
+        return {
+            'activities': {
+                'activity_type',
+                'assay_type',
+                'data_modality'
+            },
+            'biosamples': {
+                'anatomical_site',
+                'biosample_type',
+                'disease',
+                'donor_age_at_collection_unit',
+                'donor_age_at_collection',
+            },
+            'datasets': {
+                'dataset_id',
+                'title'
+            },
+            'diagnoses': {
+                'disease',
+                'phenotype',
+                'phenopacket',
+                'onset_age_unit',
+                'diagnosis_age_unit',
+                # These fields are of high cardinality but only appear as inner
+                # entities for donors, so the aggregation size should still be low.
+                'diagnosis_age',
+                'onset_age',
+            },
+            'donors': {
+                'organism_type',
+                'phenotypic_sex',
+                'reported_ethnicity',
+                'genetic_ancestry'
+            },
+            'files': {
+                'count',
+                'data_modality',
+                'file_format',
+                'reference_assembly'
+            }
         }
-    }
