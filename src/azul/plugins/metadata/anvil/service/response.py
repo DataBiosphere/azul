@@ -207,10 +207,18 @@ class AnvilSearchResponseStage(SearchResponseStage):
                 'phenopacket',
                 'onset_age_unit',
                 'diagnosis_age_unit',
-                # These fields are of high cardinality but only appear as inner
-                # entities for donors, so the aggregation size should still be low.
-                'diagnosis_age',
-                'onset_age',
+                *(
+                    # These fields are of high cardinality, but the number of
+                    # aggregated inner entities per donor should be low. Since
+                    # diagnoses do not appear in the index as outer entities,
+                    # this is our only opportunity to display these fields.
+                    [
+                        'diagnosis_age',
+                        'onset_age'
+                    ]
+                    if self.entity_type == 'donors' else
+                    []
+                )
             },
             'donors': {
                 'organism_type',
