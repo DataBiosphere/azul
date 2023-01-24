@@ -626,7 +626,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
 
         'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-config.{AWS_DEFAULT_REGION}',
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-hca-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
         'AZUL_CATALOGS': base64.b64encode(bz2.compress(json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
