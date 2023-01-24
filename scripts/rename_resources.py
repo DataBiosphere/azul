@@ -19,6 +19,7 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 renamed: dict[str, Optional[str]] = {
+    'aws_s3_bucket.storage': None,
 }
 
 
