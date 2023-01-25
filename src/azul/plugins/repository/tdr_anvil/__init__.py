@@ -255,16 +255,32 @@ class Plugin(TDRPlugin):
         return set.union(
             self._upstream_from_files(source, entities['file']),
             self._upstream_from_biosamples(source, entities['biosample']),
-            # In order to discover diagnoses during graph traversal, we need to
-            # follow links downstream from donors. However, performing a
-            # complete downstream search with donors as input would be
-            # tantamount to using donors as bundle entities instead of
-            # biosamples, leading to increased bundle size and increased overlap
-            # between bundles. To avoid this, we instead discover diagnoses
-            # during the upstream traversal. Each diagnosis is linked to exactly
-            # one other entity (the donor), so the direction in which the
-            # donor-diagnosis links are followed won't affect the discovery of
-            # other entities.
+            # The direction of the edges linking donors to diagnoses is
+            # contentious. Currently, we model diagnoses as being upstream from
+            # donors. This is counterintuitive, but has two important practical
+            # benefits.
+            #
+            # First, it greatly simplifies the process of discovering the
+            # diagnoses while building the bundle, because performing a complete
+            # *downstream* search with donors as input would be tantamount to
+            # using donors as bundle entities instead of biosamples, leading to
+            # increased bundle size and increased overlap between bundles.
+            #
+            # Each diagnosis is linked to exactly one other entity (the donor),
+            # so the direction in which the donor-diagnosis links are followed
+            # won't affect the discovery of other entities. However, edge
+            # direction *is* important for deciding which entities in the bundle
+            # are linked to each other (and thus constitute each other's
+            # inner/outer entities). This leads to the second and more important
+            # benefit of our decision to model diagnoses as being upstream from
+            # donors: it creates continuous directed paths through the graph
+            # from the diagnoses to all entities downstream of the donor.
+            # Without such a path, we would be unable to associate biosamples or
+            # files with diagnoses without adding cumbersome diagnosis-specific
+            # logic to the transformers' graph traversal algorithm. The only
+            # entities that are upstream from donors are datasets, which do not
+            # perform a traversal and are treated as being linked to every
+            # entity in the bundle regardless of the edges in the graph.
             self._diagnoses_from_donors(source, entities['donor'])
         )
 
@@ -388,8 +404,8 @@ class Plugin(TDRPlugin):
                 WHERE dgn.donor_id IN ({', '.join(map(repr, donor_ids))})
             ''')
             return {
-                Link.create(inputs={KeyReference(key=row['donor_id'], entity_type='donor')},
-                            outputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
+                Link.create(inputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
+                            outputs={KeyReference(key=row['donor_id'], entity_type='donor')},
                             activity=None)
                 for row in rows
             }
