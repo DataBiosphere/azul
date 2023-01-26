@@ -589,6 +589,10 @@ lm2_sources = lungmap_sources | mkdict([
     mksrc('datarepo-360d3b54', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20220608_lm2', 1),
 ])
 
+lm3_sources = lm2_sources | mkdict([
+    mksrc('datarepo-d565e2a9', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20230126_lm3', 1),
+])
+
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -633,7 +637,8 @@ def env() -> Mapping[str, Optional[str]]:
             for atlas, catalog, sources in [
                 ('hca', 'dcp23', dcp23_sources),
                 ('hca', 'dcp1', dcp1_sources),
-                ('lungmap', 'lm2', lm2_sources)
+                ('lungmap', 'lm2', lm2_sources),
+                ('lungmap', 'lm3', lm3_sources)
             ] for suffix, internal in [
                 ('', False),
                 ('-it', True)
