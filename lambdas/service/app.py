@@ -672,7 +672,7 @@ def validate_repository_search(params, **validators):
     validate_params(params, **{
         'catalog': validate_catalog,
         'filters': validate_filters,
-        'order': str,
+        'order': validate_order,
         'search_after': str,
         'search_after_uid': str,
         'search_before': str,
@@ -795,6 +795,12 @@ def validate_manifest_format(format_: str):
         if format_ not in supported_formats:
             raise BRE(f'Manifest format `{format_}` is not supported for '
                       f'catalog {app.catalog}. Must be one of {supported_formats}')
+
+
+def validate_order(order: str):
+    supported_orders = ('asc', 'desc')
+    if order not in supported_orders:
+        raise BRE(f'Unknown order `{order}`. Must be one of {supported_orders}')
 
 
 class Mandatory:

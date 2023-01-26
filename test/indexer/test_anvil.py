@@ -19,7 +19,7 @@ from indexer.test_tdr import (
 
 
 class TestAnvil(IndexerTestCase, TDRAnvilPluginTestCase):
-    bundle_fqid = SourcedBundleFQID(uuid='9b78f049-83fc-a99b-83bc-8d40e34265cd',
+    bundle_fqid = SourcedBundleFQID(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
                                     version='',
                                     source=TDRAnvilPluginTestCase.source)
 

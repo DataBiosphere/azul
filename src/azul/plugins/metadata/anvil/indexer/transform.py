@@ -55,6 +55,7 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
     ActivityAggregator,
     BiosampleAggregator,
     DatasetAggregator,
+    DiagnosisAggregator,
     DonorAggregator,
     FileAggregator,
 )
@@ -122,6 +123,7 @@ class BaseTransformer(Transformer, ABC):
             'activities': cls._activity_types(),
             'biosamples': cls._biosample_types(),
             'datasets': cls._dataset_types(),
+            'diagnoses': cls._diagnosis_types(),
             'donors': cls._donor_types(),
             'files': cls._aggregate_file_types(),
         }
@@ -130,13 +132,15 @@ class BaseTransformer(Transformer, ABC):
     def get_aggregator(cls, entity_type) -> EntityAggregator:
         if entity_type == 'activities':
             return ActivityAggregator()
-        if entity_type == 'biosamples':
+        elif entity_type == 'biosamples':
             return BiosampleAggregator()
-        if entity_type == 'datasets':
+        elif entity_type == 'datasets':
             return DatasetAggregator()
-        if entity_type == 'donors':
+        elif entity_type == 'diagnoses':
+            return DiagnosisAggregator()
+        elif entity_type == 'donors':
             return DonorAggregator()
-        if entity_type == 'files':
+        elif entity_type == 'files':
             return FileAggregator()
         else:
             assert False, entity_type
@@ -152,9 +156,15 @@ class BaseTransformer(Transformer, ABC):
     def _transform(self, manifest_entry: JSON) -> Contribution:
         raise NotImplementedError
 
+    def _pluralize(self, entity_type: str) -> str:
+        if entity_type == 'diagnosis':
+            return 'diagnoses'
+        else:
+            return pluralize(entity_type)
+
     def _contains(self, partition: BundlePartition, manifest_entry: JSON) -> bool:
         return (
-            pluralize(self._entity_type(manifest_entry)).endswith(self.entity_type())
+            self._pluralize(self._entity_type(manifest_entry)).endswith(self.entity_type())
             and partition.contains(UUID(manifest_entry['uuid']))
         )
 
@@ -230,6 +240,20 @@ class BaseTransformer(Transformer, ABC):
         }
 
     @classmethod
+    def _diagnosis_types(cls) -> FieldTypes:
+        return {
+            **cls._entity_types(),
+            'diagnosis_id': null_str,
+            'disease': [null_str],
+            'diagnosis_age_unit': null_str,
+            'diagnosis_age': pass_thru_json,
+            'onset_age_unit': null_str,
+            'onset_age': pass_thru_json,
+            'phenotype': [null_str],
+            'phenopacket': [null_str]
+        }
+
+    @classmethod
     def _donor_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
@@ -266,6 +290,21 @@ class BaseTransformer(Transformer, ABC):
         return {
             **cls._file_types(),
             'count': pass_thru_int  # Added by FileAggregator, ever null
+        }
+
+    def _range(self, manifest_entry: JSON, *field_prefixes: str) -> MutableJSON:
+        metadata = self.bundle.metadata_files[manifest_entry['name']]
+
+        def get_bound(field_name: str) -> Optional[float]:
+            val = metadata[field_name]
+            return None if val is None else float(val)
+
+        return {
+            field_prefix: {
+                'gte': get_bound(field_prefix + '_lower_bound'),
+                'lte': get_bound(field_prefix + '_upper_bound')
+            }
+            for field_prefix in field_prefixes
         }
 
     def _contribution(self,
@@ -331,18 +370,17 @@ class BaseTransformer(Transformer, ABC):
         return activity
 
     def _biosample(self, manifest_entry: JSON) -> MutableJSON:
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
-        age_gte = metadata['donor_age_at_collection_lower_bound']
-        age_lte = metadata['donor_age_at_collection_upper_bound']
         return self._entity(manifest_entry,
                             self._biosample_types(),
-                            donor_age_at_collection={
-                                'gte': None if age_gte is None else float(age_gte),
-                                'lte': None if age_lte is None else float(age_lte)
-                            })
+                            **self._range(manifest_entry, 'donor_age_at_collection'))
 
     def _dataset(self, manifest_entry: JSON) -> MutableJSON:
         return self._entity(manifest_entry, self._dataset_types())
+
+    def _diagnosis(self, manifest_entry: JSON) -> MutableJSON:
+        return self._entity(manifest_entry,
+                            self._diagnosis_types(),
+                            **self._range(manifest_entry, 'diagnosis_age', 'onset_age'))
 
     def _donor(self, manifest_entry: JSON) -> MutableJSON:
         return self._entity(manifest_entry, self._donor_types())
@@ -438,6 +476,7 @@ class DonorTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
+            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             datasets=[self._only_dataset()],
             donors=[self._donor(manifest_entry)],
             files=self._entities(self._file, linked['file']),
