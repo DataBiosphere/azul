@@ -1343,6 +1343,8 @@ class Config:
     @property
     def slack_integration(self) -> Optional[SlackIntegration]:
 
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
         import json
         slack_integration = self.environ.get('azul_slack_integration')
         if slack_integration is None:
