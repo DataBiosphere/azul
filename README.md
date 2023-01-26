@@ -85,26 +85,50 @@ generic with minimal need for project-specific behavior.
 committed to a Git repository. See the *Installing git-secrets* section of the
 project's README for instructions how to install [git-secrets] on your OS.
 
-Once installed, git-secrets will need to be configured individually in each of
-your existing repository clones. To configure git-secrets in an existing clone,
-run:
+Once installed, [git-secrets] will need to be configured individually in each 
+one of your existing clones, be they clones of this repository or any of the 
+team's other repositories. Run
 
-    cd /path/to/clone
-    git secrets --install
-    git secrets --register-aws
+```
+cd /path/to/clone
+git secrets --install  # install the hooks
+```
     
-To automatically configure git-secrets in clones created subsequently, run:
+To register the provider that adds AWS-specific secret patterns, run
 
-    git secrets --install ~/.git-templates/git-secrets
-    git config --global init.templateDir ~/.git-templates/git-secrets
-    git secrets --register-aws --global
+```
+git secrets --global --register-aws
+```
 
-Finally, once configured you must verify the functionality of git-secrets in
-every clone individually. With a clean working copy, run these commands in each
-of your clones to verify a successful setup:
+Optionally, to configure [git-secrets] in all repository clones created 
+subsequently, run:
 
-    cd /path/to/clone
-    git hook 2>/dev/null; if [ $? == "1" ]; then ( echo "git-secrets test FAILED: Requires git v2.36.0 or higher."; false ) else ( echo -e 'AWS_ACCOUNT_ID=0000-0000-000\x30' > git_secrets_test_file.txt || ( echo 'git-secrets test FAILED: Unable to create test file.'; false ) && ( if [ ! -f .git/hooks/pre-commit ]; then ( echo "git-secrets test FAILED: pre-commit hook not found."; rm -f git_secrets_test_file.txt; false ) else ( git add git_secrets_test_file.txt; git hook run pre-commit 2>/dev/null; if [ $? == "0" ]; then ( git restore --staged git_secrets_test_file.txt; rm -f git_secrets_test_file.txt; echo 'git-secrets test FAILED'; false ) else ( git restore --staged git_secrets_test_file.txt; rm -f git_secrets_test_file.txt; echo 'git-secrets test PASSED.' ) fi ) fi ) ) fi 
+```
+git secrets --install ~/.git-templates/git-secrets
+git config --global init.templateDir ~/.git-templates/git-secrets
+```
+
+You must now verify the proper function of [git-secrets] in each one of your 
+existing clones, be they clones of this repository or any of the team's other 
+repositories:
+
+1) Run `cd /path/to/clone`
+
+2) Make sure there is no `foo.txt` in the current directory
+
+3) Run `(echo -e 'AWS_ACCOUNT_ID=00000000000\x30' > foo.txt && git add foo.txt && git hook run pre-commit); git rm -fq foo.txt`
+
+**This must produce output containing `[ERROR] Matched one or more prohibited 
+patterns`. If it doesn't, proper function of [git-secrets] has not been 
+verified!**
+
+If you get `git: 'hook' is not a git command. See 'git --help'.`, you are using 
+an outdated version of `git`.
+
+If you get `error: cannot find a hook named pre-commit`, [git-secrets] has not 
+been configured for the clone.
+
+If you get no output, the AWS provider has not been registered.
 
 [git-secrets]: https://github.com/awslabs/git-secrets
 
