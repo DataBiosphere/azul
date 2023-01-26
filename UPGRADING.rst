@@ -137,28 +137,28 @@ When this PR lands in the main deployment in a given Google cloud project, the
 operator should perform the following steps *in that project*, and then announce
 for the other developers to do the same *in that project*.
 
-1) Delete your personal Google service account:
+#. Delete your personal Google service account:
 
-    1a) Go to the Google Cloud console, select the appropriate project, and
-        navigate to ``IAM & Admin`` -> ``Service Accounts``
+   #. Go to the Google Cloud console, select the appropriate project, and
+      navigate to ``IAM & Admin`` -> ``Service Accounts``
 
-    1b) Select your personal service account. This is the one where the part
-        before the ``@`` symbol exactly matches your email address; it does not
-        include the string "azul").
+   #. Select your personal service account. This is the one where the part
+      before the ``@`` symbol exactly matches your email address; it does not
+      include the string "azul").
 
-    1c) Click ``DISABLE SERVICE ACCOUNT`` -> ``DISABLE``.
+   #. Click ``DISABLE SERVICE ACCOUNT`` -> ``DISABLE``.
 
-    1d) Click ``DELETE SERVICE ACCOUNT`` -> ``DELETE``.
+   #. Click ``DELETE SERVICE ACCOUNT`` -> ``DELETE``.
 
-2) Delete the local file containing the private key of the service account that
+#. Delete the local file containing the private key of the service account that
    you deleted during step 1. Such files are usually stored in ``~/.gcp/``.
 
-3) Remove the ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from
+#. Remove the ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from
    ``environment.local.py`` for all Azul deployments (including non-personal
    deployments) where that variable references the key file that you deleted in
    step 2.
 
-4) For clarity's sake, remove comments referencing the
+#. For clarity's sake, remove comments referencing the
    ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable from
    ``environment.py`` for all personal deployments that were changed during step
    3. As always, use the sandbox deployment's ``environment.py`` as a model when
