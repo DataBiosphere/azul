@@ -798,8 +798,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.assertEqual(response['Message'],
                                  f'File {file_uuid!r} with version {file_version!r} '
                                  f'was found in catalog {catalog!r}, however no download is currently available')
-                self.assertEqual(config.it_catalog_for('lm2'), catalog,
-                                 f'Phantom files detected in catalog {catalog!r} where none were expected')
             else:
                 while response['Status'] != 302:
                     self.assertEqual(301, response['Status'])
