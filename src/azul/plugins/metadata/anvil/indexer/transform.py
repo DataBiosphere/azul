@@ -415,6 +415,7 @@ class ActivityTransformer(BaseTransformer):
             activities=[self._activity(manifest_entry)],
             biosamples=self._entities(self._biosample, linked['biosample']),
             datasets=[self._only_dataset()],
+            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
@@ -436,6 +437,7 @@ class BiosampleTransformer(BaseTransformer):
             )),
             biosamples=[self._biosample(manifest_entry)],
             datasets=[self._only_dataset()],
+            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
@@ -456,6 +458,7 @@ class DatasetTransformer(BaseTransformer):
             )),
             biosamples=self._entities(self._biosample, self._entities_by_type['biosample']),
             datasets=[self._dataset(manifest_entry)],
+            diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file']),
         )
@@ -476,8 +479,8 @@ class DonorTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
-            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             datasets=[self._only_dataset()],
+            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=[self._donor(manifest_entry)],
             files=self._entities(self._file, linked['file']),
         )
@@ -499,7 +502,8 @@ class FileTransformer(BaseTransformer):
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
             datasets=[self._only_dataset()],
-            files=[self._file(manifest_entry)],
+            diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
+            files=[self._file(manifest_entry)],
         )
         return self._contribution(contents, manifest_entry['uuid'])
