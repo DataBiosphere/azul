@@ -434,14 +434,18 @@ class SearchResponseFactory:
     def make_specimens(self, entry):
         return [self.make_specimen(specimen) for specimen in entry["contents"]["specimens"]]
 
+    cell_suspension_fields = [
+        ('organ', 'organ'),
+        ('organPart', 'organ_part'),
+        ('selectedCellType', 'selected_cell_type'),
+        ('totalCells', 'total_estimated_cells'),
+        ('totalCellsRedundant', 'total_estimated_cells_redundant')
+    ]
+
     def make_cell_suspension(self, cell_suspension):
         return {
-            "organ": cell_suspension.get("organ", None),
-            "organPart": cell_suspension.get("organ_part", None),
-            "selectedCellType": cell_suspension.get("selected_cell_type", None),
-            "totalCells": cell_suspension.get("total_estimated_cells", None),
-            "totalCellsRedundant": cell_suspension.get("total_estimated_cells_redundant",
-                                                       None)
+            k: cell_suspension.get(v, None)
+            for k, v in self.cell_suspension_fields
         }
 
     def make_cell_suspensions(self, entry):
