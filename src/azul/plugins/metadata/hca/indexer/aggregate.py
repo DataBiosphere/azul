@@ -4,6 +4,7 @@ from operator import (
 from typing import (
     Any,
     Optional,
+    cast,
 )
 
 from more_itertools import (
@@ -56,7 +57,7 @@ class HCAAggregate(Aggregate):
     @cached_property
     def effective_cell_count(self) -> int:
         if self.entity.entity_type == 'projects':
-            project = one(self.contents['projects'])
+            project = cast(JSON, one(self.contents['projects']))
             project_cells = project['estimated_cell_count']
             if project_cells is None:
                 return self.cell_count
