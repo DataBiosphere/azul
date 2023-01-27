@@ -984,7 +984,7 @@ class Config:
         return self.is_sandbox_deployment or not self.is_main_deployment()
 
     @property
-    def _git_status(self) -> Mapping[str, str]:
+    def _git_status(self) -> dict[str, str]:
         import git
         repo = git.Repo(self.project_root)
         return {
@@ -993,7 +993,7 @@ class Config:
         }
 
     @property
-    def lambda_git_status(self) -> Mapping[str, str]:
+    def lambda_git_status(self) -> dict[str, str]:
         return {
             'commit': self.environ['azul_git_commit'],
             'dirty': str_to_bool(self.environ['azul_git_dirty'])
@@ -1006,10 +1006,10 @@ class Config:
         Lambda function or `chalice local`. Only includes those variables that
         don't need to be outsourced.
         """
-        return {
-            **self._lambda_env(outsource=False),
-            **self._git_status
-        }
+        return (
+            self._lambda_env(outsource=False)
+            | self._git_status
+        )
 
     @property
     def lambda_env_for_outsourcing(self) -> dict[str, str]:
