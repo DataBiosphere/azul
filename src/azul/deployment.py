@@ -425,7 +425,7 @@ class AWS:
         return self.boto3_session.resource(*args, **kwargs)
 
     def qualified_bucket_name(self, bucket_name: str) -> str:
-        return config.qualified_bucket_name(account_name=self.account_name,
+        return config.qualified_bucket_name(account_name=config.aws_account_name,
                                             region_name=self.region_name,
                                             bucket_name=bucket_name)
 
@@ -562,7 +562,7 @@ class AWS:
                 'prod': 'anvilprod'
             }
         }
-        _, project, stage = self.account_name.split('-')
+        _, project, stage = config.aws_account_name.split('-')
         return shared_deployments_by_account[project][stage]
 
     @property
