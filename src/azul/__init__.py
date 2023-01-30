@@ -1335,23 +1335,6 @@ class Config:
             import json
             return json.loads(value)
 
-    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-    class SlackIntegration:
-        workspace_id: str
-        channel_id: str
-
-    @property
-    def slack_integration(self) -> Optional[SlackIntegration]:
-
-        # FIXME: Eliminate local import
-        #        https://github.com/DataBiosphere/azul/issues/3133
-        import json
-        slack_integration = self.environ.get('azul_slack_integration')
-        if slack_integration is None:
-            return None
-        else:
-            return self.SlackIntegration(**json.loads(slack_integration))
-
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 

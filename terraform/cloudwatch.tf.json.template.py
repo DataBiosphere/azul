@@ -104,8 +104,7 @@ emit_tf({
                                 'ApiName': config.qualified_resource_name(lambda_),
                                 'Stage': config.deployment_stage,
                             },
-                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                            'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}']
                         }
                     }
                 }

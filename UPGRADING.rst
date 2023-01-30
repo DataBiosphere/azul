@@ -10,20 +10,6 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
-#4011 Integrate monitoring SNS topic with Slack
-===============================================
-
-Operator
-~~~~~~~~
-
-Before pushing a merge commit with these changes to a GitLab instance, `set up
-AWS Chatbot <./README.md#313-aws-chatbot-integration-with-slack>`_ in the AWS
-account hosting that instance. AWS Chatbot has already been set up in the
-``platform-hca-dev`` account. Once AWS Chatbot is set up, manually deploy the
-``shared`` component of the main deployment collocated with the GitLab instance
-you will be pushing to.
-
-
 #4673 Eliminate burner accounts
 ===============================
 

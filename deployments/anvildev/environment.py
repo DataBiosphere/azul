@@ -132,9 +132,4 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_INCARNATION': '2',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-3cv4g8ii9enl2000ra6m02r3ne7bgnth.apps.googleusercontent.com',
-
-        'azul_slack_integration': json.dumps({
-            'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
-            'channel_id': 'C04K4BQET7G'  # #team-boardwalk-anvildev
-        }),
     }

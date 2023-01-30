@@ -237,9 +237,4 @@ def env() -> Mapping[str, Optional[str]]:
         'GOOGLE_PROJECT': 'platform-hca-dev',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
-
-        'azul_slack_integration': json.dumps({
-            'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
-            'channel_id': 'C04K81HUALD'  # #team-boardwalk-dev
-        }),
     }
