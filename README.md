@@ -418,7 +418,38 @@ The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
 [src/azul/deployment.py:tags](src/azul/deployment.py).
 
-### 3.1.3 Shared resources managed by Terraform
+### 3.1.3 AWS Chatbot integration with Slack
+
+Azul deployments can make use of an AWS Chatbot instance to forward messages
+from the SNS monitoring topic to a channel in a Slack workspace. Both the topic
+and the Chatbot instance are shared by all deployments that are collocated in
+one AWS account and that have monitoring enabled via the
+`AZUL_ENABLE_MONITORING` environment variable. Most of the AWS Chatbot
+integration is [managed by Terraform](#314-shared-resources-managed-by-terraform)
+but the following manual steps must be performed once per AWS account containing
+such deployments, before Terraform can take care of the rest. The AWS Chatbot
+integration can be enabled or disabled separately for each AWS account by
+setting the `azul_slack_integration` environment variable in the configuration
+for the main deployment in that account. If it is disabled in an account, these
+steps can be skipped in that account.
+
+1. In the AWS Chatbot console, under *Configure a chat client*, select the
+   *Slack* chat client option, then click the *Configure client* button.
+   
+2. Once redirected to Slack's authorization page, you may be prompted to sign
+   in using your UCSC account, in order to provide permission for Chatbot to
+   access the Slack workspace. When this step is completed, you should see the
+   workspace name and ID listed in the console.
+
+3. Use the ID displayed in the console to set the `workspace_id` attribute of
+   the `azul_slack_integration` variable in the main deployment's environment
+   file for that account.
+
+4. Set the `channel_id` attribute to the ID of the appropriate channel. Get the
+   channel ID by right-clicking the channel in Slack and selecting *View channel
+   details*. The ID is listed at the bottom of the *About* tab.
+
+### 3.1.4 Shared resources managed by Terraform
 
 The remaining resources for each of the AWS accounts hosting Azul deployments
 are provisioned through Terraform. The corresponding resource definitions reside
@@ -445,7 +476,7 @@ with. Two deployments are colocated if they use the same AWS account. The
 `shared` component contains the resources shared by all deployments in an AWS 
 account.
 
-To deploy he remaining shared resources, run: 
+To deploy the remaining shared resources, run: 
 
 ```
 _select dev.shared  # or prod.shared
@@ -458,7 +489,7 @@ make
 The invocation of `terraform import` puts the bucket we created 
 [earlier](#311-versioned-bucket-for-shared-state) under management by Terraform.
 
-### 3.1.4 GitLab
+### 3.1.5 GitLab
 
 A self-hosted GitLab instance is provided by the `gitlab` TerraForm component. 
 It provides the necessary CI/CD infrastructure for one or more Azul deployments 
@@ -1642,7 +1673,7 @@ one for `prod`.
 
 The GitLab instances are provisioned through the `gitlab` *Terraform component*.
 For more information about *Terraform components*, refer the [section on shared 
-resources managed by Terraform](#313-shared-resources-managed-by-terraform). 
+resources managed by Terraform](#314-shared-resources-managed-by-terraform). 
 Within the `gitlab` component, the `dev.gitlab` child component provides a 
 single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but 
 for `integration` and `staging` as well. The `prod.gitlab` child component 
