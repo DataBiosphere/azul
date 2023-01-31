@@ -43,6 +43,8 @@ generic with minimal need for project-specific behavior.
 
 - GNU make 3.81 or newer
 
+- git 2.36.0 or newer
+
 - [Docker] for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
@@ -54,6 +56,8 @@ generic with minimal need for project-specific behavior.
   in the `PATH` environment variable. 
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
+
+- [git-secrets](#211-git-secrets)
 
 - [jq](https://stedolan.github.io/jq/)
 
@@ -73,6 +77,60 @@ generic with minimal need for project-specific behavior.
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
+
+
+### 2.1.1 git-secrets
+
+[git-secrets] helps prevent secrets (passwords, credentials, etc.) from being
+committed to a Git repository. See the *Installing git-secrets* section of the
+project's README for instructions how to install [git-secrets] on your OS.
+
+Once installed, [git-secrets] will need to be configured individually in each 
+one of your existing clones, be they clones of this repository or any of the 
+team's other repositories. Run
+
+```
+cd /path/to/clone
+git secrets --install  # install the hooks
+```
+    
+To register the provider that adds AWS-specific secret patterns, run
+
+```
+git secrets --global --register-aws
+```
+
+Optionally, to configure [git-secrets] in all repository clones created 
+subsequently, run:
+
+```
+git secrets --install ~/.git-templates/git-secrets
+git config --global init.templateDir ~/.git-templates/git-secrets
+```
+
+You must now verify the proper function of [git-secrets] in each one of your 
+existing clones, be they clones of this repository or any of the team's other 
+repositories:
+
+1) Run `cd /path/to/clone`
+
+2) Make sure there is no `foo.txt` in the current directory
+
+3) Run `(echo -e 'AWS_ACCOUNT_ID=00000000000\x30' > foo.txt && git add foo.txt && git hook run pre-commit); git rm -fq foo.txt`
+
+**This must produce output containing `[ERROR] Matched one or more prohibited 
+patterns`. If it doesn't, proper function of [git-secrets] has not been 
+verified!**
+
+If you get `git: 'hook' is not a git command. See 'git --help'.`, you are using 
+an outdated version of `git`.
+
+If you get `error: cannot find a hook named pre-commit`, [git-secrets] has not 
+been configured for the clone.
+
+If you get no output, the AWS provider has not been registered.
+
+[git-secrets]: https://github.com/awslabs/git-secrets
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
