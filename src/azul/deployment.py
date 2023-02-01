@@ -550,25 +550,10 @@ class AWS:
     def _validate_bucket_path_prefix(self, path_prefix):
         reject(path_prefix.startswith('/') or path_prefix.endswith('/'), path_prefix)
 
-    @cached_property
-    def shared_deployment_stage(self) -> str:
-        shared_deployments_by_account = {
-            'hca': {
-                'dev': 'dev',
-                'prod': 'prod'
-            },
-            'anvil': {
-                'dev': 'anvildev',
-                'prod': 'anvilprod'
-            }
-        }
-        _, project, stage = config.aws_account_name.split('-')
-        return shared_deployments_by_account[project][stage]
-
     @property
     def monitoring_topic_name(self):
         return config.qualified_resource_name('monitoring',
-                                              stage=self.shared_deployment_stage)
+                                              stage=config.shared_deployment_stage)
 
 
 aws = AWS()

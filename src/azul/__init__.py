@@ -674,6 +674,21 @@ class Config:
         self.validate_deployment_name(deployment_name)
         return deployment_name
 
+    @cached_property
+    def shared_deployment_stage(self) -> str:
+        shared_deployments_by_account = {
+            'hca': {
+                'dev': 'dev',
+                'prod': 'prod'
+            },
+            'anvil': {
+                'dev': 'anvildev',
+                'prod': 'anvilprod'
+            }
+        }
+        _, project, stage = self.aws_account_name.split('-')
+        return shared_deployments_by_account[project][stage]
+
     @property
     def deployment_incarnation(self) -> str:
         return self.environ['AZUL_DEPLOYMENT_INCARNATION']
