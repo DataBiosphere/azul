@@ -4,6 +4,7 @@ from operator import (
 from typing import (
     Any,
     Optional,
+    cast,
 )
 
 from more_itertools import (
@@ -56,7 +57,7 @@ class HCAAggregate(Aggregate):
     @cached_property
     def effective_cell_count(self) -> int:
         if self.entity.entity_type == 'projects':
-            project = one(self.contents['projects'])
+            project = cast(JSON, one(self.contents['projects']))
             project_cells = project['estimated_cell_count']
             if project_cells is None:
                 return self.cell_count
@@ -119,18 +120,22 @@ class SpecimenAggregator(SimpleAggregator):
 
 
 class CellSuspensionAggregator(GroupingAggregator):
+    cell_count_fields = frozenset([
+        'total_estimated_cells',
+        'total_estimated_cells_redundant'
+    ])
 
     def _transform_entity(self, entity: JSON) -> JSON:
-        return {
-            **entity,
-            'total_estimated_cells': (entity['document_id'], entity['total_estimated_cells']),
+        return entity | {
+            field: (entity['document_id'], entity[field])
+            for field in self.cell_count_fields
         }
 
     def _group_keys(self, entity) -> tuple[Any, ...]:
         return frozenset(entity['organ']),
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'total_estimated_cells':
+        if field in self.cell_count_fields:
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._get_accumulator(field)

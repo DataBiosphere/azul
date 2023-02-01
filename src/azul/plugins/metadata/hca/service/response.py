@@ -386,25 +386,25 @@ class SearchResponseFactory:
     # FIXME: Move this to during aggregation
     #        https://github.com/DataBiosphere/azul/issues/2415
 
-    def make_matrices_(self, matrices: JSON) -> JSON:
+    def make_matrices_(self, matrices: JSONs) -> JSON:
         files = []
         if matrices:
-            for _file in one(matrices)['file']:
+            for file in cast(JSONs, one(matrices)['file']):
                 translated_file = {
-                    **self.make_translated_file(_file),
-                    'strata': _file['strata']
+                    **self.make_translated_file(file),
+                    'strata': file['strata']
                 }
                 files.append(translated_file)
         return make_stratification_tree(files)
 
-    def make_files(self, entry):
+    def make_files(self, entry: JSON) -> JSONs:
         files = []
         for _file in entry['contents']['files']:
             translated_file = self.make_translated_file(_file)
             files.append(translated_file)
         return files
 
-    def make_translated_file(self, file):
+    def make_translated_file(self, file: JSON) -> JSON:
         translated_file = {
             'contentDescription': file.get('content_description'),
             'format': file.get('file_format'),
@@ -434,12 +434,18 @@ class SearchResponseFactory:
     def make_specimens(self, entry):
         return [self.make_specimen(specimen) for specimen in entry["contents"]["specimens"]]
 
+    cell_suspension_fields = [
+        ('organ', 'organ'),
+        ('organPart', 'organ_part'),
+        ('selectedCellType', 'selected_cell_type'),
+        ('totalCells', 'total_estimated_cells'),
+        ('totalCellsRedundant', 'total_estimated_cells_redundant')
+    ]
+
     def make_cell_suspension(self, cell_suspension):
         return {
-            "organ": cell_suspension.get("organ", None),
-            "organPart": cell_suspension.get("organ_part", None),
-            "selectedCellType": cell_suspension.get("selected_cell_type", None),
-            "totalCells": cell_suspension.get("total_estimated_cells", None)
+            k: cell_suspension.get(v, None)
+            for k, v in self.cell_suspension_fields
         }
 
     def make_cell_suspensions(self, entry):

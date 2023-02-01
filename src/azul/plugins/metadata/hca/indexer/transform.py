@@ -733,11 +733,16 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             '_type': 'specimen'
         }
 
+    cell_count_fields = [
+        ('total_estimated_cells', True),
+        ('total_estimated_cells_redundant', False)
+    ]
+
     @classmethod
     def _cell_suspension_types(cls) -> FieldTypes:
         return {
             **cls._biomaterial_types(),
-            'total_estimated_cells': null_int,
+            **{field: null_int for field, _ in cls.cell_count_fields},
             'selected_cell_type': [null_str],
             'organ': [null_str],
             'organ_part': [null_str]
@@ -760,9 +765,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 organ_parts.add(sample.model_organ_part)
             else:
                 assert False
+        is_leaf = cell_suspension.document_id in self.api_bundle.leaf_cell_suspensions
         return {
             **self._biomaterial(cell_suspension),
-            'total_estimated_cells': cell_suspension.estimated_cell_count,
+            **{
+                field: cell_suspension.estimated_cell_count if is_leaf_field == is_leaf else 0
+                for field, is_leaf_field in self.cell_count_fields
+            },
             'selected_cell_type': sorted(cell_suspension.selected_cell_types),
             'organ': sorted(organs),
             # With multiple samples it is possible to have str and None values

@@ -5,18 +5,18 @@
             {
                 "inputs": [
                     {
-                        "input_id": "af3549f4-8632-58c2-9821-c6249c622b0a",
+                        "input_id": "6ff38054-9296-5d4c-b238-6a3b01a15175",
                         "input_type": "cell_suspension"
                     }
                 ],
                 "link_type": "process_link",
                 "outputs": [
                     {
-                        "output_id": "f0c8ac7c-1c4a-5c9c-9286-c8b16208f9ae",
+                        "output_id": "caf6d2a8-2272-5689-b3d8-9c97370d6c29",
                         "output_type": "analysis_file"
                     }
                 ],
-                "process_id": "d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7",
+                "process_id": "7a330531-ec7f-5aee-84d4-2ba24d66e93b",
                 "process_type": "process",
                 "protocols": [
                     {
@@ -39,18 +39,13 @@
                 "link_type": "process_link",
                 "outputs": [
                     {
-                        "output_id": "af3549f4-8632-58c2-9821-c6249c622b0a",
+                        "output_id": "6ff38054-9296-5d4c-b238-6a3b01a15175",
                         "output_type": "cell_suspension"
                     }
                 ],
-                "process_id": "b8ec88d7-675c-54ff-8071-63255adc181b",
+                "process_id": "b0092a47-b19d-5b34-b004-cb8edd8c625b",
                 "process_type": "process",
-                "protocols": [
-                    {
-                        "protocol_id": "0f959f0b-5efa-5cc8-9c46-097b0cb574d5",
-                        "protocol_type": "treatment_protocol"
-                    }
-                ]
+                "protocols": []
             },
             {
                 "inputs": [
@@ -239,7 +234,7 @@
             "process_id": "dummy_process"
         },
         "provenance": {
-            "document_id": "b8ec88d7-675c-54ff-8071-63255adc181b",
+            "document_id": "7a330531-ec7f-5aee-84d4-2ba24d66e93b",
             "schema_major_version": 9,
             "schema_minor_version": 2,
             "submission_date": "2021-01-01T00:00:00.000000Z",
@@ -253,7 +248,7 @@
             "process_id": "dummy_process"
         },
         "provenance": {
-            "document_id": "bd6a4a38-c44b-5d17-b2b1-d0d4c4531bf0",
+            "document_id": "b0092a47-b19d-5b34-b004-cb8edd8c625b",
             "schema_major_version": 9,
             "schema_minor_version": 2,
             "submission_date": "2021-01-01T00:00:00.000000Z",
@@ -267,7 +262,7 @@
             "process_id": "dummy_process"
         },
         "provenance": {
-            "document_id": "d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7",
+            "document_id": "bd6a4a38-c44b-5d17-b2b1-d0d4c4531bf0",
             "schema_major_version": 9,
             "schema_minor_version": 2,
             "submission_date": "2021-01-01T00:00:00.000000Z",
@@ -309,7 +304,7 @@
     },
     "cell_suspension_1.json": {
         "biomaterial_core": {
-            "biomaterial_id": "AP2CS",
+            "biomaterial_id": "AP3CS",
             "ncbi_taxon_id": [
                 9606
             ]
@@ -324,7 +319,7 @@
             }
         ],
         "provenance": {
-            "document_id": "af3549f4-8632-58c2-9821-c6249c622b0a",
+            "document_id": "6ff38054-9296-5d4c-b238-6a3b01a15175",
             "schema_major_version": 13,
             "schema_minor_version": 3,
             "submission_date": "2021-01-01T00:00:00.000000Z",
@@ -349,13 +344,13 @@
                     "text": "count matrix"
                 }
             ],
-            "file_name": "AP2_file.h5ad",
+            "file_name": "AP3_file.h5ad",
             "file_source": "Contributor",
             "format": "h5ad"
         },
         "matrix_cell_count": 15000,
         "provenance": {
-            "document_id": "f0c8ac7c-1c4a-5c9c-9286-c8b16208f9ae",
+            "document_id": "caf6d2a8-2272-5689-b3d8-9c97370d6c29",
             "schema_major_version": 6,
             "schema_minor_version": 5,
             "submission_date": "2021-01-01T00:00:00.000000Z",
@@ -430,37 +425,6 @@
             "barcode_offset": 16,
             "barcode_read": "Read 1"
         }
-    },
-    "treatment_protocol_0.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/1.0.0/treatment_protocol",
-        "media": "RPMI 1640",
-        "method": [
-            {
-                "ontology": "EFO:0030037",
-                "ontology_label": "T cell activation assay",
-                "text": "T cell activation assay"
-            }
-        ],
-        "protocol_core": {
-            "protocol_description": "Cells were incubated with a culture media containing an activator agent, mimicking the natural activation and expansion process.",
-            "protocol_id": "treatment_protocol",
-            "protocol_name": "treatment protocol"
-        },
-        "provenance": {
-            "document_id": "0f959f0b-5efa-5cc8-9c46-097b0cb574d5",
-            "schema_major_version": 1,
-            "schema_minor_version": 0,
-            "submission_date": "2021-01-01T00:00:00.000000Z",
-            "update_date": "2021-01-01T00:00:00.000000Z"
-        },
-        "schema_type": "protocol",
-        "target_pathway": [
-            {
-                "ontology": "GO:0050870",
-                "ontology_label": "positive regulation of T cell activation",
-                "text": "positive regulation of T cell activation"
-            }
-        ]
     },
     "specimen_from_organism_0.json": {
         "biomaterial_core": {

@@ -304,7 +304,7 @@
     },
     "analysis_protocol_0.json": {
         "computational_method": "10x v3",
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/9.2.0/analysis_protocol",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/10.0.0/analysis_protocol",
         "matrix": {
             "data_normalization_methods": [
                 "CPM (counts per million)",
@@ -321,8 +321,8 @@
         },
         "provenance": {
             "document_id": "811adf54-7f27-5aec-9ed7-c6084c4c3a1b",
-            "schema_major_version": 9,
-            "schema_minor_version": 2,
+            "schema_major_version": 10,
+            "schema_minor_version": 0,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
@@ -487,7 +487,7 @@
                 9606
             ]
         },
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.0/donor_organism",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
         "development_stage": {
             "ontology": "HsapDv:0000087",
             "ontology_label": "human adult stage",

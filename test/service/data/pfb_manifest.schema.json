@@ -578,6 +578,14 @@
                             ]
                         },
                         {
+                            "name": "total_estimated_cells_redundant",
+                            "namespace": "cell_suspensions",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        },
+                        {
                             "name": "selected_cell_type",
                             "namespace": "cell_suspensions",
                             "type": {
