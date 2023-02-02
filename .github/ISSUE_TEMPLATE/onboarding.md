@@ -21,6 +21,12 @@ check the checkboxes as you progress through this list.
 - [ ] Read [Contributing Guidelines](../blob/develop/CONTRIBUTING.rst)
 - [ ] Read [AWS Credential Configuration](https://giwiki.gi.ucsc.edu/index.php/Overview_of_Getting_and_Using_an_AWS_IAM_Account)
 - [ ] Installed [git-secrets](..#211-git-secrets)
+- [ ] Completed the NIH [Information Security and Management Refresher](https://irtsectraining.nih.gov/publicUser.aspx) training courses
+- [ ] Completed the NIH [Information Security Awareness for New Hires](https://irtsectraining.nih.gov/publicUser.aspx) training courses
+- [ ] Completed the NIH [Information Management for New Hires](https://irtsectraining.nih.gov/publicUser.aspx) training courses
+- [ ] Completed the [dbGaP Code of Conduct](https://www.surveymonkey.com/r/HKXNYD7) quiz
+- [ ] Completed the [NIH Security Best Practices for (CAD) Subject to NIH (GDS) Policy](https://www.surveymonkey.com/r/FG3C63T) quiz
+- [ ] Digitally signed the [NIH GDS Policy](https://giwiki.gi.ucsc.edu/images/1/1b/NIH_GDS_Policy.pdf) document and gave it to your project manager
 
 
 ## Project manager actions
