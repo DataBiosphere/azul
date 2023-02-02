@@ -10,6 +10,33 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4646 Rename Azul storage buckets
+=================================
+
+After these changes are successfully merged to ``develop``, manually delete the
+old storage buckets for ``sandbox``, ``dev``, ``anvilbox``, and ``anvildev``.
+Then announce for all other developers to follow the instructions in the section
+below.
+
+After these changes are successfully merged to ``prod``, manually delete the old
+storage bucket for ``prod``.
+
+Everyone
+~~~~~~~~
+
+For each of your personal deployments, change the value of ``AZUL_S3_BUCKET`` in
+``environment.py`` to ::
+
+    "edu-ucsc-gi-{account}-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}"
+
+Where ``{account}`` is the name of the AWS account hosting the deployment, e.g.,
+``"platform-hca-dev"``. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
+After the changes are deployed to a given personal deployment, manually delete
+the old storage bucket for that deployment.
+
+
 #4011 Integrate monitoring SNS topic with Slack
 ===============================================
 
