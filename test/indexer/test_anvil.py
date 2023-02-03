@@ -34,6 +34,9 @@ from service import (
 class AnvilIndexerTestCase(IndexerTestCase, TDRAnvilPluginTestCase):
     source = TDRAnvilPluginTestCase.source
 
+    # FIXME: Tests using the AnVIL plugin must use a distinct catalog name to
+    #        avoid unwanted cache hits
+    #        https://github.com/DataBiosphere/azul/issues/4956
     catalog = 'anvil-test'
 
     @classmethod
