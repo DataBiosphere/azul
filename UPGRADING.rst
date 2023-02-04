@@ -10,6 +10,50 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#4958 Storage bucket is still being removed from TF state
+=========================================================
+
+Everyone
+~~~~~~~~
+
+PR #4926 for issue #4646 left in place code to remove the S3 storage bucket from
+the Terraform state. There are three possible states to consider when upgrading
+a deployment. Rebase all local branches on ``develop`` before deploying any
+changes.
+
+1) If you have already deployed the changes for PR #4926, and have not attempted
+to deploy any subsequent changes, no action is needed. Verify that
+``terraform state show aws_s3_bucket.storage`` shows a valid bucket state before
+deploying any changes.
+
+2) If you have already deployed the changes for PR #4926, and *have* attempted
+to deploy subsequent changes, the affected deployment needs to be repaired.
+``terraform state show aws_s3_bucket.storage`` should fail with the message
+"No instance found for the given address!" To repair the deployment, run::
+
+    cd terraform
+    make plan
+    terraform import aws_s3_bucket.storage $AZUL_S3_BUCKET
+    make apply
+
+And confirm that ``terraform state show aws_s3_bucket.storage`` now shows a
+valid bucket state.
+
+3) If you have *not* yet deployed the changes for #4646, follow the upgrading
+instructions for that issue (note that a new step has been retroactively added),
+and deploy the latest changes. ``terraform state show aws_s3_bucket.storage``
+should show a valid bucket state before and after these steps.
+
+Operator
+~~~~~~~~
+
+Follow the instructions in case 1 for ``sandbox``, ``dev``, ``anvilbox``, and
+``anvildev``. Announce for other developers to upgrade their personal
+deployments.
+
+When promoting to ``prod``, follow the instructions in case 3.
+
+
 #4646 Rename Azul storage buckets
 =================================
 
@@ -18,14 +62,21 @@ old storage buckets for ``sandbox``, ``dev``, ``anvilbox``, and ``anvildev``.
 Then announce for all other developers to follow the instructions in the section
 below.
 
+Before merging these changes to ``prod``, run::
+
+    terraform state rm aws_s3_bucket.storage
+
 After these changes are successfully merged to ``prod``, manually delete the old
 storage bucket for ``prod``.
 
 Everyone
 ~~~~~~~~
 
-For each of your personal deployments, change the value of ``AZUL_S3_BUCKET`` in
-``environment.py`` to ::
+For each of your personal deployments, run ::
+
+    terraform state rm aws_s3_bucket.storage
+
+Then, change the value of ``AZUL_S3_BUCKET`` in ``environment.py`` to ::
 
     "edu-ucsc-gi-{account}-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}"
 
