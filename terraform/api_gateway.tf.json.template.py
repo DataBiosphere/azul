@@ -391,11 +391,7 @@ emit_tf({
                 },
                 'aws_wafv2_web_acl_association': {
                     app.name: {
-                        # Chalice doesn't expose the ARN of the API Gateway stages, so we
-                        # construct the ARN manually using this workaround.
-                        # https://github.com/aws/chalice/issues/1816#issuecomment-1012231084
-                        'resource_arn': '${aws_api_gateway_rest_api.%s.arn}/stages/' % app.name
-                                        + '${aws_api_gateway_stage.%s.stage_name}' % app.name,
+                        'resource_arn': '${aws_api_gateway_stage.%s.arn}' % app.name,
                         'web_acl_arn': '${aws_wafv2_web_acl.api_gateway.arn}',
                         'lifecycle': {
                             'replace_triggered_by': [
