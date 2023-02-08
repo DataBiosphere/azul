@@ -108,13 +108,12 @@ mock_dss_source = 'https://test:/2'
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     index_service: IndexService
-    source = None
+    source = DSSSourceRef.for_dss_source(mock_dss_source)
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
-        cls.source = DSSSourceRef.for_dss_source(mock_dss_source)
 
     @classmethod
     def bundle_fqid(cls, *, uuid, version):

@@ -3743,6 +3743,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
 
 @patch_source_cache([TDRPluginTestCase.source.to_json()])
 class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
+    source = TDRPluginTestCase.source
 
     @classmethod
     def catalog_config(cls):
@@ -3752,13 +3753,12 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
                                         internal=False,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                                      repository=config.Catalog.Plugin(name='tdr_hca')),
-                                        sources=set())
+                                        sources={str(cls.source.spec)})
         }
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.source = TDRPluginTestCase.source
         cls._setup_indices()
 
     @classmethod

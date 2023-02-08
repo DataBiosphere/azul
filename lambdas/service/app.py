@@ -291,6 +291,8 @@ class ServiceApp(AzulChaliceApp):
     def catalog_controller(self) -> CatalogController:
         return self._service_controller(CatalogController)
 
+    # FIXME: Service `app.repository_controller` should be cached
+    #        https://github.com/DataBiosphere/azul/issues/4957
     @property
     def repository_controller(self) -> RepositoryController:
         return self._service_controller(RepositoryController)
