@@ -37,6 +37,9 @@ from uuid import (
 )
 import warnings
 
+from azul import (
+    cached_property,
+)
 from azul.collections import (
     OrderedSet,
 )
@@ -236,6 +239,9 @@ class LinkError(RuntimeError):
         super().__init__(entity.address +
                          ' cannot ' + ('reference ' if forward else 'be referenced by ') +
                          other_entity.address)
+
+
+L = TypeVar('L', bound=LinkedEntity)
 
 
 @dataclass(frozen=True)
@@ -1090,6 +1096,45 @@ class Bundle:
             entity.accept(visitor)
 
         return roots
+
+    def leaf_entities(self, entity_type: Type[L]) -> Mapping[UUID4, L]:
+        """
+        Return a set of all leaf entities in this bundle. A leaf entity is a
+        linked entity of a given type that has no descendants of that type.
+        """
+
+        empty = {}
+
+        def recurse(entities: Iterable[Entity]) -> Mapping[UUID4, L]:
+            # Unroll the first two iterations over the argument in order to
+            # accelerate the common cases
+            i = iter(entities)
+            try:
+                entity = next(i)
+            except StopIteration:
+                return empty
+            else:
+                try:
+                    next(i)
+                except StopIteration:
+                    return visit(entity)
+                else:
+                    return dict(chain.from_iterable(map(dict.items, map(visit, entities))))
+
+        def visit(entity: Entity) -> Mapping[UUID4, L]:
+            if isinstance(entity, LinkedEntity):
+                leafs = recurse(entity.children.values())
+                if leafs:
+                    return leafs
+                elif isinstance(entity, entity_type):
+                    return {entity.document_id: entity}
+            return empty
+
+        return recurse(self.root_entities().values())
+
+    @cached_property
+    def leaf_cell_suspensions(self) -> Mapping[UUID4, CellSuspension]:
+        return self.leaf_entities(CellSuspension)
 
     @property
     def specimens(self) -> List[SpecimenFromOrganism]:

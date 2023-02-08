@@ -231,29 +231,29 @@
       },
       {
         "inputs": [
+          "diagnosis/15d85d30-ad4a-4f50-87a8-a27f59dd1b5f"
+        ],
+        "activity": null,
+        "outputs": [
+          "donor/6708dc44-5232-44ca-a050-5dee58637284"
+        ]
+      },
+      {
+        "inputs": [
+          "diagnosis/939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
+        ],
+        "activity": null,
+        "outputs": [
+          "donor/6708dc44-5232-44ca-a050-5dee58637284"
+        ]
+      },
+      {
+        "inputs": [
           "donor/6708dc44-5232-44ca-a050-5dee58637284"
         ],
         "activity": null,
         "outputs": [
           "biosample/826dea02-e274-4ffe-aabc-eb3db63ad068"
-        ]
-      },
-      {
-        "inputs": [
-          "donor/6708dc44-5232-44ca-a050-5dee58637284"
-        ],
-        "activity": null,
-        "outputs": [
-          "diagnosis/15d85d30-ad4a-4f50-87a8-a27f59dd1b5f"
-        ]
-      },
-      {
-        "inputs": [
-          "donor/6708dc44-5232-44ca-a050-5dee58637284"
-        ],
-        "activity": null,
-        "outputs": [
-          "diagnosis/939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
         ]
       },
       {

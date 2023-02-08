@@ -43,6 +43,8 @@ generic with minimal need for project-specific behavior.
 
 - GNU make 3.81 or newer
 
+- git 2.36.0 or newer
+
 - [Docker] for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
@@ -54,6 +56,8 @@ generic with minimal need for project-specific behavior.
   in the `PATH` environment variable. 
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
+
+- [git-secrets](#211-git-secrets)
 
 - [jq](https://stedolan.github.io/jq/)
 
@@ -73,6 +77,60 @@ generic with minimal need for project-specific behavior.
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
+
+
+### 2.1.1 git-secrets
+
+[git-secrets] helps prevent secrets (passwords, credentials, etc.) from being
+committed to a Git repository. See the *Installing git-secrets* section of the
+project's README for instructions how to install [git-secrets] on your OS.
+
+Once installed, [git-secrets] will need to be configured individually in each 
+one of your existing clones, be they clones of this repository or any of the 
+team's other repositories. Run
+
+```
+cd /path/to/clone
+git secrets --install  # install the hooks
+```
+    
+To register the provider that adds AWS-specific secret patterns, run
+
+```
+git secrets --global --register-aws
+```
+
+Optionally, to configure [git-secrets] in all repository clones created 
+subsequently, run:
+
+```
+git secrets --install ~/.git-templates/git-secrets
+git config --global init.templateDir ~/.git-templates/git-secrets
+```
+
+You must now verify the proper function of [git-secrets] in each one of your 
+existing clones, be they clones of this repository or any of the team's other 
+repositories:
+
+1) Run `cd /path/to/clone`
+
+2) Make sure there is no `foo.txt` in the current directory
+
+3) Run `(echo -e 'AWS_ACCOUNT_ID=00000000000\x30' > foo.txt && git add foo.txt && git hook run pre-commit); git rm -fq foo.txt`
+
+**This must produce output containing `[ERROR] Matched one or more prohibited 
+patterns`. If it doesn't, proper function of [git-secrets] has not been 
+verified!**
+
+If you get `git: 'hook' is not a git command. See 'git --help'.`, you are using 
+an outdated version of `git`.
+
+If you get `error: cannot find a hook named pre-commit`, [git-secrets] has not 
+been configured for the clone.
+
+If you get no output, the AWS provider has not been registered.
+
+[git-secrets]: https://github.com/awslabs/git-secrets
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
@@ -222,29 +280,18 @@ this is `platform-hca-dev`. The project name is configured via the
 The Terra ecosystem is tightly integrated with Google's authentication
 infrastructure, and the same two types of accounts mentioned in the previous
 section are used to authenticate against SAM and [Terra Data Repository]
-(TDR). However, because the production instances of Terra, SAM and TDR must
-not share user accounts with other instances of those services, we were asked
-to create dedicated burner Google accounts for non-production use. 
-
-If you intend to work with an Azul deployment that uses non-production
-instances of SAM or TDR, you need to create such a burner account for
-yourself. Developers at UCSC, by convention, have been creating Google
-accounts called `….ucsc.edu@gmail.com`. This means that there are now at least
-three Google accounts at play:
+(TDR). Meaning that there are now at least two Google accounts at play:
 
 1) your individual Google account ("your account"),
 
-2) your individual burner account ("your burner") and
+2) a service account for each shared or personal Azul deployment.
 
-3) a service account for each shared or personal Azul deployment.
-
-You use your account to interact with Google Cloud in general and the
-production instance of Terra, SAM and TDR, assuming you have access. You also
-use your account for programmatic interactions with the above.
-You use your burner to interact with non-production instances of Terra, SAM
-and TDR and the Google Cloud resources they own, like the BiqQuery datasets
-and GCS buckets that TDR manages. For programmatic access to the latter, you
-can either `gcloud auth login` with your burner or use the
+You use your account to interact with Google Cloud in general, along with both
+production and non-production instances of Terra, SAM, and TDR, provided you
+have access. You also use your account for programmatic interactions with the
+above systems and the Google Cloud resources they host, like the BiqQuery
+datasets and GCS buckets that TDR manages. For programmatic access to the
+latter, you can either `gcloud auth login` with your account or use the
 `service_account_credentials` context manager from `aws.deployment`.
 
 [Terra Data Repository]: https://jade.datarepo-dev.broadinstitute.org/
@@ -262,15 +309,14 @@ registration with SAM only provides authentication. Authorization to access
 TDR datasets and snapshots is granted by adding the registered service accounts
 to dedicated SAM groups (an extension of a Google group). This must be
 performed manually by someone with administrator access to that SAM group. For
-non-production instances of TDR, the indexer service account should be added to
-the group `azul-dev`. The only members of this group should be service
-accounts belonging to non-production deployments of Azul and burner accounts.
+non-production instances of TDR, the indexer service account needs to be added
+to the group `azul-dev`.
 
 A member of the `azul-dev` group has read access to TDR. An *administrator* of
 this group can add other accounts to it, and optionally make them
 administrators, too. Before any account can be added to a group, it needs to be
 registered with SAM. While `make deploy` does this automatically for the
-deployment's service account, for your burner you must follow the steps below:
+deployment's service account, for your account, you must follow the steps below:
 
 
 1. Log into Google Cloud by running
@@ -280,12 +326,12 @@ deployment's service account, for your burner you must follow the steps below:
     ```
 
     A browser window opens to complete the authentication flow interactively.
-    When being prompted, select your burner.
+    When being prompted, select your account.
 
     For more information refer to the Google authorization
     [documentation](https://cloud.google.com/sdk/docs/authorizing).
 
-2. Register your burner with SAM. Run
+2. Register your account with SAM. Run
 
     ```
     (account="$(gcloud config get-value account)"
@@ -293,17 +339,17 @@ deployment's service account, for your burner you must follow the steps below:
     curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H "Authorization: Bearer $token")
     ```
 
-3. Ask an administrator of the `azul-dev` group to add your burner to the
+3. Ask an administrator of the `azul-dev` group to add your account to the
    group. The best way to reach an administrator is via the `#team-boardwalk`
    channel on Slack. Also, ask for a link to the group and note it in your
    records.
 
 4. If you've already attempted to create your deployment via `make deploy`,
-   visit the link, sign in as your burner and add your deployment's service
+   visit the link, sign in as your account and add your deployment's service
    account to the group. Run `make deploy` again.
 
 For production, use the same procedure, but substitute `azul-dev` with
-`azul-prod` and "burner" with "account".
+`azul-prod`.
 
 
 ### 2.3.5 Creating a personal deployment

@@ -483,7 +483,7 @@ class TestAccessorApi(AzulUnitTestCase):
         return bundle
 
     def test_canned_staging_area(self):
-        ref = 'eb8f7d34'
+        ref = 'eb93f83b'
         url = f'https://github.com/HumanCellAtlas/schema-test-data/tree/{ref}/tests'
         factory = GitHubStagingAreaFactory.from_url(url)
         staging_area = factory.load_staging_area()

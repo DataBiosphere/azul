@@ -281,15 +281,15 @@
         "schema_type": "file"
     },
     "analysis_protocol_0.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/9.2.0/analysis_protocol",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/10.0.0/analysis_protocol",
         "protocol_core": {
             "protocol_description": "10x Genomics Visium spatial sequencing samples were aligned to the human transcriptome GRCh38-3.0.0 reference (consistently with single-cell RNA-seq samples) using 10x Genomics SpaceRanger v.1.2.1 and exonic reads were used to produce mRNA count matrices for each sample. 10x Genomics SpaceRanger was also used to align paired histology images with mRNA capture spot positions in the Visium slide. The paired image was used to determine the average number of nuclei per Visium location in the tissue and used as a hyperparameter in the spatial mapping of cell type",
             "protocol_id": "Visiumanalysis"
         },
         "provenance": {
             "document_id": "5e1fa49c-f0e9-5c2c-be16-386ccd60dfd7",
-            "schema_major_version": 9,
-            "schema_minor_version": 2,
+            "schema_major_version": 10,
+            "schema_minor_version": 0,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
@@ -400,7 +400,7 @@
                 9606
             ]
         },
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.0/donor_organism",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
         "development_stage": {
             "ontology": "HsapDv:0000087",
             "ontology_label": "human adult stage",
