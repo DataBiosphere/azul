@@ -590,7 +590,8 @@ lm2_sources = lungmap_sources | mkdict([
 ])
 
 lm3_sources = lm2_sources | mkdict([
-    mksrc('datarepo-d565e2a9', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20230126_lm3', 1),
+    mksrc('datarepo-d139f96d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20230207_lm3', 1),
+    mksrc('datarepo-14448a21', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20230207_lm3', 1),
 ])
 
 
