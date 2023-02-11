@@ -18,7 +18,7 @@ from azul.indexer.document import (
 from azul.logging import (
     configure_test_logging,
 )
-from indexer.test_hca_indexer import (
+from indexer import (
     IndexerTestCase,
 )
 
