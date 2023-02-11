@@ -1661,7 +1661,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 )),
                                 'url': str(self.base_url.set(
                                     path='/repository/files/6a85e0ab-2386-4f7e-8503-d72d90b4bc47',
-                                    args=dict(catalog='anvil-test', version='2022-06-01T00:00:00.000000Z')
+                                    args=dict(catalog=self.catalog, version='2022-06-01T00:00:00.000000Z')
                                 ))
                             }
                         ]
@@ -1790,7 +1790,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 )),
                                 'url': str(self.base_url.set(
                                     path='/repository/files/677f207e-2d12-4eca-8f7a-039325af91ad',
-                                    args=dict(catalog='anvil-test', version='2022-06-01T00:00:00.000000Z')
+                                    args=dict(catalog=self.catalog, version='2022-06-01T00:00:00.000000Z')
                                 ))
                             }
                         ]
