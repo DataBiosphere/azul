@@ -206,7 +206,7 @@ class DSSUnitTestCase(TestCase):
         super().tearDownClass()
 
 
-class StorageServiceTestCase(TestCase):
+class StorageServiceTestMixin:
     """
     A mixin for test cases that utilize StorageService.
     """

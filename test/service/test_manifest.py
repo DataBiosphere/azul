@@ -106,7 +106,7 @@ from azul_test_case import (
 from service import (
     DSSUnitTestCase,
     DocumentCloningTestCase,
-    StorageServiceTestCase,
+    StorageServiceTestMixin,
     WebServiceTestCase,
     patch_dss_source,
     patch_source_cache,
@@ -121,7 +121,7 @@ def setUpModule():
 
 
 @mock_s3
-class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
+class ManifestTestCase(WebServiceTestCase, StorageServiceTestMixin):
 
     def setUp(self):
         super().setUp()
