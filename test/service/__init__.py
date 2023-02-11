@@ -205,6 +205,7 @@ class DSSUnitTestCase(AzulUnitTestCase):
     @classmethod
     def tearDownClass(cls):
         cls._dss_mock.stop()
+        cls._dss_mock = None
         super().tearDownClass()
 
 
