@@ -134,7 +134,7 @@ class TestResponse(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
-    def get_hits(self, entity_type: str, entity_id: str):
+    def _get_hits(self, entity_type: str, entity_id: str):
         """
         Fetches hits from ES instance searching for a particular entity ID
         """
@@ -182,10 +182,11 @@ class TestResponse(WebServiceTestCase):
                                                                     search_after_uid='meta%2332'))))
         ]
 
-    def test_file_search_response(self):
+    def test_response_factory_files(self):
         """
-        n=0: Test the SearchResponse object, making sure the functionality works as appropriate by asserting the
-        apiResponse attribute is the same as expected.
+        n=0: Test the SearchResponse object, making sure the functionality works
+        as appropriate by asserting the apiResponse attribute is the same as
+        expected.
 
         n=1: Tests the SearchResponse object, using 'next' pagination.
         """
@@ -338,7 +339,7 @@ class TestResponse(WebServiceTestCase):
             with self.subTest(n=n):
                 # FIXME: Use response from `/index/files` to validate
                 #        https://github.com/DataBiosphere/azul/issues/2970
-                hits = self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb')
+                hits = self._get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb')
                 factory = SearchResponseFactory(hits=hits,
                                                 pagination=self.paginations[n],
                                                 aggs={},
@@ -347,13 +348,13 @@ class TestResponse(WebServiceTestCase):
                 response = factory.make_response()
                 self.assertElasticEqual(responses[n], response)
 
-    def test_file_search_response_file_summaries(self):
+    def test_response_factory_files_summaries(self):
         """
         Test non-'files' entity type passed to SearchResponse will give file summaries
         """
         # FIXME: Use response from `/index/samples` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        hits = self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2')
+        hits = self._get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2')
         factory = SearchResponseFactory(hits=hits,
                                         pagination=self.paginations[0],
                                         aggs={},
@@ -404,7 +405,7 @@ class TestResponse(WebServiceTestCase):
         }
     }
 
-    def test_file_search_response_add_facets(self):
+    def test_response_factory_files_facets(self):
         """
         Test adding facets to SearchResponse with missing values in one facet
         and no missing values in the other
@@ -451,50 +452,14 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticEqual(facets, expected_output)
 
-    def test_sorting_details(self):
-        for entity_type in 'files', 'samples', 'projects', 'bundles':
-            with self.subTest(entity_type=entity_type):
-                response = requests.get(str(self.base_url.set(path=('index', entity_type),
-                                                              args=self._params())))
-                response.raise_for_status()
-                response_json = response.json()
-                # Verify default sort field is set correctly
-                self.assertEqual(response_json['pagination']['sort'],
-                                 self.app_module.app.metadata_plugin.exposed_indices[entity_type].field_name)
-                # Verify all fields in the response that are lists of primitives are sorted
-                for hit in response_json['hits']:
-                    self._verify_sorted_lists(hit)
-
-    def test_transform_request_with_file_url(self):
-        for entity_type in ('files', 'bundles'):
-            with self.subTest(entity_type=entity_type):
-                url = self.base_url.set(path=('index', entity_type), args=self._params())
-                response = requests.get(str(url))
-                response.raise_for_status()
-                response_json = response.json()
-                for hit in response_json['hits']:
-                    if entity_type == 'files':
-                        self.assertEqual(len(hit['files']), 1)
-                    else:
-                        self.assertGreater(len(hit['files']), 0)
-                    for file in hit['files']:
-                        self.assertIn('url', file.keys())
-                        actual_url = urlparse(file['url'])
-                        actual_query_vars = {k: one(v) for k, v in parse_qs(actual_url.query).items()}
-                        self.assertEqual(url.netloc, actual_url.netloc)
-                        self.assertEqual(url.scheme, actual_url.scheme)
-                        self.assertIsNotNone(actual_url.path)
-                        self.assertEqual(self.catalog, actual_query_vars['catalog'])
-                        self.assertIsNotNone(actual_query_vars['version'])
-
-    def test_projects_file_search_response(self):
+    def test_response_factory_projects(self):
         """
         Test building response for projects
         Response should include project detail fields that do not appear for other entity type responses
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        hits = self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88')
+        hits = self._get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88')
         factory = SearchResponseFactory(hits=hits,
                                         pagination=self.paginations[0],
                                         aggs=self.canned_aggs,
@@ -718,14 +683,14 @@ class TestResponse(WebServiceTestCase):
 
         self.assertElasticEqual(expected_response, response)
 
-    def test_project_accessions_response(self):
+    def test_response_factory_projects_accessions(self):
         """
         This method tests the SearchResponse object for the projects entity type,
         specifically making sure the accessions fields are present in the response.
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        hits = self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635')
+        hits = self._get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635')
         factory = SearchResponseFactory(hits=hits,
                                         pagination=self.paginations[0],
                                         aggs={},
@@ -941,10 +906,10 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertElasticEqual(expected_hits, response['hits'])
 
-    def test_cell_suspension_response(self):
+    def test_response_factory_projects_celltype(self):
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        hits = self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d')
+        hits = self._get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d')
         factory = SearchResponseFactory(hits=hits,
                                         pagination=self.paginations[0],
                                         aggs={},
@@ -954,13 +919,13 @@ class TestResponse(WebServiceTestCase):
         cell_suspension = one(response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
-    def test_cell_line_response(self):
+    def test_response_factory_projects_cell_line(self):
         """
         Test SearchResponse contains the correct cell_line and sample field values
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        hits = self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321')
+        hits = self._get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321')
         factory = SearchResponseFactory(hits=hits,
                                         pagination=self.paginations[0],
                                         aggs={},
@@ -985,13 +950,13 @@ class TestResponse(WebServiceTestCase):
         samples = one(one(hits)['samples'])
         self.assertElasticEqual(samples, expected_samples)
 
-    def test_file_response(self):
+    def test_response_factory_files_file(self):
         """
         Test SearchResponse contains the correct file field values
         """
-        # FIXME: Use response from `/index/projects` to validate
+        # FIXME: Use response from `/index/files` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        hits = self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a')
+        hits = self._get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a')
         factory = SearchResponseFactory(hits=hits,
                                         pagination=self.paginations[0],
                                         aggs={},
@@ -1013,6 +978,42 @@ class TestResponse(WebServiceTestCase):
         }
         file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
+
+    def test_sorting_details(self):
+        for entity_type in 'files', 'samples', 'projects', 'bundles':
+            with self.subTest(entity_type=entity_type):
+                response = requests.get(str(self.base_url.set(path=('index', entity_type),
+                                                              args=self._params())))
+                response.raise_for_status()
+                response_json = response.json()
+                # Verify default sort field is set correctly
+                self.assertEqual(response_json['pagination']['sort'],
+                                 self.app_module.app.metadata_plugin.exposed_indices[entity_type].field_name)
+                # Verify all fields in the response that are lists of primitives are sorted
+                for hit in response_json['hits']:
+                    self._verify_sorted_lists(hit)
+
+    def test_transform_request_with_file_url(self):
+        for entity_type in ('files', 'bundles'):
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url.set(path=('index', entity_type), args=self._params())
+                response = requests.get(str(url))
+                response.raise_for_status()
+                response_json = response.json()
+                for hit in response_json['hits']:
+                    if entity_type == 'files':
+                        self.assertEqual(len(hit['files']), 1)
+                    else:
+                        self.assertGreater(len(hit['files']), 0)
+                    for file in hit['files']:
+                        self.assertIn('url', file.keys())
+                        actual_url = urlparse(file['url'])
+                        actual_query_vars = {k: one(v) for k, v in parse_qs(actual_url.query).items()}
+                        self.assertEqual(url.netloc, actual_url.netloc)
+                        self.assertEqual(url.scheme, actual_url.scheme)
+                        self.assertIsNotNone(actual_url.path)
+                        self.assertEqual(self.catalog, actual_query_vars['catalog'])
+                        self.assertIsNotNone(actual_query_vars['version'])
 
     def test_filter_with_none(self):
         """
