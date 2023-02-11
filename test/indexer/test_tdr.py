@@ -170,7 +170,7 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
 
     @classmethod
     @cache
-    def _test_plugin_cls(cls) -> Type[TDRPlugin]:
+    def _test_plugin_cls(cls) -> Type[MockPlugin]:
         class Plugin(MockPlugin, cls._plugin_cls()):
             pass
 
