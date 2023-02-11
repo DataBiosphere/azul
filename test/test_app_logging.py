@@ -42,7 +42,7 @@ def setupModule():
     configure_test_logging()
 
 
-class TestAppLogging(TestCase):
+class TestAppLogging(AzulUnitTestCase):
 
     def test(self):
         magic_message = 'Now you see me'

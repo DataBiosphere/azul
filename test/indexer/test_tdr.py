@@ -89,7 +89,6 @@ from azul.types import (
     JSONs,
 )
 from azul_test_case import (
-    AzulTestCase,
     AzulUnitTestCase,
 )
 from indexer import (
@@ -358,7 +357,7 @@ class TestTDRHCAPlugin(TDRHCAPluginTestCase):
         self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
 
 
-class TestTDRSourceList(AzulTestCase):
+class TestTDRSourceList(AzulUnitTestCase):
 
     def _mock_snapshots(self, access_token: str) -> JSONs:
         return [{

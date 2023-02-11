@@ -14,7 +14,6 @@ from typing import (
     get_origin,
 )
 from unittest import (
-    TestCase,
     mock,
 )
 from unittest.mock import (
@@ -55,6 +54,9 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSONs,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
 )
 import indexer
 from indexer import (
@@ -185,7 +187,7 @@ class DocumentCloningTestCase(WebServiceTestCase):
                                     aggregate=True)
 
 
-class DSSUnitTestCase(TestCase):
+class DSSUnitTestCase(AzulUnitTestCase):
     """
     A mixin for test cases that depend on certain DSS-related environment
     variables.

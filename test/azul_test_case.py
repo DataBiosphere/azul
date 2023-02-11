@@ -392,7 +392,7 @@ class Hidden:
             self.events.append('tearDown')
 
 
-class TestAlwaysTearDownTestCase(TestCase):
+class TestAlwaysTearDownTestCase(AzulUnitTestCase):
 
     def test_regular_execution_order(self):
         expected = ['setUp', 'test', 'tearDown', 'setUp', 'test', 'tearDown']

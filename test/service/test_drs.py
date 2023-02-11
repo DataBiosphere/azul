@@ -33,6 +33,9 @@ from azul.service.drs_controller import (
 from azul.types import (
     MutableJSON,
 )
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
@@ -295,7 +298,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
             self.assertEqual(drs_response.text, error_body)
 
 
-class TestDRSController(unittest.TestCase):
+class TestDRSController(AzulUnitTestCase):
 
     def test_bad_token(self):
         controller = DRSController(app=MagicMock(), file_url_func=MagicMock())
