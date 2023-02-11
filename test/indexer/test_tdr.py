@@ -110,7 +110,7 @@ def setUpModule():
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TestPlugin(TDRPlugin, ABC):
+class MockPlugin(TDRPlugin, ABC):
     tinyquery: tinyquery.TinyQuery
 
     def _run_sql(self, query: str) -> BigQueryRows:
@@ -149,11 +149,11 @@ class TestPlugin(TDRPlugin, ABC):
         )
 
 
-class TestTestPlugin(AzulUnitTestCase):
+class TestMockPlugin(AzulUnitTestCase):
 
     def test_in(self):
         self.assertEqual('(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)',
-                         TestPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
+                         MockPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
 class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
@@ -171,7 +171,7 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
     @classmethod
     @cache
     def _test_plugin_cls(cls) -> Type[TDRPlugin]:
-        class Plugin(TestPlugin, cls._plugin_cls()):
+        class Plugin(MockPlugin, cls._plugin_cls()):
             pass
 
         return Plugin
