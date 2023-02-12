@@ -252,7 +252,6 @@ class TDRHCAPluginTestCase(TDRPluginTestCase[TDRHCABundle]):
         return TDRHCABundle
 
     @classmethod
-    @cache
     def _plugin_cls(cls) -> Type[TDRPlugin]:
         return tdr_hca.Plugin
 
@@ -264,7 +263,6 @@ class TDRAnvilPluginTestCase(TDRPluginTestCase[TDRAnvilBundle]):
         return TDRAnvilBundle
 
     @classmethod
-    @cache
     def _plugin_cls(cls) -> Type[TDRPlugin]:
         return tdr_anvil.Plugin
 
