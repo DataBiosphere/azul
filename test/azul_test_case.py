@@ -43,7 +43,8 @@ from azul.logging import (
 log = get_test_logger(__name__)
 
 
-def setupModule():
+# noinspection PyPep8Naming
+def setUpModule():
     configure_test_logging(log)
 
 

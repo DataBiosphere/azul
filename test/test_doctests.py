@@ -49,7 +49,7 @@ import test_tagging
 
 
 # noinspection PyPep8Naming
-def setupModule():
+def setUpModule():
     configure_test_logging()
 
 

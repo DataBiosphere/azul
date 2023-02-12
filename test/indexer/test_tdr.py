@@ -64,6 +64,10 @@ from azul.indexer import (
     Bundle,
     SourcedBundleFQID,
 )
+from azul.logging import (
+    configure_test_logging,
+    get_test_logger,
+)
 from azul.plugins.repository import (
     tdr_anvil,
     tdr_hca,
@@ -97,12 +101,20 @@ from indexer import (
 
 BUNDLE = TypeVar('BUNDLE', bound=Bundle)
 
+log = get_test_logger(__name__)
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging(log)
+
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class TestPlugin(TDRPlugin, ABC):
     tinyquery: tinyquery.TinyQuery
 
     def _run_sql(self, query: str) -> BigQueryRows:
+        log.debug('Query: %r', query)
         columns = self.tinyquery.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
         # Tinyquery returns naive datetime objects from a TIMESTAMP type column,

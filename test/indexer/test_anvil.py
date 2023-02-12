@@ -16,6 +16,9 @@ from azul import (
 from azul.indexer import (
     SourcedBundleFQID,
 )
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.types import (
     JSON,
 )
@@ -29,6 +32,11 @@ from service import (
     WebServiceTestCase,
     patch_source_cache,
 )
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 class AnvilIndexerTestCase(IndexerTestCase, TDRAnvilPluginTestCase):
