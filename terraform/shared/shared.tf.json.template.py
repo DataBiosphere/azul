@@ -504,6 +504,11 @@ emit_tf(block_public_s3_bucket_access({
                                         'cloudwatch:Describe*',
                                         'cloudwatch:Get*',
                                         'cloudwatch:List*',
+                                        'logs:Get*',
+                                        'logs:List*',
+                                        'logs:Describe*',
+                                        'logs:TestMetricFilter',
+                                        'logs:FilterLogEvents',
                                         'sns:Get*',
                                         'sns:List*'
                                     ]

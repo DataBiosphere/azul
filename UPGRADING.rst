@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4966 Chatbot role policy is too restrictive and causes persistent alarms
+=========================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 .. |deprecated| raw:: html
 
    <strike>
