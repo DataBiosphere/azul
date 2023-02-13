@@ -72,7 +72,7 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
             drs_url = dss_dos_object_url(file_uuid=file_uuid,
                                          catalog=self.catalog,
                                          file_version=file_version,
-                                         base_url=str(self.base_url))
+                                         base_url=self.base_url)
             with mock.patch('time.time', new=lambda: 1547691253.07010):
                 dss_url = config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
                 helper.add(responses.Response(method=responses.GET,
