@@ -16,6 +16,9 @@ from itertools import (
     chain,
 )
 import re
+from typing import (
+    cast,
+)
 import unittest
 from unittest.mock import (
     patch,
@@ -1469,7 +1472,8 @@ class TestHCAIndexer(IndexerTestCase):
             project_hit = one(hit
                               for hit in hits
                               if ('projects', True) == self._parse_index_name(hit))
-            cell_suspension = one(project_hit['_source']['contents']['cell_suspensions'])
+            contents = project_hit['_source']['contents']
+            cell_suspension = cast(JSON, one(contents['cell_suspensions']))
             actual_result = {
                 field: cell_suspension[field]
                 for field in expected.keys()
