@@ -41,6 +41,9 @@ from azul import (
     mutable_furl,
     require,
 )
+from azul.collections import (
+    adict,
+)
 from azul.drs import (
     AccessMethod,
     dos_object_url_path,
@@ -145,8 +148,12 @@ class DRSController(SourceController):
             'replica': replica,
             **kwargs
         }
-        url = config.dss_endpoint + '/files/' + file_uuid
-        return requests.get(url, params=dss_params, allow_redirects=False)
+        url = self.dss_file_url(file_uuid)
+        return requests.get(str(url), params=dss_params, allow_redirects=False)
+
+    @classmethod
+    def dss_file_url(cls, file_uuid: str) -> mutable_furl:
+        return furl(config.dss_endpoint).add(path=('files', file_uuid))
 
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version, authentication):
@@ -164,7 +171,7 @@ class DRSController(SourceController):
 
     @deprecated('DOS support will be removed')
     def _dos_gs_url(self, file_uuid, version) -> mutable_furl:
-        url = furl(url=config.dss_endpoint, path=('files', file_uuid))
+        url = self.dss_file_url(file_uuid)
         params = dict({'file_version': version} if version else {},
                       directurl=True,
                       replica='gcp')
@@ -255,8 +262,8 @@ class DRSObject:
         })
 
     def to_json(self) -> JSON:
-        version = (f'&version={self.version}' if self.version is not None else '')
-        url = f'{config.dss_endpoint}/files/{self.uuid}?replica=aws' + version
+        args = adict(replica='aws', version=self.version)
+        url = DRSController.dss_file_url(self.uuid).add(args=args)
         headers = requests.head(url).headers
         version = headers['x-dss-version']
         if self.version is not None:

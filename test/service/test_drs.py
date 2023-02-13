@@ -12,6 +12,9 @@ import urllib.parse
 from chalice.config import (
     Config as ChaliceConfig,
 )
+from furl import (
+    furl,
+)
 import requests
 import responses
 
@@ -75,7 +78,7 @@ class DRSEndpointTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
                                          file_version=file_version,
                                          base_url=self.base_url)
             with mock.patch('time.time', new=lambda: 1547691253.07010):
-                dss_url = config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
+                dss_url = str(furl(config.dss_endpoint).add(path=('files', file_uuid)))
                 helper.add(responses.Response(method=responses.GET,
                                               url=dss_url,
                                               status=301,
@@ -162,7 +165,7 @@ class DRSTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
                     drs_response = requests.get(str(url))
                     drs_response.raise_for_status()
                     drs_object = drs_response.json()
-                    uri = dss_drs_object_uri(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                    uri = dss_drs_object_uri(file_uuid=file_uuid,
                                              file_version='2018-11-02T113344.698028Z')
                     expected: MutableJSON = {
                         'checksums': [
@@ -170,7 +173,7 @@ class DRSTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
                             {'sha-256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'}
                         ],
                         'created_time': '2018-11-02T11:33:44.698028Z',
-                        'id': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                        'id': file_uuid,
                         'self_uri': str(uri),
                         'size': '195142097',
                         'version': '2018-11-02T113344.698028Z',
