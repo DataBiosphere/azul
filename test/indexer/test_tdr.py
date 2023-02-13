@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -99,8 +99,6 @@ from indexer import (
     CannedBundleTestCase,
 )
 
-BUNDLE = TypeVar('BUNDLE', bound=Bundle)
-
 log = get_test_logger(__name__)
 
 
@@ -110,7 +108,7 @@ def setUpModule():
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class MockPlugin(TDRPlugin, ABC):
+class MockPlugin(TDRPlugin, metaclass=ABCMeta):
     tinyquery: tinyquery.TinyQuery
 
     def _run_sql(self, query: str) -> BigQueryRows:
@@ -156,6 +154,9 @@ class TestMockPlugin(AzulUnitTestCase):
                          MockPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
+BUNDLE = TypeVar('BUNDLE', bound=Bundle)
+
+
 class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
 
     @classmethod
@@ -167,14 +168,6 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
     @abstractmethod
     def _plugin_cls(cls) -> Type[TDRPlugin]:
         raise NotImplementedError
-
-    @classmethod
-    @cache
-    def _test_plugin_cls(cls) -> Type[MockPlugin]:
-        class Plugin(MockPlugin, cls._plugin_cls()):
-            pass
-
-        return Plugin
 
     @classmethod
     def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
@@ -198,7 +191,12 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
 
     @cache
     def plugin_for_source_spec(self, source_spec) -> TDRPlugin:
-        return self._test_plugin_cls()(sources={source_spec}, tinyquery=self.tinyquery)
+        # noinspection PyAbstractClass
+        class Plugin(MockPlugin, self._plugin_cls()):
+            pass
+
+        return Plugin(sources={source_spec},
+                      tinyquery=self.tinyquery)
 
     def _make_mock_tdr_tables(self,
                               bundle_fqid: SourcedBundleFQID) -> None:
@@ -252,7 +250,7 @@ class TDRHCAPluginTestCase(TDRPluginTestCase[TDRHCABundle]):
         return TDRHCABundle
 
     @classmethod
-    def _plugin_cls(cls) -> Type[TDRPlugin]:
+    def _plugin_cls(cls) -> Type[tdr_hca.Plugin]:
         return tdr_hca.Plugin
 
 
@@ -263,7 +261,7 @@ class TDRAnvilPluginTestCase(TDRPluginTestCase[TDRAnvilBundle]):
         return TDRAnvilBundle
 
     @classmethod
-    def _plugin_cls(cls) -> Type[TDRPlugin]:
+    def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
         return tdr_anvil.Plugin
 
 
@@ -380,7 +378,7 @@ class TestTDRSourceList(AzulUnitTestCase):
                       ) -> Callable[..., HTTPResponse]:
         called = False
 
-        def _mock_urlopen(http_client, method, url, *, headers, **kwargs):
+        def _mock_urlopen(_http_client, method, url, *, headers, **_kwargs):
             nonlocal called
             self.assertEqual(method, 'GET')
             self.assertEqual(furl(url).remove(query=True),
