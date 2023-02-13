@@ -21,6 +21,9 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from service import (
     DocumentCloningTestCase,
     patch_dss_source,
@@ -37,7 +40,7 @@ def setUpModule():
 
 @patch_dss_source
 @patch_source_cache
-class TestPagination(DocumentCloningTestCase):
+class TestPagination(DCP1TestCase, DocumentCloningTestCase):
 
     def setUp(self):
         super().setUp()

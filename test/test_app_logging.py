@@ -21,7 +21,6 @@ from more_itertools import (
 import requests
 
 from app_test_case import (
-    AzulUnitTestCase,
     ChaliceServerThread,
 )
 import azul
@@ -34,6 +33,7 @@ from azul.logging import (
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
+    AzulUnitTestCase,
 )
 
 

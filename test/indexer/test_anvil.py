@@ -31,7 +31,6 @@ def setUpModule():
 
 
 class AnvilIndexerTestCase(IndexerTestCase, TDRAnvilPluginTestCase):
-    source = TDRAnvilPluginTestCase.source
 
     @classmethod
     def bundles(cls) -> list[SourcedBundleFQID]:

@@ -3,6 +3,9 @@ import requests
 from azul.logging import (
     configure_test_logging,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from service import (
     WebServiceTestCase,
     patch_dss_source,
@@ -15,7 +18,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class RepositorySpecimenEndpointTest(WebServiceTestCase):
+class RepositorySpecimenEndpointTest(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):

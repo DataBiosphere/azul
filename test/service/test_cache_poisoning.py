@@ -1,17 +1,18 @@
+from abc import (
+    ABCMeta,
+)
+
 import requests
 
 from app_test_case import (
     LocalAppTestCase,
 )
-from azul import (
-    CatalogName,
-    config,
-)
 from azul.logging import (
     configure_test_logging,
 )
-from indexer.test_anvil import (
-    AnvilIndexerTestCase,
+from azul_test_case import (
+    AnvilTestCase,
+    DCP1TestCase,
 )
 from service import (
     patch_dss_source,
@@ -24,7 +25,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class CachePoisoningTestCase(LocalAppTestCase):
+class CachePoisoningTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -39,32 +40,19 @@ class CachePoisoningTestCase(LocalAppTestCase):
 # Note that the test cases are named intentionally to force the order in which
 # they are run. The AnVIL test case needs to be run first.
 
-class TestCachePoisoning1(CachePoisoningTestCase):
+class TestCachePoisoning1(CachePoisoningTestCase, AnvilTestCase):
     """
     This test case attempts to poison the class-level cache on
     SourceService._repository_plugin with the TDR AnVIL repository plugin.
     """
 
-    source = AnvilIndexerTestCase.source
-
-    @classmethod
-    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
-        return {
-            cls.catalog: config.Catalog(name=cls.catalog,
-                                        atlas='anvil',
-                                        internal=False,
-                                        plugins=dict(metadata=config.Catalog.Plugin(name='anvil'),
-                                                     repository=config.Catalog.Plugin(name='tdr_anvil')),
-                                        sources={str(cls.source.spec)})
-        }
-
     @patch_dss_source
-    @patch_source_cache([source.to_json()])
+    @patch_source_cache([AnvilTestCase.source.to_json()])
     def test(self):
         self._test()
 
 
-class TestCachePoisoning2(CachePoisoningTestCase):
+class TestCachePoisoning2(CachePoisoningTestCase, DCP1TestCase):
     """
     This test uses the same default catalog name as the test case above but it
     should be using the DSS repository plugin, the inherited default, instead.

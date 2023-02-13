@@ -1,3 +1,6 @@
+from abc import (
+    ABCMeta,
+)
 import copy
 import json
 import os
@@ -57,8 +60,8 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    mock_dss_source,
 )
-import indexer
 from indexer import (
     IndexerTestCase,
 )
@@ -71,7 +74,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
+class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
     """
     Although it seems weird for the webservice to inherit the testing mechanisms
     for the indexer, we need them in order to send live indexer output to the
@@ -115,7 +118,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
         }
 
 
-class DocumentCloningTestCase(WebServiceTestCase):
+class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
     _templates: JSONs
     _random: Random
 
@@ -220,7 +223,7 @@ class StorageServiceTestMixin:
 
 
 patch_dss_source = patch('azul.Config.dss_source',
-                         new=PropertyMock(return_value=indexer.mock_dss_source))
+                         new=PropertyMock(return_value=mock_dss_source))
 
 
 def patch_source_cache(arg: Union[Type, Callable, JSONs]):

@@ -81,7 +81,6 @@ from azul.plugins.repository.tdr_anvil import (
 from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
     TDRHCABundle,
-    TDRSourceRef,
 )
 from azul.terra import (
     TDRClient,
@@ -93,7 +92,10 @@ from azul.types import (
     JSONs,
 )
 from azul_test_case import (
+    AnvilTestCase,
     AzulUnitTestCase,
+    DCP2TestCase,
+    TDRTestCase,
 )
 from indexer import (
     CannedBundleTestCase,
@@ -157,7 +159,7 @@ class TestMockPlugin(AzulUnitTestCase):
 BUNDLE = TypeVar('BUNDLE', bound=Bundle)
 
 
-class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
+class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase, Generic[BUNDLE]):
 
     @classmethod
     @abstractmethod
@@ -180,10 +182,6 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
                                  metadata_files=metadata)
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
-    partition_prefix_length = 2
-    source = f'tdr:test_project:snapshot/snapshot:/{partition_prefix_length}'
-    source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
-                          spec=TDRSourceSpec.parse(source))
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -243,7 +241,7 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
         ]
 
 
-class TDRHCAPluginTestCase(TDRPluginTestCase[TDRHCABundle]):
+class TDRHCAPluginTestCase(DCP2TestCase, TDRPluginTestCase[TDRHCABundle]):
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRHCABundle]:
@@ -254,7 +252,7 @@ class TDRHCAPluginTestCase(TDRPluginTestCase[TDRHCABundle]):
         return tdr_hca.Plugin
 
 
-class TDRAnvilPluginTestCase(TDRPluginTestCase[TDRAnvilBundle]):
+class TDRAnvilPluginTestCase(AnvilTestCase, TDRPluginTestCase[TDRAnvilBundle]):
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRAnvilBundle]:

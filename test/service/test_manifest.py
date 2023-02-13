@@ -102,6 +102,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    DCP1TestCase,
 )
 from service import (
     DSSUnitTestCase,
@@ -121,7 +122,7 @@ def setUpModule():
 
 
 @mock_s3
-class ManifestTestCase(WebServiceTestCase, StorageServiceTestMixin):
+class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin):
 
     def setUp(self):
         super().setUp()

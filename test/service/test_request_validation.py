@@ -20,6 +20,9 @@ import azul.changelog
 from azul.logging import (
     configure_test_logging,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from service import (
     WebServiceTestCase,
     patch_dss_source,
@@ -34,7 +37,7 @@ def setUpModule():
 
 @patch_dss_source
 @patch_source_cache
-class RequestParameterValidationTest(WebServiceTestCase):
+class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod

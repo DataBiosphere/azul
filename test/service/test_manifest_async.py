@@ -56,6 +56,7 @@ from azul.service.manifest_service import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    DCP1TestCase,
 )
 from service import (
     patch_dss_source,
@@ -157,7 +158,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestManifestController(LocalAppTestCase):
+class TestManifestController(DCP1TestCase, LocalAppTestCase):
     object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:

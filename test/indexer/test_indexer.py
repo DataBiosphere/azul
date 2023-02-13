@@ -84,6 +84,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    DCP1TestCase,
 )
 from indexer import (
     IndexerTestCase,
@@ -97,7 +98,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class TestHCAIndexer(IndexerTestCase):
+class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def setUp(self) -> None:
         super().setUp()

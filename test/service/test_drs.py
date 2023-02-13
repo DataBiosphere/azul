@@ -35,6 +35,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    DCP1TestCase,
 )
 from service import (
     DSSUnitTestCase,
@@ -51,7 +52,7 @@ def setUpModule():
 
 @patch_dss_source
 @patch_source_cache
-class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
+class DRSEndpointTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -129,7 +130,7 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
             self.fail()
 
 
-class DRSTest(WebServiceTestCase, DSSUnitTestCase):
+class DRSTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
     maxDiff = None
 
     dss_headers = {

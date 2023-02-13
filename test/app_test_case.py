@@ -31,7 +31,7 @@ from azul.modules import (
     load_app_module,
 )
 from azul_test_case import (
-    AzulUnitTestCase,
+    CatalogTestCase,
 )
 
 log = get_test_logger(__name__)
@@ -58,7 +58,7 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
+class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
     """
     A mixin for test cases against a locally running instance of a AWS Lambda
     Function aka Chalice application. By default, the local instance will use

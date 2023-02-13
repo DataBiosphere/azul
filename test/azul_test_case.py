@@ -1,3 +1,7 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from collections.abc import (
     Set,
 )
@@ -35,9 +39,21 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.indexer import (
+    SourceRef,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.plugins.repository.dss import (
+    DSSSourceRef,
+)
+from azul.plugins.repository.tdr_hca import (
+    TDRSourceRef,
+)
+from azul.terra import (
+    TDRSourceSpec,
 )
 
 log = get_test_logger(__name__)
@@ -203,7 +219,6 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls._mock_catalogs()
         cls._mock_aws_account_id()
         cls._mock_aws_credentials()
         cls._mock_aws_region()
@@ -215,7 +230,6 @@ class AzulUnitTestCase(AzulTestCase):
         cls._restore_aws_region()
         cls._restore_aws_credentials()
         cls._restore_aws_account_id()
-        cls._restore_catalogs()
         super().tearDownClass()
 
     def setUp(self) -> None:
@@ -233,54 +247,6 @@ class AzulUnitTestCase(AzulTestCase):
             backends = moto.backends.get_backend(name)
             for region_name, backend in backends.items():
                 backend.reset()
-
-    catalog: CatalogName = 'test'
-
-    @classmethod
-    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
-        return {
-            cls.catalog: config.Catalog(name=cls.catalog,
-                                        atlas='hca',
-                                        internal=False,
-                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                                     repository=config.Catalog.Plugin(name='dss')),
-                                        sources=set('test:/2'))
-        }
-
-    _catalog_mock = None
-
-    @classmethod
-    def _mock_catalogs(cls):
-        # Reset the cached properties
-        try:
-            # noinspection PyPropertyAccess
-            del config.catalogs
-        except AttributeError:
-            pass
-        try:
-            # noinspection PyPropertyAccess
-            del config.default_catalog
-        except AttributeError:
-            pass
-        try:
-            # noinspection PyPropertyAccess
-            del config.integration_test_catalogs
-        except AttributeError:
-            pass
-        # Patch the catalog property to use a single fake test catalog.
-        cls._catalog_mock = patch.object(target=type(config),
-                                         attribute='catalogs',
-                                         new_callable=PropertyMock,
-                                         return_value=cls.catalog_config())
-        cls._catalog_mock.start()
-        assert cls.catalog_config()[cls.catalog]
-        # Ensure that derived cached properties are affected
-        assert config.default_catalog == cls.catalog
-        assert config.integration_test_catalogs == {}
-
-    @classmethod
-    def _restore_catalogs(cls):
-        cls._catalog_mock.stop()
 
     _aws_account_id = None
 
@@ -369,6 +335,116 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def _restore_dss_query_prefix(cls):
         cls._dss_prefix_mock.stop()
+
+
+class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
+    catalog: CatalogName = 'test'
+    source: SourceRef
+
+    @classmethod
+    @abstractmethod
+    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
+        raise NotImplementedError
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls._mock_catalogs()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._restore_catalogs()
+        super().tearDownClass()
+
+    _catalog_mock = None
+
+    @classmethod
+    def _mock_catalogs(cls):
+        # Reset the cached properties
+        try:
+            # noinspection PyPropertyAccess
+            del config.catalogs
+        except AttributeError:
+            pass
+        try:
+            # noinspection PyPropertyAccess
+            del config.default_catalog
+        except AttributeError:
+            pass
+        try:
+            # noinspection PyPropertyAccess
+            del config.integration_test_catalogs
+        except AttributeError:
+            pass
+        # Patch the catalog property to use a single fake test catalog.
+        cls._catalog_mock = patch.object(target=type(config),
+                                         attribute='catalogs',
+                                         new_callable=PropertyMock,
+                                         return_value=cls.catalog_config())
+        cls._catalog_mock.start()
+        assert cls.catalog_config()[cls.catalog]
+        # Ensure that derived cached properties are affected
+        assert config.default_catalog == cls.catalog
+        assert config.integration_test_catalogs == {}
+
+    @classmethod
+    def _restore_catalogs(cls):
+        cls._catalog_mock.stop()
+
+
+mock_dss_source = 'https://test:/2'
+
+
+class DCP1TestCase(CatalogTestCase):
+    source = DSSSourceRef.for_dss_source(mock_dss_source)
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='dss')),
+                                        sources={str(cls.source.spec)})
+        }
+
+
+class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
+    source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
+                          spec=TDRSourceSpec.parse('tdr:test_project:snapshot/snapshot:/2'))
+
+    @classmethod
+    def _sources(cls):
+        return {str(cls.source.spec)}
+
+
+class DCP2TestCase(TDRTestCase):
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='hca',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
+                                        sources=cls._sources())
+        }
+
+
+class AnvilTestCase(TDRTestCase):
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='anvil',
+                                        internal=False,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='anvil'),
+                                                     repository=config.Catalog.Plugin(name='tdr_anvil')),
+                                        sources={str(cls.source.spec)})
+        }
 
 
 class Hidden:

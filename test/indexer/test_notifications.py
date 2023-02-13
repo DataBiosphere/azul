@@ -23,12 +23,17 @@ from azul.deployment import (
 from azul.hmac import (
     SignatureHelper,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from sqs_test_case import (
     SqsTestCase,
 )
 
 
-class TestValidNotificationRequests(LocalAppTestCase, SqsTestCase):
+class TestValidNotificationRequests(LocalAppTestCase,
+                                    DCP1TestCase,
+                                    SqsTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:

@@ -11,6 +11,9 @@ from moto import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from health_check_test_case import (
     HealthCheckTestCase,
 )
@@ -21,7 +24,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestServiceHealthCheck(HealthCheckTestCase):
+class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:

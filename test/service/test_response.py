@@ -78,6 +78,9 @@ from azul.types import (
     JSON,
     JSONs,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from indexer.test_tdr import (
     TDRHCAPluginTestCase,
     TDRPluginTestCase,
@@ -104,7 +107,7 @@ def parse_url_qs(url) -> dict[str, str]:
 
 @patch_dss_source
 @patch_source_cache
-class TestResponse(WebServiceTestCase):
+class TestResponse(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -2186,7 +2189,7 @@ class TestResponse(WebServiceTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestFileTypeSummaries(WebServiceTestCase):
+class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
     def bundles(cls) -> list[BundleFQID]:
@@ -2268,7 +2271,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestResponseInnerEntitySamples(WebServiceTestCase):
+class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -2397,7 +2400,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestSchemaTestDataCannedBundle(WebServiceTestCase):
+class TestSchemaTestDataCannedBundle(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -2545,7 +2548,7 @@ class CellCounts:
 
 @patch_dss_source
 @patch_source_cache
-class TestSortAndFilterByCellCount(WebServiceTestCase):
+class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -2701,7 +2704,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestProjectMatrices(WebServiceTestCase):
+class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -3233,7 +3236,7 @@ class TestProjectMatrices(WebServiceTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestResponseFields(WebServiceTestCase):
+class TestResponseFields(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -3443,7 +3446,7 @@ class TestResponseFields(WebServiceTestCase):
 
 @patch_dss_source
 @patch_source_cache
-class TestUnpopulatedIndexResponse(WebServiceTestCase):
+class TestUnpopulatedIndexResponse(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
     def bundles(cls) -> list[BundleFQID]:
@@ -3519,7 +3522,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                 self.assertEqual(200, response.status_code)
 
 
-class TestPortalIntegrationResponse(LocalAppTestCase):
+class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -3693,7 +3696,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     self.assertEqual(set(integration_ids), set(found_integration_ids))
 
 
-class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
+class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase, DSSUnitTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -3742,20 +3745,8 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
         }, response.json())
 
 
-@patch_source_cache([TDRPluginTestCase.source.to_json()])
+@patch_source_cache([TDRHCAPluginTestCase.source.to_json()])
 class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
-    source = TDRPluginTestCase.source
-
-    @classmethod
-    def catalog_config(cls):
-        return {
-            cls.catalog: config.Catalog(name=cls.catalog,
-                                        atlas='hca',
-                                        internal=False,
-                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
-                                        sources={str(cls.source.spec)})
-        }
 
     @classmethod
     def setUpClass(cls):
