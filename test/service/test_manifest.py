@@ -49,9 +49,9 @@ from furl import (
     furl,
 )
 from more_itertools import (
+    chunked,
     first,
     one,
-    sliced,
 )
 from moto import (
     mock_s3,
@@ -1200,7 +1200,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 ''
             ],
         ]
-        self.assertEqual(expected_body, sorted(sliced(body, 3)))
+        self.assertEqual(expected_body, sorted(chunked(body, 3)))
 
     def test_manifest_format_validation(self):
         url = self.base_url.set(path='/manifest/files',
