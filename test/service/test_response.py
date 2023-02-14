@@ -3745,7 +3745,7 @@ class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase, DSSUnitTestCase):
         }, response.json())
 
 
-@patch_source_cache([TDRHCAPluginTestCase.source.to_json()])
+@patch_source_cache(hit=[TDRHCAPluginTestCase.source.to_json()])
 class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
 
     @classmethod

@@ -47,7 +47,7 @@ class TestCachePoisoning1(CachePoisoningTestCase, AnvilTestCase):
     """
 
     @patch_dss_source
-    @patch_source_cache([AnvilTestCase.source.to_json()])
+    @patch_source_cache(hit=[AnvilTestCase.source.to_json()])
     def test(self):
         self._test()
 

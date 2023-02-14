@@ -22,7 +22,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_source_cache([AnvilIndexerTestCase.source.to_json()])
+@patch_source_cache(hit=[AnvilIndexerTestCase.source.to_json()])
 class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
 
     @classmethod
