@@ -8,8 +8,6 @@ from azul_test_case import (
 )
 from service import (
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 
@@ -30,8 +28,6 @@ class RepositorySpecimenEndpointTest(DCP1TestCase, WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
-    @patch_dss_source
-    @patch_source_cache
     def test_basic_response(self):
         url = self.base_url.set(path='/index/samples',
                                 args=dict(catalog=self.catalog))

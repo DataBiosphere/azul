@@ -86,10 +86,7 @@ from indexer.test_tdr import (
     TDRPluginTestCase,
 )
 from service import (
-    DSSUnitTestCase,
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 
@@ -105,8 +102,6 @@ def parse_url_qs(url) -> dict[str, str]:
     return cast(dict[str, str], query_dict)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestResponse(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -278,8 +273,8 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                     }
                 ],
                 "sources": [{
-                    "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                    "sourceSpec": "https://test:/2"
+                    "sourceId": self.source.id,
+                    "sourceSpec": str(self.source.spec)
                 }],
                 "specimens": [
                     {
@@ -615,8 +610,8 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                         }
                     ],
                     "sources": [{
-                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                        "sourceSpec": "https://test:/2"
+                        "sourceId": self.source.id,
+                        "sourceSpec": str(self.source.spec)
                     }],
                     "specimens": [
                         {
@@ -880,8 +875,8 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                     }
                 ],
                 "sources": [{
-                    "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                    "sourceSpec": "https://test:/2"
+                    "sourceId": self.source.id,
+                    "sourceSpec": str(self.source.spec)
                 }],
                 "specimens": [
                     {
@@ -2187,8 +2182,6 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                         self.assertIn({key: value}, accession_properties)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
@@ -2269,8 +2262,6 @@ class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
         self.assertElasticEqual(file_type_summaries, expected)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -2398,8 +2389,6 @@ class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
-@patch_dss_source
-@patch_source_cache
 class TestSchemaTestDataCannedBundle(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -2546,8 +2535,6 @@ class CellCounts:
                    })
 
 
-@patch_dss_source
-@patch_source_cache
 class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -2702,8 +2689,6 @@ class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
                     self.assertEqual(actual, expected)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -3234,8 +3219,6 @@ class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
         self.assertEqual(expected_counts, actual_counts)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestResponseFields(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -3444,8 +3427,6 @@ class TestResponseFields(DCP1TestCase, WebServiceTestCase):
         self.assertEqual(expected_publications, project['publications'])
 
 
-@patch_dss_source
-@patch_source_cache
 class TestUnpopulatedIndexResponse(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
@@ -3696,7 +3677,8 @@ class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(set(integration_ids), set(found_integration_ids))
 
 
-class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase, DSSUnitTestCase):
+class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase):
+    maxDiff = None
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -3736,7 +3718,7 @@ class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase, DSSUnitTestCase):
                         'repository': {
                             'name': 'dss',
                             'sources': [
-                                'https://dss.data.humancellatlas.org/v1:2/2'
+                                'https://fake_dss_instance/v1:/2'
                             ],
                         }
                     }
@@ -3745,7 +3727,6 @@ class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase, DSSUnitTestCase):
         }, response.json())
 
 
-@patch_source_cache(hit=[TDRHCAPluginTestCase.source.to_json()])
 class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
 
     @classmethod

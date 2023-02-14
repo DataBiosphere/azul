@@ -3,7 +3,6 @@ from abc import (
 )
 import copy
 import json
-import os
 from random import (
     Random,
 )
@@ -14,16 +13,15 @@ from typing import (
     Optional,
     Union,
 )
-from unittest import (
-    mock,
-)
 from unittest.mock import (
     MagicMock,
-    PropertyMock,
     patch,
 )
 import uuid
 
+from deprecated import (
+    deprecated,
+)
 from more_itertools import (
     flatten,
     one,
@@ -55,10 +53,6 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSONs,
-)
-from azul_test_case import (
-    AzulUnitTestCase,
-    mock_dss_source,
 )
 from indexer import (
     IndexerTestCase,
@@ -188,28 +182,6 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
                                     aggregate=True)
 
 
-class DSSUnitTestCase(AzulUnitTestCase):
-    """
-    A mixin for test cases that depend on certain DSS-related environment
-    variables.
-    """
-
-    _dss_mock = None
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls._dss_mock = mock.patch.dict(os.environ,
-                                        AZUL_DSS_SOURCE='https://dss.data.humancellatlas.org/v1:2/2')
-        cls._dss_mock.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._dss_mock.stop()
-        cls._dss_mock = None
-        super().tearDownClass()
-
-
 class StorageServiceTestMixin:
     """
     A mixin for test cases that utilize StorageService.
@@ -220,10 +192,8 @@ class StorageServiceTestMixin:
         return StorageService()
 
 
-patch_dss_source = patch('azul.Config.dss_source',
-                         new=PropertyMock(return_value=mock_dss_source))
-
-
+@deprecated('Instead of decorating your test case, or its test methods in it, '
+            'mix in the appropriate subclass of CatalogTestCase.')
 def patch_source_cache(target: Union[None, type, Callable] = None,
                        /,
                        hit: Optional[JSONs] = None):

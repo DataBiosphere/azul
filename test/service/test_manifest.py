@@ -105,12 +105,9 @@ from azul_test_case import (
     DCP1TestCase,
 )
 from service import (
-    DSSUnitTestCase,
     DocumentCloningTestCase,
     StorageServiceTestMixin,
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 log = get_test_logger(__name__)
@@ -188,7 +185,7 @@ def manifest_test(test):
     return wrapper
 
 
-class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
+class TestManifestEndpoints(ManifestTestCase):
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
@@ -317,8 +314,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     @manifest_test
     def test_compact_manifest(self):
         expected = [
-            ('source_id', '6aaf72a6-0a45-5886-80cf-48f8d670dc26', '6aaf72a6-0a45-5886-80cf-48f8d670dc26'),
-            ('source_spec', 'https://test:/2', 'https://test:/2'),
+            ('source_id', self.source.id, self.source.id),
+            ('source_spec', str(self.source.spec), str(self.source.spec)),
             ('bundle_uuid',
              'b81656cf-231b-47a3-9317-10f1e501a05c || f79257a7-dfc6-46d6-ae00-ba4b25313c10',
              'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
@@ -494,8 +491,6 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.assertEqual(expected_field_names, field_names)
         self.assertEqual(sorted(freeze(expected_rows)), sorted(freeze(rows)))
 
-    @patch_dss_source
-    @patch_source_cache
     @manifest_test
     def test_manifest_zarr(self):
         """
@@ -715,8 +710,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',
                 'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                 'bundle_version': '2018-09-14T13:33:14.453337Z',
-                'source_id': '6aaf72a6-0a45-5886-80cf-48f8d670dc26',
-                'source_spec': 'https://test:/2',
+                'source_id': self.source.id,
+                'source_spec': str(self.source.spec),
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'Q4_DEMO-cellsus_SAMN02797092',
                 'cell_suspension__estimated_cell_count': '',
@@ -821,8 +816,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
                 'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                 'bundle_version': '2018-11-02T11:33:44.698028Z',
-                'source_id': '6aaf72a6-0a45-5886-80cf-48f8d670dc26',
-                'source_spec': 'https://test:/2',
+                'source_id': self.source.id,
+                'source_spec': str(self.source.spec),
                 'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'GSM2172585 1',
                 'cell_suspension__estimated_cell_count': '1',
@@ -1235,11 +1230,11 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     # a pair of deterministically derived v5 UUIDs.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-20d97863-d8cf-54f3-8575-0f9593d3d7ef.64610d37-a501-5b3a-a7e8-2b7f10e37144'
+                        'hca-manifest-20d97863-d8cf-54f3-8575-0f9593d3d7ef.4bc67e84-4873-591f-b524-a5fe4ec215eb'
                     ),
                     (
                         {},
-                        'hca-manifest-c3cf398e-1927-5aae-ba2a-81d8d1800b2d.64610d37-a501-5b3a-a7e8-2b7f10e37144'
+                        'hca-manifest-c3cf398e-1927-5aae-ba2a-81d8d1800b2d.4bc67e84-4873-591f-b524-a5fe4ec215eb'
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):
@@ -1377,8 +1372,6 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
-@patch_dss_source
-@patch_source_cache
 class TestManifestResponse(ManifestTestCase):
 
     @mock.patch.dict(os.environ, AZUL_PRIVATE_API='0')

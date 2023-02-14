@@ -90,6 +90,7 @@ class AzulTestCase(TestCase):
                 RE(r'Call to deprecated method .*\. \(DOS support will be removed\)'),
 
                 'Call to deprecated method fetch_bundle_manifest',
+
                 'ProjectContact.contact_name is deprecated',
                 'File.file_format is deprecated',
                 'ProjectPublication.publication_title is deprecated',
@@ -133,6 +134,8 @@ class AzulTestCase(TestCase):
                     "'collections.abc' is deprecated since Python 3.3, and in 3.9 "
                     "it will stop working"
                 ),
+
+                'Call to deprecated function (or staticmethod) patch_source_cache',
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',
@@ -392,11 +395,38 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         cls._catalog_mock.stop()
 
 
-mock_dss_source = 'https://test:/2'
+class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
+    """
+    A mixin for test cases that depend on certain DSS-related environment
+    variables.
+    """
+    source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
+
+    _source_patch = None
+    _source_cache_patch = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._source_patch = patch.dict(os.environ,
+                                       AZUL_DSS_SOURCE=str(cls.source.spec))
+        cls._source_patch.start()
+        from service import (
+            patch_source_cache,
+        )
+        cls._source_cache_patch = patch_source_cache()
+        cls._source_cache_patch.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._source_patch.stop()
+        cls._source_patch = None
+        cls._source_cache_patch.stop()
+        cls._source_cache_patch = None
+        super().tearDownClass()
 
 
-class DCP1TestCase(CatalogTestCase):
-    source = DSSSourceRef.for_dss_source(mock_dss_source)
+class DCP1TestCase(DSSTestCase):
 
     @classmethod
     def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
@@ -417,6 +447,23 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
     @classmethod
     def _sources(cls):
         return {str(cls.source.spec)}
+
+    _source_cache_patch = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        from service import (
+            patch_source_cache,
+        )
+        cls._source_cache_patch = patch_source_cache(hit=[cls.source.to_json()])
+        cls._source_cache_patch.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._source_cache_patch.stop()
+        cls._source_cache_patch = None
+        super().tearDownClass()
 
 
 class DCP2TestCase(TDRTestCase):

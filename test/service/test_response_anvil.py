@@ -13,7 +13,6 @@ from indexer.test_anvil import (
 )
 from service import (
     WebServiceTestCase,
-    patch_source_cache,
 )
 
 
@@ -22,7 +21,6 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_source_cache(hit=[AnvilIndexerTestCase.source.to_json()])
 class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
 
     @classmethod

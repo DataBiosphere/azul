@@ -58,10 +58,6 @@ from azul_test_case import (
     AzulUnitTestCase,
     DCP1TestCase,
 )
-from service import (
-    patch_dss_source,
-    patch_source_cache,
-)
 
 
 # noinspection PyPep8Naming
@@ -156,8 +152,6 @@ class TestAsyncManifestService(AzulUnitTestCase):
                               token)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
     object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
 
@@ -193,7 +187,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     mock_uuid.return_value = execution_id
                     format_ = ManifestFormat.compact
                     filters = Filters(explicit={'organ': {'is': ['lymph node']}},
-                                      source_ids={'6aaf72a6-0a45-5886-80cf-48f8d670dc26'})
+                                      source_ids={self.source.id})
                     params = {
                         'catalog': self.catalog,
                         'format': format_.value,

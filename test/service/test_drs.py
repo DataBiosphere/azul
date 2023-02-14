@@ -41,10 +41,7 @@ from azul_test_case import (
     DCP1TestCase,
 )
 from service import (
-    DSSUnitTestCase,
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 
@@ -53,9 +50,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_source
-@patch_source_cache
-class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
+class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -133,7 +128,7 @@ class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
             self.fail()
 
 
-class TestDRSEndpoint(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
+class TestDRSEndpoint(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     dss_headers = {

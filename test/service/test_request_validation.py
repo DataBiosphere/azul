@@ -25,8 +25,6 @@ from azul_test_case import (
 )
 from service import (
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 
@@ -35,8 +33,6 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_source
-@patch_source_cache
 class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
@@ -278,8 +274,6 @@ class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
                 url.args.set('filters', filters)
                 self.assertBadRequest(url, message)
 
-    @patch_dss_source
-    @patch_source_cache
     def test_single_entity_error_responses(self):
         entity_types = ['files', 'projects']
         for uuid, expected_error_code in [('2b7959bb-acd1-4aa3-9557-345f9b3c6327', 404),

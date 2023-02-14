@@ -71,10 +71,6 @@ from azul_test_case import (
     DCP1TestCase,
     DCP2TestCase,
 )
-from service import (
-    DSSUnitTestCase,
-    patch_source_cache,
-)
 
 log = get_test_logger(__name__)
 
@@ -241,7 +237,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             _test(authenticate=False, cache=False)
 
 
-class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase, DSSUnitTestCase):
+class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
     # These are the credentials defined in
     #
     # moto.instance_metadata.responses.InstanceMetadataResponse
@@ -264,7 +260,6 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase, DSSUnitTest
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
-    @patch_source_cache
     def test_repository_files_proxy(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None

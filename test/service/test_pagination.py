@@ -26,8 +26,6 @@ from azul_test_case import (
 )
 from service import (
     DocumentCloningTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 log = get_test_logger(__name__)
@@ -38,8 +36,6 @@ def setUpModule():
     configure_test_logging(log)
 
 
-@patch_dss_source
-@patch_source_cache
 class TestPagination(DCP1TestCase, DocumentCloningTestCase):
 
     def setUp(self):

@@ -11,8 +11,6 @@ from azul_test_case import (
 )
 from service import (
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 
@@ -21,8 +19,6 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_source
-@patch_source_cache
 class RepositoryProjectsEndpointTest(DCP1TestCase, WebServiceTestCase):
     # Set a seed so that we can test the detail response with a stable project ID
     seed = 123

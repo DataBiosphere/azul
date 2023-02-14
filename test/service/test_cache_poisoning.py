@@ -14,10 +14,6 @@ from azul_test_case import (
     AnvilTestCase,
     DCP1TestCase,
 )
-from service import (
-    patch_dss_source,
-    patch_source_cache,
-)
 
 
 # noinspection PyPep8Naming
@@ -46,8 +42,6 @@ class TestCachePoisoning1(CachePoisoningTestCase, AnvilTestCase):
     SourceService._repository_plugin with the TDR AnVIL repository plugin.
     """
 
-    @patch_dss_source
-    @patch_source_cache(hit=[AnvilTestCase.source.to_json()])
     def test(self):
         self._test()
 
@@ -65,7 +59,5 @@ class TestCachePoisoning2(CachePoisoningTestCase, DCP1TestCase):
     out of unit tests (intentionally invalid credentials).
     """
 
-    @patch_source_cache
-    @patch_dss_source
     def test(self):
         self._test()
