@@ -55,7 +55,7 @@ def setUpModule():
 
 @patch_dss_source
 @patch_source_cache
-class DRSEndpointTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
+class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -126,21 +126,21 @@ class DRSEndpointTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
 
     def test_data_object_not_found(self):
         try:
-            self._get_data_object("NOT_A_GOOD_IDEA", None)
+            self._get_data_object('NOT_A_GOOD_IDEA', None)
         except requests.exceptions.HTTPError as e:
             self.assertEqual(e.response.status_code, 404)
         else:
             self.fail()
 
 
-class DRSTest(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
+class TestDRSEndpoint(DCP1TestCase, WebServiceTestCase, DSSUnitTestCase):
     maxDiff = None
 
     dss_headers = {
-        "X-DSS-SHA1": "7ad306f154ce7de1a9a333cfd9100fc26ef652b4",
-        "X-DSS-SHA256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
-        "X-DSS-SIZE": "195142097",
-        "X-DSS-VERSION": "2018-11-02T113344.698028Z",
+        'X-DSS-SHA1': '7ad306f154ce7de1a9a333cfd9100fc26ef652b4',
+        'X-DSS-SHA256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+        'X-DSS-SIZE': '195142097',
+        'X-DSS-VERSION': '2018-11-02T113344.698028Z',
     }
 
     signed_url = 'https://org-hca-dss-checkout-prod.s3.amazonaws.com/blobs/307.a72.eb6?foo=bar&et=cetera'
@@ -313,5 +313,5 @@ class TestDRSController(AzulUnitTestCase):
         self.assertEqual('Invalid DRS access ID', response.body)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
