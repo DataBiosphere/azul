@@ -21,7 +21,6 @@ from more_itertools import (
 import requests
 
 from app_test_case import (
-    AzulUnitTestCase,
     ChaliceServerThread,
 )
 import azul
@@ -34,15 +33,16 @@ from azul.logging import (
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
+    AzulUnitTestCase,
 )
 
 
 # noinspection PyPep8Naming
-def setupModule():
+def setUpModule():
     configure_test_logging()
 
 
-class TestAppLogging(TestCase):
+class TestAppLogging(AzulUnitTestCase):
 
     def test(self):
         magic_message = 'Now you see me'

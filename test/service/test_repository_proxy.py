@@ -1,3 +1,6 @@
+from abc import (
+    ABCMeta,
+)
 import io
 import json
 import os
@@ -64,9 +67,9 @@ from azul.terra import (
 from azul.types import (
     JSON,
 )
-from service import (
-    DSSUnitTestCase,
-    patch_source_cache,
+from azul_test_case import (
+    DCP1TestCase,
+    DCP2TestCase,
 )
 
 log = get_test_logger(__name__)
@@ -77,11 +80,11 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class RepositoryPluginTestCase(LocalAppTestCase):
+class RepositoryPluginTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
     @classmethod
     def lambda_name(cls) -> str:
-        return "service"
+        return 'service'
 
     def chalice_config(self):
         return ChaliceConfig.create(lambda_timeout=15)
@@ -102,24 +105,17 @@ class RepositoryPluginTestCase(LocalAppTestCase):
 
 @mock.patch.object(SourceService, '_put', new=MagicMock())
 @mock.patch.object(SourceService, '_get')
-class TestTDRRepositoryProxy(RepositoryPluginTestCase):
+class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
     mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+
     mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
     make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
-    mock_sources = set(map(make_mock_source_spec, mock_source_names))
-
-    catalog = 'testtdr'
 
     @classmethod
-    def catalog_config(cls):
-        return {
-            cls.catalog: config.Catalog(name=cls.catalog,
-                                        atlas='hca',
-                                        internal=False,
-                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
-                                        sources=cls.mock_sources)
-        }
+    def _sources(cls):
+        return set(map(cls.make_mock_source_spec, cls.mock_source_names))
+
+    catalog = 'testtdr'
 
     @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
     @mock.patch.object(TerraClient,
@@ -241,7 +237,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
             _test(authenticate=False, cache=False)
 
 
-class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
+class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
     # These are the credentials defined in
     #
     # moto.instance_metadata.responses.InstanceMetadataResponse
@@ -264,7 +260,6 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
-    @patch_source_cache
     def test_repository_files_proxy(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None

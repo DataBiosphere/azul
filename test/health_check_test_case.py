@@ -45,7 +45,7 @@ from es_test_case import (
     ElasticsearchTestCase,
 )
 from service import (
-    StorageServiceTestCase,
+    StorageServiceTestMixin,
 )
 from sqs_test_case import (
     SqsTestCase,
@@ -66,7 +66,7 @@ def setUpModule():
 
 class HealthCheckTestCase(LocalAppTestCase,
                           ElasticsearchTestCase,
-                          StorageServiceTestCase,
+                          StorageServiceTestMixin,
                           SqsTestCase,
                           metaclass=ABCMeta):
     endpoints = (

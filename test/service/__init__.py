@@ -1,6 +1,8 @@
+from abc import (
+    ABCMeta,
+)
 import copy
 import json
-import os
 from random import (
     Random,
 )
@@ -9,21 +11,17 @@ from typing import (
     Callable,
     ClassVar,
     Optional,
-    Type,
     Union,
-    get_origin,
-)
-from unittest import (
-    TestCase,
-    mock,
 )
 from unittest.mock import (
     MagicMock,
-    PropertyMock,
     patch,
 )
 import uuid
 
+from deprecated import (
+    deprecated,
+)
 from more_itertools import (
     flatten,
     one,
@@ -56,7 +54,6 @@ from azul.service.storage_service import (
 from azul.types import (
     JSONs,
 )
-import indexer
 from indexer import (
     IndexerTestCase,
 )
@@ -69,7 +66,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
+class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
     """
     Although it seems weird for the webservice to inherit the testing mechanisms
     for the indexer, we need them in order to send live indexer output to the
@@ -113,7 +110,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
         }
 
 
-class DocumentCloningTestCase(WebServiceTestCase):
+class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
     _templates: JSONs
     _random: Random
 
@@ -185,28 +182,7 @@ class DocumentCloningTestCase(WebServiceTestCase):
                                     aggregate=True)
 
 
-class DSSUnitTestCase(TestCase):
-    """
-    A mixin for test cases that depend on certain DSS-related environment
-    variables.
-    """
-
-    _dss_mock = None
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls._dss_mock = mock.patch.dict(os.environ,
-                                        AZUL_DSS_SOURCE='https://dss.data.humancellatlas.org/v1:2/2')
-        cls._dss_mock.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._dss_mock.stop()
-        super().tearDownClass()
-
-
-class StorageServiceTestCase(TestCase):
+class StorageServiceTestMixin:
     """
     A mixin for test cases that utilize StorageService.
     """
@@ -216,18 +192,18 @@ class StorageServiceTestCase(TestCase):
         return StorageService()
 
 
-patch_dss_source = patch('azul.Config.dss_source',
-                         new=PropertyMock(return_value=indexer.mock_dss_source))
-
-
-def patch_source_cache(arg: Union[Type, Callable, JSONs]):
+@deprecated('Instead of decorating your test case, or its test methods in it, '
+            'mix in the appropriate subclass of CatalogTestCase.')
+def patch_source_cache(target: Union[None, type, Callable] = None,
+                       /,
+                       hit: Optional[JSONs] = None):
     """
     Patch the cache access methods of SourceService to emulate a cache miss or
     return a given set of sources.
 
-    May be invoked directly as a decorator (no parentheses, emulating a cache
-    miss) or as a decorator factory accepting exactly one argument (the sources
-    to return from the patched cache).
+    When used directly (without parentheses) to decorate a method (or class),
+    the SourceService will produce a cache miss, while the method (or any
+    method in the class) is running.
 
     >>> @patch_source_cache
     ... class C:
@@ -247,53 +223,64 @@ def patch_source_cache(arg: Union[Type, Callable, JSONs]):
     ...
     azul.service.source_service.NotFound: Key not found: 'foo'
 
+    When calling it without arguments it returns a decorator that has the same
+    effect.
+
     >>> @patch_source_cache()
     ... class C:
     ...     def test(self):
     ...         return SourceService()._get('foo')
+    >>> C().test()
     Traceback (most recent call last):
     ...
-    TypeError: patch_source_cache() missing 1 required positional argument: 'arg'
+    azul.service.source_service.NotFound: Key not found: 'foo'
 
-    >>> class C:
-    ...     @patch_source_cache()
-    ...     def test(self):
-    ...         return SourceService()._get('foo')
+    Alternatively, the return value can be used as a context manager, to the
+    same effect.
+
+    >>> with patch_source_cache():
+    ...     SourceService()._get('key')  # noqa
     Traceback (most recent call last):
     ...
-    TypeError: patch_source_cache() missing 1 required positional argument: 'arg'
+    azul.service.source_service.NotFound: Key not found: 'key'
 
-    >>> @patch_source_cache([{'foo': 'bar'}])
+    When called with the `hit` keyword argument, the returned decorator/context
+    manager causes SourceService to produce a cache hit with the given value.
+
+    >>> @patch_source_cache(hit=[{'foo': 'bar'}])
     ... class C:
     ...     def test(self):
-    ...         return SourceService()._get('foo')
+    ...         return SourceService()._get('key')
     >>> C().test()
     [{'foo': 'bar'}]
 
-    >>> class C:
-    ...     @patch_source_cache([{'foo': 'bar'}])
-    ...     def test(self):
-    ...         return SourceService()._get('foo')
-    >>> C().test()
+    >>> with patch_source_cache(hit=[{'foo': 'bar'}]):
+    ...     SourceService()._get('foo')  # noqa
+    [{'foo': 'bar'}]
+
+    While the patch is active, any items placed in the cache are discarded.
+
+    >>> with patch_source_cache(hit=[{'foo': 'bar'}]):
+    ...     service = SourceService()
+    ...     service._put('key', [{}])  # noqa
+    ...     service._get('key')  # noqa
     [{'foo': 'bar'}]
     """
-    get_mock = MagicMock()
 
-    def nested_patch(target):
-        get_patch = patch.object(SourceService,
-                                 '_get',
-                                 new=get_mock)
-        put_patch = patch.object(SourceService,
-                                 '_put',
-                                 new=MagicMock())
-        return put_patch(get_patch(target))
+    def not_found(key):
+        raise NotFound(key)
 
-    if isinstance(arg, get_origin(JSONs)):
-        get_mock.return_value = arg
-        return nested_patch
+    get = MagicMock()
+    if hit is None:
+        get.side_effect = not_found
     else:
-        def not_found(key):
-            raise NotFound(key)
+        get.return_value = hit
 
-        get_mock.side_effect = not_found
-        return nested_patch(arg)
+    put = MagicMock()
+    put.return_value = None
+    the_patch = patch.multiple(SourceService, _get=get, _put=put)
+
+    if target is None:
+        return the_patch
+    else:
+        return the_patch(target)

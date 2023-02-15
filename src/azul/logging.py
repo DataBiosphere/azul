@@ -74,8 +74,10 @@ def _test_logger_name(names):
 
 
 def configure_test_logging(*loggers):
-    for logger in loggers:
-        assert logger.name.startswith(_test_logger_name(''))
+    prefix = _test_logger_name('')
+    expected = [(logger.name, True) for logger in loggers]
+    actual = [(logger.name, logger.name.startswith(prefix)) for logger in loggers]
+    assert actual == expected, actual
     _configure_non_app_logging(get_test_logger(), *loggers)
 
 

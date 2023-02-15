@@ -49,9 +49,8 @@ class Expired(CacheMiss):
 
 class SourceService:
 
-    @classmethod
     @cache
-    def _repository_plugin(cls, catalog: CatalogName) -> RepositoryPlugin:
+    def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
     def list_sources(self,

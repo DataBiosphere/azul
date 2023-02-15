@@ -16,6 +16,9 @@ from itertools import (
     chain,
 )
 import re
+from typing import (
+    cast,
+)
 import unittest
 from unittest.mock import (
     patch,
@@ -81,6 +84,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    DCP1TestCase,
 )
 from indexer import (
     IndexerTestCase,
@@ -94,7 +98,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class TestHCAIndexer(IndexerTestCase):
+class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def setUp(self) -> None:
         super().setUp()
@@ -1469,7 +1473,8 @@ class TestHCAIndexer(IndexerTestCase):
             project_hit = one(hit
                               for hit in hits
                               if ('projects', True) == self._parse_index_name(hit))
-            cell_suspension = one(project_hit['_source']['contents']['cell_suspensions'])
+            contents = project_hit['_source']['contents']
+            cell_suspension = cast(JSON, one(contents['cell_suspensions']))
             actual_result = {
                 field: cell_suspension[field]
                 for field in expected.keys()
