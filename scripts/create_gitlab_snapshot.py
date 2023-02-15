@@ -1,6 +1,3 @@
-from collections.abc import (
-    Mapping,
-)
 import datetime
 import logging
 from time import (
@@ -12,7 +9,6 @@ from more_itertools import (
 )
 
 from azul import (
-    JSON,
     config,
     require,
 )
@@ -22,6 +18,10 @@ from azul.deployment import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.types import (
+    JSON,
+    JSONs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -30,12 +30,12 @@ def main():
     require(config.terraform_component == 'gitlab',
             "Select the 'gitlab' component ('dev.gitlab' or 'prod.gitlab', for example).")
     volume = gitlab_volume_info()
-    attachments = volume['Attachments']
+    attachments: JSONs = volume['Attachments']
     if attachments:
         instance = one(attachments)
         shutdown_instance(instance)
     else:
-        log.info('Volume %s is not attached to any instances', volume['VolumeId'])
+        log.info('Volume %r is not attached to any instances', volume['VolumeId'])
     create_snapshot(volume)
 
 
@@ -48,26 +48,25 @@ gitlab_filter = [
 ]
 
 
-def gitlab_volume_info() -> Mapping[str, JSON]:
+def gitlab_volume_info() -> JSON:
     return one(aws.ec2.describe_volumes(Filters=gitlab_filter)['Volumes'])
 
 
-def shutdown_instance(instance: Mapping[str, JSON]):
-    instance_ids = [instance['InstanceId']]
-    log.info('Preparing to stop GitLab instance for %s, waiting 10 seconds '
-             'before proceeding. Hit Ctrl-C to abort',
+def shutdown_instance(instance: JSON):
+    instance_id = instance['InstanceId']
+    log.info('Preparing to stop GitLab instance for %r, waiting 10 seconds '
+             'before proceeding. Hit Ctrl-C to abort …',
              config.deployment_stage)
     sleep(10)
-    log.info('Stopping instance %s', instance_ids)
-    aws.ec2.stop_instances(InstanceIds=instance_ids)
-    log.info('Waiting for the GitLab instance to stop')
+    log.info('Stopping instance %r …', instance_id)
+    aws.ec2.stop_instances(InstanceIds=[instance_id])
     waiter = aws.ec2.get_waiter('instance_stopped')
-    waiter.wait(InstanceIds=instance_ids,
+    waiter.wait(InstanceIds=[instance_id],
                 WaiterConfig=dict(MaxAttempts=9999, Delay=15))
-    log.info('Instance %s has stopped', instance_ids)
+    log.info('Instance %r has stopped', instance_id)
 
 
-def create_snapshot(volume: Mapping[str, JSON]):
+def create_snapshot(volume: JSON):
     # FIXME: Consolidate uses of sts.get_caller_identity
     #        https://github.com/DataBiosphere/azul/issues/3890
     role_id = aws.sts.get_caller_identity()['UserId'].split(':')[0]
@@ -87,13 +86,13 @@ def create_snapshot(volume: Mapping[str, JSON]):
                                            dict(ResourceType='snapshot',
                                                 Tags=[{'Key': k, 'Value': v} for k, v in tags.items()])
                                        ])
-    snapshot = [response['SnapshotId']]
-    log.info('Created snapshot %s for %s, waiting for completion',
+    snapshot = response['SnapshotId']
+    log.info('Snapshot %r of volume %r is being created …',
              snapshot, volume['VolumeId'])
     waiter = aws.ec2.get_waiter('snapshot_completed')
-    waiter.wait(SnapshotIds=snapshot,
+    waiter.wait(SnapshotIds=[snapshot],
                 WaiterConfig=dict(MaxAttempts=9999, Delay=15))
-    log.info('Snapshot for %s in %s is complete',
+    log.info('Snapshot %r of volume %r is complete',
              volume['VolumeId'], config.deployment_stage)
 
 
