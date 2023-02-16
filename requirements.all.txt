@@ -10,7 +10,7 @@ blessed==1.20.0
 boto3==1.24.94
 boto3-stubs==1.24.94
 botocore==1.27.94
-botocore-stubs==1.29.76
+botocore-stubs==1.29.79
 brotli==1.0.9
 cachetools==5.3.0
 certifi==2022.12.7
@@ -70,7 +70,7 @@ locust==2.12.2
 markupsafe==2.1.2
 mccabe==0.7.0
 more-itertools==9.0.0
-moto==4.0.8
+moto==4.1.4.dev8
 msgpack==1.0.4
 mypy-boto3-dynamodb==1.24.74
 mypy-boto3-iam==1.24.90
@@ -129,8 +129,8 @@ wcwidth==0.2.6
 websocket-client==1.5.1
 werkzeug==2.2.3
 wheel==0.38.0
-wrapt==1.14.1
+wrapt==1.15.0
 xmltodict==0.13.0
-zipp==3.14.0
+zipp==3.15.0
 zope.event==4.6
 zope.interface==5.5.2
