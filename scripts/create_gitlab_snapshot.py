@@ -1,11 +1,21 @@
+"""
+Create a snapshot of the EBS data volume attached to the GitLab instance in the
+currently selected deployment.
+"""
+
 import datetime
 import logging
+import sys
 from time import (
     sleep,
+)
+from typing import (
+    Optional,
 )
 
 from more_itertools import (
     one,
+    only,
 )
 
 from azul import (
@@ -20,23 +30,31 @@ from azul.logging import (
 )
 from azul.types import (
     JSON,
-    JSONs,
 )
 
 log = logging.getLogger(__name__)
 
 
-def main():
+def main(argv):
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--no-restart',
+                        default=False,
+                        action='store_true',
+                        help='Leave the EC2 instance in a stopped state after'
+                             ' the snapshot has been created.')
+    args = parser.parse_args(argv)
     require(config.terraform_component == 'gitlab',
             "Select the 'gitlab' component ('dev.gitlab' or 'prod.gitlab', for example).")
     volume = gitlab_volume_info()
-    attachments: JSONs = volume['Attachments']
-    if attachments:
-        instance = one(attachments)
+    instance: Optional[JSON] = only(volume['Attachments'])
+    if instance:
         shutdown_instance(instance)
     else:
         log.info('Volume %r is not attached to any instances', volume['VolumeId'])
     create_snapshot(volume)
+    if instance and not args.no_restart:
+        start_instance(instance)
 
 
 # This filter is used to locate the EBS data volume to be backed up
@@ -64,6 +82,16 @@ def shutdown_instance(instance: JSON):
     waiter.wait(InstanceIds=[instance_id],
                 WaiterConfig=dict(MaxAttempts=9999, Delay=15))
     log.info('Instance %r has stopped', instance_id)
+
+
+def start_instance(instance: JSON):
+    instance_id = instance['InstanceId']
+    log.info('Starting instance %r …', config.deployment_stage)
+    aws.ec2.start_instances(InstanceIds=[instance_id])
+    waiter = aws.ec2.get_waiter('instance_status_ok')
+    waiter.wait(InstanceIds=[instance_id],
+                WaiterConfig=dict(MaxAttempts=9999, Delay=15))
+    log.info('Instance %r is running', instance_id)
 
 
 def create_snapshot(volume: JSON):
@@ -98,4 +126,4 @@ def create_snapshot(volume: JSON):
 
 if __name__ == '__main__':
     configure_script_logging(log)
-    main()
+    main(sys.argv[1:])
