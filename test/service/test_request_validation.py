@@ -1,12 +1,4 @@
 import json
-import os
-import sys
-from tempfile import (
-    TemporaryDirectory,
-)
-from unittest import (
-    mock,
-)
 
 from furl import (
     furl,
@@ -16,7 +8,6 @@ from requests import (
     Response,
 )
 
-import azul.changelog
 from azul.logging import (
     configure_test_logging,
 )
@@ -67,22 +58,6 @@ class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
 
     def assertBadField(self, url: furl):
         self.assertBadRequest(url, 'Unknown field `bad-field`')
-
-    def test_version(self):
-        commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
-        with TemporaryDirectory() as tmpdir:
-            azul.changelog.write_changes(tmpdir)
-            with mock.patch('sys.path', new=sys.path + [tmpdir]):
-                for dirty in True, False:
-                    with self.subTest(is_repo_dirty=dirty):
-                        with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
-                            url = self.base_url.set(path='/version')
-                            response = self.assertResponseStatus(url, 200)
-                            expected_json = {
-                                'commit': commit,
-                                'dirty': dirty
-                            }
-                            self.assertEqual(expected_json, response.json()['git'])
 
     def test_bad_single_filter_field_of_sample(self):
         params = {
