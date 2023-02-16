@@ -3,6 +3,9 @@ from io import (
     StringIO,
 )
 import json
+from typing import (
+    Callable,
+)
 from unittest.mock import (
     MagicMock,
     patch,
@@ -26,6 +29,9 @@ from azul.indexer.log_forwarding_controller import (
 from azul.service.storage_service import (
     StorageService,
 )
+from azul.types import (
+    JSONs,
+)
 from azul_test_case import (
     AzulUnitTestCase,
 )
@@ -47,18 +53,13 @@ class TestLogForwarding(AzulUnitTestCase):
     def storage_service(self) -> StorageService:
         return StorageService(bucket_name=self.log_bucket)
 
-    @mock_s3
-    def test(self):
-        self.storage_service.create_bucket()
-        event = chalice.app.S3Event(context={}, event_dict={
-            'Records': [{
-                's3': {
-                    'bucket': {'name': self.log_bucket},
-                    'object': {'key': self.log_file_key}
-                }
-            }]
-        })
+    @cached_property
+    def controller(self) -> LogForwardingController:
+        return LogForwardingController(app=MagicMock())
 
+    @mock_s3
+    def test_alb(self):
+        self.storage_service.create_bucket()
         log_escape_sequences_by_input = {
             # Quotation marks are escaped because they are used wrap fields that
             # may contain spaces
@@ -134,13 +135,27 @@ class TestLogForwarding(AzulUnitTestCase):
                     'type': 'https',
                     'user_agent': f'gitlab-runner 15.6.1 (15-6-stable; go1.18.8; linux/amd64; {escaped})'
                 }]
+                input = gzip.compress('\n'.join(input).encode('ascii'))
+                self._test(self.controller.forward_alb_logs, input, expected_output)
 
-                log_file_contents = '\n'.join(input).encode('ascii')
-                self.storage_service.put(self.log_file_key, gzip.compress(log_file_contents))
+    def _test(self,
+              forward_method: Callable[[chalice.app.S3Event], None],
+              log_file_contents: bytes,
+              expected_output: JSONs):
+        self.storage_service.put(self.log_file_key, log_file_contents)
 
-                with patch('sys.stdout', new=StringIO()) as stdout:
-                    LogForwardingController(app=MagicMock()).forward_logs(event)
-                    output = stdout.getvalue()
+        event = chalice.app.S3Event(context={}, event_dict={
+            'Records': [{
+                's3': {
+                    'bucket': {'name': self.log_bucket},
+                    'object': {'key': self.log_file_key}
+                }
+            }]
+        })
 
-                output = list(map(json.loads, output.split('\n')[:-1]))
-                self.assertEqual(expected_output, output)
+        with patch('sys.stdout', new=StringIO()) as stdout:
+            forward_method(event)
+            output = stdout.getvalue()
+
+        output = list(map(json.loads, output.split('\n')[:-1]))
+        self.assertEqual(expected_output, output)

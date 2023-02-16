@@ -57,6 +57,14 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
                          # see LocalAppTestCase.setUpClass()
                          unit_test=globals().get('unit_test', False))
 
+    def log_forwarder(self, prefix: str):
+        if config.enable_log_forwarding:
+            return self.on_s3_event(bucket=aws.qualified_bucket_name(config.logs_term),
+                                    events=['s3:ObjectCreated:*'],
+                                    prefix=prefix)
+        else:
+            return lambda func: func
+
     def _authenticate(self) -> Optional[HMACAuthentication]:
         return self.auth_from_request(self.current_request)
 
@@ -149,9 +157,6 @@ def contribute_retry(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event, retry=True)
 
 
-if config.enable_log_forwarding:
-    @app.on_s3_event(bucket=aws.qualified_bucket_name(config.logs_term),
-                     events=['s3:ObjectCreated:*'],
-                     prefix=config.alb_access_log_path_prefix(deployment=None))
-    def forward_alb_logs(event: chalice.app.S3Event):
-        app.log_controller.forward_logs(event)
+@app.log_forwarder(config.alb_access_log_path_prefix(deployment=None))
+def forward_alb_logs(event: chalice.app.S3Event):
+    app.log_controller.forward_alb_logs(event)
