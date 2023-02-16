@@ -160,3 +160,8 @@ def contribute_retry(event: chalice.app.SQSEvent):
 @app.log_forwarder(config.alb_access_log_path_prefix(deployment=None))
 def forward_alb_logs(event: chalice.app.S3Event):
     app.log_controller.forward_alb_logs(event)
+
+
+@app.log_forwarder(config.s3_access_log_path_prefix(deployment=None))
+def forward_s3_logs(event: chalice.app.S3Event):
+    app.log_controller.forward_s3_access_logs(event)

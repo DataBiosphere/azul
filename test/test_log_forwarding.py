@@ -140,6 +140,72 @@ class TestLogForwarding(AzulUnitTestCase):
                 input = gzip.compress('\n'.join(input).encode('ascii'))
                 self._test(self.controller.forward_alb_logs, input, expected_output)
 
+    @mock_s3
+    def test_s3(self):
+        self.storage_service.create_bucket()
+        input = ' '.join([
+            'b30e3bcf6032455643443203384c72722f50257ae46d68aa0cb9624f59b08944',
+            'edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1',
+            '[14/Mar/2023:23:18:18 +0000]',
+            '54.211.146.213 arn:aws:sts::289950828509:assumed-role/'
+            + 'azul-service-anvilbox/azul-service-anvilbox-servicecachehealth',
+            'K829N8AH88F1RX7K',
+            'REST.PUT.OBJECT',
+            'health/service',
+            '"PUT /edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1/health/service HTTP/1.1"',
+            '200',
+            '-',
+            '-',
+            '523',
+            '85',
+            '52',
+            '"-"',
+            '"Boto3/1.24.94 Python/3.9.13 Linux/4.14.255-301-238.520.amzn2.x86_64 '
+            + 'exec-env/AWS_Lambda_python3.9 aws-chalice/1.27.3 Botocore/1.27.94"',
+            '-',
+            'jcmyLMRqqJ7dT4ovtY21rtgwmuTC3qs24vgAtLAkcad9sRV92zC90gf2zGvCkxxsLSaKm48AMjo=',
+            'SigV4',
+            'ECDHE-RSA-AES128-GCM-SHA256',
+            'AuthHeader',
+            's3.amazonaws.com',
+            'TLSv1.2',
+            '-',
+            '-',
+        ]).encode('ascii')
+        expected_output = [{
+            '_source_bucket': self.log_bucket,
+            '_source_key': self.log_file_key,
+            'access_point_arn': '-',
+            'acl_required': '-',
+            'authentication_type': 'AuthHeader',
+            'bucket': 'edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1',
+            'bucket_owner': 'b30e3bcf6032455643443203384c72722f50257ae46d68aa0cb9624f59b08944',
+            'bytes_sent': '-',
+            'cipher_suite': 'ECDHE-RSA-AES128-GCM-SHA256',
+            'error_code': '-',
+            'host_header': 's3.amazonaws.com',
+            'host_id': 'jcmyLMRqqJ7dT4ovtY21rtgwmuTC3qs24vgAtLAkcad9sRV92zC90gf2zGvCkxxsLSaKm48AMjo=',
+            'http_status': '200',
+            'key': 'health/service',
+            'object_size': '523',
+            'operation': 'REST.PUT.OBJECT',
+            'referer': '-',
+            'remote_ip': '54.211.146.213',
+            'request_id': 'K829N8AH88F1RX7K',
+            'request_uri': 'PUT /edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1/health/service HTTP/1.1',
+            'requester': 'arn:aws:sts::289950828509:assumed-role/'
+                         'azul-service-anvilbox/azul-service-anvilbox-servicecachehealth',
+            'signature_version': 'SigV4',
+            'time': '14/Mar/2023:23:18:18 +0000',
+            'tls_version': 'TLSv1.2',
+            'total_time': '85',
+            'turn_around_time': '52',
+            'user_agent': 'Boto3/1.24.94 Python/3.9.13 Linux/4.14.255-301-238.520.amzn2.x86_64 '
+                          'exec-env/AWS_Lambda_python3.9 aws-chalice/1.27.3 Botocore/1.27.94',
+            'version_id': '-',
+        }]
+        self._test(self.controller.forward_s3_access_logs, input, expected_output)
+
     def _test(self,
               forward_method: Callable[[chalice.app.S3Event], None],
               log_file_contents: bytes,

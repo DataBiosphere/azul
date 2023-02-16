@@ -215,6 +215,7 @@ emit_tf({
                       }
                       for function_name in (
                           'forward_alb_logs',
+                          'forward_s3_logs',
                       )
                   }
               }

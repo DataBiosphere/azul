@@ -107,6 +107,7 @@ policy = {
                         f"arn:aws:s3:::{aws.qualified_bucket_name(config.logs_term)}/{prefix}"
                         for prefix in (
                             config.alb_access_log_path_prefix('*', deployment=None),
+                            config.s3_access_log_path_prefix('*', deployment=None),
                         )
                     ]
                 },
