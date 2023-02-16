@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -64,6 +64,10 @@ from azul.indexer import (
     Bundle,
     SourcedBundleFQID,
 )
+from azul.logging import (
+    configure_test_logging,
+    get_test_logger,
+)
 from azul.plugins.repository import (
     tdr_anvil,
     tdr_hca,
@@ -77,7 +81,6 @@ from azul.plugins.repository.tdr_anvil import (
 from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
     TDRHCABundle,
-    TDRSourceRef,
 )
 from azul.terra import (
     TDRClient,
@@ -89,21 +92,29 @@ from azul.types import (
     JSONs,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AnvilTestCase,
     AzulUnitTestCase,
+    DCP2TestCase,
+    TDRTestCase,
 )
 from indexer import (
     CannedBundleTestCase,
 )
 
-BUNDLE = TypeVar('BUNDLE', bound=Bundle)
+log = get_test_logger(__name__)
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging(log)
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TestPlugin(TDRPlugin, ABC):
+class MockPlugin(TDRPlugin, metaclass=ABCMeta):
     tinyquery: tinyquery.TinyQuery
 
     def _run_sql(self, query: str) -> BigQueryRows:
+        log.debug('Query: %r', query)
         columns = self.tinyquery.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
         # Tinyquery returns naive datetime objects from a TIMESTAMP type column,
@@ -138,14 +149,17 @@ class TestPlugin(TDRPlugin, ABC):
         )
 
 
-class TestTestPlugin(AzulUnitTestCase):
+class TestMockPlugin(AzulUnitTestCase):
 
     def test_in(self):
         self.assertEqual('(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)',
-                         TestPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
+                         MockPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
-class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
+BUNDLE = TypeVar('BUNDLE', bound=Bundle)
+
+
+class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase, Generic[BUNDLE]):
 
     @classmethod
     @abstractmethod
@@ -158,14 +172,6 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
         raise NotImplementedError
 
     @classmethod
-    @cache
-    def _test_plugin_cls(cls) -> Type[TDRPlugin]:
-        class Plugin(TestPlugin, cls._plugin_cls()):
-            pass
-
-        return Plugin
-
-    @classmethod
     def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
         canned_result = cls._load_canned_file_version(uuid=bundle.uuid,
                                                       version=None,
@@ -176,10 +182,6 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
                                  metadata_files=metadata)
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
-    partition_prefix_length = 2
-    source = f'tdr:test_project:snapshot/snapshot:/{partition_prefix_length}'
-    source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
-                          spec=TDRSourceSpec.parse(source))
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -187,7 +189,12 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
 
     @cache
     def plugin_for_source_spec(self, source_spec) -> TDRPlugin:
-        return self._test_plugin_cls()(sources={source_spec}, tinyquery=self.tinyquery)
+        # noinspection PyAbstractClass
+        class Plugin(MockPlugin, self._plugin_cls()):
+            pass
+
+        return Plugin(sources={source_spec},
+                      tinyquery=self.tinyquery)
 
     def _make_mock_tdr_tables(self,
                               bundle_fqid: SourcedBundleFQID) -> None:
@@ -234,27 +241,25 @@ class TDRPluginTestCase(CannedBundleTestCase, Generic[BUNDLE]):
         ]
 
 
-class TDRHCAPluginTestCase(TDRPluginTestCase[TDRHCABundle]):
+class TDRHCAPluginTestCase(DCP2TestCase, TDRPluginTestCase[TDRHCABundle]):
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRHCABundle]:
         return TDRHCABundle
 
     @classmethod
-    @cache
-    def _plugin_cls(cls) -> Type[TDRPlugin]:
+    def _plugin_cls(cls) -> Type[tdr_hca.Plugin]:
         return tdr_hca.Plugin
 
 
-class TDRAnvilPluginTestCase(TDRPluginTestCase[TDRAnvilBundle]):
+class TDRAnvilPluginTestCase(AnvilTestCase, TDRPluginTestCase[TDRAnvilBundle]):
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
         return TDRAnvilBundle
 
     @classmethod
-    @cache
-    def _plugin_cls(cls) -> Type[TDRPlugin]:
+    def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
         return tdr_anvil.Plugin
 
 
@@ -358,7 +363,7 @@ class TestTDRHCAPlugin(TDRHCAPluginTestCase):
         self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
 
 
-class TestTDRSourceList(AzulTestCase):
+class TestTDRSourceList(AzulUnitTestCase):
 
     def _mock_snapshots(self, access_token: str) -> JSONs:
         return [{
@@ -371,7 +376,7 @@ class TestTDRSourceList(AzulTestCase):
                       ) -> Callable[..., HTTPResponse]:
         called = False
 
-        def _mock_urlopen(http_client, method, url, *, headers, **kwargs):
+        def _mock_urlopen(_http_client, method, url, *, headers, **_kwargs):
             nonlocal called
             self.assertEqual(method, 'GET')
             self.assertEqual(furl(url).remove(query=True),

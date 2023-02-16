@@ -291,7 +291,7 @@ class ServiceApp(AzulChaliceApp):
     def catalog_controller(self) -> CatalogController:
         return self._service_controller(CatalogController)
 
-    @property
+    @cached_property
     def repository_controller(self) -> RepositoryController:
         return self._service_controller(RepositoryController)
 

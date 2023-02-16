@@ -15,6 +15,9 @@ from azul.chalice import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 
 
 # noinspection PyPep8Naming
@@ -22,7 +25,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestServiceAppLogging(LocalAppTestCase):
+class TestServiceAppLogging(DCP1TestCase, LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:

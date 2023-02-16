@@ -10,6 +10,171 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#4966 Chatbot role policy is too restrictive and causes persistent alarms
+=========================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+.. |deprecated| raw:: html
+
+   <strike>
+
+.. |end_deprecated| raw:: html
+
+   </strike>
+
+
+#4958 Storage bucket is still being removed from TF state
+=========================================================
+
+Everyone
+~~~~~~~~
+
+PR #4926 for issue #4646 left in place code to remove the S3 storage bucket
+from the Terraform state. We'll refer to the changes from that PR as *broken*
+and the changes for #4958 described here as *this fix*. The broken upgrading
+instructions have been deprecated. When you follow these instructions, be
+sure you have this fix checked out, or a commit that includes it.
+
+There are three possible cases to consider when upgrading a deployment. Pick
+the one applicable to the deployment being upgraded and only follow the steps
+listed under that case:
+
+Case A:
+   If you have already deployed the broken changes once, and have not yet
+   attempted to deploy again, verify that ::
+
+      (cd terraform && make init && terraform state show aws_s3_bucket.storage)
+
+   produces output that includes the following lines::
+
+      # aws_s3_bucket.storage:
+      resource "aws_s3_bucket" "storage" {
+
+   Then deploy this fix.
+
+Case B:
+   If you have already deployed the broken changes, and then attempted to
+   deploy them again, the affected deployment needs to be repaired. A symptom
+   of the breakage is that the command ::
+
+      (cd terraform && make init && terraform state show aws_s3_bucket.storage)
+
+   fails with the message *No instance found for the given address*.
+
+   To repair the deployment, run ::
+
+      (cd terraform && make validate && terraform import aws_s3_bucket.storage $AZUL_S3_BUCKET)
+
+   Then deploy this fix. Afterwards, confirm that ::
+
+      (cd terraform && make init && terraform state show aws_s3_bucket.storage)
+
+   produces no error but instead output that includes the following lines::
+
+      # aws_s3_bucket.storage:
+      resource "aws_s3_bucket" "storage" {
+
+Case C:
+   If you have *not* yet deployed the broken changes, first run the following
+   command::
+
+      (cd terraform && make init && terraform state rm aws_s3_bucket.storage)
+
+   This will cause Terraform to leave the old bucket in place when you
+   deploy this fix, and create a new one alongside it.
+
+   Next, in personal deployments only, specify a name for the new bucket by
+   changing the value of ``AZUL_S3_BUCKET`` in ``environment.py`` to ::
+
+      "edu-ucsc-gi-{account}-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}"
+
+   where ``{account}`` is the name of the AWS account hosting the deployment,
+   e.g., ``"platform-hca-dev"``. As always, use the sandbox deployment's
+   ``environment.py`` as a model when upgrading personal deployments.
+
+   For main deployments, the update to ``AZUL_S3_BUCKET`` has already been
+   made.
+
+   Then deploy this fix. **Afterwards, manually delete the old storage bucket
+   for the deployment.** 
+
+   Finally, verify that ::
+
+      (cd terraform && make init && terraform state show aws_s3_bucket.storage)
+
+   produces output that includes the following lines ::
+
+      # aws_s3_bucket.storage:
+      resource "aws_s3_bucket" "storage" {
+
+Operator
+~~~~~~~~
+
+Follow the instructions in case A above for ``sandbox``, ``dev``,
+``anvilbox``, and ``anvildev``. As part of the now deprecated upgrading steps
+for #4646, the old storage buckets for these deployments should already have
+been removed. Confirm that this is still the case.
+
+Announce for other developers to upgrade their personal deployments.
+
+When promoting this fix to ``prod``, follow the instructions in case C above.
+
+
+#4646 Rename Azul storage buckets
+=================================
+
+This section has been deprecated. If you've already followed the steps
+included here, please read the section for #4958 above.
+
+|deprecated|
+
+After these changes are successfully merged to ``develop``, manually delete the
+old storage buckets for ``sandbox``, ``dev``, ``anvilbox``, and ``anvildev``.
+Then announce for all other developers to follow the instructions in the section
+below.
+
+After these changes are successfully merged to ``prod``, manually delete the old
+storage bucket for ``prod``.
+
+Everyone
+~~~~~~~~
+
+For each of your personal deployments, change the value of ``AZUL_S3_BUCKET`` in
+``environment.py`` to ::
+
+    "edu-ucsc-gi-{account}-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}"
+
+Where ``{account}`` is the name of the AWS account hosting the deployment, e.g.,
+``"platform-hca-dev"``. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
+After the changes are deployed to a given personal deployment, manually delete
+the old storage bucket for that deployment.
+
+|end_deprecated|
+
+
+#4011 Integrate monitoring SNS topic with Slack
+===============================================
+
+Operator
+~~~~~~~~
+
+Before pushing a merge commit with these changes to a GitLab instance, `set up
+AWS Chatbot <./README.md#313-aws-chatbot-integration-with-slack>`_ in the AWS
+account hosting that instance. AWS Chatbot has already been set up in the
+``platform-hca-dev`` account. Once AWS Chatbot is set up, manually deploy the
+``shared`` component of the main deployment collocated with the GitLab instance
+you will be pushing to.
+
+
 #4673 Eliminate burner accounts
 ===============================
 

@@ -61,6 +61,9 @@ from azul.plugins.repository.dss import (
 from azul.types import (
     JSONs,
 )
+from azul_test_case import (
+    DCP1TestCase,
+)
 from indexer import (
     IndexerTestCase,
 )
@@ -78,7 +81,7 @@ def setUpModule():
 
 @mock_sts
 @mock_sqs
-class TestIndexController(IndexerTestCase, SqsTestCase):
+class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
     partition_prefix_length = 0
 
     def setUp(self) -> None:

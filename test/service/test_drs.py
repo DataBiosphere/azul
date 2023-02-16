@@ -12,6 +12,9 @@ import urllib.parse
 from chalice.config import (
     Config as ChaliceConfig,
 )
+from furl import (
+    furl,
+)
 import requests
 import responses
 
@@ -33,22 +36,21 @@ from azul.service.drs_controller import (
 from azul.types import (
     MutableJSON,
 )
+from azul_test_case import (
+    AzulUnitTestCase,
+    DCP1TestCase,
+)
 from service import (
-    DSSUnitTestCase,
     WebServiceTestCase,
-    patch_dss_source,
-    patch_source_cache,
 )
 
 
 # noinspection PyPep8Naming
-def setupModule():
+def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_source
-@patch_source_cache
-class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
+class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -69,9 +71,9 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
             drs_url = dss_dos_object_url(file_uuid=file_uuid,
                                          catalog=self.catalog,
                                          file_version=file_version,
-                                         base_url=str(self.base_url))
+                                         base_url=self.base_url)
             with mock.patch('time.time', new=lambda: 1547691253.07010):
-                dss_url = config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
+                dss_url = str(furl(config.dss_endpoint).add(path=('files', file_uuid)))
                 helper.add(responses.Response(method=responses.GET,
                                               url=dss_url,
                                               status=301,
@@ -119,21 +121,21 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
 
     def test_data_object_not_found(self):
         try:
-            self._get_data_object("NOT_A_GOOD_IDEA", None)
+            self._get_data_object('NOT_A_GOOD_IDEA', None)
         except requests.exceptions.HTTPError as e:
             self.assertEqual(e.response.status_code, 404)
         else:
             self.fail()
 
 
-class DRSTest(WebServiceTestCase, DSSUnitTestCase):
+class TestDRSEndpoint(DCP1TestCase, WebServiceTestCase):
     maxDiff = None
 
     dss_headers = {
-        "X-DSS-SHA1": "7ad306f154ce7de1a9a333cfd9100fc26ef652b4",
-        "X-DSS-SHA256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
-        "X-DSS-SIZE": "195142097",
-        "X-DSS-VERSION": "2018-11-02T113344.698028Z",
+        'X-DSS-SHA1': '7ad306f154ce7de1a9a333cfd9100fc26ef652b4',
+        'X-DSS-SHA256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+        'X-DSS-SIZE': '195142097',
+        'X-DSS-VERSION': '2018-11-02T113344.698028Z',
     }
 
     signed_url = 'https://org-hca-dss-checkout-prod.s3.amazonaws.com/blobs/307.a72.eb6?foo=bar&et=cetera'
@@ -158,7 +160,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                     drs_response = requests.get(str(url))
                     drs_response.raise_for_status()
                     drs_object = drs_response.json()
-                    uri = dss_drs_object_uri(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                    uri = dss_drs_object_uri(file_uuid=file_uuid,
                                              file_version='2018-11-02T113344.698028Z')
                     expected: MutableJSON = {
                         'checksums': [
@@ -166,7 +168,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                             {'sha-256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'}
                         ],
                         'created_time': '2018-11-02T11:33:44.698028Z',
-                        'id': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                        'id': file_uuid,
                         'self_uri': str(uri),
                         'size': '195142097',
                         'version': '2018-11-02T113344.698028Z',
@@ -295,7 +297,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
             self.assertEqual(drs_response.text, error_body)
 
 
-class TestDRSController(unittest.TestCase):
+class TestDRSController(AzulUnitTestCase):
 
     def test_bad_token(self):
         controller = DRSController(app=MagicMock(), file_url_func=MagicMock())
@@ -306,5 +308,5 @@ class TestDRSController(unittest.TestCase):
         self.assertEqual('Invalid DRS access ID', response.body)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

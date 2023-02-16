@@ -577,6 +577,24 @@ dcp23_sources = dcp22_sources | mkdict([
     mksrc('datarepo-f7f5893b', 'hca_prod_fc381e70df1b407d813152ab523270bd__20221208_dcp2_20221208_dcp23', 19)
 ])
 
+dcp24_sources = dcp23_sources | mkdict([
+    mksrc('datarepo-b7dfe3eb', 'hca_prod_12f320548f184dae8959bfce7e3108e7__20230201_dcp2_20230210_dcp24', 62),
+    mksrc('datarepo-27434eaf', 'hca_prod_2d4d89f2ebeb467cae60a3efc5e8d4ba__20230206_dcp2_20230210_dcp24', 2),
+    mksrc('datarepo-215ae20a', 'hca_prod_3ce9ae94c469419a96375d138a4e642f__20230201_dcp2_20230210_dcp24', 6),
+    mksrc('datarepo-adc4e130', 'hca_prod_5f607e50ba224598b1e9f3d9d7a35dcc__20230201_dcp2_20230210_dcp24', 8),
+    mksrc('datarepo-7230d8d4', 'hca_prod_6e60a555fd954aa28e293ec2ef01a580__20230206_dcp2_20230210_dcp24', 6),
+    mksrc('datarepo-c5864eb0', 'hca_prod_77dedd59137648879bcadc42b56d5b7a__20230201_dcp2_20230210_dcp24', 51),
+    mksrc('datarepo-f3272b0a', 'hca_prod_8787c23889ef4636a57d3167e8b54a80__20220118_dcp2_20230210_dcp24', 3),
+    mksrc('datarepo-b1aa4336', 'hca_prod_957261f72bd64358a6ed24ee080d5cfc__20220330_dcp2_20230210_dcp24', 605),
+    mksrc('datarepo-83e0bc68', 'hca_prod_95d058bc9cec4c888d2c05b4a45bf24f__20230201_dcp2_20230210_dcp24', 123),
+    mksrc('datarepo-6a865365', 'hca_prod_cbd2911f252b4428abde69e270aefdfc__20230201_dcp2_20230210_dcp24', 2),
+    mksrc('datarepo-da0b7e39', 'hca_prod_cd9d6360ce38432197dff13c79e3cb84__20230206_dcp2_20230210_dcp24', 2),
+    mksrc('datarepo-19358e1b', 'hca_prod_cdabcf0b76024abf9afb3b410e545703__20230201_dcp2_20230210_dcp24', 2),
+    mksrc('datarepo-4582b46e', 'hca_prod_e57dc176ab98446b90c289e0842152fd__20220119_dcp2_20230210_dcp24', 95),
+    mksrc('datarepo-06c4cdf8', 'hca_prod_e88714c22e7849da81465a60b50628b4__20230206_dcp2_20230210_dcp24', 7),
+    mksrc('datarepo-7e506a9c', 'hca_prod_f2078d5f2e7d48448552f7c41a231e52__20230201_dcp2_20230210_dcp24', 78)
+])
+
 lungmap_sources = mkdict([
     mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
     mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
@@ -590,7 +608,8 @@ lm2_sources = lungmap_sources | mkdict([
 ])
 
 lm3_sources = lm2_sources | mkdict([
-    mksrc('datarepo-d565e2a9', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20230126_lm3', 1),
+    mksrc('datarepo-d139f96d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20230207_lm3', 1),
+    mksrc('datarepo-14448a21', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20230207_lm3', 1),
 ])
 
 
@@ -626,7 +645,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
 
         'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-config.{AWS_DEFAULT_REGION}',
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-hca-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
         'AZUL_CATALOGS': base64.b64encode(bz2.compress(json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
@@ -636,6 +655,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp23', dcp23_sources),
+                ('hca', 'dcp24', dcp24_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
                 ('lungmap', 'lm3', lm3_sources)
@@ -669,4 +689,9 @@ def env() -> Mapping[str, Optional[str]]:
         'GOOGLE_PROJECT': 'platform-hca-prod',
 
         'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
+
+        'azul_slack_integration': json.dumps({
+            'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
+            'channel_id': 'C04JWDFCPFZ'  # #team-boardwalk-prod
+        }),
     }

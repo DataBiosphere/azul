@@ -14,7 +14,7 @@ from azul_test_case import (
     AzulUnitTestCase,
 )
 from service import (
-    StorageServiceTestCase,
+    StorageServiceTestMixin,
 )
 
 
@@ -23,7 +23,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class StorageServiceTest(AzulUnitTestCase, StorageServiceTestCase):
+class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
     """
     Functional Test for Storage Service
     """

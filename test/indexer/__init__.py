@@ -1,3 +1,6 @@
+from abc import (
+    ABCMeta,
+)
 from copy import (
     deepcopy,
 )
@@ -34,7 +37,6 @@ from azul.plugins import (
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
-    DSSSourceRef,
 )
 from azul.types import (
     AnyJSON,
@@ -45,6 +47,7 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+    CatalogTestCase,
 )
 from es_test_case import (
     ElasticsearchTestCase,
@@ -103,18 +106,16 @@ class CannedBundleTestCase(AzulUnitTestCase):
                          metadata_files=metadata_files)
 
 
-mock_dss_source = 'https://test:/2'
-
-
-class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
+class IndexerTestCase(CatalogTestCase,
+                      ElasticsearchTestCase,
+                      CannedBundleTestCase,
+                      metaclass=ABCMeta):
     index_service: IndexService
-    source = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
-        cls.source = DSSSourceRef.for_dss_source(mock_dss_source)
 
     @classmethod
     def bundle_fqid(cls, *, uuid, version):

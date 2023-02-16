@@ -19,11 +19,6 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 renamed: dict[str, Optional[str]] = {
-    'aws_cloudtrail.shared': None,
-    'aws_cloudwatch_log_group.cloudtrail': None,
-    'aws_s3_bucket.shared_cloudtrail': None,
-    'aws_s3_bucket_policy.shared_cloudtrail': None,
-    'aws_s3_bucket_public_access_block.shared_cloudtrail': None
 }
 
 

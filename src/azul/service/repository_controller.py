@@ -61,9 +61,8 @@ class RepositoryController(SourceController):
     def service(self) -> RepositoryService:
         return RepositoryService()
 
-    @classmethod
     @cache
-    def repository_plugin(cls, catalog: CatalogName) -> RepositoryPlugin:
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
     def search(self,

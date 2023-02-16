@@ -276,6 +276,36 @@ emit_tf(block_public_s3_bucket_access({
                 }
             }
         },
+        **(
+            {
+                'aws_cloudformation_stack': {
+                    'chatbot': {
+                        'name': config.qualified_resource_name('chatbot'),
+                        'template_body': json.dumps({
+                            'AWSTemplateFormatVersion': '2010-09-09',
+                            'Description': 'Use AWS Chatbot to forward messages from monitoring SNS topic to Slack',
+                            'Resources': {
+                                'SlackChannelConfiguration': {
+                                    'Type': 'AWS::Chatbot::SlackChannelConfiguration',
+                                    'Properties': {
+                                        'ConfigurationName': config.qualified_resource_name('chatbot'),
+                                        'GuardrailPolicies': ['arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess'],
+                                        'IamRoleArn': '${aws_iam_role.chatbot.arn}',
+                                        'LoggingLevel': 'INFO',
+                                        'SlackChannelId': config.slack_integration.channel_id,
+                                        'SlackWorkspaceId': config.slack_integration.workspace_id,
+                                        'SnsTopicArns': ['${aws_sns_topic.monitoring.arn}'],
+                                        'UserRoleRequired': False
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+            if config.slack_integration else
+            {}
+        ),
         'aws_cloudtrail': {
             'trail': {
                 'name': config.qualified_resource_name('trail'),
@@ -374,27 +404,48 @@ emit_tf(block_public_s3_bucket_access({
                         ]
                     }
                 )
-            }
+            },
+            **(
+                {
+                    'chatbot': {
+                        'name': config.qualified_resource_name('chatbot'),
+                        'assume_role_policy': json.dumps({
+                            'Version': '2012-10-17',
+                            'Statement': [
+                                {
+                                    'Effect': 'Allow',
+                                    'Action': 'sts:AssumeRole',
+                                    'Principal': {
+                                        'Service': 'chatbot.amazonaws.com'
+                                    }
+                                }
+                            ]
+                        })
+                    }
+                }
+                if config.slack_integration else
+                {}
+            ),
         },
         'aws_iam_role_policy': {
             'api_gateway': {
                 'name': 'azul-api_gateway',
                 'role': '${aws_iam_role.api_gateway.id}',
                 'policy': json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
+                    'Version': '2012-10-17',
+                    'Statement': [
                         {
-                            "Effect": "Allow",
-                            "Action": [
-                                "logs:CreateLogGroup",
-                                "logs:CreateLogStream",
-                                "logs:DescribeLogGroups",
-                                "logs:DescribeLogStreams",
-                                "logs:PutLogEvents",
-                                "logs:GetLogEvents",
-                                "logs:FilterLogEvents"
+                            'Effect': 'Allow',
+                            'Action': [
+                                'logs:CreateLogGroup',
+                                'logs:CreateLogStream',
+                                'logs:DescribeLogGroups',
+                                'logs:DescribeLogStreams',
+                                'logs:PutLogEvents',
+                                'logs:GetLogEvents',
+                                'logs:FilterLogEvents'
                             ],
-                            "Resource": "*"
+                            'Resource': '*'
                         }
                     ]
                 })
@@ -437,11 +488,42 @@ emit_tf(block_public_s3_bucket_access({
                         }
                     ]
                 })
-            }
+            },
+            **(
+                {
+                    'chatbot': {
+                        'name': config.qualified_resource_name('chatbot'),
+                        'role': '${aws_iam_role.chatbot.id}',
+                        'policy': json.dumps({
+                            'Version': '2012-10-17',
+                            'Statement': [
+                                {
+                                    'Effect': 'Allow',
+                                    'Resource': '*',
+                                    'Action': [
+                                        'cloudwatch:Describe*',
+                                        'cloudwatch:Get*',
+                                        'cloudwatch:List*',
+                                        'logs:Get*',
+                                        'logs:List*',
+                                        'logs:Describe*',
+                                        'logs:TestMetricFilter',
+                                        'logs:FilterLogEvents',
+                                        'sns:Get*',
+                                        'sns:List*'
+                                    ]
+                                }
+                            ]
+                        })
+                    }
+                }
+                if config.slack_integration else
+                {}
+            ),
         },
-        "aws_iam_service_linked_role": {
-            "opensearch": {
-                "aws_service_name": "opensearchservice.amazonaws.com"
+        'aws_iam_service_linked_role': {
+            'opensearch': {
+                'aws_service_name': 'opensearchservice.amazonaws.com'
             }
         },
         'aws_api_gateway_account': {

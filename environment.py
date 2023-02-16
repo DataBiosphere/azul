@@ -545,4 +545,15 @@ def env() -> Mapping[str, Optional[str]]:
         # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_alternate_contact
         #
         'azul_security_contact': None,
+
+        # To enable Slack integration with AWS Chatbot, set this variable to
+        # a JSON object containing the IDs of the Slack workspace and Slack
+        # channel for Chatbot to post notifications to. For example:
+        #
+        # 'azul_slack_integration': json.dumps({
+        #     'workspace_id': 'your-workspace-id',
+        #     'channel_id': 'your-channel-id'
+        # })
+        #
+        'azul_slack_integration': None
     }
