@@ -20,3 +20,5 @@ __pycache__/
 /.venv/
 # PyCharm
 /.idea
+# FedRAMP inventory output
+/docs/fedramp_inventory.xlsx

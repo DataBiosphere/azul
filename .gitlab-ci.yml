@@ -12,6 +12,7 @@ stages:
   - teardown
   - manual
   - sell_unused_slots
+  - fedramp_inventory
 
 build_image:
   # Build an image containing the build prerequisites (python, terraform, etc).
@@ -126,3 +127,16 @@ sell_unused_slots:
     - schedules
   script:
     - python3 scripts/sell_unused_slots.py
+
+fedramp_inventory:
+  extends: .base
+  only:
+    # FIXME: this needs additional configuration to avoid conflicting with the
+    #        `sell_unused_slots` schedule
+    #        https://docs.gitlab.com/ee/ci/yaml/#rules
+    - schedules
+  script:
+    - python3 scripts/create_fedramp_report.py --wiki docs/fedramp_inventory.xlsx
+  artifacts:
+    paths:
+      - report.xlsx

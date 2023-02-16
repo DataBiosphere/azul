@@ -689,6 +689,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'actions': ['sns:ListTopics'],
                         'resources': aws_service_arns('SNS',
                                                       TopicName='*'),
+                    },
+
+                    # FedRAMP inventory
+                    {
+                        'actions': [
+                            'config:SelectResourceConfig'
+                        ],
+                        'resources': ['*']
                     }
                 ]
             }

@@ -4,6 +4,8 @@ source =
     src
     lambdas/indexer
     lambdas/service
+omit =
+    src/azul/compliance/fedramp_inventory_service.py
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
