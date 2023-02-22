@@ -57,17 +57,13 @@ def main(argv):
         start_instance(instance)
 
 
-# This filter is used to locate the EBS data volume to be backed up
-gitlab_filter = [
-    {
+def gitlab_volume_info() -> JSON:
+    filter = {
         'Name': 'tag:Name',
         'Values': ['azul-gitlab']
     }
-]
-
-
-def gitlab_volume_info() -> JSON:
-    return one(aws.ec2.describe_volumes(Filters=gitlab_filter)['Volumes'])
+    response = aws.ec2.describe_volumes(Filters=[filter])
+    return one(response['Volumes'])
 
 
 def shutdown_instance(instance: JSON):
