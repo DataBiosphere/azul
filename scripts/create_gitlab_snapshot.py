@@ -110,11 +110,11 @@ def create_snapshot(volume: JSON):
                                            dict(ResourceType='snapshot',
                                                 Tags=[{'Key': k, 'Value': v} for k, v in tags.items()])
                                        ])
-    snapshot = response['SnapshotId']
+    snapshot_id = response['SnapshotId']
     log.info('Snapshot %r of volume %r is being created …',
-             snapshot, volume['VolumeId'])
+             snapshot_id, volume['VolumeId'])
     waiter = aws.ec2.get_waiter('snapshot_completed')
-    waiter.wait(SnapshotIds=[snapshot],
+    waiter.wait(SnapshotIds=[snapshot_id],
                 WaiterConfig=dict(MaxAttempts=9999, Delay=15))
     log.info('Snapshot %r of volume %r is complete',
              volume['VolumeId'], config.deployment_stage)
