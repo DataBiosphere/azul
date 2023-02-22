@@ -39,21 +39,22 @@ def main(argv):
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--no-restart',
-                        default=False,
-                        action='store_true',
-                        help='Leave the EC2 instance in a stopped state after'
-                             ' the snapshot has been created.')
+                        dest='restart',
+                        default=True,
+                        action='store_false',
+                        help='Leave the EC2 instance in a stopped state after '
+                             'the snapshot has been created.')
     args = parser.parse_args(argv)
     require(config.terraform_component == 'gitlab',
             "Select the 'gitlab' component ('dev.gitlab' or 'prod.gitlab', for example).")
     volume = gitlab_volume_info()
     instance: Optional[JSON] = only(volume['Attachments'])
-    if instance:
-        shutdown_instance(instance)
-    else:
+    if instance is None:
         log.info('Volume %r is not attached to any instances', volume['VolumeId'])
+    else:
+        shutdown_instance(instance)
     create_snapshot(volume)
-    if instance and not args.no_restart:
+    if instance and args.restart:
         start_instance(instance)
 
 
