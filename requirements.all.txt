@@ -10,7 +10,7 @@ blessed==1.20.0
 boto3==1.24.94
 boto3-stubs==1.24.94
 botocore==1.27.94
-botocore-stubs==1.29.73
+botocore-stubs==1.29.76
 brotli==1.0.9
 cachetools==5.3.0
 certifi==2022.12.7
@@ -50,14 +50,14 @@ google-crc32c==1.5.0
 google-resumable-media==2.4.1
 googleapis-common-protos==1.58.0
 greenlet==1.1.3.post0
-grpcio==1.51.1
-grpcio-status==1.51.1
+grpcio==1.51.3
+grpcio-status==1.51.3
 http-message-signatures==0.4.4
 http-sfv==0.9.8
 httplib2==0.21.0
 idna==3.4
 importlib-metadata==6.0.0
-importlib-resources==5.10.2
+importlib-resources==5.12.0
 inquirer==2.10.1
 itsdangerous==2.1.2
 jinja2==3.1.2
@@ -119,7 +119,7 @@ tinyquery==1.2+2
 toml==0.10.2
 types-awscrt==0.16.10
 types-s3transfer==0.6.0.post5
-types-toml==0.10.8.4
+types-toml==0.10.8.5
 typing_extensions==4.5.0
 tzlocal==2.1
 uritemplate==4.1.1
@@ -131,6 +131,6 @@ werkzeug==2.2.3
 wheel==0.38.0
 wrapt==1.14.1
 xmltodict==0.13.0
-zipp==3.13.0
+zipp==3.14.0
 zope.event==4.6
 zope.interface==5.5.2
