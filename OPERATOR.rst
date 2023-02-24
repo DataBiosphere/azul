@@ -277,11 +277,7 @@ Before any changes are applied, run::
 	git checkout -b gitlab/yyyy-mm-dd/<GitLab version> github/develop
 	_select dev.gitlab
 
-Use the following script to create a snapshot of the storage volume attached to
-the GitLab instance. The script will stop (NOT terminate) the instance, and
-create a properly tagged snapshot of the GitLab EBS volume. Run::
-
-	python scripts/create_gitlab_snapshot.py
+Create a backup of the GitLab volume, see `Backup GitLab volumes`_ for help.
 
 Edit the `GitLab Terraform`_ file, updating the version of the Docker images for
 ``gitlab-ce`` and ``gitlab-runner``. Then run::
@@ -302,6 +298,20 @@ update the ``prod`` deployment, but select the ``prod.gitlab`` component  and
 use ``CI_COMMIT_REF_NAME=prod`` in all ``make`` invocations. Once both instances
 have been successfully updated, file a PR with the changes against the
 ``develop`` branch and request review from the lead.
+
+Backup GitLab volumes
+^^^^^^^^^^^^^^^^^^^^^
+
+Use the ``create_gitlab_snapshot.py`` script to back up the EBS data volume
+attached to each of our GitLab instances. The script will stop the instance,
+create a snapshot of the GitLab EBS volume, tag the snapshot and finally restart
+the instance::
+
+	python scripts/create_gitlab_snapshot.py
+
+For GitLab or ClamAV updates, use the ``--no-restart`` flag in order to leave
+the instance stopped after the snapshot has been created. There is no point in
+starting the instance only to have the update terminate it again.
 
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
