@@ -206,6 +206,18 @@ emit_tf({
                 }
             }
         },
+        *([
+              {
+                  'aws_lambda_function_event_invoke_config': {
+                      'forward_alb_logs': {
+                          'function_name': '${aws_lambda_function.indexer_forward_alb_logs.function_name}',
+                          'maximum_retry_attempts': 0
+                      }
+                  }
+              }
+          ]
+          if config.enable_log_forwarding else
+          []),
         *(
             {
                 **chalice.tf_config(app.name)['resource'],

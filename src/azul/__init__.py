@@ -729,6 +729,15 @@ class Config:
         return not self.enable_monitoring
 
     @property
+    def enable_log_forwarding(self) -> bool:
+        # The main deployment in a given account is responsible for forwarding
+        # logs from every deployment in that account. We expect this to be more
+        # efficient than having one forwarder per deployment because logs are
+        # delivered very frequently so each log forwarder Lambda will be
+        # constantly active.
+        return self.deployment_stage == self.shared_deployment_stage
+
+    @property
     def es_instance_type(self) -> str:
         return self.environ['AZUL_ES_INSTANCE_TYPE']
 
