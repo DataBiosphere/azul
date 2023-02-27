@@ -82,9 +82,6 @@ class AzulTestCase(TestCase):
             ResourceWarning: {
                 RE(r'.*<ssl\.SSLSocket.*>'),
                 RE(r'.*<socket\.socket.*>'),
-                # FIXME: Remove expectation
-                #        https://github.com/DataBiosphere/azul/issues/4564
-                'S3 key was not disposed of in time',
             },
             DeprecationWarning: {
                 RE(r'Call to deprecated method .*\. \(DOS support will be removed\)'),

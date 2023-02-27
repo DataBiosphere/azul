@@ -36,6 +36,7 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
         object_key = 'test_file'
         with tempfile.NamedTemporaryFile('w') as f:
             f.write('some contents')
+            f.flush()
             for tags in (None, {}, {'Name': 'foo', 'game': 'bar'}):
                 with self.subTest(tags=tags):
                     self.storage_service.upload(file_path=f.name,
