@@ -248,18 +248,19 @@ class AzulUnitTestCase(AzulTestCase):
             for region_name, backend in backends.items():
                 backend.reset()
 
-    _aws_account_id = None
+    _aws_account_mock = None
 
     @classmethod
     def _mock_aws_account_id(cls):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
-        cls._aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.DEFAULT_ACCOUNT_ID
+        cls._aws_account_mock = patch.dict(os.environ,
+                                           AZUL_AWS_ACCOUNT_ID=moto.core.models.DEFAULT_ACCOUNT_ID)
+        cls._aws_account_mock.start()
 
     @classmethod
     def _restore_aws_account_id(cls):
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = cls._aws_account_id
+        cls._aws_account_mock.stop()
 
     get_credentials_botocore = None
     get_credentials_boto3 = None
