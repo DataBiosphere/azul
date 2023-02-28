@@ -546,6 +546,13 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
     def file_download_class(self) -> Type['RepositoryFileDownload']:
         raise NotImplementedError
 
+    @abstractmethod
+    def validate_version(self, version: str) -> None:
+        """
+        Raise ValueError if the given version string is invalid.
+        """
+        raise NotImplementedError
+
 
 @attr.s(auto_attribs=True, kw_only=True)
 class RepositoryFileDownload(ABC):

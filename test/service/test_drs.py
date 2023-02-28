@@ -18,6 +18,9 @@ from furl import (
 import requests
 import responses
 
+from app_test_case import (
+    LocalAppTestCase,
+)
 from azul import (
     config,
 )
@@ -128,7 +131,7 @@ class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
             self.fail()
 
 
-class TestDRSEndpoint(DCP1TestCase, WebServiceTestCase):
+class TestDRSEndpoint(DCP1TestCase, LocalAppTestCase):
     maxDiff = None
 
     dss_headers = {
@@ -140,6 +143,10 @@ class TestDRSEndpoint(DCP1TestCase, WebServiceTestCase):
 
     signed_url = 'https://org-hca-dss-checkout-prod.s3.amazonaws.com/blobs/307.a72.eb6?foo=bar&et=cetera'
     gs_url = 'gs://important-bucket/object/path'
+
+    @classmethod
+    def lambda_name(cls) -> str:
+        return 'service'
 
     def test_drs(self):
         """

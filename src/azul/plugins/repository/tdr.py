@@ -54,6 +54,7 @@ from azul.terra import (
 )
 from azul.time import (
     format_dcp2_datetime,
+    parse_dcp2_version,
 )
 from azul.types import (
     JSON,
@@ -201,6 +202,9 @@ class TDRPlugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload
+
+    def validate_version(self, version: str) -> None:
+        parse_dcp2_version(version)
 
 
 class TDRFileDownload(RepositoryFileDownload):

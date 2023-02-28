@@ -9,6 +9,11 @@ from itertools import (
     product,
 )
 import json
+import os
+import sys
+from tempfile import (
+    TemporaryDirectory,
+)
 from typing import (
     Optional,
     cast,
@@ -43,6 +48,7 @@ from azul import (
     cached_property,
     config,
 )
+import azul.changelog
 from azul.collections import (
     none_safe_key,
 )
@@ -2180,6 +2186,23 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                     ]
                     for key, value in nested_properties.items():
                         self.assertIn({key: value}, accession_properties)
+
+    def test_version(self):
+        commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
+        with TemporaryDirectory() as tmpdir:
+            azul.changelog.write_changes(tmpdir)
+            with mock.patch('sys.path', new=sys.path + [tmpdir]):
+                for dirty in True, False:
+                    with self.subTest(is_repo_dirty=dirty):
+                        with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
+                            url = self.base_url.set(path='/version')
+                            response = requests.get(str(url))
+                            response.raise_for_status()
+                            expected_json = {
+                                'commit': commit,
+                                'dirty': dirty
+                            }
+                            self.assertEqual(expected_json, response.json()['git'])
 
 
 class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
