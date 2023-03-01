@@ -65,7 +65,7 @@ from azul.logging import (
 )
 from azul.time import (
     format_dcp2_datetime,
-    parse_dcp2_datetime,
+    parse_dcp2_version,
 )
 from azul.types import (
     JSON,
@@ -271,7 +271,7 @@ class CGMAdapter:
         if self.args.version is None:
             self.timestamp = format_dcp2_datetime(datetime.now(timezone.utc))
         else:
-            d = parse_dcp2_datetime(self.args.version)
+            d = parse_dcp2_version(self.args.version)
             version_string = format_dcp2_datetime(d)
             require(self.args.version == version_string,
                     f'{self.args.version!r} does not have correct syntax.')

@@ -48,6 +48,9 @@ from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
 )
+from azul.time import (
+    parse_dcp2_version,
+)
 from azul.types import (
     JSON,
     MutableJSON,
@@ -201,6 +204,9 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return CannedFileDownload
+
+    def validate_version(self, version: str) -> None:
+        parse_dcp2_version(version)
 
 
 class CannedFileDownload(RepositoryFileDownload):

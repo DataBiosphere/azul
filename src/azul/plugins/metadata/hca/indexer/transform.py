@@ -107,7 +107,7 @@ from azul.plugins.metadata.hca.service.contributor_matrices import (
 )
 from azul.time import (
     format_dcp2_datetime,
-    parse_dcp2_datetime,
+    parse_dcp2_version,
 )
 from azul.types import (
     JSON,
@@ -1566,7 +1566,10 @@ class BundleAsEntity(DatedEntity):
     def __init__(self, bundle: api.Bundle) -> None:
         super().__init__()
         self.document_id = bundle.uuid
-        date = parse_dcp2_datetime(bundle.version)
+        # A bundle's version should be a sortable string, however we happen to
+        # know that all bundles in current deployments use a DCP/2 version
+        # string, so we use this to set the entity's date fields.
+        date = parse_dcp2_version(bundle.version)
         self.update_date = date
         self.submission_date = date
 

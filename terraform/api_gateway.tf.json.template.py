@@ -475,6 +475,13 @@ emit_tf({
                                 ],
                                 'security_groups': [
                                     '${aws_security_group.%s_alb.id}' % app.name
+                                ],
+                                'access_logs': [
+                                    {
+                                        'bucket': '${data.aws_s3_bucket.logs.id}',
+                                        'prefix': config.alb_access_log_path_prefix(app.name),
+                                        'enabled': True
+                                    }
                                 ]
                             }
                         },
