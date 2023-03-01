@@ -39,6 +39,9 @@ import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
 )
+from azul.collections import (
+    atuple,
+)
 from azul.json_freeze import (
     freeze,
 )
@@ -199,16 +202,32 @@ class Config:
 
     shared_term = 'shared'
 
+    current = object()
+
     def alb_access_log_path_prefix(self,
                                    *component: str,
-                                   deployment: Optional[str] = None
+                                   deployment: Optional[str] = current,
                                    ) -> str:
+        """
+        :param deployment: Which deployment name to use in the path. Omit this
+                           parameter to use the current deployment. Pass `None`
+                           to omit the deployment name from the path.
+
+        :param component: Other component names to append at the end of the path
+        """
         return self._log_path_prefix(['alb', 'access'], deployment, *component)
 
     def s3_access_log_path_prefix(self,
                                   *component: str,
-                                  deployment: Optional[str] = None,
+                                  deployment: Optional[str] = current,
                                   ) -> str:
+        """
+        :param deployment: Which deployment name to use in the path. Omit this
+                           parameter to use the current deployment. Pass `None`
+                           to omit the deployment name from the path.
+
+        :param component: Other component names to append at the end of the path
+        """
         return self._log_path_prefix(['s3', 'access'], deployment, *component)
 
     def _log_path_prefix(self,
@@ -216,9 +235,9 @@ class Config:
                          deployment: Optional[str],
                          *component: str,
                          ):
-        if deployment is None:
+        if deployment is self.current:
             deployment = self.deployment_stage
-        return '/'.join([*prefix, deployment, *component])
+        return '/'.join([*prefix, *atuple(deployment), *component])
 
     @property
     def manifest_expiration(self) -> int:
