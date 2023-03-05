@@ -1,6 +1,15 @@
 Upgrading
 ---------
 
+.. |deprecated| raw:: html
+
+   <strike>
+
+.. |end_deprecated| raw:: html
+
+   </strike>
+
+
 This file documents any upgrade procedure that must be performed. Because we
 don't use a semantic version, a change that requires explicit steps to upgrade
 a is referenced by its Github issue number. After checking out a branch that
@@ -11,8 +20,13 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
-#4966 Chatbot role policy is too restrictive and causes persistent alarms
-=========================================================================
+#4918 Rename shared (aka versioned aka config) bucket (PR 1 of 2)
+=================================================================
+
+This change creates the new bucket with the correct name, sets up replication
+between the old and the new bucket so that future object versions are copied,
+and runs a batch migration of prior and current objects versions. The next PR
+will actually switch all deployments to using the new bucket.
 
 Operator
 ~~~~~~~~
@@ -21,13 +35,14 @@ Manually deploy the ``shared`` component of any main deployment just before
 pushing the merge commit to the GitLab instance in that deployment.
 
 
-.. |deprecated| raw:: html
+#4966 Chatbot role policy is too restrictive and causes persistent alarms
+=========================================================================
 
-   <strike>
+Operator
+~~~~~~~~
 
-.. |end_deprecated| raw:: html
-
-   </strike>
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
 
 
 #4958 Storage bucket is still being removed from TF state

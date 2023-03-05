@@ -197,6 +197,8 @@ class Config:
 
     logs_term = 'logs'
 
+    shared_term = 'shared'
+
     def alb_access_log_path_prefix(self,
                                    *component: str,
                                    deployment: Optional[str] = None
