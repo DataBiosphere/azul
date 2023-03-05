@@ -20,6 +20,37 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4918 Rename shared (aka versioned aka config) bucket (PR 2 of 2)
+=================================================================
+
+This change removes the old shared (aka versioned aka config) bucket and
+switches all deployments to the replacement.
+
+Everyone
+~~~~~~~~
+
+When requested by the operator, remove the ``AZUL_VERSIONED_BUCKET`` variable
+from all of your personal deployments, then deploy this change to all of them.
+Notify the operator when done.
+
+Operator
+~~~~~~~~
+
+1. After pushing the merge commit for this change to ``develop`` on GitHub,
+   request that team members upgrade their personal deployments. Request that
+   team members report back when done.
+
+2. Manually deploy the ``gitlab`` component of any main deployment just *before*
+   pushing the merge commit to the GitLab instance in that deployment.
+
+3. Manually deploy the ``shared`` component of any main deployment just *after*
+   this change was deployed to all collocated deployments, both personal and
+   shared ones.
+
+Promote this change separately from the previous one, and when promoting it,
+follow steps 2 and 3 above.
+
+
 #4918 Rename shared (aka versioned aka config) bucket (PR 1 of 2)
 =================================================================
 

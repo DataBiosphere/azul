@@ -440,18 +440,16 @@ not be publicly accessible since Terraform state may include secrets. If your
 developers assume a role via Amazon STS, the bucket should reside in the same
 region as the Azul deployment. This is because temporary STS AssumeRole
 credentials are specific to a region and won't be recognized by an S3 region
-that's different from the one the temporary credentials were issued in. To
-account for the region specificity of the bucket, you may want to include the
-region name at then end of the bucket name. That way you can have consistent
-bucket names across regions. Modify the ``environment.py`` of a main
-deployment to be created in the AWS account owning the bucket(typically `dev`
-or `prod`) to set `AZUL_VERSIONED_BUCKET` to the name of the bucket. Or,
-inversely, name the bucket using the current value of that variable.
+that's different from the one the temporary credentials were issued in. The 
+name of the bucket is not configurable but instead dictated by Azul's internal 
+convention for bucket names. Use the commands below to create that bucket.
 
 ```
-aws s3api create-bucket --bucket $AZUL_VERSIONED_BUCKET
+_select dev.shared  # or prod.shared, anvildev.shared, anvilprod.shared …
+bucket="$(python -c 'from azul.deployment import aws; print(aws.shared_bucket)')"
+aws s3api create-bucket --bucket "$bucket"
 aws s3api put-bucket-tagging \
-          --bucket $AZUL_VERSIONED_BUCKET \
+          --bucket "$bucket" \
           --tagging TagSet="[{Key=owner,Value=$AZUL_OWNER}]"
 ```
 
@@ -537,10 +535,11 @@ account.
 To deploy the remaining shared resources, run: 
 
 ```
-_select dev.shared  # or prod.shared
+_select dev.shared  # or prod.shared, anvildev.shared, anvilprod.shared …
 cd terraform/shared
 make validate
-terraform import aws_s3_bucket.versioned $AZUL_VERSIONED_BUCKET
+bucket="$(python -c 'from azul.deployment import aws; print(aws.shared_bucket)')"
+terraform import aws_s3_bucket.versioned "$bucket"
 make
 ```
 
@@ -856,8 +855,9 @@ but they will be empty.
    The destruction of `aws_acm_certificate` resources may time out. Simply
    repeat this step until it succeeds.
 
-6. From the config bucket (see environment var AZUL_VERSIONED_BUCKET),
-   delete all keys relating to your deployment.
+6. From the shared bucket (run `python -c 'from azul.deployment import aws; 
+   print(aws.shared_bucket)'` to reveal its name), delete all keys relating to 
+   your deployment.
 
 7. Delete the local Terraform state file at
    `deployments/.active/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
@@ -888,26 +888,6 @@ process.
 
 
 # 5. Troubleshooting
-
-
-## `NoSuchBucket` during `make deploy`
-
-```
-Initializing the backend...
-Backend configuration changed!
-
-Terraform has detected that the configuration specified for the backend
-has changed. Terraform will now check for existing state in the backends.
-
-
-Error inspecting states in the "s3" backend:
-    NoSuchBucket: The specified bucket does not exist
-```
-
-… but the bucket does exist. Make sure
-`deployments/.active/.terraform/terraform.tfstate` refers to the correct bucket,
-the one configured in `AZUL_VERSIONED_BUCKET`. If it doesn't, you may
-have to remove that file or modify it to fix the bucket name.
 
 
 ## `Error: Invalid index` during `make deploy`

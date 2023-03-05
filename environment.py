@@ -312,26 +312,6 @@ def env() -> Mapping[str, Optional[str]]:
         # https://forums.aws.amazon.com/thread.jspa?threadID=233378
         'AZUL_ES_TIMEOUT': '60',
 
-        # The name of the bucket where Terraform and Chalice maintain their
-        # state, allowing multiple developers to collaboratively use those
-        # frameworks on a single Azul deployment.
-        #
-        # If your developers assume a role via Amazon STS, the bucket should
-        # reside in the same region as the Azul deployment. This is because
-        # temporary STS AssumeRole credentials are specific to a region and
-        # won't be recognized by an S3 region that's different from the one
-        # the temporary credentials were issued in:
-        #
-        # AuthorizationHeaderMalformed: The authorization header is malformed;
-        # the region 'us-east-1' is wrong; expecting 'us-west-2' status code:
-        # 400.
-        #
-        # To account for the region specificity of the bucket, you may want to
-        # include the region name at then end of the bucket name. That way you
-        # can have consistent bucket names across regions.
-        #
-        'AZUL_VERSIONED_BUCKET': None,
-
         # The number of workers pulling files from the DSS repository.
         # There is one such set of repository workers per index worker.
         'AZUL_DSS_WORKERS': '8',

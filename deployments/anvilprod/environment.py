@@ -78,7 +78,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
         'AZUL_PRIVATE_API': '1',
 
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-platform-anvil-prod.{AWS_DEFAULT_REGION}',
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
         'AZUL_CATALOGS': json.dumps({

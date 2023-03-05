@@ -53,7 +53,7 @@ class PortalService:
 
     @property
     def bucket(self):
-        return config.portal_db_bucket
+        return aws.shared_bucket
 
     @property
     def object_key(self):

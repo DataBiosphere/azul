@@ -38,9 +38,6 @@ import_resources: rename_resources
 .PHONY: apply
 apply: validate import_resources
 	terraform apply
-	# FIXME: Remove role once migration is done
-	#        https://github.com/DataBiosphere/azul/issues/4918
-	python $(project_root)/scripts/replicate_versioned_bucket.py
 
 .PHONY: destroy
 destroy: validate
