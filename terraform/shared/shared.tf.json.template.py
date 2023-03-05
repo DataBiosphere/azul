@@ -125,8 +125,16 @@ emit_tf(block_public_s3_bucket_access({
                     'prevent_destroy': True
                 }
             },
+            # FIXME: Remove old bucket once all deployments use the new one
+            #        https://github.com/DataBiosphere/azul/issues/4918
             'versioned': {
                 'bucket': config.versioned_bucket,
+                'lifecycle': {
+                    'prevent_destroy': True
+                }
+            },
+            'shared': {
+                'bucket': aws.shared_bucket,
                 'lifecycle': {
                     'prevent_destroy': True
                 }
@@ -239,22 +247,30 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_s3_bucket_lifecycle_configuration': {
-            'versioned': {
-                'bucket': '${aws_s3_bucket.versioned.id}',
-                'rule': {
-                    'id': 'expire-tag',
-                    'status': 'Enabled',
-                    'filter': {
-                        'tag': {
-                            'key': 'expires',
-                            'value': 'true'
+            **(
+                {}
+                # FIXME: Enable lifecycle rule once migration is done
+                #        https://github.com/DataBiosphere/azul/issues/4918
+                if True else
+                {
+                    'shared': {
+                        'bucket': '${aws_s3_bucket.shared.id}',
+                        'rule': {
+                            'id': 'expire-tag',
+                            'status': 'Enabled',
+                            'filter': {
+                                'tag': {
+                                    'key': 'expires',
+                                    'value': 'true'
+                                }
+                            },
+                            'noncurrent_version_expiration': {
+                                'noncurrent_days': 30
+                            }
                         }
-                    },
-                    'noncurrent_version_expiration': {
-                        'noncurrent_days': 30
                     }
                 }
-            },
+            ),
             'logs': {
                 'bucket': '${aws_s3_bucket.logs.id}',
                 'rule': {
@@ -269,10 +285,44 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_s3_bucket_versioning': {
+            # FIXME: Remove old bucket once all deployments use the new one
+            #        https://github.com/DataBiosphere/azul/issues/4918
             'versioned': {
                 'bucket': '${aws_s3_bucket.versioned.id}',
                 'versioning_configuration': {
                     'status': 'Enabled'
+                }
+            },
+            'shared': {
+                'bucket': '${aws_s3_bucket.shared.id}',
+                'versioning_configuration': {
+                    'status': 'Enabled'
+                }
+            }
+        },
+        'aws_s3_bucket_replication_configuration': {
+            # FIXME: Disable replication once migration is done
+            #        https://github.com/DataBiosphere/azul/issues/4918
+            'shared_temp': {
+                'depends_on': [
+                    'aws_s3_bucket_versioning.versioned',
+                    'aws_s3_bucket_versioning.shared'
+                ],
+                'role': '${aws_iam_role.shared_temp.arn}',
+                'bucket': '${aws_s3_bucket.versioned.id}',
+                'rule': {
+                    'id': 'shared_temp',
+                    'filter': {
+                        'prefix': ''
+                    },
+                    'status': 'Enabled',
+                    'destination': {
+                        'bucket': '${aws_s3_bucket.shared.arn}',
+                        'storage_class': 'STANDARD'
+                    },
+                    'delete_marker_replication': {
+                        'status': 'Enabled'
+                    }
                 }
             }
         },
@@ -405,6 +455,29 @@ emit_tf(block_public_s3_bucket_access({
                     }
                 )
             },
+            # FIXME: Remove role once migration is done
+            #        https://github.com/DataBiosphere/azul/issues/4918
+            'shared_temp': {
+                'name': config.qualified_resource_name('shared_temp'),
+                'assume_role_policy': json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': [
+                                        's3.amazonaws.com',
+                                        'batchoperations.s3.amazonaws.com'
+                                    ]
+                                },
+                                'Action': 'sts:AssumeRole'
+                            }
+                        ]
+                    }
+                )
+
+            },
             **(
                 {
                     'chatbot': {
@@ -484,6 +557,55 @@ emit_tf(block_public_s3_bucket_access({
                             ],
                             'Resource': [
                                 '${aws_cloudwatch_log_group.trail.arn}:*'
+                            ]
+                        }
+                    ]
+                })
+            },
+            # FIXME: Remove policy once migration is done
+            #        https://github.com/DataBiosphere/azul/issues/4918
+            'shared_temp': {
+                'name': config.qualified_resource_name('shared_temp'),
+                'role': '${aws_iam_role.shared_temp.id}',
+                # noqa https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-required-policy-for-cloudwatch-logs.html
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Action': [
+                                's3:GetReplicationConfiguration',
+                                's3:PutInventoryConfiguration',
+                                's3:ListBucket'
+                            ],
+                            'Effect': 'Allow',
+                            'Resource': [
+                                '${aws_s3_bucket.versioned.arn}'
+                            ]
+                        },
+                        {
+                            'Effect': 'Allow',
+                            'Action': [
+                                's3:InitiateReplication',
+                                's3:GetObjectVersionForReplication',
+                                's3:GetObjectVersionAcl',
+                                's3:GetObjectVersionTagging'
+                            ],
+                            'Resource': [
+                                '${aws_s3_bucket.versioned.arn}/*'
+                            ]
+                        },
+                        {
+                            'Action': [
+                                's3:GetObject',
+                                's3:GetObjectVersion',
+                                's3:PutObject',
+                                's3:ReplicateObject',
+                                's3:ReplicateDelete',
+                                's3:ReplicateTags'
+                            ],
+                            'Effect': 'Allow',
+                            'Resource': [
+                                '${aws_s3_bucket.shared.arn}/*'
                             ]
                         }
                     ]
