@@ -1,6 +1,15 @@
 Upgrading
 ---------
 
+.. |deprecated| raw:: html
+
+   <strike>
+
+.. |end_deprecated| raw:: html
+
+   </strike>
+
+
 This file documents any upgrade procedure that must be performed. Because we
 don't use a semantic version, a change that requires explicit steps to upgrade
 a is referenced by its Github issue number. After checking out a branch that
@@ -19,15 +28,6 @@ Operator
 
 Manually deploy the ``shared`` component of any main deployment just before
 pushing the merge commit to the GitLab instance in that deployment.
-
-
-.. |deprecated| raw:: html
-
-   <strike>
-
-.. |end_deprecated| raw:: html
-
-   </strike>
 
 
 #4958 Storage bucket is still being removed from TF state
