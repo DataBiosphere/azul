@@ -425,7 +425,7 @@ class AWS:
         return self.boto3_session.resource(*args, **kwargs)
 
     def qualified_bucket_name(self, bucket_name: str) -> str:
-        return config.qualified_bucket_name(account_name=self.account_name,
+        return config.qualified_bucket_name(account_name=config.aws_account_name,
                                             region_name=self.region_name,
                                             bucket_name=bucket_name)
 
@@ -550,25 +550,10 @@ class AWS:
     def _validate_bucket_path_prefix(self, path_prefix):
         reject(path_prefix.startswith('/') or path_prefix.endswith('/'), path_prefix)
 
-    @cached_property
-    def shared_deployment_stage(self) -> str:
-        shared_deployments_by_account = {
-            'hca': {
-                'dev': 'dev',
-                'prod': 'prod'
-            },
-            'anvil': {
-                'dev': 'anvildev',
-                'prod': 'anvilprod'
-            }
-        }
-        _, project, stage = self.account_name.split('-')
-        return shared_deployments_by_account[project][stage]
-
     @property
     def monitoring_topic_name(self):
         return config.qualified_resource_name('monitoring',
-                                              stage=self.shared_deployment_stage)
+                                              stage=config.shared_deployment_stage)
 
 
 aws = AWS()

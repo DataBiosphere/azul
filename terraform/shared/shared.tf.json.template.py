@@ -235,12 +235,12 @@ emit_tf(block_public_s3_bucket_access({
                     'Statement': [
                         *aws.elb_access_log_bucket_policy(
                             bucket_arn='${aws_s3_bucket.logs.arn}',
-                            path_prefix=config.alb_access_log_path_prefix('*', deployment='*')
+                            path_prefix=config.alb_access_log_path_prefix('*', deployment=None)
                         ),
                         *aws.s3_access_log_bucket_policy(
                             source_bucket_arn='arn:aws:s3:::*',
                             target_bucket_arn='${aws_s3_bucket.logs.arn}',
-                            path_prefix=config.s3_access_log_path_prefix('*', deployment='*')
+                            path_prefix=config.s3_access_log_path_prefix('*', deployment=None)
                         )
                     ]
                 })

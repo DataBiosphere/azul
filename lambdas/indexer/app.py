@@ -14,6 +14,9 @@ from azul import (
 from azul.chalice import (
     AzulChaliceApp,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.health import (
     HealthController,
 )
@@ -23,6 +26,9 @@ from azul.hmac import (
 )
 from azul.indexer.index_controller import (
     IndexController,
+)
+from azul.indexer.log_forwarding_controller import (
+    LogForwardingController,
 )
 from azul.logging import (
     configure_app_logging,
@@ -40,6 +46,10 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
     @cached_property
     def index_controller(self) -> IndexController:
         return self._controller(IndexController)
+
+    @cached_property
+    def log_controller(self) -> LogForwardingController:
+        return self._controller(LogForwardingController)
 
     def __init__(self):
         super().__init__(app_name=config.indexer_name,
@@ -137,3 +147,11 @@ def aggregate_retry(event: chalice.app.SQSEvent):
                     batch_size=1)
 def contribute_retry(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event, retry=True)
+
+
+if config.enable_log_forwarding:
+    @app.on_s3_event(bucket=aws.qualified_bucket_name(config.logs_term),
+                     events=['s3:ObjectCreated:*'],
+                     prefix=config.alb_access_log_path_prefix(deployment=None))
+    def forward_alb_logs(event: chalice.app.S3Event):
+        app.log_controller.forward_logs(event)
