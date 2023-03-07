@@ -427,6 +427,8 @@ class FedRAMPInventoryService:
         query = f"SELECT {join(fields)} ORDER BY {join(order_fields)}"
         next_token = ''
         while next_token is not None:
+            # FIXME FedRAMP resource inventory does not cover all regions
+            #       https://github.com/DataBiosphere/azul/issues/5025
             response = self.config.select_resource_config(Expression=query,
                                                           NextToken=next_token)
             resources = response.get('Results', [])
