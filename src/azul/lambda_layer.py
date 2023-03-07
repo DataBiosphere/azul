@@ -35,11 +35,11 @@ class DependenciesLayer:
 
     def _update_required(self) -> bool:
         log.info('Checking for dependencies layer package at s3://%s/%s.',
-                 config.lambda_layer_bucket, self.object_key)
+                 aws.shared_bucket, self.object_key)
         try:
             # Since the object is content-addressed, just checking for the
             # object's presence is sufficient
-            self.s3.head_object(Bucket=config.lambda_layer_bucket, Key=self.object_key)
+            self.s3.head_object(Bucket=aws.shared_bucket, Key=self.object_key)
         except self.s3.exceptions.ClientError as e:
             if e.response['Error']['Code'] == '404':
                 return True
@@ -60,7 +60,7 @@ class DependenciesLayer:
             self._filter_package(input_zip, output_zip)
             self._validate_layer(output_zip)
             log.info('Uploading layer package to S3 ...')
-            self.s3.upload_file(str(output_zip), config.lambda_layer_bucket, self.object_key)
+            self.s3.upload_file(str(output_zip), aws.shared_bucket, self.object_key)
             log.info('Successfully staged updated layer package.')
         else:
             log.info('Layer package already up-to-date.')
