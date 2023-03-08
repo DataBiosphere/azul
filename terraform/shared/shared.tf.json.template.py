@@ -145,13 +145,17 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_s3_bucket_logging': {
-            'trail': {
-                'bucket': '${aws_s3_bucket.trail.id}',
+            bucket: {
+                'bucket': '${aws_s3_bucket.%s.id}' % bucket,
                 'target_bucket': '${aws_s3_bucket.logs.id}',
                 # Other S3 log deliveries, like ELB, implicitly put a slash
                 # after the prefix. S3 doesn't, so we add one explicitly.
-                'target_prefix': config.s3_access_log_path_prefix('cloudtrail') + '/'
+                'target_prefix': config.s3_access_log_path_prefix(prefix) + '/'
             }
+            for bucket, prefix in [
+                ('trail', 'cloudtrail'),
+                ('aws_config', 'aws_config')
+            ]
         },
         'aws_s3_bucket_policy': {
             'trail': {
