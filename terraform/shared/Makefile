@@ -31,9 +31,6 @@ rename_resources: config
 .PHONY: import_resources
 import_resources: rename_resources
 	python $(project_root)/scripts/import_default_vpc.py
-	# FIXME: https://github.com/DataBiosphere/azul/issues/4824
-	#        Remove import of the GitLab default security group once completed
-	python $(project_root)/scripts/import_gitlab_security_group.py
 
 .PHONY: apply
 apply: validate import_resources
