@@ -81,15 +81,26 @@ class Terraform:
             if 'tags' in resource['block']['attributes']
         ]
 
-    def run(self, *args: str) -> str:
+    def run(self, *args: str, **kwargs) -> str:
         args = ['terraform', *args]
         log.info('Running %r', args)
         cmd = subprocess.run(args,
                              check=True,
                              stdout=subprocess.PIPE,
                              text=True,
-                             shell=False)
+                             shell=False,
+                             **kwargs)
         return cmd.stdout
+
+    def run_state_list(self):
+        try:
+            stdout = self.run('state', 'list', stderr=subprocess.PIPE)
+            return stdout.splitlines()
+        except subprocess.CalledProcessError as e:
+            if 'No state file was found!' in e.stderr:
+                return []
+            else:
+                raise
 
     schema_path = Path(config.project_root) / 'terraform' / '_schema.json'
 
