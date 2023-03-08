@@ -39,6 +39,9 @@ import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
 )
+from azul.collections import (
+    atuple,
+)
 from azul.json_freeze import (
     freeze,
 )
@@ -197,16 +200,34 @@ class Config:
 
     logs_term = 'logs'
 
+    shared_term = 'shared'
+
+    current = object()
+
     def alb_access_log_path_prefix(self,
                                    *component: str,
-                                   deployment: Optional[str] = None
+                                   deployment: Optional[str] = current,
                                    ) -> str:
+        """
+        :param deployment: Which deployment name to use in the path. Omit this
+                           parameter to use the current deployment. Pass `None`
+                           to omit the deployment name from the path.
+
+        :param component: Other component names to append at the end of the path
+        """
         return self._log_path_prefix(['alb', 'access'], deployment, *component)
 
     def s3_access_log_path_prefix(self,
                                   *component: str,
-                                  deployment: Optional[str] = None,
+                                  deployment: Optional[str] = current,
                                   ) -> str:
+        """
+        :param deployment: Which deployment name to use in the path. Omit this
+                           parameter to use the current deployment. Pass `None`
+                           to omit the deployment name from the path.
+
+        :param component: Other component names to append at the end of the path
+        """
         return self._log_path_prefix(['s3', 'access'], deployment, *component)
 
     def _log_path_prefix(self,
@@ -214,9 +235,9 @@ class Config:
                          deployment: Optional[str],
                          *component: str,
                          ):
-        if deployment is None:
+        if deployment is self.current:
             deployment = self.deployment_stage
-        return '/'.join([*prefix, deployment, *component])
+        return '/'.join([*prefix, *atuple(deployment), *component])
 
     @property
     def manifest_expiration(self) -> int:
@@ -672,6 +693,21 @@ class Config:
         self.validate_deployment_name(deployment_name)
         return deployment_name
 
+    @cached_property
+    def shared_deployment_stage(self) -> str:
+        shared_deployments_by_account = {
+            'hca': {
+                'dev': 'dev',
+                'prod': 'prod'
+            },
+            'anvil': {
+                'dev': 'anvildev',
+                'prod': 'anvilprod'
+            }
+        }
+        _, project, stage = self.aws_account_name.split('-')
+        return shared_deployments_by_account[project][stage]
+
     @property
     def deployment_incarnation(self) -> str:
         return self.environ['AZUL_DEPLOYMENT_INCARNATION']
@@ -691,6 +727,15 @@ class Config:
     @property
     def disable_monitoring(self) -> bool:
         return not self.enable_monitoring
+
+    @property
+    def enable_log_forwarding(self) -> bool:
+        # The main deployment in a given account is responsible for forwarding
+        # logs from every deployment in that account. We expect this to be more
+        # efficient than having one forwarder per deployment because logs are
+        # delivered very frequently so each log forwarder Lambda will be
+        # constantly active.
+        return self.deployment_stage == self.shared_deployment_stage
 
     @property
     def es_instance_type(self) -> str:
@@ -982,7 +1027,7 @@ class Config:
         return self.is_sandbox_deployment or not self.is_main_deployment()
 
     @property
-    def _git_status(self) -> Mapping[str, str]:
+    def _git_status(self) -> dict[str, str]:
         import git
         repo = git.Repo(self.project_root)
         return {
@@ -991,11 +1036,35 @@ class Config:
         }
 
     @property
-    def lambda_git_status(self) -> Mapping[str, str]:
+    def lambda_git_status(self) -> dict[str, str]:
         return {
             'commit': self.environ['azul_git_commit'],
             'dirty': str_to_bool(self.environ['azul_git_dirty'])
         }
+
+    @property
+    def _aws_account_name(self) -> dict[str, str]:
+        return {
+            'azul_aws_account_name': self.aws_account_name
+        }
+
+    @property
+    def aws_account_name(self) -> str:
+        """
+        When in invoked in a Lambda context, this method will retrieve the AWS
+        account name from the Lambda environment, avoiding a round trip to IAM.
+        """
+        if self.is_in_lambda:
+            return self.environ['azul_aws_account_name']
+        else:
+            from azul.deployment import (
+                aws,
+            )
+            return aws.account_name
+
+    @property
+    def is_in_lambda(self) -> bool:
+        return 'AWS_LAMBDA_FUNCTION_NAME' in self.environ
 
     @property
     def lambda_env(self) -> dict[str, str]:
@@ -1004,10 +1073,11 @@ class Config:
         Lambda function or `chalice local`. Only includes those variables that
         don't need to be outsourced.
         """
-        return {
-            **self._lambda_env(outsource=False),
-            **self._git_status
-        }
+        return (
+            self._lambda_env(outsource=False)
+            | self._git_status
+            | self._aws_account_name
+        )
 
     @property
     def lambda_env_for_outsourcing(self) -> dict[str, str]:

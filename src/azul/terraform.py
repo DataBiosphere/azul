@@ -649,6 +649,22 @@ class Chalice:
                 assert function_name, function_name
                 resource[argument] = config.qualified_resource_name(function_name)
 
+        # Chalice-generated S3 bucket notifications include the bucket name in
+        # the resource name, resulting in an invalid resource name when the
+        # bucket name contains periods. Bucket names cannot include underscores
+        # (https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html),
+        # so replacing the periods with underscores results in valid resource
+        # names while retaining the correlation with bucket names.
+        try:
+            bucket_notifications = resources['aws_s3_bucket_notification']
+        except KeyError:
+            pass
+        else:
+            resources['aws_s3_bucket_notification'] = {
+                key.replace('.', '_'): value
+                for key, value in bucket_notifications.items()
+            }
+
         # The fix for https://github.com/aws/chalice/issues/1237 introduced the
         # create_before_destroy hack and it may have helped but has far-ranging
         # implications such as pushing create-before-destroy semantics upstream
