@@ -29,6 +29,16 @@ Manually deploy the ``shared`` component of any main deployment just before
 pushing the merge commit to the GitLab instance in that deployment.
 
 
+#4176 Enable VPC flow logs
+==========================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` and  ``shared`` components of any main deployment
+just before pushing the merge commit to the GitLab instance in that deployment.
+
+
 #4918 Rename shared (aka versioned aka config) bucket (PR 2 of 2)
 =================================================================
 
