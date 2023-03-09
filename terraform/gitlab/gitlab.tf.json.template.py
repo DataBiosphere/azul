@@ -394,9 +394,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'edu-ucsc-gi-platform-hca-dev-*',
                                     'edu-ucsc-gi-singlecell-azul-*',
                                 ] if 'singlecell' in config.domain_name else [
-                                    'edu-ucsc-gi-platform-anvil-dev.*',
-                                    'edu-ucsc-gi-platform-anvil-dev-*',
-                                    'edu-ucsc-gi-platform-anvil-anvilbox',
+                                    'edu-ucsc-gi-platform-anvil-*',
+                                    'edu-ucsc-gi-platform-anvil-*',
                                 ] if 'anvil' in config.domain_name else [
                                     'edu-ucsc-gi-platform-hca-prod-*',
                                     'edu-ucsc-gi-azul-*',
