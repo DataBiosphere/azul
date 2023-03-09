@@ -102,7 +102,7 @@ class CredentialsProvisioner:
             return False
 
     def _create_service_account_creds(self, service_account_email):
-        iam = self.google_iam()
+        iam = self.google_iam
         key = iam.projects().serviceAccounts().keys().create(
             name='projects/-/serviceAccounts/' + service_account_email, body={}
         ).execute()
@@ -148,7 +148,7 @@ class CredentialsProvisioner:
             return
         else:
             key_id = json.loads(creds['SecretString'])['private_key_id']
-            iam = self.google_iam()
+            iam = self.google_iam
             try:
                 iam.projects().serviceAccounts().keys().delete(
                     name='projects/-/serviceAccounts/' + service_account_email + '/keys/' + key_id).execute()
