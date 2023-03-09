@@ -564,7 +564,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'values': [aws.permissions_boundary_arn]
                         }
                     },
-
+                    {
+                        'actions': [
+                            'iam:CreateServiceLinkedRole'
+                        ],
+                        'resources': [
+                            f'arn:aws:iam::{aws.account}'
+                            ':role'
+                            '/aws-service-role'
+                            '/ops.apigateway.amazonaws.com'
+                            '/AWSServiceRoleForAPIGateway',
+                        ]
+                    },
                     {
                         'actions': [
                             'iam:UpdateAssumeRolePolicy',
