@@ -19,6 +19,15 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5004 Enable access logging on AWS Config bucket
+================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
 
 #4918 Rename shared (aka versioned aka config) bucket (PR 2 of 2)
 =================================================================
