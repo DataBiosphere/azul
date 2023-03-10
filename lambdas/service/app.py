@@ -9,8 +9,6 @@ from inspect import (
 )
 import json
 import logging.config
-import mimetypes
-import pathlib
 from typing import (
     Any,
     Callable,
@@ -29,7 +27,6 @@ from chalice import (
     Response,
     UnauthorizedError,
 )
-import chevron
 from furl import (
     furl,
 )
@@ -423,38 +420,12 @@ configure_app_logging(app, log)
 
 @app.route('/', cors=True)
 def swagger_ui():
-    swagger_ui_template = app.load_static_resource('swagger-ui.html.template.mustache')
-    base_url = app.base_url
-    redirect_url = furl(base_url).add(path='oauth2_redirect')
-    deployment_url = furl(base_url).add(path='openapi')
-    swagger_ui_html = chevron.render(swagger_ui_template, {
-        'DEPLOYMENT_PATH': json.dumps(str(deployment_url.path)),
-        'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
-        'OAUTH2_REDIRECT_URL': json.dumps(str(redirect_url)),
-        'NON_INTERACTIVE_METHODS': json.dumps([
-            f'{path}/{method.lower()}'
-            for path, method in app.non_interactive_routes
-        ])
-    })
-    return Response(status_code=200,
-                    headers={'Content-Type': 'text/html'},
-                    body=swagger_ui_html)
+    return app.swagger_ui()
 
 
 @app.route('/static/{file}', cors=True)
 def static_resource(file):
-    swagger_resources = {
-        'swagger-ui.css',
-        'swagger-ui-bundle.js',
-        'swagger-ui-standalone-preset.js'
-    }
-    if file not in swagger_resources:
-        raise NotFoundError(file)
-    else:
-        suffix = pathlib.Path(file).suffix
-        return Response(status_code=200,
-                        headers={"Content-Type": mimetypes.types_map[suffix]},
-                        body=app.load_static_resource(file))
+    return app.swagger_resource(file)
 
 
 @app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)

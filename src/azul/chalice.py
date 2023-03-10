@@ -6,7 +6,9 @@ from json import (
     JSONEncoder,
 )
 import logging
+import mimetypes
 import os
+import pathlib
 from typing import (
     Any,
     Optional,
@@ -25,9 +27,11 @@ from chalice import (
 from chalice.app import (
     CaseInsensitiveMapping,
     MultiDict,
+    NotFoundError,
     Request,
     Response,
 )
+import chevron
 from furl import (
     furl,
 )
@@ -414,6 +418,38 @@ class AzulChaliceApp(Chalice):
 
     def _controller(self, controller_cls: Type[C], **kwargs) -> C:
         return controller_cls(app=self, **kwargs)
+
+    def swagger_ui(self) -> Response:
+        swagger_ui_template = self.load_static_resource('swagger-ui.html.template.mustache')
+        base_url = self.base_url
+        redirect_url = furl(base_url).add(path='oauth2_redirect')
+        deployment_url = furl(base_url).add(path='openapi')
+        swagger_ui_html = chevron.render(swagger_ui_template, {
+            'DEPLOYMENT_PATH': json.dumps(str(deployment_url.path)),
+            'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
+            'OAUTH2_REDIRECT_URL': json.dumps(str(redirect_url)),
+            'NON_INTERACTIVE_METHODS': json.dumps([
+                f'{path}/{method.lower()}'
+                for path, method in self.non_interactive_routes
+            ])
+        })
+        return Response(status_code=200,
+                        headers={'Content-Type': 'text/html'},
+                        body=swagger_ui_html)
+
+    def swagger_resource(self, file) -> Response:
+        swagger_resources = {
+            'swagger-ui.css',
+            'swagger-ui-bundle.js',
+            'swagger-ui-standalone-preset.js'
+        }
+        if file not in swagger_resources:
+            raise NotFoundError(file)
+        else:
+            suffix = pathlib.Path(file).suffix
+            return Response(status_code=200,
+                            headers={"Content-Type": mimetypes.types_map[suffix]},
+                            body=self.load_static_resource(file))
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
