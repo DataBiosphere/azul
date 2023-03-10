@@ -37,6 +37,7 @@ from more_itertools import (
 )
 
 from azul import (
+    RequirementError,
     cached_property,
     config,
 )
@@ -1807,6 +1808,17 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
                 hits = self._get_all_hits()
                 self.assertEqual(len(hits), 42)
+
+    def test_disallow_manifest_column_joiner(self):
+        bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
+                                       version='2019-10-03T10:55:24.911627Z')
+        bundle = self._load_canned_bundle(bundle_fqid)
+        project = bundle.metadata_files['project_0.json']
+        contributor = project['contributors'][0]
+        assert contributor['institution'] == 'Lund University'
+        contributor['institution'] += ' || LabMED'
+        with self.assertRaisesRegex(RequirementError, "'||' is disallowed"):
+            self._index_bundle(bundle)
 
 
 class TestIndexManagement(AzulUnitTestCase):
