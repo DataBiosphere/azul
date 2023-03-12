@@ -1,6 +1,6 @@
 arrow==1.2.3
 blessed==1.20.0
-botocore-stubs==1.29.87
+botocore-stubs==1.29.89
 brotli==1.0.9
 click==8.1.3
 colorama==0.4.4

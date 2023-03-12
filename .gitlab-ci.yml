@@ -10,9 +10,8 @@ stages:
   - early_reindex
   - integration_test
   - teardown
-  - manual
-  - sell_unused_slots
-  - fedramp_inventory
+  - reindex
+  - schedule
 
 build_image:
   # Build an image containing the build prerequisites (python, terraform, etc).
@@ -20,6 +19,8 @@ build_image:
   # image will only be rebuilt after changes to the Dockerfile, 
   # requirements*.txt, common.mk and the Makefile.
   stage: build_image
+  rules:
+    - if: $CI_COMMIT_BRANCH
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
     - make docker_dev_push .gitlab.env
@@ -29,6 +30,8 @@ build_image:
 
 .base:
   image: $BUILD_IMAGE
+  rules:
+    - if: $CI_COMMIT_BRANCH
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
@@ -47,8 +50,6 @@ setup:
   stage: setup
   script:
     - python scripts/github_status_check.py "${status_context}" pending
-  except:
-    - schedules
 
 test:
   extends: .base
@@ -60,8 +61,6 @@ test:
     - make check_clean  # would dirty up the working copy and fail the build.
     - make pep8
     - AZUL_DEBUG=0 make test
-  except:
-    - schedules
 
 deploy:
   extends: .base
@@ -69,8 +68,6 @@ deploy:
   script:
     - make auto_deploy
     - make create
-  except:
-    - schedules
   artifacts:
     paths:
       - terraform/plan.json
@@ -80,8 +77,6 @@ integration_test:
   stage: integration_test
   script:
     - make integration_test
-  except:
-    - schedules
 
 on_success:
   extends: .base
@@ -89,8 +84,6 @@ on_success:
   when: on_success
   script:
     - python scripts/github_status_check.py "${status_context}" success
-  except:
-    - schedules
 
 on_failure:
   extends: .base
@@ -98,45 +91,40 @@ on_failure:
   when: on_failure
   script:
     - python scripts/github_status_check.py "${status_context}" failure
-  except:
-    - schedules
 
 early_reindex:
   extends: .base
   stage: early_reindex
   when: manual
-  except:
-    - schedules
+  timeout: 24h
   script:
     - make reindex
-  timeout: 24h
 
 reindex:
   extends: .base
-  stage: manual
+  stage: reindex
   when: manual
-  except:
-    - schedules
+  timeout: 24h
   script:
     - make reindex
-  timeout: 24h
 
 sell_unused_slots:
   extends: .base
-  only:
-    - schedules
+  stage: schedule
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'schedule' 
+          && $azul_gitlab_schedule == 'sell_unused_slots'
   script:
     - python3 scripts/sell_unused_slots.py
 
 fedramp_inventory:
   extends: .base
-  only:
-    # FIXME: this needs additional configuration to avoid conflicting with the
-    #        `sell_unused_slots` schedule
-    #        https://docs.gitlab.com/ee/ci/yaml/#rules
-    - schedules
+  stage: schedule
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'schedule' 
+          && $azul_gitlab_schedule == 'fedramp_inventory'
   script:
-    - python3 scripts/create_fedramp_report.py --wiki docs/fedramp_inventory.xlsx
+    - python3 scripts/compliance/fedramp_inventory.py fedramp_inventory.xlsx
   artifacts:
     paths:
-      - report.xlsx
+      - fedramp_inventory.xlsx

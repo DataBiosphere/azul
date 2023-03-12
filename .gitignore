@@ -4,6 +4,7 @@ __pycache__/
 # Python coverage
 /.coverage
 /.coverage.*
+/fedramp_inventory.xlsx
 
 ## Build products above this line. Please see the `clean` target in Makefile.
 
@@ -20,5 +21,3 @@ __pycache__/
 /.venv/
 # PyCharm
 /.idea
-# FedRAMP inventory output
-/docs/fedramp_inventory.xlsx
