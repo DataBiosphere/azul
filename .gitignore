@@ -4,6 +4,7 @@ __pycache__/
 # Python coverage
 /.coverage
 /.coverage.*
+/fedramp_inventory.xlsx
 
 ## Build products above this line. Please see the `clean` target in Makefile.
 

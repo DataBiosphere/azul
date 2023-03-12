@@ -19,6 +19,36 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#3634 Automate creation of a FedRAMP Integrated Inventory Workbook
+==================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just *before*
+pushing the merge commit to the GitLab instance in that deployment.
+
+Afterwards, edit the existing schedule in the Azul project on that GitLab
+instance. Its description is ``Sell unused BigQuery slot commitments``. You may
+need to ask a system administrator to perform make these changes on your behalf.
+
+1) Set the Cron timezone to ``Pacific Time (US & Canada)``
+
+2) Set the variable ``azul_gitlab_schedule`` to ``sell_unused_slots``
+
+
+Add another schedule:
+
+1) Set the description to ``Prepare FedRAMP inventory``
+
+2) Set the interval pattern to ``0 4 * * *``
+
+3) Set the Cron timezone to ``Pacific Time (US & Canada)``
+
+4) Set the variable ``azul_gitlab_schedule`` to ``fedramp_inventory``
+
+
 #5004 Enable access logging on AWS Config bucket
 ================================================
 

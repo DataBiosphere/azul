@@ -1,3 +1,13 @@
+workflow:
+  name: $azul_gitlab_pipeline_name
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH
+      variables:
+        azul_gitlab_pipeline_name: $CI_COMMIT_TITLE
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+      variables:
+        azul_gitlab_pipeline_name: Scheduled $azul_gitlab_schedule
+
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
   DOCKER_TAG: $CI_PIPELINE_ID
@@ -10,15 +20,22 @@ stages:
   - early_reindex
   - integration_test
   - teardown
-  - manual
-  - sell_unused_slots
+  - reindex
+  - schedule
+
+.on_branch_push:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH
 
 build_image:
   # Build an image containing the build prerequisites (python, terraform, etc).
   # This lets us exploit Docker's layer caching to speed up the build. The
   # image will only be rebuilt after changes to the Dockerfile, 
   # requirements*.txt, common.mk and the Makefile.
+  extends: .on_branch_push
   stage: build_image
+  rules:
+    - if: $CI_COMMIT_BRANCH
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
     - make docker_dev_push .gitlab.env
@@ -26,7 +43,7 @@ build_image:
     reports:
       dotenv: .gitlab.env
 
-.base:
+.needs_image:
   image: $BUILD_IMAGE
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
@@ -41,13 +58,14 @@ build_image:
   dependencies:
     - build_image
 
+.base:
+  extends: [ .on_branch_push, .needs_image ]
+
 setup:
   extends: .base
   stage: setup
   script:
     - python scripts/github_status_check.py "${status_context}" pending
-  except:
-    - schedules
 
 test:
   extends: .base
@@ -59,8 +77,6 @@ test:
     - make check_clean  # would dirty up the working copy and fail the build.
     - make pep8
     - AZUL_DEBUG=0 make test
-  except:
-    - schedules
 
 deploy:
   extends: .base
@@ -68,8 +84,6 @@ deploy:
   script:
     - make auto_deploy
     - make create
-  except:
-    - schedules
   artifacts:
     paths:
       - terraform/plan.json
@@ -79,8 +93,6 @@ integration_test:
   stage: integration_test
   script:
     - make integration_test
-  except:
-    - schedules
 
 on_success:
   extends: .base
@@ -88,8 +100,6 @@ on_success:
   when: on_success
   script:
     - python scripts/github_status_check.py "${status_context}" success
-  except:
-    - schedules
 
 on_failure:
   extends: .base
@@ -97,32 +107,40 @@ on_failure:
   when: on_failure
   script:
     - python scripts/github_status_check.py "${status_context}" failure
-  except:
-    - schedules
 
 early_reindex:
   extends: .base
   stage: early_reindex
   when: manual
-  except:
-    - schedules
+  timeout: 24h
   script:
     - make reindex
-  timeout: 24h
 
 reindex:
   extends: .base
-  stage: manual
+  stage: reindex
   when: manual
-  except:
-    - schedules
+  timeout: 24h
   script:
     - make reindex
-  timeout: 24h
 
 sell_unused_slots:
-  extends: .base
-  only:
-    - schedules
+  extends: .needs_image
+  stage: schedule
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+        && $azul_gitlab_schedule == 'sell_unused_slots'
   script:
     - python3 scripts/sell_unused_slots.py
+
+fedramp_inventory:
+  extends: .needs_image
+  stage: schedule
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+        && $azul_gitlab_schedule == 'fedramp_inventory'
+  script:
+    - python3 scripts/compliance/fedramp_inventory.py fedramp_inventory.xlsx
+  artifacts:
+    paths:
+      - fedramp_inventory.xlsx
