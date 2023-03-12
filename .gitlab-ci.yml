@@ -1,3 +1,13 @@
+workflow:
+  name: $azul_gitlab_pipeline_name
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH
+      variables:
+        azul_gitlab_pipeline_name: $CI_COMMIT_TITLE
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+      variables:
+        azul_gitlab_pipeline_name: Scheduled $azul_gitlab_schedule
+
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
   DOCKER_TAG: $CI_PIPELINE_ID
@@ -49,7 +59,7 @@ build_image:
     - build_image
 
 .base:
-  extends: [.on_branch_push, .needs_image]
+  extends: [ .on_branch_push, .needs_image ]
 
 setup:
   extends: .base
@@ -118,8 +128,8 @@ sell_unused_slots:
   extends: .needs_image
   stage: schedule
   rules:
-    - if: $CI_PIPELINE_SOURCE == 'schedule' 
-          && $azul_gitlab_schedule == 'sell_unused_slots'
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+        && $azul_gitlab_schedule == 'sell_unused_slots'
   script:
     - python3 scripts/sell_unused_slots.py
 
@@ -127,8 +137,8 @@ fedramp_inventory:
   extends: .needs_image
   stage: schedule
   rules:
-    - if: $CI_PIPELINE_SOURCE == 'schedule' 
-          && $azul_gitlab_schedule == 'fedramp_inventory'
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+        && $azul_gitlab_schedule == 'fedramp_inventory'
   script:
     - python3 scripts/compliance/fedramp_inventory.py fedramp_inventory.xlsx
   artifacts:
