@@ -104,6 +104,8 @@ class TestLogForwarding(AzulUnitTestCase):
                     '"-"', '"-"',
                 ])]
                 expected_output = [{
+                    '_source_bucket': self.log_bucket,
+                    '_source_key': self.log_file_key,
                     'actions_executed': 'forward',
                     'chosen_cert_arn': 'arn:aws:acm:us-east-1:122796619775:certificate/'
                                        '81241b8e-c875-4a22-a30e-58003ee139ae',

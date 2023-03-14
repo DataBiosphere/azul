@@ -31,7 +31,10 @@ class LogForwardingService(metaclass=ABCMeta):
     def read_logs(self, bucket: str, key: str) -> Iterator[MutableJSON]:
         response = aws.s3.get_object(Bucket=bucket, Key=key)
         body = self._read_log(response['Body'])
-        return self._parse_log_lines(body)
+        for message in self._parse_log_lines(body):
+            message['_source_bucket'] = bucket
+            message['_source_key'] = key
+            yield message
 
     def _parse_log_lines(self, file_body: Iterable[str]) -> Iterator[MutableJSON]:
         # CSV format escapes the quotechar by repeating it. This cannot
