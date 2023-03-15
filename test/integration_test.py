@@ -1351,18 +1351,22 @@ class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 class OpenAPIIntegrationTest(AzulTestCase):
 
     def test_openapi(self):
-        url = config.service_endpoint
-        url.set(path='/')
-        response = requests.get(str(url))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.headers['content-type'], 'text/html')
-        self.assertGreater(len(response.content), 0)
-        # validate OpenAPI spec
-        url.set(path='/openapi')
-        response = requests.get(str(url))
-        response.raise_for_status()
-        spec = response.json()
-        validate_spec(spec)
+        for component, url in [
+            ('service', config.service_endpoint),
+            ('indexer', config.indexer_endpoint)
+        ]:
+            with self.subTest(component=component):
+                url.set(path='/')
+                response = requests.get(str(url))
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.headers['content-type'], 'text/html')
+                self.assertGreater(len(response.content), 0)
+                # validate OpenAPI spec
+                url.set(path='/openapi')
+                response = requests.get(str(url))
+                response.raise_for_status()
+                spec = response.json()
+                validate_spec(spec)
 
 
 class AzulChaliceLocalIntegrationTest(AzulTestCase):
