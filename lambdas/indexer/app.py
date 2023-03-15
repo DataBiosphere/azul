@@ -70,7 +70,6 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
 
 
 app = IndexerApp()
-
 configure_app_logging(app, log)
 
 
