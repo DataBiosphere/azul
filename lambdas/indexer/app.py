@@ -46,6 +46,8 @@ spec = {
     'openapi': '3.0.1',
     'info': {
         'title': config.indexer_name,
+        # FIXME: Swagger UI for indexer is a stub
+        #        https://github.com/DataBiosphere/azul/issues/5051
         'description': format_description('''
             This is the indexer component for Azul.
         '''),
