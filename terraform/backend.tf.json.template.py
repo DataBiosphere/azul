@@ -12,7 +12,7 @@ emit_tf(tag_resources=False, config={
     "terraform": {
         "backend": {
             "s3": {
-                "bucket": config.versioned_bucket,
+                "bucket": aws.shared_bucket,
                 "key": f"azul-{config.terraform_component}-{config.deployment_stage}.tfstate",
                 "region": aws.region_name,
             }

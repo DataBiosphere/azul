@@ -717,10 +717,6 @@ class Config:
         return self.environ['AWS_DEFAULT_REGION']
 
     @property
-    def versioned_bucket(self):
-        return self.environ['AZUL_VERSIONED_BUCKET']
-
-    @property
     def enable_monitoring(self) -> bool:
         return self._boolean(self.environ['AZUL_ENABLE_MONITORING'])
 
@@ -1347,16 +1343,8 @@ class Config:
     def github_access_token(self) -> str:
         return self.environ['azul_github_access_token']
 
-    @property
-    def portal_db_bucket(self) -> str:
-        return self.versioned_bucket
-
     def portal_db_object_key(self, catalog_source: str) -> str:
         return f'azul/{self.deployment_stage}/portals/{catalog_source}-db.json'
-
-    @property
-    def lambda_layer_bucket(self) -> str:
-        return self.versioned_bucket
 
     @property
     def lambda_layer_key(self) -> str:

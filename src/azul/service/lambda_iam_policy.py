@@ -77,7 +77,7 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/*",
-                f"arn:aws:s3:::{config.versioned_bucket}/*"
+                f"arn:aws:s3:::{aws.shared_bucket}/*"
             ]
         },
         # Needed for GetObject to work in versioned bucket
@@ -87,7 +87,7 @@ policy = {
                 "s3:GetObjectVersion"
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.versioned_bucket}/*"
+                f"arn:aws:s3:::{aws.shared_bucket}/*"
             ]
         },
         {
@@ -97,7 +97,7 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}",
-                f"arn:aws:s3:::{config.versioned_bucket}"
+                f"arn:aws:s3:::{aws.shared_bucket}"
             ]
         },
         *(
