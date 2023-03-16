@@ -67,7 +67,3 @@ destroy: validate import_resources
 auto_destroy: validate import_resources
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
-
-.PHONY: taint_dependencies_layer
-taint_dependencies_layer: config
-	terraform taint -allow-missing aws_lambda_layer_version.dependencies
