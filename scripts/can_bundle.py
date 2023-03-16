@@ -79,16 +79,15 @@ def main(argv):
 def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
     for catalog in config.catalogs:
         plugin = plugin_for(catalog)
-        sources = set(map(str, plugin.sources))
         try:
             source_ref = plugin.resolve_source(source)
         except Exception:
             log.debug('Skipping catalog %r (incompatible source)', catalog)
         else:
             log.debug('Searching for %r in catalog %r', source, catalog)
-            for plugin_source_spec in sources:
-                plugin_source_ref = plugin.resolve_source(plugin_source_spec)
-                if source_ref.spec.contains(plugin_source_ref.spec):
+            for plugin_source_spec in plugin.sources:
+                if source_ref.spec.contains(plugin_source_spec):
+                    plugin_source_ref = plugin.resolve_source(str(plugin_source_spec))
                     fqid = SourcedBundleFQID(source=plugin_source_ref,
                                              uuid=bundle_uuid,
                                              version=bundle_version)
