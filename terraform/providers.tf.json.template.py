@@ -20,7 +20,7 @@ emit_tf(tag_resources=False, config={
             },
             'aws': {
                 'source': 'hashicorp/aws',
-                'version': '4.30.0'
+                'version': '4.58.0'
             },
         },
     },
