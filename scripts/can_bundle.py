@@ -83,8 +83,9 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
         try:
             source_ref = plugin.resolve_source(source)
         except Exception:
-            pass
+            log.debug('Skipping catalog %r (incompatible source)', catalog)
         else:
+            log.debug('Searching for %r in catalog %r', source, catalog)
             for plugin_source_spec in sources:
                 plugin_source_ref = plugin.resolve_source(plugin_source_spec)
                 if source_ref.spec.contains(plugin_source_ref.spec):
@@ -95,7 +96,7 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
                     log.info('Fetched bundle %r version %r from catalog %r.',
                              fqid.uuid, fqid.version, catalog)
                     return bundle
-    raise ValueError('No repository using this source')
+    raise ValueError(f'No repository using source {source!r}')
 
 
 @cache
