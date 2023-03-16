@@ -50,12 +50,6 @@ emit_tf(block_public_s3_bucket_access({
                 # after the prefix. S3 doesn't, so we add one explicitly.
                 'target_prefix': config.s3_access_log_path_prefix('storage') + '/'
             }
-        },
-        'aws_s3_bucket_acl': {
-            'storage': {
-                'bucket': '${aws_s3_bucket.storage.id}',
-                'acl': 'private',
-            }
         }
     }
 }))
