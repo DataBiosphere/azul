@@ -14,7 +14,6 @@ import subprocess
 from typing import (
     Optional,
     TypeVar,
-    Union,
 )
 
 import attr
@@ -36,6 +35,7 @@ from azul.template import (
 )
 from azul.types import (
     AnyJSON,
+    CompositeJSON,
     JSON,
     JSONs,
     MutableJSON,
@@ -81,15 +81,26 @@ class Terraform:
             if 'tags' in resource['block']['attributes']
         ]
 
-    def run(self, *args: str) -> str:
+    def run(self, *args: str, **kwargs) -> str:
         args = ['terraform', *args]
         log.info('Running %r', args)
         cmd = subprocess.run(args,
                              check=True,
                              stdout=subprocess.PIPE,
                              text=True,
-                             shell=False)
+                             shell=False,
+                             **kwargs)
         return cmd.stdout
+
+    def run_state_list(self):
+        try:
+            stdout = self.run('state', 'list', stderr=subprocess.PIPE)
+            return stdout.splitlines()
+        except subprocess.CalledProcessError as e:
+            if 'No state file was found!' in e.stderr:
+                return []
+            else:
+                raise
 
     schema_path = Path(config.project_root) / 'terraform' / '_schema.json'
 
@@ -125,7 +136,13 @@ terraform = Terraform()
 del Terraform
 
 
-def _sanitize_tf(tf_config: JSON) -> JSON:
+def emit_tf(config: Optional[JSON], *, tag_resources: bool = True) -> None:
+    if config is not None:
+        config = _transform_tf(config, tag_resources=tag_resources)
+    emit(config)
+
+
+def _sanitize_tf(tf_config: CompositeJSON) -> CompositeJSON:
     """
     Avoid errors like
 
@@ -137,10 +154,15 @@ def _sanitize_tf(tf_config: JSON) -> JSON:
         At least one object property is required, whose name represents the resource
         block's type.
     """
-    return {k: v for k, v in tf_config.items() if v}
+    if isinstance(tf_config, dict):
+        return {k: v for k, v in tf_config.items() if v}
+    elif isinstance(tf_config, list):
+        return [v for v in tf_config if v]
+    else:
+        assert False, type(tf_config)
 
 
-def _normalize_tf(tf_config: Union[JSON, JSONs]) -> Iterable[tuple[str, AnyJSON]]:
+def _normalize_tf(tf_config: CompositeJSON) -> Iterable[tuple[str, AnyJSON]]:
     """
     Certain levels of a Terraform JSON structure can either be a single
     dictionary or a list of dictionaries. For example, these are equivalent:
@@ -183,43 +205,33 @@ def _normalize_tf(tf_config: Union[JSON, JSONs]) -> Iterable[tuple[str, AnyJSON]
         assert False, type(tf_config)
 
 
-def populate_tags(tf_config: JSON) -> JSON:
+def _transform_tf(tf_config: JSON, *, tag_resources: bool = True) -> JSON:
     """
     Add tags to all taggable resources and change the `name` tag to `Name`
     for tagged AWS resources.
     """
-    taggable_resource_types = terraform.taggable_resource_types()
-    try:
-        resources = tf_config['resource']
-    except KeyError:
-        return tf_config
-    else:
-        return {
-            k: v if k != 'resource' else [
-                _sanitize_tf({
-                    resource_type: [
-                        {
-                            resource_name: {
-                                **arguments,
-                                'tags': _adjust_name_tag(resource_type,
-                                                         _tags(resource_name, **arguments.get('tags', {})))
-                            } if resource_type in taggable_resource_types else arguments
+    taggable_types = terraform.taggable_resource_types()
+    return _sanitize_tf({
+        section_key: _sanitize_tf([
+            _sanitize_tf({
+                resource_type: _sanitize_tf([
+                    {
+                        resource_name: resource | {
+                            'tags': _adjust_name_tag(resource_type,
+                                                     _tags(resource_name, **resource.get('tags', {})))
                         }
-                        for resource_name, arguments in _normalize_tf(resource)
-                    ]
-                })
-                for resource_type, resource in _normalize_tf(resources)
-            ]
-            for k, v in tf_config.items()
-        }
-
-
-def emit_tf(config: Optional[JSON], *, tag_resources: bool = True) -> None:
-    if config is not None:
-        if tag_resources:
-            config = populate_tags(config)
-        config = _sanitize_tf(config)
-    emit(config)
+                        if tag_resources and section_key == 'resource' and resource_type in taggable_types else
+                        resource
+                    }
+                    for resource_name, resource in _normalize_tf(resources)
+                ])
+            })
+            for resource_type, resources in _normalize_tf(section)
+        ])
+        if section_key in {'data', 'resource'} else
+        section
+        for section_key, section in tf_config.items()
+    })
 
 
 def _tags(resource_name: str, **overrides: str) -> dict[str, str]:

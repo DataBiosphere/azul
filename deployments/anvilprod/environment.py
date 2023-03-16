@@ -30,7 +30,8 @@ def mksrc(google_project, snapshot, subgraphs, flags: int = 0):
         'snapshot/' + snapshot,
         '/' + str(partition_prefix_length(subgraphs))
     ])
-    return source
+    key = '_'.join(snapshot.split('_')[1:-1])
+    return key, source
 
 
 def mkdict(items):
@@ -41,7 +42,9 @@ def mkdict(items):
 
 
 anvil_sources = mkdict([
-    ('encode', mksrc('datarepo-e8d615a1', 'AnVIL_ENCODE_default_v1', 31975))
+    mksrc('datarepo-dev-43738c90', 'ANVIL_1000G_2019_Dev_20230302_ANV5_202303032342', 6404),
+    mksrc('datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 25),
+    mksrc('datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25),
 ])
 
 
@@ -76,7 +79,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_STAGE': 'anvilprod',
 
         'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
-        'AZUL_PRIVATE_API': '1',
 
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
@@ -87,7 +89,7 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_anvil')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('anvil', 'anvil-encode', anvil_sources),
+                ('anvil', 'anvil', anvil_sources),
             ]
             for suffix, internal in [
                 ('', False),
@@ -95,15 +97,15 @@ def env() -> Mapping[str, Optional[str]]:
             ]
         }),
 
-        'AZUL_TDR_SOURCE_LOCATION': 'US',
-        'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
-        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
+        'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
+        'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
         'AZUL_ENABLE_MONITORING': '1',
 
         # $0.382/h × 3 × 24h/d × 30d/mo = $825.12/mo
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-        'AZUL_ES_INSTANCE_COUNT': '3',
+        'AZUL_ES_INSTANCE_COUNT': '2',
 
         'AZUL_DEBUG': '1',
 
@@ -118,5 +120,12 @@ def env() -> Mapping[str, Optional[str]]:
 
         'GOOGLE_PROJECT': 'platform-anvil-prod',
 
+        'AZUL_DEPLOYMENT_INCARNATION': '1',
+
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '',
+
+        'azul_slack_integration': json.dumps({
+            'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
+            'channel_id': 'C04TKUL49FA'  # #team-boardwalk-anvilprod
+        }),
     }

@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5019 Index public & mock-MA snapshots in anvilprod
+===================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just *before*
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #3634 Automate creation of a FedRAMP Integrated Inventory Workbook
 ==================================================================
 

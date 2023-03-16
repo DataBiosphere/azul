@@ -24,7 +24,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.terraform import (
-    populate_tags,
+    _transform_tf,  # noqa
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -199,7 +199,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 }]
             }]
         }
-        tagged = populate_tags(tagged_aws_resource)
+        tagged = _transform_tf(tagged_aws_resource)
         self.assertDictEqualPermissive(expected, tagged)
 
         tagged_gcp_resource = {
@@ -225,7 +225,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 }]
             }]
         }
-        tagged = populate_tags(tagged_gcp_resource)
+        tagged = _transform_tf(tagged_gcp_resource)
         self.assertDictEqualPermissive(expected, tagged)
 
         untaggable_aws_resource = {
@@ -238,7 +238,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 {'aws_untaggable_resource': [{'name': {}}]}
             ]
         }
-        tagged = populate_tags(untaggable_aws_resource)
+        tagged = _transform_tf(untaggable_aws_resource)
         self.assertDictEqualPermissive(expected, tagged)
 
         manually_tagged_resource = {
@@ -268,7 +268,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 }]
             }]
         }
-        tagged = populate_tags(manually_tagged_resource)
+        tagged = _transform_tf(manually_tagged_resource)
         self.assertDictEqualPermissive(expected, tagged)
 
 

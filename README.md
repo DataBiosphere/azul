@@ -539,7 +539,7 @@ _select dev.shared  # or prod.shared, anvildev.shared, anvilprod.shared …
 cd terraform/shared
 make validate
 bucket="$(python -c 'from azul.deployment import aws; print(aws.shared_bucket)')"
-terraform import aws_s3_bucket.versioned "$bucket"
+terraform import aws_s3_bucket.shared "$bucket"
 make
 ```
 
@@ -2036,9 +2036,9 @@ EBS volume that just been initialized, this file is missing, so the container
 starts but doesn't advertise any runners to Gitlab.
 
 The easiest way to create the file is to kill the `gitlab-runner` container and
-the run it manually using the `docker run` command from `/etc/rc.local`, but
-replacing `--detach` with `-it` and adding `register` at the end of the
-command. You will be prompted to supply a URL and a registration token as
+the run it manually using the `docker run` command from the `systemd` unit file, 
+but adding `-it` after `run` and `register` at the end of the command. 
+You will be prompted to supply a URL and a registration token as
 [documented here](https://docs.gitlab.com/runner/register/).
 
 Note that since version 15.0.0 of GitLab, there is no way to convert a runner
@@ -2048,15 +2048,55 @@ the *CI/CD* — *Runners* page of the respective group. Runners reserved to a
 project must be registered from the project's *Settings* — *CI/CD* — *Runners*
 page. Shared runners are registered via *Admin* — *Overview* — *Runners*. 
 
-Specify `docker` as the runner type and `docker:18.03.1-ce` as the image. Once
-the container exits `config.toml` should have been created. Edit it and adjust
-the `volumes` setting to read
+Specify `docker` as the runner type and 
+
+`docker.gitlab.anvil.gi.ucsc.edu/ucsc/ azul/runner:latest` 
+
+as the image for Azul runners. For generic runners you could use the 
+`docker:20.10.18-ce` image instead, but you'd need to match the tag (aka 
+version) of the image currently used for the `gitlab-dind` container. 
+
+Here's an example terminal transcript:
+
+```
+$ systemctl stop gitlab-runner.service
+
+$ systemctl show gitlab-runner.service | grep ExecStart=
+ExecStart={ path=/usr/bin/docker ; argv[]=/usr/bin/docker run --name gitlab-runner …
+
+$ /usr/bin/docker run -it --name gitlab-runner --rm --volume /mnt/gitlab/runner/config:/etc/gitlab-runner --network gitlab-runner-net --env DOCKER_HOST=tcp://gitlab-dind:2375 gitlab/gitlab-runner:v15.9.1 register
+Runtime platform                                    arch=amd64 os=linux pid=7 revision=d540b510 version=15.9.1
+Running in system-mode.
+
+Enter the GitLab instance URL (for example, https://gitlab.com/):
+https://gitlab.prod.anvil.gi.ucsc.edu/
+Enter the registration token:
+REDACTED
+Enter a description for the runner:
+[cd20ca0ec956]:
+Enter tags for the runner (comma-separated):
+
+Enter optional maintenance note for the runner:
+
+WARNING: Support for registration tokens and runner parameters in the 'register' command has been deprecated in GitLab Runner 15.6 and will be replaced with support for authentication tokens. For more information, see https://gitlab.com/gitlab-org/gitlab/-/issues/380872
+Registering runner... succeeded                     runner=GR1348941eDiqsoCC
+Enter an executor: docker, shell, ssh, docker-ssh+machine, instance, custom, docker-ssh, parallels, virtualbox, docker+machine, kubernetes:
+docker
+Enter the default Docker image (for example, ruby:2.7):
+docker.gitlab.anvil.gi.ucsc.edu/ucsc/ azul/runner:latest
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
+
+Configuration (with the authentication token) was saved in "/etc/gitlab-runner/config.toml"
+```
+
+Once the container exits, `config.toml` should have been created. Edit it and 
+adjust the `volumes` setting to read
 
 ```
 volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/etc/gitlab-runner/etc:/etc/gitlab"]
 ```
 
-If you already have a GitLab instance top copy `config.toml` from, do that and
+If you already have a GitLab instance to copy `config.toml` from, do that and
 register the runners as described above. Copy the runner tokens from the newly
 added runners at the end of config.toml to the preexisting runners. Then
 discard the newly added runners from the file. For another instance's
@@ -2065,9 +2105,9 @@ needs to be updated is the runner token. That's because the runner token is
 derived from the registration token which is different between the two
 instances.
 
-Finally, reboot the instance. Alternatively, manually start the container using
-the command from `/etc/rc.local` verbatim. Either way, the Gitlab UI should now
-show the runners.
+Finally, start the runner unit using `systemctl start gitlab-runner.service` or
+simply reboot the instance. Either way, the Gitlab UI should now show the newly 
+registered runners.
 
 
 ## 9.8 The Gitlab runner image for Azul
