@@ -74,6 +74,12 @@ class CannedSourceRef(SourceRef[SimpleSourceSpec, 'CannedSourceRef']):
 CannedBundleFQID = SourcedBundleFQID[CannedSourceRef]
 
 
+class CannedBundle(Bundle[CannedSourceRef]):
+
+    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
+        return None
+
+
 @dataclass(frozen=True)
 class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     _sources: Set[SimpleSourceSpec]
@@ -125,7 +131,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
 
-    def fetch_bundle(self, bundle_fqid: CannedBundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: CannedBundleFQID) -> CannedBundle:
         self._assert_source(bundle_fqid.source)
         now = time.time()
         staging_area = self.staging_area(bundle_fqid.source.spec)
@@ -230,9 +236,3 @@ class CannedFileDownload(RepositoryFileDownload):
     @property
     def retry_after(self) -> Optional[int]:
         return self._retry_after
-
-
-class CannedBundle(Bundle[CannedSourceRef]):
-
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return None

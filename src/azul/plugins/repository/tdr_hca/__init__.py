@@ -43,7 +43,6 @@ from azul.bigquery import (
     backtick,
 )
 from azul.indexer import (
-    Bundle,
     BundleFQID,
     SourcedBundleFQID,
 )
@@ -136,6 +135,153 @@ class Links:
         }
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Checksums:
+    crc32c: str
+    sha1: Optional[str] = None
+    sha256: str
+    s3_etag: Optional[str] = None
+
+    def to_json(self) -> dict[str, str]:
+        """
+        >>> Checksums(crc32c='a', sha1='b', sha256='c', s3_etag=None).to_json()
+        {'crc32c': 'a', 'sha1': 'b', 'sha256': 'c'}
+        """
+        return {k: v for k, v in attr.asdict(self).items() if v is not None}
+
+    @classmethod
+    def from_json(cls, json: JSON) -> 'Checksums':
+        """
+        >>> Checksums.from_json({'crc32c': 'a', 'sha256': 'c'})
+        Checksums(crc32c='a', sha1=None, sha256='c', s3_etag=None)
+
+        >>> Checksums.from_json({'crc32c': 'a', 'sha1':'b', 'sha256': 'c', 's3_etag': 'd'})
+        Checksums(crc32c='a', sha1='b', sha256='c', s3_etag='d')
+
+        >>> Checksums.from_json({'crc32c': 'a'})
+        Traceback (most recent call last):
+            ...
+        ValueError: ('JSON property cannot be absent or null', 'sha256')
+        """
+
+        def extract_field(field: attr.Attribute) -> tuple[str, Any]:
+            value = json.get(field.name)
+            if value is None and not is_optional(field.type):
+                raise ValueError('JSON property cannot be absent or null', field.name)
+            return field.name, value
+
+        return cls(**dict(map(extract_field, attr.fields(cls))))
+
+
+class TDRHCABundle(TDRBundle):
+
+    def add_entity(self,
+                   *,
+                   entity_key: str,
+                   entity_type: EntityType,
+                   entity_row: BigQueryRow,
+                   is_stitched: bool
+                   ) -> None:
+        entity_id = entity_row[entity_type + '_id']
+        self._add_manifest_entry(name=entity_key,
+                                 uuid=entity_id,
+                                 version=TDRPlugin.format_version(entity_row['version']),
+                                 size=entity_row['content_size'],
+                                 content_type='application/json',
+                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"',
+                                 is_stitched=is_stitched)
+        if entity_type.endswith('_file'):
+            descriptor = json.loads(entity_row['descriptor'])
+            self._add_manifest_entry(name=entity_row['file_name'],
+                                     uuid=descriptor['file_id'],
+                                     version=descriptor['file_version'],
+                                     size=descriptor['size'],
+                                     content_type=descriptor['content_type'],
+                                     dcp_type='data',
+                                     is_stitched=is_stitched,
+                                     checksums=Checksums.from_json(descriptor),
+                                     drs_path=self._parse_drs_uri(entity_row['file_id'], descriptor))
+        content = entity_row['content']
+        self.metadata_files[entity_key] = (json.loads(content)
+                                           if isinstance(content, str)
+                                           else content)
+
+    metadata_columns: ClassVar[set[str]] = {
+        'version',
+        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
+        'BYTE_LENGTH(content) AS content_size',
+        'content'
+    }
+
+    data_columns: ClassVar[set[str]] = metadata_columns | {
+        'descriptor',
+        'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
+        'file_id'
+    }
+
+    # `links_id` is omitted for consistency since the other sets do not include
+    # the primary key
+    links_columns: ClassVar[set[str]] = metadata_columns | {
+        'project_id'
+    }
+
+    def _add_manifest_entry(self,
+                            *,
+                            name: str,
+                            uuid: str,
+                            version: str,
+                            size: int,
+                            content_type: str,
+                            dcp_type: str,
+                            is_stitched: bool,
+                            checksums: Optional[Checksums] = None,
+                            drs_path: Optional[str] = None) -> None:
+        self.manifest.append({
+            'name': name,
+            'uuid': uuid,
+            'version': version,
+            'content-type': f'{content_type}; dcp-type={dcp_type}',
+            'size': size,
+            'is_stitched': is_stitched,
+            **(
+                {
+                    'indexed': True,
+                    'crc32c': '',
+                    'sha256': ''
+                } if checksums is None else {
+                    'indexed': False,
+                    'drs_path': drs_path,
+                    **checksums.to_json()
+                }
+            )
+        })
+
+    def _parse_drs_uri(self,
+                       file_id: Optional[str],
+                       descriptor: JSON
+                       ) -> Optional[str]:
+        # The file_id column is present for datasets, but is usually null, may
+        # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
+        # so we avoid parsing the column altogether for datasets.
+        if self.fqid.source.spec.is_snapshot:
+            if file_id is None:
+                try:
+                    external_drs_uri = descriptor['drs_uri']
+                except KeyError:
+                    raise RequirementError('`file_id` is null and `drs_uri` '
+                                           'is not set in file descriptor', descriptor)
+                else:
+                    # FIXME: Support non-null DRS URIs in file descriptors
+                    #        https://github.com/DataBiosphere/azul/issues/3631
+                    require(external_drs_uri is None,
+                            'Non-null `drs_uri` in file descriptor', external_drs_uri)
+                    return external_drs_uri
+            else:
+                return self._parse_drs_path(file_id)
+        else:
+            return None
+
+
 class Plugin(TDRPlugin):
 
     def list_partitions(self,
@@ -183,7 +329,7 @@ class Plugin(TDRPlugin):
         else:
             return max(versioned_items, key=itemgetter('version'))
 
-    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+    def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
         bundle = TDRHCABundle(fqid=bundle_fqid,
                               manifest=[],
                               metadata_files={})
@@ -430,150 +576,3 @@ class Plugin(TDRPlugin):
             return merged
         else:
             return root
-
-
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class Checksums:
-    crc32c: str
-    sha1: Optional[str] = None
-    sha256: str
-    s3_etag: Optional[str] = None
-
-    def to_json(self) -> dict[str, str]:
-        """
-        >>> Checksums(crc32c='a', sha1='b', sha256='c', s3_etag=None).to_json()
-        {'crc32c': 'a', 'sha1': 'b', 'sha256': 'c'}
-        """
-        return {k: v for k, v in attr.asdict(self).items() if v is not None}
-
-    @classmethod
-    def from_json(cls, json: JSON) -> 'Checksums':
-        """
-        >>> Checksums.from_json({'crc32c': 'a', 'sha256': 'c'})
-        Checksums(crc32c='a', sha1=None, sha256='c', s3_etag=None)
-
-        >>> Checksums.from_json({'crc32c': 'a', 'sha1':'b', 'sha256': 'c', 's3_etag': 'd'})
-        Checksums(crc32c='a', sha1='b', sha256='c', s3_etag='d')
-
-        >>> Checksums.from_json({'crc32c': 'a'})
-        Traceback (most recent call last):
-            ...
-        ValueError: ('JSON property cannot be absent or null', 'sha256')
-        """
-
-        def extract_field(field: attr.Attribute) -> tuple[str, Any]:
-            value = json.get(field.name)
-            if value is None and not is_optional(field.type):
-                raise ValueError('JSON property cannot be absent or null', field.name)
-            return field.name, value
-
-        return cls(**dict(map(extract_field, attr.fields(cls))))
-
-
-class TDRHCABundle(TDRBundle):
-
-    def add_entity(self,
-                   *,
-                   entity_key: str,
-                   entity_type: EntityType,
-                   entity_row: BigQueryRow,
-                   is_stitched: bool
-                   ) -> None:
-        entity_id = entity_row[entity_type + '_id']
-        self._add_manifest_entry(name=entity_key,
-                                 uuid=entity_id,
-                                 version=TDRPlugin.format_version(entity_row['version']),
-                                 size=entity_row['content_size'],
-                                 content_type='application/json',
-                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"',
-                                 is_stitched=is_stitched)
-        if entity_type.endswith('_file'):
-            descriptor = json.loads(entity_row['descriptor'])
-            self._add_manifest_entry(name=entity_row['file_name'],
-                                     uuid=descriptor['file_id'],
-                                     version=descriptor['file_version'],
-                                     size=descriptor['size'],
-                                     content_type=descriptor['content_type'],
-                                     dcp_type='data',
-                                     is_stitched=is_stitched,
-                                     checksums=Checksums.from_json(descriptor),
-                                     drs_path=self._parse_drs_uri(entity_row['file_id'], descriptor))
-        content = entity_row['content']
-        self.metadata_files[entity_key] = (json.loads(content)
-                                           if isinstance(content, str)
-                                           else content)
-
-    metadata_columns: ClassVar[set[str]] = {
-        'version',
-        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
-        'BYTE_LENGTH(content) AS content_size',
-        'content'
-    }
-
-    data_columns: ClassVar[set[str]] = metadata_columns | {
-        'descriptor',
-        'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
-        'file_id'
-    }
-
-    # `links_id` is omitted for consistency since the other sets do not include
-    # the primary key
-    links_columns: ClassVar[set[str]] = metadata_columns | {
-        'project_id'
-    }
-
-    def _add_manifest_entry(self,
-                            *,
-                            name: str,
-                            uuid: str,
-                            version: str,
-                            size: int,
-                            content_type: str,
-                            dcp_type: str,
-                            is_stitched: bool,
-                            checksums: Optional[Checksums] = None,
-                            drs_path: Optional[str] = None) -> None:
-        self.manifest.append({
-            'name': name,
-            'uuid': uuid,
-            'version': version,
-            'content-type': f'{content_type}; dcp-type={dcp_type}',
-            'size': size,
-            'is_stitched': is_stitched,
-            **(
-                {
-                    'indexed': True,
-                    'crc32c': '',
-                    'sha256': ''
-                } if checksums is None else {
-                    'indexed': False,
-                    'drs_path': drs_path,
-                    **checksums.to_json()
-                }
-            )
-        })
-
-    def _parse_drs_uri(self,
-                       file_id: Optional[str],
-                       descriptor: JSON
-                       ) -> Optional[str]:
-        # The file_id column is present for datasets, but is usually null, may
-        # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
-        # so we avoid parsing the column altogether for datasets.
-        if self.fqid.source.spec.is_snapshot:
-            if file_id is None:
-                try:
-                    external_drs_uri = descriptor['drs_uri']
-                except KeyError:
-                    raise RequirementError('`file_id` is null and `drs_uri` '
-                                           'is not set in file descriptor', descriptor)
-                else:
-                    # FIXME: Support non-null DRS URIs in file descriptors
-                    #        https://github.com/DataBiosphere/azul/issues/3631
-                    require(external_drs_uri is None,
-                            'Non-null `drs_uri` in file descriptor', external_drs_uri)
-                    return external_drs_uri
-            else:
-                return self._parse_drs_path(file_id)
-        else:
-            return None

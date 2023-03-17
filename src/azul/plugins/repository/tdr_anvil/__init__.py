@@ -29,7 +29,6 @@ from azul.bigquery import (
     backtick,
 )
 from azul.indexer import (
-    Bundle,
     BundleFQID,
     SourcedBundleFQID,
 )
@@ -113,6 +112,75 @@ class Link:
 Links = set[Link]
 
 
+class TDRAnvilBundle(TDRBundle):
+    entity_type: EntityType = 'biosample'
+
+    def add_entity(self,
+                   entity: EntityReference,
+                   version: str,
+                   row: MutableJSON
+                   ) -> None:
+        pk_column = entity.entity_type + '_id'
+        self._add_entity(
+            manifest_entry={
+                'uuid': entity.entity_id,
+                'version': version,
+                'name': f'{entity.entity_type}_{row[pk_column]}',
+                'indexed': True,
+                'crc32': '',
+                'sha256': '',
+                **(
+                    {'drs_path': self._parse_drs_uri(row.get('file_ref'))}
+                    if entity.entity_type == 'file' else {}
+                )
+            },
+            metadata=row
+        )
+
+    def add_links(self,
+                  bundle_fqid: BundleFQID,
+                  links: Links,
+                  entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
+        def link_sort_key(link: JSON):
+            return link['activity'] or '', link['inputs'], link['outputs']
+
+        def key_ref_to_entity_ref(key_ref: KeyReference) -> str:
+            return str(entities_by_key[key_ref])
+
+        self._add_entity(
+            manifest_entry={
+                'uuid': bundle_fqid.uuid,
+                'version': bundle_fqid.version,
+                'name': 'links',
+                'indexed': True
+            },
+            metadata=sorted((
+                {
+                    'inputs': sorted(map(key_ref_to_entity_ref, link.inputs)),
+                    'activity': None if link.activity is None else key_ref_to_entity_ref(link.activity),
+                    'outputs': sorted(map(key_ref_to_entity_ref, link.outputs))
+                }
+                for link in links
+            ), key=link_sort_key)
+        )
+
+    def _add_entity(self,
+                    *,
+                    manifest_entry: MutableJSON,
+                    metadata: AnyMutableJSON
+                    ) -> None:
+        name = manifest_entry['name']
+        assert name not in self.metadata_files, name
+        self.manifest.append(manifest_entry)
+        self.metadata_files[name] = metadata
+
+    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
+        if file_ref is None:
+            return None
+        else:
+            return self._parse_drs_path(file_ref)
+
+
 class Plugin(TDRPlugin):
 
     @cached_property
@@ -169,7 +237,7 @@ class Plugin(TDRPlugin):
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
         bundle_entity = self._bundle_entity(bundle_fqid)
 
@@ -635,72 +703,3 @@ class Plugin(TDRPlugin):
             'data_modality'
         }
     }
-
-
-class TDRAnvilBundle(TDRBundle):
-    entity_type: EntityType = 'biosample'
-
-    def add_entity(self,
-                   entity: EntityReference,
-                   version: str,
-                   row: MutableJSON
-                   ) -> None:
-        pk_column = entity.entity_type + '_id'
-        self._add_entity(
-            manifest_entry={
-                'uuid': entity.entity_id,
-                'version': version,
-                'name': f'{entity.entity_type}_{row[pk_column]}',
-                'indexed': True,
-                'crc32': '',
-                'sha256': '',
-                **(
-                    {'drs_path': self._parse_drs_uri(row.get('file_ref'))}
-                    if entity.entity_type == 'file' else {}
-                )
-            },
-            metadata=row
-        )
-
-    def add_links(self,
-                  bundle_fqid: BundleFQID,
-                  links: Links,
-                  entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
-        def link_sort_key(link: JSON):
-            return link['activity'] or '', link['inputs'], link['outputs']
-
-        def key_ref_to_entity_ref(key_ref: KeyReference) -> str:
-            return str(entities_by_key[key_ref])
-
-        self._add_entity(
-            manifest_entry={
-                'uuid': bundle_fqid.uuid,
-                'version': bundle_fqid.version,
-                'name': 'links',
-                'indexed': True
-            },
-            metadata=sorted((
-                {
-                    'inputs': sorted(map(key_ref_to_entity_ref, link.inputs)),
-                    'activity': None if link.activity is None else key_ref_to_entity_ref(link.activity),
-                    'outputs': sorted(map(key_ref_to_entity_ref, link.outputs))
-                }
-                for link in links
-            ), key=link_sort_key)
-        )
-
-    def _add_entity(self,
-                    *,
-                    manifest_entry: MutableJSON,
-                    metadata: AnyMutableJSON
-                    ) -> None:
-        name = manifest_entry['name']
-        assert name not in self.metadata_files, name
-        self.manifest.append(manifest_entry)
-        self.metadata_files[name] = metadata
-
-    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
-        if file_ref is None:
-            return None
-        else:
-            return self._parse_drs_path(file_ref)
