@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4189 Scan GitLab EC2 instance with Amazon Inspector
+====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just *before*
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5019 Index public & mock-MA snapshots in anvilprod
 ===================================================
 

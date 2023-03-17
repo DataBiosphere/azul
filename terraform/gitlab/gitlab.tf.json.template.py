@@ -1233,6 +1233,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'role': '${aws_iam_role.gitlab.name}',
                 'policy_arn': '${aws_iam_policy.gitlab_iam.arn}'
             },
+            'gitlab_ssm': {
+                'role': '${aws_iam_role.gitlab.name}',
+                'policy_arn': 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+            },
+            'gitlab_ssm_cloudwatch': {
+                'role': '${aws_iam_role.gitlab.name}',
+                'policy_arn': 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
+            },
             # Since we are using the boundary as a policy Gitlab can explicitly
             # do everything within the boundary
             'gitlab_boundary': {
@@ -1242,6 +1250,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_vpc': {
                 'role': '${aws_iam_role.gitlab_vpc.name}',
                 'policy_arn': '${aws_iam_policy.gitlab_vpc.arn}'
+            }
+        },
+        'aws_inspector2_enabler': {
+            'gitlab': {
+                'account_ids': [aws.account],
+                'resource_types': ['ECR', 'EC2']
             }
         },
         'google_service_account': {
