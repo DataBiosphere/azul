@@ -19,13 +19,9 @@ from typing import (
     Optional,
     Type,
     TypeVar,
-    get_args,
 )
 
 import attr
-from more_itertools import (
-    one,
-)
 
 from azul import (
     RequirementError,
@@ -38,6 +34,7 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
     SupportsLessThan,
+    get_generic_type_params,
 )
 from azul.uuids import (
     UUIDPartition,
@@ -353,8 +350,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
 
     @classmethod
     def spec_cls(cls) -> Type[SourceSpec]:
-        base_cls = one(getattr(cls, '__orig_bases__'))
-        spec_cls, ref_cls = get_args(base_cls)
+        spec_cls, ref_cls = get_generic_type_params(cls, SourceSpec, SourceRef)
         return spec_cls
 
 

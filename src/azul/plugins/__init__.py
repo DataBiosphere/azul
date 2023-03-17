@@ -24,19 +24,14 @@ from typing import (
     TypeVar,
     TypedDict,
     Union,
-    get_args,
 )
 
 import attr
-from more_itertools import (
-    one,
-)
 
 from azul import (
     CatalogName,
     cached_property,
     config,
-    require,
 )
 from azul.chalice import (
     Authentication,
@@ -65,6 +60,7 @@ from azul.types import (
     JSON,
     JSONs,
     MutableJSON,
+    get_generic_type_params,
 )
 
 if TYPE_CHECKING:
@@ -446,10 +442,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
     @cached_property
     def _source_ref_cls(self) -> Type[SOURCE_REF]:
         cls = type(self)
-        base_cls = one(getattr(cls, '__orig_bases__'))
-        spec_cls, ref_cls = get_args(base_cls)
-        require(issubclass(spec_cls, SourceSpec))
-        require(issubclass(ref_cls, SourceRef))
+        spec_cls, ref_cls = get_generic_type_params(cls, SourceSpec, SourceRef)
         assert ref_cls.spec_cls() is spec_cls
         return ref_cls
 

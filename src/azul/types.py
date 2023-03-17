@@ -4,12 +4,19 @@ from collections.abc import (
 )
 from typing import (
     Any,
+    ForwardRef,
+    Generic,
     Optional,
     Protocol,
     TYPE_CHECKING,
+    TypeVar,
     Union,
     get_args,
     get_origin,
+)
+
+from more_itertools import (
+    one,
 )
 
 PrimitiveJSON = Union[str, int, float, bool, None]
@@ -156,6 +163,60 @@ def reify(t):
                 yield a if o is None else o
 
     return tuple(set(f(t)))
+
+
+def get_generic_type_params(cls: type[Generic],
+                            *required_types: type
+                            ) -> Sequence[Union[type, TypeVar, ForwardRef]]:
+    """
+    Inspect and validate the type parameters of a subclass of `typing.Generic`.
+
+    The type of each returned parameter may be a type, a `typing.TypeVar`, or a
+    `typing.ForwardRef`, depending on how the parameter is written in the
+    inspected class's definition. `*required_types` can be used to assert the
+    superclasses of parameters that are types.
+
+    >>> from typing import Generic, TypeVar
+    >>> T = TypeVar(name='T')
+    >>> class A(Generic[T]):
+    ...     pass
+    >>> class B(A[int]):
+    ...     pass
+    >>> class C(A['foo']):
+    ...     pass
+
+    >>> get_generic_type_params(A)
+    (~T,)
+
+    >>> get_generic_type_params(A, str)
+    (~T,)
+
+    >>> get_generic_type_params(B)
+    (<class 'int'>,)
+
+    >>> get_generic_type_params(B, str)
+    Traceback (most recent call last):
+    ...
+    AssertionError: (<class 'int'>, <class 'str'>)
+
+    >>> get_generic_type_params(B, int, int)
+    Traceback (most recent call last):
+    ...
+    AssertionError: 1
+
+    >>> get_generic_type_params(C)
+    (ForwardRef('foo'),)
+    """
+    base_cls = one(getattr(cls, '__orig_bases__'))
+    types = get_args(base_cls)
+    if required_types:
+        assert len(required_types) == len(types), len(types)
+        for required_type, type_ in zip(required_types, types):
+            if isinstance(type_, type):
+                assert issubclass(type_, required_type), (type_, required_type)
+            else:
+                assert isinstance(type_, (TypeVar, ForwardRef)), type_
+    return types
 
 
 # FIXME: Remove hacky import of SupportsLessThan
