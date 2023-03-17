@@ -296,7 +296,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     id: str
     spec: SOURCE_SPEC
 
-    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str], 'SourceRef']] = {}
+    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
     def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
