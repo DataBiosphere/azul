@@ -2,6 +2,9 @@
     defaultdict,
 )
 import datetime
+from enum import (
+    Enum,
+)
 import logging
 from operator import (
     itemgetter,
@@ -22,11 +25,15 @@ from more_itertools import (
 
 from azul import (
     cached_property,
+    config,
     require,
     uuids,
 )
 from azul.bigquery import (
     backtick,
+)
+from azul.indexer import (
+    SourcedBundleFQIDJSON,
 )
 from azul.indexer.document import (
     EntityReference,
@@ -108,8 +115,38 @@ class Link:
 Links = set[Link]
 
 
+class BundleEntityType(Enum):
+    """
+    AnVIL snapshots have no inherent notion of a "bundle". When indexing these
+    snapshots, we dynamically construct bundles by selecting individual entities
+    and following their foreign keys to discover associated entities. The
+    initial entity from which this graph traversal begins is termed the
+    "bundle entity", and its FQID serves as the basis for the bundle FQID. Each
+    member of this enumeration represents a strategy for selecting bundle
+    entities.
+
+    Our primary such strategy is to use every biosample in a given snapshot as a
+    bundle entity. Biosamples were chosen for this role based on a desirable
+    balance between the size and number of the resulting bundles as well as the
+    degree of overlap between them. The implementation of the graph traversal is
+    tightly coupled to this choice, and switching to a different entity type
+    would require re-implementing much of the Plugin code. Primary bundles
+    consist of at least one biosample (the bundle entity), exactly one dataset,
+    and zero or more other entities of assorted types.
+    """
+    primary: EntityType = 'biosample'
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class AnvilBundleFQID(TDRBundleFQID):
+    entity_type: BundleEntityType = attr.ib(converter=BundleEntityType)
+
+    def to_json(self) -> SourcedBundleFQIDJSON:
+        return dict(super().to_json(),
+                    entity_type=self.entity_type.value)
+
+
 class TDRAnvilBundle(TDRBundle):
-    entity_type: EntityType = 'biosample'
 
     def add_entity(self,
                    entity: EntityReference,
@@ -179,7 +216,7 @@ class TDRAnvilBundle(TDRBundle):
             return self._parse_drs_path(file_ref)
 
 
-class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
+class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
 
     @cached_property
     def _version(self):
@@ -195,24 +232,25 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
-                      ) -> list[TDRBundleFQID]:
+                      ) -> list[AnvilBundleFQID]:
         spec = source.spec
         partition_prefix = spec.prefix.common + prefix
         validate_uuid_prefix(partition_prefix)
-        entity_type = TDRAnvilBundle.entity_type
+        primary = BundleEntityType.primary.value
         rows = self._run_sql(f'''
-            SELECT datarepo_row_id
-            FROM {backtick(self._full_table_name(spec, entity_type))}
+            SELECT datarepo_row_id, {primary!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, primary))}
             WHERE STARTS_WITH(datarepo_row_id, '{partition_prefix}')
         ''')
         return [
-            TDRBundleFQID(source=source,
-                          # Reversibly tweak the entity UUID to prevent
-                          # collisions between entity IDs and bundle IDs
-                          uuid=uuids.change_version(row['datarepo_row_id'],
-                                                    self.datarepo_row_uuid_version,
-                                                    self.bundle_uuid_version),
-                          version=self._version)
+            AnvilBundleFQID(source=source,
+                            # Reversibly tweak the entity UUID to prevent
+                            # collisions between entity IDs and bundle IDs
+                            uuid=uuids.change_version(row['datarepo_row_id'],
+                                                      self.datarepo_row_uuid_version,
+                                                      self.bundle_uuid_version),
+                            version=self._version,
+                            entity_type=BundleEntityType(row['entity_type']))
             for row in rows
         ]
 
@@ -225,7 +263,7 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
             for partition_prefix in prefix.partition_prefixes()
         ]
         assert prefixes, prefix
-        entity_type = TDRAnvilBundle.entity_type
+        entity_type = BundleEntityType.primary.value
         pk_column = entity_type + '_id'
         rows = self._run_sql(f'''
             SELECT prefix, COUNT({pk_column}) AS subgraph_count
@@ -235,7 +273,34 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRAnvilBundle:
+    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> AnvilBundleFQID:
+        if 'entity_type' not in fqid:
+            # Resolution of bundles without entity type is expensive, so we only
+            # support it during canning.
+            assert not config.is_in_lambda, ('Bundle FQID lacks entity type', fqid)
+            source = self.source_from_json(fqid['source'])
+            entity_id = uuids.change_version(fqid['uuid'],
+                                             self.bundle_uuid_version,
+                                             self.datarepo_row_uuid_version)
+            rows = self._run_sql(' UNION ALL '.join((
+                f'''
+                SELECT {entity_type.value!r} AS entity_type
+                FROM {backtick(self._full_table_name(source.spec, entity_type.value))}
+                WHERE datarepo_row_id = {entity_id!r}
+                '''
+                for entity_type in BundleEntityType
+            )))
+            fqid = {**fqid, **one(rows)}
+        return super().resolve_bundle(fqid)
+
+    def _emulate_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+        if bundle_fqid.entity_type is BundleEntityType.primary:
+            log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
+            return self._primary_bundle(bundle_fqid)
+        else:
+            assert False, bundle_fqid.entity_type
+
+    def _primary_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
         bundle_entity = self._bundle_entity(bundle_fqid)
 
@@ -273,16 +338,15 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
                 entities_by_key[key] = entity
                 result.add_entity(entity, self._version, row)
         result.add_links(links, entities_by_key)
-
         return result
 
-    def _bundle_entity(self, bundle_fqid: TDRBundleFQID) -> KeyReference:
+    def _bundle_entity(self, bundle_fqid: AnvilBundleFQID) -> KeyReference:
         source = bundle_fqid.source
         bundle_uuid = bundle_fqid.uuid
         entity_id = uuids.change_version(bundle_uuid,
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
-        entity_type = TDRAnvilBundle.entity_type
+        entity_type = bundle_fqid.entity_type.value
         pk_column = entity_type + '_id'
         bundle_entity = one(self._run_sql(f'''
             SELECT {pk_column}
