@@ -584,10 +584,7 @@ class Plugin(TDRPlugin):
                            ) -> MutableJSONs:
         if keys:
             table_name = self._full_table_name(source, entity_type)
-            columns = set.union(
-                self.common_indexed_columns,
-                self.indexed_columns_by_entity_type[entity_type]
-            )
+            columns = self._columns(entity_type)
             pk_column = entity_type + '_id'
             assert pk_column in columns, entity_type
             log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
@@ -616,6 +613,10 @@ class Plugin(TDRPlugin):
             return rows
         else:
             return []
+
+    def _columns(self, entity_type: EntityType) -> set[str]:
+        entity_columns = self.indexed_columns_by_entity_type[entity_type]
+        return self.common_indexed_columns | entity_columns
 
     common_indexed_columns = {
         'datarepo_row_id',
