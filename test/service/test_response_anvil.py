@@ -155,6 +155,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_format': [
                                     '.vcf.gz'
                                 ],
+                                'is_supplementary': [
+                                    False
+                                ],
                                 'reference_assembly': [
                                     None
                                 ],
@@ -273,6 +276,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 ],
                                 'file_format': [
                                     '.bam'
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'reference_assembly': [
                                     None
@@ -481,6 +487,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 2,
                         'type': 'terms'
                     },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'count': 2,
+                                'term': 'false'
+                            }
+                        ],
+                        'total': 2,
+                        'type': 'terms'
+                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -597,6 +613,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_format': [
                                     '.bam'
                                 ],
+                                'is_supplementary': [
+                                    False
+                                ],
                                 'reference_assembly': [
                                     None
                                 ],
@@ -608,6 +627,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 ],
                                 'file_format': [
                                     '.vcf.gz'
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'reference_assembly': [
                                     None
@@ -816,6 +838,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 1,
                         'type': 'terms'
                     },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'count': 1,
+                                'term': 'false'
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -952,6 +984,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_format': [
                                     '.bam'
                                 ],
+                                'is_supplementary': [
+                                    False
+                                ],
                                 'reference_assembly': [
                                     None
                                 ],
@@ -963,6 +998,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 ],
                                 'file_format': [
                                     '.vcf.gz'
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'reference_assembly': [
                                     None
@@ -1171,6 +1209,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 1,
                         'type': 'terms'
                     },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'count': 1,
+                                'term': 'false'
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -1302,6 +1350,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_format': [
                                     '.bam'
                                 ],
+                                'is_supplementary': [
+                                    False
+                                ],
                                 'reference_assembly': [
                                     None
                                 ],
@@ -1313,6 +1364,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 ],
                                 'file_format': [
                                     '.vcf.gz'
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'reference_assembly': [
                                     None
@@ -1521,6 +1575,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 1,
                         'type': 'terms'
                     },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'count': 1,
+                                'term': 'false'
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -1650,6 +1714,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'version': '2022-06-01T00:00:00.000000Z',
                                 'uuid': '6a85e0ab-2386-4f7e-8503-d72d90b4bc47',
                                 'size': 213021639,
+                                'is_supplementary': False,
                                 'name': 'file_1e269f04-4347-4188-b060-1dcc69e71d67',
                                 'crc32': '',
                                 'sha256': '',
@@ -1779,6 +1844,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'version': '2022-06-01T00:00:00.000000Z',
                                 'uuid': '677f207e-2d12-4eca-8f7a-039325af91ad',
                                 'size': 3306845592,
+                                'is_supplementary': False,
                                 'name': 'file_8b722e88-8103-49c1-b351-e64fa7c6ab37',
                                 'crc32': '',
                                 'sha256': '',
@@ -1988,6 +2054,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             {
                                 'term': 'phs000693',
                                 'count': 2
+                            }
+                        ],
+                        'total': 2,
+                        'type': 'terms'
+                    },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'count': 2,
+                                'term': 'false'
                             }
                         ],
                         'total': 2,

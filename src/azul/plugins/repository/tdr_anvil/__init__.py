@@ -133,8 +133,17 @@ class BundleEntityType(Enum):
     would require re-implementing much of the Plugin code. Primary bundles
     consist of at least one biosample (the bundle entity), exactly one dataset,
     and zero or more other entities of assorted types.
+
+    Some snapshots include file entities that lack any foreign keys that
+    associate the file with any other entity. To ensure that these "orphaned"
+    files are indexed, they are also used as bundle entities. As with primary
+    bundles, the creation of these supplementary bundles depends on a
+    specifically tailored traversal implementation. Supplementary bundles always
+    consist of exactly two entities: one file (the bundle entity) and one
+    dataset.
     """
     primary: EntityType = 'biosample'
+    supplementary: EntityType = 'file'
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
@@ -237,10 +246,15 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
         partition_prefix = spec.prefix.common + prefix
         validate_uuid_prefix(partition_prefix)
         primary = BundleEntityType.primary.value
+        supplementary = BundleEntityType.supplementary.value
         rows = self._run_sql(f'''
             SELECT datarepo_row_id, {primary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, primary))}
             WHERE STARTS_WITH(datarepo_row_id, '{partition_prefix}')
+            UNION ALL
+            SELECT datarepo_row_id, {supplementary!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
+            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{partition_prefix}')
         ''')
         return [
             AnvilBundleFQID(source=source,
@@ -297,6 +311,9 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
         if bundle_fqid.entity_type is BundleEntityType.primary:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
             return self._primary_bundle(bundle_fqid)
+        elif bundle_fqid.entity_type is BundleEntityType.supplementary:
+            log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
+            return self._supplementary_bundle(bundle_fqid)
         else:
             assert False, bundle_fqid.entity_type
 
@@ -338,6 +355,39 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
                 entities_by_key[key] = entity
                 result.add_entity(entity, self._version, row)
         result.add_links(links, entities_by_key)
+        return result
+
+    def _supplementary_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+        entity_id = uuids.change_version(bundle_fqid.uuid,
+                                         self.bundle_uuid_version,
+                                         self.datarepo_row_uuid_version)
+        source = bundle_fqid.source.spec
+        bundle_entity_type = bundle_fqid.entity_type.value
+        result = TDRAnvilBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
+        columns = self._columns(bundle_entity_type)
+        bundle_entity = dict(one(self._run_sql(f'''
+            SELECT {', '.join(sorted(columns))}
+            FROM {backtick(self._full_table_name(source, bundle_entity_type))}
+            WHERE datarepo_row_id = '{entity_id}'
+        ''')))
+        linked_entity_type = 'dataset'
+        columns = self._columns(linked_entity_type)
+        linked_entity = dict(one(self._run_sql(f'''
+            SELECT {', '.join(sorted(columns))}
+            FROM {backtick(self._full_table_name(source, linked_entity_type))}
+        ''')))
+        entities_by_key = {}
+        link_args = {}
+        for entity_type, row, arg in [
+            (bundle_entity_type, bundle_entity, 'outputs'),
+            (linked_entity_type, linked_entity, 'inputs')
+        ]:
+            entity_ref = EntityReference(entity_type=entity_type, entity_id=row['datarepo_row_id'])
+            key_ref = KeyReference(key=row[entity_type + '_id'], entity_type=entity_type)
+            entities_by_key[key_ref] = entity_ref
+            result.add_entity(entity_ref, self._version, row)
+            link_args[arg] = key_ref
+        result.add_links({Link.create(**link_args)}, entities_by_key)
         return result
 
     def _bundle_entity(self, bundle_fqid: AnvilBundleFQID) -> KeyReference:
@@ -732,6 +782,7 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
             'reference_assembly',
             'file_name',
             'file_ref',
+            'is_supplementary',
         },
         'activity': {
             'activity_id',
