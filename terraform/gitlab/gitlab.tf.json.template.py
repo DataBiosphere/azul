@@ -1228,6 +1228,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 })
             },
         },
+        'aws_iam_service_linked_role': {
+            'gitlab_ssm': {
+                'aws_service_name': 'ssm.amazonaws.com',
+            }
+        },
         'aws_iam_role_policy_attachment': {
             'gitlab_iam': {
                 'role': '${aws_iam_role.gitlab.name}',
@@ -1255,7 +1260,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_inspector2_enabler': {
             'gitlab': {
                 'account_ids': [aws.account],
-                'resource_types': ['ECR', 'EC2']
+                'resource_types': ['ECR', 'EC2'],
+                'depends_on': ['aws_iam_service_linked_role.gitlab_ssm']
             }
         },
         'google_service_account': {

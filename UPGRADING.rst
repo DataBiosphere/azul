@@ -27,7 +27,10 @@ Operator
 ~~~~~~~~
 
 Manually deploy the ``gitlab`` component of any main deployment just *before*
-pushing the merge commit to the GitLab instance in that deployment.
+pushing the merge commit to the GitLab instance in that deployment. The
+Terraform code that enables Amazon Inspector is currently unreliable. Check
+the Amazon Inspector console to see if it is enabled. If you see a *Get
+started …* button, it is not, and you need to repeat this step.
 
 
 #5019 Index public & mock-MA snapshots in anvilprod
