@@ -44,7 +44,7 @@ from azul.types import (
     AnyMutableJSON,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def main(argv):
@@ -81,19 +81,19 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
         plugin = plugin_for(catalog)
         sources = set(map(str, plugin.sources))
         try:
-            parsed_source = plugin.resolve_source(source)
+            source_ref = plugin.resolve_source(source)
         except Exception:
             pass
         else:
-            for configured_source in sources:
-                configured_source = plugin.resolve_source(configured_source)
-                if parsed_source.spec.contains(configured_source.spec):
-                    fqid = SourcedBundleFQID(source=configured_source,
+            for plugin_source_spec in sources:
+                plugin_source_ref = plugin.resolve_source(plugin_source_spec)
+                if source_ref.spec.contains(plugin_source_ref.spec):
+                    fqid = SourcedBundleFQID(source=plugin_source_ref,
                                              uuid=bundle_uuid,
                                              version=bundle_version)
                     bundle = plugin.fetch_bundle(fqid)
-                    logger.info('Fetched bundle %r version %r from catalog %r.',
-                                fqid.uuid, fqid.version, catalog)
+                    log.info('Fetched bundle %r version %r from catalog %r.',
+                             fqid.uuid, fqid.version, catalog)
                     return bundle
     raise ValueError('No repository using this source')
 
@@ -109,7 +109,7 @@ def save_bundle(bundle: Bundle, output_dir: str) -> None:
         path = os.path.join(output_dir, bundle.uuid + suffix)
         with write_file_atomically(path) as f:
             json.dump(obj, f, indent=4)
-        logger.info('Successfully wrote %s', path)
+        log.info('Successfully wrote %s', path)
 
 
 redacted_entity_types = {
@@ -172,5 +172,5 @@ def redact_json(o: AnyJSON, key: bytes) -> AnyMutableJSON:
 
 
 if __name__ == '__main__':
-    configure_script_logging(logger)
+    configure_script_logging(log)
     main(sys.argv[1:])
