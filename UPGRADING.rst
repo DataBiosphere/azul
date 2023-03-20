@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4960 S3 server access logging for shared bucket
+================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #4189 Scan GitLab EC2 instance with Amazon Inspector
 ====================================================
 

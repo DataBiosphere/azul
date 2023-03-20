@@ -171,7 +171,8 @@ emit_tf(block_public_s3_bucket_access({
             }
             for bucket, prefix in [
                 ('trail', 'cloudtrail'),
-                ('aws_config', 'aws_config')
+                ('aws_config', 'aws_config'),
+                ('shared', 'shared')
             ]
         },
         'aws_s3_bucket_policy': {
