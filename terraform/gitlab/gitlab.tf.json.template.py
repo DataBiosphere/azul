@@ -689,6 +689,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'actions': ['sns:ListTopics'],
                         'resources': aws_service_arns('SNS',
                                                       TopicName='*'),
+                    },
+
+                    # FedRAMP inventory
+                    {
+                        'actions': [
+                            'config:SelectResourceConfig'
+                        ],
+                        'resources': ['*']
                     }
                 ]
             }
@@ -897,6 +905,19 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_vpn': {
                 'name': '/aws/vpn/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+            },
+            'gitlab_vpc': {
+                'name': '/aws/vpc/azul-gitlab',
+                'retention_in_days': config.audit_log_retention_days,
+            }
+        },
+        'aws_flow_log': {
+            'gitlab': {
+                'iam_role_arn': '${aws_iam_role.gitlab_vpc.arn}',
+                'log_destination': '${aws_cloudwatch_log_group.gitlab_vpc.arn}',
+                'log_destination_type': 'cloud-watch-logs',
+                'traffic_type': 'ALL',
+                'vpc_id': '${aws_vpc.gitlab.id}',
             }
         },
         'aws_ec2_client_vpn_endpoint': {
@@ -1143,6 +1164,21 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         }
                     ]
                 })
+            },
+            'gitlab_vpc': {
+                'name': 'azul-gitlab_vpc',
+                'assume_role_policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Action': 'sts:AssumeRole',
+                            'Principal': {
+                                'Service': 'vpc-flow-logs.amazonaws.com'
+                            },
+                            'Effect': 'Allow'
+                        }
+                    ]
+                })
             }
         },
         'aws_iam_instance_profile': {
@@ -1161,7 +1197,26 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': config.permissions_boundary_name,
                 'path': '/',
                 'policy': '${data.aws_iam_policy_document.gitlab_boundary.json}'
-            }
+            },
+            'gitlab_vpc': {
+                'name': 'azul-gitlab_vpc',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Action': [
+                                'logs:CreateLogGroup',
+                                'logs:CreateLogStream',
+                                'logs:PutLogEvents',
+                                'logs:DescribeLogGroups',
+                                'logs:DescribeLogStreams'
+                            ],
+                            'Resource': '*'
+                        }
+                    ]
+                })
+            },
         },
         'aws_iam_role_policy_attachment': {
             'gitlab_iam': {
@@ -1173,6 +1228,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_boundary': {
                 'role': '${aws_iam_role.gitlab.name}',
                 'policy_arn': '${aws_iam_policy.gitlab_boundary.arn}'
+            },
+            'gitlab_vpc': {
+                'role': '${aws_iam_role.gitlab_vpc.name}',
+                'policy_arn': '${aws_iam_policy.gitlab_vpc.arn}'
             }
         },
         'google_service_account': {

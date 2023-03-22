@@ -105,11 +105,28 @@ emit_tf(block_public_s3_bucket_access({
                 'name': role
             }
             for i, role in enumerate(config.aws_support_roles)
+        },
+        'aws_vpc': {
+            vpc.default_vpc_name: {
+                'default': True
+            }
         }
     },
     'resource': {
         'aws_default_vpc': {
             vpc.default_vpc_name: {}
+        },
+        'aws_flow_log': {
+            vpc.default_vpc_name: {
+                'iam_role_arn': '${aws_iam_role.%s.arn}' % vpc.default_vpc_name,
+                'log_destination': '${aws_cloudwatch_log_group.%s.arn}' % vpc.default_vpc_name,
+                'log_destination_type': 'cloud-watch-logs',
+                'traffic_type': 'ALL',
+                # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/default_vpc#attributes-reference
+                # While the `aws_default_vpc` resource doesn't list `.id` as an
+                # attribute in the docs, its usage is valid.
+                'vpc_id': '${aws_default_vpc.%s.id}' % vpc.default_vpc_name,
+            }
         },
         'aws_default_security_group': {
             vpc.default_security_group_name: {
@@ -145,13 +162,17 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_s3_bucket_logging': {
-            'trail': {
-                'bucket': '${aws_s3_bucket.trail.id}',
+            bucket: {
+                'bucket': '${aws_s3_bucket.%s.id}' % bucket,
                 'target_bucket': '${aws_s3_bucket.logs.id}',
                 # Other S3 log deliveries, like ELB, implicitly put a slash
                 # after the prefix. S3 doesn't, so we add one explicitly.
-                'target_prefix': config.s3_access_log_path_prefix('cloudtrail') + '/'
+                'target_prefix': config.s3_access_log_path_prefix(prefix) + '/'
             }
+            for bucket, prefix in [
+                ('trail', 'cloudtrail'),
+                ('aws_config', 'aws_config')
+            ]
         },
         'aws_s3_bucket_policy': {
             'trail': {
@@ -320,6 +341,10 @@ emit_tf(block_public_s3_bucket_access({
             'trail': {
                 'name': config.qualified_resource_name('trail'),
                 'retention_in_days': config.audit_log_retention_days
+            },
+            vpc.default_vpc_name: {
+                'name': '/aws/vpc/' + config.qualified_resource_name(vpc.default_vpc_name),
+                'retention_in_days': config.audit_log_retention_days
             }
         },
         'aws_cloudwatch_log_metric_filter': {
@@ -399,6 +424,23 @@ emit_tf(block_public_s3_bucket_access({
                                 'Effect': 'Allow',
                                 'Principal': {
                                     'Service': 'cloudtrail.amazonaws.com',
+                                }
+                            }
+                        ]
+                    }
+                )
+            },
+            vpc.default_vpc_name: {
+                'name': config.qualified_resource_name(f'{vpc.default_vpc_name}_vpc'),
+                'assume_role_policy': json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': [
+                            {
+                                'Action': 'sts:AssumeRole',
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'Service': 'vpc-flow-logs.amazonaws.com',
                                 }
                             }
                         ]
@@ -485,6 +527,26 @@ emit_tf(block_public_s3_bucket_access({
                             'Resource': [
                                 '${aws_cloudwatch_log_group.trail.arn}:*'
                             ]
+                        }
+                    ]
+                })
+            },
+            vpc.default_vpc_name: {
+                'name': config.qualified_resource_name(f'{vpc.default_vpc_name}_vpc'),
+                'role': '${aws_iam_role.%s.id}' % vpc.default_vpc_name,
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Action': [
+                                'logs:CreateLogGroup',
+                                'logs:CreateLogStream',
+                                'logs:PutLogEvents',
+                                'logs:DescribeLogGroups',
+                                'logs:DescribeLogStreams'
+                            ],
+                            'Resource': '*'
                         }
                     ]
                 })
