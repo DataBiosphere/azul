@@ -613,10 +613,10 @@ lm3_sources = lm2_sources | mkdict([
 
 def env() -> Mapping[str, Optional[str]]:
     """
-    Returns a dictionary that maps environment variable names to values. The 
-    values are either None or strings. String values can contain references to 
-    other environment variables in the form `{FOO}` where FOO is the name of an 
-    environment variable. See 
+    Returns a dictionary that maps environment variable names to values. The
+    values are either None or strings. String values can contain references to
+    other environment variables in the form `{FOO}` where FOO is the name of an
+    environment variable. See
 
     https://docs.python.org/3.9/library/string.html#format-string-syntax
 
