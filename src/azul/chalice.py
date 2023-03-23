@@ -25,6 +25,7 @@ from chalice import (
     ChaliceViewError,
 )
 from chalice.app import (
+    BadRequestError,
     CaseInsensitiveMapping,
     MultiDict,
     NotFoundError,
@@ -438,18 +439,19 @@ class AzulChaliceApp(Chalice):
                         body=swagger_ui_html)
 
     def swagger_resource(self, file) -> Response:
-        swagger_resources = {
-            'swagger-ui.css',
-            'swagger-ui-bundle.js',
-            'swagger-ui-standalone-preset.js'
-        }
-        if file not in swagger_resources:
-            raise NotFoundError(file)
+        if os.sep in file:
+            raise BadRequestError(file)
         else:
-            suffix = pathlib.Path(file).suffix
-            return Response(status_code=200,
-                            headers={"Content-Type": mimetypes.types_map[suffix]},
-                            body=self.load_static_resource(file))
+            try:
+                body = self.load_static_resource(file)
+            except FileNotFoundError:
+                raise NotFoundError(file)
+            else:
+                path = pathlib.Path(file)
+                content_type = mimetypes.types_map[path.suffix]
+                return Response(status_code=200,
+                                headers={'Content-Type': content_type},
+                                body=body)
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
