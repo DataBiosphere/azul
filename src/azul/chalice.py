@@ -421,7 +421,7 @@ class AzulChaliceApp(Chalice):
         return controller_cls(app=self, **kwargs)
 
     def swagger_ui(self) -> Response:
-        swagger_ui_template = self.load_static_resource('swagger-ui.html.template.mustache')
+        swagger_ui_template = self.load_static_resource('swagger', 'swagger-ui.html.template.mustache')
         base_url = self.base_url
         redirect_url = furl(base_url).add(path='oauth2_redirect')
         deployment_url = furl(base_url).add(path='openapi')
@@ -443,7 +443,7 @@ class AzulChaliceApp(Chalice):
             raise BadRequestError(file)
         else:
             try:
-                body = self.load_static_resource(file)
+                body = self.load_static_resource('swagger', file)
             except FileNotFoundError:
                 raise NotFoundError(file)
             else:
