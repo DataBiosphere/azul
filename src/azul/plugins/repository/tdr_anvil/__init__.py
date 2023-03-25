@@ -29,7 +29,6 @@ from azul.bigquery import (
     backtick,
 )
 from azul.indexer import (
-    BundleFQID,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -138,7 +137,6 @@ class TDRAnvilBundle(TDRBundle):
         )
 
     def add_links(self,
-                  bundle_fqid: BundleFQID,
                   links: Links,
                   entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
         def link_sort_key(link: JSON):
@@ -152,8 +150,8 @@ class TDRAnvilBundle(TDRBundle):
 
         self._add_entity(
             manifest_entry={
-                'uuid': bundle_fqid.uuid,
-                'version': bundle_fqid.version,
+                'uuid': self.fqid.uuid,
+                'version': self.fqid.version,
                 'name': 'links',
                 'indexed': True
             },
@@ -277,7 +275,7 @@ class Plugin(TDRPlugin):
                 entity = EntityReference(entity_id=row['datarepo_row_id'], entity_type=entity_type)
                 entities_by_key[key] = entity
                 result.add_entity(entity, self._version, row)
-        result.add_links(bundle_fqid, links, entities_by_key)
+        result.add_links(links, entities_by_key)
 
         return result
 
