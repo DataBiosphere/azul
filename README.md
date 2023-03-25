@@ -625,7 +625,7 @@ These steps are performed once per deployment (multiple times per project).
 4. For *Name*, enter `azul-{stage}` where stage is the name of the deployment
 
 5. Add an entry to *Authorized JavaScript origins* and enter the output from
-   `python3 -c 'from azul import config; print(config.service_endpoint())'`
+   `python3 -c 'from azul import config; print(config.service_endpoint)'`
 
 6. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
     value of the previous field and enter the resulting value.
