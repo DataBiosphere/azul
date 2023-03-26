@@ -209,10 +209,14 @@ emit_tf({
         *([
               {
                   'aws_lambda_function_event_invoke_config': {
-                      'forward_alb_logs': {
-                          'function_name': '${aws_lambda_function.indexer_forward_alb_logs.function_name}',
+                      function_name: {
+                          'function_name': '${aws_lambda_function.indexer_%s.function_name}' % function_name,
                           'maximum_retry_attempts': 0
                       }
+                      for function_name in (
+                          'forward_alb_logs',
+                          'forward_s3_logs',
+                      )
                   }
               }
           ]
