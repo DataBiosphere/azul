@@ -739,6 +739,7 @@ dcp25_sources = dcp24_sources | mkdict([
     mksrc('datarepo-cf5ce794', 'hca_prod_dbcd4b1d31bd4eb594e150e8706fa192__20220119_dcp2_20230314_dcp25', 85),
     mksrc('datarepo-a44da434', 'hca_prod_dc1a41f69e0942a6959e3be23db6da56__20220119_dcp2_20230314_dcp25', 11),
     mksrc('datarepo-c3eee222', 'hca_prod_dcbb50d19acf4f709fdab1f63a948c49__20221101_dcp2_20230314_dcp25', 4),
+    mksrc('datarepo-5ba86b6e', 'hca_prod_dd7ada843f144765b7ce9b64642bb3dc__20220212_dcp2_20230314_dcp25', 0),
     mksrc('datarepo-a4d35f23', 'hca_prod_dd7f24360c564709bd17e526bba4cc15__20220119_dcp2_20230314_dcp25', 38),
     mksrc('datarepo-7882d448', 'hca_prod_e0c74c7a20a445059cf138dcdd23011b__20220119_dcp2_20230314_dcp25', 3),
     mksrc('datarepo-cf662b44', 'hca_prod_e255b1c611434fa683a8528f15b41038__20220330_dcp2_20230314_dcp25', 107),
