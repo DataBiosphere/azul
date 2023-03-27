@@ -132,9 +132,10 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
         return tallies
 
     def _fqid_from_notification(self, notification):
-        return SourcedBundleFQID(uuid=notification['notification']['match']['bundle_uuid'],
-                                 version=notification['notification']['match']['bundle_version'],
-                                 source=DSSSourceRef.from_json(notification['notification']['source']))
+        fqid = notification['notification']['bundle_fqid']
+        return SourcedBundleFQID(uuid=fqid['uuid'],
+                                 version=fqid['version'],
+                                 source=DSSSourceRef.from_json(fqid['source']))
 
     def test_invalid_notification(self):
         event = [
@@ -171,7 +172,7 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
 
             notification = one(self._read_queue(self._notifications_queue))
             expected_source = dict(id=source.id, spec=str(source.spec))
-            source = notification['notification']['source']
+            source = notification['notification']['bundle_fqid']['source']
             self.assertEqual(expected_source, source)
 
     def test_contribute_and_aggregate(self):

@@ -92,16 +92,12 @@ class AzulClient(SignatureHelper):
         """
         Generate a indexer notification for the given bundle.
         """
-        # Organic notifications sent by DSS wouldn't contain the `source` entry,
+        # Organic notifications sent by DSS have a different structure,
         # but since DSS is end-of-life these synthetic notifications are now the
         # only variant that would ever occur in the wild.
         return {
-            'source': bundle_fqid.source.to_json(),
             'transaction_id': str(uuid.uuid4()),
-            'match': {
-                'bundle_uuid': bundle_fqid.uuid,
-                'bundle_version': bundle_fqid.version
-            },
+            'bundle_fqid': bundle_fqid.to_json()
         }
 
     def bundle_message(self,
@@ -385,9 +381,9 @@ class AzulClient(SignatureHelper):
                     bundle_uuid, bundle_version, catalog)
         notifications = [
             {
-                'match': {
-                    'bundle_uuid': bundle_uuid,
-                    'bundle_version': bundle_version
+                'bundle_fqid': {
+                    'uuid': bundle_uuid,
+                    'version': bundle_version
                 }
             }
         ]

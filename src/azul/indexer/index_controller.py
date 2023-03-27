@@ -15,6 +15,9 @@ import http
 import json
 import logging
 import time
+from typing import (
+    cast,
+)
 import uuid
 
 import chalice
@@ -49,6 +52,7 @@ from azul.hmac import (
 )
 from azul.indexer import (
     BundlePartition,
+    SourcedBundleFQIDJSON,
 )
 from azul.indexer.document import (
     Contribution,
@@ -130,25 +134,25 @@ class IndexController(AppController):
 
     def _validate_notification(self, notification):
         try:
-            match = notification['match']
+            bundle_fqid = notification['bundle_fqid']
         except KeyError:
-            raise chalice.BadRequestError('Missing notification entry: match')
+            raise chalice.BadRequestError('Missing notification entry: bundle_fqid')
 
         try:
-            bundle_uuid = match['bundle_uuid']
+            bundle_uuid = bundle_fqid['uuid']
         except KeyError:
-            raise chalice.BadRequestError('Missing notification entry: bundle_uuid')
+            raise chalice.BadRequestError('Missing notification entry: bundle_fqid.uuid')
 
         try:
-            bundle_version = match['bundle_version']
+            bundle_version = bundle_fqid['version']
         except KeyError:
-            raise chalice.BadRequestError('Missing notification entry: bundle_version')
+            raise chalice.BadRequestError('Missing notification entry: bundle_fqid.version')
 
         if not isinstance(bundle_uuid, str):
-            raise chalice.BadRequestError(f'Invalid type: bundle_uuid: {type(bundle_uuid)} (should be str)')
+            raise chalice.BadRequestError(f'Invalid type: uuid: {type(bundle_uuid)} (should be str)')
 
         if not isinstance(bundle_version, str):
-            raise chalice.BadRequestError(f'Invalid type: bundle_version: {type(bundle_version)} (should be str)')
+            raise chalice.BadRequestError(f'Invalid type: version: {type(bundle_version)} (should be str)')
 
         if bundle_uuid.lower() != str(uuid.UUID(bundle_uuid)).lower():
             raise chalice.BadRequestError(f'Invalid syntax: {bundle_uuid} (should be a UUID)')
@@ -196,8 +200,7 @@ class IndexController(AppController):
         notification into a list of contributions to documents, each document
         representing one metadata entity in the index.
         """
-        match, source = notification['match'], notification['source']
-        bundle_uuid, bundle_version = match['bundle_uuid'], match['bundle_version']
+        bundle_fqid = cast(SourcedBundleFQIDJSON, notification['bundle_fqid'])
         try:
             partition = notification['partition']
         except KeyError:
@@ -205,7 +208,7 @@ class IndexController(AppController):
         else:
             partition = BundlePartition.from_json(partition)
         service = self.index_service
-        bundle = service.fetch_bundle(catalog, source, bundle_uuid, bundle_version)
+        bundle = service.fetch_bundle(catalog, bundle_fqid)
         results = service.transform(catalog, bundle, partition, delete=delete)
         result = first(results)
         if isinstance(result, BundlePartition):

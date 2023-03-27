@@ -53,6 +53,9 @@ class BundleFQID(SupportsLessThan):
     uuid: BundleUUID
     version: BundleVersion
 
+    def to_json(self) -> MutableJSON:
+        return attr.asdict(self, recurse=False)
+
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class Prefix:
@@ -360,6 +363,12 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
         return spec_cls
 
 
+class SourcedBundleFQIDJSON(TypedDict):
+    uuid: BundleUUID
+    version: BundleVersion
+    source: SourceJSON
+
+
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
 class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     source: SOURCE_REF
@@ -367,6 +376,10 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     def upcast(self):
         return BundleFQID(uuid=self.uuid,
                           version=self.version)
+
+    def to_json(self) -> SourcedBundleFQIDJSON:
+        return dict(super().to_json(),
+                    source=self.source.to_json())
 
 
 @attr.s(auto_attribs=True, kw_only=True)
