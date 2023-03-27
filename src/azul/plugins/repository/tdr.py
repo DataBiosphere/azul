@@ -37,7 +37,10 @@ from azul.drs import (
     DRSClient,
 )
 from azul.indexer import (
+    BUNDLE_FQID,
     Bundle,
+    SOURCE_REF,
+    SOURCE_SPEC,
     SourcedBundleFQID,
 )
 from azul.plugins import (
@@ -62,10 +65,12 @@ from azul.types import (
 
 log = logging.getLogger(__name__)
 
-TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
+
+class TDRBundleFQID(SourcedBundleFQID[TDRSourceRef]):
+    pass
 
 
-class TDRBundle(Bundle[TDRSourceRef]):
+class TDRBundle(Bundle[TDRBundleFQID]):
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_path')
@@ -82,7 +87,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TDRPlugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
+class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     _sources: Set[TDRSourceSpec]
 
     @classmethod

@@ -369,9 +369,23 @@ class SourcedBundleFQIDJSON(TypedDict):
     source: SourceJSON
 
 
+BUNDLE_FQID = TypeVar('BUNDLE_FQID', bound='SourcedBundleFQID')
+
+
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
 class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     source: SOURCE_REF
+
+    @classmethod
+    def source_ref_cls(cls) -> Type[SOURCE_REF]:
+        ref_cls, = get_generic_type_params(cls, SourceRef)
+        return ref_cls
+
+    @classmethod
+    def from_json(cls, json: SourcedBundleFQIDJSON) -> 'SourcedBundleFQID':
+        json = dict(json)
+        source = cls.source_ref_cls().from_json(json.pop('source'))
+        return cls(source=source, **json)
 
     def upcast(self):
         return BundleFQID(uuid=self.uuid,
@@ -383,8 +397,8 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
-class Bundle(ABC, Generic[SOURCE_REF]):
-    fqid: SourcedBundleFQID[SOURCE_REF]
+class Bundle(ABC, Generic[BUNDLE_FQID]):
+    fqid: BUNDLE_FQID
     manifest: MutableJSONs
     """
     Each item of the `manifest` attribute's value has this shape:

@@ -44,7 +44,6 @@ from azul.bigquery import (
 )
 from azul.indexer import (
     BundleFQID,
-    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     EntityID,
@@ -282,7 +281,7 @@ class TDRHCABundle(TDRBundle):
             return None
 
 
-class Plugin(TDRPlugin):
+class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
 
     def list_partitions(self,
                         source: TDRSourceRef
@@ -311,9 +310,9 @@ class Plugin(TDRPlugin):
             WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
         ''', group_by='links_id')
         return [
-            SourcedBundleFQID(source=source,
-                              uuid=row['links_id'],
-                              version=self.format_version(row['version']))
+            TDRBundleFQID(source=source,
+                          uuid=row['links_id'],
+                          version=self.format_version(row['version']))
             for row in current_bundles
         ]
 
@@ -377,8 +376,8 @@ class Plugin(TDRPlugin):
         source = root_bundle.fqid.source
         entities: EntitiesByType = defaultdict(set)
         root_entities = None
-        unprocessed: set[SourcedBundleFQID] = {root_bundle.fqid}
-        processed: set[SourcedBundleFQID] = set()
+        unprocessed: set[TDRBundleFQID] = {root_bundle.fqid}
+        processed: set[TDRBundleFQID] = set()
         stitched_links: list[JSON] = []
         # Retrieving links in batches eliminates the risk of exceeding
         # BigQuery's maximum query size. Using a batches size 1000 appears to be
@@ -420,8 +419,8 @@ class Plugin(TDRPlugin):
         return entities, root_entities, stitched_links
 
     def _retrieve_links(self,
-                        links_ids: set[SourcedBundleFQID]
-                        ) -> dict[SourcedBundleFQID, JSON]:
+                        links_ids: set[TDRBundleFQID]
+                        ) -> dict[TDRBundleFQID, JSON]:
         """
         Retrieve links entities from BigQuery and parse the `content` column.
         :param links_ids: Which links entities to retrieve.
@@ -512,7 +511,7 @@ class Plugin(TDRPlugin):
 
     def _find_upstream_bundles(self,
                                source: TDRSourceRef,
-                               outputs: Entities) -> set[SourcedBundleFQID]:
+                               outputs: Entities) -> set[TDRBundleFQID]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
@@ -530,9 +529,9 @@ class Plugin(TDRPlugin):
         bundles = set()
         outputs_found = set()
         for row in rows:
-            bundles.add(SourcedBundleFQID(source=source,
-                                          uuid=row['links_id'],
-                                          version=self.format_version(row['version'])))
+            bundles.add(TDRBundleFQID(source=source,
+                                      uuid=row['links_id'],
+                                      version=self.format_version(row['version'])))
             outputs_found.add(row['output_id'])
         missing = set(output_ids) - outputs_found
         require(not missing,

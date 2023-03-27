@@ -76,10 +76,11 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
         return str(uuid5(cls.namespace, spec.name))
 
 
-DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
+class DSSBundleFQID(SourcedBundleFQID[DSSSourceRef]):
+    pass
 
 
-class DSSBundle(Bundle[DSSSourceRef]):
+class DSSBundle(Bundle[DSSBundleFQID]):
 
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
@@ -87,7 +88,7 @@ class DSSBundle(Bundle[DSSSourceRef]):
         return str(furl(path=(file_uuid,), args={'version': file_version}))
 
 
-class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
+class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:

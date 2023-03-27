@@ -56,7 +56,6 @@ from azul.indexer import (
     BundlePartition,
     BundleUUID,
     BundleVersion,
-    SourcedBundleFQID,
     SourcedBundleFQIDJSON,
 )
 from azul.indexer.aggregate import (
@@ -176,10 +175,7 @@ class IndexService(DocumentService):
                      bundle_fqid: SourcedBundleFQIDJSON
                      ) -> Bundle:
         plugin = self.repository_plugin(catalog)
-        source = plugin.source_from_json(bundle_fqid['source'])
-        bundle_fqid = SourcedBundleFQID(source=source,
-                                        uuid=bundle_fqid['uuid'],
-                                        version=bundle_fqid['version'])
+        bundle_fqid = plugin.resolve_bundle(bundle_fqid)
         return plugin.fetch_bundle(bundle_fqid)
 
     def index(self, catalog: CatalogName, bundle: Bundle) -> None:

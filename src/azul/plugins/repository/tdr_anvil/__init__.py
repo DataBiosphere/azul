@@ -28,9 +28,6 @@ from azul import (
 from azul.bigquery import (
     backtick,
 )
-from azul.indexer import (
-    SourcedBundleFQID,
-)
 from azul.indexer.document import (
     EntityReference,
     EntityType,
@@ -182,7 +179,7 @@ class TDRAnvilBundle(TDRBundle):
             return self._parse_drs_path(file_ref)
 
 
-class Plugin(TDRPlugin):
+class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
 
     @cached_property
     def _version(self):
@@ -238,7 +235,7 @@ class Plugin(TDRPlugin):
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> TDRAnvilBundle:
+    def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
         bundle_entity = self._bundle_entity(bundle_fqid)
 
@@ -279,7 +276,7 @@ class Plugin(TDRPlugin):
 
         return result
 
-    def _bundle_entity(self, bundle_fqid: SourcedBundleFQID) -> KeyReference:
+    def _bundle_entity(self, bundle_fqid: TDRBundleFQID) -> KeyReference:
         source = bundle_fqid.source
         bundle_uuid = bundle_fqid.uuid
         entity_id = uuids.change_version(bundle_uuid,

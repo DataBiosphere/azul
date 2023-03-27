@@ -71,17 +71,18 @@ class CannedSourceRef(SourceRef[SimpleSourceSpec, 'CannedSourceRef']):
     pass
 
 
-CannedBundleFQID = SourcedBundleFQID[CannedSourceRef]
+class CannedBundleFQID(SourcedBundleFQID[CannedSourceRef]):
+    pass
 
 
-class CannedBundle(Bundle[CannedSourceRef]):
+class CannedBundle(Bundle[CannedBundleFQID]):
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return None
 
 
 @dataclass(frozen=True)
-class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
+class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef, CannedBundleFQID]):
     _sources: Set[SimpleSourceSpec]
 
     @classmethod
@@ -124,9 +125,9 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         bundle_fqids = []
         for link in self.staging_area(source.spec).links.values():
             if link.uuid.startswith(prefix):
-                bundle_fqids.append(SourcedBundleFQID(source=source,
-                                                      uuid=link.uuid,
-                                                      version=link.version))
+                bundle_fqids.append(CannedBundleFQID(source=source,
+                                                     uuid=link.uuid,
+                                                     version=link.version))
         log.info('There are %i bundle(s) with prefix %r in source %r.',
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
@@ -137,9 +138,9 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         staging_area = self.staging_area(bundle_fqid.source.spec)
         version, manifest, metadata = staging_area.get_bundle(bundle_fqid.uuid)
         if bundle_fqid.version is None:
-            bundle_fqid = SourcedBundleFQID(source=bundle_fqid.source,
-                                            uuid=bundle_fqid.uuid,
-                                            version=version)
+            bundle_fqid = CannedBundleFQID(source=bundle_fqid.source,
+                                           uuid=bundle_fqid.uuid,
+                                           version=version)
         bundle = CannedBundle(fqid=bundle_fqid,
                               manifest=cast(MutableJSONs, manifest),
                               metadata_files=cast(MutableJSON, metadata))

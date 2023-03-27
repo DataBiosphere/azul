@@ -31,7 +31,6 @@ from azul.files import (
 )
 from azul.indexer import (
     Bundle,
-    SourcedBundleFQID,
 )
 from azul.logging import (
     configure_script_logging,
@@ -88,9 +87,9 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
             for plugin_source_spec in plugin.sources:
                 if source_ref.spec.contains(plugin_source_spec):
                     plugin_source_ref = plugin.resolve_source(str(plugin_source_spec))
-                    fqid = SourcedBundleFQID(source=plugin_source_ref,
-                                             uuid=bundle_uuid,
-                                             version=bundle_version)
+                    fqid = plugin.resolve_bundle(dict(source=plugin_source_ref.to_json(),
+                                                      uuid=bundle_uuid,
+                                                      version=bundle_version))
                     bundle = plugin.fetch_bundle(fqid)
                     log.info('Fetched bundle %r version %r from catalog %r.',
                              fqid.uuid, fqid.version, catalog)
