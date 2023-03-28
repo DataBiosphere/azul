@@ -104,8 +104,11 @@ policy = {
                         "s3:GetObject",
                     ],
                     "Resource": [
-                        f"arn:aws:s3:::{aws.qualified_bucket_name(config.logs_term)}/"
-                        f"{config.alb_access_log_path_prefix('*', deployment=None)}",
+                        f"arn:aws:s3:::{aws.qualified_bucket_name(config.logs_term)}/{prefix}"
+                        for prefix in (
+                            config.alb_access_log_path_prefix('*', deployment=None),
+                            config.s3_access_log_path_prefix('*', deployment=None),
+                        )
                     ]
                 },
             ] if config.enable_log_forwarding else []

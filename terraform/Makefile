@@ -9,9 +9,13 @@ clean: check_env git_clean
 .PHONY: state
 state: check_terraform check_branch check_aws
 
+.PHONY: initable
+initable: clean state providers.tf.json backend.tf.json
+
 .PHONY: init
-init: clean state providers.tf.json backend.tf.json
+init: initable
 	terraform init -reconfigure
+	$(MAKE) check_providers_clean
 
 .PHONY: check_schema
 check_schema: init
@@ -68,6 +72,15 @@ auto_destroy: validate import_resources
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
 
-.PHONY: taint_dependencies_layer
-taint_dependencies_layer: config
-	terraform taint -allow-missing aws_lambda_layer_version.dependencies
+.PHONY: provider_update
+provider_update: initable
+	terraform init -upgrade
+	terraform providers lock -platform=linux_amd64 \
+	                         -platform=linux_arm64 \
+	                         -platform=darwin_amd64 \
+	                         -platform=darwin_arm64
+
+.PHONY: check_providers_clean
+check_providers_clean:
+	git diff --exit-code --name-only .terraform.lock.hcl \
+	&& git diff --cached --exit-code --name-only .terraform.lock.hcl

@@ -394,9 +394,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'edu-ucsc-gi-platform-hca-dev-*',
                                     'edu-ucsc-gi-singlecell-azul-*',
                                 ] if 'singlecell' in config.domain_name else [
-                                    'edu-ucsc-gi-platform-anvil-dev.*',
-                                    'edu-ucsc-gi-platform-anvil-dev-*',
-                                    'edu-ucsc-gi-platform-anvil-anvilbox',
+                                    'edu-ucsc-gi-platform-anvil-*',
+                                    'edu-ucsc-gi-platform-anvil-*',
                                 ] if 'anvil' in config.domain_name else [
                                     'edu-ucsc-gi-platform-hca-prod-*',
                                     'edu-ucsc-gi-azul-*',
@@ -564,7 +563,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'values': [aws.permissions_boundary_arn]
                         }
                     },
-
+                    {
+                        'actions': [
+                            'iam:CreateServiceLinkedRole'
+                        ],
+                        'resources': [
+                            f'arn:aws:iam::{aws.account}'
+                            ':role'
+                            '/aws-service-role'
+                            '/ops.apigateway.amazonaws.com'
+                            '/AWSServiceRoleForAPIGateway',
+                        ]
+                    },
                     {
                         'actions': [
                             'iam:UpdateAssumeRolePolicy',
@@ -1218,10 +1228,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 })
             },
         },
+        'aws_iam_service_linked_role': {
+            'gitlab_ssm': {
+                'aws_service_name': 'ssm.amazonaws.com',
+            }
+        },
         'aws_iam_role_policy_attachment': {
             'gitlab_iam': {
                 'role': '${aws_iam_role.gitlab.name}',
                 'policy_arn': '${aws_iam_policy.gitlab_iam.arn}'
+            },
+            'gitlab_ssm': {
+                'role': '${aws_iam_role.gitlab.name}',
+                'policy_arn': 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+            },
+            'gitlab_ssm_cloudwatch': {
+                'role': '${aws_iam_role.gitlab.name}',
+                'policy_arn': 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
             },
             # Since we are using the boundary as a policy Gitlab can explicitly
             # do everything within the boundary
@@ -1232,6 +1255,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_vpc': {
                 'role': '${aws_iam_role.gitlab_vpc.name}',
                 'policy_arn': '${aws_iam_policy.gitlab_vpc.arn}'
+            }
+        },
+        'aws_inspector2_enabler': {
+            'gitlab': {
+                'account_ids': [aws.account],
+                'resource_types': ['ECR', 'EC2'],
+                'depends_on': ['aws_iam_service_linked_role.gitlab_ssm']
             }
         },
         'google_service_account': {

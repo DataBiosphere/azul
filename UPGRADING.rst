@@ -20,6 +20,49 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5071 s3_access_log_bucket_policy includes redundant condition on source account
+================================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#4960 S3 server access logging for shared bucket
+================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#4189 Scan GitLab EC2 instance with Amazon Inspector
+====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just *before*
+pushing the merge commit to the GitLab instance in that deployment. The
+Terraform code that enables Amazon Inspector is currently unreliable. Check
+the Amazon Inspector console to see if it is enabled. If you see a *Get
+started …* button, it is not, and you need to repeat this step.
+
+
+#5019 Index public & mock-MA snapshots in anvilprod
+===================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just *before*
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #3634 Automate creation of a FedRAMP Integrated Inventory Workbook
 ==================================================================
 

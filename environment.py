@@ -500,7 +500,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_main_deployments': json.dumps({
             'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
-            'prod': ['prod']
+            'prod': ['prod', 'anvilprod']
         }),
 
         # 1 if current deployment is a main deployment with the sole purpose of
