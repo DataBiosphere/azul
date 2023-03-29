@@ -55,8 +55,7 @@ class ImportDefaultVPC:
         return one(groups['SecurityGroups'])['GroupId']
 
     def import_default_vpc(self) -> None:
-        resources = terraform.run('state', 'list').splitlines()
-
+        resources = terraform.run_state_list()
         resource = 'aws_default_vpc.' + vpc.default_vpc_name
         if resource in resources:
             log.info('The default VPC has already been imported.')

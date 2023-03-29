@@ -540,9 +540,6 @@ class AWS:
                     'ArnLike': {
                         'aws:SourceArn': source_bucket_arn
                     },
-                    'StringEquals': {
-                        'aws:SourceAccount': self.account
-                    }
                 }
             }
         ]

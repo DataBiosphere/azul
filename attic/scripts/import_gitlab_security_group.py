@@ -56,8 +56,7 @@ def get_default_security_group_id(vpc_id: str) -> str:
 
 
 def import_gitlab_security_group() -> None:
-    resources = terraform.run('state', 'list').splitlines()
-
+    resources = terraform.run_state_list()
     resource = 'aws_default_security_group.gitlab'
     if resource in resources:
         log.info("Default security group of the 'azul-gitlab' VPC has already been imported.")

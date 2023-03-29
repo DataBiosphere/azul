@@ -1,4 +1,4 @@
-FROM docker:19.03.15
+FROM docker:20.10.18
 RUN apk -U add make bash
 
 # This is the image for the Gitlab runner for Azul builds. It needs to be
@@ -29,7 +29,7 @@ RUN apk -U add make bash
 
 # From the directory containing this file, build the image:
 #
-# docker build -t docker.gitlab.dev.singlecell.gi.ucsc.edu/ucsc/azul/runner .
+# docker build --platform linux/amd64 -t docker.gitlab.dev.singlecell.gi.ucsc.edu/ucsc/azul/runner .
 
 # Push the image:
 #
