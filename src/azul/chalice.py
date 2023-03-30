@@ -13,6 +13,9 @@ from typing import (
     Type,
     TypeVar,
 )
+from urllib.parse import (
+    unquote,
+)
 
 import attr
 from chalice import (
@@ -98,6 +101,18 @@ class AzulChaliceApp(Chalice):
         self.register_middleware(self._logging_middleware, 'http')
         self.register_middleware(self._lambda_context_middleware, 'all')
         self.register_middleware(self._authentication_middleware, 'http')
+
+    def __call__(self, event: dict, context: LambdaContext) -> dict[str, Any]:
+        # Chalice does not URL-decode path parameters
+        # (https://github.com/aws/chalice/issues/511)
+        # This appears to actually be a bug in API Gateway, as the parameters
+        # are already parsed when the event is passed to Chalice
+        # (https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-example-event)
+        path_params = event['pathParameters']
+        if path_params is not None:
+            for key, value in path_params.items():
+                path_params[key] = unquote(value)
+        return super().__call__(event, context)
 
     def _patch_event_source_handler(self):
         """
