@@ -75,11 +75,9 @@ class Lambda:
         name = response['FunctionName']
         role = response['Role']
         try:
-            env = response['Environment']['Variables']
+            slot_location = response['Environment']['Variables']['AZUL_TDR_SOURCE_LOCATION']
         except KeyError:
             slot_location = None
-        else:
-            slot_location = env['AZUL_TDR_SOURCE_LOCATION']
         return cls(name=name,
                    role=role,
                    slot_location=slot_location)
