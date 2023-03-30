@@ -77,7 +77,6 @@ class Lambda:
         try:
             env = response['Environment']['Variables']
         except KeyError:
-            assert name.startswith('custodian-mandatory'), response
             slot_location = None
         else:
             slot_location = env['AZUL_TDR_SOURCE_LOCATION']
