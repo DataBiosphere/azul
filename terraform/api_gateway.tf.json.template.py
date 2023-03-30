@@ -159,6 +159,12 @@ emit_tf({
                 }
                 for public in (False, True)
                 for zone in range(vpc.num_zones)
+            },
+            'aws_wafv2_ip_set': {
+                'blocked': {
+                    'name': 'blocked',
+                    'scope': 'REGIONAL'
+                }
             }
         },
         *(
@@ -196,6 +202,95 @@ emit_tf({
                         'allow': {}
                     },
                     'rule': [
+                        {
+                            'priority': 0,
+                            'name': 'BlockedIPs',
+                            'action': {
+                                'block': {}
+                            },
+                            'statement': {
+                                'ip_set_reference_statement': {
+                                    'arn': '${data.aws_wafv2_ip_set.blocked.arn}'
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': 'BlockedIPs',
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
+                        {
+                            'priority': 1,
+                            'name': 'RateRule',
+                            'action': {
+                                'block': {}
+                            },
+                            'statement': {
+                                'rate_based_statement': {
+                                    'limit': 100,  # limit must be between 100 and 20,000,000
+                                    'aggregate_key_type': 'IP'
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': 'RateRule',
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
+                        {
+                            'priority': 2,
+                            'name': 'AWS-CommonRuleSet',
+                            'override_action': {
+                                'none': {}
+                            },
+                            'statement': {
+                                'managed_rule_group_statement': {
+                                    'name': 'AWSManagedRulesCommonRuleSet',
+                                    'vendor_name': 'AWS'
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': 'AWS-CommonRuleSet',
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
+                        {
+                            'priority': 3,
+                            'name': 'AWS-AmazonIpReputationList',
+                            'override_action': {
+                                'none': {}
+                            },
+                            'statement': {
+                                'managed_rule_group_statement': {
+                                    'name': 'AWSManagedRulesAmazonIpReputationList',
+                                    'vendor_name': 'AWS'
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': 'AWS-AmazonIpReputationList',
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
+                        {
+                            'priority': 4,
+                            'name': 'AWS-UnixRuleSet',
+                            'override_action': {
+                                'none': {}
+                            },
+                            'statement': {
+                                'managed_rule_group_statement': {
+                                    'name': 'AWSManagedRulesUnixRuleSet',
+                                    'vendor_name': 'AWS'
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': 'AWS-UnixRuleSet',
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
                     ],
                     'scope': 'REGIONAL',
                     'visibility_config': {

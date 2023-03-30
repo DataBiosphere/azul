@@ -20,6 +20,18 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4218 Configure WAF with rules
+==============================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment immediately
+before the first time this change is pushed to the GitLab instance for that
+main deployment, regardless of whether the changes come as part of a feature
+branch, a merge commit or in a promotion.
+
+
 #5116 Enable NIST 800.53 conformance pack for AWS Config
 ========================================================
 
