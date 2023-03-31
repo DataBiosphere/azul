@@ -383,6 +383,8 @@ class AzulClient(SignatureHelper):
                     bundle_uuid, bundle_version, catalog)
         notifications = [
             {
+                # FIXME: delete_bundle script fails with KeyError: 'source'
+                #        https://github.com/DataBiosphere/azul/issues/5105
                 'bundle_fqid': {
                     'uuid': bundle_uuid,
                     'version': bundle_version
