@@ -1,20 +1,29 @@
 import abc
-import collections
+from collections import (
+    Counter,
+    defaultdict,
+)
+import inspect
 import json
 import logging
 from operator import (
     attrgetter,
 )
 import pathlib
+import sys
 from typing import (
     AbstractSet,
     Iterable,
     Iterator,
     Optional,
+    Sequence,
 )
 
 import attr
 import gitlab.v4.objects.projects
+from more_itertools import (
+    flatten,
+)
 import openpyxl
 from openpyxl.utils import (
     get_column_letter,
@@ -23,6 +32,9 @@ from openpyxl.worksheet.worksheet import (
     Worksheet,
 )
 
+from azul import (
+    cached_property,
+)
 from azul.deployment import (
     aws,
 )
@@ -413,19 +425,28 @@ class FedRAMPInventoryService:
     def config(self):
         return aws.client('config')
 
-    _mappers = [
-        DynamoDbTableMapper(),
-        EC2Mapper(),
-        ElasticSearchMapper(),
-        ELBMapper(),
-        LambdaMapper(),
-        NetworkInterfaceMapper(),
-        RDSMapper(),
-        S3Mapper(),
-        VPCMapper(),
-        ElasticIPMapper(),
-        DefaultMapper(),
-    ]
+    @cached_property
+    def _mappers(self) -> Sequence[Mapper]:
+        current_module = sys.modules[__name__]
+
+        def is_mapper_cls(o: object) -> bool:
+            return (
+                inspect.isclass(o)
+                and not inspect.isabstract(o)
+                and issubclass(o, Mapper)
+            )
+
+        mapper_clss = [
+            mapper_cls
+            for name, mapper_cls in inspect.getmembers(current_module, is_mapper_cls)
+        ]
+
+        def get_linenno(o: type) -> int:
+            src, lineno = inspect.findsource(o)
+            return lineno
+
+        mapper_clss.sort(key=get_linenno)
+        return [mapper_cls() for mapper_cls in mapper_clss]
 
     def get_resources(self) -> Iterator[JSON]:
         fields = [
@@ -462,10 +483,9 @@ class FedRAMPInventoryService:
             next_token = response.get('NextToken')
 
     def get_inventory(self, resources: Iterable[JSON]):
-        inventory = []
-        default_inventory = []
-        resource_counts = collections.Counter()
-        row_counts = collections.Counter()
+        rows_by_mapper: defaultdict[Mapper, list[InventoryRow]] = defaultdict(list)
+        resource_counts = Counter()
+        row_counts = Counter()
         for resource in resources:
             resource_type = resource['resourceType']
             mapper = self._get_mapper(resource)
@@ -475,13 +495,7 @@ class FedRAMPInventoryService:
             log.debug('Mapped to %d rows', len(rows))
             resource_counts[resource_type] += 1
             row_counts[resource_type] += len(rows)
-            if isinstance(mapper, DefaultMapper):
-                default_inventory.extend(rows)
-            else:
-                inventory.extend(rows)
-
-        inventory.extend(default_inventory)
-        del default_inventory
+            rows_by_mapper[mapper].extend(rows)
 
         log.info('Inventory contents:')
         print(f'\n{"Resource type":<42s}'
@@ -492,7 +506,7 @@ class FedRAMPInventoryService:
                   f'{resource_counts[resource_type]:>15d}'
                   f'{row_counts[resource_type]:>10d}')
 
-        return inventory
+        return flatten(rows_by_mapper[mapper] for mapper in self._mappers)
 
     def write_report(self,
                      inventory: Iterable[InventoryRow],
