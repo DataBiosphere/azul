@@ -471,7 +471,7 @@ class FedRAMPInventoryService:
             mapper = self._get_mapper(resource)
             log.debug('Mapping %r resource using %r',
                       resource_type, type(mapper).__name__)
-            rows = sorted(mapper.map(resource), key=attrgetter('ip_address'))
+            rows = sorted(mapper.map(resource), key=attrgetter('asset_tag', 'ip_address'))
             log.debug('Mapped to %d rows', len(rows))
             resource_counts[resource_type] += 1
             row_counts[resource_type] += len(rows)
