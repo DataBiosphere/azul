@@ -113,6 +113,51 @@ class Mapper(abc.ABC):
         return self._get_tag_value(resource['tags'], 'owner')
 
 
+class LambdaMapper(Mapper):
+
+    def _supported_resource_types(self) -> set[str]:
+        return {'AWS::Lambda::Function'}
+
+    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+        configuration = resource['configuration']
+        yield InventoryRow(
+            asset_tag=self._get_asset_tag(resource),
+            asset_type='AWS Lambda Function',
+            baseline_config=configuration['runtime'],
+            is_public='No',
+            is_virtual='Yes',
+            location=resource['awsRegion'],
+            purpose=configuration.get('description'),
+            software_product_name='AWS Lambda',
+            software_vendor='AWS',
+            system_owner=self._get_owner(resource),
+            unique_id=resource['arn'],
+        )
+
+
+class ElasticSearchMapper(Mapper):
+
+    def _supported_resource_types(self) -> set[str]:
+        return {'AWS::Elasticsearch::Domain'}
+
+    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+        configuration = resource['configuration']
+        yield InventoryRow(
+            asset_tag=self._get_asset_tag(resource),
+            asset_type='AWS OpenSearch Domain',
+            baseline_config=configuration['elasticsearchVersion'],
+            is_public='No',
+            is_virtual='Yes',
+            location=resource['awsRegion'],
+            network_id=configuration['endpoints'].get('vpc'),
+            patch_level=resource.get('serviceSoftwareOptions', {}).get('currentVersion'),
+            software_product_name='AWS OpenSearch',
+            software_vendor='AWS',
+            system_owner=self._get_owner(resource),
+            unique_id=resource['arn'],
+        )
+
+
 class EC2Mapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
@@ -203,46 +248,6 @@ class ELBMapper(Mapper):
         }
 
 
-class RDSMapper(Mapper):
-
-    def _supported_resource_types(self) -> set[str]:
-        return {'AWS::RDS::DBInstance'}
-
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        configuration = resource['configuration']
-        yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
-            asset_type='AWS RDS Instance',
-            hardware_model=configuration['dBInstanceClass'],
-            is_public='Yes' if configuration['publiclyAccessible'] else 'No',
-            is_virtual='Yes',
-            location=resource['awsRegion'],
-            network_id=configuration.get('dBSubnetGroup', {}).get('vpcId'),
-            software_product_name=f"{configuration['engine']}-{configuration['engineVersion']}",
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
-        )
-
-
-class DynamoDbTableMapper(Mapper):
-
-    def _supported_resource_types(self) -> set[str]:
-        return {'AWS::DynamoDB::Table'}
-
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
-            asset_type='AWS DynamoDB Table',
-            is_public='No',
-            is_virtual='Yes',
-            software_product_name='AWS DynamoDB',
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
-        )
-
-
 class S3Mapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
@@ -278,66 +283,18 @@ class S3Mapper(Mapper):
             return 'Not encrypted'
 
 
-class VPCMapper(Mapper):
+class DynamoDbTableMapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
-        return {'AWS::EC2::VPC'}
+        return {'AWS::DynamoDB::Table'}
 
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_tag=self._get_asset_tag(resource),
-            asset_type='AWS VPC',
-            baseline_config=resource['configurationStateId'],
-            ip_address=resource['configuration']['cidrBlock'],
-            is_public='Yes',
-            is_virtual='Yes',
-            location=resource['awsRegion'],
-            network_id=resource['configuration']['vpcId'],
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
-        )
-
-
-class LambdaMapper(Mapper):
-
-    def _supported_resource_types(self) -> set[str]:
-        return {'AWS::Lambda::Function'}
-
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        configuration = resource['configuration']
-        yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
-            asset_type='AWS Lambda Function',
-            baseline_config=configuration['runtime'],
+            asset_type='AWS DynamoDB Table',
             is_public='No',
             is_virtual='Yes',
-            location=resource['awsRegion'],
-            purpose=configuration.get('description'),
-            software_product_name='AWS Lambda',
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
-        )
-
-
-class ElasticSearchMapper(Mapper):
-
-    def _supported_resource_types(self) -> set[str]:
-        return {'AWS::Elasticsearch::Domain'}
-
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        configuration = resource['configuration']
-        yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
-            asset_type='AWS OpenSearch Domain',
-            baseline_config=configuration['elasticsearchVersion'],
-            is_public='No',
-            is_virtual='Yes',
-            location=resource['awsRegion'],
-            network_id=configuration['endpoints'].get('vpc'),
-            patch_level=resource.get('serviceSoftwareOptions', {}).get('currentVersion'),
-            software_product_name='AWS OpenSearch',
+            software_product_name='AWS DynamoDB',
             software_vendor='AWS',
             system_owner=self._get_owner(resource),
             unique_id=resource['arn'],
@@ -399,6 +356,49 @@ class ElasticIPMapper(Mapper):
                 system_owner=self._get_owner(resource),
                 unique_id=resource['arn']
             )
+
+
+class RDSMapper(Mapper):
+
+    def _supported_resource_types(self) -> set[str]:
+        return {'AWS::RDS::DBInstance'}
+
+    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+        configuration = resource['configuration']
+        yield InventoryRow(
+            asset_tag=self._get_asset_tag(resource),
+            asset_type='AWS RDS Instance',
+            hardware_model=configuration['dBInstanceClass'],
+            is_public='Yes' if configuration['publiclyAccessible'] else 'No',
+            is_virtual='Yes',
+            location=resource['awsRegion'],
+            network_id=configuration.get('dBSubnetGroup', {}).get('vpcId'),
+            software_product_name=f"{configuration['engine']}-{configuration['engineVersion']}",
+            software_vendor='AWS',
+            system_owner=self._get_owner(resource),
+            unique_id=resource['arn'],
+        )
+
+
+class VPCMapper(Mapper):
+
+    def _supported_resource_types(self) -> set[str]:
+        return {'AWS::EC2::VPC'}
+
+    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+        yield InventoryRow(
+            asset_tag=self._get_asset_tag(resource),
+            asset_type='AWS VPC',
+            baseline_config=resource['configurationStateId'],
+            ip_address=resource['configuration']['cidrBlock'],
+            is_public='Yes',
+            is_virtual='Yes',
+            location=resource['awsRegion'],
+            network_id=resource['configuration']['vpcId'],
+            software_vendor='AWS',
+            system_owner=self._get_owner(resource),
+            unique_id=resource['arn'],
+        )
 
 
 class DefaultMapper(Mapper):
