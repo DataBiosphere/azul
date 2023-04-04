@@ -5,9 +5,6 @@ from typing import (
     Union,
 )
 
-from google.auth.transport.urllib3 import (
-    AuthorizedHttp,
-)
 from google.cloud.bigquery_reservation_v1 import (
     Assignment,
     CapacityCommitment,
@@ -25,7 +22,6 @@ from google.oauth2.service_account import (
 from more_itertools import (
     one,
 )
-import urllib3
 
 from azul import (
     cached_property,
@@ -34,9 +30,6 @@ from azul import (
 )
 from azul.deployment import (
     aws,
-)
-from azul.http import (
-    http_client,
 )
 
 log = logging.getLogger(__name__)
@@ -93,10 +86,6 @@ class BigQueryReservation:
     @cached_property
     def _client(self) -> ReservationServiceClient:
         return ReservationServiceClient(credentials=self.credentials)
-
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        return AuthorizedHttp(self.credentials, http_client())
 
     @property
     def _project(self) -> str:
