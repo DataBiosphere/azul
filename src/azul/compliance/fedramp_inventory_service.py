@@ -165,14 +165,12 @@ class EC2Mapper(Mapper):
 
     def map(self, resource: JSON) -> Iterable[InventoryRow]:
         configuration = resource['configuration']
-        try:
-            public_dns_name = configuration['publicDnsName']
-        except KeyError:
+        dns_name = configuration.get('publicDnsName')
+        if dns_name:
+            is_public = 'Yes'
+        else:
             dns_name = configuration['privateDnsName']
             is_public = 'No'
-        else:
-            dns_name = public_dns_name
-            is_public = 'Yes'
         for nic in configuration['networkInterfaces']:
             for ip_addresses in nic['privateIpAddresses']:
                 for ip_address_path in [('privateIpAddress',), ('association', 'publicIp')]:
@@ -198,7 +196,7 @@ class EC2Mapper(Mapper):
                             unique_id=resource['configuration']['instanceId'],
                         )
 
-    def _get_ip_address(self, ip_addresses: JSON, *keys) -> str:
+    def _get_ip_address(self, ip_addresses: JSON, keys) -> str:
         for key in keys:
             ip_addresses = ip_addresses[key]
         return ip_addresses
