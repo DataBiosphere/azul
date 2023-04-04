@@ -407,7 +407,7 @@ class DefaultMapper(Mapper):
     def map(self, resource: JSON) -> Iterable[InventoryRow]:
         yield InventoryRow(
             asset_tag=self._get_asset_tag(resource),
-            asset_type=repr(resource['resourceType']),
+            asset_type=resource['resourceType'],
             location=resource['awsRegion'],
             system_owner=self._get_owner(resource),
             unique_id=resource.get('arn')
