@@ -399,6 +399,16 @@ class VPCMapper(Mapper):
         )
 
 
+class ResourceComplianceMapper(Mapper):
+
+    def _supported_resource_types(self) -> AbstractSet[str]:
+        return {'AWS::Config::ResourceCompliance'}
+
+    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+        # Intentionally omit rows for this resource type
+        return ()
+
+
 class DefaultMapper(Mapper):
 
     def can_map(self, resource: JSON) -> bool:
