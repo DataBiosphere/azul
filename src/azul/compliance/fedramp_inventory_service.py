@@ -82,6 +82,15 @@ class Mapper(abc.ABC):
     def map(self, resource: JSON) -> Iterable[InventoryRow]:
         raise NotImplementedError
 
+    def _common_fields(self, resource: JSON) -> dict:
+        return dict(
+            asset_tag=self._get_asset_tag(resource),
+            location=resource['awsRegion'],
+            software_vendor='AWS',
+            system_owner=self._get_owner(resource),
+            unique_id=resource.get('arn', '')
+        )
+
     def _supported_resource_types(self) -> AbstractSet[str]:
         return frozenset()
 
@@ -121,17 +130,13 @@ class LambdaMapper(Mapper):
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         configuration = resource['configuration']
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type='AWS Lambda Function',
             baseline_config=configuration['runtime'],
             is_public='No',
             is_virtual='Yes',
-            location=resource['awsRegion'],
             purpose=configuration.get('description'),
             software_product_name='AWS Lambda',
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
+            **self._common_fields(resource)
         )
 
 
@@ -143,18 +148,14 @@ class ElasticSearchMapper(Mapper):
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         configuration = resource['configuration']
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type='AWS OpenSearch Domain',
             baseline_config=configuration['elasticsearchVersion'],
             is_public='No',
             is_virtual='Yes',
-            location=resource['awsRegion'],
             network_id=configuration['endpoints'].get('vpc'),
             patch_level=resource.get('serviceSoftwareOptions', {}).get('currentVersion'),
             software_product_name='AWS OpenSearch',
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
+            **self._common_fields(resource)
         )
 
 
@@ -180,7 +181,6 @@ class EC2Mapper(Mapper):
                         continue
                     else:
                         yield InventoryRow(
-                            asset_tag=self._get_asset_tag(resource),
                             asset_type='AWS EC2 Instance',
                             authenticated_scan_planned='Yes',
                             baseline_config=resource['configuration']['imageId'],
@@ -191,9 +191,7 @@ class EC2Mapper(Mapper):
                             is_virtual='Yes',
                             mac_address=nic['macAddress'],
                             network_id=resource['configuration']['vpcId'],
-                            software_vendor='AWS',
-                            system_owner=self._get_owner(resource),
-                            unique_id=resource['configuration']['instanceId'],
+                            **self._common_fields(resource)
                         )
 
     def _get_ip_address(self, ip_addresses: JSON, keys) -> str:
@@ -217,7 +215,6 @@ class ELBMapper(Mapper):
             ip_addresses = [None]
         for ip_address in ip_addresses:
             yield InventoryRow(
-                asset_tag=self._get_asset_tag(resource),
                 asset_type=self._get_asset_type_name(resource),
                 dns_name=configuration['dNSName'],
                 ip_address=ip_address,
@@ -225,9 +222,7 @@ class ELBMapper(Mapper):
                 is_virtual='Yes',
                 # Classic ELBs have key of 'vpcid' while V2 ELBs have key of 'vpcId'
                 network_id=self._get_polymorphic_key(configuration, 'vpcId', 'vpcid'),
-                software_vendor='AWS',
-                system_owner=self._get_owner(resource),
-                unique_id=resource['arn'],
+                **self._common_fields(resource)
             )
 
     def _get_asset_type_name(self, resource: JSON) -> str:
@@ -253,15 +248,11 @@ class S3Mapper(Mapper):
 
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type='AWS S3 Bucket',
             comments=self._get_encryption_status(resource),
             is_public='Yes' if self._get_is_public(resource) else 'No',
             is_virtual='Yes',
-            location=resource['awsRegion'],
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
+            **self._common_fields(resource)
         )
 
     def _get_is_public(self, resource: JSON) -> bool:
@@ -288,14 +279,11 @@ class DynamoDbTableMapper(Mapper):
 
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type='AWS DynamoDB Table',
             is_public='No',
             is_virtual='Yes',
             software_product_name='AWS DynamoDB',
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
+            **self._common_fields(resource)
         )
 
 
@@ -311,14 +299,11 @@ class ElasticIPMapper(Mapper):
             (configuration['privateIpAddress'], False)
         ]:
             yield InventoryRow(
-                asset_tag=self._get_asset_tag(resource),
                 asset_type='AWS EC2 Elastic IP',
                 ip_address=ip,
                 is_public='Yes' if is_public else 'No',
-                location=resource['awsRegion'],
                 network_id=configuration['networkInterfaceId'],
-                system_owner=self._get_owner(resource),
-                unique_id=resource['arn']
+                **self._common_fields(resource)
             )
 
 
@@ -342,17 +327,14 @@ class NetworkInterfaceMapper(Mapper):
         )
         for is_public, ip_address in ip_addresses:
             yield InventoryRow(
-                asset_tag=self._get_asset_tag(resource),
                 asset_type='AWS EC2 Network Interface',
                 dns_name=public_dns_name,
                 ip_address=ip_address,
                 is_public=is_public,
-                location=resource['awsRegion'],
                 mac_address=resource.get('macAddress'),
                 network_id=configuration['networkInterfaceId'],
                 purpose=configuration.get('description'),
-                system_owner=self._get_owner(resource),
-                unique_id=resource['arn']
+                **self._common_fields(resource)
             )
 
 
@@ -364,17 +346,13 @@ class RDSMapper(Mapper):
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         configuration = resource['configuration']
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type='AWS RDS Instance',
             hardware_model=configuration['dBInstanceClass'],
             is_public='Yes' if configuration['publiclyAccessible'] else 'No',
             is_virtual='Yes',
-            location=resource['awsRegion'],
             network_id=configuration.get('dBSubnetGroup', {}).get('vpcId'),
             software_product_name=f"{configuration['engine']}-{configuration['engineVersion']}",
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
+            **self._common_fields(resource)
         )
 
 
@@ -385,17 +363,13 @@ class VPCMapper(Mapper):
 
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type='AWS VPC',
             baseline_config=resource['configurationStateId'],
             ip_address=resource['configuration']['cidrBlock'],
             is_public='Yes',
             is_virtual='Yes',
-            location=resource['awsRegion'],
             network_id=resource['configuration']['vpcId'],
-            software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource['arn'],
+            **self._common_fields(resource)
         )
 
 
@@ -416,11 +390,8 @@ class DefaultMapper(Mapper):
 
     def map(self, resource: JSON) -> Iterable[InventoryRow]:
         yield InventoryRow(
-            asset_tag=self._get_asset_tag(resource),
             asset_type=resource['resourceType'],
-            location=resource['awsRegion'],
-            system_owner=self._get_owner(resource),
-            unique_id=resource.get('arn')
+            **self._common_fields(resource)
         )
 
 
