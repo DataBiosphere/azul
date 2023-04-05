@@ -20,6 +20,9 @@ from typing import (
 )
 
 import attr
+from furl import (
+    furl,
+)
 import gitlab.v4.objects.projects
 from more_itertools import (
     flatten,
@@ -34,6 +37,7 @@ from openpyxl.worksheet.worksheet import (
 
 from azul import (
     cached_property,
+    config,
 )
 from azul.deployment import (
     aws,
@@ -382,6 +386,32 @@ class VPCMapper(Mapper):
         )
 
 
+class ACMCertificateMapper(Mapper):
+
+    def _supported_resource_types(self) -> AbstractSet[str]:
+        return {'AWS::ACM::Certificate'}
+
+    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+        yield InventoryRow(
+            asset_type='AWS ACM Certificate',
+            **self._common_fields(resource)
+        )
+        for user in resource['configuration']['inUseBy']:
+            parts, id = user.split('/', 1)
+            parts = parts.split(':')
+            if parts[:2] == ['aws', 'clientvpn']:
+                _, resource_type, region, stage = parts
+                url = '.'.join([id, stage, resource_type, region, 'amazonaws.com'])
+                yield InventoryRow(
+                    asset_tag=user,
+                    asset_type='AWS Client VPN',
+                    dns_name=url,
+                    location=region,
+                    software_vendor='AWS',
+                    unique_id=url + ':443',
+                )
+
+
 class ResourceComplianceMapper(Mapper):
 
     def _supported_resource_types(self) -> AbstractSet[str]:
@@ -470,7 +500,7 @@ class FedRAMPInventoryService:
                 yield json.loads(resource)
             next_token = response.get('NextToken')
 
-    def get_inventory(self, resources: Iterable[JSON]):
+    def get_inventory(self, resources: Iterable[JSON]) -> Iterable[InventoryRow]:
         rows_by_mapper: defaultdict[Mapper, list[InventoryRow]] = defaultdict(list)
         resource_counts = Counter()
         row_counts = Counter()
@@ -495,6 +525,54 @@ class FedRAMPInventoryService:
                   f'{row_counts[resource_type]:>10d}')
 
         return flatten(rows_by_mapper[mapper] for mapper in self._mappers)
+
+    def get_synthetic_inventory(self) -> Iterable[InventoryRow]:
+        data_browser_url = furl(scheme='https', netloc=config.data_browser_domain)
+        yield InventoryRow(
+            asset_type='Application endpoint',
+            dns_name=str(data_browser_url),
+            is_public=YesNo.yes,
+            purpose='UI for external users',
+            software_vendor='UCSC',
+            system_owner=config.owner,
+            unique_id='Data Browser UI',
+        )
+        yield InventoryRow(
+            asset_type='Service endpoint',
+            dns_name=str(config.service_endpoint),
+            is_public=YesNo.from_bool(not config.private_api),
+            purpose='Service API (backend for Data Browser UI, programmatic use by external users)',
+            software_vendor='UCSC',
+            system_owner=config.owner,
+            unique_id='Service REST API',
+        )
+        yield InventoryRow(
+            asset_type='Application endpoint',
+            dns_name=str(config.indexer_endpoint),
+            is_public=YesNo.from_bool(not config.private_api),
+            purpose='Indexer API (primarily for internal users)',
+            software_vendor='UCSC',
+            system_owner=config.owner,
+            unique_id='Indexer API',
+        )
+
+        for unique_id, purpose, port, scheme in [
+            ('GitLab UI', 'CI/CD (internal users only)', None, 'https'),
+            ('GitLab SSH', 'CI/CD (system administrators only)', 2222, 'ssh'),
+            ('GitLab Git', 'Source repository for CI/CD (internal users only)', 22, 'git+ssh')
+        ]:
+            gitlab_url = furl(scheme=scheme,
+                              host=f'gitlab.{config.domain_name}',
+                              port=port)
+            yield InventoryRow(
+                asset_type='Service endpoint',
+                dns_name=str(gitlab_url),
+                is_public=YesNo.no,
+                software_vendor='GitLab',
+                system_owner=config.owner,
+                purpose=purpose,
+                unique_id=unique_id,
+            )
 
     def write_report(self,
                      inventory: Iterable[InventoryRow],
