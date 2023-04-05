@@ -82,13 +82,13 @@ class Mapper(abc.ABC):
     def map(self, resource: JSON) -> Iterable[InventoryRow]:
         raise NotImplementedError
 
-    def _common_fields(self, resource: JSON) -> dict:
+    def _common_fields(self, resource: JSON, *, id_suffix: Optional[str] = None) -> dict:
         return dict(
             asset_tag=self._get_asset_tag(resource),
             location=resource['awsRegion'],
             software_vendor='AWS',
             system_owner=self._get_owner(resource),
-            unique_id=resource.get('arn', '')
+            unique_id=resource.get('arn', '') + ('' if id_suffix is None else f'/{id_suffix}')
         )
 
     def _supported_resource_types(self) -> AbstractSet[str]:
@@ -191,7 +191,7 @@ class EC2Mapper(Mapper):
                             is_virtual='Yes',
                             mac_address=nic['macAddress'],
                             network_id=resource['configuration']['vpcId'],
-                            **self._common_fields(resource)
+                            **self._common_fields(resource, id_suffix=ip_address)
                         )
 
     def _get_ip_address(self, ip_addresses: JSON, keys) -> str:
@@ -222,7 +222,7 @@ class ELBMapper(Mapper):
                 is_virtual='Yes',
                 # Classic ELBs have key of 'vpcid' while V2 ELBs have key of 'vpcId'
                 network_id=self._get_polymorphic_key(configuration, 'vpcId', 'vpcid'),
-                **self._common_fields(resource)
+                **self._common_fields(resource, id_suffix=ip_address)
             )
 
     def _get_asset_type_name(self, resource: JSON) -> str:
@@ -303,7 +303,7 @@ class ElasticIPMapper(Mapper):
                 ip_address=ip,
                 is_public='Yes' if is_public else 'No',
                 network_id=configuration['networkInterfaceId'],
-                **self._common_fields(resource)
+                **self._common_fields(resource, id_suffix=ip)
             )
 
 
@@ -334,7 +334,7 @@ class NetworkInterfaceMapper(Mapper):
                 mac_address=resource.get('macAddress'),
                 network_id=configuration['networkInterfaceId'],
                 purpose=configuration.get('description'),
-                **self._common_fields(resource)
+                **self._common_fields(resource, id_suffix=ip_address)
             )
 
 
