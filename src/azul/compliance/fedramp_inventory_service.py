@@ -301,6 +301,29 @@ class DynamoDbTableMapper(Mapper):
         )
 
 
+class ElasticIPMapper(Mapper):
+
+    def _supported_resource_types(self) -> AbstractSet[str]:
+        return {'AWS::EC2::EIP'}
+
+    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+        configuration = resource['configuration']
+        for ip, is_public in [
+            (configuration['publicIp'], True),
+            (configuration['privateIpAddress'], False)
+        ]:
+            yield InventoryRow(
+                asset_tag=self._get_asset_tag(resource),
+                asset_type='AWS EC2 Elastic IP',
+                ip_address=ip,
+                is_public='Yes' if is_public else 'No',
+                location=resource['awsRegion'],
+                network_id=configuration['networkInterfaceId'],
+                system_owner=self._get_owner(resource),
+                unique_id=resource['arn']
+            )
+
+
 class NetworkInterfaceMapper(Mapper):
 
     def _supported_resource_types(self) -> AbstractSet[str]:
@@ -330,29 +353,6 @@ class NetworkInterfaceMapper(Mapper):
                 mac_address=resource.get('macAddress'),
                 network_id=configuration['networkInterfaceId'],
                 purpose=configuration.get('description'),
-                system_owner=self._get_owner(resource),
-                unique_id=resource['arn']
-            )
-
-
-class ElasticIPMapper(Mapper):
-
-    def _supported_resource_types(self) -> AbstractSet[str]:
-        return {'AWS::EC2::EIP'}
-
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
-        configuration = resource['configuration']
-        for ip, is_public in [
-            (configuration['publicIp'], True),
-            (configuration['privateIpAddress'], False)
-        ]:
-            yield InventoryRow(
-                asset_tag=self._get_asset_tag(resource),
-                asset_type='AWS EC2 Elastic IP',
-                ip_address=ip,
-                is_public='Yes' if is_public else 'No',
-                location=resource['awsRegion'],
-                network_id=configuration['networkInterfaceId'],
                 system_owner=self._get_owner(resource),
                 unique_id=resource['arn']
             )
