@@ -175,6 +175,14 @@ emit_tf(block_public_s3_bucket_access({
                 ('shared', 'shared')
             ]
         },
+        'aws_s3_account_public_access_block': {
+            f'{aws.account_name}': {
+                'block_public_acls': True,
+                'block_public_policy': True,
+                'ignore_public_acls': True,
+                'restrict_public_buckets': True
+            }
+        },
         'aws_s3_bucket_policy': {
             'trail': {
                 'bucket': '${aws_s3_bucket.trail.id}',

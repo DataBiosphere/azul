@@ -144,3 +144,5 @@ fedramp_inventory:
   artifacts:
     paths:
       - fedramp_inventory.xlsx
+    expire_in:
+      1 year

@@ -10,6 +10,7 @@ from itertools import (
     chain,
 )
 import json
+import logging
 import time
 from typing import (
     ClassVar,
@@ -58,6 +59,8 @@ from azul.types import (
     JSON,
 )
 
+log = logging.getLogger(__name__)
+
 
 # noinspection PyPep8Naming
 class health_property(cached_property):
@@ -66,6 +69,10 @@ class health_property(cached_property):
     returned by HealthController.as_json(). Be sure to provide a docstring in
     the decorated method.
     """
+
+    def __get__(self, obj, objtype=None):
+        log.info('Getting health property %r', self.key)
+        return super().__get__(obj, objtype=objtype)
 
     @property
     def key(self):
@@ -233,6 +240,7 @@ class Health:
 
     def _api_endpoint(self, relative_url: furl) -> tuple[str, JSON]:
         url = str(config.service_endpoint.join(relative_url))
+        log.info('Requesting %r', url)
         response = requests.head(url)
         try:
             response.raise_for_status()
@@ -273,6 +281,7 @@ class Health:
         try:
             url = config.lambda_endpoint(lambda_name).set(path='/health/basic',
                                                           args={'catalog': self.catalog})
+            log.info('Requesting %r', url)
             response = requests.get(str(url))
             response.raise_for_status()
             up = response.json()['up']
