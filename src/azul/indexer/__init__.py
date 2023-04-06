@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Type,
     TypeVar,
+    TypedDict,
 )
 
 import attr
@@ -270,6 +271,11 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         )
 
 
+class SourceJSON(TypedDict):
+    id: str
+    spec: str
+
+
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
 
 
@@ -341,11 +347,11 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
                 assert self.spec == spec, (self.spec, spec)
             return self
 
-    def to_json(self):
+    def to_json(self) -> SourceJSON:
         return dict(id=self.id, spec=str(self.spec))
 
     @classmethod
-    def from_json(cls, ref: JSON) -> 'SourceRef':
+    def from_json(cls, ref: SourceJSON) -> 'SourceRef':
         return cls(id=ref['id'], spec=cls.spec_cls().parse(ref['spec']))
 
     @classmethod

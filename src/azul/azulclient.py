@@ -22,6 +22,7 @@ from pprint import (
 )
 from typing import (
     Union,
+    cast,
 )
 import uuid
 
@@ -47,6 +48,7 @@ from azul.hmac import (
     SignatureHelper,
 )
 from azul.indexer import (
+    SourceJSON,
     SourceRef,
     SourcedBundleFQID,
 )
@@ -246,8 +248,9 @@ class AzulClient(SignatureHelper):
     def remote_reindex_partition(self, message: JSON) -> None:
         catalog = message['catalog']
         prefix = message['prefix']
+        source = cast(SourceJSON, message['source'])
         validate_uuid_prefix(prefix)
-        source = self.repository_plugin(catalog).source_from_json(message['source'])
+        source = self.repository_plugin(catalog).source_from_json(source)
         bundle_fqids = self.list_bundles(catalog, source, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '

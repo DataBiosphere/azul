@@ -46,6 +46,7 @@ from azul.indexer import (
     Bundle,
     SOURCE_REF,
     SOURCE_SPEC,
+    SourceJSON,
     SourceRef,
     SourceSpec,
     SourcedBundleFQID,
@@ -57,7 +58,6 @@ from azul.indexer.transform import (
     Transformer,
 )
 from azul.types import (
-    JSON,
     JSONs,
     MutableJSON,
     get_generic_type_params,
@@ -446,7 +446,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         assert ref_cls.spec_cls() is spec_cls
         return ref_cls
 
-    def source_from_json(self, ref: JSON) -> SOURCE_REF:
+    def source_from_json(self, ref: SourceJSON) -> SOURCE_REF:
         """
         Instantiate a :class:`SourceRef` from its JSON representation. The
         expected input format matches the output format of `SourceRef.to_json`.
