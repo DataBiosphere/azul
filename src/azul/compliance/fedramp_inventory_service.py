@@ -49,6 +49,15 @@ log = logging.getLogger(__name__)
 null_str = Optional[str]
 
 
+class YesNo:
+    yes = 'Yes'
+    no = 'No'
+
+    @classmethod
+    def from_bool(cls, b: bool) -> str:
+        return cls.yes if b else cls.no
+
+
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class InventoryRow:
     unique_id: null_str = attr.ib(default=None)
@@ -132,8 +141,8 @@ class LambdaMapper(Mapper):
         yield InventoryRow(
             asset_type='AWS Lambda Function',
             baseline_config=configuration['runtime'],
-            is_public='No',
-            is_virtual='Yes',
+            is_public=YesNo.no,
+            is_virtual=YesNo.yes,
             purpose=configuration.get('description'),
             software_product_name='AWS Lambda',
             **self._common_fields(resource)
@@ -150,8 +159,8 @@ class ElasticSearchMapper(Mapper):
         yield InventoryRow(
             asset_type='AWS OpenSearch Domain',
             baseline_config=configuration['elasticsearchVersion'],
-            is_public='No',
-            is_virtual='Yes',
+            is_public=YesNo.no,
+            is_virtual=YesNo.yes,
             network_id=configuration['endpoints'].get('vpc'),
             patch_level=resource.get('serviceSoftwareOptions', {}).get('currentVersion'),
             software_product_name='AWS OpenSearch',
@@ -168,10 +177,10 @@ class EC2Mapper(Mapper):
         configuration = resource['configuration']
         dns_name = configuration.get('publicDnsName')
         if dns_name:
-            is_public = 'Yes'
+            is_public = YesNo.yes
         else:
             dns_name = configuration['privateDnsName']
-            is_public = 'No'
+            is_public = YesNo.no
         for nic in configuration['networkInterfaces']:
             for ip_addresses in nic['privateIpAddresses']:
                 for ip_address_path in [('privateIpAddress',), ('association', 'publicIp')]:
@@ -182,13 +191,13 @@ class EC2Mapper(Mapper):
                     else:
                         yield InventoryRow(
                             asset_type='AWS EC2 Instance',
-                            authenticated_scan_planned='Yes',
+                            authenticated_scan_planned=YesNo.yes,
                             baseline_config=resource['configuration']['imageId'],
                             dns_name=dns_name,
                             hardware_model=resource['configuration']['instanceType'],
                             ip_address=ip_address,
                             is_public=is_public,
-                            is_virtual='Yes',
+                            is_virtual=YesNo.yes,
                             mac_address=nic['macAddress'],
                             network_id=resource['configuration']['vpcId'],
                             **self._common_fields(resource, id_suffix=ip_address)
@@ -218,8 +227,8 @@ class ELBMapper(Mapper):
                 asset_type=self._get_asset_type_name(resource),
                 dns_name=configuration['dNSName'],
                 ip_address=ip_address,
-                is_public='Yes' if configuration['scheme'] == 'internet-facing' else 'No',
-                is_virtual='Yes',
+                is_public=YesNo.from_bool(configuration['scheme'] == 'internet-facing'),
+                is_virtual=YesNo.yes,
                 # Classic ELBs have key of 'vpcid' while V2 ELBs have key of 'vpcId'
                 network_id=self._get_polymorphic_key(configuration, 'vpcId', 'vpcid'),
                 **self._common_fields(resource, id_suffix=ip_address)
@@ -250,8 +259,8 @@ class S3Mapper(Mapper):
         yield InventoryRow(
             asset_type='AWS S3 Bucket',
             comments=self._get_encryption_status(resource),
-            is_public='Yes' if self._get_is_public(resource) else 'No',
-            is_virtual='Yes',
+            is_public=YesNo.from_bool(self._get_is_public(resource)),
+            is_virtual=YesNo.yes,
             **self._common_fields(resource)
         )
 
@@ -280,8 +289,8 @@ class DynamoDbTableMapper(Mapper):
     def map(self, resource: JSON) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS DynamoDB Table',
-            is_public='No',
-            is_virtual='Yes',
+            is_public=YesNo.no,
+            is_virtual=YesNo.yes,
             software_product_name='AWS DynamoDB',
             **self._common_fields(resource)
         )
@@ -295,13 +304,13 @@ class ElasticIPMapper(Mapper):
     def map(self, resource: JSON) -> Iterable[InventoryRow]:
         configuration = resource['configuration']
         for ip, is_public in [
-            (configuration['publicIp'], True),
-            (configuration['privateIpAddress'], False)
+            (configuration['publicIp'], YesNo.yes),
+            (configuration['privateIpAddress'], YesNo.no)
         ]:
             yield InventoryRow(
                 asset_type='AWS EC2 Elastic IP',
                 ip_address=ip,
-                is_public='Yes' if is_public else 'No',
+                is_public=is_public,
                 network_id=configuration['networkInterfaceId'],
                 **self._common_fields(resource, id_suffix=ip)
             )
@@ -316,13 +325,13 @@ class NetworkInterfaceMapper(Mapper):
         configuration = resource['configuration']
         association = configuration.get('association', {})
         try:
-            ip_addresses = [('Yes', association['publicIp'])]
+            ip_addresses = [(YesNo.yes, association['publicIp'])]
             public_dns_name = association['public_dns_name']
         except KeyError:
             ip_addresses = []
             public_dns_name = None
         ip_addresses.extend(
-            ('No', private_ip['privateIpAddress'])
+            (YesNo.no, private_ip['privateIpAddress'])
             for private_ip in configuration['privateIpAddresses']
         )
         for is_public, ip_address in ip_addresses:
@@ -348,8 +357,8 @@ class RDSMapper(Mapper):
         yield InventoryRow(
             asset_type='AWS RDS Instance',
             hardware_model=configuration['dBInstanceClass'],
-            is_public='Yes' if configuration['publiclyAccessible'] else 'No',
-            is_virtual='Yes',
+            is_public=YesNo.from_bool(configuration['publiclyAccessible']),
+            is_virtual=YesNo.yes,
             network_id=configuration.get('dBSubnetGroup', {}).get('vpcId'),
             software_product_name=f"{configuration['engine']}-{configuration['engineVersion']}",
             **self._common_fields(resource)
@@ -366,8 +375,8 @@ class VPCMapper(Mapper):
             asset_type='AWS VPC',
             baseline_config=resource['configurationStateId'],
             ip_address=resource['configuration']['cidrBlock'],
-            is_public='Yes',
-            is_virtual='Yes',
+            is_public=YesNo.yes,
+            is_virtual=YesNo.yes,
             network_id=resource['configuration']['vpcId'],
             **self._common_fields(resource)
         )
