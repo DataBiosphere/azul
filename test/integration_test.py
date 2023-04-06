@@ -1351,18 +1351,22 @@ class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 class OpenAPIIntegrationTest(AzulTestCase):
 
     def test_openapi(self):
-        url = config.service_endpoint
-        url.set(path='/')
-        response = requests.get(str(url))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.headers['content-type'], 'text/html')
-        self.assertGreater(len(response.content), 0)
-        # validate OpenAPI spec
-        url.set(path='/openapi')
-        response = requests.get(str(url))
-        response.raise_for_status()
-        spec = response.json()
-        validate_spec(spec)
+        for component, url in [
+            ('service', config.service_endpoint),
+            ('indexer', config.indexer_endpoint)
+        ]:
+            with self.subTest(component=component):
+                url.set(path='/')
+                response = requests.get(str(url))
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.headers['content-type'], 'text/html')
+                self.assertGreater(len(response.content), 0)
+                # validate OpenAPI spec
+                url.set(path='/openapi')
+                response = requests.get(str(url))
+                response.raise_for_status()
+                spec = response.json()
+                validate_spec(spec)
 
 
 class AzulChaliceLocalIntegrationTest(AzulTestCase):
@@ -1512,3 +1516,24 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
     def _can_bundle_main(self) -> Callable[[Sequence[str]], None]:
         can_bundle = load_script('can_bundle')
         return can_bundle.main
+
+
+class SwaggerResourceIntegrationTest(AzulTestCase):
+
+    def test(self):
+        http = http_client()
+        for component, base_url in [
+            ('service', config.service_endpoint),
+            ('indexer', config.indexer_endpoint)
+        ]:
+            for file, expected_status in [
+                ('swagger-ui.css', 200),
+                ('does-not-exist', 404),
+                ('../environ.json', 403),
+                ('../does-not-exist', 403),
+                ('..%2Fenviron.json', 400),
+                ('..%2Fdoes-not-exist', 400),
+            ]:
+                with self.subTest(component=component, file=file):
+                    response = http.request('GET', str(base_url / 'static' / file))
+                    self.assertEqual(expected_status, response.status)
