@@ -264,7 +264,7 @@ class NetworkInterfaceMapper(Mapper):
         association = configuration.get('association', {})
         try:
             ip_addresses = [(YesNo.yes, association['publicIp'])]
-            public_dns_name = association['public_dns_name']
+            public_dns_name = association['publicDnsName']
         except KeyError:
             ip_addresses = []
             public_dns_name = None
@@ -278,8 +278,8 @@ class NetworkInterfaceMapper(Mapper):
                 dns_name=public_dns_name,
                 ip_address=ip_address,
                 is_public=is_public,
-                mac_address=resource.get('macAddress'),
-                network_id=configuration['networkInterfaceId'],
+                mac_address=configuration.get('macAddress'),
+                network_id=configuration['subnetId'],
                 purpose=configuration.get('description'),
                 **self._common_fields(resource, id_suffix=ip_address)
             )
