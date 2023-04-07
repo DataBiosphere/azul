@@ -254,6 +254,37 @@ class ELBMapper(Mapper):
         }
 
 
+class NetworkInterfaceMapper(Mapper):
+
+    def _supported_resource_types(self) -> AbstractSet[str]:
+        return {'AWS::EC2::NetworkInterface'}
+
+    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+        configuration = resource['configuration']
+        association = configuration.get('association', {})
+        try:
+            ip_addresses = [(YesNo.yes, association['publicIp'])]
+            public_dns_name = association['public_dns_name']
+        except KeyError:
+            ip_addresses = []
+            public_dns_name = None
+        ip_addresses.extend(
+            (YesNo.no, private_ip['privateIpAddress'])
+            for private_ip in configuration['privateIpAddresses']
+        )
+        for is_public, ip_address in ip_addresses:
+            yield InventoryRow(
+                asset_type='AWS EC2 Network Interface',
+                dns_name=public_dns_name,
+                ip_address=ip_address,
+                is_public=is_public,
+                mac_address=resource.get('macAddress'),
+                network_id=configuration['networkInterfaceId'],
+                purpose=configuration.get('description'),
+                **self._common_fields(resource, id_suffix=ip_address)
+            )
+
+
 class S3Mapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
@@ -317,37 +348,6 @@ class ElasticIPMapper(Mapper):
                 is_public=is_public,
                 network_id=configuration['networkInterfaceId'],
                 **self._common_fields(resource, id_suffix=ip)
-            )
-
-
-class NetworkInterfaceMapper(Mapper):
-
-    def _supported_resource_types(self) -> AbstractSet[str]:
-        return {'AWS::EC2::NetworkInterface'}
-
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
-        configuration = resource['configuration']
-        association = configuration.get('association', {})
-        try:
-            ip_addresses = [(YesNo.yes, association['publicIp'])]
-            public_dns_name = association['public_dns_name']
-        except KeyError:
-            ip_addresses = []
-            public_dns_name = None
-        ip_addresses.extend(
-            (YesNo.no, private_ip['privateIpAddress'])
-            for private_ip in configuration['privateIpAddresses']
-        )
-        for is_public, ip_address in ip_addresses:
-            yield InventoryRow(
-                asset_type='AWS EC2 Network Interface',
-                dns_name=public_dns_name,
-                ip_address=ip_address,
-                is_public=is_public,
-                mac_address=resource.get('macAddress'),
-                network_id=configuration['networkInterfaceId'],
-                purpose=configuration.get('description'),
-                **self._common_fields(resource, id_suffix=ip_address)
             )
 
 
