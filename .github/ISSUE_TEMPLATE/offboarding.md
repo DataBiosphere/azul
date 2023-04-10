@@ -46,6 +46,7 @@ ticket has been completed. At that time, put the ticket back to triage.
 - [ ] Assigned the replacement system administrator's account as a maintainer of the `Azul Developers` team on GitHub <sub>or the system administrator is not being replaced</sub>
 - [ ] Assigned the replacement system administrator's account as a maintainer of the `Azul Operators` team on GitHub <sub>or the system administrator is not being replaced</sub>
 - [ ] Handed over credentials of all GitLab root accounts to the replacement system administrator <sub>or the system administrator is not being replaced</sub>
+- [ ] Handed over local git repository with GitLab configuration to the replacement system administrator <sub>or the system administrator is not being replaced</sub>
 - [ ] Added the replacement system administrator's Google workspace account to the `platform-hca-dev` Google project <sub>or the system administrator is not being replaced</sub>
 - [ ] Added the replacement system administrator's Google workspace account to the `platform-hca-prod` Google project <sub>or the system administrator is not being replaced</sub>
 - [ ] Added the replacement system administrator's Google workspace account to the `platform-anvil-dev` Google project <sub>or the system administrator is not being replaced</sub>
@@ -126,7 +127,6 @@ ticket has been completed. At that time, put the ticket back to triage.
 - [ ] Removed the offboarded employee/contractor from the `azul-prod` group in Terra
 - [ ] Removed the offboarded employee/contractor from the `azul-anvil-dev` group in Terra
 - [ ] Removed the offboarded employee/contractor from the `azul-anvil-prod` group in Terra
-- [ ] Removed any IAM accounts owned by the employee/contractor created for AWS CodeCommit
 - [ ] Revoked the offboarded employee/contractor's VPN certificate for `dev` and submitted the updated certificate revocation list to AWS Client VPN
 - [ ] Revoked the offboarded employee/contractor's VPN certificate for `prod` and submitted the updated certificate revocation list to AWS Client VPN
 - [ ] Revoked the offboarded employee/contractor's VPN certificate for `anvildev` and submitted the updated certificate revocation list to AWS Client VPN
