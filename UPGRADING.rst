@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5116 Enable NIST 800.53 conformance pack for AWS Config
+========================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #4713 S3 Block Public Access setting should be enabled
 ======================================================
 
