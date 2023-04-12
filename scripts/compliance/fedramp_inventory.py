@@ -1,4 +1,5 @@
 import argparse
+import itertools
 import logging
 import os
 import pathlib
@@ -34,7 +35,10 @@ def gitlab_auth() -> gitlab.Gitlab:
 def main(output_path: pathlib.Path, update_wiki: bool) -> None:
     service = FedRAMPInventoryService()
     resources = list(service.get_resources())
-    inventory = service.get_inventory(resources)
+    inventory = itertools.chain(
+        service.get_synthetic_inventory(),
+        service.get_inventory(resources),
+    )
     template_path = pathlib.Path(__file__).parent / 'fedramp_inventory_template.xlsx'
     service.write_report(inventory, template_path, output_path)
     if update_wiki:
