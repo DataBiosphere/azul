@@ -162,7 +162,7 @@ emit_tf(block_public_s3_bucket_access({
                 }
             },
             'logs': {
-                'bucket': aws.qualified_bucket_name(config.logs_term),
+                'bucket': aws.logs_bucket,
                 'lifecycle': {
                     'prevent_destroy': True
                 }

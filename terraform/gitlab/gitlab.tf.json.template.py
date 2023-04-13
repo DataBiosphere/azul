@@ -352,7 +352,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_s3_bucket': {
             'logs': {
-                'bucket': aws.qualified_bucket_name(config.logs_term),
+                'bucket': aws.logs_bucket,
             }
         },
         'aws_iam_policy_document': {

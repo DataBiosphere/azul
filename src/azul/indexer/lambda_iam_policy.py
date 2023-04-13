@@ -104,7 +104,7 @@ policy = {
                         "s3:GetObject",
                     ],
                     "Resource": [
-                        f"arn:aws:s3:::{aws.qualified_bucket_name(config.logs_term)}/{prefix}"
+                        f"arn:aws:s3:::{aws.logs_bucket}/{prefix}"
                         for prefix in (
                             config.alb_access_log_path_prefix('*', deployment=None),
                             config.s3_access_log_path_prefix('*', deployment=None),

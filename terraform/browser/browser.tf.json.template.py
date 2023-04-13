@@ -46,7 +46,7 @@ def emit(): emit_tf(block_public_s3_bucket_access({
     'data': {
         'aws_s3_bucket': {
             'logs': {
-                'bucket': aws.qualified_bucket_name(config.logs_term),
+                'bucket': aws.logs_bucket,
             }
         },
         'aws_cloudfront_cache_policy': {

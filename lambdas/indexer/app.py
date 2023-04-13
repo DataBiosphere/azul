@@ -86,7 +86,7 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
 
     def log_forwarder(self, prefix: str):
         if config.enable_log_forwarding:
-            return self.on_s3_event(bucket=aws.qualified_bucket_name(config.logs_term),
+            return self.on_s3_event(bucket=aws.logs_bucket,
                                     events=['s3:ObjectCreated:*'],
                                     prefix=prefix)
         else:
