@@ -228,22 +228,24 @@ class ELBMapper(Mapper):
             ip_addresses = [None]
         for ip_address in ip_addresses:
             yield InventoryRow(
-                asset_type=self._get_asset_type_name(resource),
                 dns_name=configuration['dNSName'],
                 ip_address=ip_address,
                 is_public=YesNo.from_bool(configuration['scheme'] == 'internet-facing'),
                 is_virtual=YesNo.yes,
-                # Classic ELBs have key of 'vpcid' while V2 ELBs have key of 'vpcId'
-                network_id=self._get_polymorphic_key(configuration, 'vpcId', 'vpcid'),
+                **self._polymorphic_fields(resource),
                 **self._common_fields(resource, id_suffix=ip_address)
             )
 
-    def _get_asset_type_name(self, resource: JSON) -> str:
+    def _polymorphic_fields(self, resource: JSON) -> dict[str, str]:
+        # Classic ELBs have key of 'vpcid' while V2 ELBs have key of 'vpcId'
         prefix = 'AWS Elastic Load Balancer-'
         if resource['resourceType'] == 'AWS::ElasticLoadBalancing::LoadBalancer':
-            return prefix + 'Classic'
+            asset_type = prefix + 'Classic'
+            network_id = resource['configuration']['vpcid']
         else:
-            return prefix + resource['configuration']['type']
+            asset_type = prefix + resource['configuration']['type']
+            network_id = resource['configuration']['vpcId']
+        return dict(asset_type=asset_type, network_id=network_id)
 
     def _get_ip_addresses(self, availability_zones: JSONs) -> set[Optional[str]]:
         return {
