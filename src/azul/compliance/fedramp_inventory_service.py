@@ -50,6 +50,29 @@ from azul.types import (
 
 log = logging.getLogger(__name__)
 
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class ResourceConfig:
+    arn: str
+    region: str
+    id: str
+    type: str
+    config: JSON
+    supplementary_config: JSON
+
+    @classmethod
+    def from_response(cls, response: dict) -> 'ResourceConfig':
+        print(response.keys())
+        return cls(
+            arn=response['arn'],
+            region=response['awsRegion'],
+            type=response['resourceType'],
+            id=response['resourceId'],
+            config=json.loads(response['configuration']),
+            supplementary_config=response['supplementaryConfiguration']
+        )
+
+
 null_str = Optional[str]
 
 
@@ -92,23 +115,23 @@ class InventoryRow:
 class Mapper(abc.ABC):
 
     @abc.abstractmethod
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         raise NotImplementedError
 
-    def _common_fields(self, resource: JSON, *, id_suffix: Optional[str] = None) -> dict:
+    def _common_fields(self, resource: ResourceConfig, *, id_suffix: Optional[str] = None) -> dict:
         return dict(
-            asset_tag=self._get_asset_tag(resource),
-            location=resource['awsRegion'],
+            asset_tag=resource.id,
+            location=resource.region,
             software_vendor='AWS',
-            system_owner=self._get_owner(resource),
-            unique_id=resource.get('arn', '') + ('' if id_suffix is None else f'/{id_suffix}')
+            system_owner=config.owner,
+            unique_id=resource.arn + ('' if id_suffix is None else f'/{id_suffix}')
         )
 
     def _supported_resource_types(self) -> AbstractSet[str]:
         return frozenset()
 
-    def can_map(self, resource: JSON) -> bool:
-        return resource['resourceType'] in self._supported_resource_types()
+    def can_map(self, resource: ResourceConfig) -> bool:
+        return resource.type in self._supported_resource_types()
 
     def _get_polymorphic_key(self, json: JSON, *keys: str) -> AnyJSON:
         for key in keys:
@@ -121,33 +144,19 @@ class Mapper(abc.ABC):
     def _get_asset_tag(self, resource: JSON) -> str:
         return self._get_polymorphic_key(resource, 'resourceName', 'resourceId')
 
-    def _get_tag_value(self, tags: JSONs, tag_name: str) -> str:
-        try:
-            return next(
-                tag['value']
-                for tag in tags
-                if tag.get('key', '').casefold() == tag_name.casefold()
-            )
-        except StopIteration:
-            return ''
-
-    def _get_owner(self, resource: JSON) -> str:
-        return self._get_tag_value(resource['tags'], 'owner')
-
 
 class LambdaMapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::Lambda::Function'}
 
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        configuration = resource['configuration']
+    def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS Lambda Function',
-            baseline_config=configuration['runtime'],
+            baseline_config=resource.config['runtime'],
             is_public=YesNo.no,
             is_virtual=YesNo.yes,
-            purpose=configuration.get('description'),
+            purpose=resource.config.get('description'),
             software_product_name='AWS Lambda',
             **self._common_fields(resource)
         )
@@ -158,14 +167,13 @@ class ElasticSearchMapper(Mapper):
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::Elasticsearch::Domain'}
 
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        configuration = resource['configuration']
+    def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS OpenSearch Domain',
-            baseline_config=configuration['elasticsearchVersion'],
+            baseline_config=resource.config['elasticsearchVersion'],
             is_public=YesNo.no,
             is_virtual=YesNo.yes,
-            network_id=configuration['endpoints'].get('vpc'),
+            network_id=resource.config['endpoints'].get('vpc'),
             patch_level=resource.get('serviceSoftwareOptions', {}).get('currentVersion'),
             software_product_name='AWS OpenSearch',
             **self._common_fields(resource)
@@ -177,15 +185,13 @@ class EC2Mapper(Mapper):
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::EC2::Instance'}
 
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
-        configuration = resource['configuration']
-        dns_name = configuration.get('publicDnsName')
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
+        dns_name = resource.config.get('publicDnsName')
         if dns_name:
             is_public = YesNo.yes
         else:
-            dns_name = configuration['privateDnsName']
             is_public = YesNo.no
-        for nic in configuration['networkInterfaces']:
+        for nic in resource.config['networkInterfaces']:
             for ip_addresses in nic['privateIpAddresses']:
                 for ip_address_path in [('privateIpAddress',), ('association', 'publicIp')]:
                     try:
@@ -196,9 +202,9 @@ class EC2Mapper(Mapper):
                         yield InventoryRow(
                             asset_type='AWS EC2 Instance',
                             authenticated_scan_planned=YesNo.yes,
-                            baseline_config=resource['configuration']['imageId'],
+                            baseline_config=resource.config['imageId'],
                             dns_name=dns_name,
-                            hardware_model=resource['configuration']['instanceType'],
+                            hardware_model=resource.config['instanceType'],
                             ip_address=ip_address,
                             is_public=is_public,
                             is_virtual=YesNo.yes,
@@ -261,9 +267,8 @@ class NetworkInterfaceMapper(Mapper):
     def _supported_resource_types(self) -> AbstractSet[str]:
         return {'AWS::EC2::NetworkInterface'}
 
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
-        configuration = resource['configuration']
-        association = configuration.get('association', {})
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
+        association = resource.config.get('association', {})
         try:
             ip_addresses = [(YesNo.yes, association['publicIp'])]
             public_dns_name = association['publicDnsName']
@@ -272,7 +277,7 @@ class NetworkInterfaceMapper(Mapper):
             public_dns_name = None
         ip_addresses.extend(
             (YesNo.no, private_ip['privateIpAddress'])
-            for private_ip in configuration['privateIpAddresses']
+            for private_ip in resource.config['privateIpAddresses']
         )
         for is_public, ip_address in ip_addresses:
             yield InventoryRow(
@@ -280,9 +285,9 @@ class NetworkInterfaceMapper(Mapper):
                 dns_name=public_dns_name,
                 ip_address=ip_address,
                 is_public=is_public,
-                mac_address=configuration.get('macAddress'),
-                network_id=configuration['subnetId'],
-                purpose=configuration.get('description'),
+                mac_address=resource.config.get('macAddress'),
+                network_id=resource.config['subnetId'],
+                purpose=resource.config.get('description'),
                 **self._common_fields(resource, id_suffix=ip_address)
             )
 
@@ -292,7 +297,7 @@ class S3Mapper(Mapper):
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::S3::Bucket'}
 
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS S3 Bucket',
             comments=self._get_encryption_status(resource),
@@ -301,9 +306,9 @@ class S3Mapper(Mapper):
             **self._common_fields(resource)
         )
 
-    def _get_is_public(self, resource: JSON) -> bool:
+    def _get_is_public(self, resource: ResourceConfig) -> bool:
         try:
-            public_access_config = resource['supplementaryConfiguration']['PublicAccessBlockConfiguration']
+            public_access_config = resource.supplementary_config['PublicAccessBlockConfiguration']
         except KeyError:
             # If there is no PublicAccessBlockConfiguration then this bucket is public
             return True
@@ -311,8 +316,8 @@ class S3Mapper(Mapper):
             # The bucket is public if any access blocks are false
             return not all(public_access_config.values())
 
-    def _get_encryption_status(self, resource: JSON) -> str:
-        if 'ServerSideEncryptionConfiguration' in resource['supplementaryConfiguration']:
+    def _get_encryption_status(self, resource: ResourceConfig) -> str:
+        if 'ServerSideEncryptionConfiguration' in resource.supplementary_config:
             return 'Encrypted'
         else:
             return 'Not encrypted'
@@ -323,7 +328,7 @@ class DynamoDbTableMapper(Mapper):
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::DynamoDB::Table'}
 
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS DynamoDB Table',
             is_public=YesNo.no,
@@ -338,17 +343,16 @@ class ElasticIPMapper(Mapper):
     def _supported_resource_types(self) -> AbstractSet[str]:
         return {'AWS::EC2::EIP'}
 
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
-        configuration = resource['configuration']
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         for ip, is_public in [
-            (configuration['publicIp'], YesNo.yes),
-            (configuration['privateIpAddress'], YesNo.no)
+            (resource.config['publicIp'], YesNo.yes),
+            (resource.config['privateIpAddress'], YesNo.no)
         ]:
             yield InventoryRow(
                 asset_type='AWS EC2 Elastic IP',
                 ip_address=ip,
                 is_public=is_public,
-                network_id=configuration['networkInterfaceId'],
+                network_id=resource.config['networkInterfaceId'],
                 **self._common_fields(resource, id_suffix=ip)
             )
 
@@ -358,15 +362,14 @@ class RDSMapper(Mapper):
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::RDS::DBInstance'}
 
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
-        configuration = resource['configuration']
+    def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS RDS Instance',
-            hardware_model=configuration['dBInstanceClass'],
-            is_public=YesNo.from_bool(configuration['publiclyAccessible']),
+            hardware_model=resource.config['dBInstanceClass'],
+            is_public=YesNo.from_bool(resource.config['publiclyAccessible']),
             is_virtual=YesNo.yes,
-            network_id=configuration.get('dBSubnetGroup', {}).get('vpcId'),
-            software_product_name=f"{configuration['engine']}-{configuration['engineVersion']}",
+            network_id=resource.config.get('dBSubnetGroup', {}).get('vpcId'),
+            software_product_name=f"{resource.config['engine']}-{resource.config['engineVersion']}",
             **self._common_fields(resource)
         )
 
@@ -376,14 +379,14 @@ class VPCMapper(Mapper):
     def _supported_resource_types(self) -> set[str]:
         return {'AWS::EC2::VPC'}
 
-    def map(self, resource: JSON) -> Iterator[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS VPC',
             baseline_config=resource['configurationStateId'],
-            ip_address=resource['configuration']['cidrBlock'],
+            ip_address=resource.config['cidrBlock'],
             is_public=YesNo.yes,
             is_virtual=YesNo.yes,
-            network_id=resource['configuration']['vpcId'],
+            network_id=resource.config['vpcId'],
             **self._common_fields(resource)
         )
 
@@ -393,12 +396,12 @@ class ACMCertificateMapper(Mapper):
     def _supported_resource_types(self) -> AbstractSet[str]:
         return {'AWS::ACM::Certificate'}
 
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS ACM Certificate',
             **self._common_fields(resource)
         )
-        for user in resource['configuration']['inUseBy']:
+        for user in resource.config['inUseBy']:
             parts, id = user.split('/', 1)
             parts = parts.split(':')
             if parts[:2] == ['aws', 'clientvpn']:
@@ -419,19 +422,19 @@ class ResourceComplianceMapper(Mapper):
     def _supported_resource_types(self) -> AbstractSet[str]:
         return {'AWS::Config::ResourceCompliance'}
 
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         # Intentionally omit rows for this resource type
         return ()
 
 
 class DefaultMapper(Mapper):
 
-    def can_map(self, resource: JSON) -> bool:
+    def can_map(self, resource: ResourceConfig) -> bool:
         return True
 
-    def map(self, resource: JSON) -> Iterable[InventoryRow]:
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         yield InventoryRow(
-            asset_type=resource['resourceType'],
+            asset_type=resource.type,
             **self._common_fields(resource)
         )
 
@@ -619,7 +622,7 @@ class FedRAMPInventoryService:
             log.info('Updated wiki page %r (character count: %d -> %d)',
                      page_name, old_length, len(content))
 
-    def _get_mapper(self, resource: JSON) -> Mapper:
+    def _get_mapper(self, resource: ResourceConfig) -> Mapper:
         return next(
             mapper
             for mapper in self._mappers
