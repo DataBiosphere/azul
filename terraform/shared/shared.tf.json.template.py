@@ -13,6 +13,7 @@ from azul.deployment import (
 from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
+    enable_s3_bucket_inventory,
     vpc,
 )
 
@@ -105,7 +106,7 @@ cis_alarms = [
                                    '$.eventType !="AwsServiceEvent"}')
 ]
 
-emit_tf(block_public_s3_bucket_access({
+tf_config = {
     'data': {
         'aws_iam_role': {
             f'support_{i}': {
@@ -270,10 +271,31 @@ emit_tf(block_public_s3_bucket_access({
                             source_bucket_arn='arn:aws:s3:::*',
                             target_bucket_arn='${aws_s3_bucket.logs.arn}',
                             path_prefix=config.s3_access_log_path_prefix('*', deployment=None)
-                        )
+                        ),
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 's3.amazonaws.com'
+                            },
+                            'Action': [
+                                's3:PutObject'
+                            ],
+                            'Resource': [
+                                'arn:aws:s3:::${aws_s3_bucket.logs.id}/*'
+                            ],
+                            'Condition': {
+                                'ArnLike': {
+                                    'aws:SourceArn': f'arn:aws:s3:::{aws.qualified_bucket_name("*")}'
+                                },
+                                'StringEquals': {
+                                    'aws:SourceAccount': config.aws_account_id,
+                                    's3:x-amz-acl': 'bucket-owner-full-control'
+                                }
+                            }
+                        }
                     ]
                 })
-            }
+            },
         },
         'aws_s3_bucket_lifecycle_configuration': {
             'shared': {
@@ -808,4 +830,7 @@ emit_tf(block_public_s3_bucket_access({
             }
         }
     }
-}))
+}
+tf_config = enable_s3_bucket_inventory(tf_config, 'aws_s3_bucket.logs')
+tf_config = block_public_s3_bucket_access(tf_config)
+emit_tf(tf_config)

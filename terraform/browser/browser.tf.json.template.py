@@ -31,6 +31,7 @@ from azul.deployment import (
 from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
+    enable_s3_bucket_inventory,
 )
 
 buckets = {
@@ -42,7 +43,7 @@ buckets = {
 }
 
 
-def emit(): emit_tf(block_public_s3_bucket_access({
+def emit(): emit_tf(block_public_s3_bucket_access(enable_s3_bucket_inventory({
     'data': {
         'aws_s3_bucket': {
             'logs': {
@@ -334,7 +335,7 @@ def emit(): emit_tf(block_public_s3_bucket_access({
             }
         }
     }
-}))
+})))
 
 
 def bucket_behaviour(origin, *, path_pattern: str = None, **functions: bool) -> JSON:

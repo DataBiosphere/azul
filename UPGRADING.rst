@@ -26,8 +26,9 @@ have too many entries in this file.
 Operator
 ~~~~~~~~
 
-Manually deploy the ``gitlab`` component of any main deployment just before
-pushing the merge commit to the GitLab instance in that deployment.
+Manually deploy the ``shared`` and ``gitlab`` components (in that order) of any
+main deployment just before pushing the merge commit to the GitLab instance in
+that deployment.
 
 If deploying the ``gitlab`` component results in an ``OptInRequired`` error,
 login to the AWS Console using credentials for the AWS account that contains the

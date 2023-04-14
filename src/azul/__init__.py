@@ -194,7 +194,9 @@ class Config:
                               region_name: str,
                               bucket_name: str
                               ) -> str:
-        self._validate_term(bucket_name, name='bucket_name')
+        # Allow wildcard for use in ARN patterns
+        if bucket_name != '*':
+            self._validate_term(bucket_name, name='bucket_name')
         return f'edu-ucsc-gi-{account_name}-{bucket_name}.{region_name}'
 
     aws_config_term = 'awsconfig'
