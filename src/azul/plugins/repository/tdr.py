@@ -194,7 +194,7 @@ class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
 
-    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
         self._assert_source(bundle_fqid.source)
         now = time.time()
         bundle = self._emulate_bundle(bundle_fqid)
