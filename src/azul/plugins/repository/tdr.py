@@ -1,4 +1,5 @@
 from abc import (
+    ABC,
     abstractmethod,
 )
 from collections.abc import (
@@ -72,7 +73,7 @@ class TDRBundleFQID(SourcedBundleFQID[TDRSourceRef]):
     pass
 
 
-class TDRBundle(Bundle[TDRBundleFQID]):
+class TDRBundle(Bundle[TDRBundleFQID], ABC):
 
     @classmethod
     def canning_qualifier(cls):

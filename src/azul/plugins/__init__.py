@@ -507,6 +507,11 @@ class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, 
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return fqid_cls
 
+    @property
+    def _bundle_cls(self) -> Type[BUNDLE]:
+        bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
+        return bundle_cls
+
     def resolve_source(self, spec: str) -> SOURCE_REF:
         """
         Return an instance of :class:`SourceRef` for the repository source

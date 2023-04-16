@@ -134,7 +134,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'donors': [
                             {
                                 'organism_type': [
-                                    None
+                                    'redacted-ACw+6ecI'
                                 ],
                                 'phenotypic_sex': [
                                     'redacted-JfQ0b3xG'
@@ -155,11 +155,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_format': [
                                     '.vcf.gz'
                                 ],
-                                'is_supplementary': [
-                                    False
-                                ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             }
@@ -256,7 +256,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'donors': [
                             {
                                 'organism_type': [
-                                    None
+                                    'redacted-ACw+6ecI'
                                 ],
                                 'phenotypic_sex': [
                                     'redacted-JfQ0b3xG'
@@ -277,11 +277,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_format': [
                                     '.bam'
                                 ],
-                                'is_supplementary': [
-                                    False
-                                ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             }
@@ -337,6 +337,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'terms': [
                             {
                                 'term': None,
+                                'count': 2
+                            }
+                        ],
+                        'total': 2,
+                        'type': 'terms'
+                    },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'term': 'false',
                                 'count': 2
                             }
                         ],
@@ -406,7 +416,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'donors.organism_type': {
                         'terms': [
                             {
-                                'term': None,
+                                'term': 'redacted-ACw+6ecI',
                                 'count': 2
                             }
                         ],
@@ -482,16 +492,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             {
                                 'term': 'phs000693',
                                 'count': 2
-                            }
-                        ],
-                        'total': 2,
-                        'type': 'terms'
-                    },
-                    'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'count': 2,
-                                'term': 'false'
                             }
                         ],
                         'total': 2,
@@ -592,7 +592,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'donors': [
                             {
                                 'organism_type': [
-                                    None
+                                    'redacted-ACw+6ecI'
                                 ],
                                 'phenotypic_sex': [
                                     'redacted-JfQ0b3xG'
@@ -611,13 +611,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_format': [
-                                    '.bam'
-                                ],
-                                'is_supplementary': [
-                                    False
+                                    '.vcf.gz'
                                 ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             },
@@ -626,13 +626,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'is_supplementary': [
-                                    False
+                                    '.bam'
                                 ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             }
@@ -688,6 +688,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'terms': [
                             {
                                 'term': None,
+                                'count': 1
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'term': 'false',
                                 'count': 1
                             }
                         ],
@@ -757,7 +767,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'donors.organism_type': {
                         'terms': [
                             {
-                                'term': None,
+                                'term': 'redacted-ACw+6ecI',
                                 'count': 1
                             }
                         ],
@@ -833,16 +843,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             {
                                 'term': 'phs000693',
                                 'count': 1
-                            }
-                        ],
-                        'total': 1,
-                        'type': 'terms'
-                    },
-                    'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'count': 1,
-                                'term': 'false'
                             }
                         ],
                         'total': 1,
@@ -963,7 +963,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'donors': [
                             {
                                 'organism_type': [
-                                    None
+                                    'redacted-ACw+6ecI'
                                 ],
                                 'phenotypic_sex': [
                                     'redacted-JfQ0b3xG'
@@ -982,13 +982,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_format': [
-                                    '.bam'
-                                ],
-                                'is_supplementary': [
-                                    False
+                                    '.vcf.gz'
                                 ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             },
@@ -997,13 +997,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'is_supplementary': [
-                                    False
+                                    '.bam'
                                 ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             }
@@ -1059,6 +1059,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'terms': [
                             {
                                 'term': None,
+                                'count': 1
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'term': 'false',
                                 'count': 1
                             }
                         ],
@@ -1128,7 +1138,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'donors.organism_type': {
                         'terms': [
                             {
-                                'term': None,
+                                'term': 'redacted-ACw+6ecI',
                                 'count': 1
                             }
                         ],
@@ -1209,16 +1219,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 1,
                         'type': 'terms'
                     },
-                    'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'count': 1,
-                                'term': 'false'
-                            }
-                        ],
-                        'total': 1,
-                        'type': 'terms'
-                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -1234,7 +1234,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'donors': {
                 'hits': [
                     {
-                        'entryId': '6708dc44-5232-44ca-a050-5dee58637284',
+                        'entryId': 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
                         'sources': [
                             {
                                 'sourceSpec': 'tdr:test_project:snapshot/snapshot:/2',
@@ -1326,12 +1326,12 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'donors': [
                             {
-                                'document_id': '6708dc44-5232-44ca-a050-5dee58637284',
+                                'document_id': 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
                                 'source_datarepo_row_ids': [
                                     'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
                                 ],
                                 'donor_id': '1e2bd7e5-f45e-a391-daea-7c060be76acd',
-                                'organism_type': None,
+                                'organism_type': 'redacted-ACw+6ecI',
                                 'phenotypic_sex': 'redacted-JfQ0b3xG',
                                 'reported_ethnicity': [
                                     'redacted-NSkwDycK'
@@ -1348,13 +1348,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_format': [
-                                    '.bam'
-                                ],
-                                'is_supplementary': [
-                                    False
+                                    '.vcf.gz'
                                 ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             },
@@ -1363,13 +1363,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'is_supplementary': [
-                                    False
+                                    '.bam'
                                 ],
                                 'reference_assembly': [
                                     None
+                                ],
+                                'is_supplementary': [
+                                    False
                                 ],
                                 'count': 1
                             }
@@ -1431,6 +1431,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 1,
                         'type': 'terms'
                     },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'term': 'false',
+                                'count': 1
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'files.data_modality': {
                         'terms': [
                             {
@@ -1494,7 +1504,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'donors.organism_type': {
                         'terms': [
                             {
-                                'term': None,
+                                'term': 'redacted-ACw+6ecI',
                                 'count': 1
                             }
                         ],
@@ -1575,16 +1585,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 1,
                         'type': 'terms'
                     },
-                    'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'count': 1,
-                                'term': 'false'
-                            }
-                        ],
-                        'total': 1,
-                        'type': 'terms'
-                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -1600,7 +1600,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'files': {
                 'hits': [
                     {
-                        'entryId': '6a85e0ab-2386-4f7e-8503-d72d90b4bc47',
+                        'entryId': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                         'sources': [
                             {
                                 'sourceSpec': 'tdr:test_project:snapshot/snapshot:/2',
@@ -1681,7 +1681,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'donors': [
                             {
                                 'organism_type': [
-                                    None
+                                    'redacted-ACw+6ecI'
                                 ],
                                 'phenotypic_sex': [
                                     'redacted-JfQ0b3xG'
@@ -1696,7 +1696,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'files': [
                             {
-                                'document_id': '6a85e0ab-2386-4f7e-8503-d72d90b4bc47',
+                                'document_id': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                                 'source_datarepo_row_ids': [
                                     'file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0'
                                 ],
@@ -1711,26 +1711,26 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
-                                'version': '2022-06-01T00:00:00.000000Z',
-                                'uuid': '6a85e0ab-2386-4f7e-8503-d72d90b4bc47',
-                                'size': 213021639,
                                 'is_supplementary': False,
-                                'name': 'file_1e269f04-4347-4188-b060-1dcc69e71d67',
+                                'version': '2022-06-01T00:00:00.000000Z',
+                                'uuid': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                                'size': 213021639,
+                                'name': '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
                                 'crc32': '',
                                 'sha256': '',
                                 'accessible': True,
                                 'drs_uri': str(self.drs_uri.add(
-                                    path='v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67'
+                                    path='v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67'
                                 )),
                                 'url': str(self.base_url.set(
-                                    path='/repository/files/6a85e0ab-2386-4f7e-8503-d72d90b4bc47',
-                                    args=dict(catalog=self.catalog, version='2022-06-01T00:00:00.000000Z')
+                                    path='/repository/files/15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                                    args=dict(catalog='test', version='2022-06-01T00:00:00.000000Z')
                                 ))
                             }
                         ]
                     },
                     {
-                        'entryId': '677f207e-2d12-4eca-8f7a-039325af91ad',
+                        'entryId': '3b17377b-16b1-431c-9967-e5d01fc5923f',
                         'sources': [
                             {
                                 'sourceSpec': 'tdr:test_project:snapshot/snapshot:/2',
@@ -1811,7 +1811,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'donors': [
                             {
                                 'organism_type': [
-                                    None
+                                    'redacted-ACw+6ecI'
                                 ],
                                 'phenotypic_sex': [
                                     'redacted-JfQ0b3xG'
@@ -1826,7 +1826,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'files': [
                             {
-                                'document_id': '677f207e-2d12-4eca-8f7a-039325af91ad',
+                                'document_id': '3b17377b-16b1-431c-9967-e5d01fc5923f',
                                 'source_datarepo_row_ids': [
                                     'file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2'
                                 ],
@@ -1841,20 +1841,20 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     None
                                 ],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.bam',
-                                'version': '2022-06-01T00:00:00.000000Z',
-                                'uuid': '677f207e-2d12-4eca-8f7a-039325af91ad',
-                                'size': 3306845592,
                                 'is_supplementary': False,
-                                'name': 'file_8b722e88-8103-49c1-b351-e64fa7c6ab37',
+                                'version': '2022-06-01T00:00:00.000000Z',
+                                'uuid': '3b17377b-16b1-431c-9967-e5d01fc5923f',
+                                'size': 3306845592,
+                                'name': '307500.merged.matefixed.sorted.markeddups.recal.bam',
                                 'crc32': '',
                                 'sha256': '',
                                 'accessible': True,
                                 'drs_uri': str(self.drs_uri.add(
-                                    path='v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37'
+                                    path='v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37'
                                 )),
                                 'url': str(self.base_url.set(
-                                    path='/repository/files/677f207e-2d12-4eca-8f7a-039325af91ad',
-                                    args=dict(catalog=self.catalog, version='2022-06-01T00:00:00.000000Z')
+                                    path='/repository/files/3b17377b-16b1-431c-9967-e5d01fc5923f',
+                                    args=dict(catalog='test', version='2022-06-01T00:00:00.000000Z')
                                 ))
                             }
                         ]
@@ -1915,6 +1915,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 2,
                         'type': 'terms'
                     },
+                    'files.is_supplementary': {
+                        'terms': [
+                            {
+                                'term': 'false',
+                                'count': 2
+                            }
+                        ],
+                        'total': 2,
+                        'type': 'terms'
+                    },
                     'files.data_modality': {
                         'terms': [
                             {
@@ -1978,7 +1988,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'donors.organism_type': {
                         'terms': [
                             {
-                                'term': None,
+                                'term': 'redacted-ACw+6ecI',
                                 'count': 2
                             }
                         ],
@@ -2059,16 +2069,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'total': 2,
                         'type': 'terms'
                     },
-                    'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'count': 2,
-                                'term': 'false'
-                            }
-                        ],
-                        'total': 2,
-                        'type': 'terms'
-                    },
                     'files.reference_assembly': {
                         'terms': [
                             {
@@ -2118,7 +2118,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'donorSpecies': [
                 {
                     'count': 1,
-                    'species': None
+                    'species': 'redacted-ACw+6ecI'
                 }
             ],
             'fileCount': 2,

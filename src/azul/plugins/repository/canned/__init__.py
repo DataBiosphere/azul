@@ -39,7 +39,6 @@ from azul.auth import (
     Authentication,
 )
 from azul.indexer import (
-    Bundle,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -47,6 +46,9 @@ from azul.indexer import (
 from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
+)
+from azul.plugins.metadata.hca.bundle import (
+    HCABundle,
 )
 from azul.time import (
     parse_dcp2_version,
@@ -75,11 +77,11 @@ class CannedBundleFQID(SourcedBundleFQID[CannedSourceRef]):
     pass
 
 
-class CannedBundle(Bundle[CannedBundleFQID]):
+class CannedBundle(HCABundle[CannedBundleFQID]):
 
     @classmethod
     def canning_qualifier(cls) -> str:
-        return 'gh'
+        return 'gh.hca'
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return 'dss'

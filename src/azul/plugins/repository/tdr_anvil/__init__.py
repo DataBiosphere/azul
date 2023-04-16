@@ -12,10 +12,8 @@ from operator import (
 from typing import (
     AbstractSet,
     Callable,
-    Iterable,
     Mapping,
     Optional,
-    Union,
 )
 
 import attr
@@ -39,6 +37,12 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
 )
+from azul.plugins.metadata.anvil.bundle import (
+    AnvilBundle,
+    Key,
+    KeyReference,
+    Link,
+)
 from azul.plugins.repository.tdr import (
     TDRBundle,
     TDRBundleFQID,
@@ -49,8 +53,6 @@ from azul.terra import (
     TDRSourceSpec,
 )
 from azul.types import (
-    AnyMutableJSON,
-    JSON,
     MutableJSON,
     MutableJSONs,
 )
@@ -60,59 +62,11 @@ from azul.uuids import (
 
 log = logging.getLogger(__name__)
 
-# AnVIL snapshots do not use UUIDs for primary/foreign keys.
-# This type alias helps us distinguish these keys from the document UUIDs,
-# which are drawn from the `datarepo_row_id` column.
-# Note that entities from different tables may have the same key, so
-# `KeyReference` should be used when mixing keys from different entity types.
-Key = str
-
-
-@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
-class KeyReference:
-    key: Key
-    entity_type: EntityType
-
-
 Keys = AbstractSet[KeyReference]
 MutableKeys = set[KeyReference]
 KeysByType = dict[EntityType, AbstractSet[Key]]
 MutableKeysByType = dict[EntityType, set[Key]]
-
-
-@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
-class Link:
-    inputs: Keys
-    activity: Optional[KeyReference]
-    outputs: Keys
-
-    @property
-    def all_entities(self) -> Keys:
-        return self.inputs | self.outputs | (set() if self.activity is None else {self.activity})
-
-    @classmethod
-    def create(cls,
-               *,
-               inputs: Union[KeyReference, Iterable[KeyReference]],
-               outputs: Union[KeyReference, Iterable[KeyReference]],
-               activity: Optional[KeyReference] = None
-               ) -> 'Link':
-        if isinstance(inputs, KeyReference):
-            inputs = (inputs,)
-        if isinstance(outputs, KeyReference):
-            outputs = (outputs,)
-        return cls(inputs=frozenset(inputs),
-                   outputs=frozenset(outputs),
-                   activity=activity)
-
-    @classmethod
-    def merge(cls, links: Iterable['Link']) -> 'Link':
-        return cls(inputs=frozenset.union(*[link.inputs for link in links]),
-                   activity=one({link.activity for link in links}),
-                   outputs=frozenset.union(*[link.outputs for link in links]))
-
-
-Links = set[Link]
+KeyLinks = set[Link[KeyReference]]
 
 
 class BundleEntityType(Enum):
@@ -155,68 +109,41 @@ class AnvilBundleFQID(TDRBundleFQID):
                     entity_type=self.entity_type.value)
 
 
-class TDRAnvilBundle(TDRBundle):
+class TDRAnvilBundle(AnvilBundle[AnvilBundleFQID], TDRBundle):
+
+    @classmethod
+    def canning_qualifier(cls) -> str:
+        return super().canning_qualifier() + '.anvil'
 
     def add_entity(self,
                    entity: EntityReference,
                    version: str,
                    row: MutableJSON
                    ) -> None:
-        pk_column = entity.entity_type + '_id'
-        self._add_entity(
-            manifest_entry={
-                'uuid': entity.entity_id,
-                'version': version,
-                'name': f'{entity.entity_type}_{row[pk_column]}',
-                'indexed': True,
-                'crc32': '',
-                'sha256': '',
-                **(
-                    {'drs_path': self._parse_drs_uri(row.get('file_ref'))}
-                    if entity.entity_type == 'file' else {}
-                )
-            },
-            metadata=row
-        )
+        assert entity not in self.entities, entity
+        metadata = dict(row,
+                        version=version)
+        if entity.entity_type == 'file':
+            metadata.update(drs_path=self._parse_drs_uri(row.get('file_ref')),
+                            sha256='',
+                            crc32='')
+        self.entities[entity] = metadata
 
     def add_links(self,
-                  links: Links,
+                  links: KeyLinks,
                   entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
-        def link_sort_key(link: JSON):
-            return link['activity'] or '', link['inputs'], link['outputs']
+        def key_ref_to_entity_ref(key_ref: KeyReference) -> EntityReference:
+            return entities_by_key[key_ref]
 
-        def key_ref_to_entity_ref(key_ref: KeyReference) -> str:
-            return str(entities_by_key[key_ref])
-
-        def optional_key_ref_to_entity_ref(key_ref: Optional[KeyReference]) -> str:
+        def optional_key_ref_to_entity_ref(key_ref: Optional[KeyReference]) -> Optional[EntityReference]:
             return None if key_ref is None else key_ref_to_entity_ref(key_ref)
 
-        self._add_entity(
-            manifest_entry={
-                'uuid': self.fqid.uuid,
-                'version': self.fqid.version,
-                'name': 'links',
-                'indexed': True
-            },
-            metadata=sorted((
-                {
-                    'inputs': sorted(map(key_ref_to_entity_ref, link.inputs)),
-                    'activity': optional_key_ref_to_entity_ref(link.activity),
-                    'outputs': sorted(map(key_ref_to_entity_ref, link.outputs))
-                }
-                for link in links
-            ), key=link_sort_key)
+        self.links.update(
+            Link(inputs=set(map(key_ref_to_entity_ref, link.inputs)),
+                 activity=optional_key_ref_to_entity_ref(link.activity),
+                 outputs=set(map(key_ref_to_entity_ref, link.outputs)))
+            for link in links
         )
-
-    def _add_entity(self,
-                    *,
-                    manifest_entry: MutableJSON,
-                    metadata: AnyMutableJSON
-                    ) -> None:
-        name = manifest_entry['name']
-        assert name not in self.metadata_files, name
-        self.manifest.append(manifest_entry)
-        self.metadata_files[name] = metadata
 
     def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
         if file_ref is None:
@@ -327,10 +254,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
         bundle_entity = self._bundle_entity(bundle_fqid)
 
         keys: MutableKeys = {bundle_entity}
-        links: Links = set()
+        links: KeyLinks = set()
 
         for method in [self._follow_downstream, self._follow_upstream]:
-            method: Callable[[TDRSourceSpec, KeysByType], Links]
+            method: Callable[[TDRSourceSpec, KeysByType], KeyLinks]
             n = len(keys)
             frontier: Keys = keys
             while frontier:
@@ -349,7 +276,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
                  len(keys), bundle_fqid.uuid, arg)
 
         self._simplify_links(links)
-        result = TDRAnvilBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
+        result = TDRAnvilBundle(fqid=bundle_fqid)
         entities_by_key: dict[KeyReference, EntityReference] = {}
         for entity_type, typed_keys in sorted(keys_by_type.items()):
             pk_column = entity_type + '_id'
@@ -368,7 +295,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
                                          self.datarepo_row_uuid_version)
         source = bundle_fqid.source.spec
         bundle_entity_type = bundle_fqid.entity_type.value
-        result = TDRAnvilBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
+        result = TDRAnvilBundle(fqid=bundle_fqid)
         columns = self._columns(bundle_entity_type)
         bundle_entity = dict(one(self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
@@ -391,8 +318,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
             key_ref = KeyReference(key=row[entity_type + '_id'], entity_type=entity_type)
             entities_by_key[key_ref] = entity_ref
             result.add_entity(entity_ref, self._version, row)
-            link_args[arg] = key_ref
-        result.add_links({Link.create(**link_args)}, entities_by_key)
+            link_args[arg] = {key_ref}
+        result.add_links({Link(**link_args)}, entities_by_key)
         return result
 
     def _bundle_entity(self, bundle_fqid: AnvilBundleFQID) -> KeyReference:
@@ -424,8 +351,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
             result[e.entity_type].add(e.key)
         return result
 
-    def _simplify_links(self, links: Links) -> None:
-        grouped_links: Mapping[KeyReference, Links] = defaultdict(set)
+    def _simplify_links(self, links: KeyLinks) -> None:
+        grouped_links: Mapping[KeyReference, KeyLinks] = defaultdict(set)
         for link in links:
             grouped_links[link.activity].add(link)
         for activity, convergent_links in grouped_links.items():
@@ -436,7 +363,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _follow_upstream(self,
                          source: TDRSourceSpec,
                          entities: KeysByType
-                         ) -> Links:
+                         ) -> KeyLinks:
         return set.union(
             self._upstream_from_files(source, entities['file']),
             self._upstream_from_biosamples(source, entities['biosample']),
@@ -472,7 +399,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _follow_downstream(self,
                            source: TDRSourceSpec,
                            entities: KeysByType
-                           ) -> Links:
+                           ) -> KeyLinks:
         return set.union(
             self._downstream_from_biosamples(source, entities['biosample']),
             self._downstream_from_files(source, entities['file'])
@@ -481,24 +408,24 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _upstream_from_biosamples(self,
                                   source: TDRSourceSpec,
                                   biosample_ids: AbstractSet[Key]
-                                  ) -> Links:
+                                  ) -> KeyLinks:
         if biosample_ids:
             rows = self._run_sql(f'''
                 SELECT b.biosample_id, b.donor_id, b.part_of_dataset_id
                 FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
                 WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
             ''')
-            result: Links = set()
+            result: KeyLinks = set()
             for row in rows:
                 downstream_ref = KeyReference(entity_type='biosample',
                                               key=row['biosample_id'])
-                result.add(Link.create(outputs=downstream_ref,
-                                       inputs=KeyReference(entity_type='dataset',
-                                                           key=one(row['part_of_dataset_id']))))
+                result.add(Link(outputs={downstream_ref},
+                                inputs={KeyReference(entity_type='dataset',
+                                                     key=one(row['part_of_dataset_id']))}))
                 for donor_id in row['donor_id']:
-                    result.add(Link.create(outputs=downstream_ref,
-                                           inputs=KeyReference(entity_type='donor',
-                                                               key=donor_id)))
+                    result.add(Link(outputs={downstream_ref},
+                                    inputs={KeyReference(entity_type='donor',
+                                                         key=donor_id)}))
             return result
         else:
             return set()
@@ -506,7 +433,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _upstream_from_files(self,
                              source: TDRSourceSpec,
                              file_ids: AbstractSet[Key]
-                             ) -> Links:
+                             ) -> KeyLinks:
         if file_ids:
             rows = self._run_sql(f'''
                 WITH file AS (
@@ -560,18 +487,18 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
                     ON f.file_id IN UNNEST(a.generated_file_id)
             ''')
             return {
-                Link.create(
+                Link(
                     activity=KeyReference(entity_type=row['activity_table'], key=row['activity_id']),
                     # The generated link is not a complete representation of the
                     # upstream activity because it does not include generated files
                     # that are not ancestors of the downstream file
-                    outputs=KeyReference(entity_type='file', key=row['generated_file_id']),
-                    inputs=[
+                    outputs={KeyReference(entity_type='file', key=row['generated_file_id'])},
+                    inputs={
                         KeyReference(entity_type=entity_type, key=key)
                         for entity_type, column in [('file', 'uses_file_id'),
                                                     ('biosample', 'uses_biosample_id')]
                         for key in row[column]
-                    ]
+                    }
                 )
                 for row in rows
             }
@@ -581,7 +508,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _diagnoses_from_donors(self,
                                source: TDRSourceSpec,
                                donor_ids: AbstractSet[Key]
-                               ) -> Links:
+                               ) -> KeyLinks:
         if donor_ids:
             rows = self._run_sql(f'''
                 SELECT dgn.donor_id, dgn.diagnosis_id
@@ -589,9 +516,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
                 WHERE dgn.donor_id IN ({', '.join(map(repr, donor_ids))})
             ''')
             return {
-                Link.create(inputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
-                            outputs={KeyReference(key=row['donor_id'], entity_type='donor')},
-                            activity=None)
+                Link(inputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
+                     outputs={KeyReference(key=row['donor_id'], entity_type='donor')},
+                     activity=None)
                 for row in rows
             }
         else:
@@ -600,7 +527,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _downstream_from_biosamples(self,
                                     source: TDRSourceSpec,
                                     biosample_ids: AbstractSet[Key],
-                                    ) -> Links:
+                                    ) -> KeyLinks:
         if biosample_ids:
             rows = self._run_sql(f'''
                 WITH activities AS (
@@ -634,12 +561,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
                 WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
             ''')
             return {
-                Link.create(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
-                            outputs=[
-                                KeyReference(key=output_id, entity_type='file')
-                                for output_id in row['generated_file_id']
-                            ],
-                            activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
+                Link(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
+                     outputs={
+                         KeyReference(key=output_id, entity_type='file')
+                         for output_id in row['generated_file_id']
+                     },
+                     activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
                 for row in rows
             }
         else:
@@ -648,7 +575,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _downstream_from_files(self,
                                source: TDRSourceSpec,
                                file_ids: AbstractSet[Key]
-                               ) -> Links:
+                               ) -> KeyLinks:
         if file_ids:
             rows = self._run_sql(f'''
                 WITH activities AS (
@@ -680,12 +607,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
                 WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
             ''')
             return {
-                Link.create(inputs=KeyReference(key=row['used_file_id'], entity_type='file'),
-                            outputs=[
-                                KeyReference(key=file_id, entity_type='file')
-                                for file_id in row['generated_file_id']
-                            ],
-                            activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
+                Link(inputs={KeyReference(key=row['used_file_id'], entity_type='file')},
+                     outputs={
+                         KeyReference(key=file_id, entity_type='file')
+                         for file_id in row['generated_file_id']
+                     },
+                     activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
                 for row in rows
             }
         else:

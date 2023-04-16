@@ -17,6 +17,9 @@ from azul.indexer import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins.repository.tdr_anvil import (
+    TDRAnvilBundle,
+)
 from indexer import (
     IndexerTestCase,
 )
@@ -78,9 +81,11 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
     @unittest.skip('TinyQuery does not support the WITH clause')
     def test_fetch_bundle(self):
         canned_bundle = self._load_canned_bundle(self.bundle)
+        assert isinstance(canned_bundle, TDRAnvilBundle)
         self._make_mock_tdr_tables(self.bundle)
         plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
         bundle = plugin.fetch_bundle(self.bundle)
+        assert isinstance(bundle, TDRAnvilBundle)
         self.assertEqual(canned_bundle.fqid, bundle.fqid)
-        self.assertEqual(canned_bundle.manifest, bundle.manifest)
-        self.assertEqual(canned_bundle.metadata_files, bundle.metadata_files)
+        self.assertEqual(canned_bundle.entities, bundle.entities)
+        self.assertEqual(canned_bundle.links, bundle.links)

@@ -38,6 +38,9 @@ from azul.logging import (
 from azul.plugins import (
     RepositoryPlugin,
 )
+from azul.plugins.metadata.anvil.bundle import (
+    AnvilBundle,
+)
 from azul.types import (
     AnyJSON,
     AnyMutableJSON,
@@ -118,10 +121,12 @@ redacted_entity_types = {
 
 
 def redact_bundle(bundle: Bundle, key: bytes) -> None:
-    for name in bundle.metadata_files.keys():
-        entity_type = name.split('_')[0]
-        if entity_type in redacted_entity_types:
-            bundle.metadata_files[name] = redact_json(bundle.metadata_files[name], key)
+    if isinstance(bundle, AnvilBundle):
+        for entity_ref, entity_metadata in bundle.entities.items():
+            if entity_ref.entity_type in redacted_entity_types:
+                bundle.entities[entity_ref] = redact_json(entity_metadata, key)
+    else:
+        raise RuntimeError('HCA bundles do not support redaction', type(bundle))
 
 
 def redact_json(o: AnyJSON, key: bytes) -> AnyMutableJSON:
