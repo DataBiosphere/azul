@@ -225,7 +225,7 @@ class TDRAnvilBundle(TDRBundle):
             return self._parse_drs_path(file_ref)
 
 
-class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
+class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
 
     @cached_property
     def _version(self):

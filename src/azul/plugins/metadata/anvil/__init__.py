@@ -42,7 +42,7 @@ from azul.types import (
 )
 
 
-class Plugin(MetadataPlugin):
+class Plugin(MetadataPlugin[Bundle]):
 
     @property
     def exposed_indices(self) -> Mapping[str, Sorting]:

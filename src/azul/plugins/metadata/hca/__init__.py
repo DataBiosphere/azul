@@ -53,7 +53,7 @@ from humancellatlas.data.metadata import (
 )
 
 
-class Plugin(MetadataPlugin):
+class Plugin(MetadataPlugin[Bundle]):
 
     def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
         return (

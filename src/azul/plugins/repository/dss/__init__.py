@@ -92,7 +92,7 @@ class DSSBundle(Bundle[DSSBundleFQID]):
         return str(furl(path=(file_uuid,), args={'version': file_version}))
 
 
-class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
+class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:

@@ -86,7 +86,7 @@ class CannedBundle(Bundle[CannedBundleFQID]):
 
 
 @dataclass(frozen=True)
-class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef, CannedBundleFQID]):
+class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, CannedBundleFQID]):
     _sources: Set[SimpleSourceSpec]
 
     @classmethod

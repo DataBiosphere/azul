@@ -281,7 +281,7 @@ class TDRHCABundle(TDRBundle):
             return None
 
 
-class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
+class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
 
     def list_partitions(self,
                         source: TDRSourceRef

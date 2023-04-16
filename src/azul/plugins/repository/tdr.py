@@ -45,6 +45,7 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.plugins import (
+    BUNDLE,
     RepositoryFileDownload,
     RepositoryPlugin,
 )
@@ -95,7 +96,7 @@ T = TypeVar('T')
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
+class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     _sources: Set[TDRSourceSpec]
 
     @classmethod

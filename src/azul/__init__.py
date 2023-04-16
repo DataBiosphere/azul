@@ -810,7 +810,9 @@ class Config:
             self.validate_name(self.name)
             # Import locally to avoid cyclical import
             from azul.plugins import (
+                MetadataPlugin,
                 Plugin,
+                RepositoryPlugin,
             )
             all_types = set(p.type_name() for p in Plugin.types())
             configured_types = self.plugins.keys()
@@ -819,6 +821,15 @@ class Config:
                     self.name, all_types.symmetric_difference(configured_types))
             if self.internal:
                 assert self.is_integration_test_catalog is True, self
+
+            repository_bundle_cls, metadata_bundle_cls = (
+                plugin_type.bundle_cls(self.plugins[plugin_type.type_name()].name)
+                for plugin_type in [RepositoryPlugin, MetadataPlugin]
+            )
+
+            require(issubclass(repository_bundle_cls, metadata_bundle_cls),
+                    'Catalog combines incompatible metadata and repository plugins',
+                    self.name, repository_bundle_cls, metadata_bundle_cls)
 
         @cached_property
         def is_integration_test_catalog(self) -> bool:
