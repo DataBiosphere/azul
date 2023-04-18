@@ -41,12 +41,13 @@ jobs:
           make pep8
           AZUL_DEBUG=0 GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} make test
           make check_clean
+          coverage xml
 
       - name: 'upload_artifacts'
         uses: 'actions/upload-artifact@v3'
         with:
           name: 'coverage-file'
-          path: '.coverage'
+          path: 'coverage.xml'
 
   codecov:
     needs: 'test'
@@ -69,9 +70,11 @@ jobs:
           name: 'coverage-file'
 
       - name: 'upload_coverage'
-        run: |
-          pip install codecov==2.1.11
-          CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} codecov --disable search
+        uses: 'codecov/codecov-action@v3'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: 'coverage.xml'
+          fail_ci_if_error: true
 
   coveralls:
     needs: 'test'
@@ -93,9 +96,9 @@ jobs:
           name: 'coverage-file'
 
       - name: 'upload_coverage'
-        run: |
-          pip install coveralls==3.0.1
-          COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
+        uses: 'coverallsapp/github-action@v2'
+        with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
   codeql:
     runs-on: 'ubuntu-22.04'
