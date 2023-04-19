@@ -132,6 +132,9 @@ emit_tf(None if config.share_es_domain else {
                             #
                             "snapshot_options"
                         ]
+                    },
+                    "encrypt_at_rest": {
+                        "enabled": True
                     }
                 }
             },
