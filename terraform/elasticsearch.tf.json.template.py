@@ -135,6 +135,9 @@ emit_tf(None if config.share_es_domain else {
                     },
                     "encrypt_at_rest": {
                         "enabled": True
+                    },
+                    "node_to_node_encryption": {
+                        "enabled": True
                     }
                 }
             },
