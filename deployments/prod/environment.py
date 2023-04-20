@@ -766,6 +766,14 @@ dcp25_sources = dcp24_sources | mkdict([
     mksrc('datarepo-289f5713', 'hca_prod_fde199d2a8414ed1aa65b9e0af8969b1__20220330_dcp2_20230314_dcp25', 186),
 ])
 
+dcp26_sources = dcp25_sources | mkdict([
+    mksrc('datarepo-37928b8f', 'hca_prod_2d4d89f2ebeb467cae60a3efc5e8d4ba__20230206_dcp2_20230331_dcp26', 2),
+    mksrc('datarepo-0d0c66d4', 'hca_prod_c281ab637b7d4bdfb7619b1baaa18f82__20230331_dcp2_20230331_dcp26', 2),
+    mksrc('datarepo-b3b1e92f', 'hca_prod_c5b475f276b34a8e8465f3b69828fec3__20230331_dcp2_20230331_dcp26', 11),
+    mksrc('datarepo-baa51c1d', 'hca_prod_cd9d6360ce38432197dff13c79e3cb84__20230206_dcp2_20230331_dcp26', 2),
+    mksrc('datarepo-636717a5', 'hca_prod_f3825dfe990a431fb9719c26d39840db__20230331_dcp2_20230331_dcp26', 31),
+])
+
 lungmap_sources = mkdict([
     mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
     mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
@@ -825,6 +833,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp25', dcp25_sources),
+                ('hca', 'dcp26', dcp26_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
                 ('lungmap', 'lm3', lm3_sources)
