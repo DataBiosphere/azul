@@ -6,12 +6,17 @@ from json import (
     JSONEncoder,
 )
 import logging
+import mimetypes
 import os
+import pathlib
 from typing import (
     Any,
     Optional,
     Type,
     TypeVar,
+)
+from urllib.parse import (
+    unquote,
 )
 
 import attr
@@ -20,11 +25,14 @@ from chalice import (
     ChaliceViewError,
 )
 from chalice.app import (
+    BadRequestError,
     CaseInsensitiveMapping,
     MultiDict,
+    NotFoundError,
     Request,
     Response,
 )
+import chevron
 from furl import (
     furl,
 )
@@ -98,6 +106,18 @@ class AzulChaliceApp(Chalice):
         self.register_middleware(self._logging_middleware, 'http')
         self.register_middleware(self._lambda_context_middleware, 'all')
         self.register_middleware(self._authentication_middleware, 'http')
+
+    def __call__(self, event: dict, context: LambdaContext) -> dict[str, Any]:
+        # Chalice does not URL-decode path parameters
+        # (https://github.com/aws/chalice/issues/511)
+        # This appears to actually be a bug in API Gateway, as the parameters
+        # are already parsed when the event is passed to Chalice
+        # (https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-example-event)
+        path_params = event['pathParameters']
+        if path_params is not None:
+            for key, value in path_params.items():
+                path_params[key] = unquote(value)
+        return super().__call__(event, context)
 
     def _patch_event_source_handler(self):
         """
@@ -399,6 +419,39 @@ class AzulChaliceApp(Chalice):
 
     def _controller(self, controller_cls: Type[C], **kwargs) -> C:
         return controller_cls(app=self, **kwargs)
+
+    def swagger_ui(self) -> Response:
+        swagger_ui_template = self.load_static_resource('swagger', 'swagger-ui.html.template.mustache')
+        base_url = self.base_url
+        redirect_url = furl(base_url).add(path='oauth2_redirect')
+        deployment_url = furl(base_url).add(path='openapi')
+        swagger_ui_html = chevron.render(swagger_ui_template, {
+            'DEPLOYMENT_PATH': json.dumps(str(deployment_url.path)),
+            'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
+            'OAUTH2_REDIRECT_URL': json.dumps(str(redirect_url)),
+            'NON_INTERACTIVE_METHODS': json.dumps([
+                f'{path}/{method.lower()}'
+                for path, method in self.non_interactive_routes
+            ])
+        })
+        return Response(status_code=200,
+                        headers={'Content-Type': 'text/html'},
+                        body=swagger_ui_html)
+
+    def swagger_resource(self, file) -> Response:
+        if os.sep in file:
+            raise BadRequestError(file)
+        else:
+            try:
+                body = self.load_static_resource('swagger', file)
+            except FileNotFoundError:
+                raise NotFoundError(file)
+            else:
+                path = pathlib.Path(file)
+                content_type = mimetypes.types_map[path.suffix]
+                return Response(status_code=200,
+                                headers={'Content-Type': content_type},
+                                body=body)
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)

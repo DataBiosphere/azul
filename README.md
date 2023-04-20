@@ -1978,10 +1978,9 @@ Gitlab's data and configuration. That volume is not controlled by Terraform and
 must be created manually before terraforming the `gitlab` component for the
 first time. Details about creating and formatting the volume can be found in
 [gitlab.tf.json.template.py]. The volume is mounted at `/mnt/gitlab`. The
-configuration changes are tracked in a Git repository under `/mnt/gitlab/.git`
-which is tracked in an AWS CodeCommit repo. Since Git isn't installed natively
-on RancherOS, you must use a Docker image for it. An alias for this is defined
-in the `environment` file of that repository.
+configuration changes are tracked in a local Git repository on the system 
+administrator's computer. The system administrator keeps the configuration files 
+consistent between GitLab instances.
 
 When an instance boots and finds the EBS volume empty, Gitlab will initialize it
 with default configuration. That configuration is very vulnerable because the

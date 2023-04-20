@@ -5,6 +5,9 @@ from typing import (
 
 # noinspection PyPackageRequirements
 import chalice
+from chalice import (
+    Response,
+)
 
 from azul import (
     CatalogName,
@@ -33,8 +36,24 @@ from azul.indexer.log_forwarding_controller import (
 from azul.logging import (
     configure_app_logging,
 )
+from azul.openapi import (
+    format_description,
+)
 
 log = logging.getLogger(__name__)
+
+spec = {
+    'openapi': '3.0.1',
+    'info': {
+        'title': config.indexer_name,
+        # FIXME: Swagger UI for indexer is a stub
+        #        https://github.com/DataBiosphere/azul/issues/5051
+        'description': format_description('''
+            This is the indexer component for Azul.
+        '''),
+        'version': '1.0'
+    }
+}
 
 
 class IndexerApp(AzulChaliceApp, SignatureHelper):
@@ -55,7 +74,8 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
         super().__init__(app_name=config.indexer_name,
                          app_module_path=__file__,
                          # see LocalAppTestCase.setUpClass()
-                         unit_test=globals().get('unit_test', False))
+                         unit_test=globals().get('unit_test', False),
+                         spec=spec)
 
     def log_forwarder(self, prefix: str):
         if config.enable_log_forwarding:
@@ -70,8 +90,24 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
 
 
 app = IndexerApp()
-
 configure_app_logging(app, log)
+
+
+@app.route('/', cors=True)
+def swagger_ui():
+    return app.swagger_ui()
+
+
+@app.route('/static/{file}', cors=True)
+def static_resource(file):
+    return app.swagger_resource(file)
+
+
+@app.route('/openapi', methods=['GET'], cors=True)
+def openapi():
+    return Response(status_code=200,
+                    headers={'content-type': 'application/json'},
+                    body=app.spec())
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -113,11 +149,6 @@ def health_by_key(keys: Optional[str] = None):
 @app.schedule('rate(1 minute)', name='indexercachehealth')
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
-
-
-@app.route('/', cors=True)
-def hello():
-    return {'Hello': 'World!'}
 
 
 @app.route('/{catalog}/{action}', methods=['POST'])

@@ -264,13 +264,12 @@ class Config:
 
     @property
     def data_browser_domain(self):
-        dcp_domain = 'data.humancellatlas.org'
+        domain = self.domain_name
+        # FIXME: Remove 'azul.' prefix from AZUL_DOMAIN_NAME in prod
+        #        https://github.com/DataBiosphere/azul/issues/5122
         if self.deployment_stage == 'prod':
-            return dcp_domain
-        elif self.deployment_stage in ('integration', 'staging'):
-            return f'{self.deployment_stage}.{dcp_domain}'
-        else:
-            return f'dev.{dcp_domain}'
+            domain = domain.removeprefix('azul.')
+        return domain
 
     @property
     def data_browser_name(self):
