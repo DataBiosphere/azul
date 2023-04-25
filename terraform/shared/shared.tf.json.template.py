@@ -376,6 +376,17 @@ emit_tf(block_public_s3_bucket_access({
                     }
                 }
                 for a in cis_alarms
+            },
+            'trail_logs': {
+                'name': config.qualified_resource_name('trail_logs', suffix='.filter'),
+                'pattern': '',
+                'log_group_name': '${aws_cloudwatch_log_group.trail.name}',
+                'metric_transformation': {
+                    'name': config.qualified_resource_name('trail_logs'),
+                    'namespace': 'LogMetrics',
+                    'value': 1,
+                    'default_value': 0,
+                }
             }
         },
         'aws_cloudwatch_metric_alarm': {
@@ -396,6 +407,40 @@ emit_tf(block_public_s3_bucket_access({
                     'ok_actions': ['${aws_sns_topic.monitoring.arn}']
                 }
                 for a in cis_alarms
+            },
+            **{
+                'trail_logs': {
+                    'alarm_name': config.qualified_resource_name('trail_logs', suffix='.alarm'),
+                    'comparison_operator': 'LessThanThreshold',
+                    'threshold': 1,
+                    'datapoints_to_alarm': 1,
+                    'evaluation_periods': 1,
+                    'treat_missing_data': 'breaching',
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    # CloudWatch uses an unconfigurable "evaluation range" when missing
+                    # data is involved. In practice this means that an alarm on the
+                    # absence of logs with an evaluation period of ten minutes would
+                    # require thirty minutes of no logs before the alarm is raised.
+                    # Using a metric query we can fill in missing datapoints with a
+                    # value of zero and avoid the need for the evaluation range.
+                    'metric_query': [
+                        {
+                            'id': 'log_count_filled',
+                            'expression': 'FILL(log_count_raw, 0)',
+                            'return_data': True
+                        },
+                        {
+                            'id': 'log_count_raw',
+                            'metric': {
+                                'metric_name': config.qualified_resource_name('trail_logs'),
+                                'namespace': 'LogMetrics',
+                                'period': 10 * 60,
+                                'stat': 'Sum',
+                            }
+                        }
+                    ]
+                }
             }
         },
         'aws_iam_role': {
