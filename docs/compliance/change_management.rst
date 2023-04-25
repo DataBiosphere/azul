@@ -1,8 +1,6 @@
-UCSC Azul Data Browser
-######################
-
 Software development policy & procedures
 ****************************************
+
 
 Introduction
 ============
@@ -14,8 +12,8 @@ verification of changes on the production environment. Multiple software
 products and services are utilized during this process including `git`_ for
 version control, `GitHub`_ for issue tracking, pull request (PR) management and
 continuous integration (CI), `Terraform`_ for deployment of infrastructure as
-code (IaC), `GitLab`_ for CI/CD, and the cloud providers `AWS`_ and
-`Google Cloud`_ for cloud resources.
+code (IaC), `GitLab`_ for CI/CD, and the cloud providers `AWS`_ and `Google
+Cloud`_ for cloud resources.
 
 .. _git: https://git-scm.com/
 .. _GitHub: https://github.com/
@@ -40,6 +38,7 @@ branch.
 .. _deployments: https://docs.google.com/document/d/1Kg0dMZmCw6gtkvabD2jYWPZO2Mx_wsC8BJPKdeKTfg0/edit#bookmark=id.3zefi1arki7p
 .. _AnVIL project: https://anvilproject.org/
 
+
 Issue Management
 ================
 
@@ -55,6 +54,7 @@ for implementation.
 
 .. _project manager: https://docs.google.com/document/d/1Kg0dMZmCw6gtkvabD2jYWPZO2Mx_wsC8BJPKdeKTfg0/edit#heading=h.jk936f4i59y8
 .. _system administrator: https://docs.google.com/document/d/1Kg0dMZmCw6gtkvabD2jYWPZO2Mx_wsC8BJPKdeKTfg0/edit#heading=h.o3qbvwbucpqo
+
 
 Code Development & Peer Review
 ==============================
@@ -102,6 +102,7 @@ the review process repeats.
 
 .. _checklist: https://github.com/DataBiosphere/azul/blob/develop/.github/pull_request_template.md
 
+
 Change Approval
 ===============
 
@@ -115,6 +116,7 @@ needed to demonstrate the resolution of the issue, adds these demo expectations
 to the GitHub issue (or marks the issue “no demo”), approves the PR, and assigns
 the PR to the operator for further validation and merging the PR's feature
 branch into the `develop` branch.
+
 
 Deployment to dev environment
 =============================
@@ -173,6 +175,7 @@ deployment, and run integration tests against that deployment. A reindex is
 performed on the deployment if the feature branch includes an update to the set
 of snapshots indexed by the deployment or changes the behavior of the indexer.
 
+
 Deployment to production environment
 ====================================
 
@@ -187,12 +190,12 @@ requires changes to the UI code, a second PR must add those changes to the UI
 component. Only after both PRs have been deployed to `dev`, can they be promoted
 to `prod`. The operator creates a GitHub issue for the promotion, creates a
 branch from the agreed commit in the `develop` branch, pushes the branch to
-GitHub, and creates a promotion PR. The promotion PR contains a `checklist`__ of
-tasks for the operator to complete to ensure the PR is properly set up and
-ready for review. The operator requests a review from the system administrator,
-and after approval the PR is assigned back to the operator.
+GitHub, and creates a promotion PR. The promotion PR contains a `promotion
+checklist`_ of tasks for the operator to complete to ensure the PR is properly
+set up and ready for review. The operator requests a review from the system
+administrator, and after approval the PR is assigned back to the operator.
 
-.. __: https://github.com/DataBiosphere/azul/blob/develop/.github/PULL_REQUEST_TEMPLATE/promotion.md
+.. _promotion checklist: https://github.com/DataBiosphere/azul/blob/develop/.github/PULL_REQUEST_TEMPLATE/promotion.md
 
 At this time the operator announces the promotion via Slack. The promotion
 branch is merged into the `prod` branch, then the updated `prod` branch is
@@ -207,7 +210,7 @@ issues are marked as merged, and the promotion PR checklist is completed with
 the operator unassigning themself from the promotion PR.
 
 .. _GitLab prod: https://gitlab.azul.data.humancellatlas.org/ucsc/azul
-.. _GitLab anvilprod: https://foo
+.. _GitLab anvilprod: https://prod.anvil.gi.ucsc.edu
 
 As a final step in the process, a meeting is held once a week for developers to
 demonstrate to the team the changes they’ve implemented. Following the demo
@@ -218,6 +221,7 @@ this time. In the event that a demonstration shows that the issue has not been
 successfully resolved, the original issue will be put back in the developer’s
 sprint for additional work, or a new follow-up issue will be created.
 
+
 Hotfixes and backports
 ======================
 
@@ -226,14 +230,15 @@ is in the case of a `hotfix`_. A hotfix is a change made directly to, or that is
 merged into, the `prod` branch without first being merged into the `develop`
 branch. The system administrator may determine that a hotfix is necessary when a
 defect is discovered following an update to the production environment and there
-is need for urgent remediation. Using the checklist included in the
-`hotfix PR`_, the change is created, reviewed, and deployed to the production
+is need for urgent remediation. Using the checklist included in the `hotfix
+PR`_, the change is created, reviewed, and deployed to the production
 environment. After a hotfix has been deployed, a `backport PR`_ is created to
 backport the change from the `prod` branch to `develop`.
 
 .. _hotfix: https://github.com/DataBiosphere/azul/blob/develop/CONTRIBUTING.rst#hotfixes
 .. _hotfix PR: https://github.com/DataBiosphere/azul/blob/develop/.github/PULL_REQUEST_TEMPLATE/hotfix.md
 .. _backport PR: https://github.com/DataBiosphere/azul/blob/develop/.github/PULL_REQUEST_TEMPLATE/backport.md
+
 
 GitLab updates
 ==============
