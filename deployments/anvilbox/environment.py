@@ -32,7 +32,8 @@ def mksrc(google_project,
           subgraphs,
           flags: int = 0,
           /,
-          prefix: Optional[str] = None):
+          prefix: Optional[str] = None) -> tuple[str, str]:
+    project = '_'.join(snapshot.split('_')[1:-3])
     assert flags <= ma | pop
     if prefix is None:
         prefix = common_prefix(subgraphs)
@@ -42,18 +43,31 @@ def mksrc(google_project,
         'snapshot/' + snapshot,
         prefix + '/0'
     ])
-    key = '_'.join(snapshot.split('_')[1:-1])
-    return key, source
+    return project, source
 
 
-def mkdict(items):
+def mkdelta(items: list[tuple[str, str]]) -> dict[str, str]:
     result = dict(items)
     assert len(items) == len(result), 'collisions detected'
     assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
-anvil_sources = mkdict([
+def mklist(catalog: dict[str, str]) -> list[str]:
+    return list(filter(None, catalog.values()))
+
+
+def mkdict(previous_catalog: dict[str, str],
+           num_expected: int,
+           delta: dict[str, str]
+           ) -> dict[str, str]:
+    catalog = previous_catalog | delta
+    num_actual = len(mklist(catalog))
+    assert num_expected == num_actual, (num_expected, num_actual)
+    return catalog
+
+
+anvil_sources = mkdict({}, 11, mkdelta([
     mksrc('datarepo-1ba591a6', 'ANVIL_1000G_high_coverage_2019_20221019_ANV5_202303081523', 6404),
     mksrc('datarepo-aa67671a', 'ANVIL_CMG_UWASH_DS_BAV_IRB_PUB_RD_20221020_ANV5_202303081451', 177),
     mksrc('datarepo-b4e0bfd5', 'ANVIL_CMG_UWASH_DS_BDIS_20221020_ANV5_202303081501', 10),
@@ -65,7 +79,7 @@ anvil_sources = mkdict([
     mksrc('datarepo-4f75c9e3', 'ANVIL_CMG_UWash_GRU_20230308_ANV5_202303081731', 2113),
     mksrc('datarepo-ec9365be', 'ANVIL_CMG_UWash_GRU_IRB_20221020_ANV5_202303081458', 559),
     mksrc('datarepo-8392ac2c', 'ANVIL_GTEx_V8_hg38_20221013_ANV5_202303081502', 18361),
-])
+]))
 
 
 def env() -> Mapping[str, Optional[str]]:

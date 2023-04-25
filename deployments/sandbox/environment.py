@@ -32,7 +32,7 @@ def mksrc(google_project,
           subgraphs,
           flags: int = 0,
           /,
-          prefix: Optional[str] = None):
+          prefix: Optional[str] = None) -> tuple[str, str]:
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= ma | pop
     if prefix is None:
@@ -46,14 +46,28 @@ def mksrc(google_project,
     return project, source
 
 
-def mkdict(items):
+def mkdelta(items: list[tuple[str, str]]) -> dict[str, str]:
     result = dict(items)
     assert len(items) == len(result), 'collisions detected'
     assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
-dcp2_sources = mkdict([
+def mklist(catalog: dict[str, str]) -> list[str]:
+    return list(filter(None, catalog.values()))
+
+
+def mkdict(previous_catalog: dict[str, str],
+           num_expected: int,
+           delta: dict[str, str]
+           ) -> dict[str, str]:
+    catalog = previous_catalog | delta
+    num_actual = len(mklist(catalog))
+    assert num_expected == num_actual, (num_expected, num_actual)
+    return catalog
+
+
+dcp2_sources = mkdict({}, 105, mkdelta([
     mksrc('datarepo-dev-a9252919', 'hca_dev_005d611a14d54fbf846e571a1f874f70__20210827_20210903', 7),
     mksrc('datarepo-dev-c148d39c', 'hca_dev_027c51c60719469fa7f5640fe57cbece__20210827_20210902', 8),
     mksrc('datarepo-dev-e2ab8487', 'hca_dev_03c6fce7789e4e78a27a664d562bb738__20210902_20210907', 1530),
@@ -159,18 +173,18 @@ dcp2_sources = mkdict([
     mksrc('datarepo-dev-67240cf2', 'hca_dev_f86f1ab41fbb4510ae353ffd752d4dfc__20210901_20210903', 20),
     mksrc('datarepo-dev-e8e0a59a', 'hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903', 384),
     mksrc('datarepo-dev-96d8e08c', 'hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903', 62),
-])
+]))
 
-lungmap_sources = mkdict([
+lungmap_sources = mkdict({}, 2, mkdelta([
     mksrc('datarepo-dev-5d9526e0', 'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404', 1),
     mksrc('datarepo-dev-8de6d66b', 'lungmap_dev_2620497955a349b28d2b53e0bdfcb176__20220404_20220404', 1)
-])
+]))
 
-lm2_sources = lungmap_sources | mkdict([
+lm2_sources = mkdict(lungmap_sources, 5, mkdelta([
     mksrc('datarepo-dev-b47b6759', 'lungmap_dev_00f056f273ff43ac97ff69ca10e38c89__20220404_20220404_lm2', 1),
     mksrc('datarepo-dev-2e9ef7fd', 'lungmap_dev_20037472ea1d4ddb9cd356a11a6f0f76__20220401_20220404_lm2', 1),
     mksrc('datarepo-dev-d57fd0c5', 'lungmap_dev_f899709cae2c4bb988f0131142e6c7ec__20220401_20220629_lm2', 1)
-])
+]))
 
 
 def env() -> Mapping[str, Optional[str]]:
