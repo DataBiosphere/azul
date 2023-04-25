@@ -27,6 +27,13 @@ class CloudTrailAlarm(NamedTuple):
         return f'{self.name}_metric'
 
 
+def conformance_pack(name: str) -> str:
+    path = f'{config.project_root}/terraform/shared/{name}.yaml'
+    with open(path) as f:
+        body = f.read()
+    return body
+
+
 cis_alarms = [
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
     CloudTrailAlarm(name='api_unauthorized',
@@ -619,6 +626,13 @@ emit_tf(block_public_s3_bucket_access({
                 'depends_on': [
                     'aws_config_delivery_channel.shared'
                 ]
+            }
+        },
+        'aws_config_conformance_pack': {
+            'nist_800_53': {
+                'name': 'nist-800-53',
+                'template_body': conformance_pack('conformance_pack_nist_800_53_rev_4'),
+                'depends_on': ['aws_config_configuration_recorder.shared']
             }
         },
         'aws_iam_role_policy_attachment': {
