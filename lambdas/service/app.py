@@ -58,7 +58,6 @@ from azul.drs import (
     AccessMethod,
 )
 from azul.health import (
-    Health,
     HealthController,
 )
 from azul.indexer.document import (
@@ -74,6 +73,9 @@ from azul.openapi import (
     params,
     responses,
     schema,
+)
+from azul.openapi.spec import (
+    CommonEndpointSpecs,
 )
 from azul.plugins import (
     ManifestFormat,
@@ -439,174 +441,49 @@ def oauth2_redirect():
                     body=oauth2_redirect_html)
 
 
-@app.route('/openapi', methods=['GET'], cors=True, method_spec={
-    'summary': 'Return OpenAPI specifications for this service',
-    'description': 'This endpoint returns the [OpenAPI specifications]'
-                   '(https://github.com/OAI/OpenAPI-Specification) for this '
-                   'service. These are the specifications used to generate the '
-                   'page you are visiting now.',
-    'responses': {
-        '200': {
-            'description': '200 response',
-            **responses.json_content(
-                schema.object(
-                    openapi=str,
-                    **{
-                        k: schema.object()
-                        for k in ('info', 'tags', 'servers', 'paths', 'components')
-                    }
-                )
-            )
-        }
-    },
-    'tags': ['Auxiliary']
-})
+common_specs = CommonEndpointSpecs(app_name='service')
+
+
+@app.route('/openapi', methods=['GET'], cors=True, **common_specs.openapi)
 def openapi():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
                     body=app.spec())
 
 
-health_up_key = {
-    'up': format_description('''
-        indicates the overall result of the health check
-    '''),
-}
-
-fast_health_keys = {
-    **{
-        prop.key: format_description(prop.description)
-        for prop in Health.fast_properties['service']
-    },
-    **health_up_key
-}
-
-health_all_keys = {
-    **{
-        prop.key: format_description(prop.description)
-        for prop in Health.all_properties
-    },
-    **health_up_key
-}
-
-
-def health_spec(health_keys: dict):
-    return {
-        'responses': {
-            f'{200 if up else 503}': {
-                'description': format_description(f'''
-                    {'The' if up else 'At least one of the'} checked resources
-                    {'are' if up else 'is not'} healthy.
-
-                    The response consists of the following keys:
-
-                ''') + ''.join(f'* `{k}` {v}' for k, v in health_keys.items()) + format_description(f'''
-
-                    The top-level `up` key of the response is
-                    `{'true' if up else 'false'}`.
-
-                ''') + (format_description(f'''
-                    {'All' if up else 'At least one'} of the nested `up` keys
-                    {'are `true`' if up else 'is `false`'}.
-                ''') if len(health_keys) > 1 else ''),
-                **responses.json_content(
-                    schema.object(
-                        additional_properties=schema.object(
-                            additional_properties=True,
-                            up=schema.enum(up)
-                        ),
-                        up=schema.enum(up)
-                    ),
-                    example={
-                        k: up if k == 'up' else {} for k in health_keys
-                    }
-                )
-            } for up in [True, False]
-        },
-        'tags': ['Auxiliary']
-    }
-
-
-@app.route('/health', methods=['GET'], cors=True, method_spec={
-    'summary': 'Complete health check',
-    'description': format_description('''
-        Health check of the service and all resources it depends on. This may
-        take long time to complete and exerts considerable load on the service.
-        For that reason it should not be requested frequently or by automated
-        monitoring facilities that would be better served by the
-        [`/health/fast`](#operations-Auxiliary-get_health_fast) or
-        [`/health/cached`](#operations-Auxiliary-get_health_cached) endpoints.
-    '''),
-    **health_spec(health_all_keys)
-})
+@app.route('/health', methods=['GET'], cors=True, **common_specs.full_health)
 def health():
     return app.health_controller.health()
 
 
-@app.route('/health/basic', methods=['GET'], cors=True, method_spec={
-    'summary': 'Basic health check',
-    'description': format_description('''
-        Health check of only the REST API itself, excluding other resources
-        the service depends on. A 200 response indicates that the service is
-        reachable via HTTP(S) but nothing more.
-    '''),
-    **health_spec(health_up_key)
-})
+@app.route('/health/basic',
+           methods=['GET'],
+           cors=True,
+           **common_specs.basic_health)
 def basic_health():
     return app.health_controller.basic_health()
 
 
-@app.route('/health/cached', methods=['GET'], cors=True, method_spec={
-    'summary': 'Cached health check for continuous monitoring',
-    'description': format_description('''
-        Return a cached copy of the
-        [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
-        This endpoint is optimized for continuously running, distributed health
-        monitors such as Route 53 health checks. The cache ensures that the
-        service is not overloaded by these types of health monitors. The cache
-        is updated every minute.
-    '''),
-    **health_spec(fast_health_keys)
-})
+@app.route('/health/cached',
+           methods=['GET'],
+           cors=True,
+           **common_specs.cached_health)
 def cached_health():
     return app.health_controller.cached_health()
 
 
-@app.route('/health/fast', methods=['GET'], cors=True, method_spec={
-    'summary': 'Fast health check',
-    'description': format_description('''
-        Performance-optimized health check of the REST API and other critical
-        resources the service depends on. This endpoint can be requested more
-        frequently than [`/health`](#operations-Auxiliary-get_health) but
-        periodically scheduled, automated requests should be made to
-        [`/health/cached`](#operations-Auxiliary-get_health_cached).
-    '''),
-    **health_spec(fast_health_keys)
-})
+@app.route('/health/fast',
+           methods=['GET'],
+           cors=True,
+           **common_specs.fast_health)
 def fast_health():
     return app.health_controller.fast_health()
 
 
-@app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
-    'summary': 'Selective health check',
-    'description': format_description('''
-        This endpoint allows clients to request a health check on a specific set
-        of resources. Each resource is identified by a *key*, the same key
-        under which the resource appears in a
-        [`/health`](#operations-Auxiliary-get_health) response.
-    '''),
-    **health_spec(health_all_keys)
-}, path_spec={
-    'parameters': [
-        params.path(
-            'keys',
-            type_=schema.array(schema.enum(*sorted(Health.all_keys))),
-            description='''
-                A comma-separated list of keys selecting the health checks to be
-                performed. Each key corresponds to an entry in the response.
-        ''')
-    ],
-})
+@app.route('/health/{keys}',
+           methods=['GET'],
+           cors=True,
+           **common_specs.custom_health)
 def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
@@ -616,31 +493,7 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
 
-@app.route('/version', methods=['GET'], cors=True, method_spec={
-    'summary': 'Describe current version of the Azul service',
-    'tags': ['Auxiliary'],
-    'responses': {
-        '200': {
-            'description': 'Version endpoint is reachable.',
-            **responses.json_content(
-                schema.object(
-                    git=schema.object(
-                        commit=str,
-                        dirty=bool
-                    ),
-                    changes=schema.array(
-                        schema.object(
-                            title=str,
-                            issues=schema.array(str),
-                            upgrade=schema.array(str),
-                            notes=schema.optional(str)
-                        )
-                    )
-                )
-            )
-        }
-    }
-})
+@app.route('/version', methods=['GET'], cors=True, **common_specs.version)
 def version():
     from azul.changelog import (
         compact_changes,
