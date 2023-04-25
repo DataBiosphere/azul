@@ -1,0 +1,779 @@
+{
+    "manifest": [
+        {
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "crc32c": "eef1d942",
+            "indexed": true,
+            "name": "cell_suspension_0.json",
+            "s3_etag": "d88e754760e2e9ca8001dfd6a7409efa",
+            "sha1": "b0e960d41639ab3b7f46e1af0530a866de8bc26c",
+            "sha256": "0ff1e93e13de4b014f38f9d71fb8c30ff947e2a60b002696830b588822b841c4",
+            "size": 1314,
+            "uuid": "13eab62e-0038-4997-aeab-aa3192cc090e",
+            "version": "2019-07-18T21:12:44.344000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "crc32c": "f0a5ea57",
+            "indexed": true,
+            "name": "cell_line_0.json",
+            "s3_etag": "7c954f10c45d6310d5c45f8d03b86c9d",
+            "sha1": "acb72b83dc626d18a62a5b5914df62505d15f0b2",
+            "sha256": "274d540fce9bf4ed8efcdb3665b99293f062a3e30fbee1ab894b49f89b94d529",
+            "size": 1245,
+            "uuid": "4ccd163e-a630-4ede-bc0c-336ba044b783",
+            "version": "2019-07-18T21:12:44.526000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "crc32c": "ac20f478",
+            "indexed": true,
+            "name": "specimen_from_organism_0.json",
+            "s3_etag": "b172926081d7d55e761726240fe6e112",
+            "sha1": "9244ba8e0e90c83de61fe80a3ca12783768ba5bb",
+            "sha256": "53293d143e8a6f0d9f94cba8a3247389e8dc525393b1e84ada6895c506b828e7",
+            "size": 1327,
+            "uuid": "92254a9e-3a14-4760-b229-d914f3e8973f",
+            "version": "2019-07-18T21:12:44.655000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "crc32c": "10abd857",
+            "indexed": true,
+            "name": "donor_organism_0.json",
+            "s3_etag": "e20a2d098ed8ad7959f651fdc4ae4e74",
+            "sha1": "0839ee5524dd894a5bfcbc4c9e2e63e90aff1b83",
+            "sha256": "6e3dd41acc63a7b85607ff2a11d4eac58b6887fe5d843417ea04a532b1aa3afd",
+            "size": 1699,
+            "uuid": "39d1a24f-1785-476d-9c04-065be917e3ff",
+            "version": "2019-07-18T21:12:44.591000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "crc32c": "957dd6a8",
+            "indexed": true,
+            "name": "sequence_file_0.json",
+            "s3_etag": "23da4b7c77d23e7a466925b5c8a998fc",
+            "sha1": "e6712e3154593ba13ae55301a34cc9e539415abc",
+            "sha256": "026d78470b1118f486d5f7efc66c66a4f9b0e7b63382d74573ec03372a2f556e",
+            "size": 607,
+            "uuid": "3f193e72-8efe-4c2a-ace1-79140ca36477",
+            "version": "2019-07-18T21:22:48.292000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "crc32c": "87b70753",
+            "indexed": true,
+            "name": "sequence_file_1.json",
+            "s3_etag": "36610d80a658d1dcc4887ae1d47bd8cb",
+            "sha1": "4822d7b272f32331d82cf9cb9f356ae6a826b426",
+            "sha256": "dfd9c0abbb9e5e7e2ab7bedfb21b756517348e2c0cbe69ef2138de7b2e517093",
+            "size": 607,
+            "uuid": "078b71eb-220a-43e5-a0fc-4f231e90f85f",
+            "version": "2019-07-18T21:25:28.971000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/project\"",
+            "crc32c": "820c8cc3",
+            "indexed": true,
+            "name": "project_0.json",
+            "s3_etag": "8c065dd8633c869df498b3cf0f4fb86d",
+            "sha1": "f730de75afcef104da41761418c89eb61d16a54c",
+            "sha256": "c0e00a0eec11c46febbb483947262700bbf0e9f67ca15dce024933ff48536aba",
+            "size": 4332,
+            "uuid": "091cf39b-01bc-42e5-9437-f419a66c8a45",
+            "version": "2019-07-18T21:12:44.350000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "crc32c": "306c57c5",
+            "indexed": true,
+            "name": "library_preparation_protocol_0.json",
+            "s3_etag": "a76f6fb7953cf05653f901132832a7c0",
+            "sha1": "b34456c154e8689630c72d9b7b0b1c5a6f91d10a",
+            "sha256": "57d2a545a8a8748bf46755518e04b201904e32ce480d97c301727bb5baa73186",
+            "size": 1772,
+            "uuid": "dc19bb22-ae7b-431b-9b8b-7b49799a8fcd",
+            "version": "2019-07-18T21:12:44.269000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "crc32c": "9c6b958e",
+            "indexed": true,
+            "name": "sequencing_protocol_0.json",
+            "s3_etag": "67933d9c4dbbce2736eb2c6769e19733",
+            "sha1": "e832299fe438e03cb476eed4e76c220fc11e3b0f",
+            "sha256": "3e8d00dc1f929937ab26cbbef2fa7b1f3f1a7b253dde79724fcdfabeca59e0d6",
+            "size": 880,
+            "uuid": "461851b8-55a5-4ae6-a52a-5bca71a00beb",
+            "version": "2019-07-18T21:12:44.253000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "crc32c": "10d3414d",
+            "indexed": true,
+            "name": "collection_protocol_0.json",
+            "s3_etag": "37763d1785eb42e437b8cc700b6473c0",
+            "sha1": "d3bfcb19441f44e5bcc4999ab529d702fbdd94cf",
+            "sha256": "0018d939919b99a3babc277529f643a96f0469129c75dda17f346ddf2213cc48",
+            "size": 653,
+            "uuid": "79f7c6ac-ada8-4c17-86ec-e73e87b94374",
+            "version": "2019-07-18T21:12:44.265000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "crc32c": "23cd68d3",
+            "indexed": true,
+            "name": "enrichment_protocol_0.json",
+            "s3_etag": "ff76523d4aca2f8ac092eba448f74b70",
+            "sha1": "42e53f48da167ccfba628a6c06c6c84986dbaab1",
+            "sha256": "cd2254f05dc489f57bf4702a3d6e622e68fc06237893656bba981a2059922c14",
+            "size": 767,
+            "uuid": "5d9fc5a2-5516-4205-9d6e-8d0d674f146f",
+            "version": "2019-07-18T21:12:44.344000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "crc32c": "4094d412",
+            "indexed": true,
+            "name": "process_0.json",
+            "s3_etag": "3c0ae6bf43a7f17bde86f535222db0c3",
+            "sha1": "cfdeac00653613b8937a9abc2a5987d9a577833b",
+            "sha256": "0001f93a397a5ec70ca9ac55e0269ec5f7993f72c47afd66b223eb0aa5113302",
+            "size": 546,
+            "uuid": "f59c9106-16a8-47f8-b681-490d23ee09de",
+            "version": "2019-07-18T21:12:44.356000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "crc32c": "92b89456",
+            "indexed": true,
+            "name": "process_1.json",
+            "s3_etag": "ae28c7d367ea72a6b19edc3626f5cb89",
+            "sha1": "70f0122981f6c1efb5be293041c16c092d31d1c6",
+            "sha256": "a78ea460c1972372b4503d0eaf97dce4266762b1cbab945944df1d579d22b161",
+            "size": 377,
+            "uuid": "a03f7164-419b-4792-9a52-e6dda08b85bc",
+            "version": "2019-07-18T21:12:44.410000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "crc32c": "ca40679a",
+            "indexed": true,
+            "name": "process_2.json",
+            "s3_etag": "8174804c6c93b264516d433e6d8f6c87",
+            "sha1": "4e7016b8a8b91efdce697a87b84a4383aae05dc1",
+            "sha256": "f5438377520f62f5d8a0ff8a35bd4e57393fea257c39b45d360321eb9543832b",
+            "size": 376,
+            "uuid": "57d2c83d-cd8b-44c9-9644-c3475a44b0a7",
+            "version": "2019-07-18T21:12:44.498000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "crc32c": "75ada0a0",
+            "indexed": true,
+            "name": "process_3.json",
+            "s3_etag": "90eea457dadbdb2071cc312e4f5eeead",
+            "sha1": "c4d11c718c63c9823a598fc9180296ad0a4eca90",
+            "sha256": "5c0a6f771685ae543c7656d39342054f0356d87743a612b4510cb51a8f6cc5f5",
+            "size": 414,
+            "uuid": "8b1f44be-7eaa-4030-b6c5-697c5fc388eb",
+            "version": "2019-07-18T21:12:44.455000Z"
+        },
+        {
+            "content-type": "application/json; dcp-type=\"metadata/links\"",
+            "crc32c": "6fa63916",
+            "indexed": true,
+            "name": "links.json",
+            "s3_etag": "3d2c1f5323d5645a4946394ae97156f3",
+            "sha1": "801cfabd504abfd3d72c23367c0e7f6686f8db65",
+            "sha256": "12f0d3f084cb9f87ba0f72b8923ea8fc4548808915a4d8ebf889d887f31065e5",
+            "size": 2465,
+            "uuid": "67d2808f-f774-4f00-96a9-9ef6d1ebb817",
+            "version": "2019-07-18T21:29:49.279115Z"
+        },
+        {
+            "content-type": "application/gzip; dcp-type=data",
+            "crc32c": "64e45095",
+            "indexed": false,
+            "name": "BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz",
+            "s3_etag": "0079490037e041fb9d932ad860b8b254-41",
+            "sha1": "dc8b8fccf633bf32c9cda8e5d0cab404ee73b6df",
+            "sha256": "8dc8186925bf0b0476978e65e5b25fe60a1ebaa6e0d5dd4f0213f66721c0af21",
+            "size": 2700756088,
+            "uuid": "d879f732-d8d4-4251-a2ca-a91a852a034b",
+            "version": "2019-07-18T21:29:49.534039Z"
+        },
+        {
+            "content-type": "application/gzip; dcp-type=data",
+            "crc32c": "7046ca69",
+            "indexed": false,
+            "name": "BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz",
+            "s3_etag": "be07c9a9be1718f2328f9264a75baac2-143",
+            "sha1": "83fa93f975ac3515231196f513ea901a57fbbc07",
+            "sha256": "90d5bd195dbcdfb54a6b4eb42f4c3fce68ba235b53a0476526448d0867d18e5e",
+            "size": 9569751310,
+            "uuid": "1e14d503-31b1-4db6-82ba-f8d83bd85b9b",
+            "version": "2019-07-18T21:29:49.697974Z"
+        }
+    ],
+    "metadata": {
+        "cell_suspension_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.1.1/cell_suspension",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "HS_BM_P3_cells_2",
+                "biomaterial_name": "CD34+ sorted cells from human bone marrow",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "cell_morphology": {
+                "cell_morphology": "Cells in suspension are generally spherical in shape",
+                "percent_cell_viability": 97.0,
+                "cell_viability_method": "Countess II trypan blue assay",
+                "cell_viability_result": "pass"
+            },
+            "growth_conditions": {
+                "passage_number": 0,
+                "growth_medium": "IMDM+10%FBS"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology": "NCBITaxon:9606"
+                }
+            ],
+            "selected_cell_types": [
+                {
+                    "ontology_label": "CD34-positive, CD38-negative hematopoietic stem cell",
+                    "text": "CD34-positive, CD38-negative hematopoietic stem cell",
+                    "ontology": "CL:0001024"
+                }
+            ],
+            "estimated_cell_count": 125000,
+            "provenance": {
+                "document_id": "13eab62e-0038-4997-aeab-aa3192cc090e",
+                "submission_date": "2019-07-18T21:12:39.819Z",
+                "update_date": "2019-07-18T21:12:44.344Z"
+            }
+        },
+        "cell_line_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/14.3.1/cell_line",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "HS_BM_3_cell_line",
+                "biomaterial_name": "Bone Marrow CD34+ stem/progenitor cells",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "supplier": "AllCells, LLC",
+            "catalog_number": "ABM022F",
+            "catalog_url": "https://www.allcells.com/products/bone-marrow-cd34-stem-progenitor-cells",
+            "type": "stem cell",
+            "cell_type": {
+                "ontology_label": "CD34-positive, CD38-negative hematopoietic stem cell",
+                "text": "CD34-positive, CD38-negative hematopoietic stem cell",
+                "ontology": "CL:0001024"
+            },
+            "date_established": "2017-06-22",
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology": "NCBITaxon:9606"
+                }
+            ],
+            "model_organ": {
+                "text": "hematopoietic tissue",
+                "ontology": "UBERON:0002390",
+                "ontology_label": "hematopoietic system"
+            },
+            "provenance": {
+                "document_id": "4ccd163e-a630-4ede-bc0c-336ba044b783",
+                "submission_date": "2019-07-18T21:12:39.776Z",
+                "update_date": "2019-07-18T21:12:44.526Z"
+            }
+        },
+        "specimen_from_organism_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.2.1/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "HS_BM_3_specimen",
+                "biomaterial_name": "bone marrow specimen",
+                "biomaterial_description": "Female 19 YO bone marrow specimen",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology": "NCBITaxon:9606"
+                }
+            ],
+            "organ": {
+                "ontology_label": "hematopoietic system",
+                "text": "hematopoietic tissue",
+                "ontology": "UBERON:0002390"
+            },
+            "organ_parts": [
+                {
+                    "text": "bone marrow",
+                    "ontology": "UBERON:0002371"
+                }
+            ],
+            "preservation_storage": {
+                "storage_method": "frozen in liquid nitrogen",
+                "preservation_method": "cryopreservation of live cells in liquid nitrogen"
+            },
+            "collection_time": "2017-06-22T00:00:00Z",
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461"
+                }
+            ],
+            "provenance": {
+                "document_id": "92254a9e-3a14-4760-b229-d914f3e8973f",
+                "submission_date": "2019-07-18T21:12:39.756Z",
+                "update_date": "2019-07-18T21:12:44.655Z"
+            }
+        },
+        "donor_organism_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.3.2/donor_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "HS_BM_3",
+                "biomaterial_name": "BM_donor_3",
+                "biomaterial_description": "AllCells Female 19 YO Bone Marrow Donor",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "human_specific": {
+                "ethnicity": [
+                    {
+                        "text": "European",
+                        "ontology_label": "European",
+                        "ontology": "HANCESTRO:0005"
+                    }
+                ]
+            },
+            "medical_history": {
+                "medication": "None",
+                "smoking_history": "No",
+                "test_results": "HIV, HBV, HCV: Negative"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology": "NCBITaxon:9606"
+                }
+            ],
+            "organism_age": "19",
+            "organism_age_unit": {
+                "text": "year",
+                "ontology": "UO:0000036"
+            },
+            "development_stage": {
+                "text": "adult",
+                "ontology_label": "human adult stage",
+                "ontology": "HsapDv:0000087"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461"
+                }
+            ],
+            "height": "1.62",
+            "height_unit": {
+                "text": "meter",
+                "ontology": "UO:0000008"
+            },
+            "is_living": "yes",
+            "sex": "female",
+            "weight": "61.7",
+            "weight_unit": {
+                "text": "kilogram",
+                "ontology": "UO:0000009"
+            },
+            "provenance": {
+                "document_id": "39d1a24f-1785-476d-9c04-065be917e3ff",
+                "submission_date": "2019-07-18T21:12:39.737Z",
+                "update_date": "2019-07-18T21:12:44.591Z"
+            }
+        },
+        "sequence_file_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.1.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz",
+                "format": "fastq.gz",
+                "checksum": "4045d9611e200e9d387fd8fcf07cf56f"
+            },
+            "read_index": "read1",
+            "lane_index": 1,
+            "read_length": 26,
+            "library_prep_id": "lib_prep_7",
+            "provenance": {
+                "document_id": "3f193e72-8efe-4c2a-ace1-79140ca36477",
+                "submission_date": "2019-07-18T21:12:40.045Z",
+                "update_date": "2019-07-18T21:22:48.292Z"
+            }
+        },
+        "sequence_file_1.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.1.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz",
+                "format": "fastq.gz",
+                "checksum": "6f77234a0d49093b45c3b974ec0d9790"
+            },
+            "read_index": "read2",
+            "lane_index": 1,
+            "read_length": 98,
+            "library_prep_id": "lib_prep_7",
+            "provenance": {
+                "document_id": "078b71eb-220a-43e5-a0fc-4f231e90f85f",
+                "submission_date": "2019-07-18T21:12:40.053Z",
+                "update_date": "2019-07-18T21:25:28.971Z"
+            }
+        },
+        "project_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/project/14.0.2/project",
+            "schema_type": "project",
+            "project_core": {
+                "project_short_name": "Human Hematopoietic Profiling",
+                "project_title": "Profiling of CD34+ cells from human bone marrow to understand hematopoiesis",
+                "project_description": "Differentiation is among the most fundamental processes in cell biology. Single cell RNA-seq studies have demonstrated that differentiation is a continuous process and in particular cell states are observed to reside on largely continuous spaces. We have developed Palantir, a graph based algorithm to model continuities in cell state transitions and cell fate choices. Modeling differentiation as a Markov chain, Palantir determines probabilities of reaching terminal states from cells in each intermediate state. The entropy of these probabilities represent the differentiation potential of the cell in the corresponding state. Applied to single cell RNA-seq dataset of CD34+ hematopoietic cells from human bone marrows, Palantir accurately identified key events leading up to cell fate commitment. Integration with ATAC-seq data from bulk sorted populations helped identify key regulators that correlate with cell fate specification and commitment."
+            },
+            "publications": [
+                {
+                    "authors": [
+                        "Setty Manu",
+                        "Kieseliovas Vaidotas",
+                        "Levine Jacob",
+                        "Gayoso Adam",
+                        "Mazutis Linas",
+                        "Pe'er Dana"
+                    ],
+                    "title": "Palantir characterizes cell fate continuities in human hematopoiesis",
+                    "doi": "10.1101/385328",
+                    "url": "https://www.biorxiv.org/content/biorxiv/early/2018/08/05/385328.full.pdf"
+                }
+            ],
+            "funders": [
+                {
+                    "grant_id": "DP1-HD084071",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "NIH R01CA164729",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "P30 CA008748",
+                    "organization": "Gerry Center for Metastasis and Tumor Ecosystems"
+                }
+            ],
+            "contributors": [
+                {
+                    "name": "Manu,, Setty",
+                    "email": "manu.talanki@gmail.com",
+                    "phone": "9175451407",
+                    "institution": "Sloan Kettering Institute",
+                    "laboratory": "Pe'er",
+                    "address": "Memorial Sloan Kettering Cancer Center, 1275 York Avenue, New York, NY 10065",
+                    "country": "USA",
+                    "corresponding_contributor": true
+                },
+                {
+                    "name": "Vaidotas,, Kiseliovas",
+                    "email": "vaidotaskiseliovas@yahoo.com",
+                    "phone": "6463480473",
+                    "institution": "Sloan Kettering Institute",
+                    "laboratory": "Pe'er",
+                    "address": "Memorial Sloan Kettering Cancer Center, 1275 York Avenue, New York, NY 10065",
+                    "country": "USA"
+                },
+                {
+                    "name": "Dana,, Pe'er",
+                    "email": "peerster@gmail.com",
+                    "phone": "646-888-2619",
+                    "institution": "Sloan Kettering Institute",
+                    "laboratory": "Pe'er",
+                    "address": "Memorial Sloan Kettering Cancer Center, 1275 York Avenue, New York, NY 10065",
+                    "country": "USA",
+                    "project_role": {
+                        "ontology": "EFO:0009736",
+                        "ontology_label": "principal investigator",
+                        "text": "principal investigator"
+                    },
+                    "corresponding_contributor": true
+                },
+                {
+                    "name": "Parisa,, Nejad",
+                    "email": "pnejad@ucsc.edu",
+                    "institution": "University of California, Santa Cruz",
+                    "laboratory": "Human Cell Atlas Data Coordination Platform",
+                    "country": "USA",
+                    "project_role": {
+                        "ontology": "EFO:0009737",
+                        "ontology_label": "data curator",
+                        "text": "Human Cell Atlas wrangler"
+                    },
+                    "corresponding_contributor": false
+                }
+            ],
+            "provenance": {
+                "document_id": "091cf39b-01bc-42e5-9437-f419a66c8a45",
+                "submission_date": "2019-07-18T21:12:39.717Z",
+                "update_date": "2019-07-18T21:12:44.350Z"
+            }
+        },
+        "library_preparation_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.1.1/library_preparation_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "HS_BM_P1_LibPrep1",
+                "protocol_name": "10X Chromium Single Cell 3' Solution v2 Chemistry",
+                "document": "CG00052_SingleCell3_ReagentKitv2UserGuide_RevD.pdf"
+            },
+            "cell_barcode": {
+                "barcode_read": "Read 1",
+                "barcode_offset": 0,
+                "barcode_length": 16,
+                "white_list_file": "737K-august-2016.txt"
+            },
+            "nucleic_acid_source": "single cell",
+            "input_nucleic_acid_molecule": {
+                "text": "mRNA",
+                "ontology": "CHEBI:33699"
+            },
+            "library_construction_method": {
+                "text": "10X v2 sequencing",
+                "ontology": "EFO:0009310",
+                "ontology_label": "10X v2 sequencing"
+            },
+            "library_construction_kit": {
+                "retail_name": "10X Chromium Single Cell 3' Solution v2 Chemistry",
+                "catalog_number": "120237",
+                "manufacturer": "10X Genomics",
+                "lot_number": "151634",
+                "expiry_date": "2018-07-13"
+            },
+            "nucleic_acid_conversion_kit": {
+                "retail_name": "10X Chromium Single Cell 3' Solution v2 Chemistry",
+                "catalog_number": "151634",
+                "manufacturer": "10X Genomics",
+                "lot_number": "151634",
+                "expiry_date": "2018-07-13"
+            },
+            "end_bias": "3 prime tag",
+            "primer": "poly-dT",
+            "strand": "first",
+            "umi_barcode": {
+                "barcode_read": "Read 1",
+                "barcode_offset": 16,
+                "barcode_length": 10
+            },
+            "provenance": {
+                "document_id": "dc19bb22-ae7b-431b-9b8b-7b49799a8fcd",
+                "submission_date": "2019-07-18T21:12:39.848Z",
+                "update_date": "2019-07-18T21:12:44.269Z"
+            }
+        },
+        "sequencing_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.0.2/sequencing_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "HS_BM_P1_Seq1",
+                "protocol_name": "10X Chromium Single Cell 3' Solution v2 Chemistry",
+                "document": "CG00052_SingleCell3_ReagentKitv2UserGuide_RevD.pdf"
+            },
+            "instrument_manufacturer_model": {
+                "text": "Illumina HiSeq 2500",
+                "ontology": "EFO:0008565"
+            },
+            "paired_end": false,
+            "method": {
+                "text": "tag-based single cell RNA sequencing",
+                "ontology": "EFO:0008440",
+                "ontology_label": "tag based single cell RNA sequencing"
+            },
+            "provenance": {
+                "document_id": "461851b8-55a5-4ae6-a52a-5bca71a00beb",
+                "submission_date": "2019-07-18T21:12:39.854Z",
+                "update_date": "2019-07-18T21:12:44.253Z"
+            }
+        },
+        "collection_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.1.1/collection_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "collection_protocol",
+                "protocol_name": "bone marrow aspiration",
+                "protocol_description": "AllCells, LLC Bone Marrow Aspiration Protocol"
+            },
+            "method": {
+                "text": "bone marrow aspiration",
+                "ontology": "EFO:0009292"
+            },
+            "provenance": {
+                "document_id": "79f7c6ac-ada8-4c17-86ec-e73e87b94374",
+                "submission_date": "2019-07-18T21:12:39.836Z",
+                "update_date": "2019-07-18T21:12:44.265Z"
+            }
+        },
+        "enrichment_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.0.1/enrichment_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "HS_BM_Enrichment_Protocol",
+                "protocol_name": "Enrichment for CD34+ CD38- cells",
+                "protocol_description": "FACS sorting for CD34+  CD38- cells"
+            },
+            "method": {
+                "ontology_label": "fluorescence-activated cell sorting",
+                "text": "fluorescence-activated cell sorting",
+                "ontology": "EFO:0009108"
+            },
+            "markers": "CD34+ CD38-",
+            "provenance": {
+                "document_id": "5d9fc5a2-5516-4205-9d6e-8d0d674f146f",
+                "submission_date": "2019-07-18T21:12:39.843Z",
+                "update_date": "2019-07-18T21:12:44.344Z"
+            }
+        },
+        "process_0.json": {
+            "start_time": "2017-08-08T00:00:00Z",
+            "process_core": {
+                "operators": [
+                    "Vaidotas Kiseliovas"
+                ],
+                "location": "Memorial Sloan Kettering Cancer Center",
+                "process_id": "lib_prep_7"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.1.1/process",
+            "provenance": {
+                "document_id": "f59c9106-16a8-47f8-b681-490d23ee09de",
+                "submission_date": "2019-07-18T21:12:40.246Z",
+                "update_date": "2019-07-18T21:12:44.356Z"
+            }
+        },
+        "process_1.json": {
+            "process_core": {
+                "process_id": "process_id_10"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.1.1/process",
+            "provenance": {
+                "document_id": "a03f7164-419b-4792-9a52-e6dda08b85bc",
+                "submission_date": "2019-07-18T21:12:40.185Z",
+                "update_date": "2019-07-18T21:12:44.410Z"
+            }
+        },
+        "process_2.json": {
+            "process_core": {
+                "process_id": "process_id_3"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.1.1/process",
+            "provenance": {
+                "document_id": "57d2c83d-cd8b-44c9-9644-c3475a44b0a7",
+                "submission_date": "2019-07-18T21:12:40.134Z",
+                "update_date": "2019-07-18T21:12:44.498Z"
+            }
+        },
+        "process_3.json": {
+            "process_core": {
+                "location": "AllCells, LLC",
+                "process_id": "HS_BM_P3_Run1"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.1.1/process",
+            "provenance": {
+                "document_id": "8b1f44be-7eaa-4030-b6c5-697c5fc388eb",
+                "submission_date": "2019-07-18T21:12:40.114Z",
+                "update_date": "2019-07-18T21:12:44.455Z"
+            }
+        },
+        "links.json": {
+            "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+            "schema_type": "link_bundle",
+            "schema_version": "1.1.5",
+            "links": [
+                {
+                    "process": "f59c9106-16a8-47f8-b681-490d23ee09de",
+                    "inputs": [
+                        "13eab62e-0038-4997-aeab-aa3192cc090e"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "3f193e72-8efe-4c2a-ace1-79140ca36477",
+                        "078b71eb-220a-43e5-a0fc-4f231e90f85f"
+                    ],
+                    "output_type": "file",
+                    "protocols": [
+                        {
+                            "protocol_type": "library_preparation_protocol",
+                            "protocol_id": "dc19bb22-ae7b-431b-9b8b-7b49799a8fcd"
+                        },
+                        {
+                            "protocol_type": "sequencing_protocol",
+                            "protocol_id": "461851b8-55a5-4ae6-a52a-5bca71a00beb"
+                        }
+                    ]
+                },
+                {
+                    "process": "a03f7164-419b-4792-9a52-e6dda08b85bc",
+                    "inputs": [
+                        "4ccd163e-a630-4ede-bc0c-336ba044b783"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "13eab62e-0038-4997-aeab-aa3192cc090e"
+                    ],
+                    "output_type": "biomaterial",
+                    "protocols": []
+                },
+                {
+                    "process": "57d2c83d-cd8b-44c9-9644-c3475a44b0a7",
+                    "inputs": [
+                        "92254a9e-3a14-4760-b229-d914f3e8973f"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "4ccd163e-a630-4ede-bc0c-336ba044b783"
+                    ],
+                    "output_type": "biomaterial",
+                    "protocols": []
+                },
+                {
+                    "process": "8b1f44be-7eaa-4030-b6c5-697c5fc388eb",
+                    "inputs": [
+                        "39d1a24f-1785-476d-9c04-065be917e3ff"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "92254a9e-3a14-4760-b229-d914f3e8973f"
+                    ],
+                    "output_type": "biomaterial",
+                    "protocols": [
+                        {
+                            "protocol_type": "collection_protocol",
+                            "protocol_id": "79f7c6ac-ada8-4c17-86ec-e73e87b94374"
+                        },
+                        {
+                            "protocol_type": "enrichment_protocol",
+                            "protocol_id": "5d9fc5a2-5516-4205-9d6e-8d0d674f146f"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

@@ -456,6 +456,32 @@ class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
         self._reject_joiner(self.manifest)
         self._reject_joiner(self.metadata_files)
 
+    @classmethod
+    @abstractmethod
+    def canning_qualifier(cls) -> str:
+        """
+        Short string prepended to the file extension to distinguish between
+        canned bundle formats originating from different plugins.
+        """
+        raise NotImplementedError
+
+    def to_json(self) -> MutableJSON:
+        return {
+            'manifest': self.manifest,
+            'metadata': self.metadata_files
+        }
+
+    @classmethod
+    def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> 'Bundle':
+        manifest = json_['manifest']
+        metadata = json_['metadata']
+        assert isinstance(manifest, list), manifest
+        assert isinstance(metadata, dict), metadata
+        return cls(fqid=fqid, manifest=manifest, metadata_files=metadata)
+
+
+BUNDLE = TypeVar('BUNDLE', bound=Bundle)
+
 
 class BundlePartition(UUIDPartition['BundlePartition']):
     """

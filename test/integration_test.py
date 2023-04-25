@@ -1479,21 +1479,12 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                              uuid=fqid.uuid,
                              version=fqid.version,
                              output_dir=d)
+            generated_file = one(os.listdir(d))
+            with open(os.path.join(d, generated_file)) as f:
+                bundle_json = json.load(f)
 
-            def file_name(part):
-                return f'{fqid.uuid}.{part}.json'
-
-            manifest_file_name = file_name('manifest')
-            metadata_file_name = file_name('metadata')
-            expected_files = sorted([manifest_file_name, metadata_file_name])
-            generated_files = sorted(os.listdir(d))
-            self.assertListEqual(generated_files, expected_files)
-
-            with open(f'{d}/{manifest_file_name}') as f:
-                manifest = json.load(f)
-            with open(f'{d}/{metadata_file_name}') as f:
-                metadata = json.load(f)
-
+            self.assertEqual({'manifest', 'metadata'}, bundle_json.keys())
+            manifest, metadata = bundle_json['manifest'], bundle_json['metadata']
             self.assertIsInstance(manifest, list)
             self.assertIsInstance(metadata, dict)
 

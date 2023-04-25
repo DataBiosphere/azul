@@ -73,6 +73,10 @@ class TDRBundleFQID(SourcedBundleFQID[TDRSourceRef]):
 
 class TDRBundle(Bundle[TDRBundleFQID]):
 
+    @classmethod
+    def canning_qualifier(cls):
+        return 'tdr'
+
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_path')
 

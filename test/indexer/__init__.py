@@ -1,5 +1,6 @@
 from abc import (
     ABCMeta,
+    abstractmethod,
 )
 from copy import (
     deepcopy,
@@ -7,7 +8,9 @@ from copy import (
 import json
 import os
 from typing import (
+    Generic,
     Optional,
+    Type,
     Union,
     cast,
 )
@@ -23,6 +26,7 @@ from azul import (
     config,
 )
 from azul.indexer import (
+    BUNDLE,
     Bundle,
     BundleFQID,
     SourcedBundleFQID,
@@ -34,9 +38,6 @@ from azul.indexer.index_service import (
 )
 from azul.plugins import (
     FieldPath,
-)
-from azul.plugins.repository.dss import (
-    DSSBundle,
 )
 from azul.types import (
     AnyJSON,
@@ -66,7 +67,12 @@ class ForcedRefreshIndexService(IndexService):
         return writer
 
 
-class CannedBundleTestCase(AzulUnitTestCase):
+class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
+
+    @classmethod
+    @abstractmethod
+    def _bundle_cls(cls) -> Type[BUNDLE]:
+        raise NotImplementedError
 
     @classmethod
     def _load_canned_file(cls,
@@ -97,13 +103,10 @@ class CannedBundleTestCase(AzulUnitTestCase):
             return json.load(infile)
 
     @classmethod
-    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> Bundle:
-        manifest = cast(MutableJSONs, cls._load_canned_file(bundle, 'manifest'))
-        metadata_files = cls._load_canned_file(bundle, 'metadata')
-        assert isinstance(manifest, list)
-        return DSSBundle(fqid=bundle,
-                         manifest=manifest,
-                         metadata_files=metadata_files)
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
+        bundle_cls = cls._bundle_cls()
+        bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
+        return bundle_cls.from_json(bundle, bundle_json)
 
 
 class IndexerTestCase(CatalogTestCase,

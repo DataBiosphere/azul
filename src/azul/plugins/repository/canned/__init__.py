@@ -77,8 +77,12 @@ class CannedBundleFQID(SourcedBundleFQID[CannedSourceRef]):
 
 class CannedBundle(Bundle[CannedBundleFQID]):
 
+    @classmethod
+    def canning_qualifier(cls) -> str:
+        return 'gh'
+
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return None
+        return 'dss'
 
 
 @dataclass(frozen=True)

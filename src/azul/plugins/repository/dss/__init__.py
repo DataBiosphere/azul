@@ -82,6 +82,10 @@ class DSSBundleFQID(SourcedBundleFQID[DSSSourceRef]):
 
 class DSSBundle(Bundle[DSSBundleFQID]):
 
+    @classmethod
+    def canning_qualifier(cls) -> str:
+        return 'dss'
+
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
         file_version = manifest_entry['version']

@@ -103,12 +103,11 @@ def plugin_for(catalog):
 
 
 def save_bundle(bundle: Bundle, output_dir: str) -> None:
-    for obj, suffix in [(bundle.manifest, '.manifest.json'),
-                        (bundle.metadata_files, '.metadata.json')]:
-        path = os.path.join(output_dir, bundle.uuid + suffix)
-        with write_file_atomically(path) as f:
-            json.dump(obj, f, indent=4)
-        log.info('Successfully wrote %s', path)
+    path = os.path.join(output_dir,
+                        f'{bundle.uuid}.{bundle.canning_qualifier()}.json')
+    with write_file_atomically(path) as f:
+        json.dump(bundle.to_json(), f, indent=4)
+    log.info('Successfully wrote %s', path)
 
 
 redacted_entity_types = {
