@@ -51,8 +51,8 @@ build_image:
     - pip list
     - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
-    - (cd deployments && ln -snf ${deployment} .active)
-    - source environment
+    - _link $deployment
+    - _refresh
     - status_context="gitlab/${azul_gitlab_instance_name}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
   dependencies:

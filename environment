@@ -16,12 +16,7 @@ _refresh() {
 _select() {
 	if [[ $1 != "" ]]; then
 		_deauth
-		(# use sub-shell so `cd` is temporary
-			cd "${project_root}/deployments" &&
-				test -d "$1" &&
-				{ [ ! -e .active ] || { [ -L .active ] && rm .active; }; } &&
-				ln -s "$1" .active
-		) || { echo error: "$1" && return; }
+		_link "$1" || return
 		_refresh
 		_preauth
 	fi
@@ -32,6 +27,15 @@ _deselect() {
 	_deauth
 	rm "${project_root}/deployments/.active"
 	_refresh
+}
+
+_link() {
+	(
+		cd "${project_root}/deployments" &&
+			test -d "$1" &&
+			{ [ ! -e .active ] || { [ -L .active ] && rm .active; }; } &&
+			ln -s "$1" .active
+	) || { echo error: "$1" && return; }
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them

@@ -25,8 +25,10 @@ jobs:
 
       - name: 'test'
         run: |
-          (cd deployments && ln -snf dev .active)
           source environment
+          _link dev
+          _refresh
+
           make virtualenv
           source .venv/bin/activate
           make requirements
