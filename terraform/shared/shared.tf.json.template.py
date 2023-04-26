@@ -744,6 +744,19 @@ emit_tf(block_public_s3_bucket_access({
                     }
                 }
             }
+        },
+        'aws_wafv2_ip_set': {
+            'blocked': {
+                'name': 'blocked',
+                'scope': 'REGIONAL',
+                'ip_address_version': 'IPV4',
+                'addresses': [],
+                'lifecycle': {
+                    'ignore_changes': [
+                        'addresses'
+                    ]
+                }
+            }
         }
     }
 }))
