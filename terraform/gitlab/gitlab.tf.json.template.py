@@ -704,7 +704,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # FedRAMP inventory
                     {
                         'actions': [
-                            'config:SelectResourceConfig'
+                            'config:ListDiscoveredResources',
+                            'config:BatchGetResourceConfig'
                         ],
                         'resources': ['*']
                     }
