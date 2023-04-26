@@ -41,6 +41,14 @@ main deployment, regardless of whether the changes come as part of a feature
 branch, a merge commit or in a promotion.
 
 
+#3911 Disallow ``||`` joiners in metadata
+=========================================
+
+A new catalog ``dcp3`` has been added to ``dev`` and ``sandbox`` deployments.
+Add the ``dcp3`` catalog to your personal deployments using the sandbox
+deployment's ``environment.py`` as a model.
+
+
 #5116 Enable NIST 800.53 conformance pack for AWS Config
 ========================================================
 

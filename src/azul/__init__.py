@@ -1405,6 +1405,8 @@ class Config:
         else:
             return self.SlackIntegration(**json.loads(slack_integration))
 
+    manifest_column_joiner = '||'
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 

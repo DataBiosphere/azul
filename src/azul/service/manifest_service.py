@@ -801,7 +801,8 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
 
-    column_joiner = ' || '
+    column_joiner = config.manifest_column_joiner
+    padded_joiner = ' ' + column_joiner + ' '
 
     @cached_property
     def _field_types(self) -> FieldTypes:
@@ -821,8 +822,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         for field in field_path:
             field_types = field_types[field]
 
-        stripped_joiner = self.column_joiner.strip()
-
         def convert(field_name, field_value):
             try:
                 field_type = field_types[field_name]
@@ -840,10 +839,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             return field_type.to_tsv(field_value)
 
         def validate(field_value: str) -> str:
-            # FIXME: Re-enable, once indexer rejects joiners in metadata
-            #        https://github.com/DataBiosphere/azul/issues/3911
-            if False:
-                assert stripped_joiner not in field_value
+            assert self.column_joiner not in field_value
             return field_value
 
         for field_name, column_name in column_mapping.items():
@@ -865,7 +861,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                         column_value.append(validate(convert(field_name, field_value)))
             # FIXME: The slice is a hotfix. Reconsider.
             #        https://github.com/DataBiosphere/azul/issues/2649
-            column_value = self.column_joiner.join(sorted(set(column_value))[:100])
+            column_value = self.padded_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
     def _get_entities(self, field_path: FieldPath, doc: JSON) -> JSONs:
@@ -1724,7 +1720,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                             # between the files in a bundle this algorithm retains the values but loses the
                             # association between each individual value and the respective file.
                             for column_name, cell_value in cells.items():
-                                row.setdefault(column_name, set()).update(cell_value.split(self.column_joiner))
+                                row.setdefault(column_name, set()).update(cell_value.split(self.padded_joiner))
                         elif entity == 'file':
                             # Since file-specific cells are placed into qualified columns, no concatenation is necessary
                             index = None if num_groups_per_qualifier[qualifier] == 1 else i
@@ -1733,5 +1729,5 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                         else:
                             assert False
             # Join concatenated values using the joiner
-            row = {k: self.column_joiner.join(sorted(v)) if isinstance(v, set) else v for k, v in row.items()}
+            row = {k: self.padded_joiner.join(sorted(v)) if isinstance(v, set) else v for k, v in row.items()}
             bundle_tsv_writer.writerow(row)
