@@ -54,6 +54,25 @@ def query(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSO
     return _make_param(name, in_='query', type_=type_, **kwargs)
 
 
+def header(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
+    """
+    Returns an OpenAPI `parameters` specification of a request header.
+
+    >>> from azul.doctests import assert_json
+    >>> assert_json(header('X-foo', schema.optional(int)))
+    {
+        "name": "X-foo",
+        "in": "header",
+        "required": false,
+        "schema": {
+            "type": "integer",
+            "format": "int64"
+        }
+    }
+    """
+    return _make_param(name, in_='header', type_=type_, **kwargs)
+
+
 def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
     is_optional = isinstance(type_, schema.optional)
     if is_optional:

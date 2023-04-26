@@ -2,10 +2,750 @@
     "openapi": "3.0.1",
     "info": {
         "title": "azul_indexer",
-        "description": "\nThis is the indexer component for Azul.\n",
+        "description": "\nThis is the internal API for Azul's indexer component.\n",
         "version": "1.0"
     },
-    "paths": {},
+    "paths": {
+        "/openapi": {
+            "get": {
+                "summary": "Return OpenAPI specifications for this REST API",
+                "description": "\nThis endpoint returns the [OpenAPI specifications]'\n(https://github.com/OAI/OpenAPI-Specification) for this REST\nAPI. These are the specifications used to generate the page\nyou are visiting now.\n",
+                "responses": {
+                    "200": {
+                        "description": "200 response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "openapi": {
+                                            "type": "string"
+                                        },
+                                        "info": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": false
+                                        },
+                                        "tags": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": false
+                                        },
+                                        "servers": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": false
+                                        },
+                                        "paths": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": false
+                                        },
+                                        "components": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "openapi",
+                                        "info",
+                                        "tags",
+                                        "servers",
+                                        "paths",
+                                        "components"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/version": {
+            "get": {
+                "summary": "Describe current version of this REST API",
+                "tags": [
+                    "Auxiliary"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Version endpoint is reachable.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "git": {
+                                            "type": "object",
+                                            "properties": {
+                                                "commit": {
+                                                    "type": "string"
+                                                },
+                                                "dirty": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "commit",
+                                                "dirty"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "changes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "issues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "upgrade": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "notes": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "title",
+                                                    "issues",
+                                                    "upgrade"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "git",
+                                        "changes"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Complete health check",
+                "description": "\nHealth check of the indexer REST API and all\nresources it depends on. This may take long time to complete\nand exerts considerable load on the API. For that reason it\nshould not be requested frequently or by automated\nmonitoring facilities that would be better served by the\n[`/health/fast`](#operations-Auxiliary-get_health_fast) or\n[`/health/cached`](#operations-Auxiliary-get_health_cached)\nendpoints.\n",
+                "responses": {
+                    "200": {
+                        "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `other_lambdas` \nIndicates whether the companion REST API responds to HTTP requests.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                true
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    true
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "other_lambdas": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "api_endpoints": {},
+                                    "elasticsearch": {},
+                                    "up": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "\nAt least one of the checked resources\nis not healthy.\n\nThe response consists of the following keys:\n\n* `other_lambdas` \nIndicates whether the companion REST API responds to HTTP requests.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`false`.\n\n\nAt least one of the nested `up` keys\nis `false`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    false
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "other_lambdas": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "api_endpoints": {},
+                                    "elasticsearch": {},
+                                    "up": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/health/basic": {
+            "get": {
+                "summary": "Basic health check",
+                "description": "\nHealth check of only the REST API itself, excluding other\nresources that it depends on. A 200 response indicates that\nthe indexer is reachable via HTTP(S) but nothing\nmore.\n",
+                "responses": {
+                    "200": {
+                        "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                true
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    true
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "up": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "\nAt least one of the checked resources\nis not healthy.\n\nThe response consists of the following keys:\n\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`false`.\n\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    false
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "up": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/health/cached": {
+            "get": {
+                "summary": "Cached health check for continuous monitoring",
+                "description": "\nReturn a cached copy of the\n[`/health/fast`](#operations-Auxiliary-get_health_fast)\nresponse. This endpoint is optimized for continuously\nrunning, distributed health monitors such as Route 53 health\nchecks. The cache ensures that the indexer is not\noverloaded by these types of health monitors. The cache is\nupdated every minute.\n",
+                "responses": {
+                    "200": {
+                        "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                true
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    true
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "elasticsearch": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "up": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "\nAt least one of the checked resources\nis not healthy.\n\nThe response consists of the following keys:\n\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`false`.\n\n\nAt least one of the nested `up` keys\nis `false`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    false
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "elasticsearch": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "up": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/health/fast": {
+            "get": {
+                "summary": "Fast health check",
+                "description": "\nPerformance-optimized health check of the REST API and other\ncritical resources tht it depends on. This endpoint can be\nrequested more frequently than\n[`/health`](#operations-Auxiliary-get_health) but\nperiodically scheduled, automated requests should be made to\n[`/health/cached`](#operations-Auxiliary-get_health_cached).\n",
+                "responses": {
+                    "200": {
+                        "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                true
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    true
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "elasticsearch": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "up": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "\nAt least one of the checked resources\nis not healthy.\n\nThe response consists of the following keys:\n\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`false`.\n\n\nAt least one of the nested `up` keys\nis `false`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    false
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "elasticsearch": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "up": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/health/{keys}": {
+            "parameters": [
+                {
+                    "name": "keys",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "api_endpoints",
+                                "elasticsearch",
+                                "other_lambdas",
+                                "progress",
+                                "queues"
+                            ]
+                        }
+                    },
+                    "description": "\nA comma-separated list of keys selecting the health\nchecks to be performed. Each key corresponds to an\nentry in the response.\n"
+                }
+            ],
+            "get": {
+                "summary": "Selective health check",
+                "description": "\nThis endpoint allows clients to request a health check on a\nspecific set of resources. Each resource is identified by a\n*key*, the same key under which the resource appears in a\n[`/health`](#operations-Auxiliary-get_health) response.\n",
+                "responses": {
+                    "200": {
+                        "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `other_lambdas` \nIndicates whether the companion REST API responds to HTTP requests.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                true
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    true
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "other_lambdas": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "api_endpoints": {},
+                                    "elasticsearch": {},
+                                    "up": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "\nAt least one of the checked resources\nis not healthy.\n\nThe response consists of the following keys:\n\n* `other_lambdas` \nIndicates whether the companion REST API responds to HTTP requests.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`false`.\n\n\nAt least one of the nested `up` keys\nis `false`.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "up": {
+                                            "type": "boolean",
+                                            "enum": [
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "up"
+                                    ],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "up": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                    false
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "up"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "example": {
+                                    "other_lambdas": {},
+                                    "queues": {},
+                                    "progress": {},
+                                    "api_endpoints": {},
+                                    "elasticsearch": {},
+                                    "up": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/{catalog}/{action}": {
+            "post": {
+                "tags": [
+                    "Indexing"
+                ],
+                "summary": "Notify the indexer to perform an action on a bundle",
+                "description": "\nQueue a bundle for addition to or deletion from the index.\n\nThe request must be authenticated using HMAC via the ``signature``\nheader. Each Azul deployment has its own unique HMAC key. The HMAC\ncomponents are the request method, request path, and the SHA256 digest\nof the request body.\n\nA valid HMAC header proves that the client is in possession of the\nsecret HMAC key and that the request wasn't tampered with while\ntravelling between client and service, even though the latter is not\nstrictly necessary considering that TLS is used to encrypt the entire\nexchange. Internal clients can obtain the secret key from the\nenvironment they are running in, and that they share with the service.\nExternal clients must have been given the secret key. The now-defunct\nDSS was such an external client. The Azul indexer provided the HMAC\nsecret to DSS when it registered with DSS to be notified about bundle\nadditions/deletions. These days only internal clients use this endpoint.\n",
+                "requestBody": {
+                    "description": "Contents of the notification",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bundle_fqid": {
+                                        "type": "object",
+                                        "properties": {
+                                            "uuid": {
+                                                "type": "string"
+                                            },
+                                            "version": {
+                                                "type": "string"
+                                            },
+                                            "source": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "spec": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "spec"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "uuid",
+                                            "version",
+                                            "source"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "required": [
+                                    "bundle_fqid"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "catalog",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "dcp2"
+                            ]
+                        },
+                        "description": "The name of the catalog to notify."
+                    },
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "add",
+                                "delete"
+                            ]
+                        },
+                        "description": "Which action to perform."
+                    },
+                    {
+                        "name": "signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "HMAC authentication signature."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification was successfully queued for processing"
+                    },
+                    "400": {
+                        "description": "Request was rejected due to malformed parameters"
+                    },
+                    "401": {
+                        "description": "Request lacked a valid HMAC header"
+                    }
+                }
+            }
+        }
+    },
     "tags": [],
     "servers": [
         {

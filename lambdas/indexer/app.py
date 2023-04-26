@@ -28,6 +28,7 @@ from azul.hmac import (
     SignatureHelper,
 )
 from azul.indexer.index_controller import (
+    Action,
     IndexController,
 )
 from azul.indexer.log_forwarding_controller import (
@@ -38,6 +39,14 @@ from azul.logging import (
 )
 from azul.openapi import (
     format_description,
+    params,
+    schema,
+)
+from azul.openapi.responses import (
+    json_content,
+)
+from azul.openapi.spec import (
+    CommonEndpointSpecs,
 )
 
 log = logging.getLogger(__name__)
@@ -46,10 +55,8 @@ spec = {
     'openapi': '3.0.1',
     'info': {
         'title': config.indexer_name,
-        # FIXME: Swagger UI for indexer is a stub
-        #        https://github.com/DataBiosphere/azul/issues/5051
         'description': format_description('''
-            This is the indexer component for Azul.
+            This is the internal API for Azul's indexer component.
         '''),
         'version': '1.0'
     }
@@ -103,14 +110,17 @@ def static_resource(file):
     return app.swagger_resource(file)
 
 
-@app.route('/openapi', methods=['GET'], cors=True)
+common_specs = CommonEndpointSpecs(app_name='indexer')
+
+
+@app.route('/openapi', methods=['GET'], cors=True, **common_specs.openapi)
 def openapi():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
                     body=app.spec())
 
 
-@app.route('/version', methods=['GET'], cors=True)
+@app.route('/version', methods=['GET'], cors=True, **common_specs.version)
 def version():
     from azul.changelog import (
         compact_changes,
@@ -121,27 +131,39 @@ def version():
     }
 
 
-@app.route('/health', methods=['GET'], cors=True)
+@app.route('/health', methods=['GET'], cors=True, **common_specs.full_health)
 def health():
     return app.health_controller.health()
 
 
-@app.route('/health/basic', methods=['GET'], cors=True)
+@app.route('/health/basic',
+           methods=['GET'],
+           cors=True,
+           **common_specs.basic_health)
 def basic_health():
     return app.health_controller.basic_health()
 
 
-@app.route('/health/cached', methods=['GET'], cors=True)
+@app.route('/health/cached',
+           methods=['GET'],
+           cors=True,
+           **common_specs.cached_health)
 def cached_health():
     return app.health_controller.cached_health()
 
 
-@app.route('/health/fast', methods=['GET'], cors=True)
+@app.route('/health/fast',
+           methods=['GET'],
+           cors=True,
+           **common_specs.fast_health)
 def fast_health():
     return app.health_controller.fast_health()
 
 
-@app.route('/health/{keys}', methods=['GET'], cors=True)
+@app.route('/health/{keys}',
+           methods=['GET'],
+           cors=True,
+           **common_specs.custom_health)
 def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
@@ -151,7 +173,65 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
 
-@app.route('/{catalog}/{action}', methods=['POST'])
+@app.route('/{catalog}/{action}', methods=['POST'], method_spec={
+    'tags': ['Indexing'],
+    'summary': 'Notify the indexer to perform an action on a bundle',
+    'description': format_description('''
+        Queue a bundle for addition to or deletion from the index.
+
+        The request must be authenticated using HMAC via the ``signature``
+        header. Each Azul deployment has its own unique HMAC key. The HMAC
+        components are the request method, request path, and the SHA256 digest
+        of the request body.
+
+        A valid HMAC header proves that the client is in possession of the
+        secret HMAC key and that the request wasn't tampered with while
+        travelling between client and service, even though the latter is not
+        strictly necessary considering that TLS is used to encrypt the entire
+        exchange. Internal clients can obtain the secret key from the
+        environment they are running in, and that they share with the service.
+        External clients must have been given the secret key. The now-defunct
+        DSS was such an external client. The Azul indexer provided the HMAC
+        secret to DSS when it registered with DSS to be notified about bundle
+        additions/deletions. These days only internal clients use this endpoint.
+    '''),
+    'requestBody': {
+        'description': 'Contents of the notification',
+        'required': True,
+        **json_content(schema.object(
+            bundle_fqid=schema.object(
+                uuid=str,
+                version=str,
+                source=schema.object(
+                    id=str,
+                    spec=str
+                )
+            )
+        ))
+    },
+    'parameters': [
+        params.path('catalog',
+                    schema.enum(*config.catalogs),
+                    description='The name of the catalog to notify.'),
+        params.path('action',
+                    schema.enum(Action.add.name, Action.delete.name),
+                    description='Which action to perform.'),
+        params.header('signature',
+                      str,
+                      description='HMAC authentication signature.')
+    ],
+    'responses': {
+        '200': {
+            'description': 'Notification was successfully queued for processing'
+        },
+        '400': {
+            'description': 'Request was rejected due to malformed parameters'
+        },
+        '401': {
+            'description': 'Request lacked a valid HMAC header'
+        }
+    }
+})
 def post_notification(catalog: CatalogName, action: str):
     """
     Receive a notification event and queue it for indexing or deletion.
