@@ -19,6 +19,13 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5155 Update AnVIL catalogs in `anvilprod` with replacement snapshots
+=====================================================================
+
+Update the snapshots for any personal deployments that share an Elasticsearch
+domain with ``hammerbox``, using that deployment's ``environment.py`` as a
+template.
+
 
 #5292 Update/harden docker.elastic.co/elasticsearch/elasticsearch
 =================================================================
