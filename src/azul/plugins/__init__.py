@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -136,7 +136,7 @@ class ManifestFormat(Enum):
 T = TypeVar('T', bound='Plugin')
 
 
-class Plugin(ABC):
+class Plugin(metaclass=ABCMeta):
     """
     A base class for Azul plugins. Concrete plugins shouldn't inherit this
     class directly but one of the subclasses of this class. This class just
@@ -582,7 +582,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
-class RepositoryFileDownload(ABC):
+class RepositoryFileDownload(metaclass=ABCMeta):
     #: The UUID of the file to be downloaded
     file_uuid: str
 

@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -157,7 +157,7 @@ SOURCE_SPEC = TypeVar('SOURCE_SPEC', bound='SourceSpec')
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class SourceSpec(ABC, Generic[SOURCE_SPEC]):
+class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
     """
     The name of a repository source containing bundles to index. A repository
     has at least one source. Repository plugins whose repository source names
@@ -397,7 +397,7 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
-class Bundle(ABC, Generic[BUNDLE_FQID]):
+class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
     fqid: BUNDLE_FQID
     manifest: MutableJSONs
     """

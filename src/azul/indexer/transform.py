@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -18,7 +18,7 @@ from azul.indexer.document import (
 )
 
 
-class Transformer(ABC):
+class Transformer(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod

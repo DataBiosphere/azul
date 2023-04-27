@@ -658,6 +658,17 @@ Method and function arguments
 .. _PEP-3102: https://www.python.org/dev/peps/pep-3102/
 
 
+Abstract classes
+----------------
+
+When creating abstract base classes using the `abc` module, we prefer to write::
+
+    class Base(metaclass=ABCMeta):
+
+instead of::
+
+    class Base(ABC):
+
 Testing
 =======
 

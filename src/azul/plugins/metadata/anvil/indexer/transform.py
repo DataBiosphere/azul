@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections import (
@@ -114,7 +114,7 @@ class LinkedEntities:
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-class BaseTransformer(Transformer, ABC):
+class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: Bundle
     deleted: bool
 
