@@ -7,21 +7,21 @@ export project_root
 
 # A little helper to make re-sourcing this script easier.
 #
-_refresh () {
+_refresh() {
 	source "${project_root}/environment"
 }
 
 # Manage the symlink to the active deployment
 #
-_select () {
+_select() {
 	if [[ $1 != "" ]]; then
 		_deauth
-		( # use sub-shell so `cd` is temporary
+		(# use sub-shell so `cd` is temporary
 			cd "${project_root}/deployments" &&
-			test -d "$1" &&
-			{ [ ! -e .active ] || { [ -L .active ] && rm .active ;} ;} &&
-			ln -s "$1" .active
-		) || { echo error: "$1" && return ;}
+				test -d "$1" &&
+				{ [ ! -e .active ] || { [ -L .active ] && rm .active; }; } &&
+				ln -s "$1" .active
+		) || { echo error: "$1" && return; }
 		_refresh
 		_preauth
 	fi
@@ -40,13 +40,13 @@ _deselect() {
 #
 # https://github.com/boto/boto3/issues/1179#issuecomment-569940530
 #
-_preauth () {
+_preauth() {
 	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
 		gcloud config set project "$GOOGLE_PROJECT"
 		if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
 			gcloud auth application-default login
 			if ! gcloud auth application-default print-access-token > /dev/null; then
-				>&2 echo "Google login failed!"
+				echo >&2 "Google login failed!"
 				return 1
 			fi
 		fi
@@ -82,37 +82,37 @@ _preauth () {
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
 		EOF
 	)"; then
-		>&2 echo "AWS login failed!"
+		echo >&2 "AWS login failed!"
 		return 2
 	fi
 	eval "$env"
-	>&2 echo
-	>&2 echo "Temporary session credentials are in effect for AWS and Google." \
-	         "Use '_deauth' to revert the effect of this command."
-	>&2 echo
+	echo >&2
+	echo >&2 "Temporary session credentials are in effect for AWS and Google." \
+		"Use '_deauth' to revert the effect of this command."
+	echo >&2
 	return 0
 }
 
-_deauth () {
+_deauth() {
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-	>&2 echo
-	>&2 echo "Revoked temporary AWS credentials."
-	>&2 echo
+	echo >&2
+	echo >&2 "Revoked temporary AWS credentials."
+	echo >&2
 	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
-		>&2 echo
-		>&2 echo "Google Cloud application default credentials are system-global." \
-		         "You should revoke the existing credentials unless you are *certain* that" \
-		         "you are already logged in using the appropriate account and project." \
-		         "If in doubt, enter 'y'."
-		>&2 echo
+		echo >&2
+		echo >&2 "Google Cloud application default credentials are system-global." \
+			"You should revoke the existing credentials unless you are *certain* that" \
+			"you are already logged in using the appropriate account and project." \
+			"If in doubt, enter 'y'."
+		echo >&2
 		gcloud auth application-default revoke
-		>&2 echo
-	  >&2 echo "Revoked temporary Google credentials."
-		>&2 echo
+		echo >&2
+		echo >&2 "Revoked temporary Google credentials."
+		echo >&2
 	fi
 }
 
-_revenv () {
+_revenv() {
 	deactivate && make virtualenv && source .venv/bin/activate && make requirements envhook
 }
 
@@ -121,7 +121,6 @@ _revenv () {
 # causes problems on Travis (`importlib.util` failing to import `contextlib`).
 #
 eval "$(ENVHOOK=0 python3 "${project_root}/scripts/export_environment.py" || echo false)"
-
 
 # Auto-completion for _select
 #
@@ -132,7 +131,7 @@ _complete_env() {
 	# * because of https://unix.stackexchange.com/a/537241/448602
 	envs=$(find "${project_root}/deployments" -maxdepth 1 -type d -print0 | xargs -0 basename)
 	# shellcheck disable=SC2207
-	COMPREPLY=( $(compgen -W "$envs" -- "${env}") )
+	COMPREPLY=($(compgen -W "$envs" -- "${env}"))
 	return 0
 }
 
