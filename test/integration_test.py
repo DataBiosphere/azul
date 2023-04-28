@@ -461,6 +461,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if index and delete:
             # FIXME: Test delete notifications
             #        https://github.com/DataBiosphere/azul/issues/3548
+            # noinspection PyUnreachableCode
             if False:
                 with self._service_account_credentials:
                     for catalog in catalogs:
@@ -528,16 +529,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
         assert supported_formats
-        validators = {
+        validators: dict[ManifestFormat, Callable[[str, bytes], None]] = {
             ManifestFormat.compact: self._check_manifest,
             ManifestFormat.terra_bdbag: self._check_terra_bdbag,
             ManifestFormat.terra_pfb: self._check_terra_pfb,
             ManifestFormat.curl: self._check_curl_manifest
         }
         for format_ in [None, *supported_formats]:
-            with self.subTest('manifest',
-                              catalog=catalog,
-                              format=format_):
+            with self.subTest('manifest', catalog=catalog, format=format_):
                 args = dict(catalog=catalog)
                 if format_ is None:
                     validator = validators[first(supported_formats)]
