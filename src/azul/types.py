@@ -25,22 +25,22 @@ PrimitiveJSON = Union[str, int, float, bool, None]
 # two generic types are the most specific *immutable* super-types of `list`,
 # `tuple` and `dict`:
 
-AnyJSON4 = Union[Mapping[str, Any], Sequence[Any], PrimitiveJSON]
-AnyJSON3 = Union[Mapping[str, AnyJSON4], Sequence[AnyJSON4], PrimitiveJSON]
-AnyJSON2 = Union[Mapping[str, AnyJSON3], Sequence[AnyJSON3], PrimitiveJSON]
-AnyJSON1 = Union[Mapping[str, AnyJSON2], Sequence[AnyJSON2], PrimitiveJSON]
-AnyJSON = Union[Mapping[str, AnyJSON1], Sequence[AnyJSON1], PrimitiveJSON]
+AnyJSON4 = Union[Sequence[Any], Mapping[str, Any], PrimitiveJSON]
+AnyJSON3 = Union[Sequence[AnyJSON4], Mapping[str, AnyJSON4], PrimitiveJSON]
+AnyJSON2 = Union[Sequence[AnyJSON3], Mapping[str, AnyJSON3], PrimitiveJSON]
+AnyJSON1 = Union[Sequence[AnyJSON2], Mapping[str, AnyJSON2], PrimitiveJSON]
+AnyJSON = Union[Sequence[AnyJSON1], Mapping[str, AnyJSON1], PrimitiveJSON]
 JSON = Mapping[str, AnyJSON]
 JSONs = Sequence[JSON]
 CompositeJSON = Union[JSON, Sequence[AnyJSON]]
 
 # For mutable JSON we can be more specific and use dict and list:
 
-AnyMutableJSON4 = Union[dict[str, Any], list[Any], PrimitiveJSON]
-AnyMutableJSON3 = Union[dict[str, AnyMutableJSON4], list[AnyMutableJSON4], PrimitiveJSON]
-AnyMutableJSON2 = Union[dict[str, AnyMutableJSON3], list[AnyMutableJSON3], PrimitiveJSON]
-AnyMutableJSON1 = Union[dict[str, AnyMutableJSON2], list[AnyMutableJSON2], PrimitiveJSON]
-AnyMutableJSON = Union[dict[str, AnyMutableJSON1], list[AnyMutableJSON1], PrimitiveJSON]
+AnyMutableJSON4 = Union[list[Any], dict[str, Any], PrimitiveJSON]
+AnyMutableJSON3 = Union[list[AnyMutableJSON4], dict[str, AnyMutableJSON4], PrimitiveJSON]
+AnyMutableJSON2 = Union[list[AnyMutableJSON3], dict[str, AnyMutableJSON3], PrimitiveJSON]
+AnyMutableJSON1 = Union[list[AnyMutableJSON2], dict[str, AnyMutableJSON2], PrimitiveJSON]
+AnyMutableJSON = Union[list[AnyMutableJSON1], dict[str, AnyMutableJSON1], PrimitiveJSON]
 MutableJSON = dict[str, AnyMutableJSON]
 MutableJSONs = list[MutableJSON]
 MutableCompositeJSON = Union[MutableJSON, list[AnyJSON]]
