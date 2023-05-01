@@ -147,6 +147,9 @@ class TDRAnvilBundle(TDRBundle):
         def key_ref_to_entity_ref(key_ref: KeyReference) -> str:
             return str(entities_by_key[key_ref])
 
+        def optional_key_ref_to_entity_ref(key_ref: Optional[KeyReference]) -> str:
+            return None if key_ref is None else key_ref_to_entity_ref(key_ref)
+
         self._add_entity(
             manifest_entry={
                 'uuid': bundle_fqid.uuid,
@@ -157,7 +160,7 @@ class TDRAnvilBundle(TDRBundle):
             metadata=sorted((
                 {
                     'inputs': sorted(map(key_ref_to_entity_ref, link.inputs)),
-                    'activity': None if link.activity is None else key_ref_to_entity_ref(link.activity),
+                    'activity': optional_key_ref_to_entity_ref(link.activity),
                     'outputs': sorted(map(key_ref_to_entity_ref, link.outputs))
                 }
                 for link in links
@@ -308,7 +311,7 @@ class Plugin(TDRPlugin):
         return result
 
     def _simplify_links(self, links: Links) -> None:
-        grouped_links = defaultdict(set)
+        grouped_links: Mapping[KeyReference, Links] = defaultdict(set)
         for link in links:
             grouped_links[link.activity].add(link)
         for activity, convergent_links in grouped_links.items():
