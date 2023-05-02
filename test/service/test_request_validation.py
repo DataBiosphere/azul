@@ -197,7 +197,7 @@ class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
     def test_bad_filters(self):
         url = self.base_url.set(path='/index/files', args=dict(catalog=self.catalog))
         for filters, message in [
-            ('"', 'The `filters` parameter is not valid JSON'),
+            ('"', "The 'filters' parameter is not valid JSON"),
             ('""', 'The `filters` parameter must be a dictionary'),
             (
                 '{"sampleDisease": ["H syndrome"]}',
