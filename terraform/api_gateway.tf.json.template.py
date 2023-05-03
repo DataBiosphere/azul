@@ -227,7 +227,7 @@ emit_tf({
                             },
                             'statement': {
                                 'rate_based_statement': {
-                                    'limit': 100,  # limit must be between 100 and 20,000,000
+                                    'limit': 1000,  # limit must be between 100 and 20,000,000
                                     'aggregate_key_type': 'IP'
                                 }
                             },
