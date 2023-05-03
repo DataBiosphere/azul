@@ -244,6 +244,8 @@ class AzulClient(SignatureHelper):
     def remote_reindex_partition(self, message: JSON) -> None:
         catalog = message['catalog']
         prefix = message['prefix']
+        # FIXME: Adopt `trycast` for casting JSON to TypeDict
+        #        https://github.com/DataBiosphere/azul/issues/5171
         source = cast(SourceJSON, message['source'])
         validate_uuid_prefix(prefix)
         source = self.repository_plugin(catalog).source_from_json(source)

@@ -200,6 +200,8 @@ class IndexController(AppController):
         notification into a list of contributions to documents, each document
         representing one metadata entity in the index.
         """
+        # FIXME: Adopt `trycast` for casting JSON to TypeDict
+        #        https://github.com/DataBiosphere/azul/issues/5171
         bundle_fqid = cast(SourcedBundleFQIDJSON, notification['bundle_fqid'])
         try:
             partition = notification['partition']
