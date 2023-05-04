@@ -434,9 +434,10 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
                      authentication: Optional[Authentication]
                      ) -> Iterable[SOURCE_REF]:
         """
-        The sources the plugin is configured to read metadata from.
-        Retrieving this information may require a round-trip to the underlying
-        repository. Implementations should raise PermissionError if the provided
+        The sources the plugin is configured to read metadata from that are
+        accessible using the provided authentication. Retrieving this
+        information may require a round-trip to the underlying repository.
+        Implementations should raise PermissionError if the provided
         authentication is insufficient to access the repository.
         """
         raise NotImplementedError
