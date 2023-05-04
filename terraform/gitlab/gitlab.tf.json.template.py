@@ -688,7 +688,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'config:BatchGetResourceConfig'
                         ],
                         'resources': ['*']
-                    }
+                    },
+                    {
+                        'actions': [
+                            'logs:CreateLogGroup',
+                            'logs:CreateLogStream',
+                            'logs:PutLogEvents'
+                        ],
+                        'resources': ['arn:aws:logs:*:*:*']
+                    },
                 ]
             }
         },
@@ -899,6 +907,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             },
             'gitlab_vpc': {
                 'name': '/aws/vpc/azul-gitlab',
+                'retention_in_days': config.audit_log_retention_days,
+            },
+            'gitlab_cwagent': {
+                'name': '/aws/cwagent/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
             }
         },
@@ -1305,7 +1317,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
                     ],
-                    'packages': ['docker'],
+                    'packages': ['docker', 'amazon-cloudwatch-agent'],
                     'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
                     'write_files': [
                         {
@@ -1368,6 +1380,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'ExecStart=/usr/bin/docker',
                                     'run',
                                     '--name gitlab',
+                                    '--env GITLAB_SKIP_TAIL_LOGS=true',
                                     '--hostname ${aws_route53_record.gitlab.name}',
                                     '--publish 80:80',
                                     '--publish 2222:22',
@@ -1527,7 +1540,86 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Install]',
                                 'WantedBy=timers.target'
                             )
-                        }
+                        },
+                        {
+                            # AWS recommends placing the amazon-cloudwatch-agent config file at this path.
+                            # Note that the parent of etc/ is where the agent is installed.
+                            'path': '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
+                            'permissions': '0664',
+                            'owner': 'root',
+                            'content': json.dumps({
+                                'agent': {
+                                    'region': aws.region_name,
+                                    'logfile': '/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log',
+                                    'debug': bool(config.debug)
+                                },
+                                'logs': {
+                                    'logs_collected': {
+                                        'files': {
+                                            'collect_list': [
+                                                {
+                                                    'file_path': path,
+                                                    'log_group_name': '${aws_cloudwatch_log_group.gitlab_cwagent.name}',
+                                                    # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogStream.html
+                                                    # Characters disallowed for use in a log stream name are `:` and
+                                                    # `*`, so we replace any occurrence of `*` in `path` with `?`.
+                                                    'log_stream_name': path.replace('*', '?')
+                                                }
+                                                for path in
+                                                [
+                                                    f'/var/log/{file}'
+                                                    for file in
+                                                    [
+                                                        'amazon/ssm/amazon-ssm-agent.log',
+                                                        'audit/audit.log',
+                                                        'cloud-init.log',
+                                                        'cron',
+                                                        'maillog',
+                                                        'messages',
+                                                        'secure'
+                                                    ]
+
+                                                ] + [
+                                                    f'/mnt/gitlab/logs/{file}.log'
+                                                    for file in
+                                                    [
+                                                        'gitaly/gitaly_ruby_json',
+                                                        'gitlab-shell/gitlab-shell',
+                                                        'nginx/gitlab_access',
+                                                        'nginx/gitlab_error',
+                                                        'nginx/gitlab_registry_access',
+                                                        'puma/puma_stderr',
+                                                        'puma/puma_stdout',
+                                                        # The '*' is used in order to get the most recent GitLab
+                                                        # reconfigure logs (name based on UNIX timestamp of when
+                                                        # reconfigure initiated). Only the most recent file, by
+                                                        # modification time, matching the wildcard is collected.
+                                                        'reconfigure/*'
+                                                    ]
+                                                ] + [
+                                                    f'/mnt/gitlab/logs/gitlab-rails/{file}.log'
+                                                    for file in
+                                                    [
+                                                        'api_json',
+                                                        'application_json',
+                                                        'application',
+                                                        'audit_json',
+                                                        'auth',
+                                                        'database_load_balancing',
+                                                        'exceptions_json',
+                                                        'graphql_json',
+                                                        'migrations',
+                                                        'production_json',
+                                                        'production',
+                                                        'sidekiq_client'
+                                                    ]
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }, indent=4)
+                        },
                     ],
                     'runcmd': [
                         ['systemctl', 'daemon-reload'],
@@ -1542,6 +1634,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'gitlab-runner',
                             'clamscan.timer',
                             'prune-images.timer'
+                        ],
+                        [
+                            'amazon-cloudwatch-agent-ctl',
+                            '-m', 'ec2',  # mode
+                            '-a', 'fetch-config',  # action (fetch file from location specified in -c)
+                            '-c', 'file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
+                            '-s'  # restart agent afterwards
                         ]
                     ],
                 }, indent=2),

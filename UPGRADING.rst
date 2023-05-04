@@ -19,6 +19,16 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#3894 Send GitLab host logs to CloudWatch
+=========================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5207 Fix: Partition sizing ignores supplementary bundles
 =========================================================
 
