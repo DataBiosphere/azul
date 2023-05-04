@@ -32,7 +32,7 @@ def mksrc(google_project,
           subgraphs,
           flags: int = 0,
           /,
-          prefix: Optional[str] = None):
+          prefix: Optional[str] = None) -> tuple[str, str]:
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= ma | pop
     if prefix is None:
@@ -46,14 +46,28 @@ def mksrc(google_project,
     return project, source
 
 
-def mkdict(items):
+def mkdelta(items: list[tuple[str, str]]) -> dict[str, str]:
     result = dict(items)
     assert len(items) == len(result), 'collisions detected'
     assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
-dcp2_sources = mkdict([
+def mklist(catalog: dict[str, str]) -> list[str]:
+    return list(filter(None, catalog.values()))
+
+
+def mkdict(previous_catalog: dict[str, str],
+           num_expected: int,
+           delta: dict[str, str]
+           ) -> dict[str, str]:
+    catalog = previous_catalog | delta
+    num_actual = len(mklist(catalog))
+    assert num_expected == num_actual, (num_expected, num_actual)
+    return catalog
+
+
+dcp2_sources = mkdict({}, 105, mkdelta([
     mksrc('datarepo-dev-a9252919', 'hca_dev_005d611a14d54fbf846e571a1f874f70__20210827_20210903', 7),
     mksrc('datarepo-dev-c148d39c', 'hca_dev_027c51c60719469fa7f5640fe57cbece__20210827_20210902', 8),
     mksrc('datarepo-dev-e2ab8487', 'hca_dev_03c6fce7789e4e78a27a664d562bb738__20210902_20210907', 1530),
@@ -159,18 +173,28 @@ dcp2_sources = mkdict([
     mksrc('datarepo-dev-67240cf2', 'hca_dev_f86f1ab41fbb4510ae353ffd752d4dfc__20210901_20210903', 20),
     mksrc('datarepo-dev-e8e0a59a', 'hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903', 384),
     mksrc('datarepo-dev-96d8e08c', 'hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903', 62),
-])
+]))
 
-lungmap_sources = mkdict([
+dcp3_sources = mkdict(dcp2_sources, 105, mkdelta([
+    mksrc('datarepo-dev-3d6d24ad', 'hca_dev_05657a599f9d4bb9b77b24be13aa5cea__20210827_20230215', 185),
+    mksrc('datarepo-dev-b46086a9', 'hca_dev_51f02950ee254f4b8d0759aa99bb3498__20210827_20230215', 6),
+    mksrc('datarepo-dev-27c50fbc', 'hca_dev_c5f4661568de4cf4bbc2a0ae10f08243__20210827_20230215', 1),
+    mksrc('datarepo-dev-2a4ab485', 'hca_dev_d2111fac3fc44f429b6d32cd6a828267__20210830_20230215', 735),
+    mksrc('datarepo-dev-1005632d', 'hca_dev_d3ac7c1b53024804b611dad9f89c049d__20210827_20230215', 11),
+    mksrc('datarepo-dev-8709b362', 'hca_dev_df88f39f01a84b5b92f43177d6c0f242__20210827_20230215', 1),
+    mksrc('datarepo-dev-e1712bfa', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20230215', 606, prefix='14'),
+]))
+
+lungmap_sources = mkdict({}, 2, mkdelta([
     mksrc('datarepo-dev-5d9526e0', 'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404', 1),
     mksrc('datarepo-dev-8de6d66b', 'lungmap_dev_2620497955a349b28d2b53e0bdfcb176__20220404_20220404', 1)
-])
+]))
 
-lm2_sources = lungmap_sources | mkdict([
+lm2_sources = mkdict(lungmap_sources, 5, mkdelta([
     mksrc('datarepo-dev-b47b6759', 'lungmap_dev_00f056f273ff43ac97ff69ca10e38c89__20220404_20220404_lm2', 1),
     mksrc('datarepo-dev-2e9ef7fd', 'lungmap_dev_20037472ea1d4ddb9cd356a11a6f0f76__20220401_20220404_lm2', 1),
     mksrc('datarepo-dev-d57fd0c5', 'lungmap_dev_f899709cae2c4bb988f0131142e6c7ec__20220401_20220629_lm2', 1)
-])
+]))
 
 
 def env() -> Mapping[str, Optional[str]]:
@@ -227,7 +251,7 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_hca')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('hca', 'dcp2', dcp2_sources),
+                ('hca', 'dcp3', dcp3_sources),
                 ('lungmap', 'lungmap', lungmap_sources),
                 ('lungmap', 'lm2', lm2_sources)
             ]

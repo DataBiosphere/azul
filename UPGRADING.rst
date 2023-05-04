@@ -19,6 +19,45 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5110 Update GitLab IAM policy for FedRAMP inventory
+====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#4218 Configure WAF with rules
+==============================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment immediately
+before the first time this change is pushed to the GitLab instance for that
+main deployment, regardless of whether the changes come as part of a feature
+branch, a merge commit or in a promotion.
+
+
+#3911 Disallow ``||`` joiners in metadata
+=========================================
+
+A new catalog ``dcp3`` has been added to ``dev`` and ``sandbox`` deployments.
+Add the ``dcp3`` catalog to your personal deployments using the sandbox
+deployment's ``environment.py`` as a model.
+
+
+#5116 Enable NIST 800.53 conformance pack for AWS Config
+========================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
 
 #4713 S3 Block Public Access setting should be enabled
 ======================================================

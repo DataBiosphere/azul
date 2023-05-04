@@ -28,9 +28,12 @@ from more_itertools import (
 )
 
 from azul import (
+    RequirementError,
+    config,
     reject,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
     MutableJSON,
     MutableJSONs,
@@ -402,6 +405,27 @@ class Bundle(ABC, Generic[SOURCE_REF]):
         :param manifest_entry: the manifest entry of the data file.
         """
         raise NotImplementedError
+
+    def _reject_joiner(self, value: AnyJSON):
+        if isinstance(value, dict):
+            # Since the keys in the metadata files and manifest are pre-defined,
+            # we save some time here by not looking for the joiner in the keys.
+            for v in value.values():
+                self._reject_joiner(v)
+        elif isinstance(value, list):
+            for v in value:
+                self._reject_joiner(v)
+        elif isinstance(value, str):
+            if config.manifest_column_joiner in value:
+                msg = f'{config.manifest_column_joiner!r} is disallowed in metadata'
+                raise RequirementError(msg, self.fqid)
+
+    def reject_joiner(self):
+        """
+        Raise a requirement error if the given string is found in the bundle
+        """
+        self._reject_joiner(self.manifest)
+        self._reject_joiner(self.metadata_files)
 
 
 class BundlePartition(UUIDPartition['BundlePartition']):

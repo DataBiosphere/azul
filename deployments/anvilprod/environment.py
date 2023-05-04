@@ -22,7 +22,8 @@ ma = 1  # managed access
 pop = 2  # remove snapshot
 
 
-def mksrc(google_project, snapshot, subgraphs, flags: int = 0):
+def mksrc(google_project, snapshot, subgraphs, flags: int = 0) -> tuple[str, str]:
+    project = '_'.join(snapshot.split('_')[1:-3])
     assert flags <= ma | pop
     source = None if flags & pop else ':'.join([
         'tdr',
@@ -30,22 +31,35 @@ def mksrc(google_project, snapshot, subgraphs, flags: int = 0):
         'snapshot/' + snapshot,
         '/' + str(partition_prefix_length(subgraphs))
     ])
-    key = '_'.join(snapshot.split('_')[1:-1])
-    return key, source
+    return project, source
 
 
-def mkdict(items):
+def mkdelta(items: list[tuple[str, str]]) -> dict[str, str]:
     result = dict(items)
     assert len(items) == len(result), 'collisions detected'
     assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
-anvil_sources = mkdict([
+def mklist(catalog: dict[str, str]) -> list[str]:
+    return list(filter(None, catalog.values()))
+
+
+def mkdict(previous_catalog: dict[str, str],
+           num_expected: int,
+           delta: dict[str, str]
+           ) -> dict[str, str]:
+    catalog = previous_catalog | delta
+    num_actual = len(mklist(catalog))
+    assert num_expected == num_actual, (num_expected, num_actual)
+    return catalog
+
+
+anvil_sources = mkdict({}, 3, mkdelta([
     mksrc('datarepo-dev-43738c90', 'ANVIL_1000G_2019_Dev_20230302_ANV5_202303032342', 6404),
     mksrc('datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 25),
     mksrc('datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25),
-])
+]))
 
 
 def env() -> Mapping[str, Optional[str]]:

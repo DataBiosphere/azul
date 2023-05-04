@@ -356,7 +356,8 @@ def env() -> Mapping[str, Optional[str]]:
         # The name of the Google Cloud service account to be created and used
         # to simulate access from users who are logged in but not registered
         # with SAM.
-        'AZUL_GOOGLE_SERVICE_ACCOUNT_UNREGISTERED': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-unreg-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_GOOGLE_SERVICE_ACCOUNT_UNREGISTERED':
+            'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-unreg-{AZUL_DEPLOYMENT_STAGE}',
 
         # The number of concurrently running lambda executions for the
         # contribution and aggregation stages of indexing, respectively.
@@ -423,7 +424,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Lambda platform.
         #
         'azul_chalice_bin': '{project_root}/bin/wheels/runtime',
-
 
         # Stop `pip` from nagging us about updates. We update pip regularly like
         # any other dependency. There is nothing special about `pip` that would
@@ -508,7 +508,7 @@ def env() -> Mapping[str, Optional[str]]:
         # develop branch, 0 otherwise. Personal deployments have this set to 0.
         #
         'AZUL_IS_SANDBOX': '0',
-        
+
         # A list of names of AWS IAM roles that should be given permission to
         # manage incidents with AWS support as defined in CIS rule 1.20:
         #

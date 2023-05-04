@@ -1531,8 +1531,10 @@ class SwaggerResourceIntegrationTest(AzulTestCase):
                 ('does-not-exist', 404),
                 ('../environ.json', 403),
                 ('../does-not-exist', 403),
-                ('..%2Fenviron.json', 400),
-                ('..%2Fdoes-not-exist', 400),
+                # Normally the next two paths would return a 400, however the
+                # WAF rule group CommonRuleSet now catches and blocks these
+                ('..%2Fenviron.json', 403),
+                ('..%2Fdoes-not-exist', 403),
             ]:
                 with self.subTest(component=component, file=file):
                     response = http.request('GET', str(base_url / 'static' / file))

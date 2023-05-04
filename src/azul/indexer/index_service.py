@@ -265,6 +265,7 @@ class IndexService(DocumentService):
                        of additions.
         """
         plugin = self.metadata_plugin(catalog)
+        bundle.reject_joiner()
         transformers = plugin.transformers(bundle, delete=delete)
         log.info('Estimating size of partition %s of bundle %s, version %s.',
                  partition, bundle.uuid, bundle.version)

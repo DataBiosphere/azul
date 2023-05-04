@@ -194,6 +194,8 @@ absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/test \
                                 $(project_root)/lambdas/{layer,indexer,service}/app.py \
                                 $(project_root)/.flake8/azul_flake8.py \
+                                $(project_root)/environment.py \
+                                $(project_root)/deployments/*/environment.py \
                                 $$(find $(project_root)/terraform{,/gitlab,/shared} \
                                         $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         $(project_root)/.github \

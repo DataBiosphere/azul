@@ -73,6 +73,8 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
         expected_hits = self._load_canned_result(self.bundle)
         self.assertEqual(expected_hits, hits)
 
+    # FIXME: Enable test after the issue with TinyQuery `WITH` has been resolved
+    #        https://github.com/DataBiosphere/azul/issues/5046
     @unittest.skip('TinyQuery does not support the WITH clause')
     def test_fetch_bundle(self):
         canned_bundle = self._load_canned_bundle(self.bundle)

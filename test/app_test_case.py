@@ -6,6 +6,10 @@ from threading import (
     Thread,
 )
 import time
+from typing import (
+    Any,
+    ClassVar,
+)
 
 # noinspection PyPackageRequirements
 from chalice.config import (
@@ -68,6 +72,8 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
     that this mixin picks up the environment overrides made by
     ElasticsearchTestCase.
     """
+
+    app_module: ClassVar[Any]
 
     @classmethod
     @abstractmethod
