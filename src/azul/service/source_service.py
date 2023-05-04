@@ -84,8 +84,6 @@ class SourceService:
     ttl_attribute = 'expiration'
 
     # Timespan in seconds that sources persist in the cache
-    # FIXME: Streamline cache expiration
-    #        https://github.com/DataBiosphere/azul/issues/3094
     expiration = 60
 
     @property
