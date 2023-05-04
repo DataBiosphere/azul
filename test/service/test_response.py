@@ -2052,6 +2052,39 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
         self.assertEqual([None, '308eea51-d14b-4036-8cd1-cfd81d7532c3'],
                          json.loads(second_page_previous['search_before']))
 
+    def test_bad_search_after_search_before(self):
+        """
+        Test that invalid JSON for search_after or search_before raise a 400
+        """
+        query_params = self._params(size=1, sort='sampleId', order='asc')
+        url = self.base_url.set(path='/index/samples', args=query_params)
+        # Get page 1
+        response = requests.get(str(url))
+        response.raise_for_status()
+        response_json = response.json()
+        # Get page 2
+        response = requests.get(response_json['pagination']['next'])
+        response.raise_for_status()
+        response_json = response.json()
+        test_cases = {
+            'search_before': response_json['pagination']['previous'],
+            'search_after': response_json['pagination']['next']
+        }
+        for pagination_key, good_url in test_cases.items():
+            with self.subTest(pagination_key=pagination_key):
+                # Verify URL works before modifying
+                response = requests.get(good_url)
+                response.raise_for_status()
+                # Modify search_… param in URL and verify expected error occurs
+                bad_url = furl(good_url)
+                self.assertIn('"', bad_url.args[pagination_key])
+                bad_url.args[pagination_key] = bad_url.args[pagination_key].replace('"', '')
+                response = requests.get(str(bad_url))
+                error_msg = f'The {pagination_key!r} parameter is not valid JSON'
+                expected_text = f'{{"Code":"BadRequestError","Message":"{error_msg}"}}'
+                self.assertEqual(400, response.status_code)
+                self.assertEqual(expected_text, response.text)
+
     def test_filter_by_publication_title(self):
         cases = [
             (
