@@ -11,7 +11,6 @@ from typing import (
     Callable,
     ClassVar,
     Optional,
-    Sequence,
     Union,
 )
 from unittest.mock import (
@@ -39,7 +38,6 @@ from azul import (
 from azul.indexer import (
     Bundle,
     BundleUUID,
-    SourceJSON,
     SourcedBundleFQID,
 )
 from azul.logging import (
@@ -54,6 +52,7 @@ from azul.service.storage_service import (
     StorageService,
 )
 from azul.types import (
+    AnyJSON,
     JSONs,
 )
 from indexer import (
@@ -198,7 +197,7 @@ class StorageServiceTestMixin:
             'mix in the appropriate subclass of CatalogTestCase.')
 def patch_source_cache(target: Union[None, type, Callable] = None,
                        /,
-                       hit: Optional[Sequence[SourceJSON]] = None):
+                       hit: Optional[list[AnyJSON]] = None):
     """
     Patch the cache access methods of SourceService to emulate a cache miss or
     return a given set of sources.

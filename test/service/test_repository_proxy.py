@@ -61,6 +61,7 @@ from azul.service.source_service import (
     SourceService,
 )
 from azul.terra import (
+    TDRClient,
     TDRSourceSpec,
     TerraClient,
 )
@@ -182,7 +183,9 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                 response = client.request('GET', str(azul_url), redirect=False)
             self.assertEqual(response.status, 404)
 
+    @mock.patch.object(TDRClient, 'snapshot_names_by_id')
     def test_list_sources(self,
+                          mock_list_snapshots,
                           mock_get_cached_sources,
                           ):
         # Includes extra sources to check that the endpoint only returns results
@@ -192,14 +195,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             str(i): source_name
             for i, source_name in enumerate(self.mock_source_names + extra_sources)
         }
-        mock_source_jsons = [
-            {
-                'id': id,
-                'spec': str(TDRSourceSpec.parse(self.make_mock_source_spec(name)))
-            }
-            for id, name in mock_source_names_by_id.items()
-            if name not in extra_sources
-        ]
+        mock_list_snapshots.return_value = mock_source_names_by_id
         client = http_client()
         azul_url = furl(url=self.base_url,
                         path='/repository/sources',
@@ -219,22 +215,21 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                 self.assertEqual(response, {
                     'sources': [
                         {
-                            'sourceId': source['id'],
-                            'sourceSpec': source['spec']
+                            'sourceId': id,
+                            'sourceSpec': str(TDRSourceSpec.parse(self.make_mock_source_spec(name)))
                         }
-                        for source in mock_source_jsons
+                        for id, name in mock_source_names_by_id.items()
+                        if name not in extra_sources
                     ]
                 })
 
-        mock_get_cached_sources.return_value = mock_source_jsons
+        mock_get_cached_sources.return_value = list(mock_source_names_by_id.keys())
         _test(authenticate=True, cache=True)
         _test(authenticate=False, cache=True)
         mock_get_cached_sources.return_value = None
         mock_get_cached_sources.side_effect = NotFound('foo_token')
-        with mock.patch('azul.terra.TDRClient.snapshot_names_by_id',
-                        return_value=mock_source_names_by_id):
-            _test(authenticate=True, cache=False)
-            _test(authenticate=False, cache=False)
+        _test(authenticate=True, cache=False)
+        _test(authenticate=False, cache=False)
 
 
 class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
