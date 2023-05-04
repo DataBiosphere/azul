@@ -156,6 +156,12 @@ class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
             for name, id in snapshot_ids_by_name.items()
         ]
 
+    def list_source_ids(self,
+                        authentication: Optional[Authentication]
+                        ) -> set[str]:
+        return self._auth_fallback(authentication,
+                                   lambda tdr: tdr.snapshot_ids())
+
     @property
     def tdr(self):
         return self._tdr()

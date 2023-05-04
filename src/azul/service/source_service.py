@@ -68,11 +68,11 @@ class SourceService:
         assert not any(joiner in c for c in cache_key), cache_key
         cache_key = joiner.join(cache_key)
         try:
-            source_ids = self._get(cache_key)
+            source_ids = set(self._get(cache_key))
         except CacheMiss:
-            source_ids = [source.id for source in plugin.list_sources(authentication)]
-            self._put(cache_key, source_ids)
-        return set(source_ids)
+            source_ids = plugin.list_source_ids(authentication)
+            self._put(cache_key, list(source_ids))
+        return source_ids
 
     def list_sources(self,
                      catalog: CatalogName,

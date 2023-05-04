@@ -442,6 +442,21 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
         """
         raise NotImplementedError
 
+    def list_source_ids(self,
+                        authentication: Optional[Authentication]
+                        ) -> set[str]:
+        """
+        List source IDs in the underlying repository that are accessible using
+        the provided authentication. Sources may be included even if they are
+        not configured to be read from. Subclasses should override this method
+        if it can be implemented more efficiently than `list_sources`.
+
+        Retrieving this information may require a round-trip to the underlying
+        repository. Implementations should raise PermissionError if the provided
+        authentication is insufficient to access the repository.
+        """
+        return {source.id for source in self.list_sources(authentication)}
+
     @cached_property
     def _generic_params(self) -> tuple:
         spec_cls, ref_cls, fqid_cls = get_generic_type_params(type(self),
