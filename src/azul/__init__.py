@@ -1383,7 +1383,7 @@ class Config:
         return os.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
 
     @property
-    def azul_monitoring_email(self) -> str:
+    def monitoring_email(self) -> str:
         return self.environ['AZUL_MONITORING_EMAIL']
 
     @property

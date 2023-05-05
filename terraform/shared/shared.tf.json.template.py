@@ -805,7 +805,7 @@ tf_config = {
                 # (see link below), we use a separate script for this purpose.
                 # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
                 'protocol': 'email',
-                'endpoint': config.azul_monitoring_email,
+                'endpoint': config.monitoring_email,
                 'provisioner': {
                     'local-exec': {
                         'command': ' '.join(map(shlex.quote, [
