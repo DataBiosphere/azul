@@ -131,7 +131,7 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.plugins.repository.tdr_anvil import (
-    TDRAnvilBundle,
+    BundleEntityType,
 )
 from azul.portal_service import (
     PortalService,
@@ -450,8 +450,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 elif config.is_anvil_enabled(catalog.name):
                     # While the files index does exist for AnVIL, it's possible
                     # for a bundle entity not to contain any files and
-                    # thus be absent from the files response
-                    entity_type = pluralize(TDRAnvilBundle.entity_type)
+                    # thus be absent from the files response. The only entity
+                    # type that is linked to both primary and supplementary
+                    # bundles is datasets.
+                    entity_type = 'datasets'
                 else:
                     assert False, catalog
                 self._assert_catalog_complete(catalog=catalog.name,
@@ -494,7 +496,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if config.is_hca_enabled(catalog):
             bundle_index, project_index = 'bundles', 'projects'
         elif config.is_anvil_enabled(catalog):
-            bundle_index, project_index = pluralize(TDRAnvilBundle.entity_type), 'datasets'
+            bundle_index = pluralize(BundleEntityType.primary.value)
+            project_index = 'datasets'
         else:
             assert False, catalog
         service_paths = {

@@ -2,6 +2,9 @@
     defaultdict,
 )
 import datetime
+from enum import (
+    Enum,
+)
 import logging
 from operator import (
     itemgetter,
@@ -22,6 +25,7 @@ from more_itertools import (
 
 from azul import (
     cached_property,
+    config,
     require,
     uuids,
 )
@@ -29,9 +33,7 @@ from azul.bigquery import (
     backtick,
 )
 from azul.indexer import (
-    Bundle,
-    BundleFQID,
-    SourcedBundleFQID,
+    SourcedBundleFQIDJSON,
 )
 from azul.indexer.document import (
     EntityReference,
@@ -113,7 +115,117 @@ class Link:
 Links = set[Link]
 
 
-class Plugin(TDRPlugin):
+class BundleEntityType(Enum):
+    """
+    AnVIL snapshots have no inherent notion of a "bundle". When indexing these
+    snapshots, we dynamically construct bundles by selecting individual entities
+    and following their foreign keys to discover associated entities. The
+    initial entity from which this graph traversal begins is termed the
+    "bundle entity", and its FQID serves as the basis for the bundle FQID. Each
+    member of this enumeration represents a strategy for selecting bundle
+    entities.
+
+    Our primary such strategy is to use every biosample in a given snapshot as a
+    bundle entity. Biosamples were chosen for this role based on a desirable
+    balance between the size and number of the resulting bundles as well as the
+    degree of overlap between them. The implementation of the graph traversal is
+    tightly coupled to this choice, and switching to a different entity type
+    would require re-implementing much of the Plugin code. Primary bundles
+    consist of at least one biosample (the bundle entity), exactly one dataset,
+    and zero or more other entities of assorted types.
+
+    Some snapshots include file entities that lack any foreign keys that
+    associate the file with any other entity. To ensure that these "orphaned"
+    files are indexed, they are also used as bundle entities. As with primary
+    bundles, the creation of these supplementary bundles depends on a
+    specifically tailored traversal implementation. Supplementary bundles always
+    consist of exactly two entities: one file (the bundle entity) and one
+    dataset.
+    """
+    primary: EntityType = 'biosample'
+    supplementary: EntityType = 'file'
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class AnvilBundleFQID(TDRBundleFQID):
+    entity_type: BundleEntityType = attr.ib(converter=BundleEntityType)
+
+    def to_json(self) -> SourcedBundleFQIDJSON:
+        return dict(super().to_json(),
+                    entity_type=self.entity_type.value)
+
+
+class TDRAnvilBundle(TDRBundle):
+
+    def add_entity(self,
+                   entity: EntityReference,
+                   version: str,
+                   row: MutableJSON
+                   ) -> None:
+        pk_column = entity.entity_type + '_id'
+        self._add_entity(
+            manifest_entry={
+                'uuid': entity.entity_id,
+                'version': version,
+                'name': f'{entity.entity_type}_{row[pk_column]}',
+                'indexed': True,
+                'crc32': '',
+                'sha256': '',
+                **(
+                    {'drs_path': self._parse_drs_uri(row.get('file_ref'))}
+                    if entity.entity_type == 'file' else {}
+                )
+            },
+            metadata=row
+        )
+
+    def add_links(self,
+                  links: Links,
+                  entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
+        def link_sort_key(link: JSON):
+            return link['activity'] or '', link['inputs'], link['outputs']
+
+        def key_ref_to_entity_ref(key_ref: KeyReference) -> str:
+            return str(entities_by_key[key_ref])
+
+        def optional_key_ref_to_entity_ref(key_ref: Optional[KeyReference]) -> str:
+            return None if key_ref is None else key_ref_to_entity_ref(key_ref)
+
+        self._add_entity(
+            manifest_entry={
+                'uuid': self.fqid.uuid,
+                'version': self.fqid.version,
+                'name': 'links',
+                'indexed': True
+            },
+            metadata=sorted((
+                {
+                    'inputs': sorted(map(key_ref_to_entity_ref, link.inputs)),
+                    'activity': optional_key_ref_to_entity_ref(link.activity),
+                    'outputs': sorted(map(key_ref_to_entity_ref, link.outputs))
+                }
+                for link in links
+            ), key=link_sort_key)
+        )
+
+    def _add_entity(self,
+                    *,
+                    manifest_entry: MutableJSON,
+                    metadata: AnyMutableJSON
+                    ) -> None:
+        name = manifest_entry['name']
+        assert name not in self.metadata_files, name
+        self.manifest.append(manifest_entry)
+        self.metadata_files[name] = metadata
+
+    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
+        if file_ref is None:
+            return None
+        else:
+            return self._parse_drs_path(file_ref)
+
+
+class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
 
     @cached_property
     def _version(self):
@@ -129,24 +241,30 @@ class Plugin(TDRPlugin):
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
-                      ) -> list[TDRBundleFQID]:
+                      ) -> list[AnvilBundleFQID]:
         spec = source.spec
         partition_prefix = spec.prefix.common + prefix
         validate_uuid_prefix(partition_prefix)
-        entity_type = TDRAnvilBundle.entity_type
+        primary = BundleEntityType.primary.value
+        supplementary = BundleEntityType.supplementary.value
         rows = self._run_sql(f'''
-            SELECT datarepo_row_id
-            FROM {backtick(self._full_table_name(spec, entity_type))}
+            SELECT datarepo_row_id, {primary!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, primary))}
             WHERE STARTS_WITH(datarepo_row_id, '{partition_prefix}')
+            UNION ALL
+            SELECT datarepo_row_id, {supplementary!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
+            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{partition_prefix}')
         ''')
         return [
-            TDRBundleFQID(source=source,
-                          # Reversibly tweak the entity UUID to prevent
-                          # collisions between entity IDs and bundle IDs
-                          uuid=uuids.change_version(row['datarepo_row_id'],
-                                                    self.datarepo_row_uuid_version,
-                                                    self.bundle_uuid_version),
-                          version=self._version)
+            AnvilBundleFQID(source=source,
+                            # Reversibly tweak the entity UUID to prevent
+                            # collisions between entity IDs and bundle IDs
+                            uuid=uuids.change_version(row['datarepo_row_id'],
+                                                      self.datarepo_row_uuid_version,
+                                                      self.bundle_uuid_version),
+                            version=self._version,
+                            entity_type=BundleEntityType(row['entity_type']))
             for row in rows
         ]
 
@@ -159,7 +277,7 @@ class Plugin(TDRPlugin):
             for partition_prefix in prefix.partition_prefixes()
         ]
         assert prefixes, prefix
-        entity_type = TDRAnvilBundle.entity_type
+        entity_type = BundleEntityType.primary.value
         pk_column = entity_type + '_id'
         rows = self._run_sql(f'''
             SELECT prefix, COUNT({pk_column}) AS subgraph_count
@@ -169,7 +287,37 @@ class Plugin(TDRPlugin):
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> AnvilBundleFQID:
+        if 'entity_type' not in fqid:
+            # Resolution of bundles without entity type is expensive, so we only
+            # support it during canning.
+            assert not config.is_in_lambda, ('Bundle FQID lacks entity type', fqid)
+            source = self.source_from_json(fqid['source'])
+            entity_id = uuids.change_version(fqid['uuid'],
+                                             self.bundle_uuid_version,
+                                             self.datarepo_row_uuid_version)
+            rows = self._run_sql(' UNION ALL '.join((
+                f'''
+                SELECT {entity_type.value!r} AS entity_type
+                FROM {backtick(self._full_table_name(source.spec, entity_type.value))}
+                WHERE datarepo_row_id = {entity_id!r}
+                '''
+                for entity_type in BundleEntityType
+            )))
+            fqid = {**fqid, **one(rows)}
+        return super().resolve_bundle(fqid)
+
+    def _emulate_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+        if bundle_fqid.entity_type is BundleEntityType.primary:
+            log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
+            return self._primary_bundle(bundle_fqid)
+        elif bundle_fqid.entity_type is BundleEntityType.supplementary:
+            log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
+            return self._supplementary_bundle(bundle_fqid)
+        else:
+            assert False, bundle_fqid.entity_type
+
+    def _primary_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
         bundle_entity = self._bundle_entity(bundle_fqid)
 
@@ -206,17 +354,49 @@ class Plugin(TDRPlugin):
                 entity = EntityReference(entity_id=row['datarepo_row_id'], entity_type=entity_type)
                 entities_by_key[key] = entity
                 result.add_entity(entity, self._version, row)
-        result.add_links(bundle_fqid, links, entities_by_key)
-
+        result.add_links(links, entities_by_key)
         return result
 
-    def _bundle_entity(self, bundle_fqid: SourcedBundleFQID) -> KeyReference:
+    def _supplementary_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+        entity_id = uuids.change_version(bundle_fqid.uuid,
+                                         self.bundle_uuid_version,
+                                         self.datarepo_row_uuid_version)
+        source = bundle_fqid.source.spec
+        bundle_entity_type = bundle_fqid.entity_type.value
+        result = TDRAnvilBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
+        columns = self._columns(bundle_entity_type)
+        bundle_entity = dict(one(self._run_sql(f'''
+            SELECT {', '.join(sorted(columns))}
+            FROM {backtick(self._full_table_name(source, bundle_entity_type))}
+            WHERE datarepo_row_id = '{entity_id}'
+        ''')))
+        linked_entity_type = 'dataset'
+        columns = self._columns(linked_entity_type)
+        linked_entity = dict(one(self._run_sql(f'''
+            SELECT {', '.join(sorted(columns))}
+            FROM {backtick(self._full_table_name(source, linked_entity_type))}
+        ''')))
+        entities_by_key = {}
+        link_args = {}
+        for entity_type, row, arg in [
+            (bundle_entity_type, bundle_entity, 'outputs'),
+            (linked_entity_type, linked_entity, 'inputs')
+        ]:
+            entity_ref = EntityReference(entity_type=entity_type, entity_id=row['datarepo_row_id'])
+            key_ref = KeyReference(key=row[entity_type + '_id'], entity_type=entity_type)
+            entities_by_key[key_ref] = entity_ref
+            result.add_entity(entity_ref, self._version, row)
+            link_args[arg] = key_ref
+        result.add_links({Link.create(**link_args)}, entities_by_key)
+        return result
+
+    def _bundle_entity(self, bundle_fqid: AnvilBundleFQID) -> KeyReference:
         source = bundle_fqid.source
         bundle_uuid = bundle_fqid.uuid
         entity_id = uuids.change_version(bundle_uuid,
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
-        entity_type = TDRAnvilBundle.entity_type
+        entity_type = bundle_fqid.entity_type.value
         pk_column = entity_type + '_id'
         bundle_entity = one(self._run_sql(f'''
             SELECT {pk_column}
@@ -240,7 +420,7 @@ class Plugin(TDRPlugin):
         return result
 
     def _simplify_links(self, links: Links) -> None:
-        grouped_links = defaultdict(set)
+        grouped_links: Mapping[KeyReference, Links] = defaultdict(set)
         for link in links:
             grouped_links[link.activity].add(link)
         for activity, convergent_links in grouped_links.items():
@@ -513,10 +693,7 @@ class Plugin(TDRPlugin):
                            ) -> MutableJSONs:
         if keys:
             table_name = self._full_table_name(source, entity_type)
-            columns = set.union(
-                self.common_indexed_columns,
-                self.indexed_columns_by_entity_type[entity_type]
-            )
+            columns = self._columns(entity_type)
             pk_column = entity_type + '_id'
             assert pk_column in columns, entity_type
             log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
@@ -545,6 +722,10 @@ class Plugin(TDRPlugin):
             return rows
         else:
             return []
+
+    def _columns(self, entity_type: EntityType) -> set[str]:
+        entity_columns = self.indexed_columns_by_entity_type[entity_type]
+        return self.common_indexed_columns | entity_columns
 
     common_indexed_columns = {
         'datarepo_row_id',
@@ -601,6 +782,7 @@ class Plugin(TDRPlugin):
             'reference_assembly',
             'file_name',
             'file_ref',
+            'is_supplementary',
         },
         'activity': {
             'activity_id',
@@ -635,72 +817,3 @@ class Plugin(TDRPlugin):
             'data_modality'
         }
     }
-
-
-class TDRAnvilBundle(TDRBundle):
-    entity_type: EntityType = 'biosample'
-
-    def add_entity(self,
-                   entity: EntityReference,
-                   version: str,
-                   row: MutableJSON
-                   ) -> None:
-        pk_column = entity.entity_type + '_id'
-        self._add_entity(
-            manifest_entry={
-                'uuid': entity.entity_id,
-                'version': version,
-                'name': f'{entity.entity_type}_{row[pk_column]}',
-                'indexed': True,
-                'crc32': '',
-                'sha256': '',
-                **(
-                    {'drs_path': self._parse_drs_uri(row.get('file_ref'))}
-                    if entity.entity_type == 'file' else {}
-                )
-            },
-            metadata=row
-        )
-
-    def add_links(self,
-                  bundle_fqid: BundleFQID,
-                  links: Links,
-                  entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
-        def link_sort_key(link: JSON):
-            return link['activity'] or '', link['inputs'], link['outputs']
-
-        def key_ref_to_entity_ref(key_ref: KeyReference) -> str:
-            return str(entities_by_key[key_ref])
-
-        self._add_entity(
-            manifest_entry={
-                'uuid': bundle_fqid.uuid,
-                'version': bundle_fqid.version,
-                'name': 'links',
-                'indexed': True
-            },
-            metadata=sorted((
-                {
-                    'inputs': sorted(map(key_ref_to_entity_ref, link.inputs)),
-                    'activity': None if link.activity is None else key_ref_to_entity_ref(link.activity),
-                    'outputs': sorted(map(key_ref_to_entity_ref, link.outputs))
-                }
-                for link in links
-            ), key=link_sort_key)
-        )
-
-    def _add_entity(self,
-                    *,
-                    manifest_entry: MutableJSON,
-                    metadata: AnyMutableJSON
-                    ) -> None:
-        name = manifest_entry['name']
-        assert name not in self.metadata_files, name
-        self.manifest.append(manifest_entry)
-        self.metadata_files[name] = metadata
-
-    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
-        if file_ref is None:
-            return None
-        else:
-            return self._parse_drs_path(file_ref)

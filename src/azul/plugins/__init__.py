@@ -24,19 +24,14 @@ from typing import (
     TypeVar,
     TypedDict,
     Union,
-    get_args,
 )
 
 import attr
-from more_itertools import (
-    one,
-)
 
 from azul import (
     CatalogName,
     cached_property,
     config,
-    require,
 )
 from azul.chalice import (
     Authentication,
@@ -48,12 +43,15 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
+    BUNDLE_FQID,
     Bundle,
     SOURCE_REF,
     SOURCE_SPEC,
+    SourceJSON,
     SourceRef,
     SourceSpec,
     SourcedBundleFQID,
+    SourcedBundleFQIDJSON,
 )
 from azul.indexer.document import (
     Aggregate,
@@ -62,9 +60,9 @@ from azul.indexer.transform import (
     Transformer,
 )
 from azul.types import (
-    JSON,
     JSONs,
     MutableJSON,
+    get_generic_type_params,
 )
 
 if TYPE_CHECKING:
@@ -406,7 +404,7 @@ class MetadataPlugin(Plugin):
         raise NotImplementedError
 
 
-class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
+class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
 
     @classmethod
     def type_name(cls) -> str:
@@ -444,21 +442,31 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         raise NotImplementedError
 
     @cached_property
-    def _source_ref_cls(self) -> Type[SOURCE_REF]:
-        cls = type(self)
-        base_cls = one(getattr(cls, '__orig_bases__'))
-        spec_cls, ref_cls = get_args(base_cls)
-        require(issubclass(spec_cls, SourceSpec))
-        require(issubclass(ref_cls, SourceRef))
+    def _generic_params(self) -> tuple:
+        spec_cls, ref_cls, fqid_cls = get_generic_type_params(type(self),
+                                                              SourceSpec,
+                                                              SourceRef,
+                                                              SourcedBundleFQID)
+        assert fqid_cls.source_ref_cls() is ref_cls
         assert ref_cls.spec_cls() is spec_cls
+        return spec_cls, ref_cls, fqid_cls
+
+    @property
+    def _source_ref_cls(self) -> Type[SOURCE_REF]:
+        spec_cls, ref_cls, fqid_cls = self._generic_params
         return ref_cls
 
-    def source_from_json(self, ref: JSON) -> SOURCE_REF:
+    def source_from_json(self, ref: SourceJSON) -> SOURCE_REF:
         """
         Instantiate a :class:`SourceRef` from its JSON representation. The
         expected input format matches the output format of `SourceRef.to_json`.
         """
         return self._source_ref_cls.from_json(ref)
+
+    @property
+    def _bundle_fqid_cls(self) -> Type[BUNDLE_FQID]:
+        spec_cls, ref_cls, fqid_cls = self._generic_params
+        return fqid_cls
 
     def resolve_source(self, spec: str) -> SOURCE_REF:
         """
@@ -479,11 +487,14 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         raise NotImplementedError
 
+    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> BUNDLE_FQID:
+        return self._bundle_fqid_cls.from_json(fqid)
+
     @abstractmethod
     def list_bundles(self,
                      source: SOURCE_REF,
                      prefix: str
-                     ) -> list[SourcedBundleFQID[SOURCE_REF]]:
+                     ) -> list[BUNDLE_FQID]:
         """
         List the bundles in the given source whose UUID starts with the given
         prefix.
@@ -511,7 +522,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         return None
 
     @abstractmethod
-    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID[SOURCE_REF]) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: BUNDLE_FQID) -> Bundle[BUNDLE_FQID]:
         """
         Fetch the given bundle.
 

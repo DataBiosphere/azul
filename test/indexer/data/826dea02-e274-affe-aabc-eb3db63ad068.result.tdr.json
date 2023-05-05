@@ -181,6 +181,7 @@
       "file_ref": "drs://data.terra.bio/v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67",
       "file_size": 213021639,
       "reference_assembly": [],
+      "is_supplementary": false,
       "source_datarepo_row_ids": [
         "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
       ]
@@ -195,6 +196,7 @@
       "file_ref": "drs://data.terra.bio/v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37",
       "file_size": 3306845592,
       "reference_assembly": [],
+      "is_supplementary": false,
       "source_datarepo_row_ids": [
         "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
       ]

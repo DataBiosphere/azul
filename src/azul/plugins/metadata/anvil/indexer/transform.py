@@ -42,6 +42,7 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     FieldTypes,
+    null_bool,
     null_datetime,
     null_int,
     null_str,
@@ -275,6 +276,7 @@ class BaseTransformer(Transformer, ABC):
             'file_md5sum': null_str,
             'reference_assembly': [null_str],
             'file_name': null_str,
+            'is_supplementary': null_bool,
             # Not in schema
             'version': null_str,
             'uuid': null_str,

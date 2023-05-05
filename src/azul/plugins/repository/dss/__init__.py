@@ -76,10 +76,19 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
         return str(uuid5(cls.namespace, spec.name))
 
 
-DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
+class DSSBundleFQID(SourcedBundleFQID[DSSSourceRef]):
+    pass
 
 
-class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
+class DSSBundle(Bundle[DSSBundleFQID]):
+
+    def drs_path(self, manifest_entry: JSON) -> str:
+        file_uuid = manifest_entry['uuid']
+        file_version = manifest_entry['version']
+        return str(furl(path=(file_uuid,), args={'version': file_version}))
+
+
+class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -108,7 +117,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
         # noinspection PyUnreachableCode
         return []
 
-    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> DSSBundle:
         assert False, 'DSS is EOL'
         # noinspection PyUnreachableCode
         return DSSBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
@@ -458,11 +467,3 @@ class DSSFileDownload(RepositoryFileDownload):
     @property
     def retry_after(self) -> Optional[int]:
         return self._retry_after
-
-
-class DSSBundle(Bundle[DSSSourceRef]):
-
-    def drs_path(self, manifest_entry: JSON) -> str:
-        file_uuid = manifest_entry['uuid']
-        file_version = manifest_entry['version']
-        return str(furl(path=(file_uuid,), args={'version': file_version}))
