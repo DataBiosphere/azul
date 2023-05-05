@@ -3,7 +3,7 @@ all: hello
 
 include common.mk
 
-azul_docker_image ?= azul
+azul_docker_image ?= ucsc/azul
 azul_docker_image_tag ?= latest
 azul_docker_image_cache_seed ?=
 
