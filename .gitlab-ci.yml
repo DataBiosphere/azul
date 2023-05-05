@@ -38,15 +38,12 @@ build_image:
     - if: $CI_COMMIT_BRANCH
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
-    - make docker_dev_push .gitlab.env
-  artifacts:
-    reports:
-      dotenv: .gitlab.env
+    - make docker_dev_push
 
 .base:
   dependencies:
     - build_image
-  image: $BUILD_IMAGE
+  image: ${azul_docker_image}/dev:${azul_docker_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate

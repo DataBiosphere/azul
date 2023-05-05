@@ -50,10 +50,6 @@ $(eval $(call docker,_dev,,/dev))  # development image w/o dependency resolution
 $(eval $(call docker,_deps,_runtime_deps,/deps))  # runtime image with automatic dependency resolution
 $(eval $(call docker,_dev_deps,_deps,/dev-deps))  # development image with automatic dependency resolution
 
-.gitlab.env:
-	echo BUILD_IMAGE=$(azul_docker_image)/dev:$(azul_docker_image_tag) > .gitlab.env
-
-
 .PHONY: requirements_update
 requirements_update: check_venv check_docker
 #	Pull out transitive dependency pins so they can be recomputed. Instead
