@@ -9,8 +9,8 @@ workflow:
         azul_gitlab_pipeline_name: Scheduled $azul_gitlab_schedule
 
 variables:
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE
-  DOCKER_TAG: $CI_PIPELINE_ID
+  azul_docker_image: $CI_REGISTRY_IMAGE
+  azul_docker_image_tag: $CI_PIPELINE_ID
 
 stages:
   - build_image
