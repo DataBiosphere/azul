@@ -1196,8 +1196,6 @@ class Config:
         public = '_public'
         unregistered = '_unregistered'
 
-        value: str  # avoid type warning in PyCharm
-
         @property
         def id(self) -> str:
             return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT' + self.value.upper()]
