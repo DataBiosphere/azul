@@ -52,8 +52,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
         container port on a interface that is within reach of the current
         process.
 
-        :param image: the name of a docker image (may include a tag and/or the
-                      repository)
+        :param image: the fully qualified name of the Docker image to run
 
         :param container_port: The TCP port that the process inside the
                                container binds to.

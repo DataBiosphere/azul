@@ -3,7 +3,7 @@ all: hello
 
 include common.mk
 
-azul_docker_image ?= ucsc/azul
+azul_docker_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
 azul_docker_image_tag ?= latest
 azul_docker_image_cache_seed ?=
 
@@ -214,7 +214,8 @@ format: check_venv check_docker
 	docker run \
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
-	    --workdir /home/developer/azul ucscgi/azul-pycharm:2022.3.3 \
+	    --workdir /home/developer/azul \
+	    docker.io/ucscgi/azul-pycharm:2022.3.3 \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test

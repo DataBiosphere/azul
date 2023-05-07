@@ -293,10 +293,10 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-clamav_image = 'clamav/clamav:1.1.0-1'
-dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.11.2-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.11.0'
+clamav_image = 'docker.io/clamav/clamav:1.1.0-1'
+dind_image = 'docker.io/library/docker:20.10.18-dind'
+gitlab_image = 'docker.io/gitlab/gitlab-ce:15.11.2-ce.0'
+runner_image = 'docker.io/gitlab/gitlab-runner:v15.11.0'
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
