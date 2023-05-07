@@ -29,6 +29,18 @@ jobs:
           _link dev
           _refresh
 
+          # FIXME: The default Azul registry is hosted privately on ECR, so we'd
+          #        have to provide credentials to use it. For now, it's
+          #        sufficient to pull 3rd party images directly from their
+          #        upstream registry, accepting the risk that a 3rd party image
+          #        is compromised. GitHub Actions have limited access to our
+          #        infrastructure (the token scope is limited). The worst that
+          #        could happen is that the token itself is revealed or that the
+          #        action falsely reports a passing build.
+          #        https://github.com/DataBiosphere/azul/issues/5188
+          #
+          export azul_docker_registry=""
+          
           make virtualenv
           source .venv/bin/activate
           make requirements
