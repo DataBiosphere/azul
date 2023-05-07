@@ -17,7 +17,7 @@ RUN mkdir terraform \
 # is too much of a hassle. The version should roughly match that of the docker
 # version installed on the Gitlab instance.
 #
-RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz \
+RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-20.10.18.tgz \
         | tar -xvzf - --strip-components=1 docker/docker \
     && install -g root -o root -m 755 docker /usr/bin \
     && rm docker
