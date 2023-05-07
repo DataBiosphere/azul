@@ -23,6 +23,7 @@ from pathlib import (
 import shlex
 import sys
 from typing import (
+    Iterable,
     Optional,
     TextIO,
     Tuple,
@@ -202,7 +203,6 @@ class ResolvedEnvironment(Environment):
                         return v
                     finally:
                         self._keys.remove(k)
-
         else:
             # For some reason, format_map does not enforce the syntax of the
             # format string correctly:
@@ -214,6 +214,9 @@ class ResolvedEnvironment(Environment):
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._env)
+
+    def keys(self) -> Iterable[str]:
+        return self._env.keys()
 
     def __repr__(self) -> str:
         return repr(dict(self))
