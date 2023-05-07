@@ -2111,14 +2111,14 @@ registered runners.
 
 ## 9.8 The Gitlab runner image for Azul
 
-Because the first stage of the Azul pipeline on Gitlab creates a dedicated
-image containing the dependencies of the subsequent stages, that first stage
-only requires the `docker` client binary, `make` and `bash` to be in the
-runner. These are provided by yet another custom Docker image for the Gitlab
-runner that executes Azul builds. This image must be created when the EBS
-volume attached to the Gitlab instance is first provisioned, or when the
-corresponding Dockerfile is modified. See `terraform/gitlab/Dockerfile` for
-details on how to build the image and register it with the runner.
+Because the first stage of the Azul pipeline on Gitlab creates a dedicated image
+containing the dependencies of the subsequent stages, that first stage only
+requires the `docker` client binary, `make` and `bash` to be in the runner.
+These are provided by yet another custom Docker image for the Gitlab runner that
+executes Azul builds. This image must be created when the EBS volume attached to
+the Gitlab instance is first provisioned, or when the corresponding Dockerfile
+is modified. See `terraform/gitlab/runner/Dockerfile` for details on how to
+build the image and register it with the runner.
 
 
 ## 9.9 Updating Gitlab
