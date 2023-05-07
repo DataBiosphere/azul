@@ -2049,7 +2049,7 @@ page. Shared runners are registered via *Admin* — *Overview* — *Runners*.
 
 Specify `docker` as the runner type and 
 
-`docker.gitlab.anvil.gi.ucsc.edu/ucsc/ azul/runner:latest` 
+`docker.gitlab.anvil.gi.ucsc.edu/ucsc/azul/runner:latest` 
 
 as the image for Azul runners. For generic runners you could use the 
 `docker:20.10.18-ce` image instead, but you'd need to match the tag (aka 
