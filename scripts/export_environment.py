@@ -179,30 +179,33 @@ def filter_env(env: DraftEnvironment) -> Environment:
     return {k: v for k, v in env.items() if v is not None}
 
 
-class ResolvedEnvironment(Environment):
+class ResolvedEnvironment(DraftEnvironment):
 
     def __init__(self, env: Environment) -> None:
         super().__init__()
         self._env = env
         self._keys = set()
 
-    def __getitem__(self, k: str) -> str:
+    def __getitem__(self, k: str) -> Optional[str]:
         if k.isidentifier():
-            try:
-                v = self._env[k]
-            except KeyError:
-                return ''
-            else:
-                if k in self._keys:
-                    raise RecursionError('Circular reference', k)
+            v = self._env[k]
+            if k in self._keys:
+                raise RecursionError('Circular reference', k)
+            elif v is None:
+                if self._keys:
+                    raise KeyError
                 else:
-                    self._keys.add(k)
-                    try:
-                        return v.format_map(self)
-                    except ValueError:
-                        return v
-                    finally:
-                        self._keys.remove(k)
+                    return v
+            else:
+                self._keys.add(k)
+                try:
+                    return v.format_map(self)
+                except KeyError:
+                    return None
+                except ValueError:
+                    return v
+                finally:
+                    self._keys.remove(k)
         else:
             # For some reason, format_map does not enforce the syntax of the
             # format string correctly:
@@ -239,11 +242,18 @@ def resolve_env(env: Environment) -> Environment:
     >>> resolve_env({'x': '{y}', 'y': '42'})
     {'x': '42', 'y': '42'}
 
-    A reference to a missing value yields an empty string, similar to Unix
-    shell variable interpolation.
+    A reference to a missing variable, or a variable whose value is None, causes
+    the entire referencing value to be undefined. This is unlike Unix shell
+    substitution, where the reference would be replaced with the empty string.
+    It's more akin to `null` propagation in SQL. We do this so that we don't
+    emit partially populated values, which allows for composing defaults that
+    are dependendent on variables defined in overriding environments.
 
-    >>> resolve_env({'x': '{y}'})
-    {'x': ''}
+    >>> resolve_env({'x': 'a{y}b'})
+    {'x': None}
+
+    >>> resolve_env({'x': 'a{y}b', 'y': None})
+    {'x': None, 'y': None}
 
     Transitive reference:
 
@@ -256,10 +266,12 @@ def resolve_env(env: Environment) -> Environment:
     Traceback (most recent call last):
     ...
     RecursionError: ('Circular reference', 'x')
+
     >>> resolve_env({'x': '{y}', 'y': '{x}'})
     Traceback (most recent call last):
     ...
     RecursionError: ('Circular reference', 'x')
+
     >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})
     Traceback (most recent call last):
     ...
