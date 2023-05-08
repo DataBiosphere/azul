@@ -364,35 +364,39 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudwatch_log_metric_filter': {
-            a.name: {
-                'name': config.qualified_resource_name(a.name, suffix='.filter'),
-                'pattern': a.filter_pattern,
-                'log_group_name': '${aws_cloudwatch_log_group.trail.name}',
-                'metric_transformation': {
-                    'name': a.metric_name,
-                    'namespace': 'LogMetrics',
-                    'value': 1
+            **{
+                a.name: {
+                    'name': config.qualified_resource_name(a.name, suffix='.filter'),
+                    'pattern': a.filter_pattern,
+                    'log_group_name': '${aws_cloudwatch_log_group.trail.name}',
+                    'metric_transformation': {
+                        'name': a.metric_name,
+                        'namespace': 'LogMetrics',
+                        'value': 1
+                    }
                 }
+                for a in cis_alarms
             }
-            for a in cis_alarms
         },
         'aws_cloudwatch_metric_alarm': {
-            a.name: {
-                'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
-                'comparison_operator': 'GreaterThanOrEqualToThreshold',
-                'evaluation_periods': 1,
-                'metric_name': a.metric_name,
-                'namespace': 'LogMetrics',
-                'statistic': a.statistic,
-                'treat_missing_data': 'notBreaching',
-                'threshold': 1,
-                # The CIS documentation does not specify a period. 5 minutes is
-                # the default value when creating the alarm via the console UI.
-                'period': 5 * 60,
-                'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
-                'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+            **{
+                a.name: {
+                    'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
+                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                    'evaluation_periods': 1,
+                    'metric_name': a.metric_name,
+                    'namespace': 'LogMetrics',
+                    'statistic': a.statistic,
+                    'treat_missing_data': 'notBreaching',
+                    'threshold': 1,
+                    # The CIS documentation does not specify a period. 5 minutes is
+                    # the default value when creating the alarm via the console UI.
+                    'period': 5 * 60,
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+                }
+                for a in cis_alarms
             }
-            for a in cis_alarms
         },
         'aws_iam_role': {
             'api_gateway': {
