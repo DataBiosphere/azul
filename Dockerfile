@@ -1,5 +1,5 @@
 ARG registry
-FROM ${registry}docker.io/library/python:3.9.12-buster
+FROM ${registry}docker.io/library/python:3.9.16-bullseye
 
 RUN curl -o /usr/bin/docker-credential-ecr-login \
     https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-amd64/docker-credential-ecr-login \

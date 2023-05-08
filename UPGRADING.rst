@@ -26,6 +26,8 @@ have too many entries in this file.
 Everyone
 ~~~~~~~~
 
+Update Python on your developer machines to version 3.9.16.
+
 Create a `personal access token`_ on every GitLab instance you have access to
 and specify that token as the value of the ``azul_gitlab_access_token`` in your
 ``environment.local.py`` for the main deployment collocated with that instance.
