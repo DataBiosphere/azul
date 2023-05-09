@@ -122,6 +122,7 @@ class RepositoryService(ElasticsearchService):
         response = self._search(catalog=catalog,
                                 filters=filters,
                                 pagination=pagination,
+                                aggregate=item_id is None,
                                 entity_type=entity_type)
 
         for hit in response['hits']:
@@ -182,6 +183,7 @@ class RepositoryService(ElasticsearchService):
                 *,
                 catalog: CatalogName,
                 entity_type: str,
+                aggregate: bool,
                 filters: Filters,
                 pagination: Pagination
                 ) -> MutableJSON:
@@ -195,6 +197,8 @@ class RepositoryService(ElasticsearchService):
 
         :param entity_type: the string referring to the entity type used to get
                             the ElasticSearch index to search
+
+        :param aggregate: Whether to perform the aggregation stage or not.
 
         :param filters: Filter parameter from the API to be used in the query.
 
@@ -223,7 +227,8 @@ class RepositoryService(ElasticsearchService):
                             catalog=catalog,
                             entity_type=entity_type).wrap(chain)
 
-        chain = plugin.aggregation_stage.create_and_wrap(chain)
+        if aggregate:
+            chain = plugin.aggregation_stage.create_and_wrap(chain)
 
         chain = PaginationStage(service=self,
                                 catalog=catalog,
