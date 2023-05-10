@@ -459,6 +459,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self._assert_catalog_complete(catalog=catalog.name,
                                               entity_type=entity_type,
                                               bundle_fqids=catalog.bundles)
+                self._test_single_entity_response(catalog=catalog.name)
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
@@ -561,8 +562,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 log.info('Request took %.3fs to execute.', time.time() - start)
                 validator(catalog, response)
 
+    def _get_one_inner_file(self, catalog: CatalogName) -> JSON:
+        outer_file = self._get_one_outer_file(catalog)
+        inner_files: JSONs = outer_file['files']
+        return one(inner_files)
+
     @cache
-    def _get_one_file(self, catalog: CatalogName) -> JSON:
+    def _get_one_outer_file(self, catalog: CatalogName) -> JSON:
         # Try to filter for an easy-to-parse format to verify its contents
         if config.is_hca_enabled(catalog):
             file_size_facet = 'fileSize'
@@ -579,9 +585,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                       sort=file_size_facet))
             hits = json.loads(response)['hits']
             if hits:
-                hit = one(hits)
-                return one(hit['files'])
-        self.fail('No files found')
+                break
+        else:
+            self.fail('No files found')
+        return one(hits)
 
     def _fastq_filter(self, catalog: CatalogName) -> JSON:
         if config.is_hca_enabled(catalog):
@@ -594,7 +601,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file = self._get_one_file(catalog)
+            file = self._get_one_inner_file(catalog)
             file_uuid, file_ext = file['uuid'], self._file_ext(file)
             self._test_dos(catalog, file_uuid, file_ext)
             self._test_drs(catalog, file_uuid, file_ext)
@@ -788,7 +795,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            file = self._get_one_file(catalog)
+            file = self._get_one_inner_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
             endpoint_url = config.service_endpoint
             file_url = endpoint_url.set(path=f'/fetch/repository/files/{file_uuid}',
@@ -983,6 +990,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     retries += 1
                     time.sleep(5)
             self.assertSetEqual(indexed_fqids, expected_fqids)
+
+    def _test_single_entity_response(self,
+                                     catalog: CatalogName
+                                     ) -> None:
+        entity_type = 'files'
+        with self.subTest('single_entity', entity_type=entity_type, catalog=catalog):
+            entity_id = self._get_one_outer_file(catalog)['entryId']
+            url = config.service_endpoint.set(path=('index', entity_type, entity_id),
+                                              args=dict(catalog=catalog))
+            hit = self._get_url_json(url)
+            self.assertEqual(entity_id, hit['entryId'])
 
     entity_types = ['files', 'projects', 'samples', 'bundles']
 
