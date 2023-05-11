@@ -788,7 +788,7 @@ dcp26_sources = mkdict(dcp25_sources, 336, mkdelta([
     mksrc('datarepo-636717a5', 'hca_prod_f3825dfe990a431fb9719c26d39840db__20230331_dcp2_20230331_dcp26', 31),
 ]))
 
-dcp27_sources = mkdict(dcp26_sources, 336, mkdelta([
+dcp27_sources = mkdict(dcp26_sources, 353, mkdelta([
     mksrc('datarepo-75b50ae7', 'hca_prod_04e4292cf62f4098ae9bfd69ae002a90__20230427_dcp2_20230501_dcp27', 310),
     mksrc('datarepo-d2f36342', 'hca_prod_0751843070314bdfa3ce1bf0917a1923__20221208_dcp2_20230501_dcp27', 7),
     mksrc('datarepo-26882f0f', 'hca_prod_07d5987e7f9e4f34b0fba185a35504f5__20230427_dcp2_20230501_dcp27', 36),
