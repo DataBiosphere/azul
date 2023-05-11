@@ -38,7 +38,6 @@ from azul.azulclient import (
 )
 from azul.indexer import (
     BundlePartition,
-    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     Contribution,
@@ -55,6 +54,7 @@ from azul.logging import (
     get_test_logger,
 )
 from azul.plugins.repository.dss import (
+    DSSBundleFQID,
     DSSSourceRef,
     Plugin,
 )
@@ -132,9 +132,10 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
         return tallies
 
     def _fqid_from_notification(self, notification):
-        return SourcedBundleFQID(uuid=notification['notification']['match']['bundle_uuid'],
-                                 version=notification['notification']['match']['bundle_version'],
-                                 source=DSSSourceRef.from_json(notification['notification']['source']))
+        fqid = notification['notification']['bundle_fqid']
+        return DSSBundleFQID(uuid=fqid['uuid'],
+                             version=fqid['version'],
+                             source=DSSSourceRef.from_json(fqid['source']))
 
     def test_invalid_notification(self):
         event = [
@@ -161,9 +162,9 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
             event = [self._mock_sqs_record(notification)]
 
             bundle_fqids = [
-                SourcedBundleFQID(source=source,
-                                  uuid='ffa338fe-7554-4b5d-96a2-7df127a7640b',
-                                  version='2018-03-28T15:10:23.074974Z')
+                DSSBundleFQID(source=source,
+                              uuid='ffa338fe-7554-4b5d-96a2-7df127a7640b',
+                              version='2018-03-28T15:10:23.074974Z')
             ]
 
             with patch.object(Plugin, 'list_bundles', return_value=bundle_fqids):
@@ -171,7 +172,7 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
 
             notification = one(self._read_queue(self._notifications_queue))
             expected_source = dict(id=source.id, spec=str(source.spec))
-            source = notification['notification']['source']
+            source = notification['notification']['bundle_fqid']['source']
             self.assertEqual(expected_source, source)
 
     def test_contribute_and_aggregate(self):
@@ -187,12 +188,12 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
         self._create_mock_queues()
         source = DSSSourceRef.for_dss_source('foo_source:/0')
         fqids = [
-            SourcedBundleFQID(source=source,
-                              uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
-                              version='2018-03-28T15:10:23.074974Z'),
-            SourcedBundleFQID(source=source,
-                              uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
-                              version='2018-03-29T10:40:41.822717Z')
+            DSSBundleFQID(source=source,
+                          uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
+                          version='2018-03-28T15:10:23.074974Z'),
+            DSSBundleFQID(source=source,
+                          uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
+                          version='2018-03-29T10:40:41.822717Z')
         ]
 
         # Load canned bundles
@@ -232,7 +233,7 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
             notified_fqids = list(map(self._fqid_from_notification, notifications))
             notified_bundles = [bundles[fqid] for fqid in notified_fqids]
             mock_plugin.fetch_bundle.side_effect = notified_bundles
-            mock_plugin.source_from_json.return_value = source
+            mock_plugin.resolve_bundle.side_effect = DSSBundleFQID.from_json
             mock_plugin.sources = [source]
             with patch.object(IndexService, 'repository_plugin', return_value=mock_plugin):
                 with patch.object(BundlePartition, 'max_partition_size', 4):
@@ -240,8 +241,8 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
                     self.controller.contribute(event)
 
             # Assert plugin calls by controller
-            expected_calls = [call(source.to_json())] * len(notified_fqids)
-            self.assertEqual(expected_calls, mock_plugin.source_from_json.mock_calls)
+            expected_calls = [call(fqid.to_json()) for fqid in notified_fqids]
+            self.assertEqual(expected_calls, mock_plugin.resolve_bundle.mock_calls)
             expected_calls = list(map(call, notified_fqids))
             self.assertEqual(expected_calls, mock_plugin.fetch_bundle.mock_calls)
 

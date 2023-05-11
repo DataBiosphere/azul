@@ -43,9 +43,7 @@ from azul.bigquery import (
     backtick,
 )
 from azul.indexer import (
-    Bundle,
     BundleFQID,
-    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     EntityID,
@@ -134,302 +132,6 @@ class Links:
                 input_ in self.supplementary_files
             )
         }
-
-
-class Plugin(TDRPlugin):
-
-    def list_partitions(self,
-                        source: TDRSourceRef
-                        ) -> Mapping[str, int]:
-        self._assert_source(source)
-        prefix = source.spec.prefix
-        prefixes = [
-            prefix.common + partition_prefix
-            for partition_prefix in prefix.partition_prefixes()
-        ]
-        assert prefixes, prefix
-        rows = self._run_sql(f'''
-            SELECT prefix, COUNT(links_id) AS subgraph_count
-            FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH(links_id, prefix)
-            GROUP BY prefix
-        ''')
-        return {row['prefix']: row['subgraph_count'] for row in rows}
-
-    def _list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
-        source_prefix = source.spec.prefix.common
-        validate_uuid_prefix(source_prefix + prefix)
-        current_bundles = self._query_latest_version(source.spec, f'''
-            SELECT links_id, version
-            FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
-        ''', group_by='links_id')
-        return [
-            SourcedBundleFQID(source=source,
-                              uuid=row['links_id'],
-                              version=self.format_version(row['version']))
-            for row in current_bundles
-        ]
-
-    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> list[BigQueryRow]:
-        iter_rows = self._run_sql(query)
-        key = itemgetter(group_by)
-        groups = groupby(sorted(iter_rows, key=key), key=key)
-        return [self._choose_one_version(source, group) for _, group in groups]
-
-    def _choose_one_version(self, source: TDRSourceSpec, versioned_items: BigQueryRows) -> BigQueryRow:
-        if source.is_snapshot:
-            return one(versioned_items)
-        else:
-            return max(versioned_items, key=itemgetter('version'))
-
-    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
-        bundle = TDRHCABundle(fqid=bundle_fqid,
-                              manifest=[],
-                              metadata_files={})
-        entities, root_entities, links_jsons = self._stitch_bundles(bundle)
-        bundle.add_entity(entity_key='links.json',
-                          entity_type='links',
-                          entity_row=self._merge_links(links_jsons),
-                          is_stitched=False)
-
-        with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
-            futures = {
-                entity_type: executor.submit(self._retrieve_entities,
-                                             bundle.fqid.source.spec,
-                                             entity_type,
-                                             entity_ids)
-                for entity_type, entity_ids in entities.items()
-            }
-            for entity_type, future in futures.items():
-                e = future.exception()
-                if e is None:
-                    rows = future.result()
-                    pk_column = entity_type + '_id'
-                    rows.sort(key=itemgetter(pk_column))
-                    for i, row in enumerate(rows):
-                        is_stitched = EntityReference(entity_id=row[pk_column],
-                                                      entity_type=entity_type) not in root_entities
-                        bundle.add_entity(entity_key=f'{entity_type}_{i}.json',
-                                          entity_type=entity_type,
-                                          entity_row=row,
-                                          is_stitched=is_stitched)
-                else:
-                    log.error('TDR worker failed to retrieve entities of type %r',
-                              entity_type, exc_info=e)
-                    raise e
-        bundle.manifest.sort(key=itemgetter('uuid'))
-        return bundle
-
-    def _stitch_bundles(self,
-                        root_bundle: 'TDRHCABundle'
-                        ) -> tuple[EntitiesByType, Entities, list[JSON]]:
-        """
-        Recursively follow dangling inputs to collect entities from upstream
-        bundles, ensuring that no bundle is processed more than once.
-        """
-        source = root_bundle.fqid.source
-        entities: EntitiesByType = defaultdict(set)
-        root_entities = None
-        unprocessed: set[SourcedBundleFQID] = {root_bundle.fqid}
-        processed: set[SourcedBundleFQID] = set()
-        stitched_links: list[JSON] = []
-        # Retrieving links in batches eliminates the risk of exceeding
-        # BigQuery's maximum query size. Using a batches size 1000 appears to be
-        # equally performant as retrieving the links without batching.
-        batch_size = 1000
-        while unprocessed:
-            batch = set(islice(unprocessed, batch_size))
-            links = self._retrieve_links(batch)
-            processed.update(batch)
-            unprocessed -= batch
-            stitched_links.extend(links.values())
-            all_dangling_inputs: set[EntityReference] = set()
-            for links_id, links_json in links.items():
-                project = EntityReference(entity_type='project',
-                                          entity_id=links_json['project_id'])
-                links = Links.from_json(project, links_json['content'])
-                linked_entities = links.all_entities()
-                dangling_inputs = links.dangling_inputs()
-                if links_id == root_bundle.fqid:
-                    assert root_entities is None
-                    root_entities = linked_entities - dangling_inputs
-                for entity in linked_entities:
-                    entities[entity.entity_type].add(entity.entity_id)
-                if dangling_inputs:
-                    log.info('There are %i dangling inputs in bundle %r', len(dangling_inputs), links_id)
-                    log.debug('Dangling inputs in bundle %r: %r', links_id, dangling_inputs)
-                    all_dangling_inputs.update(dangling_inputs)
-                else:
-                    log.info('Bundle %r is self-contained', links_id)
-            if all_dangling_inputs:
-                upstream = self._find_upstream_bundles(source, all_dangling_inputs)
-                unprocessed |= upstream - processed
-
-        assert root_entities is not None
-        processed.remove(root_bundle.fqid)
-        if processed:
-            arg = f': {processed!r}' if log.isEnabledFor(logging.DEBUG) else ''
-            log.info('Stitched %i bundle(s)%s', len(processed), arg)
-        return entities, root_entities, stitched_links
-
-    def _retrieve_links(self,
-                        links_ids: set[SourcedBundleFQID]
-                        ) -> dict[SourcedBundleFQID, JSON]:
-        """
-        Retrieve links entities from BigQuery and parse the `content` column.
-        :param links_ids: Which links entities to retrieve.
-        """
-        source = one({fqid.source.spec for fqid in links_ids})
-        links = self._retrieve_entities(source, 'links', links_ids)
-        links = {
-            # Copy the values so we can reassign `content` below
-            fqid: dict(one(links_json
-                           for links_json in links
-                           if links_json['links_id'] == fqid.uuid))
-            for fqid in links_ids
-        }
-        for links_json in links.values():
-            links_json['content'] = json.loads(links_json['content'])
-        return links
-
-    def _retrieve_entities(self,
-                           source: TDRSourceSpec,
-                           entity_type: EntityType,
-                           entity_ids: Union[set[EntityID], set[BundleFQID]],
-                           ) -> list[BigQueryRow]:
-        """
-        Efficiently retrieve multiple entities from BigQuery in a single query.
-
-        :param source: Snapshot containing the entity table
-
-        :param entity_type: The type of entity, corresponding to the table name
-
-        :param entity_ids: For links, the fully qualified UUID and version of
-                           each `links` entity. For other entities, just the UUIDs.
-        """
-        pk_column = entity_type + '_id'
-        version_column = 'version'
-        non_pk_columns = (
-            TDRHCABundle.links_columns if entity_type == 'links'
-            else TDRHCABundle.data_columns if entity_type.endswith('_file')
-            else TDRHCABundle.metadata_columns
-        )
-        assert version_column in non_pk_columns
-        table_name = backtick(self._full_table_name(source, entity_type))
-        entity_id_type = one(set(map(type, entity_ids)))
-
-        def quote(s):
-            return f"'{s}'"
-
-        if entity_type == 'links':
-            assert issubclass(entity_id_type, BundleFQID), entity_id_type
-            entity_ids = cast(set[BundleFQID], entity_ids)
-            where_columns = (pk_column, version_column)
-            where_values = (
-                (quote(fqid.uuid), f'TIMESTAMP({quote(fqid.version)})')
-                for fqid in entity_ids
-            )
-            expected = {fqid.uuid for fqid in entity_ids}
-        else:
-            assert issubclass(entity_id_type, str), (entity_type, entity_id_type)
-            where_columns = (pk_column,)
-            where_values = ((quote(entity_id),) for entity_id in entity_ids)
-            expected = entity_ids
-        query = f'''
-            SELECT {', '.join({pk_column, *non_pk_columns})}
-            FROM {table_name}
-            WHERE {self._in(where_columns, where_values)}
-        '''
-        log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
-        rows = self._query_latest_version(source, query, group_by=pk_column)
-        log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
-        missing = expected - {row[pk_column] for row in rows}
-        require(not missing,
-                f'Required entities not found in {table_name}: {missing}')
-        return rows
-
-    def _in(self,
-            columns: tuple[str, ...],
-            values: Iterable[tuple[str, ...]]
-            ) -> str:
-        """
-        >>> plugin = Plugin(sources=set())
-        >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
-        '(foo, bar) IN (("abc", 123), ("def", 456))'
-        """
-
-        def join(i):
-            return '(' + ', '.join(i) + ')'
-
-        return join(columns) + ' IN ' + join(map(join, values))
-
-    def _find_upstream_bundles(self,
-                               source: TDRSourceRef,
-                               outputs: Entities) -> set[SourcedBundleFQID]:
-        """
-        Search for bundles containing processes that produce the specified output
-        entities.
-        """
-        output_ids = [output.entity_id for output in outputs]
-        output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
-        rows = self._run_sql(f'''
-            SELECT links_id, version, {output_id} AS output_id
-            FROM {backtick(self._full_table_name(source.spec, 'links'))} AS links
-                JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
-                    ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
-                JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output
-                    ON {output_id} IN UNNEST({output_ids})
-        ''')
-        bundles = set()
-        outputs_found = set()
-        for row in rows:
-            bundles.add(SourcedBundleFQID(source=source,
-                                          uuid=row['links_id'],
-                                          version=self.format_version(row['version'])))
-            outputs_found.add(row['output_id'])
-        missing = set(output_ids) - outputs_found
-        require(not missing,
-                f'Dangling inputs not found in any bundle: {missing}')
-        return bundles
-
-    def _merge_links(self, links_jsons: JSONs) -> JSON:
-        """
-        Merge the links.json documents from multiple stitched bundles into a
-        single document.
-        """
-        root, *stitched = links_jsons
-        if stitched:
-            merged = {
-                'links_id': root['links_id'],
-                'version': root['version']
-            }
-            for common_key in ('project_id', 'schema_type'):
-                merged[common_key] = one({row[common_key] for row in links_jsons})
-            source_contents = [row['content'] for row in links_jsons]
-            # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
-            #        https://github.com/DataBiosphere/azul/issues/3215
-            schema_type = 'links'
-            schema_version = '3.0.0'
-            schema_url = furl(url='https://schema.humancellatlas.org',
-                              path=('system', schema_version, schema_type))
-            merged_content = {
-                'schema_type': schema_type,
-                'schema_version': schema_version,
-                'describedBy': str(schema_url),
-                'links': sum((sc['links'] for sc in source_contents), start=[])
-            }
-            merged['content'] = merged_content  # Keep result of parsed JSON for reuse
-            merged['content_size'] = len(json.dumps(merged_content))
-            assert merged.keys() == one({
-                frozenset(row.keys()) for row in links_jsons
-            }), merged
-            assert merged_content.keys() == one({
-                frozenset(sc.keys()) for sc in source_contents
-            }), merged_content
-            return merged
-        else:
-            return root
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -577,3 +279,299 @@ class TDRHCABundle(TDRBundle):
                 return self._parse_drs_path(file_id)
         else:
             return None
+
+
+class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
+
+    def list_partitions(self,
+                        source: TDRSourceRef
+                        ) -> Mapping[str, int]:
+        self._assert_source(source)
+        prefix = source.spec.prefix
+        prefixes = [
+            prefix.common + partition_prefix
+            for partition_prefix in prefix.partition_prefixes()
+        ]
+        assert prefixes, prefix
+        rows = self._run_sql(f'''
+            SELECT prefix, COUNT(links_id) AS subgraph_count
+            FROM {backtick(self._full_table_name(source.spec, 'links'))}
+            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH(links_id, prefix)
+            GROUP BY prefix
+        ''')
+        return {row['prefix']: row['subgraph_count'] for row in rows}
+
+    def _list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
+        source_prefix = source.spec.prefix.common
+        validate_uuid_prefix(source_prefix + prefix)
+        current_bundles = self._query_latest_version(source.spec, f'''
+            SELECT links_id, version
+            FROM {backtick(self._full_table_name(source.spec, 'links'))}
+            WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
+        ''', group_by='links_id')
+        return [
+            TDRBundleFQID(source=source,
+                          uuid=row['links_id'],
+                          version=self.format_version(row['version']))
+            for row in current_bundles
+        ]
+
+    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> list[BigQueryRow]:
+        iter_rows = self._run_sql(query)
+        key = itemgetter(group_by)
+        groups = groupby(sorted(iter_rows, key=key), key=key)
+        return [self._choose_one_version(source, group) for _, group in groups]
+
+    def _choose_one_version(self, source: TDRSourceSpec, versioned_items: BigQueryRows) -> BigQueryRow:
+        if source.is_snapshot:
+            return one(versioned_items)
+        else:
+            return max(versioned_items, key=itemgetter('version'))
+
+    def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
+        bundle = TDRHCABundle(fqid=bundle_fqid,
+                              manifest=[],
+                              metadata_files={})
+        entities, root_entities, links_jsons = self._stitch_bundles(bundle)
+        bundle.add_entity(entity_key='links.json',
+                          entity_type='links',
+                          entity_row=self._merge_links(links_jsons),
+                          is_stitched=False)
+
+        with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
+            futures = {
+                entity_type: executor.submit(self._retrieve_entities,
+                                             bundle.fqid.source.spec,
+                                             entity_type,
+                                             entity_ids)
+                for entity_type, entity_ids in entities.items()
+            }
+            for entity_type, future in futures.items():
+                e = future.exception()
+                if e is None:
+                    rows = future.result()
+                    pk_column = entity_type + '_id'
+                    rows.sort(key=itemgetter(pk_column))
+                    for i, row in enumerate(rows):
+                        is_stitched = EntityReference(entity_id=row[pk_column],
+                                                      entity_type=entity_type) not in root_entities
+                        bundle.add_entity(entity_key=f'{entity_type}_{i}.json',
+                                          entity_type=entity_type,
+                                          entity_row=row,
+                                          is_stitched=is_stitched)
+                else:
+                    log.error('TDR worker failed to retrieve entities of type %r',
+                              entity_type, exc_info=e)
+                    raise e
+        bundle.manifest.sort(key=itemgetter('uuid'))
+        return bundle
+
+    def _stitch_bundles(self,
+                        root_bundle: 'TDRHCABundle'
+                        ) -> tuple[EntitiesByType, Entities, list[JSON]]:
+        """
+        Recursively follow dangling inputs to collect entities from upstream
+        bundles, ensuring that no bundle is processed more than once.
+        """
+        source = root_bundle.fqid.source
+        entities: EntitiesByType = defaultdict(set)
+        root_entities = None
+        unprocessed: set[TDRBundleFQID] = {root_bundle.fqid}
+        processed: set[TDRBundleFQID] = set()
+        stitched_links: list[JSON] = []
+        # Retrieving links in batches eliminates the risk of exceeding
+        # BigQuery's maximum query size. Using a batches size 1000 appears to be
+        # equally performant as retrieving the links without batching.
+        batch_size = 1000
+        while unprocessed:
+            batch = set(islice(unprocessed, batch_size))
+            links = self._retrieve_links(batch)
+            processed.update(batch)
+            unprocessed -= batch
+            stitched_links.extend(links.values())
+            all_dangling_inputs: set[EntityReference] = set()
+            for links_id, links_json in links.items():
+                project = EntityReference(entity_type='project',
+                                          entity_id=links_json['project_id'])
+                links = Links.from_json(project, links_json['content'])
+                linked_entities = links.all_entities()
+                dangling_inputs = links.dangling_inputs()
+                if links_id == root_bundle.fqid:
+                    assert root_entities is None
+                    root_entities = linked_entities - dangling_inputs
+                for entity in linked_entities:
+                    entities[entity.entity_type].add(entity.entity_id)
+                if dangling_inputs:
+                    log.info('There are %i dangling inputs in bundle %r', len(dangling_inputs), links_id)
+                    log.debug('Dangling inputs in bundle %r: %r', links_id, dangling_inputs)
+                    all_dangling_inputs.update(dangling_inputs)
+                else:
+                    log.info('Bundle %r is self-contained', links_id)
+            if all_dangling_inputs:
+                upstream = self._find_upstream_bundles(source, all_dangling_inputs)
+                unprocessed |= upstream - processed
+
+        assert root_entities is not None
+        processed.remove(root_bundle.fqid)
+        if processed:
+            arg = f': {processed!r}' if log.isEnabledFor(logging.DEBUG) else ''
+            log.info('Stitched %i bundle(s)%s', len(processed), arg)
+        return entities, root_entities, stitched_links
+
+    def _retrieve_links(self,
+                        links_ids: set[TDRBundleFQID]
+                        ) -> dict[TDRBundleFQID, JSON]:
+        """
+        Retrieve links entities from BigQuery and parse the `content` column.
+        :param links_ids: Which links entities to retrieve.
+        """
+        source = one({fqid.source.spec for fqid in links_ids})
+        links = self._retrieve_entities(source, 'links', links_ids)
+        links = {
+            # Copy the values so we can reassign `content` below
+            fqid: dict(one(links_json
+                           for links_json in links
+                           if links_json['links_id'] == fqid.uuid))
+            for fqid in links_ids
+        }
+        for links_json in links.values():
+            links_json['content'] = json.loads(links_json['content'])
+        return links
+
+    def _retrieve_entities(self,
+                           source: TDRSourceSpec,
+                           entity_type: EntityType,
+                           entity_ids: Union[set[EntityID], set[BundleFQID]],
+                           ) -> list[BigQueryRow]:
+        """
+        Efficiently retrieve multiple entities from BigQuery in a single query.
+
+        :param source: Snapshot containing the entity table
+
+        :param entity_type: The type of entity, corresponding to the table name
+
+        :param entity_ids: For links, the fully qualified UUID and version of
+                           each `links` entity. For other entities, just the UUIDs.
+        """
+        pk_column = entity_type + '_id'
+        version_column = 'version'
+        non_pk_columns = (
+            TDRHCABundle.links_columns if entity_type == 'links'
+            else TDRHCABundle.data_columns if entity_type.endswith('_file')
+            else TDRHCABundle.metadata_columns
+        )
+        assert version_column in non_pk_columns
+        table_name = backtick(self._full_table_name(source, entity_type))
+        entity_id_type = one(set(map(type, entity_ids)))
+
+        def quote(s):
+            return f"'{s}'"
+
+        if entity_type == 'links':
+            assert issubclass(entity_id_type, BundleFQID), entity_id_type
+            entity_ids = cast(set[BundleFQID], entity_ids)
+            where_columns = (pk_column, version_column)
+            where_values = (
+                (quote(fqid.uuid), f'TIMESTAMP({quote(fqid.version)})')
+                for fqid in entity_ids
+            )
+            expected = {fqid.uuid for fqid in entity_ids}
+        else:
+            assert issubclass(entity_id_type, str), (entity_type, entity_id_type)
+            where_columns = (pk_column,)
+            where_values = ((quote(entity_id),) for entity_id in entity_ids)
+            expected = entity_ids
+        query = f'''
+            SELECT {', '.join({pk_column, *non_pk_columns})}
+            FROM {table_name}
+            WHERE {self._in(where_columns, where_values)}
+        '''
+        log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
+        rows = self._query_latest_version(source, query, group_by=pk_column)
+        log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
+        missing = expected - {row[pk_column] for row in rows}
+        require(not missing,
+                f'Required entities not found in {table_name}: {missing}')
+        return rows
+
+    def _in(self,
+            columns: tuple[str, ...],
+            values: Iterable[tuple[str, ...]]
+            ) -> str:
+        """
+        >>> plugin = Plugin(sources=set())
+        >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
+        '(foo, bar) IN (("abc", 123), ("def", 456))'
+        """
+
+        def join(i):
+            return '(' + ', '.join(i) + ')'
+
+        return join(columns) + ' IN ' + join(map(join, values))
+
+    def _find_upstream_bundles(self,
+                               source: TDRSourceRef,
+                               outputs: Entities) -> set[TDRBundleFQID]:
+        """
+        Search for bundles containing processes that produce the specified output
+        entities.
+        """
+        output_ids = [output.entity_id for output in outputs]
+        output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
+        rows = self._run_sql(f'''
+            SELECT links_id, version, {output_id} AS output_id
+            FROM {backtick(self._full_table_name(source.spec, 'links'))} AS links
+                JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
+                    ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
+                JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output
+                    ON {output_id} IN UNNEST({output_ids})
+        ''')
+        bundles = set()
+        outputs_found = set()
+        for row in rows:
+            bundles.add(TDRBundleFQID(source=source,
+                                      uuid=row['links_id'],
+                                      version=self.format_version(row['version'])))
+            outputs_found.add(row['output_id'])
+        missing = set(output_ids) - outputs_found
+        require(not missing,
+                f'Dangling inputs not found in any bundle: {missing}')
+        return bundles
+
+    def _merge_links(self, links_jsons: JSONs) -> JSON:
+        """
+        Merge the links.json documents from multiple stitched bundles into a
+        single document.
+        """
+        root, *stitched = links_jsons
+        if stitched:
+            merged = {
+                'links_id': root['links_id'],
+                'version': root['version']
+            }
+            for common_key in ('project_id', 'schema_type'):
+                merged[common_key] = one({row[common_key] for row in links_jsons})
+            source_contents = [row['content'] for row in links_jsons]
+            # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
+            #        https://github.com/DataBiosphere/azul/issues/3215
+            schema_type = 'links'
+            schema_version = '3.0.0'
+            schema_url = furl(url='https://schema.humancellatlas.org',
+                              path=('system', schema_version, schema_type))
+            merged_content = {
+                'schema_type': schema_type,
+                'schema_version': schema_version,
+                'describedBy': str(schema_url),
+                'links': sum((sc['links'] for sc in source_contents), start=[])
+            }
+            merged['content'] = merged_content  # Keep result of parsed JSON for reuse
+            merged['content_size'] = len(json.dumps(merged_content))
+            assert merged.keys() == one({
+                frozenset(row.keys()) for row in links_jsons
+            }), merged
+            assert merged_content.keys() == one({
+                frozenset(sc.keys()) for sc in source_contents
+            }), merged_content
+            return merged
+        else:
+            return root

@@ -180,6 +180,7 @@ class Plugin(MetadataPlugin):
                             'file_md5sum',
                             'reference_assembly',
                             'file_name',
+                            'is_supplementary',
                             # Not in schema
                             'crc32',
                             'sha256',
@@ -223,6 +224,7 @@ class Plugin(MetadataPlugin):
             'files.data_modality',
             'files.file_format',
             'files.reference_assembly',
+            'files.is_supplementary',
         ]
 
     @property

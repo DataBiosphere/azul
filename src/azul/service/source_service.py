@@ -5,6 +5,7 @@ from time import (
 )
 from typing import (
     Optional,
+    Sequence,
 )
 
 from azul import (
@@ -19,13 +20,11 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
+    SourceJSON,
     SourceRef,
 )
 from azul.plugins import (
     RepositoryPlugin,
-)
-from azul.types import (
-    JSONs,
 )
 
 log = logging.getLogger(__name__)
@@ -93,7 +92,7 @@ class SourceService:
     def _dynamodb(self):
         return aws.dynamodb
 
-    def _get(self, key: str) -> JSONs:
+    def _get(self, key: str) -> list[SourceJSON]:
         response = self._dynamodb.get_item(TableName=self.table_name,
                                            Key={self.key_attribute: {'S': key}},
                                            ProjectionExpression=','.join([self.value_attribute, self.ttl_attribute]))
@@ -109,7 +108,7 @@ class SourceService:
             else:
                 return json.loads(result[self.value_attribute]['S'])
 
-    def _put(self, key: str, sources: JSONs) -> None:
+    def _put(self, key: str, sources: Sequence[SourceJSON]) -> None:
         item = {
             self.key_attribute: {'S': key},
             self.value_attribute: {'S': json.dumps(sources)},

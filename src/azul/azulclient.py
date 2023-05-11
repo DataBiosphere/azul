@@ -22,6 +22,7 @@ from pprint import (
 )
 from typing import (
     Union,
+    cast,
 )
 import uuid
 
@@ -47,6 +48,7 @@ from azul.hmac import (
     SignatureHelper,
 )
 from azul.indexer import (
+    SourceJSON,
     SourceRef,
     SourcedBundleFQID,
 )
@@ -90,16 +92,12 @@ class AzulClient(SignatureHelper):
         """
         Generate a indexer notification for the given bundle.
         """
-        # Organic notifications sent by DSS wouldn't contain the `source` entry,
+        # Organic notifications sent by DSS have a different structure,
         # but since DSS is end-of-life these synthetic notifications are now the
         # only variant that would ever occur in the wild.
         return {
-            'source': bundle_fqid.source.to_json(),
             'transaction_id': str(uuid.uuid4()),
-            'match': {
-                'bundle_uuid': bundle_fqid.uuid,
-                'bundle_version': bundle_fqid.version
-            },
+            'bundle_fqid': bundle_fqid.to_json()
         }
 
     def bundle_message(self,
@@ -246,8 +244,11 @@ class AzulClient(SignatureHelper):
     def remote_reindex_partition(self, message: JSON) -> None:
         catalog = message['catalog']
         prefix = message['prefix']
+        # FIXME: Adopt `trycast` for casting JSON to TypeDict
+        #        https://github.com/DataBiosphere/azul/issues/5171
+        source = cast(SourceJSON, message['source'])
         validate_uuid_prefix(prefix)
-        source = self.repository_plugin(catalog).source_from_json(message['source'])
+        source = self.repository_plugin(catalog).source_from_json(source)
         bundle_fqids = self.list_bundles(catalog, source, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '
@@ -382,9 +383,11 @@ class AzulClient(SignatureHelper):
                     bundle_uuid, bundle_version, catalog)
         notifications = [
             {
-                'match': {
-                    'bundle_uuid': bundle_uuid,
-                    'bundle_version': bundle_version
+                # FIXME: delete_bundle script fails with KeyError: 'source'
+                #        https://github.com/DataBiosphere/azul/issues/5105
+                'bundle_fqid': {
+                    'uuid': bundle_uuid,
+                    'version': bundle_version
                 }
             }
         ]

@@ -44,9 +44,9 @@ class TestValidNotificationRequests(LocalAppTestCase,
     def test_successful_notifications(self):
         self._create_mock_notifications_queue()
         body = {
-            'match': {
-                'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
-                'bundle_version': '2018-03-28T13:55:26.044Z'
+            'bundle_fqid': {
+                'uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
+                'version': '2018-03-28T13:55:26.044Z'
             }
         }
         for delete in False, True:
@@ -60,44 +60,44 @@ class TestValidNotificationRequests(LocalAppTestCase,
     def test_invalid_notifications(self):
         bodies = {
             "Missing body": {},
-            "Missing bundle_uuid":
+            "Missing bundle uuid":
                 {
-                    'match': {
-                        'bundle_version': '2018-03-28T13:55:26.044Z'
+                    'bundle_fqid': {
+                        'version': '2018-03-28T13:55:26.044Z'
                     }
                 },
-            "bundle_uuid is None":
+            "bundle uuid is None":
                 {
-                    'match': {
-                        'bundle_uuid': None,
-                        'bundle_version': '2018-03-28T13:55:26.044Z'
+                    'bundle_fqid': {
+                        'uuid': None,
+                        'version': '2018-03-28T13:55:26.044Z'
                     }
                 },
             "Missing bundle_version":
                 {
-                    'match': {
-                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd'
+                    'bundle_fqid': {
+                        'uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd'
                     }
                 },
-            "bundle_version is None":
+            "bundle version is None":
                 {
-                    'match': {
-                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
-                        'bundle_version': None
+                    'bundle_fqid': {
+                        'uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
+                        'version': None
                     }
                 },
-            'Malformed bundle_uuis value':
+            'Malformed bundle uuid value':
                 {
-                    'match': {
-                        'bundle_uuid': f'}}{str(uuid4())}{{',
-                        'bundle_version': "2019-12-31T00:00:00.000Z"
+                    'bundle_fqid': {
+                        'uuid': f'}}{str(uuid4())}{{',
+                        'version': "2019-12-31T00:00:00.000Z"
                     }
                 },
-            'Malformed bundle_version':
+            'Malformed bundle version':
                 {
-                    'match': {
-                        'bundle_uuid': str(uuid4()),
-                        'bundle_version': ''
+                    'bundle_fqid': {
+                        'uuid': str(uuid4()),
+                        'version': ''
                     }
                 }
         }
@@ -113,9 +113,9 @@ class TestValidNotificationRequests(LocalAppTestCase,
     def test_invalid_auth_for_notification_request(self):
         self._create_mock_notifications_queue()
         body = {
-            "match": {
-                'bundle_uuid': str(uuid4()),
-                'bundle_version': 'SomeBundleVersion'
+            'bundle_fqid': {
+                'uuid': str(uuid4()),
+                'version': 'SomeBundleVersion'
             }
         }
         for delete in False, True:

@@ -3,6 +3,9 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
+from functools import (
+    partial,
+)
 import hashlib
 from inspect import (
     signature,
@@ -653,9 +656,9 @@ def validate_repository_search(params, **validators):
         'catalog': validate_catalog,
         'filters': validate_filters,
         'order': validate_order,
-        'search_after': str,
+        'search_after': partial(validate_json_param, 'search_after'),
         'search_after_uid': str,
-        'search_before': str,
+        'search_before': partial(validate_json_param, 'search_before'),
         'search_before_uid': str,
         'size': validate_size,
         'sort': validate_field,
@@ -698,10 +701,7 @@ def validate_size(size):
 
 
 def validate_filters(filters):
-    try:
-        filters = json.loads(filters)
-    except Exception:
-        raise BRE('The `filters` parameter is not valid JSON')
+    filters = validate_json_param('filters', filters)
     if type(filters) is not dict:
         raise BRE('The `filters` parameter must be a dictionary')
     field_types = app.repository_controller.field_types(app.catalog)
@@ -781,6 +781,13 @@ def validate_order(order: str):
     supported_orders = ('asc', 'desc')
     if order not in supported_orders:
         raise BRE(f'Unknown order `{order}`. Must be one of {supported_orders}')
+
+
+def validate_json_param(name: str, value: str) -> MutableJSON:
+    try:
+        return json.loads(value)
+    except json.decoder.JSONDecodeError:
+        raise BRE(f'The {name!r} parameter is not valid JSON')
 
 
 class Mandatory:

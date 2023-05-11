@@ -196,6 +196,9 @@
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
                         ],
+                        "is_supplementary": [
+                            0
+                        ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
@@ -405,6 +408,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
                         "size": 213021639,
@@ -630,6 +634,9 @@
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
+                        "is_supplementary": [
+                            0
+                        ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
@@ -686,6 +693,9 @@
                         ],
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
+                        ],
+                        "is_supplementary": [
+                            0
                         ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
@@ -915,6 +925,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
                         "size": 3306845592,
@@ -941,6 +952,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
                         "size": 213021639,
@@ -1164,6 +1176,9 @@
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
+                        "is_supplementary": [
+                            0
+                        ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
@@ -1220,6 +1235,9 @@
                         ],
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
+                        ],
+                        "is_supplementary": [
+                            0
                         ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
@@ -1449,6 +1467,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
                         "size": 3306845592,
@@ -1475,6 +1494,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
                         "size": 213021639,
@@ -1689,6 +1709,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
                         "size": 3306845592,
@@ -1881,6 +1902,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
                         "size": 3306845592,
@@ -2095,6 +2117,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
                         "size": 213021639,
@@ -2287,6 +2310,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
                         "size": 213021639,
@@ -2505,6 +2529,9 @@
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
+                        "is_supplementary": [
+                            0
+                        ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
@@ -2714,6 +2741,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
                         "size": 3306845592,
@@ -2931,6 +2959,9 @@
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
+                        "is_supplementary": [
+                            0
+                        ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
                         ],
@@ -2987,6 +3018,9 @@
                         ],
                         "file_name": [
                             "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
+                        ],
+                        "is_supplementary": [
+                            0
                         ],
                         "version": [
                             "2022-06-01T00:00:00.000000Z"
@@ -3216,6 +3250,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
                         "size": 3306845592,
@@ -3242,6 +3277,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
                         "size": 213021639,

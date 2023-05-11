@@ -19,13 +19,10 @@ from typing import (
     Optional,
     Type,
     TypeVar,
-    get_args,
+    TypedDict,
 )
 
 import attr
-from more_itertools import (
-    one,
-)
 
 from azul import (
     RequirementError,
@@ -38,6 +35,7 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
     SupportsLessThan,
+    get_generic_type_params,
 )
 from azul.uuids import (
     UUIDPartition,
@@ -54,6 +52,9 @@ BundleVersion = str
 class BundleFQID(SupportsLessThan):
     uuid: BundleUUID
     version: BundleVersion
+
+    def to_json(self) -> MutableJSON:
+        return attr.asdict(self, recurse=False)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -273,6 +274,11 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         )
 
 
+class SourceJSON(TypedDict):
+    id: str
+    spec: str
+
+
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
 
 
@@ -296,7 +302,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     id: str
     spec: SOURCE_SPEC
 
-    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str], 'SourceRef']] = {}
+    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
     def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
@@ -344,32 +350,55 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
                 assert self.spec == spec, (self.spec, spec)
             return self
 
-    def to_json(self):
+    def to_json(self) -> SourceJSON:
         return dict(id=self.id, spec=str(self.spec))
 
     @classmethod
-    def from_json(cls, ref: JSON) -> 'SourceRef':
+    def from_json(cls, ref: SourceJSON) -> 'SourceRef':
         return cls(id=ref['id'], spec=cls.spec_cls().parse(ref['spec']))
 
     @classmethod
     def spec_cls(cls) -> Type[SourceSpec]:
-        base_cls = one(getattr(cls, '__orig_bases__'))
-        spec_cls, ref_cls = get_args(base_cls)
+        spec_cls, ref_cls = get_generic_type_params(cls, SourceSpec, SourceRef)
         return spec_cls
+
+
+class SourcedBundleFQIDJSON(TypedDict):
+    uuid: BundleUUID
+    version: BundleVersion
+    source: SourceJSON
+
+
+BUNDLE_FQID = TypeVar('BUNDLE_FQID', bound='SourcedBundleFQID')
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
 class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     source: SOURCE_REF
 
+    @classmethod
+    def source_ref_cls(cls) -> Type[SOURCE_REF]:
+        ref_cls, = get_generic_type_params(cls, SourceRef)
+        return ref_cls
+
+    @classmethod
+    def from_json(cls, json: SourcedBundleFQIDJSON) -> 'SourcedBundleFQID':
+        json = dict(json)
+        source = cls.source_ref_cls().from_json(json.pop('source'))
+        return cls(source=source, **json)
+
     def upcast(self):
         return BundleFQID(uuid=self.uuid,
                           version=self.version)
 
+    def to_json(self) -> SourcedBundleFQIDJSON:
+        return dict(super().to_json(),
+                    source=self.source.to_json())
+
 
 @attr.s(auto_attribs=True, kw_only=True)
-class Bundle(ABC, Generic[SOURCE_REF]):
-    fqid: SourcedBundleFQID[SOURCE_REF]
+class Bundle(ABC, Generic[BUNDLE_FQID]):
+    fqid: BUNDLE_FQID
     manifest: MutableJSONs
     """
     Each item of the `manifest` attribute's value has this shape:
