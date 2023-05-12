@@ -239,6 +239,39 @@ Change the target branch of the blocked PR to ``develop`` and remove the ``chain
 label from that PR. Remove the ``base`` label from the blocking PR. Lastly, remove the blocking
 relationship.
 
+Updating the AMI for GitLab instances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once a month, operators must check for updates to the AMI for the root volume of
+the EC2 instance running GitLab. There are ways to dynamically determine the
+latest AMI for Amazon Linux 2 but in the spirit of reproducible builds, we would
+rather pin the AMI ID and adopt updates at our own discretion to avoid
+unexpected failures. To obtain the latest compatible AMI ID, select the desired
+``….gitlab`` component, say, ``_select dev.gitlab`` and run
+
+    ::
+
+        aws ssm get-parameters \
+          --names \
+              $(aws ssm get-parameters-by-path \
+                  --path /aws/service/ami-amazon-linux-latest \
+                  --query "Parameters[].Name" \
+              | jq -r .[] \
+              | grep -F amzn2 \
+              | grep -Fv minimal \
+              | grep -Fv kernel-5.10 \
+              | grep -F x86_64 \
+              | grep -F ebs) \
+        | jq -r .Parameters[].Value
+
+This will print the ID of the most recent Amazon Linux 2 AMI. Update the value
+of the ``ami_id`` variable in ``terraform/gitlab/gitlab.tf.json.template.py``.
+The variable holds a dictionary with one entry per region, because AMIs are
+specific to a region. If there are ``….gitlab`` components in more than one AWS
+region (uncommon), you need to select at least one ``….gitlab`` component in
+each of these regions, rerun the command above for each such component, and add
+or update the ``ami_id`` entry for the respective region.
+
 Upgrading GitLab & ClamAV
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

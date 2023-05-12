@@ -298,29 +298,8 @@ dind_image = 'docker:20.10.18-dind'
 gitlab_image = 'gitlab/gitlab-ce:15.11.2-ce.0'
 runner_image = 'gitlab/gitlab-runner:v15.11.0'
 
-# There are ways to dynamically determine the latest Amazon Linux AMI but in the
-# spirit of reproducable builds we would rather pin the AMI and adopt updates at
-# our own discretion so as to avoid unexpected failures due to AMI changes. To
-# determine the latest AMI for Amazon Linux 2, I used the following commands:
-#
-# _select dev.gitlab
-# aws ssm get-parameters \
-#   --names \
-#       $(aws ssm get-parameters-by-path \
-#           --path /aws/service/ami-amazon-linux-latest \
-#           --query "Parameters[].Name" \
-#       | jq -r .[] \
-#       | grep -F amzn2 \
-#       | grep -Fv minimal \
-#       | grep -Fv kernel-5.10 \
-#       | grep -F x86_64 \
-#       | grep -F ebs) \
-# | jq -r .Parameters[].Value
-#
-# The AMI ID is specific to a region. If there are ….gitlab components in more
-# than one AWS region, you need to select at least one ….gitlab component in
-# each of these regions, rerun the command for each such component and add or
-# update the entry for the respective region in the dictionary literal below.
+# For instructions on finding the latest Amazon Linux AMI ID, see
+# OPERATOR.rst#upgrading-linux-ami
 #
 ami_id = {
     'us-east-1': 'ami-0bb85ecb87fe01c2f'
