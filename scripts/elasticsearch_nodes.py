@@ -10,16 +10,10 @@ converted back into a list when processed in the Terraform config.
 """
 import json
 import logging
-from time import (
-    sleep,
-)
 from typing import (
     Sequence,
 )
 
-from botocore.exceptions import (
-    ClientError,
-)
 import jq
 from more_itertools import (
     padded,
@@ -29,8 +23,8 @@ from azul import (
     config,
     require,
 )
-from azul.deployment import (
-    aws,
+from azul.es import (
+    ESClientFactory,
 )
 from azul.logging import (
     configure_script_logging,
@@ -52,37 +46,9 @@ def get_node_ids() -> Sequence[str]:
     """
     Return a list of ES node IDs used by the current deployment.
     """
-    for i in range(max_attempts):
-        log.debug('Attempt %d/%d', i + 1, max_attempts)
-        try:
-            response = aws.cloudwatch.list_metrics(Namespace='AWS/ES',
-                                                   MetricName='CPUUtilization',
-                                                   # To exclude old and unused ES nodes we filter by 'PT3H' (the only
-                                                   # choice for this parameter) so that only metrics that have had data
-                                                   # points published in the past three hours will be included.
-                                                   RecentlyActive='PT3H',
-                                                   Dimensions=[
-                                                       {
-                                                           'Name': 'DomainName',
-                                                           'Value': config.es_domain
-                                                       }
-                                                   ])
-        except ClientError as e:
-            log.warning("Failed to list Cloudwatch metrics due to '%s'. Retrying …",
-                        e.response['Error']['Code'])
-        else:
-            nodes = [
-                d['Value']
-                for m in response['Metrics']
-                for d in m['Dimensions']
-                if d['Name'] == 'NodeId'
-            ]
-            if nodes:
-                return nodes
-            else:
-                log.warning('No node IDs found in response. Retrying …')
-        sleep(5)
-    raise RuntimeError('Failed to obtain node IDs')
+    es_client = ESClientFactory.get()
+    nodes = es_client.nodes.info()
+    return sorted(nodes['nodes'].keys())
 
 
 def prepare_node_ids(node_ids: Sequence[str]) -> dict[str, str]:
