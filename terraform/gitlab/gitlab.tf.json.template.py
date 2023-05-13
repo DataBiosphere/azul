@@ -124,17 +124,18 @@ from azul.types import (
 # missing after `terraform apply`.
 
 # The name of an EBS volume to attach to the instance. This EBS volume must
-# exist and be formatted with ext4. We don't manage the volume in Terraform
-# because that would require formatting it once after creation. That can only
-# be one after attaching it to an EC2 instance but before mounting it. This
-# turns out to be difficult and risks overwriting existing data on the volume.
-# We'd also have to prevent the volume from being deleted during `terraform
-# destroy`.
+# exist, be encrypted, and be formatted with ext4. We don't manage the volume in
+# Terraform because that would require formatting it once after creation. That
+# can only be one after attaching it to an EC2 instance but before mounting it.
+# This turns out to be difficult and risks overwriting existing data on the
+# volume. We'd also have to prevent the volume from being deleted during
+# `terraform destroy`.
 #
 # If this EBS volume does not exist you must create it with the desired size
 # before running Terraform. For example:
 #
 # aws ec2 create-volume \
+# --encrypted \
 # --size 100 \
 # --availability-zone "${AWS_DEFAULT_REGION}a" \
 # --tag-specifications 'ResourceType=volume,Tags=[{Key=Name,Value=azul-gitlab},{Key=owner,Value=hannes@ucsc.edu}]'
@@ -1312,6 +1313,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'http_put_response_hop_limit': 3
                 },
                 'root_block_device': {
+                    'encrypted': True,
                     'volume_size': 20
                 },
                 'key_name': '${aws_key_pair.gitlab.key_name}',
