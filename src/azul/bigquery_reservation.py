@@ -317,13 +317,17 @@ class BigQueryReservation:
         if not self.dry_run and self.is_active is not False:
             raise RuntimeError(f'Failed to delete slots in location {self.location!r}')
 
-    ResourcePager = Union[ListCapacityCommitmentsPager,
-                          ListReservationsPager,
-                          ListAssignmentsPager]
+    ResourcePager = Union[
+        ListCapacityCommitmentsPager,
+        ListReservationsPager,
+        ListAssignmentsPager
+    ]
 
-    Resource = Union[CapacityCommitment,
-                     Reservation,
-                     Assignment]
+    Resource = Union[
+        CapacityCommitment,
+        Reservation,
+        Assignment
+    ]
 
     def _single_resource(self, resources: ResourcePager) -> Optional[Resource]:
         resources = list(resources)
