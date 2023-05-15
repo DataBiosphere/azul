@@ -275,19 +275,19 @@ or update the ``ami_id`` entry for the respective region.
 Upgrading GitLab & ClamAV
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Operators must check for updates to GitLab and ClamAV on a monthly basis in
-addition to triaging GitLab security releases that occur during the month.
-An email notification is sent to ``azul-group@ucsc.edu`` when a GitLab security
+Operators must check for updates to the Docker images for GitLab and ClamAV at
+least once a month, and whenever a GitLab security releases requires it. An
+email notification is sent to ``azul-group@ucsc.edu`` when a GitLab security
 release is available. Discuss with the lead the **Table of Fixes** referenced in
 the release blog post to determine the urgency of the update. An email
 notification should also be received when ClamAV releases become available. The
 current version of GitLab installed can be found on the ``/help`` endpoint of
-`GitLab dev`_, and the available releases can be found on the
-`GitLab Docker image`_ page. When updating the GitLab instance, check if there
-are applicable updates to the `GitLab runner image`_. Use the latest runner
-image whose major and minor version match that of the GitLab image. Similarly,
-check for available releases to ClamAV in the `ClamAV image`_. The current
-version of ClamAV image being used can be found by running::
+`GitLab dev`_, and the available releases can be found on the `GitLab Docker
+image`_ page. When updating the GitLab instance, check if there are applicable
+updates to the `GitLab runner image`_. Use the latest runner image whose major
+and minor version match that of the GitLab image. Similarly, check for available
+releases to ClamAV in the `ClamAV image`_. The current version of ClamAV image
+being used can be found by running::
 
     cat $project_root/terraform/gitlab/gitlab.tf.json.template.py | grep 'clamav_image ='
 
@@ -345,6 +345,19 @@ the instance::
 For GitLab or ClamAV updates, use the ``--no-restart`` flag in order to leave
 the instance stopped after the snapshot has been created. There is no point in
 starting the instance only to have the update terminate it again.
+
+Updating software packages on GitLab instances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once a week, operators must update all Linux packages installed on the root
+volume of each GitLab instance. SSH access to the instances is necessary to
+perform these instructions but on production instances this access is
+unavailable, even to operators. In these cases the operator must request the
+help of the system administrator via Slack to perform these steps.
+
+SSH into the instance, and run ``sudo yum update`` followed by ``sudo reboot``.
+Wait for the GitLab web application to become available again and perform a
+``git pull`` from one of the Git repositories hosted on that instance.
 
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
