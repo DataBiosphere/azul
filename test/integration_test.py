@@ -936,6 +936,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
         with self._service_account_credentials:
+            # FIXME: Use `bundles` index for `catalog_complete` subtest
+            #        https://github.com/DataBiosphere/azul/issues/5214
             hits = self._get_entities(catalog, 'files')
             if config.is_anvil_enabled(catalog):
                 # Primary bundles may not contain any files, and supplementary
