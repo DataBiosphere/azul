@@ -935,19 +935,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              catalog: CatalogName,
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
-        if config.is_hca_enabled(catalog):
-            entity_type = 'files'
-        elif config.is_anvil_enabled(catalog):
-            # While the files index does exist for AnVIL, it's possible
-            # for a bundle entity not to contain any files and
-            # thus be absent from the files response. The only entity
-            # type that is linked to both primary and supplementary
-            # bundles is datasets.
-            entity_type = 'datasets'
-        else:
-            assert False, catalog
         with self._service_account_credentials:
-            hits = self._get_entities(catalog, entity_type)
+            hits = self._get_entities(catalog, 'files')
+            if config.is_anvil_enabled(catalog):
+                # Primary bundles may not contain any files, and supplementary
+                # bundles contain only a file and a dataset. We can't use
+                # datasets to find all the indexed bundles because the number of
+                # bundles per dataset often exceeds the inner entity aggregation
+                # limit. Hence, we need to collect bundles separately for files
+                # and biosamples to cover supplementary and primary bundles,
+                # respectively.
+                hits.extend(self._get_entities(catalog, 'biosamples'))
         for hit in hits:
             source = one(hit['sources'])
             for bundle in hit.get('bundles', ()):
