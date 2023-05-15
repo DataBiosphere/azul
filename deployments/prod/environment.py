@@ -780,15 +780,17 @@ dcp25_sources = mkdict(dcp24_sources, 333, mkdelta([
     mksrc('datarepo-289f5713', 'hca_prod_fde199d2a8414ed1aa65b9e0af8969b1__20220330_dcp2_20230314_dcp25', 186),
 ]))
 
-dcp26_sources = mkdict(dcp25_sources, 336, mkdelta([
+dcp26_sources = mkdict(dcp25_sources, 334, mkdelta([
     mksrc('datarepo-37928b8f', 'hca_prod_2d4d89f2ebeb467cae60a3efc5e8d4ba__20230206_dcp2_20230331_dcp26', 2),
+    mksrc('datarepo-96f28c63', 'hca_prod_615158205bb845d08d12f0850222ecf0__20221007_dcp2_20230314_dcp25', 5174, pop),
     mksrc('datarepo-0d0c66d4', 'hca_prod_c281ab637b7d4bdfb7619b1baaa18f82__20230331_dcp2_20230331_dcp26', 2),
     mksrc('datarepo-b3b1e92f', 'hca_prod_c5b475f276b34a8e8465f3b69828fec3__20230331_dcp2_20230331_dcp26', 11),
     mksrc('datarepo-baa51c1d', 'hca_prod_cd9d6360ce38432197dff13c79e3cb84__20230206_dcp2_20230331_dcp26', 2),
+    mksrc('datarepo-d0d87d10', 'hca_prod_e6773550c1a6494986431a3154cf2670__20221208_dcp2_20230314_dcp25', 56, pop),
     mksrc('datarepo-636717a5', 'hca_prod_f3825dfe990a431fb9719c26d39840db__20230331_dcp2_20230331_dcp26', 31),
 ]))
 
-dcp27_sources = mkdict(dcp26_sources, 336, mkdelta([
+dcp27_sources = mkdict(dcp26_sources, 350, mkdelta([
     mksrc('datarepo-75b50ae7', 'hca_prod_04e4292cf62f4098ae9bfd69ae002a90__20230427_dcp2_20230501_dcp27', 310),
     mksrc('datarepo-d2f36342', 'hca_prod_0751843070314bdfa3ce1bf0917a1923__20221208_dcp2_20230501_dcp27', 7),
     mksrc('datarepo-26882f0f', 'hca_prod_07d5987e7f9e4f34b0fba185a35504f5__20230427_dcp2_20230501_dcp27', 36),
@@ -801,7 +803,6 @@ dcp27_sources = mkdict(dcp26_sources, 336, mkdelta([
     mksrc('datarepo-a498b8c7', 'hca_prod_50154d1e230844bf960810c7afaa560b__20230427_dcp2_20230501_dcp27', 322),
     mksrc('datarepo-f800a6a6', 'hca_prod_566d00b0e1f84b929cbd57de9fad0050__20230427_dcp2_20230501_dcp27', 24),
     mksrc('datarepo-bf159952', 'hca_prod_5f44a860d96e4a99b67e24e1b8ccfd26__20230427_dcp2_20230501_dcp27', 3),
-    mksrc('datarepo-a9c85bb3', 'hca_prod_5f607e50ba224598b1e9f3d9d7a35dcc__20230201_dcp2_20230501_dcp27', 10),
     mksrc('datarepo-319b1c54', 'hca_prod_6e1771950ac0468b99a287de96dc9db4__20230503_dcp2_20230503_dcp27', 412),
     mksrc('datarepo-7eec55b7', 'hca_prod_77c13c40a5984036807fbe09209ec2dd__20230427_dcp2_20230501_dcp27', 40),
     mksrc('datarepo-daba93c4', 'hca_prod_7c5990297a3c4b5c8e79e72c9a9a65fe__20230427_dcp2_20230501_dcp27', 18),
