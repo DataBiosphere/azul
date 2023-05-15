@@ -947,10 +947,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                  catalog: CatalogName,
                                  entity_type: str,
                                  bundle_fqids: Set[SourcedBundleFQID]) -> None:
-        fqid_by_uuid: Mapping[str, SourcedBundleFQID] = {
-            fqid.uuid: fqid for fqid in bundle_fqids
-        }
-        self.assertEqual(len(bundle_fqids), len(fqid_by_uuid))
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
             obsolete_fqids = bundle_fqids - expected_fqids
@@ -965,14 +961,26 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 with self._service_account_credentials:
                     hits = self._get_entities(catalog, entity_type)
-                indexed_fqids.update(
-                    # FIXME: We should use the source from the index rather than
-                    #        looking it up from the expectation.
-                    #        https://github.com/DataBiosphere/azul/issues/2625
-                    fqid_by_uuid[bundle['bundleUuid']]
-                    for hit in hits
-                    for bundle in hit.get('bundles', ())
-                )
+                for hit in hits:
+                    source = one(hit['sources'])
+                    for bundle in hit.get('bundles', ()):
+                        bundle_fqid = dict(
+                            source=dict(id=source['sourceId'], spec=source['sourceSpec']),
+                            uuid=bundle['bundleUuid'],
+                            version=bundle['bundleVersion']
+                        )
+                        if config.is_anvil_enabled(catalog):
+                            for file in hit['files']:
+                                is_supplementary = file['is_supplementary']
+                                if isinstance(is_supplementary, list):
+                                    is_supplementary = one(is_supplementary)
+                                if is_supplementary:
+                                    bundle_fqid['entity_type'] = BundleEntityType.supplementary.value
+                                    break
+                            else:
+                                bundle_fqid['entity_type'] = BundleEntityType.primary.value
+                        bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
+                        indexed_fqids.add(bundle_fqid)
                 log.info('Detected %i of %i bundles in %i hits for entity type %s on try #%i.',
                          len(indexed_fqids), num_bundles, len(hits), entity_type, retries)
                 if len(indexed_fqids) == num_bundles:
