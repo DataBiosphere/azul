@@ -629,7 +629,11 @@ class IndexService(DocumentService):
             ]
             # FIXME: Replace hard coded limit with a config property
             #       https://github.com/DataBiosphere/azul/issues/3725
-            bundles = bundles[:100]
+            max_bundles = 100
+            if len(bundles) > max_bundles:
+                log.warning('Only aggregating %i out of %i bundles for outer entity %r',
+                            max_bundles, len(bundles), entity)
+            bundles = bundles[:max_bundles]
             sources = set(c.source for c in contributions)
             aggregate_cls = self.aggregate_class(entity.catalog)
             aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
