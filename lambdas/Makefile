@@ -21,4 +21,4 @@ clean: check_env
 
 .PHONY: openapi
 openapi: check_env
-	for d in service; do $(MAKE) -C $$d openapi || ! break; done
+	for d in indexer service; do $(MAKE) -C $$d openapi || ! break; done
