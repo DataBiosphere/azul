@@ -242,7 +242,3 @@ integration_test: check_python check_branch $(project_root)/lambdas/service/.cha
 .PHONY: check_clean
 check_clean: check_env
 	git diff --exit-code && git diff --cached --exit-code
-
-.PHONY: openapi
-openapi:
-	python $(project_root)/scripts/generate_openapi_document.py
