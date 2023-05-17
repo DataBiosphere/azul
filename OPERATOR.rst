@@ -232,13 +232,6 @@ For an example of how to document failures within a PR `click here`_.
 
 .. _click here: https://github.com/DataBiosphere/azul/pull/3050#issuecomment-840033931
 
-Chain shortening
-^^^^^^^^^^^^^^^^
-
-Change the target branch of the blocked PR to ``develop`` and remove the ``chained``
-label from that PR. Remove the ``base`` label from the blocking PR. Lastly, remove the blocking
-relationship.
-
 Updating the AMI for GitLab instances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

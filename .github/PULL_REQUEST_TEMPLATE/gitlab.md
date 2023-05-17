@@ -49,9 +49,16 @@ Connected issue: #4014
 - [ ] Pushed merge commit to GitHub
 
 
+### Operator (chain shortening)
+
+- [ ] Changed the target branch of the blocked PR to `develop` <sub>or this PR is not labeled `base`</sub>
+- [ ] Removed the `chained` label from the blocked PR <sub>or this PR is not labeled `base`</sub>
+- [ ] Removed the blocking relationship from the blocked PR <sub>or this PR is not labeled `base`</sub>
+- [ ] Removed the `base` label from this PR <sub>or this PR is not labeled `base`</sub>
+
+
 ### Operator (after pushing the merge commit)
 
-- [ ] Shortened the PR chain <sub>or this PR is not labeled `base`</sub>
 - [ ] Deleted PR branch from GitHub
 
 

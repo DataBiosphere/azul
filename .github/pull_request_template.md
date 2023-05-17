@@ -126,9 +126,16 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Pushed merge commit to GitHub
 
 
+### Operator (chain shortening)
+
+- [ ] Changed the target branch of the blocked PR to `develop` <sub>or this PR is not labeled `base`</sub>
+- [ ] Removed the `chained` label from the blocked PR <sub>or this PR is not labeled `base`</sub>
+- [ ] Removed the blocking relationship from the blocked PR <sub>or this PR is not labeled `base`</sub>
+- [ ] Removed the `base` label from this PR <sub>or this PR is not labeled `base`</sub>
+
+
 ### Operator (after pushing the merge commit)
 
-- [ ] Shortened the PR chain <sub>or this PR is not labeled `base`</sub>
 - [ ] Pushed merge commit to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed merge commit to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>

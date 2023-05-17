@@ -598,14 +598,29 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed merge commit to GitHub'
             },
+            *iif(t in (T.default, T.gitlab), [
+                {
+                    'type': 'h2',
+                    'content': 'Operator (chain shortening)'
+                },
+                *[
+                    {
+                        'type': 'cli',
+                        'content': content,
+                        'alt': 'or this PR is not labeled `base`'
+                    }
+                    for content in [
+                        'Changed the target branch of the blocked PR to `develop`',
+                        'Removed the `chained` label from the blocked PR',
+                        'Removed the blocking relationship from the blocked PR',
+                        'Removed the `base` label from this PR'
+                    ]
+                ]
+            ]),
             {
                 'type': 'h2',
                 'content': 'Operator (after pushing the merge commit)'
             },
-            iif(t in (T.default, T.gitlab), {
-                'type': 'cli',
-                'content': 'Shortened the PR chain', 'alt': 'or this PR is not labeled `base`'
-            }),
             *[
                 {
                     'type': 'cli',
