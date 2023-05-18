@@ -69,8 +69,9 @@ def gitlab_volume_info() -> JSON:
 
 def shutdown_instance(instance: JSON):
     instance_id = instance['InstanceId']
-    log.info('Preparing to stop GitLab instance for %r, waiting 10 seconds '
-             'before proceeding. Hit Ctrl-C to abort …',
+    log.info('Preparing to stop GitLab instance in %r. '
+             'Waiting 10 seconds before proceeding. '
+             'Hit Ctrl-C to abort …',
              config.deployment_stage)
     sleep(10)
     log.info('Stopping instance %r …', instance_id)
@@ -83,7 +84,7 @@ def shutdown_instance(instance: JSON):
 
 def start_instance(instance: JSON):
     instance_id = instance['InstanceId']
-    log.info('Starting instance %r …', config.deployment_stage)
+    log.info('Starting instance %r …', instance_id)
     aws.ec2.start_instances(InstanceIds=[instance_id])
     waiter = aws.ec2.get_waiter('instance_status_ok')
     waiter.wait(InstanceIds=[instance_id],
@@ -105,7 +106,7 @@ def create_snapshot(volume: JSON):
         'service': 'azul',
     }
     date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-    response = aws.ec2.create_snapshot(Description=f'{date} GitLab Update',
+    response = aws.ec2.create_snapshot(Description=f'{date} snapshot of GitLab data volume',
                                        VolumeId=volume['VolumeId'],
                                        TagSpecifications=[
                                            dict(ResourceType='snapshot',
@@ -118,7 +119,7 @@ def create_snapshot(volume: JSON):
     waiter.wait(SnapshotIds=[snapshot_id],
                 WaiterConfig=dict(MaxAttempts=9999, Delay=15))
     log.info('Snapshot %r of volume %r is complete',
-             volume['VolumeId'], config.deployment_stage)
+             snapshot_id, volume['VolumeId'])
 
 
 if __name__ == '__main__':
