@@ -94,7 +94,6 @@ ticket checklist is completed. At that time, put the ticket back in triage.
 - [ ] Gave the onboarded employee [GCP Credentials](https://console.cloud.google.com/)
 - [ ] Added the onboarded employee's Google Workspace account to the `azul-dev` group in Terra
 - [ ] Added the onboarded employee's Google Workspace account to the `azul-anvil-dev` group in Terra
-- [ ] Added the onboarded employee's Google Workspace account to the `azul-anvil-prod` group in Terra
 - [ ] Assigned this ticket to the hiring supervisor
 
 ## Hiring supervisor actions (after probationary period)
@@ -110,7 +109,14 @@ ticket checklist is completed. At that time, put the ticket back in triage.
     - Send confirmation to all email recipients when the request has been completed
 - [ ] Received confirmation from the organization administrator that the request has been completed
 - [ ] Received confirmation from the system administrator that the request has been completed
- 
+- [ ] Assigned this ticket to the system administrator
+
+## System administrator actions (after probationary period)
+
+- [ ] Added the onboarded employee's Google Workspace account to the `azul-prod` group in Terra
+- [ ] Added the onboarded employee's Google Workspace account to the `azul-anvil-prod` group in Terra
+- [ ] Added the onboarded employee to the operator role rotation in Slack <sub>or the onboarded employee will not be performing the operator role</sub>
+
 ## Conclusion
 
 - [ ] Closed & unassigned this ticket

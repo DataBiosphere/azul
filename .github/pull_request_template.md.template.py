@@ -507,6 +507,11 @@ def main():
                     'type': 'cli',
                     'content': 'Checked that demo expectations are clear',
                     'alt': 'or all connected issues are labeled `no demo`'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'PR has checklist items for upgrading instructions',
+                    'alt': 'or PR is not labeled `upgrade`'
                 }
             ]),
             iif(t not in (T.promotion, T.backport), {
