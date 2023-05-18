@@ -56,9 +56,9 @@ def mkdict(previous_catalog: dict[str, str],
 
 
 anvil_sources = mkdict({}, 3, mkdelta([
-    mksrc('datarepo-dev-43738c90', 'ANVIL_1000G_2019_Dev_20230302_ANV5_202303032342', 6404),
-    mksrc('datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 25),
-    mksrc('datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25),
+    mksrc('datarepo-dev-43738c90', 'ANVIL_1000G_2019_Dev_20230302_ANV5_202303032342', 22814),
+    mksrc('datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 28),
+    mksrc('datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25)
 ]))
 
 
