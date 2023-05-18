@@ -79,6 +79,10 @@ class GoneError(ChaliceViewError):
 
 
 # Chalice does not define any exceptions for 5xx status codes besides 500
+class BadGatewayError(ChaliceViewError):
+    STATUS_CODE = 502
+
+
 class ServiceUnavailableError(ChaliceViewError):
     STATUS_CODE = 503
 
