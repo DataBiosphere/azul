@@ -44,6 +44,8 @@ build_image:
       dotenv: .gitlab.env
 
 .base:
+  dependencies:
+    - build_image
   image: $BUILD_IMAGE
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
@@ -55,8 +57,6 @@ build_image:
     - _refresh
     - status_context="gitlab/${azul_gitlab_instance_name}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
-  dependencies:
-    - build_image
 
 .base_on_push:
   extends:
@@ -89,6 +89,22 @@ deploy:
   artifacts:
     paths:
       - terraform/plan.json
+
+deploy_browser:
+  extends: .base_on_push
+  stage: deploy
+  needs:
+    - build_image
+    - deploy
+  script:
+    - test -e deployments/$deployment.browser || exit 0
+    - _link $deployment.browser
+    - _refresh
+    - cd terraform/browser
+    - make auto_apply
+  artifacts:
+    paths:
+      - terraform/browser/plan.json
 
 integration_test:
   extends: .base_on_push

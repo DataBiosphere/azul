@@ -298,11 +298,11 @@ dind_image = 'docker:20.10.18-dind'
 gitlab_image = 'gitlab/gitlab-ce:15.11.2-ce.0'
 runner_image = 'gitlab/gitlab-runner:v15.11.0'
 
-# For instructions on finding the latest Amazon Linux AMI ID, see
+# For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
 ami_id = {
-    'us-east-1': 'ami-0bb85ecb87fe01c2f'
+    'us-east-1': 'ami-0236f915da7b5680d'
 }
 
 
@@ -1287,7 +1287,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         for operation in ['create', 'delete', 'get', 'list', 'update', 'undelete']
                         for resource in ['roles', 'serviceAccountKeys', 'serviceAccounts']
                         if resource != 'serviceAccountKeys' or operation not in ['update', 'undelete']
-                    )
+                    ),
+                    'serviceusage.services.use'
                 ]
             }
         },

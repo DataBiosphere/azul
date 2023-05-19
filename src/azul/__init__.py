@@ -24,6 +24,7 @@ from typing import (
     TYPE_CHECKING,
     TextIO,
     TypeVar,
+    TypedDict,
     Union,
 )
 
@@ -270,14 +271,6 @@ class Config:
         if self.deployment_stage == 'prod':
             domain = domain.removeprefix('azul.')
         return domain
-
-    @property
-    def data_browser_name(self):
-        return f'{self.resource_prefix}-data-browser-{self.deployment_stage}'
-
-    @property
-    def data_portal_name(self):
-        return f'{self.resource_prefix}-data-portal-{self.deployment_stage}'
 
     @property
     def dss_endpoint(self) -> Optional[str]:
@@ -1017,6 +1010,17 @@ class Config:
     def is_sandbox_or_personal_deployment(self) -> bool:
         return self.is_sandbox_deployment or not self.is_main_deployment()
 
+    class BrowserSite(TypedDict):
+        domain: str
+        bucket: str
+        tarball_path: str
+        real_path: str
+
+    @property
+    def browser_sites(self) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
+        import json
+        return json.loads(self.environ['azul_browser_sites'])
+
     @property
     def _git_status(self) -> dict[str, str]:
         import git
@@ -1180,7 +1184,10 @@ class Config:
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
 
     def enable_gcp(self):
-        return 'GOOGLE_PROJECT' in self.environ
+        return self.google_project() is not None
+
+    def google_project(self) -> Optional[str]:
+        return self.environ.get('GOOGLE_PROJECT')
 
     class ServiceAccount(Enum):
         indexer = ''
@@ -1337,6 +1344,10 @@ class Config:
     @property
     def github_access_token(self) -> str:
         return self.environ['azul_github_access_token']
+
+    @property
+    def gitlab_access_token(self) -> Optional[str]:
+        return self.environ.get('azul_gitlab_access_token')
 
     def portal_db_object_key(self, catalog_source: str) -> str:
         return f'azul/{self.deployment_stage}/portals/{catalog_source}-db.json'

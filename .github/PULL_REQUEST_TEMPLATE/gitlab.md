@@ -21,6 +21,7 @@ Connected issue: #4014
 
 - [ ] Deployed changes to `dev.gitlab`
 - [ ] Deployed changes to `anvildev.gitlab`
+- [ ] Deployed changes to `anvilprod.gitlab`
 - [ ] Deployed changes to `prod.gitlab`
 
 
@@ -28,6 +29,7 @@ Connected issue: #4014
 
 - [ ] Verified background migrations for `dev.gitlab` are complete
 - [ ] Verified background migrations for `anvildev.gitlab` are complete
+- [ ] Verified background migrations for `anvilprod.gitlab` are complete
 - [ ] Verified background migrations for `prod.gitlab` are complete
 - [ ] Actually approved the PR
 - [ ] Labeled connected issue as `no demo`

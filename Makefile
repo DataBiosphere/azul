@@ -196,7 +196,7 @@ absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/.flake8/azul_flake8.py \
                                 $(project_root)/environment.py \
                                 $(project_root)/deployments/*/environment.py \
-                                $$(find $(project_root)/terraform{,/gitlab,/shared} \
+                                $$(find $(project_root)/terraform{,/gitlab,/shared,/browser} \
                                         $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         $(project_root)/.github \
                                         -maxdepth 1 \

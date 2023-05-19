@@ -19,6 +19,23 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#5015 Prepare platform-anvil-prod for compliance assessment
+===========================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+If deploying the ``gitlab`` component results in an ``OptInRequired`` error,
+login to the AWS Console using credentials for the AWS account that contains the
+GitLab instance and visit the URL that is included in the error message. This
+will enable the required AWS Marketplace subscription for the CIS-hardened
+image.
+
+
 #3894 Send GitLab host logs to CloudWatch
 =========================================
 

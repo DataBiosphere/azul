@@ -126,7 +126,10 @@ class T(Enum):
             if self is T.gitlab else
             {
                 'dev': 'sandbox',
-                'anvildev': 'anvilbox'
+                'anvildev': 'anvilbox',
+                # No sandbox for anvilprod, either, even though it's a defacto
+                # non-production deployment at the moment
+                'anvilprod': None
             }
         )
 
@@ -625,9 +628,9 @@ def main():
                 {
                     'type': 'cli',
                     'content': f'Pushed merge commit to GitLab `{d}`',
-                    'alt': iif(s is not None, 'or PR is labeled `no sandbox`', None)
+                    'alt': iif(t in (T.hotfix, T.promotion), None, 'or PR is labeled `no sandbox`')
                 }
-                for d, s in t.deployments.items()
+                for d in t.deployments
             ],
             *flatten(
                 [
