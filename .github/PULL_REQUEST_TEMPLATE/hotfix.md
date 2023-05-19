@@ -48,8 +48,9 @@ Connected issue: #0000
 - [ ] Squashed PR branch and rebased onto `prod`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
+- [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
-- [ ] Collected commit title tags in merge commit title
+- [ ] Added commit title tags to merge commit title
 - [ ] Moved connected issue to *Merged prod* column in ZenHub
 - [ ] Pushed merge commit to GitHub
 

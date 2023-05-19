@@ -119,8 +119,9 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Started reindex in `anvilbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `anvilbox` <sub>or this PR does not require reindexing `sandbox`</sub>
+- [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
-- [ ] Collected commit title tags in merge commit title
+- [ ] Added commit title tags to merge commit title
 - [ ] Moved connected issues to Merged column in ZenHub
 - [ ] Pushed merge commit to GitHub
 

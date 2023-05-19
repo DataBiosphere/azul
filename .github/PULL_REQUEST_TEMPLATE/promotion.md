@@ -41,8 +41,9 @@ Connected issue: #0000
 ### Operator (before pushing merge the commit)
 
 - [ ] Pushed PR branch to GitHub
+- [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
-- [ ] Collected commit title tags in merge commit title
+- [ ] Added commit title tags to merge commit title
 - [ ] Pushed merge commit to GitHub
 
 

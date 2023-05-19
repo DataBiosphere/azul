@@ -570,11 +570,15 @@ def main():
             ))),
             {
                 'type': 'cli',
+                'content': 'Title of merge commit starts with title from this PR'
+            },
+            {
+                'type': 'cli',
                 'content': f"Added PR reference {iif(t is T.backport, '(this PR) ')}to merge commit title"
             },
             {
                 'type': 'cli',
-                'content': 'Collected commit title tags in merge commit title'
+                'content': 'Added commit title tags to merge commit title'
             },
             iif(t in (T.default, T.gitlab, T.hotfix), {
                 'type': 'cli',
