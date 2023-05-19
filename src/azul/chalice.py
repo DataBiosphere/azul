@@ -1,7 +1,6 @@
 from collections.abc import (
     Iterable,
 )
-import html
 import json
 from json import (
     JSONEncoder,
@@ -36,12 +35,6 @@ from chalice.app import (
 import chevron
 from furl import (
     furl,
-)
-from more_itertools import (
-    only,
-)
-from werkzeug.http import (
-    parse_accept_header,
 )
 
 from azul import (
@@ -114,7 +107,6 @@ class AzulChaliceApp(Chalice):
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
         # Middleware is invoked in order of registration
-        self.register_middleware(self._html_wrapping_middleware, 'http')
         self.register_middleware(self._logging_middleware, 'http')
         self.register_middleware(self._hsts_header_middleware, 'http')
         self.register_middleware(self._lambda_context_middleware, 'all')
@@ -148,32 +140,6 @@ class AzulChaliceApp(Chalice):
         old_handler = chalice.app.EventSourceHandler.__call__
         if old_handler.__code__ != patched_event_source_handler.__code__:
             chalice.app.EventSourceHandler.__call__ = patched_event_source_handler
-
-    def _html_wrapping_middleware(self, event, get_response):
-        """
-        Embed a `text/plain` response in HTML if the request favors `text/html`.
-        Any HTML fragments in the original response are escaped to counteract
-        HTML injection attacks. This doesn't fully prevent those attacks because
-        a broken, ancient user agent might still request `text/plain`, `*/*` or
-        nothing, ignore the `text/plain` content type, sniff the HTML fragment
-        and render it. It does, however, handle vulnerability scanners because
-        those do prefer `text/html`.
-        """
-        response = get_response(event)
-        ct_key = only(k for k in response.headers if k.casefold() == 'content-type')
-        if ct_key and response.headers[ct_key] == 'text/plain':
-            parsed = parse_accept_header(event.headers.get('accept'))
-            text_html = parsed.find('text/html')
-            star_star = parsed.find('*/*')
-            if 0 <= text_html and (star_star < 0 or text_html < star_star):
-                response.body = (
-                    '<html><body>'
-                    f'<h1>Status {response.status_code}</h1>'
-                    f'<pre>{html.escape(json.dumps(response.body), quote=False)}</pre>'
-                    '</body></html>'
-                )
-                response.headers[ct_key] = 'text/html'
-        return response
 
     def _logging_middleware(self, event, get_response):
         self._log_request()
