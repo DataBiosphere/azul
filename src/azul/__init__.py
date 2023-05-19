@@ -1418,6 +1418,32 @@ class Config:
 
     manifest_column_joiner = '||'
 
+    @property
+    def docker_registry(self) -> str:
+        return self.environ['azul_docker_registry']
+
+    # Note that a change to the image references here also requires redeploying
+    # the `shared` TF component.
+
+    docker_images = [
+        'docker.elastic.co/elasticsearch/elasticsearch:7.10.1',
+        'docker.elastic.co/kibana/kibana-oss:7.10.2',
+        'docker.io/clamav/clamav:1.1.0-1',
+        'docker.io/cllunsford/aws-signing-proxy:0.2.2',
+        'docker.io/gitlab/gitlab-ce:15.11.2-ce.0',
+        'docker.io/gitlab/gitlab-runner:v15.11.0',
+        'docker.io/library/docker:20.10.18',
+        'docker.io/library/docker:20.10.18-dind',
+        'docker.io/library/python:3.9.12-buster',
+        'docker.io/lmenezes/cerebro:0.9.4',
+        'docker.io/ucscgi/azul-pycharm:2022.3.3',
+    ]
+
+    docker_platforms = [
+        'linux/arm64',
+        'linux/amd64'
+    ]
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 

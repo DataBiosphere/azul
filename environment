@@ -91,13 +91,51 @@ _preauth() {
 	fi
 	eval "$env"
 	echo >&2
-	echo >&2 "Temporary session credentials are in effect for AWS and Google." \
+  if ! {
+    [ -z "${azul_docker_registry:+x}" ] \
+    || aws ecr get-login-password --region us-east-1 \
+      | docker login \
+        --username AWS \
+        --password-stdin \
+        "${azul_docker_registry%/}"
+  }; then
+    echo >&2 "Login to ECR failed!"
+    return 3
+  fi
+  if ! {
+    [ -z "${azul_gitlab_access_token:+x}" ] \
+    || [ -z "${azul_gitlab_user:+x}" ] \
+    || printenv azul_gitlab_access_token \
+      | docker login \
+        --username "${azul_gitlab_user}" \
+        --password-stdin \
+        "docker.gitlab.${AZUL_DOMAIN_NAME}"
+  }; then
+    echo >&2 "Login to GitLab registry failed!"
+    return 3
+  fi
+	echo >&2
+	echo >&2 "Temporary session credentials are in effect for AWS, Google," \
+		"Amazon ECR and the GitLab docker registry." \
 		"Use '_deauth' to revert the effect of this command."
 	echo >&2
 	return 0
 }
 
 _deauth() {
+  if ! {
+    [ -z "${azul_docker_registry:+x}" ] \
+    || docker logout "${azul_docker_registry}"
+  }; then
+    echo >&2 "Warning: Logout from ECR failed!"
+  fi
+  if ! {
+    [ -z "${azul_gitlab_access_token:+x}" ] \
+    || [ -z "${azul_gitlab_user:+x}" ] \
+    || docker logout "docker.gitlab.${AZUL_DOMAIN_NAME}"
+  }; then
+    echo >&2 "Warning: Logout from GitLab registry failed!"
+  fi
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 	echo >&2
 	echo >&2 "Revoked temporary AWS credentials."

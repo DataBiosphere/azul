@@ -43,6 +43,7 @@ from docker.models.containers import (
 
 from azul import (
     cached_property,
+    config,
 )
 from azul.deployment import (
     aws,
@@ -61,6 +62,7 @@ class KibanaProxy:
         self.docker = docker.from_env()
 
     def create_container(self, image: str, *args, **kwargs) -> Container:
+        image = config.docker_registry + image
         try:
             container = self.docker.containers.create(image, *args, **kwargs)
         except docker.errors.ImageNotFound:

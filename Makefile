@@ -34,6 +34,7 @@ define docker
 .PHONY: docker$1
 docker$1: check_docker
 	docker build \
+	       --build-arg registry=$$(azul_docker_registry) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
 	       --build-arg cache_seed=${azul_docker_image_cache_seed} \
@@ -215,7 +216,7 @@ format: check_venv check_docker
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
 	    --workdir /home/developer/azul \
-	    docker.io/ucscgi/azul-pycharm:2022.3.3 \
+	    $(azul_docker_registry)docker.io/ucscgi/azul-pycharm:2022.3.3 \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test

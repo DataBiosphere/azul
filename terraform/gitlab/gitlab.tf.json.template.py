@@ -293,10 +293,14 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-clamav_image = 'docker.io/clamav/clamav:1.1.0-1'
-dind_image = 'docker.io/library/docker:20.10.18-dind'
-gitlab_image = 'docker.io/gitlab/gitlab-ce:15.11.2-ce.0'
-runner_image = 'docker.io/gitlab/gitlab-runner:v15.11.0'
+# Note that a change to the image references here also requires updating
+# azul.config.docker_images and redeploying the `shared` TF component prior to
+# deploying the `gitlab` component.
+
+clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
+dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:15.11.2-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:v15.11.0'
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
@@ -686,6 +690,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'actions': [
                             'config:ListDiscoveredResources',
                             'config:BatchGetResourceConfig'
+                        ],
+                        'resources': ['*']
+                    },
+
+                    {
+                        'actions': [
+                            'ecr:BatchCheckLayerAvailability',
+                            'ecr:BatchGet*',
+                            'ecr:Describe*',
+                            'ecr:Get*',
+                            'ecr:List*',
                         ],
                         'resources': ['*']
                     },
@@ -1318,9 +1333,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
                     ],
-                    'packages': ['docker', 'amazon-cloudwatch-agent'],
+                    'packages': ['docker', 'amazon-cloudwatch-agent', 'amazon-ecr-credential-helper'],
                     'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
                     'write_files': [
+                        {
+                            'path': '/root/.docker/config.json',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': json.dumps(
+                                {
+                                    'credHelpers': {
+                                        config.docker_registry[:-1]: 'ecr-login'
+                                    }
+                                }
+                                if config.docker_registry else
+                                {}
+                            )
+                        },
                         {
                             'path': '/etc/systemd/system/gitlab-dind.service',
                             'permissions': '0644',

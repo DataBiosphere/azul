@@ -6,6 +6,7 @@ from typing import (
 
 from azul import (
     config,
+    docker,
 )
 from azul.deployment import (
     aws,
@@ -828,6 +829,79 @@ tf_config = {
                     ]
                 }
             }
+        },
+        'aws_ecr_repository': {
+            image.tf_repository: {
+                'name': image.name,
+                'force_delete': True
+            }
+            for image in docker.images
+            if config.docker_registry
+        },
+        'null_resource': {
+            **{
+                image.tf_image: {
+                    # FIXME: Delete unused images from ECR
+                    #        https://github.com/DataBiosphere/azul/issues/5189
+                    'depends_on': [
+                        'aws_ecr_repository.' + image.tf_repository
+                    ],
+                    'triggers': {
+                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root
+                    },
+                    'lifecycle': {
+                        # While `triggers` above only accepts strings, this
+                        # property accepts entire resources. Any change to the
+                        # image repository resource should cause the image
+                        # copying to be kicked off again. The copying is
+                        # idempotent, and efficiently so with respect to
+                        # bandwidth consumption, but it still takes a couple
+                        # minutes, even if all of the destination images are
+                        # already in place, so we'd still like to avoid running
+                        # it unnecessarily.
+                        'replace_triggered_by': [
+                            'aws_ecr_repository.' + image.tf_repository
+                        ]
+                    },
+                    'provisioner': {
+                        'local-exec': {
+                            'command': ' '.join([
+                                'python',
+                                f'{config.project_root}/scripts/copy_images_to_ecr.py',
+                                str(image)
+                            ]),
+                        }
+                    }
+                }
+                for image in docker.images
+                if config.docker_registry
+            },
+            **(
+                {
+                    'cleanup': {
+                        'depends_on': [
+                            'null_resource.' + image.tf_image
+                            for image in docker.images
+                        ],
+                        'lifecycle': {
+                            'replace_triggered_by': [
+                                'aws_ecr_repository.' + image.tf_repository
+                                for image in docker.images
+                            ]
+                        },
+                        'provisioner': {
+                            'local-exec': {
+                                'command': ' '.join([
+                                    'python',
+                                    f'{config.project_root}/scripts/copy_images_to_ecr.py'
+                                ]),
+                            }
+                        }
+                    }
+                }
+                if config.docker_registry else
+                {}
+            )
         }
     }
 }

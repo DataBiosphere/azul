@@ -178,6 +178,21 @@ def env() -> Mapping[str, Optional[str]]:
         # between deployments.
         'AZUL_DEPLOYMENT_STAGE': None,
 
+        # The Docker registry containing all 3rd party images used by this
+        # project, including images used locally, in FROM clauses, for CI/CD or
+        # GitLab. Must be empty or end in a slash. All references to 3rd party
+        # images must point at the registry defined here, ideally by prefixing
+        # the image reference with a reference to this variable. The registry
+        # and the images therein are managed by the `shared` TF component, which
+        # copies images from the upstream registry into the Azul registry. A
+        # 3rd-party image at `<registry>/<username>/<repository>:tag`, is stored
+        # as `${azul_docker_registry>}<registry>/<username>/<repository>:tag`
+        # in the Azul registry. To disable the use of the Azul registry, set
+        # this variable to the empty string.
+        #
+        'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
+                                '{AWS_DEFAULT_REGION}.amazonaws.com/',
+
         # Whether to enable direct access to objects in the DSS main bucket. If 0,
         # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
         # and GET /files/{UUID} endpoints. If 1, S3 GetObject requests are made
@@ -414,13 +429,17 @@ def env() -> Mapping[str, Optional[str]]:
         # the repository defined in `azul_github_project`.
         'azul_github_access_token': '',
 
-        # A GitLab private access token with `read_api` scope. This is used to
-        # download distribution tarballs for the `browser` TF component. This
-        # variable is typically only set on developer machines. In GitLab CI/CD
-        # pipelines, this variable should NOT be set because a different type of
-        # token is automatically provided via the CI_JOB_TOKEN variable.
+        # A GitLab private access token with scopes `read_api`, `read_registry`
+        # and `write_registry`. This variable is typically only set on developer
+        # machines. In GitLab CI/CD pipelines, this variable should NOT be set
+        # because a different type of token is automatically provided via the
+        # CI_JOB_TOKEN variable.
         #
         'azul_gitlab_access_token': None,
+
+        # The name of the user owning the token in `azul_gitlab_access_token`.
+        #
+        'azul_gitlab_user': None,
 
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',

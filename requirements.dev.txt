@@ -15,6 +15,7 @@ moto[s3,sqs,sns,dynamodb,iam]==4.1.4.dev8  # match the extras with the backends 
 boto3-stubs[s3,sqs,lambda,dynamodb,iam]==1.24.94  # match this with the version of the `boto3` runtime dependency
 openapi-spec-validator==0.5.1
 openpyxl==3.0.6
+posix-ipc==1.1.1
 pygithub==1.56
 python-gitlab==3.13.0
 pyyaml==5.4.1  # can't upgrade beyond that b/c awscli 1.25.95 depends on PyYAML<5.5 and >=3.10
