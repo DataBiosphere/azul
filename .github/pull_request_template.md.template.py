@@ -284,11 +284,13 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `base` label to the blocking PR', 'alt': 'or this PR is not chained to another PR'
+                    'content': 'Added `base` label to the blocking PR',
+                    'alt': 'or this PR is not chained to another PR'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `chained` label to this PR', 'alt': 'or this PR is not chained to another PR'
+                    'content': 'Added `chained` label to this PR',
+                    'alt': 'or this PR is not chained to another PR'
                 }
             ]),
             *iif(t in (T.default, T.promotion), [
@@ -303,11 +305,13 @@ def main():
                 }),
                 iif(t is T.default, {
                     'type': 'cli',
-                    'content': 'Added `u` tag to commit title', 'alt': 'or this PR does not require upgrading'
+                    'content': 'Added `u` tag to commit title',
+                    'alt': 'or this PR does not require upgrading'
                 }),
                 {
                     'type': 'cli',
-                    'content': 'Added `upgrade` label to PR', 'alt': 'or this PR does not require upgrading'
+                    'content': 'Added `upgrade` label to PR',
+                    'alt': 'or this PR does not require upgrading'
                 }
             ]),
             *iif(t is T.default, [
@@ -378,11 +382,13 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `R` tag to commit title', 'alt': 'or this PR does not touch requirements*.txt'
+                    'content': 'Added `R` tag to commit title',
+                    'alt': 'or this PR does not touch requirements*.txt'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `reqs` label to PR', 'alt': 'or this PR does not touch requirements*.txt'
+                    'content': 'Added `reqs` label to PR',
+                    'alt': 'or this PR does not touch requirements*.txt'
                 },
                 iif(t is T.default, {
                     'type': 'cli',
