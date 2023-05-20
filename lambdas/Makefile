@@ -17,4 +17,4 @@ service: check_env
 
 .PHONY: clean
 clean: check_env
-	for d in indexer service layer; do $(MAKE) -C $$d clean; done
+	for d in indexer service layer; do $(MAKE) -C $$d clean || ! break; done
