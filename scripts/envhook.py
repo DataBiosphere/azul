@@ -29,10 +29,6 @@ from typing import (
     TypeVar,
 )
 
-from azul.args import (
-    AzulArgumentHelpFormatter,
-)
-
 
 class EnvHook:
 
@@ -57,6 +53,9 @@ class EnvHook:
 
     def _main(self, argv):
         import argparse
+        from azul.args import (
+            AzulArgumentHelpFormatter,
+        )
         parser = argparse.ArgumentParser(description=__doc__,
                                          formatter_class=AzulArgumentHelpFormatter)
         parser.add_argument('action', choices=['install', 'remove'])
