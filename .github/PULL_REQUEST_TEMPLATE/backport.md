@@ -47,8 +47,9 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Build passes in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference (this PR) to merge commit title
-- [ ] Collected commit title tags in merge commit title
+- [ ] Added commit title tags to merge commit title
 - [ ] Pushed merge commit to GitHub
 
 
