@@ -815,8 +815,8 @@ class Config:
             all_types = set(p.type_name() for p in Plugin.types())
             configured_types = self.plugins.keys()
             require(all_types == configured_types,
-                    'Missing or extra plugin types',
-                    all_types.symmetric_difference(configured_types))
+                    'Catalog is missing or has extra plugin types',
+                    self.name, all_types.symmetric_difference(configured_types))
             if self.internal:
                 assert self.is_integration_test_catalog is True, self
 
