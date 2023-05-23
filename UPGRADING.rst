@@ -19,6 +19,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5207 Fix: Partition sizing ignores supplementary bundles
+=========================================================
+
+Subgraph counts have been updated for `anvildev` and `anvilbox`. If you have any
+personal deployments that index these snapshots, update the subgraph counts
+accordingly.
+
+
 #4022 Encrypt GitLab data and root volume and snapshots
 =======================================================
 

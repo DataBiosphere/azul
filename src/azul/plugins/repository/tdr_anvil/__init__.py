@@ -277,12 +277,17 @@ class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
             for partition_prefix in prefix.partition_prefixes()
         ]
         assert prefixes, prefix
-        entity_type = BundleEntityType.primary.value
-        pk_column = entity_type + '_id'
+        primary = BundleEntityType.primary.value
+        supplementary = BundleEntityType.supplementary.value
         rows = self._run_sql(f'''
-            SELECT prefix, COUNT({pk_column}) AS subgraph_count
-            FROM {backtick(self._full_table_name(source.spec, entity_type))}
-            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH({pk_column}, prefix)
+            SELECT prefix, COUNT(datarepo_row_id) AS subgraph_count
+            FROM (
+                SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, primary))}
+                UNION ALL
+                SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, supplementary))}
+                WHERE is_supplementary
+            )
+            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH(datarepo_row_id, prefix)
             GROUP BY prefix
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
