@@ -155,7 +155,7 @@ class Plugin(metaclass=ABCMeta):
         :param catalog: the name of the catalog for which to load the plugin
         """
         assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
-        assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
+        assert isabstract(cls), f'Must use an abstract subclass of {cls.__name__}'
         plugin_type_name = cls.type_name()
         plugin_package_name = config.catalogs[catalog].plugins[plugin_type_name].name
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
