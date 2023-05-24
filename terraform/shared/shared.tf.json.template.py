@@ -350,15 +350,7 @@ emit_tf(block_public_s3_bucket_access({
                 'enable_log_file_validation': True,
                 'is_multi_region_trail': True,
                 'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.trail.arn}:*',
-                'cloud_watch_logs_role_arn': '${aws_iam_role.trail.arn}',
-                'event_selector': {
-                    'read_write_type': 'All',
-                    'include_management_events': True,
-                    'data_resource': {
-                        'type': 'AWS::S3::Object',
-                        'values': ['arn:aws:s3']
-                    }
-                }
+                'cloud_watch_logs_role_arn': '${aws_iam_role.trail.arn}'
             }
         },
         'aws_cloudwatch_log_group': {
