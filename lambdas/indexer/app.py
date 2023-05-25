@@ -244,11 +244,15 @@ def post_notification(catalog: CatalogName, action: str):
     return app.index_controller.handle_notification(catalog, action)
 
 
+@app.threshold(errors=int(config.contribution_concurrency(retry=False) * 2 / 3),
+               throttles=int(15000 / config.contribution_concurrency(retry=False)))
 @app.on_sqs_message(queue=config.notifications_queue_name(), batch_size=1)
 def contribute(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event)
 
 
+@app.threshold(errors=int(config.aggregation_concurrency(retry=False) * 3),
+               throttles=int(9000 / config.aggregation_concurrency(retry=False)))
 @app.on_sqs_message(queue=config.tallies_queue_name(),
                     batch_size=IndexController.document_batch_size)
 def aggregate(event: chalice.app.SQSEvent):
@@ -258,6 +262,8 @@ def aggregate(event: chalice.app.SQSEvent):
 # Any messages in the tallies queue that fail being processed will be retried
 # with more RAM in the tallies_retry queue.
 
+@app.threshold(errors=int(config.aggregation_concurrency(retry=True) * 1 / 16),
+               throttles=0)
 @app.on_sqs_message(queue=config.tallies_queue_name(retry=True),
                     batch_size=IndexController.document_batch_size)
 def aggregate_retry(event: chalice.app.SQSEvent):
@@ -267,6 +273,8 @@ def aggregate_retry(event: chalice.app.SQSEvent):
 # Any messages in the notifications queue that fail being processed will be
 # retried with more RAM and a longer timeout in the notifications_retry queue.
 
+@app.threshold(errors=int(config.contribution_concurrency(retry=True) * 1 / 4),
+               throttles=int(15000 / config.contribution_concurrency(retry=True)))
 @app.on_sqs_message(queue=config.notifications_queue_name(retry=True),
                     batch_size=1)
 def contribute_retry(event: chalice.app.SQSEvent):
