@@ -4,8 +4,8 @@ from time import (
     time,
 )
 from typing import (
+    Iterable,
     Optional,
-    Sequence,
 )
 
 from azul import (
@@ -20,11 +20,13 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
-    SourceJSON,
     SourceRef,
 )
 from azul.plugins import (
     RepositoryPlugin,
+)
+from azul.types import (
+    AnyJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -52,10 +54,10 @@ class SourceService:
     def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def list_sources(self,
-                     catalog: CatalogName,
-                     authentication: Optional[Authentication]
-                     ) -> list[SourceRef]:
+    def list_source_ids(self,
+                        catalog: CatalogName,
+                        authentication: Optional[Authentication]
+                        ) -> set[str]:
         plugin = self._repository_plugin(catalog)
 
         cache_key = (
@@ -66,16 +68,26 @@ class SourceService:
         assert not any(joiner in c for c in cache_key), cache_key
         cache_key = joiner.join(cache_key)
         try:
-            sources = self._get(cache_key)
+            source_ids = self._get(cache_key)
         except CacheMiss:
-            sources = list(plugin.list_sources(authentication))
-            self._put(cache_key, [source.to_json() for source in sources])
-            return sources
+            pass
         else:
-            return [
-                plugin.source_from_json(source)
-                for source in sources
-            ]
+            # FIXME: Remove safety net from source cache format transition
+            #        https://github.com/DataBiosphere/azul/issues/5204
+            try:
+                return set(source_ids)
+            except TypeError as e:
+                if e.args != ("unhashable type: 'dict'",):
+                    raise
+        source_ids = plugin.list_source_ids(authentication)
+        self._put(cache_key, list(source_ids))
+        return source_ids
+
+    def list_sources(self,
+                     catalog: CatalogName,
+                     authentication: Optional[Authentication]
+                     ) -> Iterable[SourceRef]:
+        return self._repository_plugin(catalog).list_sources(authentication)
 
     table_name = config.dynamo_sources_cache_table_name
 
@@ -84,15 +96,13 @@ class SourceService:
     ttl_attribute = 'expiration'
 
     # Timespan in seconds that sources persist in the cache
-    # FIXME: Streamline cache expiration
-    #        https://github.com/DataBiosphere/azul/issues/3094
     expiration = 60
 
     @property
     def _dynamodb(self):
         return aws.dynamodb
 
-    def _get(self, key: str) -> list[SourceJSON]:
+    def _get(self, key: str) -> list[AnyJSON]:
         response = self._dynamodb.get_item(TableName=self.table_name,
                                            Key={self.key_attribute: {'S': key}},
                                            ProjectionExpression=','.join([self.value_attribute, self.ttl_attribute]))
@@ -108,7 +118,7 @@ class SourceService:
             else:
                 return json.loads(result[self.value_attribute]['S'])
 
-    def _put(self, key: str, sources: Sequence[SourceJSON]) -> None:
+    def _put(self, key: str, sources: list[AnyJSON]) -> None:
         item = {
             self.key_attribute: {'S': key},
             self.value_attribute: {'S': json.dumps(sources)},

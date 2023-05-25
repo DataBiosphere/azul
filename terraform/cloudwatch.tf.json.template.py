@@ -85,31 +85,94 @@ emit_tf({
     'resource': [
         *(
             (
-                {
-                    'aws_cloudwatch_metric_alarm': {
-                        f'{lambda_}_5xx': {
-                            'alarm_name': config.qualified_resource_name(lambda_ + '_5xx'),
-                            'comparison_operator': 'GreaterThanThreshold',
-                            # This alarm catches persistent 5XX errors occurring over
-                            # one hour, specifically when more than one occurrence is
-                            # sampled in a ten-minute period for six consecutive periods.
-                            'evaluation_periods': 6,
-                            'period': 60 * 10,
-                            'metric_name': '5XXError',
-                            'namespace': 'AWS/ApiGateway',
-                            'statistic': 'Sum',
-                            'threshold': 1,
-                            'treat_missing_data': 'notBreaching',
-                            'dimensions': {
-                                'ApiName': config.qualified_resource_name(lambda_),
-                                'Stage': config.deployment_stage,
-                            },
-                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                            'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                *(
+                    {
+                        'aws_cloudwatch_metric_alarm': {
+                            f'{lambda_}_5xx': {
+                                'alarm_name': config.qualified_resource_name(lambda_ + '_5xx'),
+                                'comparison_operator': 'GreaterThanThreshold',
+                                # This alarm catches persistent 5XX errors occurring over
+                                # one hour, specifically when more than one occurrence is
+                                # sampled in a ten-minute period for six consecutive periods.
+                                'evaluation_periods': 6,
+                                'period': 60 * 10,
+                                'metric_name': '5XXError',
+                                'namespace': 'AWS/ApiGateway',
+                                'statistic': 'Sum',
+                                'threshold': 1,
+                                'treat_missing_data': 'notBreaching',
+                                'dimensions': {
+                                    'ApiName': config.qualified_resource_name(lambda_),
+                                    'Stage': config.deployment_stage,
+                                },
+                                'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                                'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            }
                         }
                     }
-                }
-                for lambda_ in config.lambda_names()
+                    for lambda_ in config.lambda_names()
+                ),
+                *(
+                    {
+                        'aws_cloudwatch_log_metric_filter': {
+                            f'{lambda_}cachehealth': {
+                                'name': config.qualified_resource_name(f'{lambda_}cachehealth', suffix='.filter'),
+                                'pattern': '',
+                                'log_group_name': (
+                                    '/aws/lambda/'
+                                    + config.qualified_resource_name(lambda_)
+                                    + f'-{lambda_}cachehealth'
+                                ),
+                                'metric_transformation': {
+                                    'name': config.qualified_resource_name(f'{lambda_}cachehealth'),
+                                    'namespace': 'LogMetrics',
+                                    'value': 1,
+                                    'default_value': 0,
+                                }
+                            }
+                        }
+                    }
+                    for lambda_ in config.lambda_names()
+                ),
+                *(
+                    {
+                        'aws_cloudwatch_metric_alarm': {
+                            f'{lambda_}cachehealth': {
+                                'alarm_name': config.qualified_resource_name(f'{lambda_}cachehealth', suffix='.alarm'),
+                                'comparison_operator': 'LessThanThreshold',
+                                'threshold': 1,
+                                'datapoints_to_alarm': 1,
+                                'evaluation_periods': 1,
+                                'treat_missing_data': 'breaching',
+                                'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                                'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                                # CloudWatch uses an unconfigurable "evaluation range" when missing
+                                # data is involved. In practice this means that an alarm on the
+                                # absence of logs with an evaluation period of ten minutes would
+                                # require thirty minutes of no logs before the alarm is raised.
+                                # Using a metric query we can fill in missing datapoints with a
+                                # value of zero and avoid the need for the evaluation range.
+                                'metric_query': [
+                                    {
+                                        'id': 'log_count_filled',
+                                        'expression': 'FILL(log_count_raw, 0)',
+                                        'return_data': True,
+                                    },
+                                    {
+                                        'id': 'log_count_raw',
+                                        'metric': {
+                                            'metric_name': config.qualified_resource_name(f'{lambda_}cachehealth'),
+                                            'namespace': 'LogMetrics',
+                                            'period': 10 * 60,
+                                            'stat': 'Sum',
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                    for lambda_ in config.lambda_names()
+                ),
             )
             if config.enable_monitoring else
             ()

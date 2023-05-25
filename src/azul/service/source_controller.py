@@ -1,3 +1,4 @@
+import logging
 from typing import (
     Optional,
 )
@@ -14,6 +15,7 @@ from azul.auth import (
     Authentication,
 )
 from azul.chalice import (
+    BadGatewayError,
     ServiceUnavailableError,
 )
 from azul.service import (
@@ -29,6 +31,8 @@ from azul.terra import (
 from azul.types import (
     JSONs,
 )
+
+log = logging.getLogger(__name__)
 
 
 class SourceController(ServiceAppController):
@@ -48,6 +52,16 @@ class SourceController(ServiceAppController):
         except TerraTimeoutException as e:
             raise ServiceUnavailableError(*e.args)
         else:
+            authoritative_source_ids = {source.id for source in sources}
+            cached_source_ids = self._list_source_ids(catalog, authentication)
+            # For optimized performance, the cache may include source IDs that
+            # are accessible but are not configured for indexing. Therefore, we
+            # expect the set of actual sources to be a subset of the cached
+            # sources.
+            diff = authoritative_source_ids - cached_source_ids
+            if diff:
+                log.debug(diff)
+                raise BadGatewayError('Inconsistent response from repository')
             return [
                 {'sourceId': source.id, 'sourceSpec': str(source.spec)}
                 for source in sources
@@ -57,8 +71,14 @@ class SourceController(ServiceAppController):
                          catalog: CatalogName,
                          authentication: Optional[Authentication]
                          ) -> set[str]:
-        sources = self.list_sources(catalog, authentication)
-        return {source['sourceId'] for source in sources}
+        try:
+            source_ids = self._source_service.list_source_ids(catalog, authentication)
+        except PermissionError:
+            raise UnauthorizedError
+        except TerraTimeoutException as e:
+            raise ServiceUnavailableError(*e.args)
+        else:
+            return source_ids
 
     def get_filters(self,
                     catalog: CatalogName,

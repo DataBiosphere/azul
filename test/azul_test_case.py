@@ -470,7 +470,7 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
         from service import (
             patch_source_cache,
         )
-        cls._source_cache_patch = patch_source_cache(hit=[cls.source.to_json()])
+        cls._source_cache_patch = patch_source_cache(hit=[cls.source.id])
         cls._source_cache_patch.start()
 
     @classmethod

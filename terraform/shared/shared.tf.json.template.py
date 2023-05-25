@@ -364,35 +364,84 @@ emit_tf(block_public_s3_bucket_access({
             }
         },
         'aws_cloudwatch_log_metric_filter': {
-            a.name: {
-                'name': config.qualified_resource_name(a.name, suffix='.filter'),
-                'pattern': a.filter_pattern,
+            **{
+                a.name: {
+                    'name': config.qualified_resource_name(a.name, suffix='.filter'),
+                    'pattern': a.filter_pattern,
+                    'log_group_name': '${aws_cloudwatch_log_group.trail.name}',
+                    'metric_transformation': {
+                        'name': a.metric_name,
+                        'namespace': 'LogMetrics',
+                        'value': 1
+                    }
+                }
+                for a in cis_alarms
+            },
+            'trail_logs': {
+                'name': config.qualified_resource_name('trail_logs', suffix='.filter'),
+                'pattern': '',
                 'log_group_name': '${aws_cloudwatch_log_group.trail.name}',
                 'metric_transformation': {
-                    'name': a.metric_name,
+                    'name': config.qualified_resource_name('trail_logs'),
                     'namespace': 'LogMetrics',
-                    'value': 1
+                    'value': 1,
+                    'default_value': 0,
                 }
             }
-            for a in cis_alarms
         },
         'aws_cloudwatch_metric_alarm': {
-            a.name: {
-                'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
-                'comparison_operator': 'GreaterThanOrEqualToThreshold',
-                'evaluation_periods': 1,
-                'metric_name': a.metric_name,
-                'namespace': 'LogMetrics',
-                'statistic': a.statistic,
-                'treat_missing_data': 'notBreaching',
-                'threshold': 1,
-                # The CIS documentation does not specify a period. 5 minutes is
-                # the default value when creating the alarm via the console UI.
-                'period': 5 * 60,
-                'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
-                'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+            **{
+                a.name: {
+                    'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
+                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                    'evaluation_periods': 1,
+                    'metric_name': a.metric_name,
+                    'namespace': 'LogMetrics',
+                    'statistic': a.statistic,
+                    'treat_missing_data': 'notBreaching',
+                    'threshold': 1,
+                    # The CIS documentation does not specify a period. 5 minutes is
+                    # the default value when creating the alarm via the console UI.
+                    'period': 5 * 60,
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+                }
+                for a in cis_alarms
+            },
+            **{
+                'trail_logs': {
+                    'alarm_name': config.qualified_resource_name('trail_logs', suffix='.alarm'),
+                    'comparison_operator': 'LessThanThreshold',
+                    'threshold': 1,
+                    'datapoints_to_alarm': 1,
+                    'evaluation_periods': 1,
+                    'treat_missing_data': 'breaching',
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    # CloudWatch uses an unconfigurable "evaluation range" when missing
+                    # data is involved. In practice this means that an alarm on the
+                    # absence of logs with an evaluation period of ten minutes would
+                    # require thirty minutes of no logs before the alarm is raised.
+                    # Using a metric query we can fill in missing datapoints with a
+                    # value of zero and avoid the need for the evaluation range.
+                    'metric_query': [
+                        {
+                            'id': 'log_count_filled',
+                            'expression': 'FILL(log_count_raw, 0)',
+                            'return_data': True
+                        },
+                        {
+                            'id': 'log_count_raw',
+                            'metric': {
+                                'metric_name': config.qualified_resource_name('trail_logs'),
+                                'namespace': 'LogMetrics',
+                                'period': 10 * 60,
+                                'stat': 'Sum',
+                            }
+                        }
+                    ]
+                }
             }
-            for a in cis_alarms
         },
         'aws_iam_role': {
             'api_gateway': {

@@ -124,17 +124,18 @@ from azul.types import (
 # missing after `terraform apply`.
 
 # The name of an EBS volume to attach to the instance. This EBS volume must
-# exist and be formatted with ext4. We don't manage the volume in Terraform
-# because that would require formatting it once after creation. That can only
-# be one after attaching it to an EC2 instance but before mounting it. This
-# turns out to be difficult and risks overwriting existing data on the volume.
-# We'd also have to prevent the volume from being deleted during `terraform
-# destroy`.
+# exist, be encrypted, and be formatted with ext4. We don't manage the volume in
+# Terraform because that would require formatting it once after creation. That
+# can only be one after attaching it to an EC2 instance but before mounting it.
+# This turns out to be difficult and risks overwriting existing data on the
+# volume. We'd also have to prevent the volume from being deleted during
+# `terraform destroy`.
 #
 # If this EBS volume does not exist you must create it with the desired size
 # before running Terraform. For example:
 #
 # aws ec2 create-volume \
+# --encrypted \
 # --size 100 \
 # --availability-zone "${AWS_DEFAULT_REGION}a" \
 # --tag-specifications 'ResourceType=volume,Tags=[{Key=Name,Value=azul-gitlab},{Key=owner,Value=hannes@ucsc.edu}]'
@@ -297,29 +298,8 @@ dind_image = 'docker:20.10.18-dind'
 gitlab_image = 'gitlab/gitlab-ce:15.11.2-ce.0'
 runner_image = 'gitlab/gitlab-runner:v15.11.0'
 
-# There are ways to dynamically determine the latest Amazon Linux AMI but in the
-# spirit of reproducable builds we would rather pin the AMI and adopt updates at
-# our own discretion so as to avoid unexpected failures due to AMI changes. To
-# determine the latest AMI for Amazon Linux 2, I used the following commands:
-#
-# _select dev.gitlab
-# aws ssm get-parameters \
-#   --names \
-#       $(aws ssm get-parameters-by-path \
-#           --path /aws/service/ami-amazon-linux-latest \
-#           --query "Parameters[].Name" \
-#       | jq -r .[] \
-#       | grep -F amzn2 \
-#       | grep -Fv minimal \
-#       | grep -Fv kernel-5.10 \
-#       | grep -F x86_64 \
-#       | grep -F ebs) \
-# | jq -r .Parameters[].Value
-#
-# The AMI ID is specific to a region. If there are ….gitlab components in more
-# than one AWS region, you need to select at least one ….gitlab component in
-# each of these regions, rerun the command for each such component and add or
-# update the entry for the respective region in the dictionary literal below.
+# For instructions on finding the latest Amazon Linux AMI ID, see
+# OPERATOR.rst#upgrading-linux-ami
 #
 ami_id = {
     'us-east-1': 'ami-0bb85ecb87fe01c2f'
@@ -1312,6 +1292,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'http_put_response_hop_limit': 3
                 },
                 'root_block_device': {
+                    'encrypted': True,
                     'volume_size': 20
                 },
                 'key_name': '${aws_key_pair.gitlab.key_name}',

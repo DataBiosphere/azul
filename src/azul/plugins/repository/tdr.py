@@ -9,8 +9,10 @@ import datetime
 import logging
 import time
 from typing import (
+    Callable,
     Optional,
     Type,
+    TypeVar,
 )
 
 import attr
@@ -25,7 +27,6 @@ from azul import (
     CatalogName,
     cache_per_thread,
     config,
-    reject,
     require,
 )
 from azul.auth import (
@@ -86,6 +87,9 @@ class TDRBundle(Bundle[TDRBundleFQID]):
         return str(drs_uri.path).strip('/')
 
 
+T = TypeVar('T')
+
+
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     _sources: Set[TDRSourceSpec]
@@ -113,10 +117,25 @@ class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
                                   type(authentication))
         return tdr
 
+    def _auth_fallback(self,
+                       authentication: Optional[Authentication],
+                       tdr_callback: Callable[[TDRClient], T]
+                       ) -> T:
+        tdr = self._user_authenticated_tdr(authentication)
+        try:
+            return tdr_callback(tdr)
+        except UnauthorizedError:
+            if authentication is None or tdr.is_registered():
+                raise
+            else:
+                # Fall back to anonymous access if the request is authenticated
+                # using an unregistered account.
+                tdr = self._user_authenticated_tdr(None)
+                return tdr_callback(tdr)
+
     def list_sources(self,
                      authentication: Optional[Authentication]
                      ) -> list[TDRSourceRef]:
-        tdr = self._user_authenticated_tdr(authentication)
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
         # Filter by prefix of snapshot names in an attempt to speed up the
         # listing by limiting the number of irrelevant snapshots returned. Note
@@ -124,19 +143,8 @@ class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
         # the longest common substring is complicated and, as of yet, I haven't
         # found a trustworthy, reusable implementation.
         filter = longest_common_prefix(configured_specs_by_name.keys())
-        try:
-            snapshots = tdr.snapshot_names_by_id(filter=filter)
-        except UnauthorizedError:
-            if tdr.is_registered():
-                raise
-            else:
-                # Fall back to anonymous access if the user has authenticated
-                # using an unregistered account. The call to `reject` protects
-                # against infinite recursion in the event that the public
-                # service account erroneously isn't registered.
-                reject(authentication is None)
-                return self.list_sources(None)
-
+        snapshots = self._auth_fallback(authentication,
+                                        lambda tdr: tdr.snapshot_names_by_id(filter=filter))
         snapshot_ids_by_name = {
             name: id
             for id, name in snapshots.items()
@@ -147,6 +155,12 @@ class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
                          spec=configured_specs_by_name[name])
             for name, id in snapshot_ids_by_name.items()
         ]
+
+    def list_source_ids(self,
+                        authentication: Optional[Authentication]
+                        ) -> set[str]:
+        return self._auth_fallback(authentication,
+                                   lambda tdr: tdr.snapshot_ids())
 
     @property
     def tdr(self):

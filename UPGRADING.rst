@@ -19,6 +19,39 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5207 Fix: Partition sizing ignores supplementary bundles
+=========================================================
+
+Subgraph counts have been updated for `anvildev` and `anvilbox`. If you have any
+personal deployments that index these snapshots, update the subgraph counts
+accordingly.
+
+
+#4022 Encrypt GitLab data and root volume and snapshots
+=======================================================
+
+Operator
+~~~~~~~~
+
+Prior to pushing the merge commit to a GitLab instance, login to the AWS
+Console and navigate to `EC2` -> `Instances` -> select the GitLab instance ->
+`Storage` to confirm that root volume is encrypted.
+
+If the root volume is not encrypted, manually deploy the ``gitlab`` component of
+a deployment just before pushing the merge commit to the GitLab instance in that
+deployment.
+
+
+#5133 Trigger an alarm on absence of logs
+=========================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5110 Update GitLab IAM policy for FedRAMP inventory
 ====================================================
 

@@ -434,12 +434,28 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
                      authentication: Optional[Authentication]
                      ) -> Iterable[SOURCE_REF]:
         """
-        The sources the plugin is configured to read metadata from.
+        The sources the plugin is configured to read metadata from that are
+        accessible using the provided authentication. Retrieving this
+        information may require a round-trip to the underlying repository.
+        Implementations should raise PermissionError if the provided
+        authentication is insufficient to access the repository.
+        """
+        raise NotImplementedError
+
+    def list_source_ids(self,
+                        authentication: Optional[Authentication]
+                        ) -> set[str]:
+        """
+        List source IDs in the underlying repository that are accessible using
+        the provided authentication. Sources may be included even if they are
+        not configured to be read from. Subclasses should override this method
+        if it can be implemented more efficiently than `list_sources`.
+
         Retrieving this information may require a round-trip to the underlying
         repository. Implementations should raise PermissionError if the provided
         authentication is insufficient to access the repository.
         """
-        raise NotImplementedError
+        return {source.id for source in self.list_sources(authentication)}
 
     @cached_property
     def _generic_params(self) -> tuple:

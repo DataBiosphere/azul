@@ -445,19 +445,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.azul_client.queue_notifications(catalog.notifications)
             _wait_for_indexer()
             for catalog in catalogs:
-                if config.is_hca_enabled(catalog.name):
-                    entity_type = 'files'
-                elif config.is_anvil_enabled(catalog.name):
-                    # While the files index does exist for AnVIL, it's possible
-                    # for a bundle entity not to contain any files and
-                    # thus be absent from the files response. The only entity
-                    # type that is linked to both primary and supplementary
-                    # bundles is datasets.
-                    entity_type = 'datasets'
-                else:
-                    assert False, catalog
                 self._assert_catalog_complete(catalog=catalog.name,
-                                              entity_type=entity_type,
                                               bundle_fqids=catalog.bundles)
                 self._test_single_entity_response(catalog=catalog.name)
 
@@ -943,14 +931,49 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         notifications.extend(duplicate_bundles)
         return notifications, bundle_fqids
 
+    def _get_indexed_bundles(self,
+                             catalog: CatalogName,
+                             ) -> set[SourcedBundleFQID]:
+        indexed_fqids = set()
+        with self._service_account_credentials:
+            # FIXME: Use `bundles` index for `catalog_complete` subtest
+            #        https://github.com/DataBiosphere/azul/issues/5214
+            hits = self._get_entities(catalog, 'files')
+            if config.is_anvil_enabled(catalog):
+                # Primary bundles may not contain any files, and supplementary
+                # bundles contain only a file and a dataset. We can't use
+                # datasets to find all the indexed bundles because the number of
+                # bundles per dataset often exceeds the inner entity aggregation
+                # limit. Hence, we need to collect bundles separately for files
+                # and biosamples to cover supplementary and primary bundles,
+                # respectively.
+                hits.extend(self._get_entities(catalog, 'biosamples'))
+        for hit in hits:
+            source = one(hit['sources'])
+            for bundle in hit.get('bundles', ()):
+                bundle_fqid = dict(
+                    source=dict(id=source['sourceId'], spec=source['sourceSpec']),
+                    uuid=bundle['bundleUuid'],
+                    version=bundle['bundleVersion']
+                )
+                if config.is_anvil_enabled(catalog):
+                    for file in hit['files']:
+                        is_supplementary = file['is_supplementary']
+                        if isinstance(is_supplementary, list):
+                            is_supplementary = one(is_supplementary)
+                        if is_supplementary:
+                            bundle_fqid['entity_type'] = BundleEntityType.supplementary.value
+                            break
+                    else:
+                        bundle_fqid['entity_type'] = BundleEntityType.primary.value
+                bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
+                indexed_fqids.add(bundle_fqid)
+        return indexed_fqids
+
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
-                                 entity_type: str,
-                                 bundle_fqids: Set[SourcedBundleFQID]) -> None:
-        fqid_by_uuid: Mapping[str, SourcedBundleFQID] = {
-            fqid.uuid: fqid for fqid in bundle_fqids
-        }
-        self.assertEqual(len(bundle_fqids), len(fqid_by_uuid))
+                                 bundle_fqids: Set[SourcedBundleFQID]
+                                 ) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
             obsolete_fqids = bundle_fqids - expected_fqids
@@ -958,23 +981,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
             num_bundles = len(expected_fqids)
             timeout = 600
-            indexed_fqids = set()
             log.debug('Expecting bundles %s ', sorted(expected_fqids))
             retries = 0
             deadline = time.time() + timeout
             while True:
-                with self._service_account_credentials:
-                    hits = self._get_entities(catalog, entity_type)
-                indexed_fqids.update(
-                    # FIXME: We should use the source from the index rather than
-                    #        looking it up from the expectation.
-                    #        https://github.com/DataBiosphere/azul/issues/2625
-                    fqid_by_uuid[bundle['bundleUuid']]
-                    for hit in hits
-                    for bundle in hit.get('bundles', ())
-                )
-                log.info('Detected %i of %i bundles in %i hits for entity type %s on try #%i.',
-                         len(indexed_fqids), num_bundles, len(hits), entity_type, retries)
+                indexed_fqids = self._get_indexed_bundles(catalog)
+                log.info('Detected %i of %i bundles on try #%i.',
+                         len(indexed_fqids), num_bundles, retries)
                 if len(indexed_fqids) == num_bundles:
                     log.info('Found the expected %i bundles.', num_bundles)
                     break

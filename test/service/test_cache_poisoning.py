@@ -1,6 +1,9 @@
 from abc import (
     ABCMeta,
 )
+from unittest.mock import (
+    patch,
+)
 
 import requests
 
@@ -9,6 +12,9 @@ from app_test_case import (
 )
 from azul.logging import (
     configure_test_logging,
+)
+from azul.terra import (
+    TDRClient,
 )
 from azul_test_case import (
     AnvilTestCase,
@@ -22,6 +28,21 @@ def setUpModule():
 
 
 class CachePoisoningTestCase(LocalAppTestCase, metaclass=ABCMeta):
+    snapshot_mock = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.snapshot_mock = patch.object(TDRClient,
+                                         'snapshot_names_by_id',
+                                         return_value={})
+        cls.snapshot_mock.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.snapshot_mock.stop()
+        cls.snapshot_mock = None
+        super().tearDownClass()
 
     @classmethod
     def lambda_name(cls) -> str:
