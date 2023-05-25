@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 from collections.abc import (
     Iterable,
     Sequence,
@@ -721,6 +724,19 @@ class Chalice:
                 key.replace('.', '_'): value
                 for key, value in bucket_notifications.items()
             }
+            # To prevent a race condition by Terraform, we make the bucket
+            # notifications depend on the related aws_lambda_permission.
+            permissions_by_function = defaultdict(set)
+            for permission_name, permission in resources['aws_lambda_permission'].items():
+                function_ref = permission['function_name']
+                permissions_by_function[function_ref].add(permission_name)
+            for notification in resources['aws_s3_bucket_notification'].values():
+                assert 'depends_on' not in notification, notification
+                notification['depends_on'] = [
+                    f'aws_lambda_permission.{permission_name}'
+                    for function in notification['lambda_function']
+                    for permission_name in permissions_by_function[function['lambda_function_arn']]
+                ]
 
         # The fix for https://github.com/aws/chalice/issues/1237 introduced the
         # create_before_destroy hack and it may have helped but has far-ranging
