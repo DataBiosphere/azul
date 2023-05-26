@@ -14,6 +14,9 @@ from furl import (
 from azul import (
     config,
 )
+from azul.chalice import (
+    AzulChaliceApp,
+)
 from azul.files import (
     write_file_atomically,
 )
@@ -46,11 +49,11 @@ def main():
                           return_value=f'azul_{lambda_name}'):
             assert getattr(config, f'{lambda_name}_name') == f'azul_{lambda_name}'
             lambda_endpoint = furl('http://localhost')
-            with patch.object(target=type(config),
-                              attribute=f'{lambda_name}_endpoint',
+            with patch.object(target=AzulChaliceApp,
+                              attribute='base_url',
                               new=lambda_endpoint):
-                assert getattr(config, f'{lambda_name}_endpoint') == lambda_endpoint
                 app_module = load_app_module(lambda_name)
+                assert app_module.app.base_url == lambda_endpoint
                 app_spec = app_module.app.spec()
                 doc_path = Path(config.project_root) / 'lambdas' / lambda_name / 'openapi.json'
                 with write_file_atomically(doc_path) as file:
