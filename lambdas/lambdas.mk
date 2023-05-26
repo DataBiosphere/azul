@@ -49,3 +49,7 @@ clean: git_clean_recursive
 package: check_branch check_python check_aws config environ compile
 	python -m azul.changelog vendor
 	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform
+
+.PHONY: openapi
+openapi: check_python
+	python $(project_root)/scripts/generate_openapi_document.py
