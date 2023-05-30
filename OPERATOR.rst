@@ -350,7 +350,7 @@ help of the system administrator via Slack to perform these steps.
 
 SSH into the instance, and run ``sudo yum update`` followed by ``sudo reboot``.
 Wait for the GitLab web application to become available again and perform a
-``git pull`` from one of the Git repositories hosted on that instance.
+``git fetch`` from one of the Git repositories hosted on that instance.
 
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
