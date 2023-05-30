@@ -957,15 +957,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     version=bundle['bundleVersion']
                 )
                 if config.is_anvil_enabled(catalog):
-                    for file in hit['files']:
-                        is_supplementary = file['is_supplementary']
-                        if isinstance(is_supplementary, list):
-                            is_supplementary = one(is_supplementary)
-                        if is_supplementary:
-                            bundle_fqid['entity_type'] = BundleEntityType.supplementary.value
-                            break
-                    else:
-                        bundle_fqid['entity_type'] = BundleEntityType.primary.value
+                    # Biosamples are used as bundle entities for primary bundles
+                    # and are never present in supplementary bundles.
+                    # We cannot use the `files.is_supplementary` field to
+                    # determine whether a bundle is supplementary or not due to
+                    # false positives in the current snapshots
+                    # (https://github.com/DataBiosphere/azul/issues/5229)
+                    bundle_fqid['entity_type'] = (
+                        BundleEntityType.primary.value
+                        if hit['biosamples'] else
+                        BundleEntityType.supplementary.value
+                    )
                 bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
                 indexed_fqids.add(bundle_fqid)
         return indexed_fqids
