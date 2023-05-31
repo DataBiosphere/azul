@@ -284,11 +284,13 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `base` label to the blocking PR', 'alt': 'or this PR is not chained to another PR'
+                    'content': 'Added `base` label to the blocking PR',
+                    'alt': 'or this PR is not chained to another PR'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `chained` label to this PR', 'alt': 'or this PR is not chained to another PR'
+                    'content': 'Added `chained` label to this PR',
+                    'alt': 'or this PR is not chained to another PR'
                 }
             ]),
             *iif(t in (T.default, T.promotion), [
@@ -303,11 +305,13 @@ def main():
                 }),
                 iif(t is T.default, {
                     'type': 'cli',
-                    'content': 'Added `u` tag to commit title', 'alt': 'or this PR does not require upgrading'
+                    'content': 'Added `u` tag to commit title',
+                    'alt': 'or this PR does not require upgrading'
                 }),
                 {
                     'type': 'cli',
-                    'content': 'Added `upgrade` label to PR', 'alt': 'or this PR does not require upgrading'
+                    'content': 'Added `upgrade` label to PR',
+                    'alt': 'or this PR does not require upgrading'
                 }
             ]),
             *iif(t is T.default, [
@@ -378,11 +382,13 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `R` tag to commit title', 'alt': 'or this PR does not touch requirements*.txt'
+                    'content': 'Added `R` tag to commit title',
+                    'alt': 'or this PR does not touch requirements*.txt'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `reqs` label to PR', 'alt': 'or this PR does not touch requirements*.txt'
+                    'content': 'Added `reqs` label to PR',
+                    'alt': 'or this PR does not touch requirements*.txt'
                 },
                 iif(t is T.default, {
                     'type': 'cli',
@@ -570,11 +576,15 @@ def main():
             ))),
             {
                 'type': 'cli',
+                'content': 'Title of merge commit starts with title from this PR'
+            },
+            {
+                'type': 'cli',
                 'content': f"Added PR reference {iif(t is T.backport, '(this PR) ')}to merge commit title"
             },
             {
                 'type': 'cli',
-                'content': 'Collected commit title tags in merge commit title'
+                'content': 'Added commit title tags to merge commit title'
             },
             iif(t in (T.default, T.gitlab, T.hotfix), {
                 'type': 'cli',
@@ -588,14 +598,29 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed merge commit to GitHub'
             },
+            *iif(t in (T.default, T.gitlab), [
+                {
+                    'type': 'h2',
+                    'content': 'Operator (chain shortening)'
+                },
+                *[
+                    {
+                        'type': 'cli',
+                        'content': content,
+                        'alt': 'or this PR is not labeled `base`'
+                    }
+                    for content in [
+                        'Changed the target branch of the blocked PR to `develop`',
+                        'Removed the `chained` label from the blocked PR',
+                        'Removed the blocking relationship from the blocked PR',
+                        'Removed the `base` label from this PR'
+                    ]
+                ]
+            ]),
             {
                 'type': 'h2',
                 'content': 'Operator (after pushing the merge commit)'
             },
-            iif(t in (T.default, T.gitlab), {
-                'type': 'cli',
-                'content': 'Shortened the PR chain', 'alt': 'or this PR is not labeled `base`'
-            }),
             *[
                 {
                     'type': 'cli',

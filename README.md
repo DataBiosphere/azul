@@ -2384,7 +2384,7 @@ Changes to the OpenAPI definition are tracked in the source tree. When making
 changes that affect the definition, run:
 
 ```
-make openapi
+make -C lambdas openapi
 ```
 
 and commit any modifications to the `openapi.json` file. Failure to do so will 

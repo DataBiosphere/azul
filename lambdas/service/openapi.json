@@ -26,8 +26,8 @@
     "paths": {
         "/openapi": {
             "get": {
-                "summary": "Return OpenAPI specifications for this service",
-                "description": "This endpoint returns the [OpenAPI specifications](https://github.com/OAI/OpenAPI-Specification) for this service. These are the specifications used to generate the page you are visiting now.",
+                "summary": "Return OpenAPI specifications for this REST API",
+                "description": "\nThis endpoint returns the [OpenAPI specifications]'\n(https://github.com/OAI/OpenAPI-Specification) for this REST\nAPI. These are the specifications used to generate the page\nyou are visiting now.\n",
                 "responses": {
                     "200": {
                         "description": "200 response",
@@ -87,7 +87,7 @@
         "/health": {
             "get": {
                 "summary": "Complete health check",
-                "description": "\nHealth check of the service and all resources it depends on. This may\ntake long time to complete and exerts considerable load on the service.\nFor that reason it should not be requested frequently or by automated\nmonitoring facilities that would be better served by the\n[`/health/fast`](#operations-Auxiliary-get_health_fast) or\n[`/health/cached`](#operations-Auxiliary-get_health_cached) endpoints.\n",
+                "description": "\nHealth check of the service REST API and all\nresources it depends on. This may take long time to complete\nand exerts considerable load on the API. For that reason it\nshould not be requested frequently or by automated\nmonitoring facilities that would be better served by the\n[`/health/fast`](#operations-Auxiliary-get_health_fast) or\n[`/health/cached`](#operations-Auxiliary-get_health_cached)\nendpoints.\n",
                 "responses": {
                     "200": {
                         "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `other_lambdas` \nIndicates whether the companion REST API responds to HTTP requests.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
@@ -186,7 +186,7 @@
         "/health/basic": {
             "get": {
                 "summary": "Basic health check",
-                "description": "\nHealth check of only the REST API itself, excluding other resources\nthe service depends on. A 200 response indicates that the service is\nreachable via HTTP(S) but nothing more.\n",
+                "description": "\nHealth check of only the REST API itself, excluding other\nresources that it depends on. A 200 response indicates that\nthe service is reachable via HTTP(S) but nothing\nmore.\n",
                 "responses": {
                     "200": {
                         "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n",
@@ -275,7 +275,7 @@
         "/health/cached": {
             "get": {
                 "summary": "Cached health check for continuous monitoring",
-                "description": "\nReturn a cached copy of the\n[`/health/fast`](#operations-Auxiliary-get_health_fast) response.\nThis endpoint is optimized for continuously running, distributed health\nmonitors such as Route 53 health checks. The cache ensures that the\nservice is not overloaded by these types of health monitors. The cache\nis updated every minute.\n",
+                "description": "\nReturn a cached copy of the\n[`/health/fast`](#operations-Auxiliary-get_health_fast)\nresponse. This endpoint is optimized for continuously\nrunning, distributed health monitors such as Route 53 health\nchecks. The cache ensures that the service is not\noverloaded by these types of health monitors. The cache is\nupdated every minute.\n",
                 "responses": {
                     "200": {
                         "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
@@ -368,7 +368,7 @@
         "/health/fast": {
             "get": {
                 "summary": "Fast health check",
-                "description": "\nPerformance-optimized health check of the REST API and other critical\nresources the service depends on. This endpoint can be requested more\nfrequently than [`/health`](#operations-Auxiliary-get_health) but\nperiodically scheduled, automated requests should be made to\n[`/health/cached`](#operations-Auxiliary-get_health_cached).\n",
+                "description": "\nPerformance-optimized health check of the REST API and other\ncritical resources tht it depends on. This endpoint can be\nrequested more frequently than\n[`/health`](#operations-Auxiliary-get_health) but\nperiodically scheduled, automated requests should be made to\n[`/health/cached`](#operations-Auxiliary-get_health_cached).\n",
                 "responses": {
                     "200": {
                         "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
@@ -477,12 +477,12 @@
                             ]
                         }
                     },
-                    "description": "\nA comma-separated list of keys selecting the health checks to be\nperformed. Each key corresponds to an entry in the response.\n"
+                    "description": "\nA comma-separated list of keys selecting the health\nchecks to be performed. Each key corresponds to an\nentry in the response.\n"
                 }
             ],
             "get": {
                 "summary": "Selective health check",
-                "description": "\nThis endpoint allows clients to request a health check on a specific set\nof resources. Each resource is identified by a *key*, the same key\nunder which the resource appears in a\n[`/health`](#operations-Auxiliary-get_health) response.\n",
+                "description": "\nThis endpoint allows clients to request a health check on a\nspecific set of resources. Each resource is identified by a\n*key*, the same key under which the resource appears in a\n[`/health`](#operations-Auxiliary-get_health) response.\n",
                 "responses": {
                     "200": {
                         "description": "\nThe checked resources\nare healthy.\n\nThe response consists of the following keys:\n\n* `other_lambdas` \nIndicates whether the companion REST API responds to HTTP requests.\n* `queues` \nReturns information about the SQS queues used by the indexer.\n* `progress` \nThe number of Data Store bundles pending to be indexed and the number\nof index documents in need of updating.\n* `api_endpoints` \nIndicates whether important service API endpoints are operational.\n* `elasticsearch` \nIndicates whether the Elasticsearch cluster is responsive.\n* `up` \nindicates the overall result of the health check\n\n\nThe top-level `up` key of the response is\n`true`.\n\n\nAll of the nested `up` keys\nare `true`.\n",
@@ -580,7 +580,7 @@
         },
         "/version": {
             "get": {
-                "summary": "Describe current version of the Azul service",
+                "summary": "Describe current version of this REST API",
                 "tags": [
                     "Auxiliary"
                 ],
