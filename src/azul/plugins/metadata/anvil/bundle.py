@@ -84,6 +84,8 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
     links: set[Link[EntityReference]] = attr.ib(factory=set)
 
     def reject_joiner(self):
+        # FIXME: Optimize joiner rejection and re-enable it for AnVIL
+        #        https://github.com/DataBiosphere/azul/issues/5256
         pass
 
     def to_json(self) -> MutableJSON:
