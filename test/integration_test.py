@@ -113,6 +113,7 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     EntityReference,
+    EntityType,
 )
 from azul.indexer.index_service import (
     IndexExistsAndDiffersException,
@@ -596,6 +597,22 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         else:
             assert False, catalog
         return {facet: {'is': ['fastq', 'fastq.gz']}}
+
+    def _bundle_type(self, catalog: CatalogName) -> EntityType:
+        if config.is_hca_enabled(catalog):
+            return 'bundles'
+        elif config.is_anvil_enabled(catalog):
+            return 'biosamples'
+        else:
+            assert False, catalog
+
+    def _project_type(self, catalog: CatalogName) -> EntityType:
+        if config.is_hca_enabled(catalog):
+            return 'projects'
+        elif config.is_anvil_enabled(catalog):
+            return 'datasets'
+        else:
+            assert False, catalog
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
@@ -1085,22 +1102,18 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.skipTest(f'No managed access sources found in catalog {catalog!r}')
 
             with self.subTest('managed_access_indices'):
-                # FIXME: Reenable subtest once underlying issue is fixed
-                #        https://github.com/DataBiosphere/azul/issues/5167
-                if config.is_anvil_enabled(catalog):
-                    self.skipTest('This test is HCA-specific')
-                bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
-                with self.subTest('managed_access_repository_files'):
-                    files = self._test_managed_access_repository_files(bundles)
-                    with self.subTest('managed_access_summary'):
-                        self._test_managed_access_summary(catalog, files)
+                self._test_managed_access_indices(catalog, managed_access_source_ids)
+            with self.subTest('managed_access_repository_files'):
+                files = self._test_managed_access_repository_files(catalog, managed_access_source_ids)
+                with self.subTest('managed_access_summary'):
+                    self._test_managed_access_summary(catalog, files)
                 with self.subTest('managed_access_repository_sources'):
                     public_source_ids = self._test_managed_access_repository_sources(catalog,
                                                                                      indexed_source_ids,
                                                                                      managed_access_source_ids)
                     with self.subTest('managed_access_manifest'):
                         self._test_managed_access_manifest(catalog,
-                                                           bundles,
+                                                           files,
                                                            first(public_source_ids & indexed_source_ids))
 
     def _test_managed_access_repository_sources(self,
@@ -1145,40 +1158,51 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             sources: JSONs = hit['sources']
             return one(sources)['sourceId']
 
-        hits = self._get_entities(catalog, 'projects')
+        bundle_type = self._bundle_type(catalog)
+        project_type = self._project_type(catalog)
+
+        hits = self._get_entities(catalog, project_type)
         sources_found = set()
         for hit in hits:
             source_id = source_id_from_hit(hit)
             sources_found.add(source_id)
             self.assertEqual(source_id not in managed_access_source_ids,
-                             one(hit['projects'])['accessible'])
+                             one(hit[project_type])['accessible'])
         self.assertIsSubset(managed_access_source_ids, sources_found)
 
-        hits = self._get_entities(catalog, 'bundles')
+        hits = self._get_entities(catalog, bundle_type)
         hit_source_ids = set(map(source_id_from_hit, hits))
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-        url = config.service_endpoint.set(path='/index/bundles',
+        url = config.service_endpoint.set(path=('index', bundle_type),
                                           args={'filters': json.dumps(source_filter)})
         response = self._get_url_unchecked(url)
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 
         with self._service_account_credentials:
-            hits = self._get_entities(catalog, 'bundles', filters=source_filter)
+            hits = self._get_entities(catalog, bundle_type, filters=source_filter)
         hit_source_ids = set(map(source_id_from_hit, hits))
         self.assertEqual(managed_access_source_ids, hit_source_ids)
         return hits
 
-    def _test_managed_access_repository_files(self, bundles: JSONs) -> set[str]:
+    def _test_managed_access_repository_files(self,
+                                              catalog: CatalogName,
+                                              managed_access_source_ids: set[str]
+                                              ) -> JSONs:
         """
         Test the managed access controls for the /repository/files endpoint
-        :return: download URLs for the managed access files
+        :return: Managed access file hits
         """
+        with self._service_account_credentials:
+            files = self._get_entities(catalog, 'files', filters={
+                'sourceId': {
+                    'is': list(managed_access_source_ids)
+                }
+            })
         managed_access_file_urls = {
-            file['url']
-            for bundle in bundles
-            for file in cast(JSONs, bundle['files'])
+            one(file['files'])['url']
+            for file in files
         }
         file_url = furl(first(managed_access_file_urls))
         response = self._get_url_unchecked(file_url, redirect=False)
@@ -1186,11 +1210,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self._service_account_credentials:
             response = self._get_url_unchecked(file_url, redirect=False)
             self.assertIn(response.status, (301, 302))
-        return managed_access_file_urls
+        return files
 
     def _test_managed_access_summary(self,
                                      catalog: CatalogName,
-                                     managed_access_files: Set[str]
+                                     managed_access_files: JSONs
                                      ) -> None:
         """
         Test the managed access controls for the /index/summary endpoint
@@ -1209,7 +1233,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_manifest(self,
                                       catalog: CatalogName,
-                                      bundles: JSONs,
+                                      files: JSONs,
                                       source_id: str
                                       ) -> None:
         """
@@ -1217,16 +1241,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         the cURL manifest file download
         """
         endpoint = config.service_endpoint
-        managed_access_bundles = [
-            bundle['entryId']
-            for bundle in bundles
-            if len(bundle['sources']) == 1
-        ]
+
+        def bundle_uuid(hit: JSON) -> str:
+            return one(hit['bundles'])['bundleUuid']
+
+        managed_access_bundles = {
+            bundle_uuid(file)
+            for file in files
+            if len(file['sources']) == 1
+        }
         filters = {'sourceId': {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
-        bundles_url = furl(url=endpoint, path='index/bundles', args=params)
+        bundles_url = furl(url=endpoint, path=['index', self._bundle_type(catalog)], args=params)
         response = self._get_url_json(bundles_url)
-        public_bundle = one(response['hits'])['entryId']
+        public_bundle = bundle_uuid(one(response['hits']))
         self.assertNotIn(public_bundle, managed_access_bundles)
 
         filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
@@ -1258,29 +1286,29 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # Without credentials, only the public bundle should be represented
         assert_manifest({public_bundle})
 
-        # Create a single-file curl manifest and verify that the OAuth2
-        # token is present on the command line
-        managed_access_files: JSONs = self.random.choice(bundles)['files']
-        managed_access_file_id = self.random.choice(managed_access_files)['uuid']
-        manifest_url.set(args={
-            'catalog': catalog,
-            'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
-            'format': 'curl'
-        })
-        while True:
-            with self._service_account_credentials:
-                response = self._get_url_unchecked(manifest_url, redirect=False)
-            if response.status == 302:
-                break
-            else:
-                self.assertEqual(response.status, 301)
-                time.sleep(int(response.headers['Retry-After']))
-                manifest_url.url = response.headers['Location']
-        token = self._tdr_client.credentials.token
-        expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
-        command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
-        for command_line in command_lines:
-            self.assertIn(expected_auth_header, command_line)
+        if ManifestFormat.curl in self.metadata_plugin(catalog).manifest_formats:
+            # Create a single-file curl manifest and verify that the OAuth2
+            # token is present on the command line
+            managed_access_file_id = one(self.random.choice(files)['files'])['uuid']
+            manifest_url.set(args={
+                'catalog': catalog,
+                'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
+                'format': 'curl'
+            })
+            while True:
+                with self._service_account_credentials:
+                    response = self._get_url_unchecked(manifest_url, redirect=False)
+                if response.status == 302:
+                    break
+                else:
+                    self.assertEqual(response.status, 301)
+                    time.sleep(int(response.headers['Retry-After']))
+                    manifest_url.url = response.headers['Location']
+            token = self._tdr_client.credentials.token
+            expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
+            command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
+            for command_line in command_lines:
+                self.assertIn(expected_auth_header, command_line)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
