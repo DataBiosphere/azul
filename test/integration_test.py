@@ -1158,7 +1158,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
 
         def source_id_from_hit(hit: JSON) -> str:
-            return one(hit['sources'])['sourceId']
+            sources: JSONs = hit['sources']
+            return one(sources)['sourceId']
 
         hits = self._get_entities(catalog, 'projects')
         sources_found = set()
