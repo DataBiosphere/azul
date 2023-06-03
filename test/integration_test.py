@@ -756,7 +756,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
         self.assertIn(uuid_field_name, reader.fieldnames)
-        bundle_uuids = rows[0][uuid_field_name].split(ManifestGenerator.column_joiner)
+        bundle_uuids = rows[0][uuid_field_name].split(ManifestGenerator.padded_joiner)
         self.assertGreater(len(bundle_uuids), 0)
         for bundle_uuid in bundle_uuids:
             self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
@@ -1239,7 +1239,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ))
             all_found_bundles = set()
             for row in manifest_rows:
-                row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.column_joiner))
+                row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.padded_joiner))
                 # It's possible for one file to be present in multiple
                 # bundles (e.g. due to stitching), so each row may include
                 # additional bundles besides those included in the filters.
