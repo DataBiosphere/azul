@@ -82,14 +82,6 @@ class TDRBundle(Bundle[TDRBundleFQID], ABC):
     def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_uri')
 
-    def _validate_drs_uri(self, drs_uri: Optional[str]) -> None:
-        # These requirements prevent mismatches in the DRS domain, and ensure
-        # that changes to the column syntax don't go undetected.
-        if drs_uri is not None:
-            drs_uri = furl(drs_uri)
-            require(drs_uri.scheme == 'drs')
-            require(drs_uri.netloc == config.tdr_service_url.netloc)
-
 
 T = TypeVar('T')
 

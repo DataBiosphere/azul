@@ -42,6 +42,9 @@ from azul.bigquery import (
     BigQueryRows,
     backtick,
 )
+from azul.drs import (
+    RegularDRSURI,
+)
 from azul.indexer import (
     BundleFQID,
 )
@@ -244,7 +247,11 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             is_stitched: bool,
                             checksums: Optional[Checksums] = None,
                             drs_uri: Optional[str] = None) -> None:
-        self._validate_drs_uri(drs_uri)
+        # These requirements prevent mismatches in the DRS domain, and ensure
+        # that changes to the column syntax don't go undetected.
+        if drs_uri is not None:
+            parsed = RegularDRSURI.parse(drs_uri)
+            require(parsed.uri.netloc == config.tdr_service_url.netloc)
         self.manifest.append({
             'name': name,
             'uuid': uuid,
