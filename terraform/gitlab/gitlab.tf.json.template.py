@@ -609,7 +609,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::dev.explore.lungmap.net'
                                 ]
                             }
-                        ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
+                        ] if config.deployment_stage == 'dev' else [
                             {
                                 'actions': [
                                     's3:PutObject',
@@ -633,7 +633,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::data-browser.explore.lungmap.net'
                                 ]
                             }
-                        ] if config.domain_name == 'azul.data.humancellatlas.org' else [
+                        ] if config.deployment_name == 'prod' else [
                         ]
                     ),
                     # Manage VPN infrastructure for private API
