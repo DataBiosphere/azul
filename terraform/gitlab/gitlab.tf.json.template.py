@@ -608,19 +608,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::dev.explore.lungmap.net/*',
                                     'arn:aws:s3:::dev.explore.lungmap.net'
                                 ]
-                            },
-                            {
-                                'actions': [
-                                    'cloudfront:CreateInvalidation'
-                                ],
-                                'resources': [
-                                    # dev.singlecell.gi.ucsc.edu
-                                    'arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8',
-                                    # ux-dev.singlecell.gi.ucsc.edu
-                                    'arn:aws:cloudfront::122796619775:distribution/E3FFK49Z7TQ60R',
-                                    # data-browser.dev.lungmap.net
-                                    'arn:aws:cloudfront::122796619775:distribution/E21CJFOUWO9Q7X'
-                                ]
                             }
                         ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
                             {
@@ -644,17 +631,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # Lungmap Data Portal Prod
                                     'arn:aws:s3:::data-browser.explore.lungmap.net/*',
                                     'arn:aws:s3:::data-browser.explore.lungmap.net'
-                                ]
-                            },
-                            {
-                                'actions': [
-                                    'cloudfront:CreateInvalidation'
-                                ],
-                                'resources': [
-                                    # data.humancellatlas.org
-                                    'arn:aws:cloudfront::542754589326:distribution/E1LYQC3LZXO7M3',
-                                    # data-browser.lungmap.net/
-                                    'arn:aws:cloudfront::542754589326:distribution/E22L661MUAMMTD'
                                 ]
                             }
                         ] if config.domain_name == 'azul.data.humancellatlas.org' else [
