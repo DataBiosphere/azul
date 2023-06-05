@@ -6,6 +6,7 @@ from typing import (
 
 from azul import (
     config,
+    docker,
 )
 from azul.deployment import (
     aws,
@@ -13,6 +14,7 @@ from azul.deployment import (
 from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
+    enable_s3_bucket_inventory,
     vpc,
 )
 
@@ -105,7 +107,7 @@ cis_alarms = [
                                    '$.eventType !="AwsServiceEvent"}')
 ]
 
-emit_tf(block_public_s3_bucket_access({
+tf_config = {
     'data': {
         'aws_iam_role': {
             f'support_{i}': {
@@ -162,7 +164,7 @@ emit_tf(block_public_s3_bucket_access({
                 }
             },
             'logs': {
-                'bucket': aws.qualified_bucket_name(config.logs_term),
+                'bucket': aws.logs_bucket,
                 'lifecycle': {
                     'prevent_destroy': True
                 }
@@ -270,10 +272,31 @@ emit_tf(block_public_s3_bucket_access({
                             source_bucket_arn='arn:aws:s3:::*',
                             target_bucket_arn='${aws_s3_bucket.logs.arn}',
                             path_prefix=config.s3_access_log_path_prefix('*', deployment=None)
-                        )
+                        ),
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 's3.amazonaws.com'
+                            },
+                            'Action': [
+                                's3:PutObject'
+                            ],
+                            'Resource': [
+                                'arn:aws:s3:::${aws_s3_bucket.logs.id}/*'
+                            ],
+                            'Condition': {
+                                'ArnLike': {
+                                    'aws:SourceArn': f'arn:aws:s3:::{aws.qualified_bucket_name("*")}'
+                                },
+                                'StringEquals': {
+                                    'aws:SourceAccount': config.aws_account_id,
+                                    's3:x-amz-acl': 'bucket-owner-full-control'
+                                }
+                            }
+                        }
                     ]
                 })
-            }
+            },
         },
         'aws_s3_bucket_lifecycle_configuration': {
             'shared': {
@@ -783,7 +806,7 @@ emit_tf(block_public_s3_bucket_access({
                 # (see link below), we use a separate script for this purpose.
                 # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
                 'protocol': 'email',
-                'endpoint': config.azul_monitoring_email,
+                'endpoint': config.monitoring_email,
                 'provisioner': {
                     'local-exec': {
                         'command': ' '.join(map(shlex.quote, [
@@ -806,6 +829,82 @@ emit_tf(block_public_s3_bucket_access({
                     ]
                 }
             }
+        },
+        'aws_ecr_repository': {
+            image.tf_repository: {
+                'name': image.name,
+                'force_delete': True
+            }
+            for image in docker.images
+            if config.docker_registry
+        },
+        'null_resource': {
+            **{
+                image.tf_image: {
+                    # FIXME: Delete unused images from ECR
+                    #        https://github.com/DataBiosphere/azul/issues/5189
+                    'depends_on': [
+                        'aws_ecr_repository.' + image.tf_repository
+                    ],
+                    'triggers': {
+                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root
+                    },
+                    'lifecycle': {
+                        # While `triggers` above only accepts strings, this
+                        # property accepts entire resources. Any change to the
+                        # image repository resource should cause the image
+                        # copying to be kicked off again. The copying is
+                        # idempotent, and efficiently so with respect to
+                        # bandwidth consumption, but it still takes a couple
+                        # minutes, even if all of the destination images are
+                        # already in place, so we'd still like to avoid running
+                        # it unnecessarily.
+                        'replace_triggered_by': [
+                            'aws_ecr_repository.' + image.tf_repository
+                        ]
+                    },
+                    'provisioner': {
+                        'local-exec': {
+                            'command': ' '.join([
+                                'python',
+                                f'{config.project_root}/scripts/copy_images_to_ecr.py',
+                                str(image)
+                            ]),
+                        }
+                    }
+                }
+                for image in docker.images
+                if config.docker_registry
+            },
+            **(
+                {
+                    'cleanup': {
+                        'depends_on': [
+                            'null_resource.' + image.tf_image
+                            for image in docker.images
+                        ],
+                        'lifecycle': {
+                            'replace_triggered_by': [
+                                'aws_ecr_repository.' + image.tf_repository
+                                for image in docker.images
+                            ]
+                        },
+                        'provisioner': {
+                            'local-exec': {
+                                'command': ' '.join([
+                                    'python',
+                                    f'{config.project_root}/scripts/copy_images_to_ecr.py'
+                                ]),
+                            }
+                        }
+                    }
+                }
+                if config.docker_registry else
+                {}
+            )
         }
     }
-}))
+}
+tf_config = enable_s3_bucket_inventory(tf_config, 'aws_s3_bucket.logs')
+tf_config = block_public_s3_bucket_access(tf_config)
+emit_tf(tf_config)

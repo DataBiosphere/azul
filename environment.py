@@ -178,6 +178,21 @@ def env() -> Mapping[str, Optional[str]]:
         # between deployments.
         'AZUL_DEPLOYMENT_STAGE': None,
 
+        # The Docker registry containing all 3rd party images used by this
+        # project, including images used locally, in FROM clauses, for CI/CD or
+        # GitLab. Must be empty or end in a slash. All references to 3rd party
+        # images must point at the registry defined here, ideally by prefixing
+        # the image reference with a reference to this variable. The registry
+        # and the images therein are managed by the `shared` TF component, which
+        # copies images from the upstream registry into the Azul registry. A
+        # 3rd-party image at `<registry>/<username>/<repository>:tag`, is stored
+        # as `${azul_docker_registry>}<registry>/<username>/<repository>:tag`
+        # in the Azul registry. To disable the use of the Azul registry, set
+        # this variable to the empty string.
+        #
+        'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
+                                '{AWS_DEFAULT_REGION}.amazonaws.com/',
+
         # Whether to enable direct access to objects in the DSS main bucket. If 0,
         # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
         # and GET /files/{UUID} endpoints. If 1, S3 GetObject requests are made
@@ -414,6 +429,18 @@ def env() -> Mapping[str, Optional[str]]:
         # the repository defined in `azul_github_project`.
         'azul_github_access_token': '',
 
+        # A GitLab private access token with scopes `read_api`, `read_registry`
+        # and `write_registry`. This variable is typically only set on developer
+        # machines. In GitLab CI/CD pipelines, this variable should NOT be set
+        # because a different type of token is automatically provided via the
+        # CI_JOB_TOKEN variable.
+        #
+        'azul_gitlab_access_token': None,
+
+        # The name of the user owning the token in `azul_gitlab_access_token`.
+        #
+        'azul_gitlab_user': None,
+
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
 
@@ -499,9 +526,54 @@ def env() -> Mapping[str, Optional[str]]:
         # other branch not mentioned explicitly, or a detached HEAD.
         #
         'azul_main_deployments': json.dumps({
-            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
-            'prod': ['prod', 'anvilprod']
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod'],
+            'prod': ['prod'],
         }),
+
+        # A dictionary with one entry per browser or portal site that is to be
+        # managed by the `browser` TF component of the current Azul deployment.
+        #
+        # {
+        #     'ucsc/data-browser': {  // The path of the GitLab project hosting
+        #                             // the source code for the site. The
+        #                             // project must exist on the GitLab
+        #                             // instance managing the current Azul
+        #                             // deployment.
+        #
+        #         'main': {  // The name of the branch (in that project) from
+        #                    // which the site's content tarball was built
+        #
+        #             'anvil': {  // The site name. Typically corresponds to an
+        #                         // Azul atlas as defined in the AZUL_CATALOGS.
+        #
+        #                 'domain': '{AZUL_DOMAIN_NAME}',  // The domain name of
+        #                                                  // the site
+        #
+        #                 'bucket': 'browser',  // The TF resource name (in the
+        #                                       // `browser` component) of the
+        #                                       // S3 bucket hosting the site
+        #                                       // ('portal' or 'browser')
+        #
+        #                 'tarball_path': 'explore',  // The path to the site's
+        #                                             // content in the tarball
+        #
+        #                 'real_path': 'explore/anvil-cmg'  // The path of that
+        #                                                   // same content in
+        #                                                   // the bucket
+        #             }
+        #         }
+        #     }
+        # }
+        #
+        # The real_path and tarball_path properties define a path mapping from
+        # files in the tarball to objects in the S3 bucket. In the above
+        # example, the tarball entry `explore/foo.html` will be stored in the S3
+        # bucket under the key `explore/anvil-cmg/foo.html`. The tarball entry
+        # `fubaz/bar.html` will be store in the S3 bucket under the same key
+        # (`fubaz/bar.html`). It is uncommon to have such tarball entries. Site
+        # tarballs should always contain a single root directory.
+        #
+        'azul_browser_sites': json.dumps({}),
 
         # 1 if current deployment is a main deployment with the sole purpose of
         # testing feature branches in GitLab before they are merged to the

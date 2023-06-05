@@ -15,8 +15,6 @@ __pycache__/
 /deployments/*/environment.local.py
 /deployments/*/.terraform/
 /deployments/*/.terraform.*/
-# File with environment definitions for GitLab jobs
-/.gitlab.env
 # Virtual environment created by Makefile
 /.venv/
 # PyCharm

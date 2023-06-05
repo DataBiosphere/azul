@@ -37,7 +37,7 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python 3.9.12
+- Python 3.9.16
 
 - The `bash` shell
 
@@ -183,8 +183,8 @@ end.
    ```
 
    Linux users whose distribution does not offer Python 3.9 should consider
-   installing [pyenv] and then Python 3.9 using `pyenv install 3.9.12` and
-   setting `PYENV_VERSION` to `3.9.12`. You may need to update pyenv itself
+   installing [pyenv] and then Python 3.9 using `pyenv install 3.9.16` and
+   setting `PYENV_VERSION` to `3.9.16`. You may need to update pyenv itself
    before it recognizes the given Python version. Even if a distribution
    provides the  required minor version of Python natively, using pyenv is
    generally preferred because it offers every patch-level release of Python,
@@ -625,7 +625,7 @@ These steps are performed once per deployment (multiple times per project).
 4. For *Name*, enter `azul-{stage}` where stage is the name of the deployment
 
 5. Add an entry to *Authorized JavaScript origins* and enter the output from
-   `python3 -c 'from azul import config; print(config.service_endpoint())'`
+   `python3 -c 'from azul import config; print(config.service_endpoint)'`
 
 6. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
     value of the previous field and enter the resulting value.
@@ -1034,10 +1034,10 @@ brew install zlib pyenv
 Install python
 
 ```
-pyenv install 3.9.12
+pyenv install 3.9.16
 ```
 
-Set `PYENV_VERSION` to `3.9.12` in `environment.local.py` at the project root.
+Set `PYENV_VERSION` to `3.9.16` in `environment.local.py` at the project root.
 Do not set `SYSTEM_VERSION_COMPAT`.
 
 Install Docker Desktop. Google it.
@@ -2049,7 +2049,7 @@ page. Shared runners are registered via *Admin* — *Overview* — *Runners*.
 
 Specify `docker` as the runner type and 
 
-`docker.gitlab.anvil.gi.ucsc.edu/ucsc/ azul/runner:latest` 
+`docker.gitlab.anvil.gi.ucsc.edu/ucsc/azul/runner:latest` 
 
 as the image for Azul runners. For generic runners you could use the 
 `docker:20.10.18-ce` image instead, but you'd need to match the tag (aka 
@@ -2111,14 +2111,14 @@ registered runners.
 
 ## 9.8 The Gitlab runner image for Azul
 
-Because the first stage of the Azul pipeline on Gitlab creates a dedicated
-image containing the dependencies of the subsequent stages, that first stage
-only requires the `docker` client binary, `make` and `bash` to be in the
-runner. These are provided by yet another custom Docker image for the Gitlab
-runner that executes Azul builds. This image must be created when the EBS
-volume attached to the Gitlab instance is first provisioned, or when the
-corresponding Dockerfile is modified. See `terraform/gitlab/Dockerfile` for
-details on how to build the image and register it with the runner.
+Because the first stage of the Azul pipeline on Gitlab creates a dedicated image
+containing the dependencies of the subsequent stages, that first stage only
+requires the `docker` client binary, `make` and `bash` to be in the runner.
+These are provided by yet another custom Docker image for the Gitlab runner that
+executes Azul builds. This image must be created when the EBS volume attached to
+the Gitlab instance is first provisioned, or when the corresponding Dockerfile
+is modified. See `terraform/gitlab/runner/Dockerfile` for details on how to
+build the image and register it with the runner.
 
 
 ## 9.9 Updating Gitlab
@@ -2310,7 +2310,7 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.9.12-buster bash
+(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.9.16-bullseye bash
 
 root@97804cb60d95:/# pip --version
 pip 22.0.4 from /usr/local/lib/python3.9/site-packages/pip (python 3.9)

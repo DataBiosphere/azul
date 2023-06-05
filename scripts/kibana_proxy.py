@@ -43,6 +43,7 @@ from docker.models.containers import (
 
 from azul import (
     cached_property,
+    config,
 )
 from azul.deployment import (
     aws,
@@ -61,6 +62,7 @@ class KibanaProxy:
         self.docker = docker.from_env()
 
     def create_container(self, image: str, *args, **kwargs) -> Container:
+        image = config.docker_registry + image
         try:
             container = self.docker.containers.create(image, *args, **kwargs)
         except docker.errors.ImageNotFound:
@@ -77,7 +79,7 @@ class KibanaProxy:
         proxy_port = self.options.proxy_port or kibana_port + 2
         containers = []
         try:
-            proxy = self.create_container('cllunsford/aws-signing-proxy:0.2.2',
+            proxy = self.create_container('docker.io/cllunsford/aws-signing-proxy:0.2.2',
                                           name='proxy',
                                           auto_remove=True,
                                           command=['-target', self.es_endpoint, '-port', str(proxy_port)],
@@ -100,7 +102,7 @@ class KibanaProxy:
                                            },
                                            network_mode=f'container:{proxy.name}')
             containers.append(kibana)
-            cerebro = self.create_container('lmenezes/cerebro:0.9.4',
+            cerebro = self.create_container('docker.io/lmenezes/cerebro:0.9.4',
                                             name='cerebro',
                                             auto_remove=True,
                                             command=[f'-Dhttp.port={cerebro_port}'],

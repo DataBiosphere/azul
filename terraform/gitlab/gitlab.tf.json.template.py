@@ -293,16 +293,20 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-clamav_image = 'clamav/clamav:1.1.0-1'
-dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.11.2-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.11.0'
+# Note that a change to the image references here also requires updating
+# azul.config.docker_images and redeploying the `shared` TF component prior to
+# deploying the `gitlab` component.
 
-# For instructions on finding the latest Amazon Linux AMI ID, see
+clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
+dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:15.11.2-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:v15.11.0'
+
+# For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
 ami_id = {
-    'us-east-1': 'ami-0bb85ecb87fe01c2f'
+    'us-east-1': 'ami-0236f915da7b5680d'
 }
 
 
@@ -352,7 +356,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_s3_bucket': {
             'logs': {
-                'bucket': aws.qualified_bucket_name(config.logs_term),
+                'bucket': aws.logs_bucket,
             }
         },
         'aws_iam_policy_document': {
@@ -686,6 +690,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'actions': [
                             'config:ListDiscoveredResources',
                             'config:BatchGetResourceConfig'
+                        ],
+                        'resources': ['*']
+                    },
+
+                    {
+                        'actions': [
+                            'ecr:BatchCheckLayerAvailability',
+                            'ecr:BatchGet*',
+                            'ecr:Describe*',
+                            'ecr:Get*',
+                            'ecr:List*',
                         ],
                         'resources': ['*']
                     },
@@ -1287,7 +1302,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         for operation in ['create', 'delete', 'get', 'list', 'update', 'undelete']
                         for resource in ['roles', 'serviceAccountKeys', 'serviceAccounts']
                         if resource != 'serviceAccountKeys' or operation not in ['update', 'undelete']
-                    )
+                    ),
+                    'serviceusage.services.use'
                 ]
             }
         },
@@ -1317,9 +1333,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
                     ],
-                    'packages': ['docker', 'amazon-cloudwatch-agent'],
+                    'packages': ['docker', 'amazon-cloudwatch-agent', 'amazon-ecr-credential-helper'],
                     'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
                     'write_files': [
+                        {
+                            'path': '/root/.docker/config.json',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': json.dumps(
+                                {
+                                    'credHelpers': {
+                                        config.docker_registry[:-1]: 'ecr-login'
+                                    }
+                                }
+                                if config.docker_registry else
+                                {}
+                            )
+                        },
                         {
                             'path': '/etc/systemd/system/gitlab-dind.service',
                             'permissions': '0644',

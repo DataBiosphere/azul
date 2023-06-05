@@ -19,6 +19,46 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#5015 Prepare platform-anvil-prod for compliance assessment
+===========================================================
+
+Everyone
+~~~~~~~~
+
+Update Python on your developer machines to version 3.9.16.
+
+Create a `personal access token`_ on every GitLab instance you have access to
+and specify that token as the value of the ``azul_gitlab_access_token`` in your
+``environment.local.py`` for the main deployment collocated with that instance.
+See the documentation of that variable in the top-level ``environment.py`` for
+the set of scopes (permissions) to be assigned to the token. Refresh the
+environment and run ``_preauth``.
+
+.. _personal access token: https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html
+
+Operator
+~~~~~~~~
+
+Follow the steps for everyone listed above.
+
+Just before pushing the feature branch to a GitLab instance, locally merge the
+feature branch into ``develop`` — without pushing the resultimg merge commit —
+and deploy the merge commit to the ``shared`` & ``gitlab`` components (in that
+order) of the main deployment for that GitLab instance. When the PR cannot be
+merged for any reason, undo the merge locally by resetting the ``develop``
+branch to the prior commit and manually deploy the ``develop`` branch to
+``shared`` & ``gitlab`` components (in that order) of the main deployment for
+that GitLab instance.
+
+If deploying the ``gitlab`` component results in an ``OptInRequired`` error,
+login to the AWS Console using credentials for the AWS account that contains the
+GitLab instance and visit the URL that is included in the error message. This
+will enable the required AWS Marketplace subscription for the CIS-hardened
+image.
+
+With the ``gitlab`` component selected, run ``make -C terraform/gitlab/runner``.
+
 #3894 Send GitLab host logs to CloudWatch
 =========================================
 
