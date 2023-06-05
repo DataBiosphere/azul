@@ -502,8 +502,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ]
                     },
 
-                    # CloudFront does not define any ARNs. We need it for
-                    # friendly domain names for API Gateways
+                    # CloudFront uses identifiers in most if its ARNs, not
+                    # names. The identifiers are random so we can't easily use
+                    # the ARNs that reference them in policies.
+                    #
+                    # FIXME: Tighten GitLab security boundary
+                    #        https://github.com/DataBiosphere/azul/issues/4207
                     {
                         'actions': ['cloudfront:*'],
                         'resources': ['*']
