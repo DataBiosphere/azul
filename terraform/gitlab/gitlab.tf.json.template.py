@@ -582,11 +582,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         [
                             {
                                 'actions': [
-                                    's3:PutObject',
-                                    's3:GetObject',
-                                    's3:ListBucket',
-                                    's3:DeleteObject',
-                                    's3:PutObjectAcl'
+                                    's3:*'
                                 ],
                                 'resources': [
                                     # Data Portal Dev
@@ -612,11 +608,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ] if config.deployment_stage == 'dev' else [
                             {
                                 'actions': [
-                                    's3:PutObject',
-                                    's3:GetObject',
-                                    's3:ListBucket',
-                                    's3:DeleteObject',
-                                    's3:PutObjectAcl'
+                                    's3:*'
                                 ],
                                 'resources': [
                                     # HCA Data Portal Prod
@@ -633,7 +625,22 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::data-browser.explore.lungmap.net'
                                 ]
                             }
-                        ] if config.deployment_name == 'prod' else [
+                        ] if config.deployment_stage == 'prod' else [
+                            {
+                                'actions': [
+                                    's3:*'
+                                ],
+                                'resources': [
+                                    'arn:aws:s3:::anvil.gi.ucsc.edu/*',
+                                    'arn:aws:s3:::anvil.gi.ucsc.edu',
+                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu/*',
+                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu',
+                                ]
+                            }
+                        ] if config.deployment_stage == 'anvildev' else [
+                            # anvilprod already follows the bucket naming
+                            # convention and is covered by the S3 permissions
+                            # in the boundary.
                         ]
                     ),
                     # Manage VPN infrastructure for private API
