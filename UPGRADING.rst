@@ -19,6 +19,17 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5232 Fix: Operators should have SSH access to anvildev and anvilprod
+=====================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, except
+``prod``, just before pushing the merge commit to the GitLab instance in that
+deployment.
+
+
 
 #5015 Prepare platform-anvil-prod for compliance assessment
 ===========================================================
