@@ -36,6 +36,12 @@ import_resources: rename_resources
 apply: validate import_resources
 	terraform apply
 
+.PHONY: auto_apply
+auto_apply: validate import_resources
+	terraform plan -no-color -out=plan.bin
+	terraform show -json plan.bin > plan.json
+	terraform apply -auto-approve plan.bin
+
 .PHONY: destroy
 destroy: validate
 	terraform destroy

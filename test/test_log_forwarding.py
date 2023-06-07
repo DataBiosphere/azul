@@ -42,7 +42,7 @@ class TestLogForwarding(AzulUnitTestCase):
 
     @property
     def log_bucket(self) -> str:
-        return aws.qualified_bucket_name(config.logs_term)
+        return aws.logs_bucket
 
     @property
     def log_file_key(self) -> str:

@@ -60,7 +60,7 @@ def subscription_pending_confirmation() -> bool:
     for page in paginator.paginate(TopicArn=sns_topic_arn()):
         for subscription in page['Subscriptions']:
             if subscription['SubscriptionArn'] == 'PendingConfirmation':
-                assert config.azul_monitoring_email == subscription['Endpoint'], subscription
+                assert config.monitoring_email == subscription['Endpoint'], subscription
                 pending_subs.append(subscription)
     assert len(pending_subs) in (0, 1), pending_subs
     return bool(pending_subs)
@@ -72,7 +72,7 @@ def prompt_for_subscription_url() -> furl:
     """
     print('\n'.join([
         '',
-        f'To confirm the pending subscription of {config.azul_monitoring_email}',
+        f'To confirm the pending subscription of {config.monitoring_email}',
         'to the SNS topic that receives monitoring and security notifications, please',
         'open the "Subscription Confirmation" email, copy the "Confirm subscription"',
         'link address, and paste it here.'

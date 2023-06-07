@@ -9,8 +9,8 @@ workflow:
         azul_gitlab_pipeline_name: Scheduled $azul_gitlab_schedule
 
 variables:
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE
-  DOCKER_TAG: $CI_PIPELINE_ID
+  azul_docker_image: $CI_REGISTRY_IMAGE
+  azul_docker_image_tag: $CI_PIPELINE_ID
 
 stages:
   - build_image
@@ -23,7 +23,7 @@ stages:
   - reindex
   - schedule
 
-.on_branch_push:
+.on_push:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH
 
@@ -32,43 +32,44 @@ build_image:
   # This lets us exploit Docker's layer caching to speed up the build. The
   # image will only be rebuilt after changes to the Dockerfile, 
   # requirements*.txt, common.mk and the Makefile.
-  extends: .on_branch_push
+  extends: .on_push
   stage: build_image
   rules:
     - if: $CI_COMMIT_BRANCH
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
-    - make docker_dev_push .gitlab.env
-  artifacts:
-    reports:
-      dotenv: .gitlab.env
+    - >
+      printenv CI_REGISTRY_PASSWORD 
+      | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY_IMAGE
+    - make docker_dev_push
 
-.needs_image:
-  image: $BUILD_IMAGE
+.base:
+  dependencies:
+    - build_image
+  image: ${azul_docker_image}/dev:${azul_docker_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
     - pip list
     - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
-    - (cd deployments && ln -snf ${deployment} .active)
-    - source environment
+    - _link $deployment
+    - _refresh
     - status_context="gitlab/${azul_gitlab_instance_name}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
-  dependencies:
-    - build_image
 
-.base:
-  extends: [ .on_branch_push, .needs_image ]
+.base_on_push:
+  extends:
+    - .on_push
+    - .base
 
 setup:
-  extends: .base
+  extends: .base_on_push
   stage: setup
   script:
     - python scripts/github_status_check.py "${status_context}" pending
 
 test:
-  extends: .base
+  extends: .base_on_push
   stage: test
   script:
     - make format  # Any ill-formatted sources, ...
@@ -79,7 +80,7 @@ test:
     - AZUL_DEBUG=0 make test
 
 deploy:
-  extends: .base
+  extends: .base_on_push
   stage: deploy
   script:
     - make auto_deploy
@@ -88,28 +89,44 @@ deploy:
     paths:
       - terraform/plan.json
 
+deploy_browser:
+  extends: .base_on_push
+  stage: deploy
+  needs:
+    - build_image
+    - deploy
+  script:
+    - test -e deployments/$deployment.browser || exit 0
+    - _link $deployment.browser
+    - _refresh
+    - cd terraform/browser
+    - make auto_apply
+  artifacts:
+    paths:
+      - terraform/browser/plan.json
+
 integration_test:
-  extends: .base
+  extends: .base_on_push
   stage: integration_test
   script:
     - make integration_test
 
 on_success:
-  extends: .base
+  extends: .base_on_push
   stage: teardown
   when: on_success
   script:
     - python scripts/github_status_check.py "${status_context}" success
 
 on_failure:
-  extends: .base
+  extends: .base_on_push
   stage: teardown
   when: on_failure
   script:
     - python scripts/github_status_check.py "${status_context}" failure
 
 early_reindex:
-  extends: .base
+  extends: .base_on_push
   stage: early_reindex
   when: manual
   timeout: 24h
@@ -117,7 +134,7 @@ early_reindex:
     - make reindex
 
 reindex:
-  extends: .base
+  extends: .base_on_push
   stage: reindex
   when: manual
   timeout: 24h
@@ -125,7 +142,7 @@ reindex:
     - make reindex
 
 sell_unused_slots:
-  extends: .needs_image
+  extends: .base
   stage: schedule
   rules:
     - if: $CI_PIPELINE_SOURCE == 'schedule'
@@ -134,7 +151,7 @@ sell_unused_slots:
     - python3 scripts/sell_unused_slots.py
 
 fedramp_inventory:
-  extends: .needs_image
+  extends: .base
   stage: schedule
   rules:
     - if: $CI_PIPELINE_SOURCE == 'schedule'

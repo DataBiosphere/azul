@@ -433,6 +433,10 @@ class AWS:
     def shared_bucket(self):
         return self.qualified_bucket_name(config.shared_term)
 
+    @property
+    def logs_bucket(self):
+        return self.qualified_bucket_name(config.logs_term)
+
     # An ELB account ID, which varies depending on region, is needed to specify
     # the principal in bucket policies for buckets storing LB access logs.
     #

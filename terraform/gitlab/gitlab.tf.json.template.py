@@ -200,22 +200,37 @@ public_key = (
     'hannes@ucsc.edu'
 )
 
+operator_keys = [
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fR'
+        'yiQqyMNxE/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi'
+        '6ag8h/pOQCvx6oO5NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcK'
+        'G2t2SuVh+PCpmMPA5/i/raDUqATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zp'
+        'ChGpbl5jA2ZfoEDEOhX4ffOD1UwmkmkoUC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6H'
+        'VMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/AkQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZ'
+        'e1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
+        ' '
+        'achave11@ucsc.edu'
+    ),
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXES'
+        'gpL59i5QcycpYq6q7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xm'
+        'rlGWi8AhEfbFyAFaqb2i+Whbkt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye3'
+        '0OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhr'
+        'W07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
+        ' '
+        'dsotirho@ucsc.edu'
+    )
+]
+
 other_public_keys = {
-    'dev': [
-        (
-            'ssh-rsa'
-            ' '
-            'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fR'
-            'yiQqyMNxE/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi'
-            '6ag8h/pOQCvx6oO5NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcK'
-            'G2t2SuVh+PCpmMPA5/i/raDUqATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zp'
-            'ChGpbl5jA2ZfoEDEOhX4ffOD1UwmkmkoUC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6H'
-            'VMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/AkQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZ'
-            'e1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
-            ' '
-            'achave11@ucsc.edu'
-        ),
-    ],
+    'dev': operator_keys,
+    'anvildev': operator_keys,
+    'anvilprod': operator_keys,
     'prod': []
 }
 
@@ -293,16 +308,20 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-clamav_image = 'clamav/clamav:1.1.0-1'
-dind_image = 'docker:20.10.18-dind'
-gitlab_image = 'gitlab/gitlab-ce:15.11.2-ce.0'
-runner_image = 'gitlab/gitlab-runner:v15.11.0'
+# Note that a change to the image references here also requires updating
+# azul.config.docker_images and redeploying the `shared` TF component prior to
+# deploying the `gitlab` component.
 
-# For instructions on finding the latest Amazon Linux AMI ID, see
+clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
+dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:15.11.2-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:v15.11.0'
+
+# For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
 ami_id = {
-    'us-east-1': 'ami-0bb85ecb87fe01c2f'
+    'us-east-1': 'ami-0236f915da7b5680d'
 }
 
 
@@ -352,7 +371,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_s3_bucket': {
             'logs': {
-                'bucket': aws.qualified_bucket_name(config.logs_term),
+                'bucket': aws.logs_bucket,
             }
         },
         'aws_iam_policy_document': {
@@ -498,8 +517,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ]
                     },
 
-                    # CloudFront does not define any ARNs. We need it for
-                    # friendly domain names for API Gateways
+                    # CloudFront uses identifiers in most if its ARNs, not
+                    # names. The identifiers are random so we can't easily use
+                    # the ARNs that reference them in policies.
+                    #
+                    # FIXME: Tighten GitLab security boundary
+                    #        https://github.com/DataBiosphere/azul/issues/4207
                     {
                         'actions': ['cloudfront:*'],
                         'resources': ['*']
@@ -574,11 +597,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         [
                             {
                                 'actions': [
-                                    's3:PutObject',
-                                    's3:GetObject',
-                                    's3:ListBucket',
-                                    's3:DeleteObject',
-                                    's3:PutObjectAcl'
+                                    's3:*'
                                 ],
                                 'resources': [
                                     # Data Portal Dev
@@ -600,28 +619,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::dev.explore.lungmap.net/*',
                                     'arn:aws:s3:::dev.explore.lungmap.net'
                                 ]
-                            },
-                            {
-                                'actions': [
-                                    'cloudfront:CreateInvalidation'
-                                ],
-                                'resources': [
-                                    # dev.singlecell.gi.ucsc.edu
-                                    'arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8',
-                                    # ux-dev.singlecell.gi.ucsc.edu
-                                    'arn:aws:cloudfront::122796619775:distribution/E3FFK49Z7TQ60R',
-                                    # data-browser.dev.lungmap.net
-                                    'arn:aws:cloudfront::122796619775:distribution/E21CJFOUWO9Q7X'
-                                ]
                             }
-                        ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
+                        ] if config.deployment_stage == 'dev' else [
                             {
                                 'actions': [
-                                    's3:PutObject',
-                                    's3:GetObject',
-                                    's3:ListBucket',
-                                    's3:DeleteObject',
-                                    's3:PutObjectAcl'
+                                    's3:*'
                                 ],
                                 'resources': [
                                     # HCA Data Portal Prod
@@ -637,19 +639,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::data-browser.explore.lungmap.net/*',
                                     'arn:aws:s3:::data-browser.explore.lungmap.net'
                                 ]
-                            },
+                            }
+                        ] if config.deployment_stage == 'prod' else [
                             {
                                 'actions': [
-                                    'cloudfront:CreateInvalidation'
+                                    's3:*'
                                 ],
                                 'resources': [
-                                    # data.humancellatlas.org
-                                    'arn:aws:cloudfront::542754589326:distribution/E1LYQC3LZXO7M3',
-                                    # data-browser.lungmap.net/
-                                    'arn:aws:cloudfront::542754589326:distribution/E22L661MUAMMTD'
+                                    'arn:aws:s3:::anvil.gi.ucsc.edu/*',
+                                    'arn:aws:s3:::anvil.gi.ucsc.edu',
+                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu/*',
+                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu',
                                 ]
                             }
-                        ] if config.domain_name == 'azul.data.humancellatlas.org' else [
+                        ] if config.deployment_stage == 'anvildev' else [
+                            # anvilprod already follows the bucket naming
+                            # convention and is covered by the S3 permissions
+                            # in the boundary.
                         ]
                     ),
                     # Manage VPN infrastructure for private API
@@ -688,7 +694,26 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'config:BatchGetResourceConfig'
                         ],
                         'resources': ['*']
-                    }
+                    },
+
+                    {
+                        'actions': [
+                            'ecr:BatchCheckLayerAvailability',
+                            'ecr:BatchGet*',
+                            'ecr:Describe*',
+                            'ecr:Get*',
+                            'ecr:List*',
+                        ],
+                        'resources': ['*']
+                    },
+                    {
+                        'actions': [
+                            'logs:CreateLogGroup',
+                            'logs:CreateLogStream',
+                            'logs:PutLogEvents'
+                        ],
+                        'resources': ['arn:aws:logs:*:*:*']
+                    },
                 ]
             }
         },
@@ -899,6 +924,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             },
             'gitlab_vpc': {
                 'name': '/aws/vpc/azul-gitlab',
+                'retention_in_days': config.audit_log_retention_days,
+            },
+            'gitlab_cwagent': {
+                'name': '/aws/cwagent/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
             }
         },
@@ -1275,7 +1304,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         for operation in ['create', 'delete', 'get', 'list', 'update', 'undelete']
                         for resource in ['roles', 'serviceAccountKeys', 'serviceAccounts']
                         if resource != 'serviceAccountKeys' or operation not in ['update', 'undelete']
-                    )
+                    ),
+                    'serviceusage.services.use'
                 ]
             }
         },
@@ -1305,9 +1335,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
                     ],
-                    'packages': ['docker'],
+                    'packages': ['docker', 'amazon-cloudwatch-agent', 'amazon-ecr-credential-helper'],
                     'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
                     'write_files': [
+                        {
+                            'path': '/root/.docker/config.json',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': json.dumps(
+                                {
+                                    'credHelpers': {
+                                        config.docker_registry[:-1]: 'ecr-login'
+                                    }
+                                }
+                                if config.docker_registry else
+                                {}
+                            )
+                        },
                         {
                             'path': '/etc/systemd/system/gitlab-dind.service',
                             'permissions': '0644',
@@ -1368,6 +1412,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'ExecStart=/usr/bin/docker',
                                     'run',
                                     '--name gitlab',
+                                    '--env GITLAB_SKIP_TAIL_LOGS=true',
                                     '--hostname ${aws_route53_record.gitlab.name}',
                                     '--publish 80:80',
                                     '--publish 2222:22',
@@ -1527,7 +1572,86 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Install]',
                                 'WantedBy=timers.target'
                             )
-                        }
+                        },
+                        {
+                            # AWS recommends placing the amazon-cloudwatch-agent config file at this path.
+                            # Note that the parent of etc/ is where the agent is installed.
+                            'path': '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
+                            'permissions': '0664',
+                            'owner': 'root',
+                            'content': json.dumps({
+                                'agent': {
+                                    'region': aws.region_name,
+                                    'logfile': '/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log',
+                                    'debug': bool(config.debug)
+                                },
+                                'logs': {
+                                    'logs_collected': {
+                                        'files': {
+                                            'collect_list': [
+                                                {
+                                                    'file_path': path,
+                                                    'log_group_name': '${aws_cloudwatch_log_group.gitlab_cwagent.name}',
+                                                    # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogStream.html
+                                                    # Characters disallowed for use in a log stream name are `:` and
+                                                    # `*`, so we replace any occurrence of `*` in `path` with `?`.
+                                                    'log_stream_name': path.replace('*', '?')
+                                                }
+                                                for path in
+                                                [
+                                                    f'/var/log/{file}'
+                                                    for file in
+                                                    [
+                                                        'amazon/ssm/amazon-ssm-agent.log',
+                                                        'audit/audit.log',
+                                                        'cloud-init.log',
+                                                        'cron',
+                                                        'maillog',
+                                                        'messages',
+                                                        'secure'
+                                                    ]
+
+                                                ] + [
+                                                    f'/mnt/gitlab/logs/{file}.log'
+                                                    for file in
+                                                    [
+                                                        'gitaly/gitaly_ruby_json',
+                                                        'gitlab-shell/gitlab-shell',
+                                                        'nginx/gitlab_access',
+                                                        'nginx/gitlab_error',
+                                                        'nginx/gitlab_registry_access',
+                                                        'puma/puma_stderr',
+                                                        'puma/puma_stdout',
+                                                        # The '*' is used in order to get the most recent GitLab
+                                                        # reconfigure logs (name based on UNIX timestamp of when
+                                                        # reconfigure initiated). Only the most recent file, by
+                                                        # modification time, matching the wildcard is collected.
+                                                        'reconfigure/*'
+                                                    ]
+                                                ] + [
+                                                    f'/mnt/gitlab/logs/gitlab-rails/{file}.log'
+                                                    for file in
+                                                    [
+                                                        'api_json',
+                                                        'application_json',
+                                                        'application',
+                                                        'audit_json',
+                                                        'auth',
+                                                        'database_load_balancing',
+                                                        'exceptions_json',
+                                                        'graphql_json',
+                                                        'migrations',
+                                                        'production_json',
+                                                        'production',
+                                                        'sidekiq_client'
+                                                    ]
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }, indent=4)
+                        },
                     ],
                     'runcmd': [
                         ['systemctl', 'daemon-reload'],
@@ -1542,6 +1666,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'gitlab-runner',
                             'clamscan.timer',
                             'prune-images.timer'
+                        ],
+                        [
+                            'amazon-cloudwatch-agent-ctl',
+                            '-m', 'ec2',  # mode
+                            '-a', 'fetch-config',  # action (fetch file from location specified in -c)
+                            '-c', 'file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
+                            '-s'  # restart agent afterwards
                         ]
                     ],
                 }, indent=2),

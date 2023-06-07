@@ -333,6 +333,51 @@ def block_public_s3_bucket_access(tf_config: JSON) -> JSON:
     return tf_config
 
 
+def enable_s3_bucket_inventory(tf_config: JSON,
+                               dest_bucket_ref: str = 'data.aws_s3_bucket.logs',
+                               /,
+                               ) -> JSON:
+    key = 'resource'
+    tf_config = copy_json(tf_config, key)
+    tf_config[key]['aws_s3_bucket_inventory'] = {
+        resource_name: {
+            **(
+                {'provider': resource['provider']}
+                if 'provider' in resource else {}
+            ),
+            'bucket': '${aws_s3_bucket.%s.id}' % resource_name,
+            'name': config.qualified_resource_name('inventory'),
+            'included_object_versions': 'All',
+            'destination': {
+                'bucket': {
+                    'format': 'CSV',
+                    'bucket_arn': '${%s.arn}' % dest_bucket_ref,
+                    'prefix': 'inventory'
+                }
+            },
+            'schedule': {
+                'frequency': 'Daily'
+            },
+            'optional_fields': [
+                'Size',
+                'LastModifiedDate',
+                'StorageClass',
+                'ETag',
+                'IsMultipartUploaded',
+                'ReplicationStatus',
+                'EncryptionStatus',
+                'ChecksumAlgorithm',
+                'BucketKeyStatus',
+                'IntelligentTieringAccessTier',
+                'ObjectLockMode',
+                'ObjectLockRetainUntilDate',
+                'ObjectLockLegalHoldStatus'
+            ]
+        } for resource_name, resource in tf_config[key]['aws_s3_bucket'].items()
+    }
+    return tf_config
+
+
 U = TypeVar('U', bound=AnyJSON)
 
 

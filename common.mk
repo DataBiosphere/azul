@@ -82,11 +82,24 @@ check_branch: check_python
 git_clean_recursive: check_env
 	git clean -Xdf
 
+.PHONY: git_list_dirt_recursive
+git_list_dirt_recursive: check_env
+	git clean -Xdn
+
+# `grep` returns 1 if nothing matches. Here, this does not constitute an error.
+define list_dirt
+	set -o pipefail \
+	&& git ls-files --ignored --others --directory --exclude-standard \
+		| (grep -v '/[^/]' || test $$? -eq 1)
+endef
+
 .PHONY: git_clean
 git_clean: check_env
-	git ls-files --ignored --others --directory --exclude-standard \
-		| grep -v '/[^/]' \
-		| xargs -r rm -rv
+	$(call list_dirt) | xargs -r rm -rv
+
+.PHONY: git_list_dirt
+git_list_dirt: check_env
+	@$(call list_dirt)
 
 %.json: %.json.template.py check_python .FORCE
 	python $< $@

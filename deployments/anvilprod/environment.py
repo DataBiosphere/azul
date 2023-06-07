@@ -136,7 +136,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_INCARNATION': '1',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '',
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '1055427471534-8ee4mhig5j40n6n366j7uul26bbbhp2p.apps.googleusercontent.com',
 
         'azul_slack_integration': json.dumps({
             'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
