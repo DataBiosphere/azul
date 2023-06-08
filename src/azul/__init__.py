@@ -24,6 +24,7 @@ from typing import (
     TYPE_CHECKING,
     TextIO,
     TypeVar,
+    TypedDict,
     Union,
 )
 
@@ -193,7 +194,9 @@ class Config:
                               region_name: str,
                               bucket_name: str
                               ) -> str:
-        self._validate_term(bucket_name, name='bucket_name')
+        # Allow wildcard for use in ARN patterns
+        if bucket_name != '*':
+            self._validate_term(bucket_name, name='bucket_name')
         return f'edu-ucsc-gi-{account_name}-{bucket_name}.{region_name}'
 
     aws_config_term = 'awsconfig'
@@ -270,14 +273,6 @@ class Config:
         if self.deployment_stage == 'prod':
             domain = domain.removeprefix('azul.')
         return domain
-
-    @property
-    def data_browser_name(self):
-        return f'{self.resource_prefix}-data-browser-{self.deployment_stage}'
-
-    @property
-    def data_portal_name(self):
-        return f'{self.resource_prefix}-data-portal-{self.deployment_stage}'
 
     @property
     def dss_endpoint(self) -> Optional[str]:
@@ -1017,6 +1012,17 @@ class Config:
     def is_sandbox_or_personal_deployment(self) -> bool:
         return self.is_sandbox_deployment or not self.is_main_deployment()
 
+    class BrowserSite(TypedDict):
+        domain: str
+        bucket: str
+        tarball_path: str
+        real_path: str
+
+    @property
+    def browser_sites(self) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
+        import json
+        return json.loads(self.environ['azul_browser_sites'])
+
     @property
     def _git_status(self) -> dict[str, str]:
         import git
@@ -1180,14 +1186,15 @@ class Config:
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
 
     def enable_gcp(self):
-        return 'GOOGLE_PROJECT' in self.environ
+        return self.google_project() is not None
+
+    def google_project(self) -> Optional[str]:
+        return self.environ.get('GOOGLE_PROJECT')
 
     class ServiceAccount(Enum):
         indexer = ''
         public = '_public'
         unregistered = '_unregistered'
-
-        value: str  # avoid type warning in PyCharm
 
         @property
         def id(self) -> str:
@@ -1338,6 +1345,10 @@ class Config:
     def github_access_token(self) -> str:
         return self.environ['azul_github_access_token']
 
+    @property
+    def gitlab_access_token(self) -> Optional[str]:
+        return self.environ.get('azul_gitlab_access_token')
+
     def portal_db_object_key(self, catalog_source: str) -> str:
         return f'azul/{self.deployment_stage}/portals/{catalog_source}-db.json'
 
@@ -1370,7 +1381,7 @@ class Config:
         return os.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
 
     @property
-    def azul_monitoring_email(self) -> str:
+    def monitoring_email(self) -> str:
         return self.environ['AZUL_MONITORING_EMAIL']
 
     @property
@@ -1406,6 +1417,32 @@ class Config:
             return self.SlackIntegration(**json.loads(slack_integration))
 
     manifest_column_joiner = '||'
+
+    @property
+    def docker_registry(self) -> str:
+        return self.environ['azul_docker_registry']
+
+    # Note that a change to the image references here also requires redeploying
+    # the `shared` TF component.
+
+    docker_images = [
+        'docker.elastic.co/elasticsearch/elasticsearch:7.10.1',
+        'docker.elastic.co/kibana/kibana-oss:7.10.2',
+        'docker.io/clamav/clamav:1.1.0-1',
+        'docker.io/cllunsford/aws-signing-proxy:0.2.2',
+        'docker.io/gitlab/gitlab-ce:15.11.2-ce.0',
+        'docker.io/gitlab/gitlab-runner:v15.11.0',
+        'docker.io/library/docker:20.10.18',
+        'docker.io/library/docker:20.10.18-dind',
+        'docker.io/library/python:3.9.16-bullseye',
+        'docker.io/lmenezes/cerebro:0.9.4',
+        'docker.io/ucscgi/azul-pycharm:2022.3.3',
+    ]
+
+    docker_platforms = [
+        'linux/arm64',
+        'linux/amd64'
+    ]
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm

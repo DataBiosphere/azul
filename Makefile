@@ -3,9 +3,9 @@ all: hello
 
 include common.mk
 
-DOCKER_IMAGE ?= azul
-DOCKER_TAG ?= latest
-CACHE_SEED ?=
+azul_docker_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
+azul_docker_image_tag ?= latest
+azul_docker_image_cache_seed ?=
 
 .PHONY: virtualenv
 virtualenv: check_env
@@ -34,25 +34,22 @@ define docker
 .PHONY: docker$1
 docker$1: check_docker
 	docker build \
+	       --build-arg registry=$$(azul_docker_registry) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
-	       --build-arg cache_seed=${CACHE_SEED} \
-	       --tag $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
+	       --build-arg cache_seed=${azul_docker_image_cache_seed} \
+	       --tag $$(azul_docker_image)$3:$$(azul_docker_image_tag) \
 	       .
 
 .PHONY: docker$1_push
 docker$1_push: docker$1
-	docker push $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG)
+	docker push $$(azul_docker_image)$3:$$(azul_docker_image_tag)
 endef
 
 $(eval $(call docker,,_runtime,))  # runtime image w/o dependency resolution
 $(eval $(call docker,_dev,,/dev))  # development image w/o dependency resolution
 $(eval $(call docker,_deps,_runtime_deps,/deps))  # runtime image with automatic dependency resolution
 $(eval $(call docker,_dev_deps,_deps,/dev-deps))  # development image with automatic dependency resolution
-
-.gitlab.env:
-	echo BUILD_IMAGE=$(DOCKER_IMAGE)/dev:$(DOCKER_TAG) > .gitlab.env
-
 
 .PHONY: requirements_update
 requirements_update: check_venv check_docker
@@ -67,8 +64,8 @@ requirements_update: check_venv check_docker
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
 	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
-	       --image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
-	       --build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
+	       --image=$(azul_docker_image)/deps:$(azul_docker_image_tag) \
+	       --build-image=$(azul_docker_image)/dev-deps:$(azul_docker_image_tag)
 	# Download wheels (source and binary) for the Lambda runtime
 	rm ${azul_chalice_bin}/*
 	pip download \
@@ -79,7 +76,7 @@ requirements_update: check_venv check_docker
 
 .PHONY: requirements_update_force
 requirements_update_force: check_venv check_docker
-	CACHE_SEED=$$(python -c 'import uuid; print(uuid.uuid4())') $(MAKE) requirements_update
+	azul_docker_image_cache_seed=$$(python -c 'import uuid; print(uuid.uuid4())') $(MAKE) requirements_update
 
 .PHONY: hello
 hello: check_python
@@ -196,7 +193,7 @@ absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/.flake8/azul_flake8.py \
                                 $(project_root)/environment.py \
                                 $(project_root)/deployments/*/environment.py \
-                                $$(find $(project_root)/terraform{,/gitlab,/shared} \
+                                $$(find $(project_root)/terraform{,/gitlab,/shared,/browser} \
                                         $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         $(project_root)/.github \
                                         -maxdepth 1 \
@@ -218,7 +215,8 @@ format: check_venv check_docker
 	docker run \
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
-	    --workdir /home/developer/azul rycus86/pycharm:2019.3.5 \
+	    --workdir /home/developer/azul \
+	    $(azul_docker_registry)docker.io/ucscgi/azul-pycharm:2022.3.3 \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test
@@ -228,7 +226,6 @@ test: check_python
 .PHONY: test_list
 test_list: check_python
 	python scripts/list_unit_tests.py test
-
 
 .PHONY: tag
 tag: check_branch

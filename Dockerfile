@@ -1,4 +1,16 @@
-FROM python:3.9.12-buster
+ARG registry
+FROM ${registry}docker.io/library/python:3.9.16-bullseye
+
+RUN curl -o /usr/bin/docker-credential-ecr-login \
+    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-amd64/docker-credential-ecr-login \
+    && printf 'c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db /usr/bin/docker-credential-ecr-login\n' | sha256sum -c \
+    && chmod +x /usr/bin/docker-credential-ecr-login
+
+ARG registry
+ENV azul_docker_registry=${registry}
+RUN mkdir -p ${HOME}/.docker \
+    && printf '{"credHelpers": {"%s": "ecr-login"}}\n' "${registry%/}" \
+    > "${HOME}/.docker/config.json"
 
 SHELL ["/bin/bash", "-c"]
 
@@ -17,7 +29,7 @@ RUN mkdir terraform \
 # is too much of a hassle. The version should roughly match that of the docker
 # version installed on the Gitlab instance.
 #
-RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz \
+RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-20.10.18.tgz \
         | tar -xvzf - --strip-components=1 docker/docker \
     && install -g root -o root -m 755 docker /usr/bin \
     && rm docker

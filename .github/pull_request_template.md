@@ -138,13 +138,17 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 - [ ] Pushed merge commit to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed merge commit to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed merge commit to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>
 - [ ] Reviewed build logs for anomalies on GitLab `dev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvildev`<sup>1</sup>
 - [ ] Reviewed build logs for anomalies on GitLab `anvildev`<sup>1</sup>
+- [ ] Build passes on GitLab `anvilprod`<sup>1</sup>
+- [ ] Reviewed build logs for anomalies on GitLab `anvilprod`<sup>1</sup>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
+- [ ] Deleted PR branch from GitLab `anvilprod`
 
 <sup>1</sup> When pushing the merge commit is skipped due to the PR being
 labelled `no sandbox`, the next build triggered by a PR whose merge commit *is*
@@ -155,12 +159,16 @@ pushed determines this checklist item.
 
 - [ ] Deleted unreferenced indices in `dev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
 - [ ] Deleted unreferenced indices in `anvildev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
+- [ ] Deleted unreferenced indices in `anvilprod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
 - [ ] Started reindex in `dev` <sub>or this PR does not require reindexing</sub>
 - [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing</sub>
+- [ ] Started reindex in `anvilprod` <sub>or this PR does not require reindexing</sub>
 - [ ] Checked for and triaged indexing failures in `dev` <sub>or this PR does not require reindexing</sub>
 - [ ] Checked for and triaged indexing failures in `anvildev` <sub>or this PR does not require reindexing</sub>
+- [ ] Checked for and triaged indexing failures in `anvilprod` <sub>or this PR does not require reindexing</sub>
 - [ ] Emptied fail queues in `dev` deployment <sub>or this PR does not require reindexing</sub>
 - [ ] Emptied fail queues in `anvildev` deployment <sub>or this PR does not require reindexing</sub>
+- [ ] Emptied fail queues in `anvilprod` deployment <sub>or this PR does not require reindexing</sub>
 
 
 ### Operator

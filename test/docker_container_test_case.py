@@ -18,6 +18,7 @@ from more_itertools import (
 
 from azul import (
     Netloc,
+    config,
 )
 from azul.logging import (
     get_test_logger,
@@ -52,8 +53,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
         container port on a interface that is within reach of the current
         process.
 
-        :param image: the name of a docker image (may include a tag and/or the
-                      repository)
+        :param image: the fully qualified name of the Docker image to run
 
         :param container_port: The TCP port that the process inside the
                                container binds to.
@@ -72,6 +72,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
         # correctly guessed the IP of an interface on the host, we would still
         # need traffic to be forwarded from the current container to that host
         # interface.
+        image = config.docker_registry + image
         is_sibling = cls._running_in_docker()
         log.info('Launching %scontainer from image %s',
                  'sibling ' if is_sibling else '', image)
