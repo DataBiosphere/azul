@@ -8,9 +8,6 @@ from typing import (
     Type,
 )
 
-from azul.indexer import (
-    Bundle,
-)
 from azul.indexer.document import (
     Aggregate,
 )
@@ -19,6 +16,9 @@ from azul.plugins import (
     ManifestConfig,
     MetadataPlugin,
     Sorting,
+)
+from azul.plugins.metadata.hca.bundle import (
+    HCABundle,
 )
 from azul.plugins.metadata.hca.indexer.aggregate import (
     HCAAggregate,
@@ -53,7 +53,7 @@ from humancellatlas.data.metadata import (
 )
 
 
-class Plugin(MetadataPlugin):
+class Plugin(MetadataPlugin[HCABundle]):
 
     def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
         return (
@@ -64,7 +64,11 @@ class Plugin(MetadataPlugin):
             BundleTransformer
         )
 
-    def transformers(self, bundle: Bundle, *, delete: bool) -> Iterable[BaseTransformer]:
+    def transformers(self,
+                     bundle: HCABundle,
+                     *,
+                     delete: bool
+                     ) -> Iterable[BaseTransformer]:
         api_bundle = api.Bundle(uuid=bundle.uuid,
                                 version=bundle.version,
                                 manifest=bundle.manifest,

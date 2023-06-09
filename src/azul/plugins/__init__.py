@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -43,6 +43,7 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
+    BUNDLE,
     BUNDLE_FQID,
     Bundle,
     SOURCE_REF,
@@ -136,7 +137,7 @@ class ManifestFormat(Enum):
 T = TypeVar('T', bound='Plugin')
 
 
-class Plugin(ABC):
+class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
     """
     A base class for Azul plugins. Concrete plugins shouldn't inherit this
     class directly but one of the subclasses of this class. This class just
@@ -155,14 +156,10 @@ class Plugin(ABC):
         :param catalog: the name of the catalog for which to load the plugin
         """
         assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
-        assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
-        plugin_type_name = cls.type_name()
+        assert isabstract(cls), f'Must use an abstract subclass of {cls.__name__}'
+        plugin_type_name = cls._plugin_type_name()
         plugin_package_name = config.catalogs[catalog].plugins[plugin_type_name].name
-        plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
-        plugin_module = importlib.import_module(plugin_package_path)
-        plugin_cls = getattr(plugin_module, 'Plugin')
-        assert issubclass(plugin_cls, cls)
-        return plugin_cls
+        return cls._load(plugin_type_name, plugin_package_name)
 
     @classmethod
     def types(cls) -> Sequence[Type['Plugin']]:
@@ -192,8 +189,33 @@ class Plugin(ABC):
     def type_name(cls) -> str:
         raise NotImplementedError
 
+    @classmethod
+    def bundle_cls(cls,
+                   plugin_package_name: str
+                   ) -> Type[BUNDLE]:
+        plugin_type_name = cls._plugin_type_name()
+        plugin_cls = cls._load(plugin_type_name, plugin_package_name)
+        bundle_cls = get_generic_type_params(plugin_cls)[0]
+        assert issubclass(bundle_cls, Bundle), bundle_cls
+        return bundle_cls
 
-class MetadataPlugin(Plugin):
+    @classmethod
+    def _plugin_type_name(cls) -> str:
+        assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
+        assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
+        plugin_type_name = cls.type_name()
+        return plugin_type_name
+
+    @classmethod
+    def _load(cls, plugin_type_name: str, plugin_package_name: str) -> Type[T]:
+        plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
+        plugin_module = importlib.import_module(plugin_package_path)
+        plugin_cls = getattr(plugin_module, 'Plugin')
+        assert issubclass(plugin_cls, cls)
+        return plugin_cls
+
+
+class MetadataPlugin(Plugin[BUNDLE]):
 
     @classmethod
     def type_name(cls) -> str:
@@ -212,7 +234,7 @@ class MetadataPlugin(Plugin):
 
     @abstractmethod
     def transformers(self,
-                     bundle: Bundle,
+                     bundle: BUNDLE,
                      *,
                      delete: bool
                      ) -> Iterable[Transformer]:
@@ -404,7 +426,7 @@ class MetadataPlugin(Plugin):
         raise NotImplementedError
 
 
-class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
+class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
 
     @classmethod
     def type_name(cls) -> str:
@@ -459,17 +481,18 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
 
     @cached_property
     def _generic_params(self) -> tuple:
-        spec_cls, ref_cls, fqid_cls = get_generic_type_params(type(self),
-                                                              SourceSpec,
-                                                              SourceRef,
-                                                              SourcedBundleFQID)
+        bundle_cls, spec_cls, ref_cls, fqid_cls = get_generic_type_params(type(self),
+                                                                          Bundle,
+                                                                          SourceSpec,
+                                                                          SourceRef,
+                                                                          SourcedBundleFQID)
         assert fqid_cls.source_ref_cls() is ref_cls
         assert ref_cls.spec_cls() is spec_cls
-        return spec_cls, ref_cls, fqid_cls
+        return bundle_cls, spec_cls, ref_cls, fqid_cls
 
     @property
     def _source_ref_cls(self) -> Type[SOURCE_REF]:
-        spec_cls, ref_cls, fqid_cls = self._generic_params
+        bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return ref_cls
 
     def source_from_json(self, ref: SourceJSON) -> SOURCE_REF:
@@ -481,8 +504,13 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
 
     @property
     def _bundle_fqid_cls(self) -> Type[BUNDLE_FQID]:
-        spec_cls, ref_cls, fqid_cls = self._generic_params
+        bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return fqid_cls
+
+    @property
+    def _bundle_cls(self) -> Type[BUNDLE]:
+        bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
+        return bundle_cls
 
     def resolve_source(self, spec: str) -> SOURCE_REF:
         """
@@ -538,7 +566,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
         return None
 
     @abstractmethod
-    def fetch_bundle(self, bundle_fqid: BUNDLE_FQID) -> Bundle[BUNDLE_FQID]:
+    def fetch_bundle(self, bundle_fqid: BUNDLE_FQID) -> BUNDLE:
         """
         Fetch the given bundle.
 
@@ -582,7 +610,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID], Plugin):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
-class RepositoryFileDownload(ABC):
+class RepositoryFileDownload(metaclass=ABCMeta):
     #: The UUID of the file to be downloaded
     file_uuid: str
 

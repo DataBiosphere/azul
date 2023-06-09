@@ -1,0 +1,1713 @@
+{
+    "manifest": [
+        {
+            "name": "cell_suspension_0.json",
+            "uuid": "26dd8b99-f4ad-4802-8d6d-cf372c819dcc",
+            "version": "2019-10-14T19:20:19.330000Z",
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "size": 1097,
+            "indexed": true,
+            "crc32c": "10bbe259",
+            "sha1": "7dc4916361d5aa841d297c3d5d60a0789e7fd803",
+            "sha256": "3c945523af0aaee780fc2be95188ba59059b796eff5d7f8ef58a78f8d27a531c",
+            "s3_etag": "4cc16cf31d8dbae4d5dab7801f8bf488"
+        },
+        {
+            "name": "specimen_from_organism_0.json",
+            "uuid": "efa34a7f-6a0b-4728-9038-b947d47a63c6",
+            "version": "2019-10-14T19:20:15.694000Z",
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "size": 1534,
+            "indexed": true,
+            "crc32c": "d190dccd",
+            "sha1": "bcaf9ab7cbfa555366375b4a097342d71525dde2",
+            "sha256": "6c0c333bd24c848e5a7a461df1f2a9024bdaec4d5fa00eb751971451c7dbd530",
+            "s3_etag": "7af6b7b2944bfbd7f12d96d937d752a5"
+        },
+        {
+            "name": "donor_organism_0.json",
+            "uuid": "a53d95b5-d1c7-4548-b2c0-479788085ab8",
+            "version": "2019-10-14T19:20:15.294000Z",
+            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+            "size": 1576,
+            "indexed": true,
+            "crc32c": "07714225",
+            "sha1": "04d588645b7a7b8d4b29421ec5d8665f558bd57d",
+            "sha256": "f33de8354f613dce9ac401c9dbeff8226f5e8f5354feb194de20f5e183a48d14",
+            "s3_etag": "649d27002701415a8f3a7131ec662b4a"
+        },
+        {
+            "name": "sequence_file_0.json",
+            "uuid": "c0a69095-57ba-4eca-8cc7-fed514f35f43",
+            "version": "2019-10-14T19:24:39.051000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "f98bcc9c",
+            "sha1": "80f900867b794013ed6f971facb5a41f896aa645",
+            "sha256": "0c521454cfc47e3690378cf46dfc51a838b73436d1b6a9c4f67617ac64739459",
+            "s3_etag": "fc36335bace6b25bdab57b8bd9a6e943"
+        },
+        {
+            "name": "sequence_file_1.json",
+            "uuid": "4a9b689f-5aad-4c30-b347-7b0d52ab3ecb",
+            "version": "2019-10-14T19:27:28.475000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "621eb495",
+            "sha1": "c084187fffd3cb068b0fbf019450ab829601612b",
+            "sha256": "d329ff3d70d7e024b4100f45ce3dc31ec0deb82b3305d2e4cd84c261696ff7b6",
+            "s3_etag": "a9e32685fa3f6dc4a9c1e5eb3873f29c"
+        },
+        {
+            "name": "sequence_file_2.json",
+            "uuid": "6fc876bc-5a8a-445c-8b41-77526203973b",
+            "version": "2019-10-14T19:25:37.567000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 818,
+            "indexed": true,
+            "crc32c": "a9bc39c1",
+            "sha1": "ee623beaa20846a7584fdd1ef91775aeaccfbaeb",
+            "sha256": "c5d66168509a33d92f68e8749c16bc7b8015d7aff92060c06a11b529eb364bee",
+            "s3_etag": "2c483259ac6772d576400b9f778ab0e6"
+        },
+        {
+            "name": "sequence_file_3.json",
+            "uuid": "d47c381f-cef0-432a-b2bb-49fb7a546ac1",
+            "version": "2019-10-14T19:27:24.178000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "f7646935",
+            "sha1": "17e778e9291507c4e9c8eb9a20eb97f12d78514c",
+            "sha256": "7022e3e827ed28a6411b94ede0b5a56ab097ec1318a30dbd835eb2016cda5b3a",
+            "s3_etag": "13f29a59b32f42d1b5733d6620ccc273"
+        },
+        {
+            "name": "sequence_file_4.json",
+            "uuid": "b2a466dd-9de4-428c-9eda-f779d9ad672f",
+            "version": "2019-10-14T19:36:29.173000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "9c226abd",
+            "sha1": "01d781e336dd32635fcb3825c100a8aae16070a3",
+            "sha256": "ee5783f1c6496d3c36b8e4670a9b864f0782370f0690ccfcb420b73811536dfa",
+            "s3_etag": "3be51248fdc8cc56d3f98303d29ca975"
+        },
+        {
+            "name": "sequence_file_5.json",
+            "uuid": "86102761-0ba7-43b6-a442-666db1296154",
+            "version": "2019-10-14T19:37:58.671000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "7c7a3b32",
+            "sha1": "b34c591a0a94b71b1872bb88d42c154a7c3cf5cd",
+            "sha256": "879f9cc32943960d59bda9c65320c9b033a419592e21bc93273b870c356482c9",
+            "s3_etag": "9874adc9cc31493e78dbe160d17875b3"
+        },
+        {
+            "name": "sequence_file_6.json",
+            "uuid": "0c4b6682-12ab-46e7-9756-07ec104b14b1",
+            "version": "2019-10-14T19:36:28.957000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "4b3e041d",
+            "sha1": "95e8a901038aaf2e30057275fa6f9270a07a8e0b",
+            "sha256": "9eef54a0369d664ed422b4fae8cc85bf4490818e3004bfad692d84f8c50318f0",
+            "s3_etag": "faea473c58a735596d51e7809a15c580"
+        },
+        {
+            "name": "sequence_file_7.json",
+            "uuid": "f31358bc-064c-4185-ae23-af044804d591",
+            "version": "2019-10-14T19:37:57.258000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "ec2c75a6",
+            "sha1": "8f90ca626f62f4a2273eccbf60b5738904501537",
+            "sha256": "b4ba85e2156302427eb9ddb5d75a5f7cc3ef9d1cbc4a6e3112820bacc2c1aa9e",
+            "s3_etag": "3ffe873d40c15ebb458722e9e0d7a49b"
+        },
+        {
+            "name": "sequence_file_8.json",
+            "uuid": "a652744c-2d55-4181-b903-db411fa589b4",
+            "version": "2019-10-14T19:37:49.258000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "6e33095d",
+            "sha1": "21fa6968fe5a1760ccd840f0a997b7993fd5e202",
+            "sha256": "b5224cfa121236491f87f484aba6add6e9b803dda2b7721a18b3ba059ffd2853",
+            "s3_etag": "a706b2a3b87b591d9c8d1348817312fd"
+        },
+        {
+            "name": "sequence_file_9.json",
+            "uuid": "da3b3aa5-3bea-441b-b1d0-022f842ddda6",
+            "version": "2019-10-14T19:39:50.546000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "1f2b8f20",
+            "sha1": "f7c17febd1bc327ffecac946aadb2f0ab67db7bc",
+            "sha256": "d3fab4221f48a86cd95a5b75fc8411c78b4933dc7c178e13861776238e42486d",
+            "s3_etag": "dd17a56b5444758545abb3782e0052eb"
+        },
+        {
+            "name": "sequence_file_10.json",
+            "uuid": "96ae6850-32c6-4d89-87cb-2f5005ac65aa",
+            "version": "2019-10-14T19:37:50.076000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "bddbedb9",
+            "sha1": "bce8856c4be760d8ba219974971264b1bdafa800",
+            "sha256": "e8f28317663063f76af3a137de3b24211baaad39eb1a5c405872cfaaa413a074",
+            "s3_etag": "7d57b535c7d48687d0faa1c210e9ff9e"
+        },
+        {
+            "name": "sequence_file_11.json",
+            "uuid": "bb4b0758-444b-48c3-89a6-9ddcf61fe912",
+            "version": "2019-10-14T19:39:50.982000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "d876bf6b",
+            "sha1": "175a114f46e847dae7a9dce03e42578c1b028ea9",
+            "sha256": "e1c5460b20035e485d05641e15881b5b6bf1c8a42f9ec08bf3fad381912ed76e",
+            "s3_etag": "031548347de69a75b2c4a7dff7c97801"
+        },
+        {
+            "name": "sequence_file_12.json",
+            "uuid": "b4308ad2-8a51-4b1e-95a3-da961a13dd70",
+            "version": "2019-10-14T19:40:10.497000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "b3de2e02",
+            "sha1": "8a27f8ddd3254e1c024fdf41d531b2fed87e7358",
+            "sha256": "2f1cc315e124217f92c4f2fb60f9c8a3e64d56708f74e89061d402e6d165728c",
+            "s3_etag": "7f41f78842267ca93e5024d6dd79dc3e"
+        },
+        {
+            "name": "sequence_file_13.json",
+            "uuid": "2fa236c1-deb5-48a8-9961-3e2ee5cae2db",
+            "version": "2019-10-14T19:43:37.367000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "e9452ec7",
+            "sha1": "a9c606d6b179b91ca3ed1291621da067a6daf690",
+            "sha256": "4eb258582af734544cc313b514d2b4aa16d33b307d68929ec51a6bb94f3cb92d",
+            "s3_etag": "b4d2638ced4e826825b1381ff6a74a52"
+        },
+        {
+            "name": "sequence_file_14.json",
+            "uuid": "ff664ba7-b1f9-4fd2-b6ae-a12eb0111721",
+            "version": "2019-10-14T19:40:08.673000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "1c25e780",
+            "sha1": "a567fc03b4c20e3040a9a64ea216ac2691aa97fa",
+            "sha256": "346cb0b977d1bb1a38b8c333bd279d6ecc8b783d8ecc2a70b27a411f7e1be42d",
+            "s3_etag": "218f1cd261f19f6d87be874a0639584b"
+        },
+        {
+            "name": "sequence_file_15.json",
+            "uuid": "899e967e-06c8-49d9-bd3f-4bef8d04e22b",
+            "version": "2019-10-14T19:43:38.487000Z",
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "size": 822,
+            "indexed": true,
+            "crc32c": "009efa5a",
+            "sha1": "35acfd0ecfc1e650e0bd29d52344201a01a5510e",
+            "sha256": "6268e5f3a732fb473c00235d453fc6177219f1a998624f234573a6df2222643d",
+            "s3_etag": "ab625328928b997a8f3e633ffa40a9e9"
+        },
+        {
+            "name": "project_0.json",
+            "uuid": "4e6f083b-5b9a-4393-9890-2a83da8188f1",
+            "version": "2019-10-14T19:20:15.147000Z",
+            "content-type": "application/json; dcp-type=\"metadata/project\"",
+            "size": 13074,
+            "indexed": true,
+            "crc32c": "ce63702a",
+            "sha1": "dd934475482ef9cba19ace9f0b162ce13097edbb",
+            "sha256": "6d4324daf51824b8afc1a456cb8558403af36ac82b55444c169fe190d8738dd5",
+            "s3_etag": "be91967cbe5dc071878b3fb79e38f58a"
+        },
+        {
+            "name": "library_preparation_protocol_0.json",
+            "uuid": "58df9607-ab66-48e0-a47b-1f897baae139",
+            "version": "2019-10-14T19:20:14.102000Z",
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "size": 2584,
+            "indexed": true,
+            "crc32c": "aa996af5",
+            "sha1": "4452c2cfa36095d4e42b7699e0919a3ec4ba2b44",
+            "sha256": "eabb0087afc8fde3001a96b9638d93a8bf8cbd4528b735038dd09fee178c0feb",
+            "s3_etag": "61158276863cf774cc5dc1f6c174b740"
+        },
+        {
+            "name": "sequencing_protocol_0.json",
+            "uuid": "6282594c-1b9d-4f26-a4f3-a26066878740",
+            "version": "2019-10-14T19:20:14.184000Z",
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "size": 2200,
+            "indexed": true,
+            "crc32c": "a2e14bea",
+            "sha1": "80180dcaa2fadf10d47f4505a2a9dec97b9c7ed7",
+            "sha256": "0c25a6e2e9d2cebf9e4bf64056cccd01e66585e631655893255aadfa47725bf5",
+            "s3_etag": "5e69a451810fd92b04bcc280ebca33bd"
+        },
+        {
+            "name": "dissociation_protocol_0.json",
+            "uuid": "acaf2d60-e6fb-4381-a81e-2fec565fc8fa",
+            "version": "2019-10-14T19:20:13.886000Z",
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "size": 1187,
+            "indexed": true,
+            "crc32c": "d50daf89",
+            "sha1": "33eb5e05325631d7f09f7cf1ae103339e4a84e28",
+            "sha256": "8f2db15706a641b1a7f39838f9187dafa518a29fb3d77fa05d6125b6cfc6721e",
+            "s3_etag": "4824f0c67335d5c94e4a8cbf49093d48"
+        },
+        {
+            "name": "enrichment_protocol_0.json",
+            "uuid": "1c9774bf-979a-4023-9756-b297cba4e371",
+            "version": "2019-10-14T19:20:13.993000Z",
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "size": 1629,
+            "indexed": true,
+            "crc32c": "c5e6d8a8",
+            "sha1": "9779193c215448e455abe34dafcb6d45290ade99",
+            "sha256": "8fc02463fa6db3fd831e40aebd22804d1a667c24b2e286bc3de3e1a005ea5215",
+            "s3_etag": "bcdcd001e2a2e016f13dca569ac39501"
+        },
+        {
+            "name": "collection_protocol_0.json",
+            "uuid": "e95ebc23-53b9-48a0-acd4-185969122f2d",
+            "version": "2019-10-14T19:20:13.961000Z",
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "size": 1052,
+            "indexed": true,
+            "crc32c": "810ea940",
+            "sha1": "03af1eac875117cd2d1eaca761f7aa4d66b27bcb",
+            "sha256": "b4628a7d1fe613caaf8d5ed654747730f84931b2331f6f2c16f5a734b6385694",
+            "s3_etag": "4c21d1c049d787d2b457c5fbb3544389"
+        },
+        {
+            "name": "collection_protocol_1.json",
+            "uuid": "6ec6ce63-3c6f-41d1-a616-5ebb20fe9a8b",
+            "version": "2019-10-14T19:20:13.874000Z",
+            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+            "size": 796,
+            "indexed": true,
+            "crc32c": "5178e8b5",
+            "sha1": "c58ec9460b25fef1456386c4f3f1613a61d7d522",
+            "sha256": "ae769898d4f585448f8d2071fc35b90bf9cd93ca6430f08a38245d1096b0c704",
+            "s3_etag": "7bf13adfc09567ac456ceeca5b4cce4b"
+        },
+        {
+            "name": "process_0.json",
+            "uuid": "c56e2990-d6a0-40f5-add2-793bc1f12d69",
+            "version": "2019-10-14T19:20:29.246000Z",
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "size": 440,
+            "indexed": true,
+            "crc32c": "ad1dfde5",
+            "sha1": "1ea241e554ae1872767e5a9b3ab9e4cf08b713d6",
+            "sha256": "a347402fed35461302db748f42d3cf61452e9c581c0449088ff3da8488fd061d",
+            "s3_etag": "a51f07e64c376e8e38ed1fcef9bbbe8e"
+        },
+        {
+            "name": "process_1.json",
+            "uuid": "6a14efb0-0c28-421f-968b-5fc022df2395",
+            "version": "2019-10-14T19:20:28.063000Z",
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "size": 447,
+            "indexed": true,
+            "crc32c": "664edeb0",
+            "sha1": "5c6e3c2d048e5ef23dc5d9baff5a43d7e9d17606",
+            "sha256": "8b4922e405a5d5b0f38a78c2a3cfdc206dfdb3070cf5c32874bd89aa32b7f438",
+            "s3_etag": "242ee29b9cb5c297055c57e1c641d4ce"
+        },
+        {
+            "name": "process_2.json",
+            "uuid": "055b2189-7f89-4392-be1d-28a7274fe563",
+            "version": "2019-10-14T19:20:27.578000Z",
+            "content-type": "application/json; dcp-type=\"metadata/process\"",
+            "size": 447,
+            "indexed": true,
+            "crc32c": "5b19507c",
+            "sha1": "60dd6ce77fd32386ef4d960eab049cedf82795af",
+            "sha256": "73e899cdb2c2aa1d7d24e9fd030c359cd806885fab6afb62db06889550218937",
+            "s3_etag": "dcc9422f3633e5300292514d24e943e1"
+        },
+        {
+            "name": "links.json",
+            "uuid": "50f1b06c-511b-4145-b9d2-67b5a75dd573",
+            "version": "2019-10-14T19:54:58.503698Z",
+            "content-type": "application/json; dcp-type=\"metadata/links\"",
+            "size": 3221,
+            "indexed": true,
+            "crc32c": "186097fd",
+            "sha1": "0e1d47d5a4f2dad48ccf4a69f9333cd5a357eede",
+            "sha256": "19a3f7ac683ca22312302cc05aea13f21bdb4f0c5dacbeb29ded1f0803f47d16",
+            "s3_etag": "56b3adc600a5b1f7f57275dd3a78b4d6"
+        },
+        {
+            "name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R1.fastq.gz",
+            "uuid": "f4146a80-2737-4299-8d9a-0ec685dbac8b",
+            "version": "2019-10-14T19:54:58.812291Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 1930893034,
+            "indexed": false,
+            "crc32c": "290983db",
+            "sha1": "d46ebafce4e4f85909ab305905ba00e7560f263e",
+            "sha256": "5261bd1b3a167ade4437b6498d621084765cf1286ee4c7d552642dbc620c4ebd",
+            "s3_etag": "bd2a388d7c4304bf2e5da23c7768e884-29"
+        },
+        {
+            "name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R2.fastq.gz",
+            "uuid": "1bd7afa9-cd85-43c7-8515-b5206c0ca07c",
+            "version": "2019-10-14T19:54:58.953689Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 5003553670,
+            "indexed": false,
+            "crc32c": "e9a1f6f0",
+            "sha1": "4a3d3995c1ffe8ed2792c4abc57d667d332cb9ae",
+            "sha256": "750c53478433c024f3fa34daa756b3c0df762374c61a1165ad35ac2b6e1711be",
+            "s3_etag": "1f0b116b90f2e0f4b5b3238a315af27c-75"
+        },
+        {
+            "name": "read-RA_si-AACCGTAA_lane-002-chunk-001_R1.fastq.gz",
+            "uuid": "2893f2c5-d60f-41e4-9d18-984bda31e52f",
+            "version": "2019-10-14T19:54:59.157141Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 1880367192,
+            "indexed": false,
+            "crc32c": "eaa745c0",
+            "sha1": "7b5b02f421e2fc1890b8c083e4f7b6abb077b819",
+            "sha256": "67aac81aae3376f6a7ac0208360a196121df8573a168c7b33eb797b6a43f136a",
+            "s3_etag": "2de9f20694ce5b5ec45a0b6c95b959c5-29"
+        },
+        {
+            "name": "read-RA_si-AACCGTAA_lane-002-chunk-001_R2.fastq.gz",
+            "uuid": "e0df1fab-7759-45df-ba8c-6d667be196c6",
+            "version": "2019-10-14T19:54:59.329884Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 4906624800,
+            "indexed": false,
+            "crc32c": "322e5eba",
+            "sha1": "e556ec8b10743f8d27ea2ff304bb841bcfebe8a9",
+            "sha256": "4c77631efaa109685e125a1ae1d71d987635847e8ffc3793c3415fbae7f9bad8",
+            "s3_etag": "9ac6946c54a589788f70b7ebe9804e4a-74"
+        },
+        {
+            "name": "read-RA_si-CTAAACGG_lane-001-chunk-001_R1.fastq.gz",
+            "uuid": "2f66adc7-7d45-4c62-95e2-43ed081fa298",
+            "version": "2019-10-14T19:54:59.562610Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 1621376642,
+            "indexed": false,
+            "crc32c": "3e128fd1",
+            "sha1": "0cdd32111cfaee35aa32b55a7f63f367d34950fd",
+            "sha256": "323b5235309ba7a7f6f5878f7b443fe3f29549b911ce4fcedd0623baa40fa19a",
+            "s3_etag": "51b046396b8ac6fc469e9d9f78da9a9b-25"
+        },
+        {
+            "name": "read-RA_si-CTAAACGG_lane-001-chunk-001_R2.fastq.gz",
+            "uuid": "69f63ebc-0803-41e1-8d78-7bb7449a88c3",
+            "version": "2019-10-14T19:54:59.734557Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 4136792617,
+            "indexed": false,
+            "crc32c": "4fd56916",
+            "sha1": "551aac2c380eef8e7a3da5eac0b83f86503b28ab",
+            "sha256": "881dfc80d43c2bc607a423e79ac03d0bf81929d09daabd72eec942633035e9d5",
+            "s3_etag": "b1f0da6f62bfbeb49d48de0629207d98-62"
+        },
+        {
+            "name": "read-RA_si-CTAAACGG_lane-002-chunk-001_R1.fastq.gz",
+            "uuid": "cb6ad465-c82e-4c8c-a01a-e2d450b05605",
+            "version": "2019-10-14T19:54:59.934447Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 1599893212,
+            "indexed": false,
+            "crc32c": "de0fc438",
+            "sha1": "4063423223015e93762a7e5ee8dc6e85883a88cd",
+            "sha256": "cdd9dd55d2eb3e374ddf8b6b1b4ed788b0a5b6302f24d22993c5fe39aaf6dcd4",
+            "s3_etag": "fdfb938eda2889cc2dba13cb1bc5eb0e-24"
+        },
+        {
+            "name": "read-RA_si-CTAAACGG_lane-002-chunk-001_R2.fastq.gz",
+            "uuid": "3f9f744e-dfeb-49ad-9b6b-5bdc7711542b",
+            "version": "2019-10-14T19:55:00.076677Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 4113858243,
+            "indexed": false,
+            "crc32c": "e95cdf5d",
+            "sha1": "ee3748d6660b7280cc72424138873c31c7870031",
+            "sha256": "caf5bc60ab523e81944766b35003eab729584a3cb6558ce36028832638e780c6",
+            "s3_etag": "c256670cbd093841ef68fc191603cca5-62"
+        },
+        {
+            "name": "read-RA_si-GGTTTACT_lane-001-chunk-001_R1.fastq.gz",
+            "uuid": "02746e63-2bf3-48c4-99a9-203ae82e317f",
+            "version": "2019-10-14T19:55:00.305520Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 1594667559,
+            "indexed": false,
+            "crc32c": "96f81fb4",
+            "sha1": "44dc9ab414adc1c1941427722c84452c9c41ddea",
+            "sha256": "c7c049ad79407eaf39e70b7f70d3d7928cfc46199505df68267f23e66bd4387b",
+            "s3_etag": "0c83eb53833b9493c4412f780ac3b9f3-24"
+        },
+        {
+            "name": "read-RA_si-GGTTTACT_lane-001-chunk-001_R2.fastq.gz",
+            "uuid": "a01cfd2b-ae29-47c5-9dac-42b7faf6bedf",
+            "version": "2019-10-14T19:55:00.441246Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 4116068394,
+            "indexed": false,
+            "crc32c": "29d567b8",
+            "sha1": "2f17792796b05e659de95433680d35f568dd8e91",
+            "sha256": "7c33f8ae017cf35350dd29d51b7e7a0c8e80912384d600c09d947bcace1b5da1",
+            "s3_etag": "5b8c3b3aec8ba9e8ffd70eee13b9faad-62"
+        },
+        {
+            "name": "read-RA_si-GGTTTACT_lane-002-chunk-001_R1.fastq.gz",
+            "uuid": "9989c2fc-2220-498c-8063-a8e93f1ad563",
+            "version": "2019-10-14T19:55:00.608106Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 1588528916,
+            "indexed": false,
+            "crc32c": "48afc1c8",
+            "sha1": "e6ececfa2ed53cf663233c259ccd2829800287f5",
+            "sha256": "0610035966a6671301225d50487926ec1ecd1547fff79d09f3f68926ac9dbbef",
+            "s3_etag": "26a31d9e604a325fde07aa092c19409b-24"
+        },
+        {
+            "name": "read-RA_si-GGTTTACT_lane-002-chunk-001_R2.fastq.gz",
+            "uuid": "b45a9d83-d09e-4177-8714-b495463d4596",
+            "version": "2019-10-14T19:55:00.749690Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 4129650386,
+            "indexed": false,
+            "crc32c": "1d98f441",
+            "sha1": "7b93c6847302d664534b1872a15b8e3f726a6dcf",
+            "sha256": "2166a03cadbf5bcf30e0af9774a6704cc6f877f41376f46db080c74a6ec85620",
+            "s3_etag": "bdfc6c92408fb7f0aff3db503fa57a6d-62"
+        },
+        {
+            "name": "read-RA_si-TCGGCGTC_lane-001-chunk-001_R1.fastq.gz",
+            "uuid": "1f6f344d-734d-47dd-8c0e-4a566aece198",
+            "version": "2019-10-14T19:55:04.648167Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 2497223987,
+            "indexed": false,
+            "crc32c": "1c0e9111",
+            "sha1": "430502f754a6da91cbce55e015792c72f10cc2b2",
+            "sha256": "59b6e856c804408156af825d8e9548b9e63117dd0f26112e376fb94dd13bea64",
+            "s3_etag": "3c77c9680081c13bccfca980583aed2f-38"
+        },
+        {
+            "name": "read-RA_si-TCGGCGTC_lane-001-chunk-001_R2.fastq.gz",
+            "uuid": "3423f8f0-b9e2-4f31-941e-d811ebc810df",
+            "version": "2019-10-14T19:55:04.933666Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 6430812110,
+            "indexed": false,
+            "crc32c": "24b77b7e",
+            "sha1": "a16e39639e74466dc0fccad6c51885b336e5f840",
+            "sha256": "d3aaa198d125b6e98fc99932f74ed7d775ee0a89876536c3b2aed233f4e22a6f",
+            "s3_etag": "8f774af28c90a781fcdffa92e753f033-96"
+        },
+        {
+            "name": "read-RA_si-TCGGCGTC_lane-002-chunk-001_R1.fastq.gz",
+            "uuid": "29de4b2c-f375-4d33-8495-98f70d8580e0",
+            "version": "2019-10-14T19:55:05.154353Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 2428439248,
+            "indexed": false,
+            "crc32c": "6d970dcc",
+            "sha1": "1c7c6112ffb31446ca75512ad7ada76952507ba9",
+            "sha256": "62550be237ead5b7e073f831963150e6a05218b0a8a52322109858f6646bbf00",
+            "s3_etag": "277ab2eef75bf8b90adca3810557a038-37"
+        },
+        {
+            "name": "read-RA_si-TCGGCGTC_lane-002-chunk-001_R2.fastq.gz",
+            "uuid": "ab7aec45-0a5e-4edb-bc77-748413fd0a36",
+            "version": "2019-10-14T19:55:05.312348Z",
+            "content-type": "application/gzip; dcp-type=data",
+            "size": 6290636255,
+            "indexed": false,
+            "crc32c": "f1af22f5",
+            "sha1": "5e834c335b0d218787751a296b607653a85d1b70",
+            "sha256": "b4ff31a894fb15a28f7d9f0e54a5b8c4b8a6a5c119e1af3a54fb852a253c268f",
+            "s3_etag": "d7fa94b852fb5a9c77c531a9fc8d6954-94"
+        }
+    ],
+    "metadata": {
+        "cell_suspension_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "Lib5-1_E7.5_GFP+",
+                "biomaterial_name": "E7.5 visceral endoderm",
+                "biomaterial_description": "GFP+ Visceral endoderm 7.5 days post fertilization",
+                "ncbi_taxon_id": [
+                    10090
+                ],
+                "genotype": "Afp - GFP"
+            },
+            "genus_species": [
+                {
+                    "text": "Mus musculus",
+                    "ontology": "NCBITaxon:10090",
+                    "ontology_label": "Mus musculus"
+                }
+            ],
+            "selected_cell_types": [
+                {
+                    "text": "endodermal cell",
+                    "ontology": "CL:0000223",
+                    "ontology_label": "endodermal cell"
+                }
+            ],
+            "estimated_cell_count": 3869,
+            "provenance": {
+                "document_id": "26dd8b99-f4ad-4802-8d6d-cf372c819dcc",
+                "submission_date": "2019-10-14T19:20:08.777Z",
+                "update_date": "2019-10-14T19:20:19.330Z",
+                "schema_major_version": 13,
+                "schema_minor_version": 3
+            }
+        },
+        "specimen_from_organism_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "e7.5_visceral_and_definitive_endoderm_rep1",
+                "biomaterial_name": "E7.5 endoderm",
+                "biomaterial_description": "Visceral and definitive endoderm 7.5 days post fertilization",
+                "ncbi_taxon_id": [
+                    10090
+                ],
+                "genotype": "Afp - GFP"
+            },
+            "genus_species": [
+                {
+                    "text": "Mus musculus",
+                    "ontology": "NCBITaxon:10090",
+                    "ontology_label": "Mus musculus"
+                }
+            ],
+            "organ": {
+                "text": "endoderm",
+                "ontology": "UBERON:0000925",
+                "ontology_label": "endoderm"
+            },
+            "organ_parts": [
+                {
+                    "text": "visceral endoderm",
+                    "ontology": "UBERON:0004877",
+                    "ontology_label": "visceral endoderm"
+                },
+                {
+                    "text": "definitive endoderm",
+                    "ontology": "UBERON:0005439",
+                    "ontology_label": "definitive endoderm"
+                }
+            ],
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "efa34a7f-6a0b-4728-9038-b947d47a63c6",
+                "submission_date": "2019-10-14T19:20:08.635Z",
+                "update_date": "2019-10-14T19:20:15.694Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 4
+            }
+        },
+        "donor_organism_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "donor_5",
+                "biomaterial_name": "pregnant mouse  E7.5 Afp-GFPTG/+12 mouse",
+                "biomaterial_description": "Mouse with Afp GFP reporter",
+                "ncbi_taxon_id": [
+                    10090
+                ],
+                "genotype": "Afp - GFP"
+            },
+            "mouse_specific": {
+                "strain": [
+                    {
+                        "text": "Afp - GFP mouse",
+                        "ontology": "EFO:0010081",
+                        "ontology_label": "Afp-GFP"
+                    }
+                ]
+            },
+            "genus_species": [
+                {
+                    "text": "Mus musculus",
+                    "ontology": "NCBITaxon:10090",
+                    "ontology_label": "Mus musculus"
+                }
+            ],
+            "sex": "female",
+            "is_living": "no",
+            "organism_age": "4-6",
+            "organism_age_unit": {
+                "text": "week",
+                "ontology": "UO:0000034",
+                "ontology_label": "week"
+            },
+            "development_stage": {
+                "text": "early adult stage",
+                "ontology": "EFO:0001272",
+                "ontology_label": "adult"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "a53d95b5-d1c7-4548-b2c0-479788085ab8",
+                "submission_date": "2019-10-14T19:20:08.564Z",
+                "update_date": "2019-10-14T19:20:15.294Z",
+                "schema_major_version": 15,
+                "schema_minor_version": 5
+            }
+        },
+        "sequence_file_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 1,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "c0a69095-57ba-4eca-8cc7-fed514f35f43",
+                "submission_date": "2019-10-14T19:20:08.985Z",
+                "update_date": "2019-10-14T19:24:39.051Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_1.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 1,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "4a9b689f-5aad-4c30-b347-7b0d52ab3ecb",
+                "submission_date": "2019-10-14T19:20:08.992Z",
+                "update_date": "2019-10-14T19:27:28.475Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_2.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-AACCGTAA_lane-002-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 2,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "6fc876bc-5a8a-445c-8b41-77526203973b",
+                "submission_date": "2019-10-14T19:20:09Z",
+                "update_date": "2019-10-14T19:25:37.567Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_3.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-AACCGTAA_lane-002-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 2,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "d47c381f-cef0-432a-b2bb-49fb7a546ac1",
+                "submission_date": "2019-10-14T19:20:09.008Z",
+                "update_date": "2019-10-14T19:27:24.178Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_4.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-CTAAACGG_lane-001-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 1,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "b2a466dd-9de4-428c-9eda-f779d9ad672f",
+                "submission_date": "2019-10-14T19:20:11.279Z",
+                "update_date": "2019-10-14T19:36:29.173Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_5.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-CTAAACGG_lane-001-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 1,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "86102761-0ba7-43b6-a442-666db1296154",
+                "submission_date": "2019-10-14T19:20:11.287Z",
+                "update_date": "2019-10-14T19:37:58.671Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_6.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-CTAAACGG_lane-002-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 2,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "0c4b6682-12ab-46e7-9756-07ec104b14b1",
+                "submission_date": "2019-10-14T19:20:11.295Z",
+                "update_date": "2019-10-14T19:36:28.957Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_7.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-CTAAACGG_lane-002-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 2,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "f31358bc-064c-4185-ae23-af044804d591",
+                "submission_date": "2019-10-14T19:20:11.305Z",
+                "update_date": "2019-10-14T19:37:57.258Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_8.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-GGTTTACT_lane-001-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 1,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "a652744c-2d55-4181-b903-db411fa589b4",
+                "submission_date": "2019-10-14T19:20:12.223Z",
+                "update_date": "2019-10-14T19:37:49.258Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_9.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-GGTTTACT_lane-001-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 1,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "da3b3aa5-3bea-441b-b1d0-022f842ddda6",
+                "submission_date": "2019-10-14T19:20:12.231Z",
+                "update_date": "2019-10-14T19:39:50.546Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_10.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-GGTTTACT_lane-002-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 2,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "96ae6850-32c6-4d89-87cb-2f5005ac65aa",
+                "submission_date": "2019-10-14T19:20:12.239Z",
+                "update_date": "2019-10-14T19:37:50.076Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_11.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-GGTTTACT_lane-002-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 2,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "bb4b0758-444b-48c3-89a6-9ddcf61fe912",
+                "submission_date": "2019-10-14T19:20:12.247Z",
+                "update_date": "2019-10-14T19:39:50.982Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_12.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-TCGGCGTC_lane-001-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 1,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "b4308ad2-8a51-4b1e-95a3-da961a13dd70",
+                "submission_date": "2019-10-14T19:20:13.159Z",
+                "update_date": "2019-10-14T19:40:10.497Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_13.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-TCGGCGTC_lane-001-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 1,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "2fa236c1-deb5-48a8-9961-3e2ee5cae2db",
+                "submission_date": "2019-10-14T19:20:13.167Z",
+                "update_date": "2019-10-14T19:43:37.367Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_14.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-TCGGCGTC_lane-002-chunk-001_R1.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read1",
+            "lane_index": 2,
+            "read_length": 26,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "ff664ba7-b1f9-4fd2-b6ae-a12eb0111721",
+                "submission_date": "2019-10-14T19:20:13.174Z",
+                "update_date": "2019-10-14T19:40:08.673Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "sequence_file_15.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "read-RA_si-TCGGCGTC_lane-002-chunk-001_R2.fastq.gz",
+                "format": "fastq.gz",
+                "content_description": [
+                    {
+                        "text": "DNA sequence (raw)",
+                        "ontology": "data:3494",
+                        "ontology_label": "DNA sequence"
+                    }
+                ]
+            },
+            "read_index": "read2",
+            "lane_index": 2,
+            "read_length": 98,
+            "library_prep_id": "Lib5-1",
+            "provenance": {
+                "document_id": "899e967e-06c8-49d9-bd3f-4bef8d04e22b",
+                "submission_date": "2019-10-14T19:20:13.182Z",
+                "update_date": "2019-10-14T19:43:38.487Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "project_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+            "schema_type": "project",
+            "project_core": {
+                "project_short_name": "Mouse Endoderm Project",
+                "project_title": "The emergent landscape of the mouse gut endoderm at single-cell resolution",
+                "project_description": "To delineate the ontogeny of the mammalian endoderm, we generated 112,217 single-cell transcriptomes representing all endoderm populations within the mouse embryo until midgestation. By employing graph-based approaches, we modelled differentiating cells for spatio-temporal characterization of developmental trajectories and defined the transcriptional architecture that accompanies the emergence of the first (primitive or extra-embryonic) endodermal population and its sister pluripotent (embryonic) epiblast lineage. We uncovered a relationship between descendants of these two lineages, whereby epiblast cells differentiate into endoderm at two distinct time-points, before and during gastrulation. Trajectories of endoderm cells were mapped as they acquired embryonic versus extra-embryonic fates, and as they spatially converged within the nascent gut endoderm; revealing them to be globally similar but retaining aspects of their lineage history. We observed the regionalized identity of cells along the anterior-posterior axis of the emergent gut tube, reflecting their embryonic or extra-embryonic origin, and their coordinate patterning into organ-specific territories."
+            },
+            "supplementary_links": [
+                "https://github.com/dpeerlab/Harmony"
+            ],
+            "insdc_project_accessions": [
+                "SRP171031",
+                "SRP171152"
+            ],
+            "geo_series_accessions": [
+                "GSE123046",
+                "GSE123124"
+            ],
+            "insdc_study_accessions": [
+                "PRJNA507618"
+            ],
+            "contributors": [
+                {
+                    "name": "Sonja,, Nowotschin",
+                    "email": "nowotscs@mskcc.org",
+                    "phone": "2126398215",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental lead",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Manu,, Setty",
+                    "email": "settym@mskcc.org",
+                    "phone": "6468883486",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Computational and Systems Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": true,
+                    "project_role": {
+                        "text": "computational lead",
+                        "ontology": "EFO:0009742",
+                        "ontology_label": "computational scientist"
+                    }
+                },
+                {
+                    "name": "Ying-Yi,, Kuo",
+                    "email": "kuoy@mskcc.org",
+                    "phone": "2126398215",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental scientist",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Vincent,, Liu",
+                    "email": "vincent.liu@columbia.edu",
+                    "phone": "6468883486",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Computational and Systems Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "computational scientist",
+                        "ontology": "EFO:0009742",
+                        "ontology_label": "computational scientist"
+                    }
+                },
+                {
+                    "name": "Vidur,, Garg",
+                    "email": "vig2013@med.cornell.edu",
+                    "phone": "2126398215",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental scientist",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Roshan,, Sharma",
+                    "email": "rs3380@columbia.edu",
+                    "phone": "6468883486",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Computational and Systems Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "computational scientist",
+                        "ontology": "EFO:0009742",
+                        "ontology_label": "computational scientist"
+                    }
+                },
+                {
+                    "name": "Claire, S, Simon",
+                    "email": "simonc@mskcc.org",
+                    "phone": "2126398215",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental scientist",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Nestor,, Saiz",
+                    "email": "saizaren@mskcc.org",
+                    "phone": "2126398215",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental scientist",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Rui,, Gardner",
+                    "email": "skifccfconsult@mskcc.org",
+                    "phone": "6468882369",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental scientist",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Stephane, C, Boutet",
+                    "email": "stephane.boutet@10xgenomics.com",
+                    "phone": "9252645551",
+                    "institution": "10X Genomics",
+                    "address": "7068 Koll Center Parkway, Suite 401 Pleasanton, CA 94566",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "experimental scientist",
+                        "ontology": "EFO:0009741",
+                        "ontology_label": "experimental scientist"
+                    }
+                },
+                {
+                    "name": "Deanna, M, Church",
+                    "email": "deanna.church@gmail.com",
+                    "institution": "10X Genomics",
+                    "address": "7068 Koll Center Parkway, Suite 401 Pleasanton, CA 94566",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "investigator",
+                        "ontology": "EFO:0001739",
+                        "ontology_label": "investigator"
+                    }
+                },
+                {
+                    "name": "Pamela, A, Hoodless",
+                    "email": "hoodless@bccrc.ca",
+                    "phone": "6046758133",
+                    "institution": "Terry Fox Laboratory, BC Cancer Agency",
+                    "laboratory": "Medical Genetics",
+                    "address": "675 West 10th Avenue Vancouver, BC V5Z 1L3",
+                    "country": "Canada",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "investigator",
+                        "ontology": "EFO:0001739",
+                        "ontology_label": "investigator"
+                    }
+                },
+                {
+                    "name": "Anna-Katerina,, Hadjantonakis",
+                    "email": "hadj@mskcc.org",
+                    "phone": "2126398215",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Developmental Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": true,
+                    "project_role": {
+                        "text": "principal investigator",
+                        "ontology": "EFO:0009736",
+                        "ontology_label": "principal investigator"
+                    }
+                },
+                {
+                    "name": "Dana,,Pe'er",
+                    "email": "peerd@mskcc.org",
+                    "phone": "6468883486",
+                    "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                    "laboratory": "Computational and Systems Biology Program",
+                    "address": "1275 York Ave, New York, NY",
+                    "country": "USA",
+                    "corresponding_contributor": true,
+                    "project_role": {
+                        "text": "principal investigator",
+                        "ontology": "EFO:0009736",
+                        "ontology_label": "principal investigator"
+                    }
+                },
+                {
+                    "name": "Parisa,,Nejad",
+                    "email": "pnejad@ucsc.edu",
+                    "institution": "University of California, Santa Cruz",
+                    "laboratory": "Human Cell Atlas Data Coordination Platform",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "data curator",
+                        "ontology": "EFO:0009737",
+                        "ontology_label": "data curator"
+                    }
+                },
+                {
+                    "name": "William,,Sullivan",
+                    "email": "wisulliv@ucsc.edu",
+                    "institution": "University of California, Santa Cruz",
+                    "laboratory": "Human Cell Atlas Data Coordination Platform",
+                    "country": "USA",
+                    "corresponding_contributor": false,
+                    "project_role": {
+                        "text": "data curator",
+                        "ontology": "EFO:0009737",
+                        "ontology_label": "data curator"
+                    }
+                }
+            ],
+            "publications": [
+                {
+                    "authors": [
+                        "Sonja Nowotschin, Manu Setty, Ying-Yi Kuo, Vincent Liu, Vidur Garg, Roshan Sharma, Claire S. Simon, Nestor Saiz, Rui Gardner, St\u00e9phane C. Boutet, Deanna M. Church, Pamela A. Hoodless, Anna-Katerina Hadjantonakis, Dana Pe'er"
+                    ],
+                    "title": "The emergent landscape of the mouse gut endoderm at single-cell resolution",
+                    "doi": "10.1038/s41586-019-1127-1",
+                    "pmid": 30959515,
+                    "url": "https://www.nature.com/articles/s41586-019-1127-1"
+                }
+            ],
+            "funders": [
+                {
+                    "grant_id": "R01-DK084391",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "R01-HD094868",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "DP1-HD084071",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "R01-CA164729",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "P30-CA008748",
+                    "organization": "National Institutes of Health"
+                },
+                {
+                    "grant_id": "MSKCC Society for Special Projects and Functional Genomics Initiative",
+                    "organization": "MSKCC"
+                },
+                {
+                    "grant_id": "RGPIN-2018-05018",
+                    "organization": "NSERC"
+                }
+            ],
+            "provenance": {
+                "document_id": "4e6f083b-5b9a-4393-9890-2a83da8188f1",
+                "submission_date": "2019-10-14T19:20:08.530Z",
+                "update_date": "2019-10-14T19:20:15.147Z",
+                "schema_major_version": 14,
+                "schema_minor_version": 1
+            }
+        },
+        "library_preparation_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "library_prep_1",
+                "protocol_name": "Single cell library prep",
+                "protocol_description": "Single cells were spun at 450g for 4 min at room temperature, and cell numbers determined using a Neubauer hemocytometer. For pre-implantation embryo dissociations, embryos were incubated in 0.5% Trypsin-EDTA (Invitrogen) at 37\u00b0C for 3 minutes before transferring to PBS supplemented with 0.5mM EDTA (Invitrogen) and 4% BSA (Sigma) for mechanical dissociations. Trypsin-treated embryos were dissociated by trituration with pulled capillaries and mouth-pipetting. Dissociated cells were stored in FHM on ice until loading on a Chromium Controller (10x Genomics). Cells were counted and diluted to a final concentration in DMEM/F12, 10% Fetal Bovine Serum in Single Cell Master Mix (10x Genomics). Cellular suspensions were loaded on a Chromium Controller54 targeting a 2,500-10,000 cell range, depending on tissue type and embryo stage, to generate single cell 3\u2019 RNA-seq libraries, in duplicate or triplicate. Single-cell 3\u2019 RNA-seq libraries were generated following manufacturer\u2019s instructions (10x Genomics Chromium Single Cell 3\u2019 Reagent Kit User Guide v2 Chemistry)."
+            },
+            "cell_barcode": {
+                "barcode_read": "Read 1",
+                "barcode_offset": 0,
+                "barcode_length": 16,
+                "white_list_file": "barcode_whitelist_file.txt"
+            },
+            "input_nucleic_acid_molecule": {
+                "text": "polyA RNA",
+                "ontology": "OBI:0000869",
+                "ontology_label": "polyA RNA"
+            },
+            "nucleic_acid_source": "single cell",
+            "library_construction_method": {
+                "text": "10X v2 sequencing",
+                "ontology": "EFO:0009310",
+                "ontology_label": "10X v2 sequencing"
+            },
+            "end_bias": "3 prime tag",
+            "primer": "poly-dT",
+            "strand": "first",
+            "umi_barcode": {
+                "barcode_read": "Read 1",
+                "barcode_offset": 0,
+                "barcode_length": 16
+            },
+            "library_preamplification_method": {
+                "text": "in vitro transcription"
+            },
+            "cdna_library_amplification_method": {
+                "text": "PCR"
+            },
+            "nominal_length": 800,
+            "provenance": {
+                "document_id": "58df9607-ab66-48e0-a47b-1f897baae139",
+                "submission_date": "2019-10-14T19:20:08.904Z",
+                "update_date": "2019-10-14T19:20:14.102Z",
+                "schema_major_version": 6,
+                "schema_minor_version": 2
+            }
+        },
+        "sequencing_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "sequencing_protocol_1",
+                "protocol_name": "Sequencing protocol",
+                "protocol_description": "Single-cell 3\u2019 RNA-seq libraries were quantified on an Agilent Bioanalyzer with high sensitivity chip (Agilent), and Kapa DNA quantification kit for Illumina platforms (Roche). Libraries were pooled according to target cell number loaded. To determine the exact number of cells in each library, libraries were sequenced at low depth (2,000 reads per cell) and short reads (40 bp). Sequencing libraries were loaded at 12 pM on an Illumina HiSeq 2500 with 1x Rapid SBS kit v2 (50 cycles) using the following read length: 26 bp Read1, 8 bp I7 Index and 40 bp Read2. After sequencing, the number of cells in each single cell 3\u2019 library was calculated using the Cell Ranger analysis pipeline V2.1 (10x Genomics). Library pools were re-made according to the actual number of cells determined in each library for sequencing at a depth of ~200,000 reads per cell and the capacity of an Illumina NovaSeq flow cell. New pools were loaded on an Illumina NovaSeq 6000 using 2x NovaSeq 6000 S2 reagent kits (200 cycles) and 1x NovaSeq 6000 S4 reagent kits (300 cycles) using the following read length: 26 bp Read1, 8 bp I7 Index and 98 bp Read2."
+            },
+            "instrument_manufacturer_model": {
+                "text": "Illumina Novaseq 6000",
+                "ontology": "EFO:0008637",
+                "ontology_label": "Illumina NovaSeq 6000"
+            },
+            "paired_end": true,
+            "method": {
+                "ontology_label": "tag based single cell RNA sequencing",
+                "ontology": "EFO:0008440",
+                "text": "tag based single cell RNA sequencing"
+            },
+            "10x": {
+                "fastq_method": "Cellranger mkfastq",
+                "fastq_method_version": "Cellranger 2.1"
+            },
+            "provenance": {
+                "document_id": "6282594c-1b9d-4f26-a4f3-a26066878740",
+                "submission_date": "2019-10-14T19:20:08.910Z",
+                "update_date": "2019-10-14T19:20:14.184Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 1
+            }
+        },
+        "dissociation_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "dissociation_protocol_2",
+                "protocol_name": "E6.5 and E7.5 dissociation",
+                "protocol_description": "To obtain single cells from E6.5 and E7.5, embryos were washed in three drops of DMEM/F12 on ice and incubated in Pancreatin/Trypsin (2.5% Pancreatin / 0.25% Trypsin in PBS) for 3 min (E7.5) and 45s (E6.5) on ice and then washed in three drops of DMEM/F12, 10% Newborn Calf Serum on ice. The endoderm layer was teased apart using Tungsten needles and washed in cold DMEM/F12, then incubated for 20 min at 37\u00b0C in Accutase/0.25% Trypsin (1:2)."
+            },
+            "method": {
+                "text": "enzymatic dissociation",
+                "ontology": "EFO:0009128",
+                "ontology_label": "enzymatic dissociation"
+            },
+            "provenance": {
+                "document_id": "acaf2d60-e6fb-4381-a81e-2fec565fc8fa",
+                "submission_date": "2019-10-14T19:20:08.888Z",
+                "update_date": "2019-10-14T19:20:13.886Z",
+                "schema_major_version": 6,
+                "schema_minor_version": 2
+            }
+        },
+        "enrichment_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "enrichment_protocol_1",
+                "protocol_name": "GFP sorting for VE and DE cells",
+                "protocol_description": "Single cells recovered from E7.5 endoderm (comprising VE and DE), as well as E8.75 gut tube, ParE, and yolk sac (YsE) were resuspended in serum-free DMEM/F12 medium and sorted prior to scRNA-seq using a SORP FACSAria IIu (BD Biosciences), with a 100 \u00b5m nozzle at 137.9 kPa (20 psi) in Purity mode. Cell suspensions were sorted based on GFP content, with both GFP-positive and GFP-negative fractions collected, and dead cells excluded using Ethidium Homodimer-1 (Ethd-1, 4 \u03bcM, ThermoFisher). Debris was excluded from YsE and ParE cell suspensions by selecting Calcein Violet (0.05 \u03bcM, ThermoFisher) and excluding Ethd-1 positive events. GFP, Calcein Violet, Ethd-1, and were excited at 488, 561, and 405 nm respectively, and detected using 530/50, 582/15, and 450/50 nm band-pass filters, respectively."
+            },
+            "method": {
+                "text": "fluorescence-activated cell sorting",
+                "ontology": "EFO:0009108",
+                "ontology_label": "fluorescence-activated cell sorting"
+            },
+            "markers": "GFP, Calcein Violet, Ethd-1",
+            "provenance": {
+                "document_id": "1c9774bf-979a-4023-9756-b297cba4e371",
+                "submission_date": "2019-10-14T19:20:08.899Z",
+                "update_date": "2019-10-14T19:20:13.993Z",
+                "schema_major_version": 3,
+                "schema_minor_version": 1
+            }
+        },
+        "collection_protocol_0.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "protocol_2",
+                "protocol_name": "Collection of post implantation embryos",
+                "protocol_description": "Mice were housed under a 12-hour light/dark cycle. Natural matings were set-up between males and 4-6 week-old virgin females, with noon of the day of vaginal plug considered embryonic day (E) 0.5. Embryos were dissected in DMEM/F12, 5% Newborn Calf Serum (Life Technologies) and staged according to Downs and Davies52 or by somite number."
+            },
+            "method": {
+                "text": "dissection",
+                "ontology": "EFO:0003856",
+                "ontology_label": "dissection"
+            },
+            "provenance": {
+                "document_id": "e95ebc23-53b9-48a0-acd4-185969122f2d",
+                "submission_date": "2019-10-14T19:20:08.866Z",
+                "update_date": "2019-10-14T19:20:13.961Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "collection_protocol_1.json": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "protocol_3",
+                "protocol_name": "Collection of endoderm from embryos",
+                "protocol_description": "The endoderm layer was teased apart using tungsten needles and washed in cold DMEM/F12"
+            },
+            "method": {
+                "text": "dissection",
+                "ontology": "EFO:0003856",
+                "ontology_label": "dissection"
+            },
+            "provenance": {
+                "document_id": "6ec6ce63-3c6f-41d1-a616-5ebb20fe9a8b",
+                "submission_date": "2019-10-14T19:20:08.872Z",
+                "update_date": "2019-10-14T19:20:13.874Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process_0.json": {
+            "process_core": {
+                "process_id": "Lib5-1"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "c56e2990-d6a0-40f5-add2-793bc1f12d69",
+                "submission_date": "2019-10-14T19:20:14.965Z",
+                "update_date": "2019-10-14T19:20:29.246Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process_1.json": {
+            "process_core": {
+                "process_id": "process_id_37"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "6a14efb0-0c28-421f-968b-5fc022df2395",
+                "submission_date": "2019-10-14T19:20:14.820Z",
+                "update_date": "2019-10-14T19:20:28.063Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process_2.json": {
+            "process_core": {
+                "process_id": "process_id_12"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "055b2189-7f89-4392-be1d-28a7274fe563",
+                "submission_date": "2019-10-14T19:20:14.628Z",
+                "update_date": "2019-10-14T19:20:27.578Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "links.json": {
+            "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+            "schema_type": "link_bundle",
+            "schema_version": "1.1.5",
+            "links": [
+                {
+                    "process": "c56e2990-d6a0-40f5-add2-793bc1f12d69",
+                    "inputs": [
+                        "26dd8b99-f4ad-4802-8d6d-cf372c819dcc"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "c0a69095-57ba-4eca-8cc7-fed514f35f43",
+                        "4a9b689f-5aad-4c30-b347-7b0d52ab3ecb",
+                        "6fc876bc-5a8a-445c-8b41-77526203973b",
+                        "d47c381f-cef0-432a-b2bb-49fb7a546ac1",
+                        "b2a466dd-9de4-428c-9eda-f779d9ad672f",
+                        "86102761-0ba7-43b6-a442-666db1296154",
+                        "0c4b6682-12ab-46e7-9756-07ec104b14b1",
+                        "f31358bc-064c-4185-ae23-af044804d591",
+                        "a652744c-2d55-4181-b903-db411fa589b4",
+                        "da3b3aa5-3bea-441b-b1d0-022f842ddda6",
+                        "96ae6850-32c6-4d89-87cb-2f5005ac65aa",
+                        "bb4b0758-444b-48c3-89a6-9ddcf61fe912",
+                        "b4308ad2-8a51-4b1e-95a3-da961a13dd70",
+                        "2fa236c1-deb5-48a8-9961-3e2ee5cae2db",
+                        "ff664ba7-b1f9-4fd2-b6ae-a12eb0111721",
+                        "899e967e-06c8-49d9-bd3f-4bef8d04e22b"
+                    ],
+                    "output_type": "file",
+                    "protocols": [
+                        {
+                            "protocol_type": "library_preparation_protocol",
+                            "protocol_id": "58df9607-ab66-48e0-a47b-1f897baae139"
+                        },
+                        {
+                            "protocol_type": "sequencing_protocol",
+                            "protocol_id": "6282594c-1b9d-4f26-a4f3-a26066878740"
+                        }
+                    ]
+                },
+                {
+                    "process": "6a14efb0-0c28-421f-968b-5fc022df2395",
+                    "inputs": [
+                        "efa34a7f-6a0b-4728-9038-b947d47a63c6"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "26dd8b99-f4ad-4802-8d6d-cf372c819dcc"
+                    ],
+                    "output_type": "biomaterial",
+                    "protocols": [
+                        {
+                            "protocol_type": "dissociation_protocol",
+                            "protocol_id": "acaf2d60-e6fb-4381-a81e-2fec565fc8fa"
+                        },
+                        {
+                            "protocol_type": "enrichment_protocol",
+                            "protocol_id": "1c9774bf-979a-4023-9756-b297cba4e371"
+                        }
+                    ]
+                },
+                {
+                    "process": "055b2189-7f89-4392-be1d-28a7274fe563",
+                    "inputs": [
+                        "a53d95b5-d1c7-4548-b2c0-479788085ab8"
+                    ],
+                    "input_type": "biomaterial",
+                    "outputs": [
+                        "efa34a7f-6a0b-4728-9038-b947d47a63c6"
+                    ],
+                    "output_type": "biomaterial",
+                    "protocols": [
+                        {
+                            "protocol_type": "collection_protocol",
+                            "protocol_id": "e95ebc23-53b9-48a0-acd4-185969122f2d"
+                        },
+                        {
+                            "protocol_type": "collection_protocol",
+                            "protocol_id": "6ec6ce63-3c6f-41d1-a616-5ebb20fe9a8b"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

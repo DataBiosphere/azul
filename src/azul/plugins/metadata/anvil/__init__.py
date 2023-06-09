@@ -6,14 +6,14 @@ from typing import (
     Type,
 )
 
-from azul.indexer import (
-    Bundle,
-)
 from azul.plugins import (
     DocumentSlice,
     ManifestConfig,
     MetadataPlugin,
     Sorting,
+)
+from azul.plugins.metadata.anvil.bundle import (
+    AnvilBundle,
 )
 from azul.plugins.metadata.anvil.indexer.transform import (
     ActivityTransformer,
@@ -42,7 +42,7 @@ from azul.types import (
 )
 
 
-class Plugin(MetadataPlugin):
+class Plugin(MetadataPlugin[AnvilBundle]):
 
     @property
     def exposed_indices(self) -> Mapping[str, Sorting]:
@@ -67,7 +67,11 @@ class Plugin(MetadataPlugin):
             FileTransformer,
         )
 
-    def transformers(self, bundle: Bundle, *, delete: bool) -> Iterable[BaseTransformer]:
+    def transformers(self,
+                     bundle: AnvilBundle,
+                     *,
+                     delete: bool
+                     ) -> Iterable[BaseTransformer]:
         return [
             transformer_cls(bundle=bundle, deleted=delete)
             for transformer_cls in self.transformer_types()

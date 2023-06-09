@@ -111,6 +111,9 @@ from azul.indexer import (
     SourceRef,
     SourcedBundleFQID,
 )
+from azul.indexer.document import (
+    EntityReference,
+)
 from azul.indexer.index_service import (
     IndexExistsAndDiffersException,
     IndexService,
@@ -126,6 +129,9 @@ from azul.modules import (
 from azul.plugins import (
     MetadataPlugin,
     RepositoryPlugin,
+)
+from azul.plugins.metadata.anvil.bundle import (
+    Link,
 )
 from azul.plugins.repository.tdr import (
     TDRSourceRef,
@@ -1479,35 +1485,40 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                              uuid=fqid.uuid,
                              version=fqid.version,
                              output_dir=d)
+            generated_file = one(os.listdir(d))
+            with open(os.path.join(d, generated_file)) as f:
+                bundle_json = json.load(f)
 
-            def file_name(part):
-                return f'{fqid.uuid}.{part}.json'
+            metadata_plugin_name = catalog.plugins['metadata'].name
+            if metadata_plugin_name == 'hca':
+                self.assertEqual({'manifest', 'metadata'}, bundle_json.keys())
+                manifest, metadata = bundle_json['manifest'], bundle_json['metadata']
+                self.assertIsInstance(manifest, list)
+                self.assertIsInstance(metadata, dict)
+                manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
+                metadata_files = sorted(metadata.keys())
 
-            manifest_file_name = file_name('manifest')
-            metadata_file_name = file_name('metadata')
-            expected_files = sorted([manifest_file_name, metadata_file_name])
-            generated_files = sorted(os.listdir(d))
-            self.assertListEqual(generated_files, expected_files)
+                if catalog.plugins['repository'].name == 'canned':
+                    # FIXME: Manifest entry not generated for links.json by
+                    #        StagingArea.get_bundle
+                    #        https://github.com/DataBiosphere/hca-metadata-api/issues/52
+                    assert 'links.json' not in manifest_files
+                    metadata_files.remove('links.json')
 
-            with open(f'{d}/{manifest_file_name}') as f:
-                manifest = json.load(f)
-            with open(f'{d}/{metadata_file_name}') as f:
-                metadata = json.load(f)
-
-            self.assertIsInstance(manifest, list)
-            self.assertIsInstance(metadata, dict)
-
-            manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
-            metadata_files = sorted(metadata.keys())
-
-            if catalog.plugins['repository'].name == 'canned':
-                # FIXME: Manifest entry not generated for links.json by
-                #        StagingArea.get_bundle
-                #        https://github.com/DataBiosphere/hca-metadata-api/issues/52
-                assert 'links.json' not in manifest_files
-                metadata_files.remove('links.json')
-
-            self.assertListEqual(manifest_files, metadata_files)
+                self.assertListEqual(manifest_files, metadata_files)
+            elif metadata_plugin_name == 'anvil':
+                self.assertEqual({'entities', 'links'}, bundle_json.keys())
+                entities, links = bundle_json['entities'], bundle_json['links']
+                self.assertIsInstance(entities, dict)
+                self.assertIsInstance(links, list)
+                entities = set(map(EntityReference.parse, entities.keys()))
+                linked_entities = frozenset.union(*(
+                    Link.from_json(link).all_entities
+                    for link in links
+                ))
+                self.assertEqual(entities, linked_entities)
+            else:
+                assert False, metadata_plugin_name
 
     def test_can_bundle_configured_catalogs(self):
         for catalog_name, catalog in config.catalogs.items():

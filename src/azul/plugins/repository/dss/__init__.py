@@ -39,7 +39,6 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
-    Bundle,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -47,6 +46,9 @@ from azul.indexer import (
 from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
+)
+from azul.plugins.metadata.hca.bundle import (
+    HCABundle,
 )
 from azul.time import (
     parse_dcp2_version,
@@ -80,7 +82,11 @@ class DSSBundleFQID(SourcedBundleFQID[DSSSourceRef]):
     pass
 
 
-class DSSBundle(Bundle[DSSBundleFQID]):
+class DSSBundle(HCABundle[DSSBundleFQID]):
+
+    @classmethod
+    def canning_qualifier(cls) -> str:
+        return 'dss.hca'
 
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
@@ -88,7 +94,7 @@ class DSSBundle(Bundle[DSSBundleFQID]):
         return str(furl(path=(file_uuid,), args={'version': file_version}))
 
 
-class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
+class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:

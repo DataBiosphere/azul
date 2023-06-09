@@ -1,0 +1,710 @@
+{
+    "manifest": [
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "project_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 4353,
+            "uuid": "90bf705c-d891-5ce2-aa54-094488b445c6",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "process_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 388,
+            "uuid": "8c1773c3-1885-545f-9381-0dab1edf6074",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "process_1.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 388,
+            "uuid": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "process_2.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 388,
+            "uuid": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "imaged_specimen_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 509,
+            "uuid": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "sequence_file_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 456,
+            "uuid": "31786d8d-d046-58d1-b7b4-49bc1114a0f8",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/octet-stream; dcp-type=data",
+            "crc32c": "50660f48",
+            "indexed": false,
+            "name": "6330STDY9479159_S1_L001_I1_001.fastq.gz",
+            "s3_etag": "4d20b082c378011bd1049f0308c94286",
+            "sha1": "a986254427c3fc3bb80af5efadac21ef5fec0043",
+            "sha256": "50f5bb493c1291e6c1b5c716963b7bd5c9a8158b3c26561d00c5ee0ae2dc4d64",
+            "size": 185,
+            "uuid": "92855c6f-2807-50b6-a2a4-19b13c71aa65",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "sequence_file_1.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 455,
+            "uuid": "6a0e071d-9bfc-5e12-b1b9-e887885e12f6",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/octet-stream; dcp-type=data",
+            "crc32c": "50660f48",
+            "indexed": false,
+            "name": "6330STDY9479159_S1_L001_R1_001.fastq.gz",
+            "s3_etag": "4d20b082c378011bd1049f0308c94286",
+            "sha1": "a986254427c3fc3bb80af5efadac21ef5fec0043",
+            "sha256": "50f5bb493c1291e6c1b5c716963b7bd5c9a8158b3c26561d00c5ee0ae2dc4d64",
+            "size": 185,
+            "uuid": "c2fe321a-487d-5e53-83d3-766aad105c4f",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "sequence_file_2.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 455,
+            "uuid": "f6abda5c-65f3-5015-8167-ae78b96f5693",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/octet-stream; dcp-type=data",
+            "crc32c": "50660f48",
+            "indexed": false,
+            "name": "6330STDY9479159_S1_L001_R2_001.fastq.gz",
+            "s3_etag": "4d20b082c378011bd1049f0308c94286",
+            "sha1": "a986254427c3fc3bb80af5efadac21ef5fec0043",
+            "sha256": "50f5bb493c1291e6c1b5c716963b7bd5c9a8158b3c26561d00c5ee0ae2dc4d64",
+            "size": 185,
+            "uuid": "b613022f-86b4-50ab-9ca2-7dfe2bc27bef",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "library_preparation_protocol_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 1289,
+            "uuid": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "sequencing_protocol_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 945,
+            "uuid": "1b8dfafd-178f-5826-a661-8a022334aaeb",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "specimen_from_organism_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 770,
+            "uuid": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "imaging_preparation_protocol_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 639,
+            "uuid": "7cd840db-f395-5a61-bd17-72c2b2319c23",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "donor_organism_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 879,
+            "uuid": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        {
+            "content-type": "application/json;",
+            "crc32c": "00000000",
+            "indexed": true,
+            "name": "collection_protocol_0.json",
+            "s3_etag": null,
+            "sha1": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "size": 2167,
+            "uuid": "c5752f73-3511-55e1-95af-040ab3924bce",
+            "version": "2021-01-01T00:00:00.000000Z"
+        }
+    ],
+    "metadata": {
+        "links.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.1.0/links",
+            "links": [
+                {
+                    "inputs": [
+                        {
+                            "input_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
+                            "input_type": "imaged_specimen"
+                        }
+                    ],
+                    "link_type": "process_link",
+                    "outputs": [
+                        {
+                            "output_id": "31786d8d-d046-58d1-b7b4-49bc1114a0f8",
+                            "output_type": "sequence_file"
+                        },
+                        {
+                            "output_id": "6a0e071d-9bfc-5e12-b1b9-e887885e12f6",
+                            "output_type": "sequence_file"
+                        },
+                        {
+                            "output_id": "f6abda5c-65f3-5015-8167-ae78b96f5693",
+                            "output_type": "sequence_file"
+                        }
+                    ],
+                    "process_id": "8c1773c3-1885-545f-9381-0dab1edf6074",
+                    "process_type": "process",
+                    "protocols": [
+                        {
+                            "protocol_id": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
+                            "protocol_type": "library_preparation_protocol"
+                        },
+                        {
+                            "protocol_id": "1b8dfafd-178f-5826-a661-8a022334aaeb",
+                            "protocol_type": "sequencing_protocol"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "input_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
+                            "input_type": "specimen_from_organism"
+                        }
+                    ],
+                    "link_type": "process_link",
+                    "outputs": [
+                        {
+                            "output_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
+                            "output_type": "imaged_specimen"
+                        }
+                    ],
+                    "process_id": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
+                    "process_type": "process",
+                    "protocols": [
+                        {
+                            "protocol_id": "7cd840db-f395-5a61-bd17-72c2b2319c23",
+                            "protocol_type": "imaging_preparation_protocol"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "input_id": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
+                            "input_type": "donor_organism"
+                        }
+                    ],
+                    "link_type": "process_link",
+                    "outputs": [
+                        {
+                            "output_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
+                            "output_type": "specimen_from_organism"
+                        }
+                    ],
+                    "process_id": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
+                    "process_type": "process",
+                    "protocols": [
+                        {
+                            "protocol_id": "c5752f73-3511-55e1-95af-040ab3924bce",
+                            "protocol_type": "collection_protocol"
+                        }
+                    ]
+                }
+            ],
+            "schema_type": "links",
+            "schema_version": "3.1.0"
+        },
+        "project_0.json": {
+            "array_express_accessions": [
+                "E-MTAB-10026"
+            ],
+            "contributors": [
+                {
+                    "corresponding_contributor": true,
+                    "email": "m.a.haniffa@ncl.ac.uk",
+                    "institution": "Newcastle University",
+                    "name": "Muzlifah,,Hannifa",
+                    "project_role": {
+                        "text": "principal investigator"
+                    }
+                }
+            ],
+            "dbgap_accessions": [
+                "phs001997.v1.p1",
+                "phs001836"
+            ],
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/17.0.0/project",
+            "ega_accessions": [
+                "EGAS00000000001",
+                "EGAD00000000002"
+            ],
+            "estimated_cell_count": 10000,
+            "funders": [
+                {
+                    "grant_id": "WT211276/Z/18/Z",
+                    "organization": "Wellcome Human Cell Atlas Strategic Science Support"
+                },
+                {
+                    "grant_id": "WT107931/Z/15/Z",
+                    "organization": "Wellcome"
+                },
+                {
+                    "grant_id": "206328/Z/17/Z",
+                    "organization": "Wellcome"
+                },
+                {
+                    "grant_id": "MR/S036113/1",
+                    "organization": "MRC"
+                },
+                {
+                    "grant_id": "WT206194",
+                    "organization": "Wellcome"
+                },
+                {
+                    "grant_id": "MR/S0358421/1",
+                    "organization": "MRC"
+                },
+                {
+                    "grant_id": "C9545/A29580",
+                    "organization": "CRUK"
+                },
+                {
+                    "grant_id": "21777",
+                    "organization": "Versus Arthiritis Cure Challenge Research Grant"
+                },
+                {
+                    "grant_id": "RP-2017-08-ST2-002",
+                    "organization": "NIHR"
+                },
+                {
+                    "grant_id": "21355/Z/18/Z",
+                    "organization": "Wellcome"
+                },
+                {
+                    "grant_id": "2017-174169",
+                    "organization": "CZI"
+                },
+                {
+                    "grant_id": "WT211276/Z/18/Z",
+                    "organization": "Wellcome"
+                },
+                {
+                    "grant_id": "MR/5005579/1",
+                    "organization": "UK Regenerative Medicine Platform"
+                },
+                {
+                    "grant_id": "CL-2017-01-004",
+                    "organization": "NIHR"
+                },
+                {
+                    "grant_id": "ME 5209/1-1",
+                    "organization": "DFG Research Fellowship"
+                },
+                {
+                    "grant_id": "21115",
+                    "organization": "Wellcome"
+                }
+            ],
+            "project_core": {
+                "project_description": "The COVID-19 pandemic, caused by SARS coronavirus 2 (SARS-CoV-2), has resulted in excess morbidity and mortality as well as economic decline. To characterise the systemic host immune response to SARS-CoV-2, we performed single-cell RNA-sequencing coupled with analysis of cell surface proteins, providing molecular profiling of over 800,000 peripheral blood mononuclear cells from a cohort of 130 patients with COVID-19. Our cohort, from three UK centres, spans the spectrum of clinical presentations and disease severities ranging from asymptomatic to critical. Three control groups were included: healthy volunteers, patients suffering from a non-COVID-19 severe respiratory illness and healthy individuals administered with intravenous lipopolysaccharide to model an acute inflammatory response. Full single cell transcriptomes coupled with quantification of 188 cell surface proteins, and T and B lymphocyte antigen receptor repertoires have provided several insights into COVID-19: 1. a new non-classical monocyte state that sequesters platelets and replenishes the alveolar macrophage pool; 2. platelet activation accompanied by early priming towards megakaryopoiesis in immature haematopoietic stem/progenitor cells and expansion of megakaryocyte-primed progenitors; 3. increased clonally expanded CD8+ effector:effector memory T cells, and proliferating CD4+ and CD8+ T cells in patients with more severe disease; and 4. relative increase of IgA plasmablasts in asymptomatic stages that switches to expansion of IgG plasmablasts and plasma cells, accompanied with higher incidence of BCR sharing, as disease severity increases. All data and analysis results are available for interrogation and data mining through an intuitive web portal. Together, these data detail the cellular processes present in peripheral blood during an acute immune response to COVID-19, and serve as a template for multi-omic single cell data integration across multiple centers to rapidly build powerful resources to help combat diseases such as COVID-19.",
+                "project_short_name": "Covid19PBMC",
+                "project_title": "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres"
+            },
+            "provenance": {
+                "document_id": "90bf705c-d891-5ce2-aa54-094488b445c6",
+                "schema_major_version": 17,
+                "schema_minor_version": 0,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "publications": [
+                {
+                    "authors": [
+                        "Muzlifa Hannifa"
+                    ],
+                    "doi": "10.1101/2021.01.13.21249725",
+                    "official_hca_publication": true,
+                    "pmid": 33879890,
+                    "title": "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres",
+                    "url": "https://www.medrxiv.org/content/10.1101/2021.01.13.21249725v1.full"
+                }
+            ],
+            "schema_type": "project"
+        },
+        "process_0.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "process_id": "dummy_process"
+            },
+            "provenance": {
+                "document_id": "8c1773c3-1885-545f-9381-0dab1edf6074",
+                "schema_major_version": 9,
+                "schema_minor_version": 2,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "process"
+        },
+        "process_1.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "process_id": "dummy_process"
+            },
+            "provenance": {
+                "document_id": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
+                "schema_major_version": 9,
+                "schema_minor_version": 2,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "process"
+        },
+        "process_2.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "process_id": "dummy_process"
+            },
+            "provenance": {
+                "document_id": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
+                "schema_major_version": 9,
+                "schema_minor_version": 2,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "process"
+        },
+        "imaged_specimen_0.json": {
+            "biomaterial_core": {
+                "biomaterial_id": "AP3_imagedspecimen",
+                "biomaterial_name": "AP3_imagedspecimen",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/3.3.0/imaged_specimen",
+            "provenance": {
+                "document_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
+                "schema_major_version": 3,
+                "schema_minor_version": 3,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "biomaterial",
+            "slice_thickness": 10.0
+        },
+        "sequence_file_0.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/9.5.0/sequence_file",
+            "file_core": {
+                "file_name": "6330STDY9479159_S1_L001_I1_001.fastq.gz",
+                "format": "fastq.gz"
+            },
+            "provenance": {
+                "document_id": "31786d8d-d046-58d1-b7b4-49bc1114a0f8",
+                "schema_major_version": 9,
+                "schema_minor_version": 5,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "read_index": "index1",
+            "schema_type": "file"
+        },
+        "sequence_file_1.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/9.5.0/sequence_file",
+            "file_core": {
+                "file_name": "6330STDY9479159_S1_L001_R1_001.fastq.gz",
+                "format": "fastq.gz"
+            },
+            "provenance": {
+                "document_id": "6a0e071d-9bfc-5e12-b1b9-e887885e12f6",
+                "schema_major_version": 9,
+                "schema_minor_version": 5,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "read_index": "read1",
+            "schema_type": "file"
+        },
+        "sequence_file_2.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/9.5.0/sequence_file",
+            "file_core": {
+                "file_name": "6330STDY9479159_S1_L001_R2_001.fastq.gz",
+                "format": "fastq.gz"
+            },
+            "provenance": {
+                "document_id": "f6abda5c-65f3-5015-8167-ae78b96f5693",
+                "schema_major_version": 9,
+                "schema_minor_version": 5,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "read_index": "read2",
+            "schema_type": "file"
+        },
+        "library_preparation_protocol_0.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
+            "end_bias": "3 prime end bias",
+            "input_nucleic_acid_molecule": {
+                "ontology": "OBI:0000869",
+                "ontology_label": "polyA RNA",
+                "text": "polyA RNA"
+            },
+            "library_construction_method": {
+                "ontology": "EFO:0010961",
+                "ontology_label": "Visium Spatial Gene Expression",
+                "text": "Visium Spatial Gene Expression"
+            },
+            "nominal_length": 350,
+            "nominal_sdev": 50,
+            "nucleic_acid_source": "single nucleus",
+            "protocol_core": {
+                "protocol_description": "The Visium spatial gene expression protocol from 10X Genomics was performed using Library Preparation slide and following the manufacturer\u2019s protocol.After transcript capture, Visium Library Preparation Protocol from 10x Genomics was performed.",
+                "protocol_id": "HumanVisiumLibraryPrep"
+            },
+            "provenance": {
+                "document_id": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
+                "schema_major_version": 6,
+                "schema_minor_version": 3,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "protocol",
+            "spatial_barcode": {
+                "barcode_length": 16,
+                "barcode_offset": 0,
+                "barcode_read": "Read 1"
+            },
+            "strand": "second",
+            "umi_barcode": {
+                "barcode_length": 12,
+                "barcode_offset": 16,
+                "barcode_read": "Read 1"
+            }
+        },
+        "sequencing_protocol_0.json": {
+            "10x": {
+                "fastq_method": "Cellranger",
+                "fastq_method_version": "Cellranger 4.0",
+                "pooled_channels": 4.0
+            },
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+            "instrument_manufacturer_model": {
+                "ontology_label": "EFO_0008637",
+                "text": "Illumina NovaSeq 6000"
+            },
+            "local_machine_name": "Illumina NovaSeq 6000",
+            "method": {
+                "ontology": "EFO:0008440",
+                "ontology_label": "tag based single cell RNA sequencing",
+                "text": "tag based single cell RNA sequencing"
+            },
+            "paired_end": true,
+            "protocol_core": {
+                "protocol_description": "Samples were sequenced using a NovaSeq 6000 (Illumina), using S1 flowcells.",
+                "protocol_id": "Cambridge_Sequencing"
+            },
+            "provenance": {
+                "document_id": "1b8dfafd-178f-5826-a661-8a022334aaeb",
+                "schema_major_version": 10,
+                "schema_minor_version": 1,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "protocol"
+        },
+        "specimen_from_organism_0.json": {
+            "biomaterial_core": {
+                "biomaterial_id": "AP3_specimen",
+                "biomaterial_name": "AP2_specimen",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "diseases": [
+                {
+                    "ontology": "MONDO:0100096",
+                    "ontology_label": "COVID-19",
+                    "text": "COVID-19"
+                }
+            ],
+            "genus_species": [
+                {
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "ontology": "UBERON:0000178",
+                "ontology_label": "blood",
+                "text": "blood"
+            },
+            "provenance": {
+                "document_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
+                "schema_major_version": 10,
+                "schema_minor_version": 5,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "biomaterial"
+        },
+        "imaging_preparation_protocol_0.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/2.3.0/imaging_preparation_protocol",
+            "protocol_core": {
+                "protocol_description": "All tissues were sectioned using the Leica CX3050S cryostat and were cut at 10um. Tissue optimization was performed to obtain permeabilization time for fetal tissue (12 min).",
+                "protocol_id": "HumanVisiumSpatialLibraryPrep"
+            },
+            "provenance": {
+                "document_id": "7cd840db-f395-5a61-bd17-72c2b2319c23",
+                "schema_major_version": 2,
+                "schema_minor_version": 3,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "protocol"
+        },
+        "donor_organism_0.json": {
+            "biomaterial_core": {
+                "biomaterial_id": "AP3",
+                "biomaterial_name": "Sanger_AP3",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
+            "development_stage": {
+                "ontology": "HsapDv:0000087",
+                "ontology_label": "human adult stage",
+                "text": "human adult stage"
+            },
+            "diseases": [
+                {
+                    "text": "COVID-19"
+                }
+            ],
+            "genus_species": [
+                {
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "is_living": "yes",
+            "organism_age": "66",
+            "organism_age_unit": {
+                "ontology": "UO:0000036",
+                "ontology_label": "year",
+                "text": "year"
+            },
+            "provenance": {
+                "document_id": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
+                "schema_major_version": 15,
+                "schema_minor_version": 6,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "biomaterial",
+            "sex": "unknown"
+        },
+        "collection_protocol_0.json": {
+            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "method": {
+                "ontology": "EFO:0009121",
+                "ontology_label": "blood draw",
+                "text": "blood draw"
+            },
+            "protocol_core": {
+                "protocol_description": "Subjects 18 years and older were included from two large hospital sites in London, United Kingdom, namely University College London Hospitals NHS Foundation Trust and Royal Free London NHS Foundation Trust during the height of the pandemic in the United Kingdom (April to July 2020). Ethical approval was given through the Living Airway Biobank, administered through UCL Great Ormond Street Institute of Child Health (REC reference: 19/NW/0171, IRAS project ID 261511), as well as by the local R&D departments at both hospitals. At daily virtual COVID-19 co-ordination meetings suitable patients were chosen from a list of newly diagnosed and admitted patients within the preceding 24 h (based on a positive nasopharyngeal swab for SARS-CoV-2). Patients with typical clinical and radiological COVID-19 features but with a negative screening test for SARS-CoV-2 were excluded. Other excluding criteria included active haematological malignancy or cancer, known immunodeficiencies, sepsis from any cause and blood transfusion within 4 weeks. Maximal severity of COVID-19 was determined retrospectively by determining the presence of symptoms, the need of oxygen supplementation and the level of respiratory support. Peripheral blood sampling was performed prior to inclusion to any pharmacological interventional trials.\n\nSamples were collected and transferred to a Category Level 3 facility at University College London and processed within 2 h of sample collection. Peripheral blood was centrifuged after adding Ficoll Paque Plus and PBMCs, serum and neutrophils separated, collected and frozen for later processing.",
+                "protocol_id": "UCL_Collection"
+            },
+            "provenance": {
+                "document_id": "c5752f73-3511-55e1-95af-040ab3924bce",
+                "schema_major_version": 9,
+                "schema_minor_version": 2,
+                "submission_date": "2021-01-01T00:00:00.000000Z",
+                "update_date": "2021-01-01T00:00:00.000000Z"
+            },
+            "schema_type": "protocol"
+        }
+    }
+}

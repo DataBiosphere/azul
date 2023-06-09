@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections import (
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 Entities = MutableJSONs
 
 
-class Accumulator(ABC):
+class Accumulator(metaclass=ABCMeta):
     """
     Accumulates multiple values into a single value, not necessarily of the same type.
     """
@@ -382,7 +382,7 @@ class UniqueValueCountAccumulator(Accumulator):
         return len(unique_items)
 
 
-class EntityAggregator(ABC):
+class EntityAggregator(metaclass=ABCMeta):
 
     def _transform_entity(self, entity: JSON) -> JSON:
         return entity

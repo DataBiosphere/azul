@@ -14,6 +14,7 @@ from re import (
 )
 from typing import (
     Optional,
+    Type,
 )
 from unittest import (
     TestCase,
@@ -47,6 +48,7 @@ from azul.logging import (
     get_test_logger,
 )
 from azul.plugins.repository.dss import (
+    DSSBundle,
     DSSSourceRef,
 )
 from azul.plugins.repository.tdr_hca import (
@@ -418,6 +420,10 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
 
     _source_patch = None
     _source_cache_patch = None
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[DSSBundle]:
+        return DSSBundle
 
     @classmethod
     def setUpClass(cls):

@@ -50,6 +50,9 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
 )
+from azul.plugins.metadata.hca.bundle import (
+    HCABundle,
+)
 from azul.plugins.repository.tdr import (
     TDRBundle,
     TDRBundleFQID,
@@ -172,7 +175,11 @@ class Checksums:
         return cls(**dict(map(extract_field, attr.fields(cls))))
 
 
-class TDRHCABundle(TDRBundle):
+class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
+
+    @classmethod
+    def canning_qualifier(cls) -> str:
+        return super().canning_qualifier() + '.hca'
 
     def add_entity(self,
                    *,
@@ -223,6 +230,8 @@ class TDRHCABundle(TDRBundle):
     links_columns: ClassVar[set[str]] = metadata_columns | {
         'project_id'
     }
+
+    _suffix = 'tdr.'
 
     def _add_manifest_entry(self,
                             *,
@@ -281,7 +290,7 @@ class TDRHCABundle(TDRBundle):
             return None
 
 
-class Plugin(TDRPlugin[TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
+class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
 
     def list_partitions(self,
                         source: TDRSourceRef
