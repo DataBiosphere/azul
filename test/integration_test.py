@@ -335,7 +335,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 map(str, self.managed_access_sources_by_catalog[catalog])
             )
             index = first(
-                i for i, source in enumerate(sources)
+                i
+                for i, source in enumerate(sources)
                 if source not in managed_access_sources
             )
             sources[0], sources[index] = sources[index], sources[0]
