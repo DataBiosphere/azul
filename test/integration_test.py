@@ -467,7 +467,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             if index:
                 bundle_fqids = catalog.bundles
             else:
-                bundle_fqids = self._list_indexed_bundles(catalog.name)
+                bundle_fqids = self._get_indexed_bundles(catalog.name)
             self._test_managed_access(catalog=catalog.name, bundle_fqids=bundle_fqids)
 
         if index and delete:
@@ -961,6 +961,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             source = one(hit['sources'])
             for bundle in hit.get('bundles', ()):
                 bundle_fqid = dict(
+                    # FIXME: Encapsulate source JSON representations
+                    #        https://github.com/databiosphere/azul/issues/3889
                     source=dict(id=source['sourceId'], spec=source['sourceSpec']),
                     uuid=bundle['bundleUuid'],
                     version=bundle['bundleVersion']
@@ -1064,24 +1066,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         service = IndexService()
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
-
-    def _list_indexed_bundles(self, catalog: CatalogName) -> set[SourcedBundleFQID]:
-        bundle_fqids = set()
-        plugin = self.azul_client.repository_plugin(catalog)
-        with self._service_account_credentials:
-            for hit in self._get_entities(catalog, 'bundles'):
-                bundle = one(hit['bundles'])
-                source = one(hit['sources'])
-                # FIXME: Encapsulate source JSON representations
-                #        https://github.com/databiosphere/azul/issues/3889
-                source = plugin.source_from_json({
-                    'id': source['sourceId'],
-                    'spec': source['sourceSpec']
-                })
-                bundle_fqids.add(SourcedBundleFQID(uuid=bundle['bundleUuid'],
-                                                   version=bundle['bundleVersion'],
-                                                   source=source))
-        return bundle_fqids
 
     def _test_managed_access(self,
                              catalog: CatalogName,
