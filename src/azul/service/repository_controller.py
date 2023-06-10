@@ -178,7 +178,7 @@ class RepositoryController(SourceController):
         file_version = query_params.get('version')
         replica = query_params.get('replica')
         file_name = query_params.get('fileName')
-        drs_path = query_params.get('drsPath')
+        drs_uri = query_params.get('drsUri')
         wait = query_params.get('wait')
         request_index = int(query_params.get('requestIndex', '0'))
         token = query_params.get('token')
@@ -195,7 +195,7 @@ class RepositoryController(SourceController):
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')
             file_version = file['version']
-            drs_path = file['drs_path']
+            drs_uri = file['drs_uri']
             file_size = file['size']
             if file_name is None:
                 file_name = file['name']
@@ -225,7 +225,7 @@ class RepositoryController(SourceController):
         download = download_cls(file_uuid=file_uuid,
                                 file_name=file_name,
                                 file_version=file_version,
-                                drs_path=drs_path,
+                                drs_uri=drs_uri,
                                 replica=replica,
                                 token=token)
 
@@ -237,8 +237,8 @@ class RepositoryController(SourceController):
                 'fileName': download.file_name,
                 'requestIndex': request_index + 1
             }
-            if download.drs_path is not None:
-                query_params['drsPath'] = download.drs_path
+            if download.drs_uri is not None:
+                query_params['drsUri'] = download.drs_uri
             if download.token is not None:
                 query_params['token'] = download.token
             if download.replica is not None:
@@ -284,7 +284,7 @@ class RepositoryController(SourceController):
                 'Location': download.location
             }
         else:
-            assert download.drs_path is None, download
+            assert download.drs_uri is None, download
             raise NotFoundError(f'File {file_uuid!r} with version {file_version!r} '
                                 f'was found in catalog {catalog!r}, however no download is currently available')
 

@@ -188,7 +188,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                             # Not in schema
                             'crc32',
                             'sha256',
-                            'drs_path',
+                            'drs_uri',
                         ]
                     },
                     # These field names are hard-coded in the implementation of
@@ -268,7 +268,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                 'reference_assembly': 'file_reference_assembly',
                 'crc32': 'file_crc32',
                 'sha256': 'file_sha256',
-                'drs_path': 'file_drs_uri',
+                'drs_uri': 'file_drs_uri',
                 'file_url': 'file_url'
             }
         }

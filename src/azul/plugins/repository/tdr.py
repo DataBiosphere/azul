@@ -79,18 +79,16 @@ class TDRBundle(Bundle[TDRBundleFQID], ABC):
     def canning_qualifier(cls):
         return 'tdr'
 
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return manifest_entry.get('drs_path')
+    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
+        return manifest_entry.get('drs_uri')
 
-    def _parse_drs_path(self, drs_uri: str) -> str:
-        # TDR stores the complete DRS URI as a BigQuery column, but we only
-        # index the path component. These requirements prevent mismatches in
-        # the DRS domain, and ensure that changes to the column syntax don't
-        # go undetected.
-        drs_uri = furl(drs_uri)
-        require(drs_uri.scheme == 'drs')
-        require(drs_uri.netloc == config.tdr_service_url.netloc)
-        return str(drs_uri.path).strip('/')
+    def _validate_drs_uri(self, drs_uri: Optional[str]) -> None:
+        # These requirements prevent mismatches in the DRS domain, and ensure
+        # that changes to the column syntax don't go undetected.
+        if drs_uri is not None:
+            drs_uri = furl(drs_uri)
+            require(drs_uri.scheme == 'drs')
+            require(drs_uri.netloc == config.tdr_service_url.netloc)
 
 
 T = TypeVar('T')
@@ -211,13 +209,6 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def portal_db(self) -> Sequence[JSON]:
         return []
 
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        if drs_path is None:
-            return None
-        else:
-            netloc = config.tdr_service_url.netloc
-            return f'drs://{netloc}/{drs_path}'
-
     @classmethod
     def format_version(cls, version: datetime.datetime) -> str:
         return format_dcp2_datetime(version)
@@ -251,20 +242,19 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
 class TDRFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
 
-    needs_drs_path = True
+    needs_drs_uri = True
 
     def update(self,
                plugin: RepositoryPlugin,
                authentication: Optional[Authentication]
                ) -> None:
         require(self.replica is None or self.replica == 'gcp')
-        drs_uri = plugin.drs_uri(self.drs_path)
-        if drs_uri is None:
+        if self.drs_uri is None:
             assert self.location is None, self
             assert self.retry_after is None, self
         else:
             drs_client = plugin.drs_client(authentication)
-            access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
+            access = drs_client.get_object(self.drs_uri, access_method=AccessMethod.gs)
             require(access.method is AccessMethod.https, access.method)
             require(access.headers is None, access.headers)
             signed_url = access.url

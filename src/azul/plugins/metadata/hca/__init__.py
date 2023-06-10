@@ -315,9 +315,7 @@ class Plugin(MetadataPlugin[HCABundle]):
                 'crc32c': 'file_crc32c',
                 'sha256': 'file_sha256',
                 'content-type': 'file_content_type',
-                # If an entry for `drs_path` is present here, manifest
-                # generators will replace it with a full DRS URI.
-                'drs_path': 'file_drs_uri',
+                'drs_uri': 'file_drs_uri',
                 'file_url': 'file_url'
             },
             ('contents', 'cell_suspensions'): {

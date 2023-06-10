@@ -19,7 +19,7 @@
             "size": 76742835,
             "is_stitched": false,
             "indexed": false,
-            "drs_path": "v1_c3c588a8-be3f-467f-a244-da614be6889a_ad683500-3756-4a85-aba8-05a9165aac90",
+            "drs_uri": "drs://azul_testing_fake_drs_domain.lan/v1_c3c588a8-be3f-467f-a244-da614be6889a_ad683500-3756-4a85-aba8-05a9165aac90",
             "crc32c": "97a7a932",
             "sha256": "edb8e0139fece9702d89ae5fe7f761c41c291ef6a71129c6420857e025228a24"
         },
@@ -42,7 +42,7 @@
             "size": 124022765,
             "is_stitched": false,
             "indexed": false,
-            "drs_path": "v1_c3c588a8-be3f-467f-a244-da614be6889a_df2476d4-ed12-4891-92cc-7384c32be978",
+            "drs_uri": "drs://azul_testing_fake_drs_domain.lan/v1_c3c588a8-be3f-467f-a244-da614be6889a_df2476d4-ed12-4891-92cc-7384c32be978",
             "crc32c": "7de6e00e",
             "sha256": "cb1467f4d23a2429b4928943b51652b32edb949099250d28cf400d13074f5440"
         },
@@ -87,7 +87,7 @@
             "size": 154980798,
             "is_stitched": false,
             "indexed": false,
-            "drs_path": "v1_c3c588a8-be3f-467f-a244-da614be6889a_0b9a12c6-95df-487b-87ce-84e278e66789",
+            "drs_uri": "drs://azul_testing_fake_drs_domain.lan/v1_c3c588a8-be3f-467f-a244-da614be6889a_0b9a12c6-95df-487b-87ce-84e278e66789",
             "crc32c": "d675b7ea",
             "sha256": "724b2c0ddf33c662b362179bc6ca90cd866b99b340d061463c35d27cfd5a23c5"
         }

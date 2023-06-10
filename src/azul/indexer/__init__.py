@@ -408,10 +408,10 @@ class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
         return self.fqid.version
 
     @abstractmethod
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
         """
-        Return the path component of a DRS URI to a data file in this bundle,
-        or None if the data file is not accessible via DRS.
+        Return the DRS URI to a data file in this bundle, or None if the data
+        file is not accessible via DRS.
 
         :param manifest_entry: the manifest entry of the data file.
         """

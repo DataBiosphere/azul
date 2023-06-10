@@ -206,7 +206,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                                      dcp_type='data',
                                      is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
-                                     drs_path=self._parse_drs_uri(entity_row['file_id'], descriptor))
+                                     drs_uri=self._parse_drs_uri(entity_row['file_id'], descriptor))
         content = entity_row['content']
         self.metadata_files[entity_key] = (json.loads(content)
                                            if isinstance(content, str)
@@ -243,7 +243,8 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             dcp_type: str,
                             is_stitched: bool,
                             checksums: Optional[Checksums] = None,
-                            drs_path: Optional[str] = None) -> None:
+                            drs_uri: Optional[str] = None) -> None:
+        self._validate_drs_uri(drs_uri)
         self.manifest.append({
             'name': name,
             'uuid': uuid,
@@ -258,7 +259,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                     'sha256': ''
                 } if checksums is None else {
                     'indexed': False,
-                    'drs_path': drs_path,
+                    'drs_uri': drs_uri,
                     **checksums.to_json()
                 }
             )
@@ -285,7 +286,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             'Non-null `drs_uri` in file descriptor', external_drs_uri)
                     return external_drs_uri
             else:
-                return self._parse_drs_path(file_id)
+                return file_id
         else:
             return None
 

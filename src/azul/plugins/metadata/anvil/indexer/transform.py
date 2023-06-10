@@ -278,7 +278,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'name': null_str,
             'crc32': null_str,
             'sha256': null_str,
-            'drs_path': null_str
+            'drs_uri': null_str
         }
 
     @classmethod

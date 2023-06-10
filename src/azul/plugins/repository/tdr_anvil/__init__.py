@@ -124,7 +124,9 @@ class TDRAnvilBundle(AnvilBundle[AnvilBundleFQID], TDRBundle):
         metadata = dict(row,
                         version=version)
         if entity.entity_type == 'file':
-            metadata.update(drs_path=self._parse_drs_uri(row.get('file_ref')),
+            drs_uri = row.get('file_ref')
+            self._validate_drs_uri(drs_uri)
+            metadata.update(drs_uri=drs_uri,
                             sha256='',
                             crc32='')
         self.entities[entity] = metadata
@@ -144,12 +146,6 @@ class TDRAnvilBundle(AnvilBundle[AnvilBundleFQID], TDRBundle):
                  outputs=set(map(key_ref_to_entity_ref, link.outputs)))
             for link in links
         )
-
-    def _parse_drs_uri(self, file_ref: Optional[str]) -> Optional[str]:
-        if file_ref is None:
-            return None
-        else:
-            return self._parse_drs_path(file_ref)
 
 
 class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
