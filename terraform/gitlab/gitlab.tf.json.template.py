@@ -1385,6 +1385,37 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # gitlab-runner-net network, so TLS is
                                     # unnecessary.
                                     '--env DOCKER_TLS_CERTDIR=',
+                                    # This DinD container is attached to a
+                                    # custom network. Because of that, Docker
+                                    # provides an /etc/resolv.conf that
+                                    # configures the container to use the DNS
+                                    # server embedded in the Docker daemon,
+                                    # which is reachable in the container at
+                                    # 127.0.0.11. This is a localhost-like alias
+                                    # that would be ignored in second-tier
+                                    # containers started by the Docker-daemon
+                                    # running in the DinD container, causing
+                                    # that container, or rather the embedded DNS
+                                    # server it's configured to use, to fall
+                                    # back to the reckless defaults hard-coded
+                                    # in the Docker source: 8.8.8.8 and 8.8.4.4.
+                                    # These servers are operated by Google and
+                                    # are rate-limited by source IP. All the
+                                    # VPC's egress traffic is routed through a
+                                    # NAT so all requests to these servers made
+                                    # within the VPC would appear to originate
+                                    # from the same public IP, therefore sharing
+                                    # one rate limit, causing them to be dropped
+                                    # whenever the rate limit is tripped.
+                                    #
+                                    # By mounting the host's resolv.conf into
+                                    # the Dind container, we work around this
+                                    # issue, so that containers launched by the
+                                    # Docker daemon running in the Dind
+                                    # container have a functional non-localhost
+                                    # DNS server and don't fall back to the
+                                    # Google ones.
+                                    '--volume /etc/resolv.conf:/etc/resolv.conf',
                                     '--volume /mnt/gitlab/docker:/var/lib/docker',
                                     '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
                                     dind_image
