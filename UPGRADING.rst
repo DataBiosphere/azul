@@ -113,6 +113,16 @@ a deployment just before pushing the merge commit to the GitLab instance in that
 deployment.
 
 
+#5043 S3 server access logs are inherently incomplete
+=====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5133 Trigger an alarm on absence of logs
 =========================================
 
