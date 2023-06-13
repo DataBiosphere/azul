@@ -387,9 +387,10 @@ class MetadataPlugin(Plugin[BUNDLE]):
         raise NotImplementedError
 
     @property
-    @abstractmethod
     def facets(self) -> Sequence[str]:
-        raise NotImplementedError
+        return [
+            self.source_id_field
+        ]
 
     @property
     @abstractmethod

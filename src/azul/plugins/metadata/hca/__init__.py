@@ -254,6 +254,7 @@ class Plugin(MetadataPlugin[HCABundle]):
     @property
     def facets(self) -> Sequence[str]:
         return [
+            *super().facets,
             'organ',
             'organPart',
             'modelOrgan',

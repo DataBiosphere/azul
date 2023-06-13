@@ -209,6 +209,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
     @property
     def facets(self) -> Sequence[str]:
         return [
+            *super().facets,
             'activities.activity_type',
             'activities.assay_type',
             'activities.data_modality',
