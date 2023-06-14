@@ -1669,7 +1669,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                         }
                                     }
                                 }
-                            }, indent=4)
+                                # FIXME: Re-enable formatting of the JSON above
+                                #        https://github.com/DataBiosphere/azul/issues/5314
+                            })
                         },
                     ],
                     'runcmd': [
