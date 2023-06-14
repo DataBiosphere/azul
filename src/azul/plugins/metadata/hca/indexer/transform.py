@@ -54,7 +54,6 @@ from azul.enums import (
     auto,
 )
 from azul.indexer import (
-    Bundle,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -86,6 +85,9 @@ from azul.iterators import (
 )
 from azul.openapi import (
     schema,
+)
+from azul.plugins.metadata.hca.bundle import (
+    HCABundle,
 )
 from azul.plugins.metadata.hca.indexer.aggregate import (
     CellLineAggregator,
@@ -449,7 +451,7 @@ class DatedEntity(Entity, Protocol):
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class BaseTransformer(Transformer, metaclass=ABCMeta):
-    bundle: Bundle
+    bundle: HCABundle
     api_bundle: api.Bundle
     deleted: bool
 
@@ -462,7 +464,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     # noinspection PyDataclass,PyUnusedLocal
     def __init__(self,
                  *,
-                 bundle: Bundle,
+                 bundle: HCABundle,
                  api_bundle: api.Bundle,
                  deleted: bool):
         ...

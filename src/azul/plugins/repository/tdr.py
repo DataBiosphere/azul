@@ -1,4 +1,5 @@
 from abc import (
+    ABC,
     abstractmethod,
 )
 from collections.abc import (
@@ -45,6 +46,7 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.plugins import (
+    BUNDLE,
     RepositoryFileDownload,
     RepositoryPlugin,
 )
@@ -71,7 +73,11 @@ class TDRBundleFQID(SourcedBundleFQID[TDRSourceRef]):
     pass
 
 
-class TDRBundle(Bundle[TDRBundleFQID]):
+class TDRBundle(Bundle[TDRBundleFQID], ABC):
+
+    @classmethod
+    def canning_qualifier(cls):
+        return 'tdr'
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_path')
@@ -91,7 +97,7 @@ T = TypeVar('T')
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
+class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     _sources: Set[TDRSourceSpec]
 
     @classmethod
@@ -194,7 +200,7 @@ class TDRPlugin(RepositoryPlugin[SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
 
-    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
         self._assert_source(bundle_fqid.source)
         now = time.time()
         bundle = self._emulate_bundle(bundle_fqid)

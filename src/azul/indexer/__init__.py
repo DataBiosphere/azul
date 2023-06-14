@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -33,7 +33,6 @@ from azul.types import (
     AnyJSON,
     JSON,
     MutableJSON,
-    MutableJSONs,
     SupportsLessThan,
     get_generic_type_params,
 )
@@ -157,7 +156,7 @@ SOURCE_SPEC = TypeVar('SOURCE_SPEC', bound='SourceSpec')
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class SourceSpec(ABC, Generic[SOURCE_SPEC]):
+class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
     """
     The name of a repository source containing bundles to index. A repository
     has at least one source. Repository plugins whose repository source names
@@ -397,25 +396,8 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
-class Bundle(ABC, Generic[BUNDLE_FQID]):
+class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
     fqid: BUNDLE_FQID
-    manifest: MutableJSONs
-    """
-    Each item of the `manifest` attribute's value has this shape:
-    {
-        'content-type': 'application/json; dcp-type="metadata/biomaterial"',
-        'crc32c': 'fd239631',
-        'indexed': True,
-        'name': 'cell_suspension_0.json',
-        's3_etag': 'aa31c093cc816edb1f3a42e577872ec6',
-        'sha1': 'f413a9a7923dee616309e4f40752859195798a5d',
-        'sha256': 'ea4c9ed9e53a3aa2ca4b7dffcacb6bbe9108a460e8e15d2b3d5e8e5261fb043e',
-        'size': 1366,
-        'uuid': '0136ebb4-1317-42a0-8826-502fae25c29f',
-        'version': '2019-05-16T162155.020000Z'
-    }
-    """
-    metadata_files: MutableJSON
 
     @property
     def uuid(self) -> BundleUUID:
@@ -449,12 +431,32 @@ class Bundle(ABC, Generic[BUNDLE_FQID]):
                 msg = f'{config.manifest_column_joiner!r} is disallowed in metadata'
                 raise RequirementError(msg, self.fqid)
 
+    @abstractmethod
     def reject_joiner(self):
         """
         Raise a requirement error if the given string is found in the bundle
         """
-        self._reject_joiner(self.manifest)
-        self._reject_joiner(self.metadata_files)
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def canning_qualifier(cls) -> str:
+        """
+        Short string prepended to the file extension to distinguish between
+        canned bundle formats originating from different plugins.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> 'Bundle':
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_json(self) -> MutableJSON:
+        raise NotImplementedError
+
+
+BUNDLE = TypeVar('BUNDLE', bound=Bundle)
 
 
 class BundlePartition(UUIDPartition['BundlePartition']):

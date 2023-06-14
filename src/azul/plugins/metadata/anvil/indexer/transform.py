@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections import (
@@ -13,10 +13,13 @@ from functools import (
 from itertools import (
     chain,
 )
+from operator import (
+    attrgetter,
+)
 from typing import (
     Callable,
+    Collection,
     Iterable,
-    Mapping,
     Optional,
 )
 from uuid import (
@@ -29,7 +32,6 @@ from more_itertools import (
 )
 
 from azul.indexer import (
-    Bundle,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -38,7 +40,6 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     Contribution,
     ContributionCoordinates,
-    EntityID,
     EntityReference,
     EntityType,
     FieldTypes,
@@ -52,6 +53,10 @@ from azul.indexer.document import (
 from azul.indexer.transform import (
     Transformer,
 )
+from azul.plugins.metadata.anvil.bundle import (
+    AnvilBundle,
+    Link,
+)
 from azul.plugins.metadata.anvil.indexer.aggregate import (
     ActivityAggregator,
     BiosampleAggregator,
@@ -60,31 +65,31 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
     DonorAggregator,
     FileAggregator,
 )
-from azul.plugins.repository.tdr_hca import (
-    EntitiesByType,
-)
 from azul.strings import (
     pluralize,
 )
 from azul.types import (
-    JSON,
-    JSONs,
     MutableJSON,
     MutableJSONs,
 )
+
+EntityRefsByType = dict[EntityType, set[EntityReference]]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class LinkedEntities:
     origin: EntityReference
-    ancestors: EntitiesByType
-    descendants: EntitiesByType
+    ancestors: EntityRefsByType
+    descendants: EntityRefsByType
 
-    def __getitem__(self, item: EntityType) -> set[EntityID]:
+    def __getitem__(self, item: EntityType) -> set[EntityReference]:
         return self.ancestors[item] | self.descendants[item]
 
     @classmethod
-    def from_links(cls, origin: EntityReference, links: JSONs) -> 'LinkedEntities':
+    def from_links(cls,
+                   origin: EntityReference,
+                   links: Collection[Link[EntityReference]]
+                   ) -> 'LinkedEntities':
         return cls(origin=origin,
                    ancestors=cls._search(origin, links, from_='outputs', to='inputs'),
                    descendants=cls._search(origin, links, from_='inputs', to='outputs'))
@@ -92,30 +97,29 @@ class LinkedEntities:
     @classmethod
     def _search(cls,
                 entity_ref: EntityReference,
-                links: JSONs,
-                entities: Optional[EntitiesByType] = None,
+                links: Collection[Link[EntityReference]],
+                entities: Optional[EntityRefsByType] = None,
                 *,
                 from_: str,
                 to: str
-                ) -> EntitiesByType:
+                ) -> EntityRefsByType:
         entities = defaultdict(set) if entities is None else entities
         if entity_ref.entity_type.endswith('activity'):
-            follow = [one(link for link in links if str(entity_ref) == link['activity'])]
+            follow = [one(link for link in links if entity_ref == link.activity)]
         else:
-            follow = [link for link in links if str(entity_ref) in link[from_]]
+            follow = [link for link in links if entity_ref in getattr(link, from_)]
         for link in follow:
-            for relative in [link['activity'], *link[to]]:
+            for relative in [link.activity, *getattr(link, to)]:
                 if relative is not None:
-                    relative = EntityReference.parse(relative)
                     if relative != entity_ref and relative.entity_id not in entities[relative.entity_type]:
-                        entities[relative.entity_type].add(relative.entity_id)
+                        entities[relative.entity_type].add(relative)
                         cls._search(relative, links, entities, from_=from_, to=to)
         return entities
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-class BaseTransformer(Transformer, ABC):
-    bundle: Bundle
+class BaseTransformer(Transformer, metaclass=ABCMeta):
+    bundle: AnvilBundle
     deleted: bool
 
     @classmethod
@@ -147,14 +151,17 @@ class BaseTransformer(Transformer, ABC):
             assert False, entity_type
 
     def estimate(self, partition: BundlePartition) -> int:
-        return sum(map(partial(self._contains, partition), self.bundle.manifest))
+        return sum(map(partial(self._contains, partition), self.bundle.entities))
 
     def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
-        return map(self._transform,
-                   filter(partial(self._contains, partition), self.bundle.manifest))
+        return (
+            self._transform(entity)
+            for entity in self.bundle.entities
+            if self._contains(partition, entity)
+        )
 
     @abstractmethod
-    def _transform(self, manifest_entry: JSON) -> Contribution:
+    def _transform(self, entity: EntityReference) -> Contribution:
         raise NotImplementedError
 
     def _pluralize(self, entity_type: str) -> str:
@@ -163,34 +170,21 @@ class BaseTransformer(Transformer, ABC):
         else:
             return pluralize(entity_type)
 
-    def _contains(self, partition: BundlePartition, manifest_entry: JSON) -> bool:
+    def _contains(self, partition: BundlePartition, entity: EntityReference) -> bool:
         return (
-            self._pluralize(self._entity_type(manifest_entry)).endswith(self.entity_type())
-            and partition.contains(UUID(manifest_entry['uuid']))
+            pluralize(entity.entity_type).endswith(self.entity_type())
+            and partition.contains(UUID(entity.entity_id))
         )
 
-    def _entity_type(self, manifest_entry: JSON) -> EntityType:
-        return manifest_entry['name'].split('_')[0]
-
     @cached_property
-    def _entries_by_entity_id(self) -> Mapping[EntityID, JSON]:
-        return {
-            manifest_entry['uuid']: manifest_entry
-            for manifest_entry in self.bundle.manifest
-        }
-
-    @cached_property
-    def _entities_by_type(self) -> EntitiesByType:
+    def _entities_by_type(self) -> dict[EntityType, set[EntityReference]]:
         entries = defaultdict(set)
-        for e in self.bundle.manifest:
-            entries[self._entity_type(e)].add(e['uuid'])
+        for e in self.bundle.entities:
+            entries[e.entity_type].add(e)
         return entries
 
-    def _linked_entities(self, manifest_entry: JSON) -> LinkedEntities:
-        entity_ref = EntityReference(entity_type=self._entity_type(manifest_entry),
-                                     entity_id=manifest_entry['uuid'])
-        links = self.bundle.metadata_files['links']
-        return LinkedEntities.from_links(entity_ref, links)
+    def _linked_entities(self, entity: EntityReference) -> LinkedEntities:
+        return LinkedEntities.from_links(entity, self.bundle.links)
 
     @classmethod
     def _entity_types(cls) -> FieldTypes:
@@ -294,8 +288,8 @@ class BaseTransformer(Transformer, ABC):
             'count': pass_thru_int  # Added by FileAggregator, ever null
         }
 
-    def _range(self, manifest_entry: JSON, *field_prefixes: str) -> MutableJSON:
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
+    def _range(self, entity: EntityReference, *field_prefixes: str) -> MutableJSON:
+        metadata = self.bundle.entities[entity]
 
         def get_bound(field_name: str) -> Optional[float]:
             val = metadata[field_name]
@@ -310,11 +304,16 @@ class BaseTransformer(Transformer, ABC):
         }
 
     def _contribution(self,
+                      entity: EntityReference,
                       contents: MutableJSON,
-                      entity_id: EntityID
                       ) -> Contribution:
-        entity = EntityReference(entity_type=self.entity_type(),
-                                 entity_id=entity_id)
+        # The entity type is used to determine the index name.
+        # All activities go into the same index, regardless of their polymorphic type.
+        # Index names use plural forms.
+        entity_type = pluralize('activity'
+                                if entity.entity_type.endswith('activity') else
+                                entity.entity_type)
+        entity = attr.evolve(entity, entity_type=entity_type)
         coordinates = ContributionCoordinates(entity=entity,
                                               bundle=self.bundle.fqid.upcast(),
                                               deleted=self.deleted)
@@ -324,14 +323,13 @@ class BaseTransformer(Transformer, ABC):
                             contents=contents)
 
     def _entity(self,
-                manifest_entry: JSON,
+                entity: EntityReference,
                 field_types: FieldTypes,
                 **additional_fields
                 ) -> MutableJSON:
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
+        metadata = self.bundle.entities[entity]
         field_values = ChainMap(metadata,
-                                {'document_id': manifest_entry['uuid']},
-                                manifest_entry,
+                                {'document_id': entity.entity_id},
                                 additional_fields)
         return {
             field: field_values[field]
@@ -339,22 +337,20 @@ class BaseTransformer(Transformer, ABC):
         }
 
     def _entities(self,
-                  factory: Callable[[JSON], MutableJSON],
-                  entity_ids: Iterable[EntityID],
+                  factory: Callable[[EntityReference], MutableJSON],
+                  entities: Iterable[EntityReference],
                   ) -> MutableJSONs:
-        entities = []
-        for entity_id in sorted(entity_ids):
-            manifest_entry = self._entries_by_entity_id[entity_id]
-            entities.append(factory(manifest_entry))
-        return entities
+        return [
+            factory(entity)
+            for entity in sorted(entities, key=attrgetter('entity_id'))
+        ]
 
-    def _activity(self, manifest_entry: JSON) -> MutableJSON:
-        activity_table = self._entity_type(manifest_entry)
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
+    def _activity(self, activity: EntityReference) -> MutableJSON:
+        metadata = self.bundle.entities[activity]
         field_types = self._activity_types()
         common_fields = {
-            'activity_table': activity_table,
-            'activity_id': metadata[f'{activity_table}_id']
+            'activity_table': activity.entity_type,
+            'activity_id': metadata[f'{activity.entity_type}_id']
         }
         # Activities are unique in that they may not contain every field defined
         # in their field types due to polymorphism, so we need to pad the field
@@ -364,37 +360,39 @@ class BaseTransformer(Transformer, ABC):
             for field_name, field_type in field_types.items()
             if field_name not in common_fields
         }
-        activity = self._entity(manifest_entry,
+        activity = self._entity(activity,
                                 self._activity_types(),
                                 **common_fields,
                                 **union_fields)
 
         return activity
 
-    def _biosample(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry,
+    def _biosample(self, biosample: EntityReference) -> MutableJSON:
+        return self._entity(biosample,
                             self._biosample_types(),
-                            **self._range(manifest_entry, 'donor_age_at_collection'))
+                            **self._range(biosample, 'donor_age_at_collection'))
 
-    def _dataset(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry, self._dataset_types())
+    def _dataset(self, dataset: EntityReference) -> MutableJSON:
+        return self._entity(dataset, self._dataset_types())
 
-    def _diagnosis(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry,
+    def _diagnosis(self, diagnosis: EntityReference) -> MutableJSON:
+        return self._entity(diagnosis,
                             self._diagnosis_types(),
-                            **self._range(manifest_entry, 'diagnosis_age', 'onset_age'))
+                            **self._range(diagnosis, 'diagnosis_age', 'onset_age'))
 
-    def _donor(self, manifest_entry: JSON) -> MutableJSON:
-        return self._entity(manifest_entry, self._donor_types())
+    def _donor(self, donor: EntityReference) -> MutableJSON:
+        return self._entity(donor, self._donor_types())
 
-    def _file(self, manifest_entry: JSON) -> MutableJSON:
-        metadata = self.bundle.metadata_files[manifest_entry['name']]
-        return self._entity(manifest_entry,
+    def _file(self, file: EntityReference) -> MutableJSON:
+        metadata = self.bundle.entities[file]
+        return self._entity(file,
                             self._file_types(),
-                            size=metadata['file_size'])
+                            size=metadata['file_size'],
+                            name=metadata['file_name'],
+                            uuid=file.entity_id)
 
     def _only_dataset(self) -> MutableJSON:
-        return self._dataset(self._entries_by_entity_id[one(self._entities_by_type['dataset'])])
+        return self._dataset(one(self._entities_by_type['dataset']))
 
     _activity_polymorphic_types = {
         'activity',
@@ -411,17 +409,17 @@ class ActivityTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'activities'
 
-    def _transform(self, manifest_entry: JSON) -> Contribution:
-        linked = self._linked_entities(manifest_entry)
+    def _transform(self, entity: EntityReference) -> Contribution:
+        linked = self._linked_entities(entity)
         contents = dict(
-            activities=[self._activity(manifest_entry)],
+            activities=[self._activity(entity)],
             biosamples=self._entities(self._biosample, linked['biosample']),
             datasets=[self._only_dataset()],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
-        return self._contribution(contents, manifest_entry['uuid'])
+        return self._contribution(entity, contents)
 
 
 class BiosampleTransformer(BaseTransformer):
@@ -430,20 +428,20 @@ class BiosampleTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'biosamples'
 
-    def _transform(self, manifest_entry: JSON) -> Contribution:
-        linked = self._linked_entities(manifest_entry)
+    def _transform(self, entity: EntityReference) -> Contribution:
+        linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
                 for activity_type in self._activity_polymorphic_types
             )),
-            biosamples=[self._biosample(manifest_entry)],
+            biosamples=[self._biosample(entity)],
             datasets=[self._only_dataset()],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
-        return self._contribution(contents, manifest_entry['uuid'])
+        return self._contribution(entity, contents)
 
 
 class DatasetTransformer(BaseTransformer):
@@ -452,19 +450,19 @@ class DatasetTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'datasets'
 
-    def _transform(self, manifest_entry: JSON) -> Contribution:
+    def _transform(self, entity: EntityReference) -> Contribution:
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 self._entities_by_type[activity_type]
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, self._entities_by_type['biosample']),
-            datasets=[self._dataset(manifest_entry)],
+            datasets=[self._dataset(entity)],
             diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file']),
         )
-        return self._contribution(contents, manifest_entry['uuid'])
+        return self._contribution(entity, contents)
 
 
 class DonorTransformer(BaseTransformer):
@@ -473,8 +471,8 @@ class DonorTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'donors'
 
-    def _transform(self, manifest_entry: JSON) -> Contribution:
-        linked = self._linked_entities(manifest_entry)
+    def _transform(self, entity: EntityReference) -> Contribution:
+        linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -483,10 +481,10 @@ class DonorTransformer(BaseTransformer):
             biosamples=self._entities(self._biosample, linked['biosample']),
             datasets=[self._only_dataset()],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
-            donors=[self._donor(manifest_entry)],
+            donors=[self._donor(entity)],
             files=self._entities(self._file, linked['file']),
         )
-        return self._contribution(contents, manifest_entry['uuid'])
+        return self._contribution(entity, contents)
 
 
 class FileTransformer(BaseTransformer):
@@ -495,8 +493,8 @@ class FileTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'files'
 
-    def _transform(self, manifest_entry: JSON) -> Contribution:
-        linked = self._linked_entities(manifest_entry)
+    def _transform(self, entity: EntityReference) -> Contribution:
+        linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -506,6 +504,6 @@ class FileTransformer(BaseTransformer):
             datasets=[self._only_dataset()],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
-            files=[self._file(manifest_entry)],
+            files=[self._file(entity)],
         )
-        return self._contribution(contents, manifest_entry['uuid'])
+        return self._contribution(entity, contents)

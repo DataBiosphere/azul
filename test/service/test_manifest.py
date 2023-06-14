@@ -243,8 +243,7 @@ class TestManifestEndpoints(ManifestTestCase):
         to test PFB manifest generation with multiple inner-entities of the same
         type.
         """
-        manifest = self._load_canned_file(bundle, 'manifest')
-        metadata_files = self._load_canned_file(bundle, 'metadata')
+        bundle = self._load_canned_bundle(bundle)
         old_to_new = {
             # process
             '4da04038-adab-59a9-b6c4-3a61242cc972': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
@@ -253,8 +252,8 @@ class TestManifestEndpoints(ManifestTestCase):
             # specimen
             '224d3750-f1f7-5b04-bbce-e23f09eea7d7': '5275e5a0-6043-4ec9-86a1-6c1140cbeede',
         }
-        manifest = self._replace_uuids(manifest, old_to_new)
-        metadata_files = self._replace_uuids(metadata_files, old_to_new)
+        manifest = self._replace_uuids(bundle.manifest, old_to_new)
+        metadata_files = self._replace_uuids(bundle.metadata_files, old_to_new)
         # Change organ to prevent cell_suspensions aggregating together
         metadata_files['specimen_from_organism_0.json']['organ'] = {
             "text": "lung",

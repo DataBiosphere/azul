@@ -1,4 +1,7 @@
-import abc
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from collections import (
     Counter,
     defaultdict,
@@ -114,9 +117,9 @@ class InventoryRow:
     application_owner: null_str = attr.ib(default=None)
 
 
-class Mapper(abc.ABC):
+class Mapper(metaclass=ABCMeta):
 
-    @abc.abstractmethod
+    @abstractmethod
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         raise NotImplementedError
 

@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections import (
@@ -193,7 +193,7 @@ class TypeLookupError(Exception):
         super().__init__(f"No entity type for schema URL '{described_by}'")
 
 
-class EntityVisitor(ABC):
+class EntityVisitor(metaclass=ABCMeta):
 
     @abstractmethod
     def visit(self, entity: 'Entity') -> None:
@@ -201,7 +201,7 @@ class EntityVisitor(ABC):
 
 
 @dataclass(init=False)
-class LinkedEntity(Entity, ABC):
+class LinkedEntity(Entity, metaclass=ABCMeta):
     children: MutableMapping[UUID4, Entity] = field(repr=False)
     parents: MutableMapping[UUID4, 'LinkedEntity'] = field(repr=False)
 

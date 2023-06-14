@@ -758,30 +758,30 @@ class Config:
     class Catalog:
         """
         >>> plugins = dict(metadata=dict(name='hca'), repository=dict(name='tdr_hca'))
-        >>> kwargs = dict(atlas='', plugins=plugins, sources='')
-        >>> c = Config.Catalog
+        >>> kwargs = dict(atlas='hca', plugins=plugins, sources='')
+        >>> c = Config.Catalog.from_json
 
-        >>> c(name='dcp', internal=False, **kwargs) # doctest: +NORMALIZE_WHITESPACE
+        >>> c(name='dcp', spec=dict(internal=False, **kwargs)) # doctest: +NORMALIZE_WHITESPACE
         Config.Catalog(name='dcp',
-                       atlas='',
+                       atlas='hca',
                        internal=False,
-                       plugins={'metadata': {'name': 'hca'},
-                                'repository': {'name': 'tdr_hca'}},
-                       sources='')
+                       plugins={'metadata': Config.Catalog.Plugin(name='hca'),
+                                'repository': Config.Catalog.Plugin(name='tdr_hca')},
+                       sources=set())
 
-        >>> c(name='dcp-it', internal=True, **kwargs).is_integration_test_catalog
+        >>> c(name='dcp-it', spec=dict(internal=True, **kwargs)).is_integration_test_catalog
         True
 
-        >>> c(name='foo-bar', internal=False, **kwargs).name
+        >>> c(name='foo-bar', spec=dict(internal=False, **kwargs)).name
         'foo-bar'
 
-        >>> c(name='foo-bar-it', internal=True, **kwargs).name
+        >>> c(name='foo-bar-it', spec=dict(internal=True, **kwargs)).name
         'foo-bar-it'
 
-        >>> c(name='a' * 61 + '-it', internal=True, **kwargs).is_integration_test_catalog
+        >>> c(name='a' * 61 + '-it', spec=dict(internal=True, **kwargs)).is_integration_test_catalog
         True
 
-        >>> c(name='a' * 62 + '-it', internal=True, **kwargs) # doctest: +NORMALIZE_WHITESPACE
+        >>> c(name='a' * 62 + '-it', spec=dict(internal=True, **kwargs)) # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
         azul.RequirementError: ('Catalog name is invalid',
@@ -810,15 +810,26 @@ class Config:
             self.validate_name(self.name)
             # Import locally to avoid cyclical import
             from azul.plugins import (
+                MetadataPlugin,
                 Plugin,
+                RepositoryPlugin,
             )
             all_types = set(p.type_name() for p in Plugin.types())
             configured_types = self.plugins.keys()
             require(all_types == configured_types,
-                    'Missing or extra plugin types',
-                    all_types.symmetric_difference(configured_types))
+                    'Catalog is missing or has extra plugin types',
+                    self.name, all_types.symmetric_difference(configured_types))
             if self.internal:
                 assert self.is_integration_test_catalog is True, self
+
+            repository_bundle_cls, metadata_bundle_cls = (
+                plugin_type.bundle_cls(self.plugins[plugin_type.type_name()].name)
+                for plugin_type in [RepositoryPlugin, MetadataPlugin]
+            )
+
+            require(issubclass(repository_bundle_cls, metadata_bundle_cls),
+                    'Catalog combines incompatible metadata and repository plugins',
+                    self.name, repository_bundle_cls, metadata_bundle_cls)
 
         @cached_property
         def is_integration_test_catalog(self) -> bool:

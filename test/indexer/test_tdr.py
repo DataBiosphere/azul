@@ -17,7 +17,6 @@ from typing import (
     Callable,
     Generic,
     Type,
-    TypeVar,
 )
 import unittest
 from unittest import (
@@ -61,7 +60,6 @@ from azul.bigquery import (
     BigQueryRows,
 )
 from azul.indexer import (
-    Bundle,
     SourcedBundleFQID,
 )
 from azul.logging import (
@@ -98,6 +96,7 @@ from azul_test_case import (
     TDRTestCase,
 )
 from indexer import (
+    BUNDLE,
     CannedBundleTestCase,
 )
 
@@ -156,30 +155,12 @@ class TestMockPlugin(AzulUnitTestCase):
                          MockPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
-BUNDLE = TypeVar('BUNDLE', bound=Bundle)
-
-
-class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase, Generic[BUNDLE]):
-
-    @classmethod
-    @abstractmethod
-    def _bundle_cls(cls) -> Type[BUNDLE]:
-        raise NotImplementedError
+class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase[BUNDLE], Generic[BUNDLE]):
 
     @classmethod
     @abstractmethod
     def _plugin_cls(cls) -> Type[TDRPlugin]:
         raise NotImplementedError
-
-    @classmethod
-    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
-        canned_result = cls._load_canned_file_version(uuid=bundle.uuid,
-                                                      version=None,
-                                                      extension='result.tdr')
-        manifest, metadata = canned_result['manifest'], canned_result['metadata']
-        return cls._bundle_cls()(fqid=bundle,
-                                 manifest=manifest,
-                                 metadata_files=metadata)
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
 

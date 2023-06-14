@@ -142,7 +142,7 @@
                 "donors": [
                     {
                         "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
+                            "bfd991f2-2797-4083-972a-da7c6d7f1b2e"
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
@@ -151,7 +151,7 @@
                             "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
-                            "~null"
+                            "redacted-ACw+6ecI"
                         ],
                         "phenotypic_sex": [
                             "redacted-JfQ0b3xG"
@@ -167,7 +167,7 @@
                 "files": [
                     {
                         "document_id": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
                         ],
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
@@ -203,7 +203,7 @@
                             "2022-06-01T00:00:00.000000Z"
                         ],
                         "uuid": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
                         ],
                         "size": [
                             213021639
@@ -212,7 +212,7 @@
                             213021639
                         ],
                         "name": [
-                            "file_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
                         ],
                         "crc32": [
                             ""
@@ -221,7 +221,7 @@
                             ""
                         ],
                         "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     }
@@ -375,12 +375,12 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
                         "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
+                        "organism_type": "redacted-ACw+6ecI",
                         "phenotypic_sex": "redacted-JfQ0b3xG",
                         "reported_ethnicity": [
                             "redacted-NSkwDycK"
@@ -392,7 +392,7 @@
                 ],
                 "files": [
                     {
-                        "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
+                        "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
@@ -410,17 +410,425 @@
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
+                        "uuid": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
                         "size": 213021639,
                         "size_": 213021639,
-                        "name": "file_1e269f04-4347-4188-b060-1dcc69e71d67",
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
             "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_files_aggregate",
+        "_type": "_doc",
+        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": [
+                            "1509ef40-d1ba-440d-b298-16b7c173dcd4"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+                        ],
+                        "activity_id": [
+                            "18b3be87-e26b-4376-0d8d-c1e370e90e07"
+                        ],
+                        "activity_table": [
+                            "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
+                        ],
+                        "assay_type": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "date_created": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": [
+                            "826dea02-e274-4ffe-aabc-eb3db63ad068"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
+                        ],
+                        "biosample_id": [
+                            "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
+                        ],
+                        "anatomical_site": [
+                            "~null"
+                        ],
+                        "apriori_cell_type": [
+                            "~null"
+                        ],
+                        "biosample_type": [
+                            "~null"
+                        ],
+                        "disease": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection_unit": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "2370f948-2783-4eb6-afea-e022897f4dcf"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                        ],
+                        "dataset_id": [
+                            "52ee7665-7033-63f2-a8d9-ce8e32666739"
+                        ],
+                        "consent_group": [
+                            "DS-BDIS"
+                        ],
+                        "data_use_permission": [
+                            "DS-BDIS"
+                        ],
+                        "owner": [
+                            "Debbie Nickerson"
+                        ],
+                        "principal_investigator": [
+                            "~null"
+                        ],
+                        "registered_identifier": [
+                            "phs000693"
+                        ],
+                        "title": [
+                            "ANVIL_CMG_UWASH_DS_BDIS"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "diagnoses": [
+                    {
+                        "document_id": [
+                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": [
+                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
+                        ],
+                        "disease": [
+                            "redacted-A61iJlLx",
+                            "redacted-g50ublm/"
+                        ],
+                        "diagnosis_age_unit": [
+                            "~null"
+                        ],
+                        "diagnosis_age": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "onset_age_unit": [
+                            "~null"
+                        ],
+                        "onset_age": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": [
+                            "bfd991f2-2797-4083-972a-da7c6d7f1b2e"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": [
+                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
+                        ],
+                        "organism_type": [
+                            "redacted-ACw+6ecI"
+                        ],
+                        "phenotypic_sex": [
+                            "redacted-JfQ0b3xG"
+                        ],
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                        "source_datarepo_row_ids": [
+                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
+                        ],
+                        "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".vcf.gz",
+                        "file_size": 213021639,
+                        "file_size_": 213021639,
+                        "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                        "size": 213021639,
+                        "size_": 213021639,
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_files",
+        "_type": "_doc",
+        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+                        "source_datarepo_row_ids": [
+                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+                        ],
+                        "activity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
+                        "assay_type": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "date_created": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
+                        "source_datarepo_row_ids": [
+                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
+                        ],
+                        "biosample_id": "f9d40cf6-37b8-22f3-ce35-0dc614d2452b",
+                        "anatomical_site": "~null",
+                        "apriori_cell_type": [
+                            "~null"
+                        ],
+                        "biosample_type": "~null",
+                        "disease": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "donor_age_at_collection": {
+                            "gte": null,
+                            "lte": null
+                        }
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+                        "source_datarepo_row_ids": [
+                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                        ],
+                        "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+                        "consent_group": [
+                            "DS-BDIS"
+                        ],
+                        "data_use_permission": [
+                            "DS-BDIS"
+                        ],
+                        "owner": [
+                            "Debbie Nickerson"
+                        ],
+                        "principal_investigator": [
+                            "~null"
+                        ],
+                        "registered_identifier": [
+                            "phs000693"
+                        ],
+                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "data_modality": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "diagnoses": [
+                    {
+                        "document_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+                        "disease": [
+                            "redacted-A61iJlLx"
+                        ],
+                        "diagnosis_age_unit": "~null",
+                        "diagnosis_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "onset_age_unit": "~null",
+                        "onset_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    },
+                    {
+                        "document_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                        "disease": [
+                            "redacted-g50ublm/"
+                        ],
+                        "diagnosis_age_unit": "~null",
+                        "diagnosis_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "onset_age_unit": "~null",
+                        "onset_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                        "organism_type": "redacted-ACw+6ecI",
+                        "phenotypic_sex": "redacted-JfQ0b3xG",
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                        "source_datarepo_row_ids": [
+                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
+                        ],
+                        "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".vcf.gz",
+                        "file_size": 213021639,
+                        "file_size_": 213021639,
+                        "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                        "size": 213021639,
+                        "size_": 213021639,
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                    }
+                ]
+            },
+            "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_826dea02-e274-affe-aabc-eb3db63ad068__exists",
             "source": {
                 "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
                 "spec": "tdr:test_project:snapshot/snapshot:/2"
@@ -580,7 +988,7 @@
                 "donors": [
                     {
                         "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
+                            "bfd991f2-2797-4083-972a-da7c6d7f1b2e"
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
@@ -589,7 +997,7 @@
                             "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
-                            "~null"
+                            "redacted-ACw+6ecI"
                         ],
                         "phenotypic_sex": [
                             "redacted-JfQ0b3xG"
@@ -605,67 +1013,7 @@
                 "files": [
                     {
                         "document_id": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".bam"
-                        ],
-                        "file_size": [
-                            3306845592
-                        ],
-                        "file_size_": [
-                            3306845592
-                        ],
-                        "file_md5sum": [
-                            "fNn9e1SovzgOROk3BvH6LQ=="
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
-                        ],
-                        "is_supplementary": [
-                            0
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
-                        ],
-                        "size": [
-                            3306845592
-                        ],
-                        "size_": [
-                            3306845592
-                        ],
-                        "name": [
-                            "file_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "count": 1
-                    },
-                    {
-                        "document_id": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
                         ],
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
@@ -701,7 +1049,7 @@
                             "2022-06-01T00:00:00.000000Z"
                         ],
                         "uuid": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
                         ],
                         "size": [
                             213021639
@@ -710,7 +1058,7 @@
                             213021639
                         ],
                         "name": [
-                            "file_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
                         ],
                         "crc32": [
                             ""
@@ -719,7 +1067,67 @@
                             ""
                         ],
                         "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        ],
+                        "count": 1
+                    },
+                    {
+                        "document_id": [
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                        ],
+                        "file_id": [
+                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".bam"
+                        ],
+                        "file_size": [
+                            3306845592
+                        ],
+                        "file_size_": [
+                            3306845592
+                        ],
+                        "file_md5sum": [
+                            "fNn9e1SovzgOROk3BvH6LQ=="
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
+                        ],
+                        "is_supplementary": [
+                            0
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
+                        ],
+                        "size": [
+                            3306845592
+                        ],
+                        "size_": [
+                            3306845592
+                        ],
+                        "name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -892,12 +1300,12 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
                         "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
+                        "organism_type": "redacted-ACw+6ecI",
                         "phenotypic_sex": "redacted-JfQ0b3xG",
                         "reported_ethnicity": [
                             "redacted-NSkwDycK"
@@ -909,34 +1317,7 @@
                 ],
                 "files": [
                     {
-                        "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
-                        "source_datarepo_row_ids": [
-                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_size": 3306845592,
-                        "file_size_": 3306845592,
-                        "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-                        "is_supplementary": 0,
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
-                        "size": 3306845592,
-                        "size_": 3306845592,
-                        "name": "file_8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                    },
-                    {
-                        "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
+                        "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
@@ -954,13 +1335,40 @@
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
+                        "uuid": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
                         "size": 213021639,
                         "size_": 213021639,
-                        "name": "file_1e269f04-4347-4188-b060-1dcc69e71d67",
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                    },
+                    {
+                        "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                        "source_datarepo_row_ids": [
+                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                        ],
+                        "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_size": 3306845592,
+                        "file_size_": 3306845592,
+                        "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                        "size": 3306845592,
+                        "size_": 3306845592,
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -975,554 +1383,12 @@
         }
     },
     {
-        "_index": "azul_v2_nadove4_test_donors_aggregate",
-        "_type": "_doc",
-        "_id": "6708dc44-5232-44ca-a050-5dee58637284",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "6708dc44-5232-44ca-a050-5dee58637284",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": [
-                            "1509ef40-d1ba-440d-b298-16b7c173dcd4",
-                            "816e364e-1193-4e5b-a91a-14e4b009157c"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b",
-                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-                        ],
-                        "activity_id": [
-                            "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                            "a60c5138-3749-f7cb-8714-52d389ad5231"
-                        ],
-                        "activity_table": [
-                            "sequencingactivity"
-                        ],
-                        "activity_type": [
-                            "Sequencing"
-                        ],
-                        "assay_type": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": [
-                            "826dea02-e274-4ffe-aabc-eb3db63ad068"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
-                        "biosample_id": [
-                            "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
-                        ],
-                        "anatomical_site": [
-                            "~null"
-                        ],
-                        "apriori_cell_type": [
-                            "~null"
-                        ],
-                        "biosample_type": [
-                            "~null"
-                        ],
-                        "disease": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection_unit": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "2370f948-2783-4eb6-afea-e022897f4dcf"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
-                        ],
-                        "dataset_id": [
-                            "52ee7665-7033-63f2-a8d9-ce8e32666739"
-                        ],
-                        "consent_group": [
-                            "DS-BDIS"
-                        ],
-                        "data_use_permission": [
-                            "DS-BDIS"
-                        ],
-                        "owner": [
-                            "Debbie Nickerson"
-                        ],
-                        "principal_investigator": [
-                            "~null"
-                        ],
-                        "registered_identifier": [
-                            "phs000693"
-                        ],
-                        "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "diagnoses": [
-                    {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
-                        ],
-                        "disease": [
-                            "redacted-A61iJlLx",
-                            "redacted-g50ublm/"
-                        ],
-                        "diagnosis_age_unit": [
-                            "~null"
-                        ],
-                        "diagnosis_age": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "onset_age_unit": [
-                            "~null"
-                        ],
-                        "onset_age": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "phenotype": [
-                            "redacted-acSYHZUr"
-                        ],
-                        "phenopacket": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-JfQ0b3xG",
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".bam"
-                        ],
-                        "file_size": [
-                            3306845592
-                        ],
-                        "file_size_": [
-                            3306845592
-                        ],
-                        "file_md5sum": [
-                            "fNn9e1SovzgOROk3BvH6LQ=="
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
-                        ],
-                        "is_supplementary": [
-                            0
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
-                        ],
-                        "size": [
-                            3306845592
-                        ],
-                        "size_": [
-                            3306845592
-                        ],
-                        "name": [
-                            "file_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "count": 1
-                    },
-                    {
-                        "document_id": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
-                        ],
-                        "file_id": [
-                            "1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".vcf.gz"
-                        ],
-                        "file_size": [
-                            213021639
-                        ],
-                        "file_size_": [
-                            213021639
-                        ],
-                        "file_md5sum": [
-                            "vuxgbuCqKZ/fkT9CWTFmIg=="
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
-                        ],
-                        "is_supplementary": [
-                            0
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
-                        ],
-                        "size": [
-                            213021639
-                        ],
-                        "size_": [
-                            213021639
-                        ],
-                        "name": [
-                            "file_1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
-                        "count": 1
-                    }
-                ]
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_donors",
-        "_type": "_doc",
-        "_id": "6708dc44-5232-44ca-a050-5dee58637284_826dea02-e274-affe-aabc-eb3db63ad068__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "6708dc44-5232-44ca-a050-5dee58637284",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
-                        "source_datarepo_row_ids": [
-                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-                        ],
-                        "activity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                        "activity_table": "sequencingactivity",
-                        "activity_type": "Sequencing",
-                        "assay_type": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
-                    },
-                    {
-                        "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
-                        "source_datarepo_row_ids": [
-                            "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b"
-                        ],
-                        "activity_id": "a60c5138-3749-f7cb-8714-52d389ad5231",
-                        "activity_table": "sequencingactivity",
-                        "activity_type": "Sequencing",
-                        "assay_type": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
-                        "biosample_id": "f9d40cf6-37b8-22f3-ce35-0dc614d2452b",
-                        "anatomical_site": "~null",
-                        "apriori_cell_type": [
-                            "~null"
-                        ],
-                        "biosample_type": "~null",
-                        "disease": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "donor_age_at_collection": {
-                            "gte": null,
-                            "lte": null
-                        }
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
-                        "source_datarepo_row_ids": [
-                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
-                        ],
-                        "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
-                        "consent_group": [
-                            "DS-BDIS"
-                        ],
-                        "data_use_permission": [
-                            "DS-BDIS"
-                        ],
-                        "owner": [
-                            "Debbie Nickerson"
-                        ],
-                        "principal_investigator": [
-                            "~null"
-                        ],
-                        "registered_identifier": [
-                            "phs000693"
-                        ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
-                        "data_modality": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "diagnoses": [
-                    {
-                        "document_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
-                        "disease": [
-                            "redacted-A61iJlLx"
-                        ],
-                        "diagnosis_age_unit": "~null",
-                        "diagnosis_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "onset_age_unit": "~null",
-                        "onset_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "phenotype": [
-                            "redacted-acSYHZUr"
-                        ],
-                        "phenopacket": [
-                            "~null"
-                        ]
-                    },
-                    {
-                        "document_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                        "disease": [
-                            "redacted-g50ublm/"
-                        ],
-                        "diagnosis_age_unit": "~null",
-                        "diagnosis_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "onset_age_unit": "~null",
-                        "onset_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "phenotype": [
-                            "redacted-acSYHZUr"
-                        ],
-                        "phenopacket": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-JfQ0b3xG",
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
-                        "source_datarepo_row_ids": [
-                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_size": 3306845592,
-                        "file_size_": 3306845592,
-                        "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-                        "is_supplementary": 0,
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
-                        "size": 3306845592,
-                        "size_": 3306845592,
-                        "name": "file_8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                    },
-                    {
-                        "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-                        "source_datarepo_row_ids": [
-                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
-                        ],
-                        "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".vcf.gz",
-                        "file_size": 213021639,
-                        "file_size_": 213021639,
-                        "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-                        "is_supplementary": 0,
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-                        "size": 213021639,
-                        "size_": 213021639,
-                        "name": "file_1e269f04-4347-4188-b060-1dcc69e71d67",
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
-                    }
-                ]
-            },
-            "document_id": "6708dc44-5232-44ca-a050-5dee58637284_826dea02-e274-affe-aabc-eb3db63ad068__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
         "_index": "azul_v2_nadove4_test_files_aggregate",
         "_type": "_doc",
-        "_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
+        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
         "_score": 1.0,
         "_source": {
-            "entity_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
+            "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
             "contents": {
                 "activities": [
                     {
@@ -1669,7 +1535,7 @@
                 "donors": [
                     {
                         "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
+                            "bfd991f2-2797-4083-972a-da7c6d7f1b2e"
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
@@ -1678,7 +1544,7 @@
                             "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
-                            "~null"
+                            "redacted-ACw+6ecI"
                         ],
                         "phenotypic_sex": [
                             "redacted-JfQ0b3xG"
@@ -1693,7 +1559,7 @@
                 ],
                 "files": [
                     {
-                        "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
+                        "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
                         ],
@@ -1711,13 +1577,13 @@
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
+                        "uuid": "3b17377b-16b1-431c-9967-e5d01fc5923f",
                         "size": 3306845592,
                         "size_": 3306845592,
-                        "name": "file_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -1739,10 +1605,10 @@
     {
         "_index": "azul_v2_nadove4_test_files",
         "_type": "_doc",
-        "_id": "677f207e-2d12-4eca-8f7a-039325af91ad_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068__exists",
         "_score": 1.0,
         "_source": {
-            "entity_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
+            "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
             "contents": {
                 "activities": [
                     {
@@ -1869,12 +1735,12 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
                         "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
+                        "organism_type": "redacted-ACw+6ecI",
                         "phenotypic_sex": "redacted-JfQ0b3xG",
                         "reported_ethnicity": [
                             "redacted-NSkwDycK"
@@ -1886,7 +1752,7 @@
                 ],
                 "files": [
                     {
-                        "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
+                        "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
                         ],
@@ -1904,425 +1770,17 @@
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
+                        "uuid": "3b17377b-16b1-431c-9967-e5d01fc5923f",
                         "size": 3306845592,
                         "size_": 3306845592,
-                        "name": "file_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad_826dea02-e274-affe-aabc-eb3db63ad068__exists",
-            "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
-            },
-            "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
-            "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_files_aggregate",
-        "_type": "_doc",
-        "_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": [
-                            "1509ef40-d1ba-440d-b298-16b7c173dcd4"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-                        ],
-                        "activity_id": [
-                            "18b3be87-e26b-4376-0d8d-c1e370e90e07"
-                        ],
-                        "activity_table": [
-                            "sequencingactivity"
-                        ],
-                        "activity_type": [
-                            "Sequencing"
-                        ],
-                        "assay_type": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
-                        ]
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": [
-                            "826dea02-e274-4ffe-aabc-eb3db63ad068"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
-                        "biosample_id": [
-                            "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
-                        ],
-                        "anatomical_site": [
-                            "~null"
-                        ],
-                        "apriori_cell_type": [
-                            "~null"
-                        ],
-                        "biosample_type": [
-                            "~null"
-                        ],
-                        "disease": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection_unit": [
-                            "~null"
-                        ],
-                        "donor_age_at_collection": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ]
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": [
-                            "2370f948-2783-4eb6-afea-e022897f4dcf"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
-                        ],
-                        "dataset_id": [
-                            "52ee7665-7033-63f2-a8d9-ce8e32666739"
-                        ],
-                        "consent_group": [
-                            "DS-BDIS"
-                        ],
-                        "data_use_permission": [
-                            "DS-BDIS"
-                        ],
-                        "owner": [
-                            "Debbie Nickerson"
-                        ],
-                        "principal_investigator": [
-                            "~null"
-                        ],
-                        "registered_identifier": [
-                            "phs000693"
-                        ],
-                        "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "diagnoses": [
-                    {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
-                        ],
-                        "disease": [
-                            "redacted-A61iJlLx",
-                            "redacted-g50ublm/"
-                        ],
-                        "diagnosis_age_unit": [
-                            "~null"
-                        ],
-                        "diagnosis_age": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "onset_age_unit": [
-                            "~null"
-                        ],
-                        "onset_age": [
-                            {
-                                "gte": null,
-                                "lte": null
-                            }
-                        ],
-                        "phenotype": [
-                            "redacted-acSYHZUr"
-                        ],
-                        "phenopacket": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
-                        ],
-                        "organism_type": [
-                            "~null"
-                        ],
-                        "phenotypic_sex": [
-                            "redacted-JfQ0b3xG"
-                        ],
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-                        "source_datarepo_row_ids": [
-                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
-                        ],
-                        "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".vcf.gz",
-                        "file_size": 213021639,
-                        "file_size_": 213021639,
-                        "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-                        "is_supplementary": 0,
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-                        "size": 213021639,
-                        "size_": 213021639,
-                        "name": "file_1e269f04-4347-4188-b060-1dcc69e71d67",
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
-                    }
-                ]
-            },
-            "num_contributions": 1,
-            "sources": [
-                {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
-                }
-            ],
-            "bundles": [
-                {
-                    "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
-                }
-            ]
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_files",
-        "_type": "_doc",
-        "_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47_826dea02-e274-affe-aabc-eb3db63ad068__exists",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-            "contents": {
-                "activities": [
-                    {
-                        "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
-                        "source_datarepo_row_ids": [
-                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-                        ],
-                        "activity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                        "activity_table": "sequencingactivity",
-                        "activity_type": "Sequencing",
-                        "assay_type": [
-                            "~null"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
-                    }
-                ],
-                "biosamples": [
-                    {
-                        "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
-                        "biosample_id": "f9d40cf6-37b8-22f3-ce35-0dc614d2452b",
-                        "anatomical_site": "~null",
-                        "apriori_cell_type": [
-                            "~null"
-                        ],
-                        "biosample_type": "~null",
-                        "disease": "~null",
-                        "donor_age_at_collection_unit": "~null",
-                        "donor_age_at_collection": {
-                            "gte": null,
-                            "lte": null
-                        }
-                    }
-                ],
-                "datasets": [
-                    {
-                        "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
-                        "source_datarepo_row_ids": [
-                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
-                        ],
-                        "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
-                        "consent_group": [
-                            "DS-BDIS"
-                        ],
-                        "data_use_permission": [
-                            "DS-BDIS"
-                        ],
-                        "owner": [
-                            "Debbie Nickerson"
-                        ],
-                        "principal_investigator": [
-                            "~null"
-                        ],
-                        "registered_identifier": [
-                            "phs000693"
-                        ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
-                        "data_modality": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "diagnoses": [
-                    {
-                        "document_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
-                        "disease": [
-                            "redacted-A61iJlLx"
-                        ],
-                        "diagnosis_age_unit": "~null",
-                        "diagnosis_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "onset_age_unit": "~null",
-                        "onset_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "phenotype": [
-                            "redacted-acSYHZUr"
-                        ],
-                        "phenopacket": [
-                            "~null"
-                        ]
-                    },
-                    {
-                        "document_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                        "disease": [
-                            "redacted-g50ublm/"
-                        ],
-                        "diagnosis_age_unit": "~null",
-                        "diagnosis_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "onset_age_unit": "~null",
-                        "onset_age": {
-                            "gte": null,
-                            "lte": null
-                        },
-                        "phenotype": [
-                            "redacted-acSYHZUr"
-                        ],
-                        "phenopacket": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "donors": [
-                    {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
-                        "source_datarepo_row_ids": [
-                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
-                        "phenotypic_sex": "redacted-JfQ0b3xG",
-                        "reported_ethnicity": [
-                            "redacted-NSkwDycK"
-                        ],
-                        "genetic_ancestry": [
-                            "~null"
-                        ]
-                    }
-                ],
-                "files": [
-                    {
-                        "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-                        "source_datarepo_row_ids": [
-                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
-                        ],
-                        "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".vcf.gz",
-                        "file_size": 213021639,
-                        "file_size_": 213021639,
-                        "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-                        "is_supplementary": 0,
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
-                        "size": 213021639,
-                        "size_": 213021639,
-                        "name": "file_1e269f04-4347-4188-b060-1dcc69e71d67",
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
-                    }
-                ]
-            },
-            "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068__exists",
             "source": {
                 "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
                 "spec": "tdr:test_project:snapshot/snapshot:/2"
@@ -2475,7 +1933,7 @@
                 "donors": [
                     {
                         "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
+                            "bfd991f2-2797-4083-972a-da7c6d7f1b2e"
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
@@ -2484,7 +1942,7 @@
                             "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
-                            "~null"
+                            "redacted-ACw+6ecI"
                         ],
                         "phenotypic_sex": [
                             "redacted-JfQ0b3xG"
@@ -2500,7 +1958,7 @@
                 "files": [
                     {
                         "document_id": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
                         ],
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
@@ -2536,7 +1994,7 @@
                             "2022-06-01T00:00:00.000000Z"
                         ],
                         "uuid": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
                         ],
                         "size": [
                             3306845592
@@ -2545,7 +2003,7 @@
                             3306845592
                         ],
                         "name": [
-                            "file_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
                         "crc32": [
                             ""
@@ -2554,7 +2012,7 @@
                             ""
                         ],
                         "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -2708,12 +2166,12 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
                         "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
+                        "organism_type": "redacted-ACw+6ecI",
                         "phenotypic_sex": "redacted-JfQ0b3xG",
                         "reported_ethnicity": [
                             "redacted-NSkwDycK"
@@ -2725,7 +2183,7 @@
                 ],
                 "files": [
                     {
-                        "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
+                        "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
                         ],
@@ -2743,13 +2201,13 @@
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
+                        "uuid": "3b17377b-16b1-431c-9967-e5d01fc5923f",
                         "size": 3306845592,
                         "size_": 3306845592,
-                        "name": "file_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -2905,7 +2363,7 @@
                 "donors": [
                     {
                         "document_id": [
-                            "6708dc44-5232-44ca-a050-5dee58637284"
+                            "bfd991f2-2797-4083-972a-da7c6d7f1b2e"
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
@@ -2914,7 +2372,7 @@
                             "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
-                            "~null"
+                            "redacted-ACw+6ecI"
                         ],
                         "phenotypic_sex": [
                             "redacted-JfQ0b3xG"
@@ -2930,67 +2388,7 @@
                 "files": [
                     {
                         "document_id": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
-                        ],
-                        "source_datarepo_row_ids": [
-                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": [
-                            ".bam"
-                        ],
-                        "file_size": [
-                            3306845592
-                        ],
-                        "file_size_": [
-                            3306845592
-                        ],
-                        "file_md5sum": [
-                            "fNn9e1SovzgOROk3BvH6LQ=="
-                        ],
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
-                        ],
-                        "is_supplementary": [
-                            0
-                        ],
-                        "version": [
-                            "2022-06-01T00:00:00.000000Z"
-                        ],
-                        "uuid": [
-                            "677f207e-2d12-4eca-8f7a-039325af91ad"
-                        ],
-                        "size": [
-                            3306845592
-                        ],
-                        "size_": [
-                            3306845592
-                        ],
-                        "name": [
-                            "file_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "crc32": [
-                            ""
-                        ],
-                        "sha256": [
-                            ""
-                        ],
-                        "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
-                        "count": 1
-                    },
-                    {
-                        "document_id": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
                         ],
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
@@ -3026,7 +2424,7 @@
                             "2022-06-01T00:00:00.000000Z"
                         ],
                         "uuid": [
-                            "6a85e0ab-2386-4f7e-8503-d72d90b4bc47"
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
                         ],
                         "size": [
                             213021639
@@ -3035,7 +2433,7 @@
                             213021639
                         ],
                         "name": [
-                            "file_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
                         ],
                         "crc32": [
                             ""
@@ -3044,7 +2442,67 @@
                             ""
                         ],
                         "drs_path": [
-                            "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        ],
+                        "count": 1
+                    },
+                    {
+                        "document_id": [
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                        ],
+                        "file_id": [
+                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".bam"
+                        ],
+                        "file_size": [
+                            3306845592
+                        ],
+                        "file_size_": [
+                            3306845592
+                        ],
+                        "file_md5sum": [
+                            "fNn9e1SovzgOROk3BvH6LQ=="
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
+                        ],
+                        "is_supplementary": [
+                            0
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
+                        ],
+                        "size": [
+                            3306845592
+                        ],
+                        "size_": [
+                            3306845592
+                        ],
+                        "name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -3217,12 +2675,12 @@
                 ],
                 "donors": [
                     {
-                        "document_id": "6708dc44-5232-44ca-a050-5dee58637284",
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
                         "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                        "organism_type": "~null",
+                        "organism_type": "redacted-ACw+6ecI",
                         "phenotypic_sex": "redacted-JfQ0b3xG",
                         "reported_ethnicity": [
                             "redacted-NSkwDycK"
@@ -3234,34 +2692,7 @@
                 ],
                 "files": [
                     {
-                        "document_id": "677f207e-2d12-4eca-8f7a-039325af91ad",
-                        "source_datarepo_row_ids": [
-                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                        "data_modality": [
-                            "~null"
-                        ],
-                        "file_format": ".bam",
-                        "file_size": 3306845592,
-                        "file_size_": 3306845592,
-                        "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
-                        "reference_assembly": [
-                            "~null"
-                        ],
-                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-                        "is_supplementary": 0,
-                        "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "677f207e-2d12-4eca-8f7a-039325af91ad",
-                        "size": 3306845592,
-                        "size_": 3306845592,
-                        "name": "file_8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                        "crc32": "",
-                        "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                    },
-                    {
-                        "document_id": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
+                        "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
@@ -3279,17 +2710,586 @@
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
-                        "uuid": "6a85e0ab-2386-4f7e-8503-d72d90b4bc47",
+                        "uuid": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
                         "size": 213021639,
                         "size_": 213021639,
-                        "name": "file_1e269f04-4347-4188-b060-1dcc69e71d67",
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_5b77f311-6e67-4a1b-b32a-baa9f5742442_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                    },
+                    {
+                        "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                        "source_datarepo_row_ids": [
+                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                        ],
+                        "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_size": 3306845592,
+                        "file_size_": 3306845592,
+                        "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                        "size": 3306845592,
+                        "size_": 3306845592,
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
             "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "source": {
+                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                "spec": "tdr:test_project:snapshot/snapshot:/2"
+            },
+            "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
+            "bundle_version": "",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_donors_aggregate",
+        "_type": "_doc",
+        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": [
+                            "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+                            "816e364e-1193-4e5b-a91a-14e4b009157c"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b",
+                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+                        ],
+                        "activity_id": [
+                            "18b3be87-e26b-4376-0d8d-c1e370e90e07",
+                            "a60c5138-3749-f7cb-8714-52d389ad5231"
+                        ],
+                        "activity_table": [
+                            "sequencingactivity"
+                        ],
+                        "activity_type": [
+                            "Sequencing"
+                        ],
+                        "assay_type": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "date_created": [
+                            "9999-01-01T00:00:00.000000Z"
+                        ]
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": [
+                            "826dea02-e274-4ffe-aabc-eb3db63ad068"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
+                        ],
+                        "biosample_id": [
+                            "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
+                        ],
+                        "anatomical_site": [
+                            "~null"
+                        ],
+                        "apriori_cell_type": [
+                            "~null"
+                        ],
+                        "biosample_type": [
+                            "~null"
+                        ],
+                        "disease": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection_unit": [
+                            "~null"
+                        ],
+                        "donor_age_at_collection": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ]
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": [
+                            "2370f948-2783-4eb6-afea-e022897f4dcf"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                        ],
+                        "dataset_id": [
+                            "52ee7665-7033-63f2-a8d9-ce8e32666739"
+                        ],
+                        "consent_group": [
+                            "DS-BDIS"
+                        ],
+                        "data_use_permission": [
+                            "DS-BDIS"
+                        ],
+                        "owner": [
+                            "Debbie Nickerson"
+                        ],
+                        "principal_investigator": [
+                            "~null"
+                        ],
+                        "registered_identifier": [
+                            "phs000693"
+                        ],
+                        "title": [
+                            "ANVIL_CMG_UWASH_DS_BDIS"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "diagnoses": [
+                    {
+                        "document_id": [
+                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": [
+                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
+                        ],
+                        "disease": [
+                            "redacted-A61iJlLx",
+                            "redacted-g50ublm/"
+                        ],
+                        "diagnosis_age_unit": [
+                            "~null"
+                        ],
+                        "diagnosis_age": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "onset_age_unit": [
+                            "~null"
+                        ],
+                        "onset_age": [
+                            {
+                                "gte": null,
+                                "lte": null
+                            }
+                        ],
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                        "organism_type": "redacted-ACw+6ecI",
+                        "phenotypic_sex": "redacted-JfQ0b3xG",
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": [
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
+                        ],
+                        "file_id": [
+                            "1e269f04-4347-4188-b060-1dcc69e71d67"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".vcf.gz"
+                        ],
+                        "file_size": [
+                            213021639
+                        ],
+                        "file_size_": [
+                            213021639
+                        ],
+                        "file_md5sum": [
+                            "vuxgbuCqKZ/fkT9CWTFmIg=="
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
+                        ],
+                        "is_supplementary": [
+                            0
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
+                        ],
+                        "size": [
+                            213021639
+                        ],
+                        "size_": [
+                            213021639
+                        ],
+                        "name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        ],
+                        "count": 1
+                    },
+                    {
+                        "document_id": [
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
+                        ],
+                        "source_datarepo_row_ids": [
+                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                        ],
+                        "file_id": [
+                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": [
+                            ".bam"
+                        ],
+                        "file_size": [
+                            3306845592
+                        ],
+                        "file_size_": [
+                            3306845592
+                        ],
+                        "file_md5sum": [
+                            "fNn9e1SovzgOROk3BvH6LQ=="
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
+                        ],
+                        "is_supplementary": [
+                            0
+                        ],
+                        "version": [
+                            "2022-06-01T00:00:00.000000Z"
+                        ],
+                        "uuid": [
+                            "3b17377b-16b1-431c-9967-e5d01fc5923f"
+                        ],
+                        "size": [
+                            3306845592
+                        ],
+                        "size_": [
+                            3306845592
+                        ],
+                        "name": [
+                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
+                        ],
+                        "crc32": [
+                            ""
+                        ],
+                        "sha256": [
+                            ""
+                        ],
+                        "drs_path": [
+                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        ],
+                        "count": 1
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "sources": [
+                {
+                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
+                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                }
+            ],
+            "bundles": [
+                {
+                    "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
+                    "version": ""
+                }
+            ]
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_donors",
+        "_type": "_doc",
+        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+            "contents": {
+                "activities": [
+                    {
+                        "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+                        "source_datarepo_row_ids": [
+                            "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+                        ],
+                        "activity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
+                        "assay_type": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "date_created": "9999-01-01T00:00:00.000000Z"
+                    },
+                    {
+                        "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
+                        "source_datarepo_row_ids": [
+                            "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b"
+                        ],
+                        "activity_id": "a60c5138-3749-f7cb-8714-52d389ad5231",
+                        "activity_table": "sequencingactivity",
+                        "activity_type": "Sequencing",
+                        "assay_type": [
+                            "~null"
+                        ],
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "date_created": "9999-01-01T00:00:00.000000Z"
+                    }
+                ],
+                "biosamples": [
+                    {
+                        "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
+                        "source_datarepo_row_ids": [
+                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
+                        ],
+                        "biosample_id": "f9d40cf6-37b8-22f3-ce35-0dc614d2452b",
+                        "anatomical_site": "~null",
+                        "apriori_cell_type": [
+                            "~null"
+                        ],
+                        "biosample_type": "~null",
+                        "disease": "~null",
+                        "donor_age_at_collection_unit": "~null",
+                        "donor_age_at_collection": {
+                            "gte": null,
+                            "lte": null
+                        }
+                    }
+                ],
+                "datasets": [
+                    {
+                        "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+                        "source_datarepo_row_ids": [
+                            "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                        ],
+                        "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+                        "consent_group": [
+                            "DS-BDIS"
+                        ],
+                        "data_use_permission": [
+                            "DS-BDIS"
+                        ],
+                        "owner": [
+                            "Debbie Nickerson"
+                        ],
+                        "principal_investigator": [
+                            "~null"
+                        ],
+                        "registered_identifier": [
+                            "phs000693"
+                        ],
+                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "data_modality": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "diagnoses": [
+                    {
+                        "document_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+                        "disease": [
+                            "redacted-A61iJlLx"
+                        ],
+                        "diagnosis_age_unit": "~null",
+                        "diagnosis_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "onset_age_unit": "~null",
+                        "onset_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    },
+                    {
+                        "document_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                        "disease": [
+                            "redacted-g50ublm/"
+                        ],
+                        "diagnosis_age_unit": "~null",
+                        "diagnosis_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "onset_age_unit": "~null",
+                        "onset_age": {
+                            "gte": null,
+                            "lte": null
+                        },
+                        "phenotype": [
+                            "redacted-acSYHZUr"
+                        ],
+                        "phenopacket": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "donors": [
+                    {
+                        "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+                        "source_datarepo_row_ids": [
+                            "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                        ],
+                        "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                        "organism_type": "redacted-ACw+6ecI",
+                        "phenotypic_sex": "redacted-JfQ0b3xG",
+                        "reported_ethnicity": [
+                            "redacted-NSkwDycK"
+                        ],
+                        "genetic_ancestry": [
+                            "~null"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                        "source_datarepo_row_ids": [
+                            "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
+                        ],
+                        "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".vcf.gz",
+                        "file_size": 213021639,
+                        "file_size_": 213021639,
+                        "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "is_supplementary": 0,
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                        "size": 213021639,
+                        "size_": 213021639,
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                    },
+                    {
+                        "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                        "source_datarepo_row_ids": [
+                            "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                        ],
+                        "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                        "data_modality": [
+                            "~null"
+                        ],
+                        "file_format": ".bam",
+                        "file_size": 3306845592,
+                        "file_size_": 3306845592,
+                        "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
+                        "reference_assembly": [
+                            "~null"
+                        ],
+                        "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "is_supplementary": 0,
+                        "version": "2022-06-01T00:00:00.000000Z",
+                        "uuid": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                        "size": 3306845592,
+                        "size_": 3306845592,
+                        "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "crc32": "",
+                        "sha256": "",
+                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                    }
+                ]
+            },
+            "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068__exists",
             "source": {
                 "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
                 "spec": "tdr:test_project:snapshot/snapshot:/2"

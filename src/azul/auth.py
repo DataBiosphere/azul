@@ -1,4 +1,7 @@
-import abc
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from inspect import (
     isabstract,
 )
@@ -18,9 +21,9 @@ from azul.json import (
 
 
 @attr.s(auto_attribs=True, frozen=True)
-class Authentication(abc.ABC):
+class Authentication(metaclass=ABCMeta):
 
-    @abc.abstractmethod
+    @abstractmethod
     def identity(self) -> str:
         """
         A string uniquely identifying the authenticated entity, for at least
@@ -28,7 +31,7 @@ class Authentication(abc.ABC):
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def as_http_header(self) -> str:
         """
         A string representing the authenticated entity as an HTTP header

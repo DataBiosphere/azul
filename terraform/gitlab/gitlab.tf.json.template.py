@@ -200,22 +200,37 @@ public_key = (
     'hannes@ucsc.edu'
 )
 
+operator_keys = [
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fR'
+        'yiQqyMNxE/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi'
+        '6ag8h/pOQCvx6oO5NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcK'
+        'G2t2SuVh+PCpmMPA5/i/raDUqATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zp'
+        'ChGpbl5jA2ZfoEDEOhX4ffOD1UwmkmkoUC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6H'
+        'VMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/AkQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZ'
+        'e1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
+        ' '
+        'achave11@ucsc.edu'
+    ),
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXES'
+        'gpL59i5QcycpYq6q7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xm'
+        'rlGWi8AhEfbFyAFaqb2i+Whbkt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye3'
+        '0OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhr'
+        'W07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
+        ' '
+        'dsotirho@ucsc.edu'
+    )
+]
+
 other_public_keys = {
-    'dev': [
-        (
-            'ssh-rsa'
-            ' '
-            'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fR'
-            'yiQqyMNxE/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi'
-            '6ag8h/pOQCvx6oO5NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcK'
-            'G2t2SuVh+PCpmMPA5/i/raDUqATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zp'
-            'ChGpbl5jA2ZfoEDEOhX4ffOD1UwmkmkoUC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6H'
-            'VMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/AkQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZ'
-            'e1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
-            ' '
-            'achave11@ucsc.edu'
-        ),
-    ],
+    'dev': operator_keys,
+    'anvildev': operator_keys,
+    'anvilprod': operator_keys,
     'prod': []
 }
 
@@ -1370,6 +1385,37 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # gitlab-runner-net network, so TLS is
                                     # unnecessary.
                                     '--env DOCKER_TLS_CERTDIR=',
+                                    # This DinD container is attached to a
+                                    # custom network. Because of that, Docker
+                                    # provides an /etc/resolv.conf that
+                                    # configures the container to use the DNS
+                                    # server embedded in the Docker daemon,
+                                    # which is reachable in the container at
+                                    # 127.0.0.11. This is a localhost-like alias
+                                    # that would be ignored in second-tier
+                                    # containers started by the Docker-daemon
+                                    # running in the DinD container, causing
+                                    # that container, or rather the embedded DNS
+                                    # server it's configured to use, to fall
+                                    # back to the reckless defaults hard-coded
+                                    # in the Docker source: 8.8.8.8 and 8.8.4.4.
+                                    # These servers are operated by Google and
+                                    # are rate-limited by source IP. All the
+                                    # VPC's egress traffic is routed through a
+                                    # NAT so all requests to these servers made
+                                    # within the VPC would appear to originate
+                                    # from the same public IP, therefore sharing
+                                    # one rate limit, causing them to be dropped
+                                    # whenever the rate limit is tripped.
+                                    #
+                                    # By mounting the host's resolv.conf into
+                                    # the Dind container, we work around this
+                                    # issue, so that containers launched by the
+                                    # Docker daemon running in the Dind
+                                    # container have a functional non-localhost
+                                    # DNS server and don't fall back to the
+                                    # Google ones.
+                                    '--volume /etc/resolv.conf:/etc/resolv.conf',
                                     '--volume /mnt/gitlab/docker:/var/lib/docker',
                                     '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
                                     dind_image

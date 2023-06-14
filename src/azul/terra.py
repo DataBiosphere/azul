@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -223,7 +223,7 @@ class SourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
     pass
 
 
-class TerraCredentialsProvider(CredentialsProvider, ABC):
+class TerraCredentialsProvider(CredentialsProvider, metaclass=ABCMeta):
 
     @abstractmethod
     def insufficient_access(self, resource: str) -> Exception:

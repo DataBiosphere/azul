@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 from collections.abc import (
@@ -36,7 +36,7 @@ from azul.http import (
 ScopedCredentials = Union[ServiceAccountCredentials, TokenCredentials]
 
 
-class CredentialsProvider(ABC):
+class CredentialsProvider(metaclass=ABCMeta):
 
     @abstractmethod
     def scoped_credentials(self) -> ScopedCredentials:
