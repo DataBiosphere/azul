@@ -205,13 +205,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         super().setUp()
         # All random operations should be made using this seed so that test
         # results are deterministically reproducible
-        self.random_seed = (
-            # FIXME: Unpin the seed once underlying issue is fixed
-            #        https://github.com/DataBiosphere/azul/issues/5168
-            6634795309975096822
-            if config.deployment_stage == 'anvilprod' else
-            randint(0, sys.maxsize)
-        )
+        self.random_seed = randint(0, sys.maxsize)
         self.random = Random(self.random_seed)
         log.info('Using random seed %r', self.random_seed)
 
@@ -332,10 +326,12 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         self.random.shuffle(sources)
         if public_1st:
             managed_access_sources = frozenset(
-                map(str, self.managed_access_sources_by_catalog[catalog])
+                str(source.spec)
+                for source in self.managed_access_sources_by_catalog[catalog]
             )
             index = first(
-                i for i, source in enumerate(sources)
+                i
+                for i, source in enumerate(sources)
                 if source not in managed_access_sources
             )
             sources[0], sources[index] = sources[index], sources[0]
