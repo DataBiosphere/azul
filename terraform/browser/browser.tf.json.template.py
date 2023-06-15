@@ -35,9 +35,6 @@ from azul.terraform import (
 )
 
 buckets = {
-    'browser': 'anvil.explorer.gi.ucsc.edu',
-    'portal': 'anvil.gi.ucsc.edu',
-} if config.deployment_stage == 'anvildev' else {
     bucket: aws.qualified_bucket_name(bucket)
     for bucket in ['portal', 'browser']
 }
@@ -358,12 +355,7 @@ def bucket_behaviour(origin, *, path_pattern: str = None, **functions: bool) -> 
 
 
 def bucket_origin_id(bucket):
-    # FIXME: Inconsistent CloudFront bucket origin ID in anvildev
-    #        https://github.com/DataBiosphere/azul/issues/5260
-    if config.deployment_stage == 'anvildev':
-        return bucket_regional_domain_name(bucket)
-    else:
-        return bucket
+    return bucket
 
 
 def bucket_regional_domain_name(bucket):
