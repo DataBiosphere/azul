@@ -299,6 +299,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'order': 'asc'
                 },
                 'termFacets': {
+                    'accessible': {
+                        'terms': [
+                            {
+                                'count': 2,
+                                'term': 'true'
+                            }
+                        ],
+                        'total': 2,
+                        'type': 'terms'
+                    },
                     'diagnoses.phenotype': {
                         'terms': [
                             {
@@ -650,6 +660,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'order': 'asc'
                 },
                 'termFacets': {
+                    'accessible': {
+                        'terms': [
+                            {
+                                'count': 1,
+                                'term': 'true'
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'diagnoses.phenotype': {
                         'terms': [
                             {
@@ -1021,6 +1041,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'order': 'asc'
                 },
                 'termFacets': {
+                    'accessible': {
+                        'terms': [
+                            {
+                                'count': 1,
+                                'term': 'true'
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'diagnoses.phenotype': {
                         'terms': [
                             {
@@ -1387,6 +1417,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'order': 'asc'
                 },
                 'termFacets': {
+                    'accessible': {
+                        'terms': [
+                            {
+                                'count': 1,
+                                'term': 'true'
+                            }
+                        ],
+                        'total': 1,
+                        'type': 'terms'
+                    },
                     'diagnoses.phenotype': {
                         'terms': [
                             {
@@ -1871,6 +1911,16 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     'order': 'asc'
                 },
                 'termFacets': {
+                    'accessible': {
+                        'terms': [
+                            {
+                                'count': 2,
+                                'term': 'true'
+                            }
+                        ],
+                        'total': 2,
+                        'type': 'terms'
+                    },
                     'diagnoses.phenotype': {
                         'terms': [
                             {

@@ -3502,7 +3502,15 @@ class TestUnpopulatedIndexResponse(DCP1TestCase, WebServiceTestCase):
 
     @property
     def facets(self) -> Sequence[str]:
-        return self.app_module.app.metadata_plugin.facets
+        # The plugin lists the fields that are used during aggregation to create
+        # the facets. The aggregation for the source ID field is replaced with
+        # the `accessible` term facet, so we must perform the same replacement
+        # before the list of facets can be used to verify the contents of the
+        # response.
+        plugin = self.app_module.app.metadata_plugin
+        facets = list(plugin.facets)
+        facets[facets.index(plugin.source_id_field)] = 'accessible'
+        return facets
 
     @property
     def field_mapping(self) -> Mapping[str, FieldPath]:

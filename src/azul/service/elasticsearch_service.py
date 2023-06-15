@@ -2,6 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections import (
+    defaultdict,
+)
 from collections.abc import (
     Iterable,
     Mapping,
@@ -292,6 +295,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             pass
         else:
             self._translate_response_aggs(aggs)
+            self._populate_accessible(aggs)
         return response
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
@@ -363,6 +367,22 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
 
         for k, v in aggs.items():
             translate(k, v)
+
+    def _populate_accessible(self, aggs: MutableJSON) -> None:
+        # Because the value of the `accessible` field depends on the provided
+        # authentication, we have to synthesize the field and its corresponding
+        # facet from the `sourceId` field.
+        source_ids = self.filter_stage.filters.source_ids
+        agg = aggs.pop(self.service.metadata_plugin(self.catalog).source_id_field)
+        counts_by_accessibility: dict[bool, int] = defaultdict(int)
+        for bucket in agg['myTerms']['buckets']:
+            accessible = bucket['key'] in source_ids
+            counts_by_accessibility[accessible] += bucket['doc_count']
+        agg['myTerms']['buckets'] = [
+            {'key': accessible, 'doc_count': count}
+            for accessible, count in counts_by_accessibility.items()
+        ]
+        aggs['accessible'] = agg
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
