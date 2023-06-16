@@ -5,9 +5,9 @@ Getting started as operator
 
 * Read the entire document
 
-* It is **strongly recommend** that you install `smartgit`_
+* It is **strongly recommend** that you install `SmartGit`_
 
-.. _smartgit: https://www.syntevo.com/smartgit/download/
+.. _SmartGit: https://www.syntevo.com/smartgit/download/
 
 * Ask the lead via Slack to:
 
