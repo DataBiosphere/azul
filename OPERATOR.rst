@@ -17,7 +17,11 @@ Getting started as operator
 
   - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
-* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the ``platform-hca-prod`` AWS account
+* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to:
+
+  - grant you developer access to the ``platform-hca-prod`` AWS account
+
+  - revoke that access from the previous operator (mention them by name)
 
 * Confirm access to GitLab:
 
