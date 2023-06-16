@@ -13,7 +13,8 @@ Getting started as operator
 
   - add you to the ``Azul Operators`` GitHub group on DataBiosphere
 
-  - give you Maintainer access to the GitLab ``dev``, ``prod`` and ``anvildev`` instances
+  - give you Maintainer access to the GitLab ``dev``, ``anvildev``,
+    ``anvilprod`` and ``prod`` instances
 
   - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
@@ -105,14 +106,17 @@ the operator performs the following steps daily.
    Use this template for the checklist::
 
       - [ ] Update `azul-index-dev`
+      - [ ] Update `azul-index-anvildev`
+      - [ ] Update `azul-index-anvilprod`
       - [ ] Confirm with Azul devs that their personal deployments are idle
       - [ ] Update `azul-index-sandbox`
+      - [ ] Update `azul-index-anvilbox`
       - [ ] Update `azul-index-prod`
 
-   Note that, somewhat counterintuitively, ``dev`` is updated before
-   ``sandbox``. If, during step 3, updates or domains were added to an
-   existing ticket, the entire process may have to be restarted and certain
-   checklist items may need to be reset.
+   Note that, somewhat counterintuitively, main deployments are updated before
+   their respective ``sandbox``. If, during step 3, updates or domains were
+   added to an existing ticket, the entire process may have to be restarted and
+   certain checklist items may need to be reset.
 
 6. To update an ES domain, select it the Amazon OpenSearch Service console.
    Under *General information*, the *Service software version* should have
