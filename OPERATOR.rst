@@ -187,7 +187,7 @@ Reindexing
 ^^^^^^^^^^
 
 During reindexing, watch the ES domain for unassigned shards, using the AWS
-console. The `azul-prod` CloudWatch dashboard has a graph for the shard count.
+console. The ``azul-prod`` CloudWatch dashboard has a graph for the shard count.
 It is OK to have unassigned shards for a while but if the same unassigned shards
 persist for over an hour, they are probably permanently unassigned. Follow the
 procedure outlined in `this AWS support article`_, using either Kibana or
