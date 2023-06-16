@@ -1,8 +1,3 @@
-**Note:** Edits to this document can be merged by the operator with one approving peer review.
-An issue is not necessary.
-
-----
-
 .. contents::
 
 Getting started as operator
