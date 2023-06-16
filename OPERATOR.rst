@@ -13,17 +13,17 @@ Getting started as operator
 
   - add you to the ``Azul Operators`` GitHub group on DataBiosphere
 
-  - give you Maintainer access to the Gitlab ``dev``, ``prod`` and ``anvildev`` instances
+  - give you Maintainer access to the GitLab ``dev``, ``prod`` and ``anvildev`` instances
 
   - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
 * Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the ``platform-hca-prod`` AWS account
 
-* Confirm access to Gitlab:
+* Confirm access to GitLab:
 
-  #. Add your SSH key to your user account on Gitlab under the "Settings/SSH Keys" panel
+  #. Add your SSH key to your user account on GitLab under the "Settings/SSH Keys" panel
 
-  #. Confirm SSH access to the gitlab instance::
+  #. Confirm SSH access to the GitLab instance::
 
          ssh -T git@ssh.gitlab.dev.singlecell.gi.ucsc.edu
          Welcome to GitLab, @amarjandu!
@@ -131,7 +131,7 @@ Testing a PR in the ``sandbox``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The operator sets ``sandbox`` label on a PR before pushing the PR branch to
-Gitlab. If the resulting sandbox build passes, the PR is merged and the label
+GitLab. If the resulting sandbox build passes, the PR is merged and the label
 stays on. If the build fails, the label is removed. Only one un-merged PR should
 have the label.
 
@@ -560,7 +560,7 @@ Follow these steps to retry the IT job:
 GitHub bot account
 ------------------
 
-Continuous integration environments (Gitlab, Travis) may need a GitHub token to
+Continuous integration environments (GitLab, Travis) may need a GitHub token to
 access GitHub's API. To avoid using a personal access token tied to any
 particular developer's account, we created a Google Group called
 ``azul-group@ucsc.edu`` of which Hannes and Trevor are owners. We then used that
