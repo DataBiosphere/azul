@@ -16,7 +16,8 @@ Getting started as operator
   - give you Maintainer access to the GitLab ``dev``, ``anvildev``,
     ``anvilprod`` and ``prod`` instances
 
-  - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
+  - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud
+    project
 
 * Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Ben and Hannes) to:
 
@@ -26,14 +27,16 @@ Getting started as operator
 
 * Confirm access to GitLab:
 
-  #. Add your SSH key to your user account on GitLab under the "Settings/SSH Keys" panel
+  #. Add your SSH key to your user account on GitLab under the "Settings/SSH
+     Keys" panel
 
   #. Confirm SSH access to the GitLab instance::
 
          ssh -T git@ssh.gitlab.dev.singlecell.gi.ucsc.edu
          Welcome to GitLab, @amarjandu!
 
-  #. Add the gitlab instances to the local working copy's ``.git/config`` file using::
+  #. Add the gitlab instances to the local working copy's ``.git/config`` file
+     using::
 
          [remote "gitlab.dcp2.dev"]
              url = git@ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul
@@ -70,17 +73,17 @@ ElasticSearch (or Amazon's OpenSearch fork) in use on an ES domain. While the
 latter are discretional and applied via a change to TerraForm configuration,
 some of the latter are mandatory.
 
-Unless we intervene, AWS will automatically force the installation of any
-update about which we receive a ``High`` severity notification, typically two
-weeks after the notification was sent. Read `Amazon notification severities`_
-for more information.  The operator must prevent the automatic installation of
-such updates. It would be disastrous if an update were to be applied during a
-reindex in ``prod``. Instead, the operator must apply the update manually as
-part of an operator ticket in GitHub, as soon as possible, and well before
-Amazon would apply it automatically.
+Unless we intervene, AWS will automatically force the installation of any update
+about which we receive a ``High`` severity notification, typically two weeks
+after the notification was sent. Read `Amazon notification severities`_ for more
+information.  The operator must prevent the automatic installation of such
+updates. It would be disastrous if an update were to be applied during a reindex
+in ``prod``. Instead, the operator must apply the update manually as part of an
+operator ticket in GitHub, as soon as possible, and well before Amazon would
+apply it automatically.
 
-To check for, and apply, if necessary, any pending service software updates,
-the operator performs the following steps daily.
+To check for, and apply, if necessary, any pending service software updates, the
+operator performs the following steps daily.
 
 1. In *Amazon OpenSearch Service Console* select the *Notifications* pane and
    identify notifications with subject ``Service Software Update``.
@@ -89,12 +92,12 @@ the operator performs the following steps daily.
    Collect this information for all ES domain in both the ``prod`` and ``dev``
    AWS accounts. If there are no notifications, you are done.
 
-3. Open a new ticket in GitHub and title it ``Apply Amazon OpenSearch
-   (ES) Software Update (before {date})``. Include ``(before {date})`` in the
-   title if any notification is of ``High`` severity, representing a forced
-   update. Replace ``{date}`` with the anticipated date of the forced
-   installation. If there already is an open ticket for pending updates, reuse
-   that ticket and adjust it accordingly.
+3. Open a new ticket in GitHub and title it ``Apply Amazon OpenSearch (ES)
+   Software Update (before {date})``. Include ``(before {date})`` in the title
+   if any notification is of ``High`` severity, representing a forced update.
+   Replace ``{date}`` with the anticipated date of the forced installation. If
+   there already is an open ticket for pending updates, reuse that ticket and
+   adjust it accordingly.
 
 4. If title contains a date, pin the ticket as *High Priority* in ZenHub.
 
@@ -119,12 +122,12 @@ the operator performs the following steps daily.
    certain checklist items may need to be reset.
 
 6. To update an ES domain, select it the Amazon OpenSearch Service console.
-   Under *General information*, the *Service software version* should have
-   an *Update available* hyperlink. Click on it and follow the subsequent
+   Under *General information*, the *Service software version* should have an
+   *Update available* hyperlink. Click on it and follow the subsequent
    instructions.
 
-7. Once the upgrade process is completed for the ``dev`` or ``prod`` ES
-   domain, perform a smoke test using the respective Data Browser instance.
+7. Once the upgrade process is completed for the ``dev`` or ``prod`` ES domain,
+   perform a smoke test using the respective Data Browser instance.
 
 .. _`Amazon notification severities`: https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-notifications.html#managedomains-notifications-severities
 
@@ -150,9 +153,9 @@ Triaging ``sandbox`` failures
 """""""""""""""""""""""""""""
 
 * If the PR fails because of out-of-date requirements on a PR with the ``[R]``
-  tag the operator should rerun ``make requirements_update``,
-  `committing the changes separately`_ with a title like ``[R] Update requirements``.
-  It is not necessary to re-request a review after doing so.
+  tag the operator should rerun ``make requirements_update``, `committing the
+  changes separately`_ with a title like ``[R] Update requirements``. It is not
+  necessary to re-request a review after doing so.
 
 * For integration test failures, check if the PR has the ``reindex`` tag. If so,
   running an early reindex may resolve the failure.
@@ -177,9 +180,8 @@ to verify it isn't broken.
 
 To restore the deployment to a known working state, the operator should rerun
 the deploy job of previous passing pipeline for that deployment. This can be
-done without pushing anything and only takes a couple of minutes. The branch
-for that deployment must then be reverted to the previously passing commit.
-
+done without pushing anything and only takes a couple of minutes. The branch for
+that deployment must then be reverted to the previously passing commit.
 
 .. _committing the changes separately: https://github.com/DataBiosphere/azul/issues/2899#issuecomment-804508017
 
@@ -227,10 +229,15 @@ If at this point the fail queues are not empty, all remaining failures must be
 tracked in tickets:
 
 - document the failures within the PR that added the changes
+
 - triage against expected failures from existing issues
+
 - create new issues for unexpected failures
+
 - link each failure you document to their respective issue
+
 - ping people on the Slack channel ``#dcp2`` about those issues, and finally
+
 - clear the fail queues so they are empty for the next reindexing
 
 For an example of how to document failures within a PR `click here`_.
@@ -330,10 +337,10 @@ confirm that any background migrations triggered by the upgrade have finished.
 Background migrations can be found under *Admin Area — Monitoring — Background
 Migrations*.
 
-Once the ``dev`` GitLab instance has been successfully updated, the same
-changes need to be applied to the ``prod`` instance. Use the same branch to
-update the ``prod`` deployment, but select the ``prod.gitlab`` component  and
-use ``CI_COMMIT_REF_NAME=prod`` in all ``make`` invocations. Once both instances
+Once the ``dev`` GitLab instance has been successfully updated, the same changes
+need to be applied to the ``prod`` instance. Use the same branch to update the
+``prod`` deployment, but select the ``prod.gitlab`` component  and use
+``CI_COMMIT_REF_NAME=prod`` in all ``make`` invocations. Once both instances
 have been successfully updated, file a PR with the changes against the
 ``develop`` branch and request review from the lead.
 
@@ -367,13 +374,13 @@ Wait for the GitLab web application to become available again and perform a
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When adding a new snapshot to dev, the operator should also add the snapshot to sandbox, but with
-an appropriate prefix.
+When adding a new snapshot to dev, the operator should also add the snapshot to
+sandbox, but with an appropriate prefix.
 
 To determine the prefix:
 
 #. Go to `TDR dev in the Google Cloud Console`_. Authenticate with your personal
-(…@ucsc.edu) account.
+   (…@ucsc.edu) account.
 
 #. Run queries such as ::
 
@@ -387,13 +394,14 @@ To determine the prefix:
 Adding snapshots to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Unless specifically agreed with the system admin (tech lead), PRs which update or
-add new snapshots to ``prod`` should be filed against the ``prod`` branch instead
-of ``develop``. When deciding whether to perform snapshot channges directly to
-``prod`` or include them in a routine promotion, the system admin considers the
-scope of changes to be promoted. It would be a mistake to promote large changes in
-combination with snapshots because that would make it difficult to diagnose whether
-indexing failures are caused by the changes or the snapshots.
+Unless specifically agreed with the system admin (tech lead), PRs which update
+or add new snapshots to ``prod`` should be filed against the ``prod`` branch
+instead of ``develop``. When deciding whether to perform snapshot channges
+directly to ``prod`` or include them in a routine promotion, the system admin
+considers the scope of changes to be promoted. It would be a mistake to promote
+large changes in combination with snapshots because that would make it difficult
+to diagnose whether indexing failures are caused by the changes or the
+snapshots.
 
 Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
 with regular promotions.
@@ -411,8 +419,8 @@ When setting a new default catalog in ``prod``, the operator shall also delete
 the old default catalog unless the ticket explicitly specifies not to delete the
 old catalog.
 
-Add a checklist item at the end of the PR checklist to file a back-merge
-PR from ``prod`` to ``develop``.
+Add a checklist item at the end of the PR checklist to file a back-merge PR from
+``prod`` to ``develop``.
 
 Add another checklist item instructing the operator to manually delete the old
 catalog.
@@ -436,15 +444,16 @@ To do a promotion:
 #. Create a branch at the commit chosen above. Name the branch correctly. See
    `promotion PR template`_ for what the correct branch name is.
 
-#. File a PR on GitHub from the new promotion branch and connect it to the issue.
-   The PR must target ``prod``. Use the `promotion PR template`_.
+#. File a PR on GitHub from the new promotion branch and connect it to the
+   issue. The PR must target ``prod``. Use the `promotion PR template`_.
 
 #. Request a review from the primary reviewer.
 
 #. Once PR is approved, announce in the `#team-boardwalk Slack channel`_ that
    you plan to promote to ``prod``
 
-#. Search for and follow any special ``[u]`` upgrading instructions that were added.
+#. Search for and follow any special ``[u]`` upgrading instructions that were
+   added.
 
 #. When merging, follow the checklist and making sure to carry over any commit
    title tags (``[u r R]`` for example) into the default merge commit title
@@ -507,17 +516,18 @@ pipeline. If there is only one approval (from the primary reviewer) an operator
 may approve a PR that does not belong to them. If the PR has no approvals (for
 example, it belongs to the primary reviewer), the  operator may approve the PR
 and seek out another team member to perform the second needed review. When
-making such a pro-forma review, indicate this within the review summary (`example`_).
+making such a pro-forma review, indicate this within the review summary
+(`example`_).
 
 .. _example: https://github.com/DataBiosphere/azul/pull/2646#pullrequestreview-572818767
 
 PR Closed automatically and can't be reopened
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This can happen when a PR is chained on another PR and the base PR is
-merged and its branch deleted. To solve this, first restore the base PR branch.
-The operator should have a copy of the branch locally that they can push. If
-not, then the PR's original author should.
+This can happen when a PR is chained on another PR and the base PR is merged and
+its branch deleted. To solve this, first restore the base PR branch. The
+operator should have a copy of the branch locally that they can push. If not,
+then the PR's original author should.
 
 Once the base branch is restored, the ``Reopen PR`` button should again be
 clickable on the chained PR.
@@ -527,12 +537,12 @@ Integration test time out
 
 This can happen on the rare occasion that the IT's random selection of bundles
 happens to pick predominantly large bundles that need to be partitioned before
-they can be indexed. This process can divide bundles into partitions, and
-divide partitions into sub-partitions, since technically bundles are partitions
-with an empty prefix.
+they can be indexed. This process can divide bundles into partitions, and divide
+partitions into sub-partitions, since technically bundles are partitions with an
+empty prefix.
 
-In the AWS console, run the CloudWatch Insights query below with the indexer
-log groups selected to see how many divisions have occurred::
+In the AWS console, run the CloudWatch Insights query below with the indexer log
+groups selected to see how many divisions have occurred::
 
     fields @timestamp, @log, @message
     | filter @message like 'Dividing partition'
@@ -585,13 +595,17 @@ password reset email. Hannes knows the 2FA recovery codes.
 Handing over operator duties
 ----------------------------
 
-#. Old operator must finish any merges in progress. The sandbox should be empty. The new operator should inherit a clean slate. This should be done before the first working day of the new operator's shift.
+#. Old operator must finish any merges in progress. The sandbox should be empty.
+   The new operator should inherit a clean slate. This should be done before the
+   first working day of the new operator's shift.
 
-#. Old operator must re-assign `all tickets in the approved column`_ to the new operator.
+#. Old operator must re-assign `all tickets in the approved column`_ to the new
+   operator.
 
-#. Old operator must re-assign expected indexing failure tickets to the new operator, along with
-   ticket that tracks operator duties.
+#. Old operator must re-assign expected indexing failure tickets to the new
+   operator, along with ticket that tracks operator duties.
 
-#. New operator must request the necessary permissions, as specified in `Getting started as operator`_.
+#. New operator must request the necessary permissions, as specified in `Getting
+   started as operator`_.
 
 .. _all tickets in the approved column: https://github.com/DataBiosphere/azul/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ahannes-ucsc+review%3Aapproved
