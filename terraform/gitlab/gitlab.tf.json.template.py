@@ -641,21 +641,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 ]
                             }
                         ] if config.deployment_stage == 'prod' else [
-                            {
-                                'actions': [
-                                    's3:*'
-                                ],
-                                'resources': [
-                                    'arn:aws:s3:::anvil.gi.ucsc.edu/*',
-                                    'arn:aws:s3:::anvil.gi.ucsc.edu',
-                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu/*',
-                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu',
-                                ]
-                            }
-                        ] if config.deployment_stage == 'anvildev' else [
-                            # anvilprod already follows the bucket naming
-                            # convention and is covered by the S3 permissions
-                            # in the boundary.
+                            # anvildev and anvilprod already follow the bucket
+                            # naming convention and is covered by the S3
+                            # permissions in the boundary.
                         ]
                     ),
                     # Manage VPN infrastructure for private API
