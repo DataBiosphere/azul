@@ -59,9 +59,9 @@ _preauth() {
 	if ! env="$(
 		python - <<- "EOF"
 			from pathlib import Path
-			import sys
-			import botocore.session
+
 			import botocore.credentials
+			import botocore.session
 
 			# Get the AssumeRole credential provider and make it the only one
 			session = botocore.session.get_session()
@@ -76,8 +76,12 @@ _preauth() {
 			# Request the credentials. If the CLI has cached credentials, this step
 			# would use those. If not, fresh ones will be requested from STS. If that
 			# requires entering an MFA code, the user will be prompted. The fresh
-			# credentials will be cached such that subsequent invocations just use them
-			# until they expire.
+			# credentials will be cached such that subsequent invocations just use
+			# them until they expire. Setting the expiration window to four hours
+			# ensures that cached credentials will be valid for at least four more
+			# hours. If they are not, new credentials will be requested from STS.
+			#
+			botocore.credentials.AssumeRoleCredentialFetcher.DEFAULT_EXPIRY_WINDOW_SECONDS = 4 * 60 * 60
 			credentials = session.get_credentials()
 
 			# Print the bash statement so they can be eval-ed

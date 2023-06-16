@@ -325,24 +325,41 @@ Before any changes are applied, run::
 Create a backup of the GitLab volume, see `Backup GitLab volumes`_ for help.
 
 Edit the `GitLab Terraform`_ file, updating the version of the Docker images for
-``gitlab-ce`` and ``gitlab-runner``. Then run::
+``gitlab-ce``, ``gitlab-runner`` and ``clamav``. The same images are also
+mentioned in ``azul.config.docker_images``. Update those entries, too. Then run
+… ::
 
-    CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
+    _select dev.shared
+    CI_COMMIT_REF_NAME=develop make -C terraform/shared
+
+… to mirror the new Docker images to the private registry in AWS. Depending on
+your uplink bandwith and the size of the images to be mirrored, this could take
+one or two hours. Be sure to run these two commands in quick succession, so as
+to minimize the chance of credentials expiring mid-operation.
 
 .. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py
 
+To then actually update GitLab, run::
+
+    _select dev.gitlab
+    CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
+
 The new GitLab instance should be online again in 10 minutes. If it takes
-longer, contact the lead. When the GitLab web app is online, have the lead
-confirm that any background migrations triggered by the upgrade have finished.
-Background migrations can be found under *Admin Area — Monitoring — Background
-Migrations*.
+longer, contact the lead.
 
 Once the ``dev`` GitLab instance has been successfully updated, the same changes
-need to be applied to the ``prod`` instance. Use the same branch to update the
-``prod`` deployment, but select the ``prod.gitlab`` component  and use
-``CI_COMMIT_REF_NAME=prod`` in all ``make`` invocations. Once both instances
-have been successfully updated, file a PR with the changes against the
-``develop`` branch and request review from the lead.
+need to be applied to the ``anvildev`` and ``anvilprod`` instances. Use the same
+branch to update those deployments, but select the respective ``.gitlab``
+component. Once both instances have been successfully updated, file a PR (using
+``&template=gitlab.md``) with the changes against the ``develop`` branch.
+
+The PR checklist must include an entry for adding checklist entries to the next
+promotion PR to deploy ``prod.shared`` and ``prod.gitlab`` in that order. There
+are checklist items for the lead to confirm that any background migrations
+triggered by the upgrade have finished successfully. Background migrations can
+be found under *Admin Area — Monitoring — Background Migrations*.
+
+Request review of the PR from the lead.
 
 Backup GitLab volumes
 ^^^^^^^^^^^^^^^^^^^^^
@@ -506,6 +523,30 @@ backport PR first. The new PR will include the changes from the old one.
 
 Troubleshooting
 ---------------
+
+Credentials expire in the middle of a long-running operation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some instances, deploying a Terraform component can take a long time. While
+``_preauth`` now makes sure that there are four hours left on the current
+credentials, it can't do that if you don't call it before such an operation.
+Note that ``_select`` also calls ``_preauth``. The following is a list of
+operations which you should expect to take an hour or longer:
+
+- the first time deploying any component
+
+- deploying a plan that creates or replaces an Elasticsearch domain
+
+- deploying a plan that involves ACM certificates
+
+- deploying a ``shared`` component after modifying
+  ``azul.config.docker_images``, especially on a slow uplink
+
+To make things worse, if the credentials expire while Terraform is updating
+resources, it will not be able to write the partially updated state back to the
+shared bucket. A subsequent retry will therefore likely report conflicts due to
+already existing resources. The rememdy is to import those existing resources
+into the Terraform state using ``terraform import``.
 
 Push errors
 ^^^^^^^^^^^
