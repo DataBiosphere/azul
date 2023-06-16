@@ -17,7 +17,7 @@ Getting started as operator
 
   - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
-* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to:
+* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Ben and Hannes) to:
 
   - grant you developer access to the ``platform-hca-prod`` AWS account
 
@@ -567,8 +567,8 @@ GitHub bot account
 Continuous integration environments (GitLab, Travis) may need a GitHub token to
 access GitHub's API. To avoid using a personal access token tied to any
 particular developer's account, we created a Google Group called
-``azul-group@ucsc.edu`` of which Hannes and Trevor are owners. We then used that
-group email to register a bot account in GitHub. Apparently that's ok:
+``azul-group@ucsc.edu`` of which Hannes is the owner. We then used that group
+email to register a bot account in GitHub. Apparently that's ok:
 
     User accounts are intended for humans, but you can give one to a robot, such as a continuous integration bot, if necessary.
 
@@ -576,8 +576,7 @@ group email to register a bot account in GitHub. Apparently that's ok:
 
 Only Hannes knows the GitHub password of the bot account but any member of the
 group can request the password to be reset. All members will receive the
-password reset email. Hannes and Trevor know the 2FA recovery codes. Hannes sent
-them to Trevor via Slack on 05/11/2021.
+password reset email. Hannes knows the 2FA recovery codes.
 
 Handing over operator duties
 ----------------------------
