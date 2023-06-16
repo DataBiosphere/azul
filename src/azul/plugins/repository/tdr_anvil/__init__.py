@@ -281,6 +281,14 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
         for entity_type, typed_keys in sorted(keys_by_type.items()):
             pk_column = entity_type + '_id'
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
+            if entity_type == 'donors':
+                # We expect that the foreign key `part_of_dataset_id` is
+                # redundant for biosamples and donors. To simplify our queries,
+                # we do not follow the latter during the graph traversal.
+                # Here, we validate our expectation.
+                dataset_id: Key = one(keys_by_type['datasets'])
+                for row in rows:
+                    require(row.pop('part_of_dataset_id') == dataset_id)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
                 entity = EntityReference(entity_id=row['datarepo_row_id'], entity_type=entity_type)
@@ -704,6 +712,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
             'phenotypic_sex',
             'reported_ethnicity',
             'genetic_ancestry',
+            # Not stored in index; only retrieved to verify redundancy with
+            # biosample.part_of_dataset_id
+            'part_of_dataset_id'
         },
         'file': {
             'file_id',
