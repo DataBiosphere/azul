@@ -226,7 +226,10 @@ def emit():
                     }
                 },
                 'portal_validation': {
-                    'for_each': '${{for o in aws_acm_certificate.portal.domain_validation_options : o.domain_name => o}}',
+                    'for_each': '${{'
+                                'for o in aws_acm_certificate.portal.domain_validation_options : '
+                                'o.domain_name => o'
+                                '}}',
                     'name': '${each.value.resource_record_name}',
                     'type': '${each.value.resource_record_type}',
                     'zone_id': '${data.aws_route53_zone.portal.id}',
