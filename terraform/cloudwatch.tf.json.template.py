@@ -12,6 +12,7 @@ from azul.queues import (
 )
 from azul.terraform import (
     emit_tf,
+    vpc,
 )
 
 
@@ -76,6 +77,27 @@ emit_tf({
                         }
                     }
                 },
+                {
+                    'aws_nat_gateway': {
+                        **{
+                            f'gitlab_{zone}': {
+                                'filter': {
+                                    'name': 'tag:Name',
+                                    'values': [f'azul-gitlab_{zone}']
+                                },
+                            }
+                            for zone in range(vpc.num_zones)
+                        }
+                    },
+                    'aws_ec2_client_vpn_endpoint': {
+                        'gitlab': {
+                            'filter': {
+                                'name': 'tag:Name',
+                                'values': ['azul-gitlab']
+                            }
+                        }
+                    }
+                }
             ) if config.enable_monitoring else ()
         ),
     ],
@@ -173,6 +195,81 @@ emit_tf({
                     }
                     for lambda_ in config.lambda_names()
                 ),
+                {
+                    'aws_cloudwatch_metric_alarm': {
+                        **{
+                            f'internet_{direction}': {
+                                'alarm_name': config.qualified_resource_name(f'internet_{direction}'),
+                                'comparison_operator': 'GreaterThanThreshold',
+                                'threshold': threshold,
+                                'evaluation_periods': 1,
+                                'datapoints_to_alarm': 1,
+                                'treat_missing_data': 'notBreaching',
+                                'metric_query': [
+                                    {
+                                        'id': f'internet_{direction}',
+                                        'label': f'Internet {direction} bytes/h',
+                                        'expression': ' + '.join(f'm{zone}' for zone in range(vpc.num_zones)),
+                                        'return_data': True,
+                                    },
+                                    *(
+                                        {
+                                            'id': f'm{zone}',
+                                            'metric': {
+                                                'dimensions': {
+                                                    'NatGatewayId': f'${{data.aws_nat_gateway.gitlab_{zone}.id}}'
+                                                },
+                                                'namespace': 'AWS/NATGateway',
+                                                'metric_name': metric_name,
+                                                'period': 1 * 60 * 60,
+                                                'stat': 'Sum',
+                                            }
+                                        }
+                                        for zone in range(vpc.num_zones)
+                                    )
+                                ],
+                                'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                                'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            }
+                            for direction, metric_name, threshold in [
+                                ('ingress', 'BytesInFromDestination', 50 * 1024 * 1024 * 1024),
+                                ('egress', 'BytesOutToDestination', 10 * 1024 * 1024 * 1024)
+                            ]
+                        },
+                        **{
+                            f'vpn_{direction}': {
+                                'alarm_name': config.qualified_resource_name(f'vpn_{direction}'),
+                                'comparison_operator': 'GreaterThanThreshold',
+                                'threshold': threshold,
+                                'evaluation_periods': 1,
+                                'datapoints_to_alarm': 1,
+                                'treat_missing_data': 'notBreaching',
+                                'metric_query': [
+                                    {
+                                        'id': f'vpn_{direction}',
+                                        'label': f'VPN {direction} bytes/h',
+                                        'metric': {
+                                            'dimensions': {
+                                                'Endpoint': '${data.aws_ec2_client_vpn_endpoint.gitlab.id}'
+                                            },
+                                            'namespace': 'AWS/ClientVPN',
+                                            'metric_name': metric_name,
+                                            'period': 1 * 60 * 60,
+                                            'stat': 'Sum',
+                                        },
+                                        'return_data': True,
+                                    }
+                                ],
+                                'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                                'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            }
+                            for direction, metric_name, threshold in [
+                                ('ingress', 'IngressBytes', 100 * 1024 * 1024 * 1024),
+                                ('egress', 'EgressBytes', 10 * 1024 * 1024 * 1024)
+                            ]
+                        }
+                    }
+                }
             )
             if config.enable_monitoring else
             ()
