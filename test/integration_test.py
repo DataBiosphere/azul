@@ -1242,19 +1242,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         endpoint = config.service_endpoint
 
-        def bundle_uuid(hit: JSON) -> str:
-            return one(hit['bundles'])['bundleUuid']
+        def bundle_uuids(hit: JSON) -> set[str]:
+            return {bundle['bundleUuid'] for bundle in hit['bundles']}
 
-        managed_access_bundles = {
-            bundle_uuid(file)
+        managed_access_bundles = set.union(*(
+            bundle_uuids(file)
             for file in files
             if len(file['sources']) == 1
-        }
+        ))
         filters = {'sourceId': {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         bundles_url = furl(url=endpoint, path=['index', self._bundle_type(catalog)], args=params)
         response = self._get_url_json(bundles_url)
-        public_bundle = bundle_uuid(one(response['hits']))
+        public_bundle = first(bundle_uuids(one(response['hits'])))
         self.assertNotIn(public_bundle, managed_access_bundles)
 
         filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
