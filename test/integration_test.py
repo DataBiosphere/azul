@@ -22,6 +22,7 @@ from io import (
     TextIOWrapper,
 )
 from itertools import (
+    chain,
     starmap,
 )
 import json
@@ -71,9 +72,11 @@ from google.oauth2 import (
     service_account,
 )
 from more_itertools import (
+    always_iterable,
     first,
     grouper,
     one,
+    only,
 )
 from openapi_spec_validator import (
     validate_spec,
@@ -985,16 +988,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     version=bundle['bundleVersion']
                 )
                 if config.is_anvil_enabled(catalog):
-                    # Biosamples are used as bundle entities for primary bundles
-                    # and are never present in supplementary bundles.
-                    # We cannot use the `files.is_supplementary` field to
-                    # determine whether a bundle is supplementary or not due to
-                    # false positives in the current snapshots
-                    # (https://github.com/DataBiosphere/azul/issues/5229)
+                    is_supplementary = only(set(chain.from_iterable(
+                        always_iterable(file['is_supplementary'])
+                        for file in hit['files']
+                    )), default=False)
                     bundle_fqid['entity_type'] = (
-                        BundleEntityType.primary.value
-                        if hit['biosamples'] else
                         BundleEntityType.supplementary.value
+                        if is_supplementary else
+                        BundleEntityType.primary.value
                     )
                 bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
                 indexed_fqids.add(bundle_fqid)
