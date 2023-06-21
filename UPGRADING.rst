@@ -20,6 +20,19 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5260 Fix: Inconsistent bucket names and CloudFront origin IDs in anvildev
+==========================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of the ``anvildev`` deployment just
+before pushing the merge commit to the GitLab instance in that deployment. When
+the ``deploy_browser`` job of the ``deploy`` stage fails on GitLab, manually
+empty and delete the S3 buckets ``anvil.explorer.gi.ucsc.edu`` and
+``anvil.gi.ucsc.edu`` in ``platform-anvil-dev`` . Retry the job.
+
+
 #5226 Sporadic DNS resolution errors on GitLab
 ==============================================
 
@@ -111,6 +124,16 @@ Console and navigate to `EC2` -> `Instances` -> select the GitLab instance ->
 If the root volume is not encrypted, manually deploy the ``gitlab`` component of
 a deployment just before pushing the merge commit to the GitLab instance in that
 deployment.
+
+
+#5043 S3 server access logs are inherently incomplete
+=====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
 
 
 #5133 Trigger an alarm on absence of logs

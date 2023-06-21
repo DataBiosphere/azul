@@ -314,8 +314,8 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
 
 clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
 dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
-gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:15.11.2-ce.0'
-runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:v15.11.0'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.0.3-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:v16.0.1'
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
@@ -641,21 +641,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 ]
                             }
                         ] if config.deployment_stage == 'prod' else [
-                            {
-                                'actions': [
-                                    's3:*'
-                                ],
-                                'resources': [
-                                    'arn:aws:s3:::anvil.gi.ucsc.edu/*',
-                                    'arn:aws:s3:::anvil.gi.ucsc.edu',
-                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu/*',
-                                    'arn:aws:s3:::anvil.explorer.gi.ucsc.edu',
-                                ]
-                            }
-                        ] if config.deployment_stage == 'anvildev' else [
-                            # anvilprod already follows the bucket naming
-                            # convention and is covered by the S3 permissions
-                            # in the boundary.
+                            # anvildev and anvilprod already follow the bucket
+                            # naming convention and is covered by the S3
+                            # permissions in the boundary.
                         ]
                     ),
                     # Manage VPN infrastructure for private API

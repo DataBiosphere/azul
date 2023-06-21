@@ -36,11 +36,34 @@ def conformance_pack(name: str) -> str:
     return body
 
 
+def paren(s: str) -> str:
+    return '(' + s + ')'
+
+
 cis_alarms = [
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Average',
-                    filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'),
+                    filter_pattern='{' + ' && '.join([
+                        paren(' || '.join([
+                            '$.errorCode = "*UnauthorizedOperation"',
+                            '$.errorCode = "AccessDenied*"',
+                        ])),
+                        # Filtering on the errorCode alone catches too many false
+                        # positives, so we exclude those logs with the additional
+                        # conditions below.
+                        paren(' || '.join([
+                            '$.eventSource != "s3.amazonaws.com"',
+                            '$.eventName != "GetObject"',
+                            '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
+                        ])),
+                        paren(' || '.join([
+                            '$.eventSource != "s3.amazonaws.com"',
+                            '$.eventName != "HeadBucket"',
+                            '$.userIdentity.invokedBy != "config.amazonaws.com"',
+                        ]))
+                    ]) + '}'
+                    ),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
                     statistic='Sum',
@@ -373,7 +396,15 @@ tf_config = {
                 'enable_log_file_validation': True,
                 'is_multi_region_trail': True,
                 'cloud_watch_logs_group_arn': '${aws_cloudwatch_log_group.trail.arn}:*',
-                'cloud_watch_logs_role_arn': '${aws_iam_role.trail.arn}'
+                'cloud_watch_logs_role_arn': '${aws_iam_role.trail.arn}',
+                'event_selector': {
+                    'read_write_type': 'All',
+                    'include_management_events': True,
+                    'data_resource': {
+                        'type': 'AWS::S3::Object',
+                        'values': ['arn:aws:s3']
+                    }
+                }
             }
         },
         'aws_cloudwatch_log_group': {
