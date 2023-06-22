@@ -67,7 +67,6 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 renamed_fields = {
-    'drs_path': 'drs_uri',
     'related_files': None  # None to remove field
 }
 
@@ -136,7 +135,6 @@ class PFBConverter:
         file_entity: MutableJSON = one(contents[self.entity_type])
         related_files = file_entity.pop('related_files', [])
         for entity in chain([file_entity], related_files):
-            entity['drs_uri'] = self.repository_plugin.drs_uri(entity.pop('drs_path'))
             _inject_reference_handover_values(entity, doc)
             # File entities are assumed to be unique
             pfb_entity = PFBEntity.from_json(name=self.entity_type,

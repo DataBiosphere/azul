@@ -226,9 +226,11 @@ class AzulUnitTestCase(AzulTestCase):
         cls._mock_aws_region()
         cls._mock_dss_query_prefix()
         cls._mock_lambda_env()
+        cls._mock_drs_domain()
 
     @classmethod
     def tearDownClass(cls) -> None:
+        cls._restore_drs_domain()
         cls._restore_lambda_env()
         cls._restore_dss_query_prefix()
         cls._restore_aws_region()
@@ -354,6 +356,20 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def _restore_lambda_env(cls):
         cls._lambda_env_mock.stop()
+
+    _drs_domain_name = 'azul_testing_fake_drs_domain.lan'
+    _drs_domain_mock = None
+
+    @classmethod
+    def _mock_drs_domain(cls):
+        cls._drs_domain_mock = patch.dict(os.environ,
+                                          AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
+        cls._drs_domain_mock.start()
+
+    @classmethod
+    def _restore_drs_domain(cls):
+        cls._drs_domain_mock.stop()
+        cls._drs_domain_mock = None
 
 
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):

@@ -831,10 +831,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                 else:
                     raise
             else:
-                if field_name == 'drs_path':
-                    field_value = self.repository_plugin.drs_uri(field_value)
-                    field_type = null_str
-                elif isinstance(field_type, list):
+                if isinstance(field_type, list):
                     field_type = one(field_type)
             return field_type.to_tsv(field_value)
 
@@ -877,7 +874,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         return entities
 
     def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> Optional[str]:
-        if self.repository_plugin.file_download_class().needs_drs_path and file['drs_path'] is None:
+        if self.repository_plugin.file_download_class().needs_drs_uri and file['drs_uri'] is None:
             return None
         else:
             return str(self.file_url_func(catalog=self.catalog,
@@ -1203,7 +1200,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             args = {
                 'requestIndex': 1,
                 'fileName': name,
-                'drsPath': file['drs_path']
+                'drsUri': file['drs_uri']
             } if is_related_file else {
             }
 
@@ -1518,7 +1515,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     def field_globs(self) -> FieldGlobs:
         return [
             *super().field_globs,
-            'contents.files.drs_path'
+            'contents.files.drs_uri'
         ]
 
     @property

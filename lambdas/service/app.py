@@ -1399,7 +1399,7 @@ repository_files_spec = {
             description='Do not use. Reserved for internal purposes.'
         ),
         params.query(
-            'drsPath',
+            'drsUri',
             schema.optional(str),
             description='Do not use. Reserved for internal purposes.'
         ),
@@ -1533,7 +1533,7 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                     wait=validate_wait,
                     requestIndex=int,
                     replica=validate_replica,
-                    drsPath=str,
+                    drsUri=str,
                     token=str)
 
     # FIXME: Prevent duplicate filenames from files in different subgraphs by

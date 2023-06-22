@@ -109,7 +109,7 @@
                 "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
             ],
             "version": "2022-06-01T00:00:00.000000Z",
-            "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
             "sha256": "",
             "crc32": ""
         },
@@ -128,7 +128,7 @@
                 "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
             ],
             "version": "2022-06-01T00:00:00.000000Z",
-            "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
             "sha256": "",
             "crc32": ""
         },
