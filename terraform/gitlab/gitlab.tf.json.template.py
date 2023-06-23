@@ -353,6 +353,11 @@ def qq(*words):
 
 emit_tf({} if config.terraform_component != 'gitlab' else {
     'data': {
+        'aws_sns_topic': {
+            'monitoring': {
+                'name': aws.monitoring_topic_name
+            }
+        },
         'aws_availability_zones': {
             'available': {}
         },
@@ -1623,6 +1628,46 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'logfile': '/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log',
                                     'debug': bool(config.debug)
                                 },
+                                'metrics': {
+                                    'metrics_collected': {
+                                        'cpu': {
+                                            'resources': [
+                                                "*"
+                                            ],
+                                            'measurement': [
+                                                'cpu_usage_active'
+                                            ]
+                                        },
+                                        'mem': {
+                                            'measurement': [
+                                                'used_percent'
+                                            ],
+                                        },
+                                        'disk': {
+                                            'measurement': [
+                                                'used_percent'
+                                            ],
+                                            'resources': [
+                                                '/',
+                                                gitlab_mount
+                                            ],
+                                            # This drops the name of the device
+                                            # from the dimensions in each data
+                                            # point. Since the device name
+                                            # correlates with the mount point,
+                                            # maintaining that dimension is
+                                            # redundant. Note that we cannot
+                                            # drop the fstype dimension this
+                                            # way, and therefore have to
+                                            # specify it explicitly when we
+                                            # create the alarm below.
+                                            'drop_device': True
+                                        }
+                                    },
+                                    'append_dimensions': {
+                                        'InstanceId': '$${aws:InstanceId}'
+                                    },
+                                },
                                 'logs': {
                                     'logs_collected': {
                                         'files': {
@@ -1732,6 +1777,35 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Owner': config.owner
                 }
+            }
+        },
+        'aws_cloudwatch_metric_alarm': {
+            **{
+                'gitlab_' + resource: {
+                    'alarm_name': 'azul-gitlab_' + resource,
+                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                    'evaluation_periods': periods,
+                    'period': 60 * 10,
+                    'metric_name': metric,
+                    'namespace': 'CWAgent',
+                    'dimensions': dimensions | {
+                        'InstanceId': '${aws_instance.gitlab.id}',
+                    },
+                    'statistic': stat,
+                    'threshold': threshold,
+                    'treat_missing_data': 'missing',
+                    **{
+                        state + '_actions': ['${data.aws_sns_topic.monitoring.arn}']
+                        for state in ('insufficient_data', 'alarm', 'ok')
+                    },
+                } for resource, metric, periods, stat, threshold, dimensions in
+                [
+                    # FIXME: Add `mem_used_percent` alarm
+                    #        https://github.com/DataBiosphere/azul/issues/5139
+                    ('data_disk_use', 'disk_used_percent', 1, 'Maximum', 75, {'path': gitlab_mount, 'fstype': 'ext4'}),
+                    ('root_disk_use', 'disk_used_percent', 1, 'Maximum', 75, {'path': '/', 'fstype': 'xfs'}),
+                    ('cpu_use', 'cpu_usage_active', 6, 'Average', 90, {'cpu': 'cpu-total'})
+                ]
             }
         }
     }
