@@ -136,7 +136,7 @@ class IndexerTestCase(CatalogTestCase,
                          index=','.join(self.index_service.index_names(self.catalog)),
                          preserve_order=True))
         for hit in hits:
-            self._verify_sorted_lists(hit)
+            self._verify_sorted_lists(hit['_source'])
         return hits
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:

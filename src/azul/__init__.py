@@ -1446,7 +1446,7 @@ class Config:
     # the `shared` TF component.
 
     docker_images = [
-        'docker.elastic.co/elasticsearch/elasticsearch:7.10.1',
+        'docker.io/ucscgi/azul-elasticsearch:7.17.10-2',
         'docker.elastic.co/kibana/kibana-oss:7.10.2',
         'docker.io/clamav/clamav:1.1.0-1',
         'docker.io/cllunsford/aws-signing-proxy:0.2.2',
