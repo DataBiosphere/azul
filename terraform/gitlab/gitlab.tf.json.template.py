@@ -263,6 +263,8 @@ ami_id = {
     'us-east-1': 'ami-0e1af243f15d4567f'
 }
 
+gitlab_mount = '/mnt/gitlab'
+
 
 @lru_cache(maxsize=1)
 def iam() -> JSON:
@@ -1333,7 +1335,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'user_data_replace_on_change': True,
                 'user_data': '#cloud-config\n' + yaml.dump({
                     'mounts': [
-                        ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
+                        ['/dev/nvme1n1', gitlab_mount, 'ext4', '']
                     ],
                     'packages': [
                         'docker',
@@ -1421,8 +1423,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # DNS server and don't fall back to the
                                     # Google ones.
                                     '--volume /etc/resolv.conf:/etc/resolv.conf',
-                                    '--volume /mnt/gitlab/docker:/var/lib/docker',
-                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    f'--volume {gitlab_mount}/docker:/var/lib/docker',
+                                    f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
                                     dind_image
                                 ),
                                 '[Install]',
@@ -1453,9 +1455,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--publish 80:80',
                                     '--publish 2222:22',
                                     '--rm',
-                                    '--volume /mnt/gitlab/config:/etc/gitlab',
-                                    '--volume /mnt/gitlab/logs:/var/log/gitlab',
-                                    '--volume /mnt/gitlab/data:/var/opt/gitlab',
+                                    f'--volume {gitlab_mount}/config:/etc/gitlab',
+                                    f'--volume {gitlab_mount}/logs:/var/log/gitlab',
+                                    f'--volume {gitlab_mount}/data:/var/opt/gitlab',
                                     gitlab_image
                                 ),
                                 '[Install]',
@@ -1482,7 +1484,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'run',
                                     '--name gitlab-runner',
                                     '--rm',
-                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
                                     '--network gitlab-runner-net',
                                     '--env DOCKER_HOST=tcp://gitlab-dind:2375',
                                     runner_image
@@ -1513,7 +1515,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--rm',
                                     '--volume /var/run/docker.sock:/var/run/docker.sock',
                                     '--volume /:/scan:ro',
-                                    '--volume /mnt/gitlab/clamav:/var/lib/clamav:rw',
+                                    f'--volume {gitlab_mount}/clamav:/var/lib/clamav:rw',
                                     clamav_image,
                                     '/bin/sh',
                                     '-c',
@@ -1648,7 +1650,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                                     ]
 
                                                 ] + [
-                                                    f'/mnt/gitlab/logs/{file}.log'
+                                                    f'{gitlab_mount}/logs/{file}.log'
                                                     for file in
                                                     [
                                                         'gitaly/gitaly_ruby_json',
@@ -1665,7 +1667,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                                         'reconfigure/*'
                                                     ]
                                                 ] + [
-                                                    f'/mnt/gitlab/logs/gitlab-rails/{file}.log'
+                                                    f'{gitlab_mount}/logs/gitlab-rails/{file}.log'
                                                     for file in
                                                     [
                                                         'api_json',
