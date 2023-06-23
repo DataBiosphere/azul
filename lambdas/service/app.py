@@ -219,8 +219,11 @@ spec = {
             index, the corresponding entity will always be a singleton like
             this.
         '''),
-        # Version should be updated in any PR tagged API with a major version
-        # update for breaking changes, and a minor version otherwise
+        # This property should be updated in any PR connected to an issue
+        # labeled `API`. Increment the major version for backwards incompatible
+        # changes and reset the minor version to zero. Otherwise, increment only
+        # the minor version for backwards compatible changes. A backwards
+        # compatible change is one that does not require updates to clients.
         'version': '1.0'
     },
     'tags': [

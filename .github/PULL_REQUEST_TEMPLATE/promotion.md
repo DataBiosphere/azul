@@ -22,7 +22,7 @@ Connected issue: #0000
 ### Author (reindex, API changes)
 
 - [ ] Added `reindex` label to PR <sub>or this PR does not require reindexing</sub>
-- [ ] Added `API` label to connected issue <sub>or this PR does not modify the Azul service API</sub>
+- [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
 
 
 ### Author (upgrading)

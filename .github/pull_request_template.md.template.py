@@ -264,16 +264,23 @@ def main():
                     'content': 'Added `reindex` label to PR',
                     'alt': 'or this PR does not require reindexing'
                 },
-                iif(t is T.default, {
-                    'type': 'cli',
-                    'content': 'Added `a` (compatible changes) or `A` (incompatible ones) tag to commit title',
-                    'alt': 'or this PR does not modify the Azul service API'
-                }),
                 {
                     'type': 'cli',
-                    'content': f'Added `API` label to connected {t.issues}',
-                    'alt': 'or this PR does not modify the Azul service API'
+                    'content': 'PR and connected issue are labeled `API`',
+                    'alt': 'or this PR does not modify a REST API'
                 },
+                *iif(t is T.default, [
+                    {
+                        'type': 'cli',
+                        'content': 'Added `a` (`A`) tag to commit title for backwards (in)compatible changes',
+                        'alt': 'or this PR does not modify a REST API'
+                    },
+                    {
+                        'type': 'cli',
+                        'content': 'Updated REST API version number in `app.py`',
+                        'alt': 'or this PR does not modify a REST API'
+                    }
+                ])
             ]),
             *iif(t is T.default, [
                 {
