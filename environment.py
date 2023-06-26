@@ -525,7 +525,34 @@ def env() -> Mapping[str, Optional[str]]:
         # first item of the value for that branch. An empty key signifies any
         # other branch not mentioned explicitly, or a detached HEAD.
         #
-        'azul_main_deployments': json.dumps({
+        # Only shared deployments are mentioned here. A shared deployment is one
+        # that is not personal. A personal deployment is owned and maintained by
+        # a single person. Shared deployments can be either main or sandbox
+        # deployments. A sandbox deployment is used to test feature branches. A
+        # main deployment is a shared deployment that is not a sandbox. Main
+        # deployments can be either stable or lower. A stable (aka production)
+        # deployment is one that must be kept operational at all times because
+        # it is exposed to the public *and* serves external users for production
+        # purposes. A lower (aka unstable) deployment is a main deployment that
+        # is not stable.
+        #
+        # ╔════════════╗ ╔═══════════════════════════════════════════════════╗
+        # ║  Personal  ║ ║                      Shared                       ║
+        # ║            ║ ║ ╔════════════╗ ╔════════════════════════════════╗ ║
+        # ║            ║ ║ ║  Sandbox   ║ ║              Main              ║ ║
+        # ║            ║ ║ ║            ║ ║ ╔════════════╗ ╔═════════════╗ ║ ║
+        # ║            ║ ║ ║            ║ ║ ║   Lower    ║ ║   Stable    ║ ║ ║
+        # ║ ┌────────┐ ║ ║ ║ ┌────────┐ ║ ║ ║ ┌────────┐ ║ ║ ┌─────────┐ ║ ║ ║
+        # ║ │ hannes │ ║ ║ ║ │sandbox │ ║ ║ ║ │  dev   │ ║ ║ │  prod   │ ║ ║ ║
+        # ║ └────────┘ ║ ║ ║ └────────┘ ║ ║ ║ └────────┘ ║ ║ └─────────┘ ║ ║ ║
+        # ║            ║ ║ ║ ┌────────┐ ║ ║ ║ ┌────────┐ ║ ║ ┌─────────┐ ║ ║ ║
+        # ║            ║ ║ ║ │anvilbox│ ║ ║ ║ │anvildev│ ║ ║ │anvilprod│ ║ ║ ║
+        # ║            ║ ║ ║ └────────┘ ║ ║ ║ └────────┘ ║ ║ └─────────┘ ║ ║ ║
+        # ║            ║ ║ ║            ║ ║ ╚════════════╝ ╚═════════════╝ ║ ║
+        # ║            ║ ║ ╚════════════╝ ╚════════════════════════════════╝ ║
+        # ╚════════════╝ ╚═══════════════════════════════════════════════════╝
+        #
+        'azul_shared_deployments': json.dumps({
             'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod'],
             'prod': ['prod'],
         }),

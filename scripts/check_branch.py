@@ -16,8 +16,8 @@ Ensure that the currently checked out branch matches the selected deployment
 """
 
 
-def default_deployment(branch: Optional[str]) -> str:
-    deployments = config.main_deployments_for_branch(branch)
+def default_deployment(branch: Optional[str]) -> Optional[str]:
+    deployments = config.shared_deployments_for_branch(branch)
     return None if deployments is None else deployments[0]
 
 
@@ -35,8 +35,8 @@ class BranchDeploymentMismatch(Exception):
 
 
 def check_branch(branch: Optional[str], deployment: str) -> None:
-    if config.is_main_deployment(deployment):
-        deployments = config.main_deployments_for_branch(branch)
+    if config.is_shared_deployment(deployment):
+        deployments = config.shared_deployments_for_branch(branch)
         if deployments is None or deployment not in deployments:
             raise BranchDeploymentMismatch(branch, deployment, deployments)
 

@@ -554,7 +554,7 @@ class AWS:
     @property
     def monitoring_topic_name(self):
         return config.qualified_resource_name('monitoring',
-                                              stage=config.shared_deployment_stage)
+                                              stage=config.main_deployment_stage)
 
 
 aws = AWS()
