@@ -647,7 +647,7 @@ class TDRClient(SAMClient):
                     # FIXME: AnVIL deployments conflate indexer and public SAs
                     #        https://github.com/DataBiosphere/azul/issues/4398
                     config.ServiceAccount.indexer
-                    if config.aws_account_name == 'platform-anvil-dev' else
+                    if config.aws_account_name == 'platform-anvil-prod' else
                     config.ServiceAccount.public
                 )
             )
