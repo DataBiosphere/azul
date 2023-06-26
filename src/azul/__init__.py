@@ -961,7 +961,7 @@ class Config:
         return self._boolean(self.environ['AZUL_PRIVATE_API'])
 
     @property
-    def _main_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
+    def _shared_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
         """
         Maps a branch name to a sequence of names of main deployments the branch
         can be deployed to. The key of None signifies any other branch not
@@ -972,33 +972,33 @@ class Config:
         import json
         return freeze({
             k if k else None: v
-            for k, v in json.loads(self.environ['azul_main_deployments']).items()
+            for k, v in json.loads(self.environ['azul_shared_deployments']).items()
         })
 
-    def main_deployments_for_branch(self,
-                                    branch: Optional[str]
-                                    ) -> Optional[Sequence[str]]:
+    def shared_deployments_for_branch(self,
+                                      branch: Optional[str]
+                                      ) -> Optional[Sequence[str]]:
         """
         The list of names of main deployments the given branch can be deployed
         to or `None` of no such deployments exist. An argument of `None`
         indicates a detached head.
         """
-        deployments = self._main_deployments
+        deployments = self._shared_deployments
         try:
             return deployments[branch]
         except KeyError:
             return None if branch is None else deployments.get(None)
 
-    def is_main_deployment(self, deployment: Optional[str] = None) -> bool:
+    def is_shared_deployment(self, deployment: Optional[str] = None) -> bool:
         """
-        Returns `True` if the deployment of the specified name is a main
+        Returns `True` if the deployment of the specified name is a shared
         deployment, or `False` if it is a personal deployment. If no argument is
-        passed or if the argument is `None`, the current deployment's name is
+        passed, or if the argument is `None`, the current deployment's name is
         used instead.
         """
         if deployment is None:
             deployment = self.deployment_stage
-        return deployment in set(chain.from_iterable(self._main_deployments.values()))
+        return deployment in set(chain.from_iterable(self._shared_deployments.values()))
 
     def is_stable_deployment(self, deployment: Optional[str] = None) -> bool:
         """
@@ -1008,20 +1008,20 @@ class Config:
         if deployment is None:
             deployment = self.deployment_stage
         if deployment in {'prod'}:
-            assert self.is_main_deployment(deployment)
+            assert self.is_shared_deployment(deployment)
             return True
 
     @property
     def is_sandbox_deployment(self) -> bool:
         """
-        True, if current deployment is a main deployment with the sole purpose
-        of testing feature branches.
+        Returns True if the current deployment is a shared deployment primarily
+        used for testing feature branches.
         """
         return self._boolean(self.environ['AZUL_IS_SANDBOX'])
 
     @property
     def is_sandbox_or_personal_deployment(self) -> bool:
-        return self.is_sandbox_deployment or not self.is_main_deployment()
+        return self.is_sandbox_deployment or not self.is_shared_deployment()
 
     class BrowserSite(TypedDict):
         domain: str

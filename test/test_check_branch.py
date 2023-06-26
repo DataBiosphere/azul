@@ -27,7 +27,7 @@ class TestCheckBranch(AzulUnitTestCase):
             'develop': ['dev', 'sandbox'],
             'prod': ['prod']
         }
-        with patch.dict(os.environ, azul_main_deployments=json.dumps(default)):
+        with patch.dict(os.environ, azul_shared_deployments=json.dumps(default)):
             check_branch('develop', 'dev')
             check_branch('develop', 'sandbox')
 
@@ -63,7 +63,7 @@ class TestCheckBranch(AzulUnitTestCase):
             **default,
             '': ['sandbox']
         }
-        with patch.dict(os.environ, azul_main_deployments=json.dumps(gitlab)):
+        with patch.dict(os.environ, azul_shared_deployments=json.dumps(gitlab)):
             check_branch('feature/foo', 'sandbox')
             check_branch(None, 'sandbox')
             expect_exception('feature/foo',
