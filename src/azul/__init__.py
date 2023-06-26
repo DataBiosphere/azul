@@ -683,24 +683,26 @@ class Config:
 
     @property
     def deployment_stage(self) -> str:
+        """
+        The name of the current deployment.
+        """
         deployment_name = self.environ['AZUL_DEPLOYMENT_STAGE']
         self.validate_deployment_name(deployment_name)
         return deployment_name
 
     @cached_property
-    def shared_deployment_stage(self) -> str:
-        shared_deployments_by_account = {
-            'hca': {
-                'dev': 'dev',
-                'prod': 'prod'
-            },
-            'anvil': {
-                'dev': 'anvildev',
-                'prod': 'anvilprod'
-            }
-        }
-        _, project, stage = self.aws_account_name.split('-')
-        return shared_deployments_by_account[project][stage]
+    def main_deployment_stage(self) -> str:
+        """
+        The name of the main deployment the current deployment is colocated
+        with. If the current deployment is a main deployment, the return value
+        is the name of the current deployment.
+        """
+        name = self.aws_account_name
+        group, project, stage = name.split('-')
+        # Some unit tests use `test`
+        assert group in ('platform', 'test'), name
+        prefix = '' if project == 'hca' else project
+        return prefix + stage
 
     @property
     def deployment_incarnation(self) -> str:
@@ -725,7 +727,7 @@ class Config:
         # efficient than having one forwarder per deployment because logs are
         # delivered very frequently so each log forwarder Lambda will be
         # constantly active.
-        return self.deployment_stage == self.shared_deployment_stage
+        return self.deployment_stage == self.main_deployment_stage
 
     @property
     def es_instance_type(self) -> str:
