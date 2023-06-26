@@ -20,6 +20,26 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5283: Swap anvilprod and anvildev
+==================================
+
+Update any personal deployments you own in AWS account ``platform-anvil-dev`` to
+mirror the configuration of the ``anvilbox`` deployment. Specifically, you will
+need to update the list of sources for the ``anvil`` catalog and the TDR and SAM
+endpoints. You will also need to ask the system administrator to move the Terra
+group memebership of the indexer service account of any such personal deployment
+from ``azul-anvil-prod`` in Terra production to ``azul-anvil-dev`` in TDR
+development. Redeploy and reindex those deployments after updating their
+configuration.
+
+All indices in the Elasticsearch domains for ``anvildev`` and ``anvilbox`` have
+been deleted, including the indices of personal deployments that share an
+Elasticsearch domain with ``anvilbox``,  regardless of whether these indices
+contained managed-access or public snapshots. In order to recover from the loss
+of these indices in your personal deployment, you will need to reindex that
+deployment.
+
+
 #5260 Fix: Inconsistent bucket names and CloudFront origin IDs in anvildev
 ==========================================================================
 
