@@ -24,9 +24,15 @@ from azul.terraform import (
 
 def alarm_resource_name(threshold: MetricThreshold) -> str:
     handler_name = threshold.handler_name
-    assert handler_name != ''
+    # FIXME: Remove this hack of slicing off the prefix from the handler name
+    #        once the Lambda's have been renamed.
+    #        https://github.com/DataBiosphere/azul/issues/5337
+    if handler_name is not None and handler_name.startswith(threshold.lambda_name):
+        handler_name = handler_name[len(threshold.lambda_name):]
+    assert handler_name != '', threshold.handler_name
     return '_'.join((
-        handler_name if handler_name is not None else threshold.lambda_name,
+        threshold.lambda_name,
+        *(() if handler_name is None else (handler_name,)),
         threshold.metric.name
     ))
 
