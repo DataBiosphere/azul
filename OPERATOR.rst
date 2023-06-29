@@ -264,23 +264,24 @@ AMI ID and adopt updates at our own discretion to avoid unexpected failures. To
 obtain the latest compatible AMI ID, select the desired ``….gitlab`` component,
 say, ``_select dev.gitlab`` and run
 
-    ::
+::
 
-        aws ec2 describe-images \
-                --owners aws-marketplace \
-                --filters="Name=name,Values=*4c096026-c6b0-440c-bd2f-6d34904e4fc6*" \
-            | jq -r '.Images[] | .CreationDate+"\t"+.ImageId+"\t"+.Name' \
-            | sort \
-            | tail -1 \
-            | cut -f 2
+    aws ec2 describe-images \
+            --owners aws-marketplace \
+            --filters="Name=name,Values=*4c096026-c6b0-440c-bd2f-6d34904e4fc6*" \
+        | jq -r '.Images[] | .CreationDate+"\t"+.ImageId+"\t"+.Name' \
+        | sort \
+        | tail -1
 
-This prints the ID of the most recent CIS-hardened AMI. Update the value of the
-``ami_id`` variable in ``terraform/gitlab/gitlab.tf.json.template.py``. The
-variable holds a dictionary with one entry per region, because AMIs are specific
-to a region. If there are ``….gitlab`` components in more than one AWS region
-(which is uncommon), you need to select at least one ``….gitlab`` component in
-each of these regions, rerun the command above for each such component, and add
-or update the ``ami_id`` entry for the respective region. Instead of selecting a
+This prints the date, ID and name of the latest CIS-hardened AMI. Update the
+``ami_id`` variable in ``terraform/gitlab/gitlab.tf.json.template.py`` to refer
+to the AMI ID. Update the image name in the comment right above the variable so
+that we know which semantic product version the AMI represents. AMIs are
+specific to a region so the variable holds a dictionary with one entry per
+region. If there are ``….gitlab`` components in more than one AWS region (which
+is uncommon), you need to select at least one ``….gitlab`` component in each of
+these regions, rerun the command above for each such component, and add or
+update the ``ami_id`` entry for the respective region. Instead of selecting a
 ``….gitlab`` component, you can just specify the region of the component using
 the ``--region`` option to ``aws ec2 describe-images``.
 
