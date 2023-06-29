@@ -101,6 +101,8 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def sources(self) -> Set[TDRSourceSpec]:
         return self._sources
 
+    # FIXME: Improve caching of DRS and TDR clients
+    #        https://github.com/DataBiosphere/azul/issues/5357
     def _user_authenticated_tdr(self,
                                 authentication: Optional[Authentication]
                                 ) -> TDRClient:
@@ -221,6 +223,8 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
         raise NotImplementedError
 
+    # FIXME: Improve caching of DRS and TDR clients
+    #        https://github.com/DataBiosphere/azul/issues/5357
     def drs_client(self,
                    authentication: Optional[Authentication] = None
                    ) -> DRSClient:
