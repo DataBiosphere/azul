@@ -66,6 +66,10 @@ cis_alarms = [
                             '$.eventSource != "s3.amazonaws.com"',
                             '$.eventName != "HeadObject"',
                             '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
+                        ])),
+                        paren(' || '.join([
+                            '$.eventSource != "inspector2.amazonaws.com"',
+                            '$.eventName != "DescribeOrganizationConfiguration"',
                         ]))
                     ]) + '}'
                     ),
