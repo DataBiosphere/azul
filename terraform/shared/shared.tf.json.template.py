@@ -61,6 +61,11 @@ cis_alarms = [
                             '$.eventSource != "s3.amazonaws.com"',
                             '$.eventName != "HeadBucket"',
                             '$.userIdentity.invokedBy != "config.amazonaws.com"',
+                        ])),
+                        paren(' || '.join([
+                            '$.eventSource != "s3.amazonaws.com"',
+                            '$.eventName != "HeadObject"',
+                            '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
                         ]))
                     ]) + '}'
                     ),
