@@ -88,10 +88,14 @@ class DSSBundle(HCABundle[DSSBundleFQID]):
     def canning_qualifier(cls) -> str:
         return 'dss.hca'
 
-    def drs_path(self, manifest_entry: JSON) -> str:
+    def drs_uri(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
         file_version = manifest_entry['version']
-        return str(furl(path=(file_uuid,), args={'version': file_version}))
+        netloc = config.drs_domain or config.api_lambda_domain('service')
+        return str(furl(scheme='drs',
+                        netloc=netloc,
+                        path=(file_uuid,),
+                        args={'version': file_version}))
 
 
 class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
@@ -381,13 +385,6 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
             }
         ]
 
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        if drs_path is None:
-            return None
-        else:
-            netloc = config.drs_domain or config.api_lambda_domain('service')
-            return f'drs://{netloc}/{drs_path}'
-
     def _direct_file_url(self,
                          file_uuid: str,
                          *,
@@ -420,7 +417,7 @@ class DSSFileDownload(RepositoryFileDownload):
                plugin: RepositoryPlugin,
                authentication: Optional[Authentication]
                ) -> None:
-        self.drs_path = None  # to shorten the retry URLs
+        self.drs_uri = None  # to shorten the retry URLs
         if self.replica is None:
             self.replica = 'aws'
         assert isinstance(plugin, Plugin)

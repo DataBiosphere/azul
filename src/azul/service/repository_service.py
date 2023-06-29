@@ -153,15 +153,13 @@ class RepositoryService(ElasticsearchService):
                     try:
                         version = node['version']
                         uuid = node['uuid']
-                        drs_path = node.pop('drs_path')
+                        drs_uri = node['drs_uri']
                     except KeyError:
                         for child in node.values():
                             inject_file_urls(child, *path)
                     else:
                         plugin = self.repository_plugin(catalog)
-                        drs_uri = plugin.drs_uri(drs_path)
-                        node['drs_uri'] = drs_uri
-                        if drs_uri is None and plugin.file_download_class().needs_drs_path:
+                        if drs_uri is None and plugin.file_download_class().needs_drs_uri:
                             node['url'] = None
                         else:
                             node['url'] = str(file_url_func(catalog=catalog,

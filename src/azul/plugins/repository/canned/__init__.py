@@ -83,7 +83,7 @@ class CannedBundle(HCABundle[CannedBundleFQID]):
     def canning_qualifier(cls) -> str:
         return 'gh.hca'
 
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
         return 'dss'
 
 
@@ -154,13 +154,6 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
-
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        if drs_path is None:
-            return None
-        else:
-            netloc = config.drs_domain or config.api_lambda_domain('service')
-            return f'drs://{netloc}/{drs_path}'
 
     def portal_db(self) -> Sequence[JSON]:
         return []

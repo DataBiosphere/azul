@@ -164,6 +164,8 @@ class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase[BUNDLE], Generic[BUNDL
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
 
+    _drs_domain_name = str(mock_service_url.netloc)
+
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
         return tinyquery.TinyQuery()

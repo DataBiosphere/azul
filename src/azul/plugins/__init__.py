@@ -589,16 +589,6 @@ class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, 
         return DRSClient(http_client=http_client())
 
     @abstractmethod
-    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
-        """
-        Given the file-specifc suffix of a DRS URI for a data file, return the
-        complete DRS URI.
-
-        This method is typically called by the service.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def file_download_class(self) -> Type['RepositoryFileDownload']:
         raise NotImplementedError
 
@@ -621,18 +611,18 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     #: Optional version of the file. Defaults to the most recent version.
     file_version: Optional[str]
 
-    #: The DRS path of the file in the repository from which to download the
-    #: file. A DRS path is the path component of a DRS URI. Same as a DRS ID:
+    #: The DRS URI of the file in the repository from which to download the
+    #: file.
     #:
     #: https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/#_drs_ids
     #:
-    #: Repository plugins that populate the DRS path (``azul.indexer.Bundle.
-    #: drs_path``) usually require this to be set. Plugins that don't will
+    #: Repository plugins that populate the DRS URI (``azul.indexer.Bundle.
+    #: drs_uri``) usually require this to be set. Plugins that don't will
     #: ignore this.
-    drs_path: Optional[str]
+    drs_uri: Optional[str]
 
-    #: True if the download of a file requires its DRS path
-    needs_drs_path: ClassVar[bool] = False
+    #: True if the download of a file requires its DRS URI
+    needs_drs_uri: ClassVar[bool] = False
 
     #: The name of the replica to download the file from. Defaults to the name
     #: of the default replica. The set of valid replica names depends on the
@@ -659,7 +649,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
                  file_uuid: str,
                  file_name: str,
                  file_version: Optional[str],
-                 drs_path: Optional[str],
+                 drs_uri: Optional[str],
                  replica: Optional[str],
                  token: Optional[str]) -> None: ...
 

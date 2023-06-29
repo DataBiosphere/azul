@@ -220,8 +220,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     }
@@ -416,7 +416,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
@@ -631,7 +631,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
@@ -824,7 +824,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
@@ -1066,8 +1066,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -1126,8 +1126,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -1341,7 +1341,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -1368,7 +1368,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -1583,7 +1583,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -1776,7 +1776,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -2011,8 +2011,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -2207,7 +2207,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -2441,8 +2441,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -2501,8 +2501,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -2716,7 +2716,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -2743,7 +2743,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
@@ -2983,8 +2983,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -3043,8 +3043,8 @@
                         "sha256": [
                             ""
                         ],
-                        "drs_path": [
-                            "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": [
+                            "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -3258,7 +3258,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -3285,7 +3285,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_path": "v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },

@@ -1323,7 +1323,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'mounts': [
                         ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
                     ],
-                    'packages': ['docker', 'amazon-cloudwatch-agent', 'amazon-ecr-credential-helper'],
+                    'packages': [
+                        'docker',
+                        'amazon-cloudwatch-agent',
+                        'amazon-ecr-credential-helper',
+                        'dracut-fips'
+                    ],
                     'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
                     'write_files': [
                         {
@@ -1669,11 +1674,26 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                         }
                                     }
                                 }
-                            }, indent=4)
+                                # FIXME: Re-enable formatting of the JSON above
+                                #        https://github.com/DataBiosphere/azul/issues/5314
+                            })
                         },
                     ],
+                    # Reboot to realize the added kernel parameter the changed sshd configuration
+                    'power_state': {
+                        'mode': 'reboot'
+                    },
                     'runcmd': [
                         ['systemctl', 'daemon-reload'],
+                        ['dracut', '-f'],
+                        ['/sbin/grubby', '--update-kernel=ALL', '--args="fips=1"'],
+                        [
+                            # Key exchange algorithm curve25519 is not FIPS-compliant
+                            'sed',
+                            '--in-place',
+                            's/curve25519[^,]*,//g',
+                            '/etc/ssh/sshd_config'
+                        ],
                         [
                             'systemctl',
                             'enable',

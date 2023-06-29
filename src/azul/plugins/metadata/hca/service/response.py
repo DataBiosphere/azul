@@ -416,8 +416,7 @@ class SearchResponseFactory:
             'uuid': file.get('uuid'),
             'version': file.get('version'),
             'matrixCellCount': file.get('matrix_cell_count'),
-            # to be replaced with `drs_uri` and `url` in post-processing
-            'drs_path': file.get('drs_path')
+            'drs_uri': file.get('drs_uri')
         }
         return translated_file
 

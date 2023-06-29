@@ -683,24 +683,26 @@ class Config:
 
     @property
     def deployment_stage(self) -> str:
+        """
+        The name of the current deployment.
+        """
         deployment_name = self.environ['AZUL_DEPLOYMENT_STAGE']
         self.validate_deployment_name(deployment_name)
         return deployment_name
 
     @cached_property
-    def shared_deployment_stage(self) -> str:
-        shared_deployments_by_account = {
-            'hca': {
-                'dev': 'dev',
-                'prod': 'prod'
-            },
-            'anvil': {
-                'dev': 'anvildev',
-                'prod': 'anvilprod'
-            }
-        }
-        _, project, stage = self.aws_account_name.split('-')
-        return shared_deployments_by_account[project][stage]
+    def main_deployment_stage(self) -> str:
+        """
+        The name of the main deployment the current deployment is colocated
+        with. If the current deployment is a main deployment, the return value
+        is the name of the current deployment.
+        """
+        name = self.aws_account_name
+        group, project, stage = name.split('-')
+        # Some unit tests use `test`
+        assert group in ('platform', 'test'), name
+        prefix = '' if project == 'hca' else project
+        return prefix + stage
 
     @property
     def deployment_incarnation(self) -> str:
@@ -725,7 +727,7 @@ class Config:
         # efficient than having one forwarder per deployment because logs are
         # delivered very frequently so each log forwarder Lambda will be
         # constantly active.
-        return self.deployment_stage == self.shared_deployment_stage
+        return self.deployment_stage == self.main_deployment_stage
 
     @property
     def es_instance_type(self) -> str:
@@ -961,7 +963,7 @@ class Config:
         return self._boolean(self.environ['AZUL_PRIVATE_API'])
 
     @property
-    def _main_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
+    def _shared_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
         """
         Maps a branch name to a sequence of names of main deployments the branch
         can be deployed to. The key of None signifies any other branch not
@@ -972,33 +974,33 @@ class Config:
         import json
         return freeze({
             k if k else None: v
-            for k, v in json.loads(self.environ['azul_main_deployments']).items()
+            for k, v in json.loads(self.environ['azul_shared_deployments']).items()
         })
 
-    def main_deployments_for_branch(self,
-                                    branch: Optional[str]
-                                    ) -> Optional[Sequence[str]]:
+    def shared_deployments_for_branch(self,
+                                      branch: Optional[str]
+                                      ) -> Optional[Sequence[str]]:
         """
         The list of names of main deployments the given branch can be deployed
         to or `None` of no such deployments exist. An argument of `None`
         indicates a detached head.
         """
-        deployments = self._main_deployments
+        deployments = self._shared_deployments
         try:
             return deployments[branch]
         except KeyError:
             return None if branch is None else deployments.get(None)
 
-    def is_main_deployment(self, deployment: Optional[str] = None) -> bool:
+    def is_shared_deployment(self, deployment: Optional[str] = None) -> bool:
         """
-        Returns `True` if the deployment of the specified name is a main
+        Returns `True` if the deployment of the specified name is a shared
         deployment, or `False` if it is a personal deployment. If no argument is
-        passed or if the argument is `None`, the current deployment's name is
+        passed, or if the argument is `None`, the current deployment's name is
         used instead.
         """
         if deployment is None:
             deployment = self.deployment_stage
-        return deployment in set(chain.from_iterable(self._main_deployments.values()))
+        return deployment in set(chain.from_iterable(self._shared_deployments.values()))
 
     def is_stable_deployment(self, deployment: Optional[str] = None) -> bool:
         """
@@ -1008,20 +1010,20 @@ class Config:
         if deployment is None:
             deployment = self.deployment_stage
         if deployment in {'prod'}:
-            assert self.is_main_deployment(deployment)
+            assert self.is_shared_deployment(deployment)
             return True
 
     @property
     def is_sandbox_deployment(self) -> bool:
         """
-        True, if current deployment is a main deployment with the sole purpose
-        of testing feature branches.
+        Returns True if the current deployment is a shared deployment primarily
+        used for testing feature branches.
         """
         return self._boolean(self.environ['AZUL_IS_SANDBOX'])
 
     @property
     def is_sandbox_or_personal_deployment(self) -> bool:
-        return self.is_sandbox_deployment or not self.is_main_deployment()
+        return self.is_sandbox_deployment or not self.is_shared_deployment()
 
     class BrowserSite(TypedDict):
         domain: str

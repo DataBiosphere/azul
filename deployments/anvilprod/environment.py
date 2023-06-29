@@ -55,10 +55,18 @@ def mkdict(previous_catalog: dict[str, str],
     return catalog
 
 
-anvil_sources = mkdict({}, 3, mkdelta([
-    mksrc('datarepo-dev-e53e74aa', 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 6804),
-    mksrc('datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 28),
-    mksrc('datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25)
+anvil_sources = mkdict({}, 11, mkdelta([
+    mksrc('datarepo-1ba591a6', 'ANVIL_1000G_high_coverage_2019_20221019_ANV5_202303081523', 6804),
+    mksrc('datarepo-aa67671a', 'ANVIL_CMG_UWASH_DS_BAV_IRB_PUB_RD_20221020_ANV5_202303081451', 181),
+    mksrc('datarepo-b4e0bfd5', 'ANVIL_CMG_UWASH_DS_BDIS_20221020_ANV5_202303081501', 10),
+    mksrc('datarepo-333dd883', 'ANVIL_CMG_UWASH_DS_HFA_20221020_ANV5_202303081456', 198),
+    mksrc('datarepo-b968cbdb', 'ANVIL_CMG_UWASH_DS_NBIA_20221020_ANV5_202303081459', 110),
+    mksrc('datarepo-6a5b13ea', 'ANVIL_CMG_UWASH_HMB_20221020_ANV5_202303081455', 423),
+    mksrc('datarepo-3d4c42f7', 'ANVIL_CMG_UWASH_HMB_IRB_20221020_ANV5_202303081454', 45),
+    mksrc('datarepo-080b2c9e', 'ANVIL_CMG_UWash_DS_EP_20221020_ANV5_202303081452', 53),
+    mksrc('datarepo-4f75c9e3', 'ANVIL_CMG_UWash_GRU_20230308_ANV5_202303081731', 5861),
+    mksrc('datarepo-ec9365be', 'ANVIL_CMG_UWash_GRU_IRB_20221020_ANV5_202303081458', 563),
+    mksrc('datarepo-8392ac2c', 'ANVIL_GTEx_V8_hg38_20221013_ANV5_202303081502', 101205)
 ]))
 
 
@@ -93,6 +101,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_STAGE': 'anvilprod',
 
         'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
+        'AZUL_PRIVATE_API': '1',
 
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
@@ -112,14 +121,14 @@ def env() -> Mapping[str, Optional[str]]:
         }),
 
         'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
-        'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
-        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
+        'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 
         'AZUL_ENABLE_MONITORING': '1',
 
         # $0.382/h × 3 × 24h/d × 30d/mo = $825.12/mo
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-        'AZUL_ES_INSTANCE_COUNT': '2',
+        'AZUL_ES_INSTANCE_COUNT': '4',
 
         'AZUL_DEBUG': '1',
 

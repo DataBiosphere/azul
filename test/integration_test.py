@@ -212,7 +212,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
             # FIXME: Unpin the seed once underlying issue is fixed
             #        https://github.com/DataBiosphere/azul/issues/5168
             6634795309975096822
-            if config.deployment_stage == 'anvilprod' else
+            if config.deployment_stage == 'anvildev' else
             randint(0, sys.maxsize)
         )
         self.random = Random(self.random_seed)

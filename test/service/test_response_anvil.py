@@ -2,8 +2,6 @@ import requests
 
 from azul import (
     JSON,
-    config,
-    mutable_furl,
 )
 from azul.logging import (
     configure_test_logging,
@@ -32,10 +30,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
     def tearDownClass(cls):
         cls._teardown_indices()
         super().tearDownClass()
-
-    @property
-    def drs_uri(self) -> mutable_furl:
-        return config.tdr_service_url.set(scheme='drs')
 
     def test_entity_indices(self):
         self.maxDiff = None
@@ -1759,9 +1753,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'crc32': '',
                                 'sha256': '',
                                 'accessible': True,
-                                'drs_uri': str(self.drs_uri.add(
-                                    path='v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67'
-                                )),
+                                'drs_uri': f'drs://{self._drs_domain_name}/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_'
+                                           f'1e269f04-4347-4188-b060-1dcc69e71d67',
                                 'url': str(self.base_url.set(
                                     path='/repository/files/15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                                     args=dict(catalog='test', version='2022-06-01T00:00:00.000000Z')
@@ -1889,9 +1882,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'crc32': '',
                                 'sha256': '',
                                 'accessible': True,
-                                'drs_uri': str(self.drs_uri.add(
-                                    path='v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37'
-                                )),
+                                'drs_uri': f'drs://{self._drs_domain_name}/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_'
+                                           f'8b722e88-8103-49c1-b351-e64fa7c6ab37',
                                 'url': str(self.base_url.set(
                                     path='/repository/files/3b17377b-16b1-431c-9967-e5d01fc5923f',
                                     args=dict(catalog='test', version='2022-06-01T00:00:00.000000Z')

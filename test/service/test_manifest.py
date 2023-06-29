@@ -186,6 +186,7 @@ def manifest_test(test):
 
 
 class TestManifestEndpoints(ManifestTestCase):
+    _drs_domain_name = 'drs-test.lan'
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
@@ -222,20 +223,19 @@ class TestManifestEndpoints(ManifestTestCase):
         for debug in (1, 0):
             with self.subTest(debug=debug):
                 with mock.patch.object(type(config), 'debug', debug):
-                    with mock.patch.object(type(config), 'drs_domain', 'drs-test.lan'):
-                        response = self._get_manifest(ManifestFormat.terra_pfb, {})
-                        self.assertEqual(200, response.status_code)
-                        pfb_file = BytesIO(response.content)
-                        reader = fastavro.reader(pfb_file)
-                        records = list(reader)
-                        results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
-                        if results_file.exists():
-                            with open(results_file, 'r') as f:
-                                expected_records = json.load(f)
-                            self.assertEqual(expected_records, json.loads(to_json(records)))
-                        else:
-                            with open(results_file, 'w') as f:
-                                f.write(to_json(records))
+                    response = self._get_manifest(ManifestFormat.terra_pfb, {})
+                    self.assertEqual(200, response.status_code)
+                    pfb_file = BytesIO(response.content)
+                    reader = fastavro.reader(pfb_file)
+                    records = list(reader)
+                    results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
+                    if results_file.exists():
+                        with open(results_file, 'r') as f:
+                            expected_records = json.load(f)
+                        self.assertEqual(expected_records, json.loads(to_json(records)))
+                    else:
+                        with open(results_file, 'w') as f:
+                            f.write(to_json(records))
 
     def _shared_file_bundle(self, bundle):
         """
@@ -673,7 +673,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 elif line.startswith(location_prefix):
                     self.assertTrue(line.endswith('"'))
                     url = furl(line[len(location_prefix):-1])
-                    (related_urls if 'drsPath' in url.args else urls).append(url)
+                    (related_urls if 'drsUri' in url.args else urls).append(url)
                 else:
                     # The manifest contains a combination of line formats,
                     # we only validate `output` and `url` prefixed lines.
@@ -682,7 +682,7 @@ class TestManifestEndpoints(ManifestTestCase):
                              sorted(curl_files))
             self.assertEqual(1, len(urls))
             self.assertEqual(len(expected) - 1, len(related_urls))
-            expected_args = {'drsPath', 'fileName', 'requestIndex'}
+            expected_args = {'drsUri', 'fileName', 'requestIndex'}
             for url in related_urls:
                 self.assertSetEqual(expected_args - set(url.args.keys()), set())
 

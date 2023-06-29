@@ -131,10 +131,11 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
         file_version = '2018-09-12T12:11:54.054628Z'
         organic_file_name = 'foo.txt'
         drs_path_id = 'v1_c99baa6f-24ce-4837-8c4a-47ca4ec9d292_b967ecc9-98b2-43c6-8bac-28c0a4fa7812'
+        drs_uri = f'drs://{self._drs_domain_name}/{drs_path_id}'
         file_doc = {
             'name': organic_file_name,
             'version': file_version,
-            'drs_path': drs_path_id,
+            'drs_uri': drs_uri,
             'size': 1,
         }
         for fetch in True, False:
@@ -175,7 +176,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                             response = dict(response.headers)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
 
-        file_doc['drs_path'] = None
+        file_doc['drs_uri'] = None
         with self.subTest('phantom'):
             with mock.patch.object(RepositoryService,
                                    'get_data_file',
@@ -277,7 +278,7 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
         file_doc = {
             'name': organic_file_name,
             'version': file_version,
-            'drs_path': None,
+            'drs_uri': None,
             'size': 3,
         }
         with mock.patch.object(RepositoryService, 'get_data_file', return_value=file_doc):
