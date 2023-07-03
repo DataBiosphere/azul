@@ -14,28 +14,60 @@ _refresh() {
 # Manage the symlink to the active deployment
 #
 _select() {
-	if [[ $1 != "" ]]; then
-		_deauth
-		_link "$1" || return
-		_refresh
-		_preauth
+	if [ -z "$1" ] ; then
+		_show_link
+	else
+		if ! {
+			_validate_link "$1" &&
+			_deauth &&
+			_link "$1" &&
+			_refresh &&
+			_preauth ;
+		} ; then
+			echo >&2 "_select failed"
+			return 1
+		fi
 	fi
-	(cd "${project_root}/deployments" && ls -l .active)
 }
 
 _deselect() {
-	_deauth
-	rm "${project_root}/deployments/.active"
-	_refresh
+	if ! {
+		_deauth &&
+		_unlink &&
+		_refresh ;
+	} ; then
+		echo >&2 "_deselect failed"
+		return 1
+	fi
 }
 
 _link() {
-	(
+	if ! (
+		_validate_link "$1" &&
 		cd "${project_root}/deployments" &&
-			test -d "$1" &&
-			{ [ ! -e .active ] || { [ -L .active ] && rm .active; }; } &&
-			ln -s "$1" .active
-	) || { echo error: "$1" && return; }
+		{ [ ! -e .active ] || { [ -L .active ] && rm .active ; } ; } &&
+		ln -s "$1" .active
+	) ; then
+		echo >&2 "_link failed: '$1'"
+		return 1
+	fi
+}
+
+_unlink() {
+	rm "${project_root}/deployments/.active"
+}
+
+_validate_link() {
+	d="${project_root}/deployments/$1"
+	# -d dereferences symlinks so with -L we make sure the argument isn't one
+	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
+		echo >&2 "_validate_link failed: '$1'"
+		return 1
+	fi
+}
+
+_show_link() {
+	( cd "${project_root}/deployments" && ls -l .active )
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them
@@ -159,7 +191,15 @@ _deauth() {
 }
 
 _revenv() {
-	deactivate && make virtualenv && source .venv/bin/activate && make requirements envhook
+	if ! {
+		deactivate &&
+		make virtualenv &&
+		source .venv/bin/activate &&
+		make requirements envhook ;
+	} ; then
+		echo >&2 "_revenv failed"
+		return 1
+	fi
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
