@@ -378,6 +378,60 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'GOOGLE_PROJECT': None,
 
+        # The path of the directory where the Google Cloud Python libraries and
+        # the Google Cloud CLI (gcloud) put their state. If this variable is not
+        # set, the state is placed in ~/.config/gcloud by default. Since we want
+        # to segregate this state per working copy and deployment, we set this
+        # variable to the path of a deployment-specific directory in the working
+        # copy. Note that this variable does not affect the Google Cloud
+        # libraries for Go, or the Google Cloud provider for Terraform which
+        # uses these Go libraries. Luckily, the Go libraries don't write any
+        # state, they only read credentials from the location configured via
+        # GOOGLE_APPLICATION_CREDENTIALS below.
+        #
+        'CLOUDSDK_CONFIG': '{project_root}/deployments/.active/.gcloud',
+
+        # The path of a JSON file with credentials for an authorized user or a
+        # service account. The Google Cloud libraries for Python and Go will
+        # load the so called ADC (Application-default credentials) from this
+        # file and use them for any Google Cloud API requests. According to
+        # Google documentation, if this variable is not set,
+        # ~/.config/gcloud/application_default_credentials.json is used.
+        # However, the Google Cloud SDK and Python libraries will only default
+        # to that if CLOUDSDK_CONFIG is not set. If it is,
+        # $CLOUDSDK_CONFIG/application_default_credentials.json is used. Since
+        # the Go libraries are unaffected by CLOUDSDK_CONFIG, the offcially
+        # documented default applies. We'll work around the inconsistent
+        # defaults by setting both variables explicitly.
+        # 
+        # If the azul_google_user variable is set, the _preauth helper defined
+        # in `environment` will populate this file with credentials (a
+        # long-lived refresh token) for that user. It does so by logging that
+        # user into Google Cloud, which requires a web browser. As a
+        # convenience, and to avoid confusion, it will, at the same time,
+        # provision credentials for the Google Cloud CLI, in a different file,
+        # but also in the directory configured via CLOUDSDK_CONFIG above.
+        #
+        # To have a service account (as opposed to a user account) manage Google
+        # Cloud resources, leave azul_google_user unset and change this variable
+        # to point to a file with the private key of that service account. Note
+        # that the service account would have to be different from the one whose
+        # name is set in AZUL_GOOGLE_SERVICE_ACCOUNT. In fact, the service
+        # account from this variable is used to manage those other service
+        # accounts, so generally, it needs elevated permissions to the project.
+        # We used to call this type of account "personal service account" but we
+        # don't use that type anymore. GitLab is nowadays the only place where
+        # this variable is set to service account credentials.
+        #
+        'GOOGLE_APPLICATION_CREDENTIALS': '{CLOUDSDK_CONFIG}/application_default_credentials.json',
+
+        # The name of a Google user account with authorization to manage the
+        # Google Cloud resources in the project referred to by GOOGLE_PROJECT.
+        # If this variable is not set, GOOGLE_APPLICATION_CREDENTIALS must be
+        # changed to the path of a file containing service account credentials.
+        #
+        'azul_google_user': None,
+
         # The name of the Google Cloud service account to represent the
         # deployment. This service account will be created automatically during
         # deployment and will then be used to access (meta)data in Google-based
