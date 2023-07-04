@@ -100,6 +100,18 @@ Manually deploy the ``shared`` component of any main deployment just before
 pushing the merge commit to the GitLab instance in that deployment.
 
 
+#5298 Keep docker Docker images updated
+=======================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` & ``gitlab`` components (in that order) of any
+main deployment, and with the ``gitlab`` component selected, run ``make -C
+terraform/gitlab/runner`` just before pushing the merge commit to the GitLab
+instance in that deployment.
+
+
 #5400 Make anvilprod public
 ===========================
 
@@ -112,19 +124,19 @@ branch. The expected failure produces the following output::
 
    ╷
    │ Error: updating REST API (1yxdxpa3db): BadRequestException: Cannot update endpoint from PRIVATE to EDGE
-   │ 
+   │
    │   with aws_api_gateway_rest_api.indexer,
    │   on api_gateway.tf.json line 862, in resource[6].aws_api_gateway_rest_api[0].indexer:
    │  862:                     }
-   │ 
+   │
    ╵
    ╷
    │ Error: updating REST API (pmmwi1i8la): BadRequestException: Cannot update endpoint from PRIVATE to EDGE
-   │ 
+   │
    │   with aws_api_gateway_rest_api.service,
    │   on api_gateway.tf.json line 1467, in resource[24].aws_api_gateway_rest_api[0].service:
    │ 1467:                     }
-   │ 
+   │
    ╵
 
 To work around this, check out the respective branch perform the commands below.
