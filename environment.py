@@ -403,8 +403,8 @@ def env() -> Mapping[str, Optional[str]]:
         # the Go libraries are unaffected by CLOUDSDK_CONFIG, the offcially
         # documented default applies. We'll work around the inconsistent
         # defaults by setting both variables explicitly.
-        # 
-        # If the azul_google_user variable is set, the _preauth helper defined
+        #
+        # If the azul_google_user variable is set, the _login helper defined
         # in `environment` will populate this file with credentials (a
         # long-lived refresh token) for that user. It does so by logging that
         # user into Google Cloud, which requires a web browser. As a

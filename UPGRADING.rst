@@ -27,6 +27,10 @@ Set the environment variable ``azul_google_user`` in all deployments to your
 ``…@ucsc.edu`` email address. The easiest way to do that is in an
 ``environment.local.py`` at the project root.
 
+Many of the shell functions defined in ``environment`` have been renamed. To
+avoid stale copies of these functions lingering around under their old names,
+exit all shells in which you sourced that file.
+
 
 #5325 Exclude noisy events from api_unauthorized alarm
 ======================================================

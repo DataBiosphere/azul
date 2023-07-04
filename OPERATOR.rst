@@ -529,9 +529,9 @@ Credentials expire in the middle of a long-running operation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some instances, deploying a Terraform component can take a long time. While
-``_preauth`` now makes sure that there are four hours left on the current
+``_login`` now makes sure that there are four hours left on the current
 credentials, it can't do that if you don't call it before such an operation.
-Note that ``_select`` also calls ``_preauth``. The following is a list of
+Note that ``_select`` also calls ``_login``. The following is a list of
 operations which you should expect to take an hour or longer:
 
 - the first time deploying any component
