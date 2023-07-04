@@ -41,6 +41,19 @@ _deselect() {
 	fi
 }
 
+_show_link() {
+	( cd "${project_root}/deployments" && ls -l .active )
+}
+
+_validate_link() {
+	d="${project_root}/deployments/$1"
+	# -d dereferences symlinks so with -L we make sure the argument isn't one
+	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
+		echo >&2 "_validate_link failed: '$1'"
+		return 1
+	fi
+}
+
 _link() {
 	if ! (
 		_validate_link "$1" &&
@@ -57,17 +70,44 @@ _unlink() {
 	rm "${project_root}/deployments/.active"
 }
 
-_validate_link() {
-	d="${project_root}/deployments/$1"
-	# -d dereferences symlinks so with -L we make sure the argument isn't one
-	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
-		echo >&2 "_validate_link failed: '$1'"
+_login() {
+	if {
+		_login_google &&
+		_login_aws &&
+		_login_docker_ecr &&
+		_login_docker_gitlab ;
+	} ; then
+		echo >&2 \
+			"Session credentials are in effect for AWS. Additionally, you have" \
+			"been logged into Google Cloud, Amazon ECR and the GitLab Docker" \
+			"registry. Use '_logout' to invalidate the session credentials." \
+			"Alternatively, you can use _logout_completely to invalidate all" \
+			"credentials but this is usually not necessary."
+	else
+		echo >&2 "_login failed"
 		return 1
 	fi
 }
 
-_show_link() {
-	( cd "${project_root}/deployments" && ls -l .active )
+_logout() {
+	# Docker segregates credential state by registry and we maintain separate
+	# registries (both ECR and GitLab) per deployment so we won't need to log out
+	# of those registries when switching deployments. Above, we offer dedicated
+	# functons for explicitly logging our of those registries.
+	_logout_aws
+	# We segregate Google state by deployment and working copy (see
+	# CLOUDSDK_CONFIG in environment.py) so we don't need to log out of Google
+	# when switching deployments. Above we offer a dedicated function for
+	# explicitly logging out of Google.
+}
+
+_logout_completely() {
+  # We don't use `&&` between function invocations because failing to log out of
+  # one realm shouldn't prevent us from attempting to log out of the others.
+	_logout_google
+	_logout
+	_logout_docker_ecr
+	_logout_docker_gitlab
 }
 
 _login_google() {
@@ -78,6 +118,18 @@ _login_google() {
 			gcloud auth application-default set-quota-project "$GOOGLE_PROJECT" ;
 		} ; then
 			echo >&2 "_login_google failed"
+			return 1
+		fi
+	fi
+}
+
+_logout_google() {
+	if [ -n "$azul_google_user" ] ; then
+		if ! {
+			gcloud auth application-default revoke --quiet &&
+			gcloud auth revoke --quiet ;
+		} ; then
+			echo >&2 "_logout_google failed"
 			return 1
 		fi
 	fi
@@ -131,6 +183,10 @@ _login_aws() {
 	eval "$env"
 }
 
+_logout_aws() {
+	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+}
+
 _login_docker_ecr() {
 	if [ -n "${azul_docker_registry:+x}" ] ; then
 		if ! (
@@ -142,6 +198,17 @@ _login_docker_ecr() {
 				"${azul_docker_registry%/}"
 		) ; then
 			echo >&2 "_login_docker_ecr failed"
+			return 1
+		fi
+	fi
+}
+
+_logout_docker_ecr() {
+	if [ -n "${azul_docker_registry:+x}" ] ; then
+		if ! {
+			docker logout "${azul_docker_registry}" ;
+		} ; then
+			echo >&2 "_logout_docker_ecr failed"
 			return 1
 		fi
 	fi
@@ -166,36 +233,6 @@ _login_docker_gitlab() {
 	fi
 }
 
-_login() {
-	if {
-		_login_google &&
-		_login_aws &&
-		_login_docker_ecr &&
-		_login_docker_gitlab ;
-	} ; then
-		echo >&2 \
-			"Session credentials are in effect for AWS. Additionally, you have" \
-			"been logged into Google Cloud, Amazon ECR and the GitLab Docker" \
-			"registry. Use '_logout' to invalidate the session credentials." \
-			"Alternatively, you can use _logout_completely to invalidate all" \
-			"credentials but this is usually not necessary."
-	else
-		echo >&2 "_login failed"
-		return 1
-	fi
-}
-
-_logout_docker_ecr() {
-	if [ -n "${azul_docker_registry:+x}" ] ; then
-		if ! {
-			docker logout "${azul_docker_registry}" ;
-		} ; then
-			echo >&2 "_logout_docker_ecr failed"
-			return 1
-		fi
-	fi
-}
-
 _logout_docker_gitlab() {
 	if {
 		[ -n "${azul_gitlab_access_token:+x}" ] &&
@@ -206,43 +243,6 @@ _logout_docker_gitlab() {
 			return 1
 		fi
 	fi
-}
-
-_logout_aws() {
-	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-}
-
-_logout_google() {
-	if [ -n "$azul_google_user" ] ; then
-		if ! {
-			gcloud auth application-default revoke --quiet &&
-			gcloud auth revoke --quiet ;
-		} ; then
-			echo >&2 "_logout_google failed"
-			return 1
-		fi
-	fi
-}
-
-_logout() {
-	# Docker segregates credential state by registry and we maintain separate
-	# registries (both ECR and GitLab) per deployment so we won't need to log out
-	# of those registries when switching deployments. Above, we offer dedicated
-	# functons for explicitly logging our of those registries.
-	_logout_aws
-	# We segregate Google state by deployment and working copy (see
-	# CLOUDSDK_CONFIG in environment.py) so we don't need to log out of Google
-	# when switching deployments. Above we offer a dedicated function for
-	# explicitly logging out of Google.
-}
-
-_logout_completely() {
-  # We don't use `&&` between function invocations because failing to log out of
-  # one realm shouldn't prevent us from attempting to log out of the others.
-	_logout_google
-	_logout
-	_logout_docker_ecr
-	_logout_docker_gitlab
 }
 
 _revenv() {
