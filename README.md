@@ -254,7 +254,7 @@ You should have been issued AWS credentials. Typically, those credentials
 require assuming a role in an account other than the one defining your IAM
 user.  Just set that up normally in `~/.aws/config` and `~/.aws/credentials`.
 If the  assumed role additionally requires an MFA token, you should run
-`_preauth`  immediately after running `source environment` or switching
+`_login`  immediately after running `source environment` or switching
 deployments with  `_select`.
 
 
@@ -932,7 +932,7 @@ making it harder to recover.
 `terraform apply` was running. To fix, run …
 
 ```
-_preauth
+_login
 (cd terraform && terraform state push errored.tfstate)
 ```
 

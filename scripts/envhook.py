@@ -207,7 +207,7 @@ class EnvHook:
             boto3.setup_default_session(botocore_session=session)
 
             if self.pycharm_hosted:
-                # The equivalent of the _preauth function in `environment`
+                # The equivalent of the _login_aws function in `environment`
                 credentials = session.get_credentials()
                 self.setenv(dict(AWS_ACCESS_KEY_ID=credentials.access_key,
                                  AWS_SECRET_ACCESS_KEY=credentials.secret_key,
