@@ -114,6 +114,7 @@ operator performs the following steps daily.
       - [ ] Confirm with Azul devs that their personal deployments are idle
       - [ ] Update `azul-index-sandbox`
       - [ ] Update `azul-index-anvilbox`
+      - [ ] Update `azul-index-hammerbox`
       - [ ] Update `azul-index-prod`
 
    Note that, somewhat counterintuitively, main deployments are updated before

@@ -650,7 +650,7 @@ def env() -> Mapping[str, Optional[str]]:
         # ╚════════════╝ ╚═══════════════════════════════════════════════════╝
         #
         'azul_shared_deployments': json.dumps({
-            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod'],
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod', 'hammerbox'],
             'prod': ['prod'],
         }),
 
