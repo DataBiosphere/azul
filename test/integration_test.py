@@ -161,6 +161,7 @@ from azul.terra import (
 from azul.types import (
     JSON,
     JSONs,
+    MutableJSONs,
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
@@ -1052,7 +1053,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 hits = self._get_entities(catalog, entity_type)
                 self.assertEqual([], [hit['entryId'] for hit in hits])
 
-    def _get_entities(self, catalog: CatalogName, entity_type, filters: Optional[JSON] = None):
+    def _get_entities(self,
+                      catalog: CatalogName,
+                      entity_type: EntityType,
+                      filters: Optional[JSON] = None
+                      ) -> MutableJSONs:
         entities = []
         size = 100
         params = dict(catalog=catalog,
