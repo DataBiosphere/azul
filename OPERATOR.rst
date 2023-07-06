@@ -363,6 +363,45 @@ be found under *Admin Area — Monitoring — Background Migrations*.
 
 Request review of the PR from the lead.
 
+Increase GitLab data volume size
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the CloudWatch alarm for high disk usage on the GitLab data volume goes
+off, you must attach a new, larger volume to the instance. Run the command below
+to create both a snapshot of the current data volume and a new data volume with
+the specified size restored from that snapshot.
+
+Discuss the desired new size with the system administrator before running the
+command::
+
+    python scripts/create_gitlab_snapshot.py --new-size [new_size]
+
+When this command finishes, it will leave the instance in a stopped state. Take
+note of the command logged by the script. You'll use it to delete the old data
+volume after confirming that GitLab is up and running with the new volume
+attached.
+
+Next, deploy the ``gitlab`` TF component in order to attach the new data volume.
+The only resource with changes in the resulting plan should be
+``aws_instance.gitlab``. Once the ``gitlab`` TF component has been deployed,
+start the GitLab instance again by running::
+
+    python scripts/create_gitlab_snapshot.py --start-only
+
+Finally, SSH into the instance to complete the setup of new data volume. Use the
+``df`` command to confirm the size and mount point of the device, and
+``resize2fs`` to grow the size of the mounted file system so that it matches
+that of the volume. Run::
+
+    df # Verify device /dev/nvme1n1 is mounted on /mnt/gitlab, note available size
+    sudo resize2fs /dev/nvme1n1
+    df # Verify the new available size is larger
+
+The output of the last ``df`` command should inform of the success of these
+operations. A larger available size compared to the first run indicates that
+the resizing operation was successful. You can now delete the old data volume by
+running the deletion command you noted earlier.
+
 Backup GitLab volumes
 ^^^^^^^^^^^^^^^^^^^^^
 
