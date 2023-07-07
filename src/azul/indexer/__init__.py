@@ -25,6 +25,7 @@ from typing import (
 import attr
 
 from azul import (
+    CatalogName,
     RequirementError,
     config,
     reject,
@@ -432,7 +433,7 @@ class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
                 raise RequirementError(msg, self.fqid)
 
     @abstractmethod
-    def reject_joiner(self):
+    def reject_joiner(self, catalog: CatalogName):
         """
         Raise a requirement error if the given string is found in the bundle
         """

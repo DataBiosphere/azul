@@ -15,6 +15,9 @@ from more_itertools import (
     one,
 )
 
+from azul import (
+    CatalogName,
+)
 from azul.indexer import (
     BUNDLE_FQID,
     Bundle,
@@ -83,7 +86,7 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
     entities: dict[EntityReference, MutableJSON] = attr.ib(factory=dict)
     links: set[Link[EntityReference]] = attr.ib(factory=set)
 
-    def reject_joiner(self):
+    def reject_joiner(self, catalog: CatalogName):
         # FIXME: Optimize joiner rejection and re-enable it for AnVIL
         #        https://github.com/DataBiosphere/azul/issues/5256
         pass
