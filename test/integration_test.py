@@ -161,7 +161,6 @@ from azul.terra import (
 from azul.types import (
     JSON,
     JSONs,
-    MutableJSONs,
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
@@ -468,8 +467,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             if index:
                 bundle_fqids = catalog.bundles
             else:
-                with self._service_account_credentials:
-                    bundle_fqids = self._get_indexed_bundles(catalog.name)
+                bundle_fqids = self._get_indexed_bundles(catalog.name)
             self._test_managed_access(catalog=catalog.name, bundle_fqids=bundle_fqids)
 
         if index and delete:
@@ -960,21 +958,21 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _get_indexed_bundles(self,
                              catalog: CatalogName,
-                             filters: Optional[JSON] = None
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
-        # FIXME: Use `bundles` index for `catalog_complete` subtest
-        #        https://github.com/DataBiosphere/azul/issues/5214
-        hits = self._get_entities(catalog, 'files', filters)
-        if config.is_anvil_enabled(catalog):
-            # Primary bundles may not contain any files, and supplementary
-            # bundles contain only a file and a dataset. We can't use
-            # datasets to find all the indexed bundles because the number of
-            # bundles per dataset often exceeds the inner entity aggregation
-            # limit. Hence, we need to collect bundles separately for files
-            # and biosamples to cover supplementary and primary bundles,
-            # respectively.
-            hits.extend(self._get_entities(catalog, 'biosamples', filters))
+        with self._service_account_credentials:
+            # FIXME: Use `bundles` index for `catalog_complete` subtest
+            #        https://github.com/DataBiosphere/azul/issues/5214
+            hits = self._get_entities(catalog, 'files')
+            if config.is_anvil_enabled(catalog):
+                # Primary bundles may not contain any files, and supplementary
+                # bundles contain only a file and a dataset. We can't use
+                # datasets to find all the indexed bundles because the number of
+                # bundles per dataset often exceeds the inner entity aggregation
+                # limit. Hence, we need to collect bundles separately for files
+                # and biosamples to cover supplementary and primary bundles,
+                # respectively.
+                hits.extend(self._get_entities(catalog, 'biosamples'))
         for hit in hits:
             source = one(hit['sources'])
             for bundle in hit.get('bundles', ()):
@@ -1014,8 +1012,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             retries = 0
             deadline = time.time() + timeout
             while True:
-                with self._service_account_credentials:
-                    indexed_fqids = self._get_indexed_bundles(catalog)
+                indexed_fqids = self._get_indexed_bundles(catalog)
                 log.info('Detected %i of %i bundles on try #%i.',
                          len(indexed_fqids), num_bundles, retries)
                 if len(indexed_fqids) == num_bundles:
@@ -1055,11 +1052,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 hits = self._get_entities(catalog, entity_type)
                 self.assertEqual([], [hit['entryId'] for hit in hits])
 
-    def _get_entities(self,
-                      catalog: CatalogName,
-                      entity_type: EntityType,
-                      filters: Optional[JSON] = None
-                      ) -> MutableJSONs:
+    def _get_entities(self, catalog: CatalogName, entity_type, filters: Optional[JSON] = None):
         entities = []
         size = 100
         params = dict(catalog=catalog,
@@ -1174,8 +1167,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              one(hit[project_type])['accessible'])
         self.assertIsSubset(managed_access_source_ids, sources_found)
 
-        bundle_fqids = self._get_indexed_bundles(catalog)
-        hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
+        hits = self._get_entities(catalog, bundle_type)
+        hit_source_ids = set(map(source_id_from_hit, hits))
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
@@ -1185,8 +1178,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 
         with self._service_account_credentials:
-            bundle_fqids = self._get_indexed_bundles(catalog, filters=source_filter)
-        hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
+            hits = self._get_entities(catalog, bundle_type, filters=source_filter)
+        hit_source_ids = set(map(source_id_from_hit, hits))
         self.assertEqual(managed_access_source_ids, hit_source_ids)
         return hits
 
