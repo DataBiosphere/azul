@@ -36,21 +36,26 @@ def copy_image(src: str):
     dst_parts = []
     client = docker.client.from_env()
     for platform in src.platforms:
+        log.info('Pulling image %r for platform %r …', src, platform)
         output = client.api.pull(src.name,
                                  platform=str(platform),
                                  tag=src.tag,
                                  stream=True)
         log_lines(src, 'pull', output)
+        log.info('Pulled image %r for platform %r', src, platform)
         image = client.images.get(str(src))
         dst_part = ImageRef.create(name=config.docker_registry + src.name,
                                    tag=src.tag + '-' + str(platform).replace('/', '-'))
         image.tag(dst_part.name, tag=dst_part.tag)
+        log.info('Pushing image %r', dst_part)
         output = client.api.push(dst_part.name,
                                  tag=dst_part.tag,
                                  stream=True)
         log_lines(src, 'push', output)
+        log.info('Pushed image %r', dst_part)
         dst_parts.append(dst_part)
 
+    log.info('Creating manifest image %r', dst)
     subprocess.run([
         'docker', 'manifest', 'rm',
         str(dst)
@@ -64,6 +69,7 @@ def copy_image(src: str):
         'docker', 'manifest', 'push',
         str(dst)
     ], check=True)
+    log.info('Created manifest image %r', dst)
 
 
 def log_lines(context: Any, command: str, output: Iterable[bytes]):
