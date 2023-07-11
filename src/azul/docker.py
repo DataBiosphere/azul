@@ -98,10 +98,6 @@ platforms = list(map(Platform.parse, config.docker_platforms))
 
 
 def filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
-    """
-    >>> from azul import config
-    >>> filter_platforms(images[0], matching_plaforms)
-    """
     import docker
     allowed_platforms = {p.normalize() for p in allowed_platforms}
     log.info('Distribution for image %r …', image)
