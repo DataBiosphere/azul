@@ -314,16 +314,16 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
 
 clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
 dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
-gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.0.3-ce.0'
-runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:v16.0.1'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.1.2-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.1.0'
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.20 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.21 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
-    'us-east-1': 'ami-0236f915da7b5680d'
+    'us-east-1': 'ami-0e1af243f15d4567f'
 }
 
 
