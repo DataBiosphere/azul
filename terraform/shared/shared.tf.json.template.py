@@ -871,11 +871,11 @@ tf_config = {
             }
         },
         'aws_ecr_repository': {
-            image.tf_repository: {
-                'name': image.name,
+            tf_repository: {
+                'name': name,
                 'force_delete': True
             }
-            for image in docker.images
+            for name, tf_repository in docker.images_by_tf_repository.keys()
             if config.docker_registry
         },
         'null_resource': {
