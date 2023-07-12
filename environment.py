@@ -633,6 +633,9 @@ def env() -> Mapping[str, Optional[str]]:
         # purposes. A lower (aka unstable) deployment is a main deployment that
         # is not stable.
         #
+        # FIXME: Diagram of shared deployments is inaccurate
+        #        https://github.com/DataBiosphere/azul/issues/5391
+        #
         # ╔════════════╗ ╔═══════════════════════════════════════════════════╗
         # ║  Personal  ║ ║                      Shared                       ║
         # ║            ║ ║ ╔════════════╗ ╔════════════════════════════════╗ ║
