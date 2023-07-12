@@ -5,7 +5,7 @@ on:
   push:
     branches: [ 'develop', 'prod' ]
 env:
-  python_version: '3.9.16'
+  python_version: '3.9.17'
 
 jobs:
 
