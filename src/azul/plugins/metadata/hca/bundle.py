@@ -5,6 +5,9 @@ import logging
 
 import attr
 
+from azul import (
+    CatalogName,
+)
 from azul.indexer import (
     BUNDLE_FQID,
     Bundle,
@@ -38,9 +41,15 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
     """
     metadata_files: MutableJSON
 
-    def reject_joiner(self):
-        self._reject_joiner(self.manifest)
-        self._reject_joiner(self.metadata_files)
+    def reject_joiner(self, catalog: CatalogName):
+        # The dcp1 release has project metadata containing the character string
+        # we use as a manifest column joiner, and since we won't be getting an
+        # updated snapshot for dcp1 we skip the joiner check when using dcp1.
+        if catalog == 'dcp1':
+            pass
+        else:
+            self._reject_joiner(self.manifest)
+            self._reject_joiner(self.metadata_files)
 
     def to_json(self) -> MutableJSON:
         return {
