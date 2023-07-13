@@ -11,13 +11,25 @@ Upgrading
 
 
 This file documents any upgrade procedure that must be performed. Because we
-don't use a semantic version, a change that requires explicit steps to upgrade
-a is referenced by its Github issue number. After checking out a branch that
+don't use a semantic version, a change that requires explicit steps to upgrade a
+is referenced by its Github issue number. After checking out a branch that
 contains a commit resolving an issue listed here, the steps listed underneath
 the issue need to be performed. When switching away from that branch, to a
 branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
+
+
+#5289 Fix: _select doesn't validate its argument
+================================================
+
+Set the environment variable ``azul_google_user`` in all deployments to your
+``…@ucsc.edu`` email address. The easiest way to do that is in an
+``environment.local.py`` at the project root.
+
+Many of the shell functions defined in ``environment`` have been renamed. To
+avoid stale copies of these functions lingering around under their old names,
+exit all shells in which you sourced that file.
 
 
 #5325 Exclude noisy events from api_unauthorized alarm

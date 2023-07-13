@@ -15,6 +15,7 @@ __pycache__/
 /deployments/*/environment.local.py
 /deployments/*/.terraform/
 /deployments/*/.terraform.*/
+/deployments/*/.gcloud/
 # Virtual environment created by Makefile
 /.venv/
 # PyCharm

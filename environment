@@ -14,28 +14,125 @@ _refresh() {
 # Manage the symlink to the active deployment
 #
 _select() {
-	if [[ $1 != "" ]]; then
-		_deauth
-		_link "$1" || return
-		_refresh
-		_preauth
+	if [ -z "$1" ] ; then
+		_show_link
+	else
+		if ! {
+			_validate_link "$1" &&
+			_logout &&
+			_link "$1" &&
+			_refresh &&
+			_login ;
+		} ; then
+			echo >&2 "_select failed"
+			return 1
+		fi
 	fi
-	(cd "${project_root}/deployments" && ls -l .active)
 }
 
 _deselect() {
-	_deauth
-	rm "${project_root}/deployments/.active"
-	_refresh
+	if ! {
+		_logout &&
+		_unlink &&
+		_refresh ;
+	} ; then
+		echo >&2 "_deselect failed"
+		return 1
+	fi
+}
+
+_show_link() {
+	( cd "${project_root}/deployments" && ls -l .active )
+}
+
+_validate_link() {
+	d="${project_root}/deployments/$1"
+	# -d dereferences symlinks so with -L we make sure the argument isn't one
+	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
+		echo >&2 "_validate_link failed: '$1'"
+		return 1
+	fi
 }
 
 _link() {
-	(
+	if ! (
+		_validate_link "$1" &&
 		cd "${project_root}/deployments" &&
-			test -d "$1" &&
-			{ [ ! -e .active ] || { [ -L .active ] && rm .active; }; } &&
-			ln -s "$1" .active
-	) || { echo error: "$1" && return; }
+		{ [ ! -e .active ] || { [ -L .active ] && rm .active ; } ; } &&
+		ln -s "$1" .active
+	) ; then
+		echo >&2 "_link failed: '$1'"
+		return 1
+	fi
+}
+
+_unlink() {
+	rm "${project_root}/deployments/.active"
+}
+
+_login() {
+	if {
+		_login_google &&
+		_login_aws &&
+		_login_docker_ecr &&
+		_login_docker_gitlab ;
+	} ; then
+		echo >&2 \
+			"Session credentials are in effect for AWS. Additionally, you have" \
+			"been logged into Google Cloud, Amazon ECR and the GitLab Docker" \
+			"registry. Use '_logout' to invalidate the session credentials." \
+			"Alternatively, you can use _logout_completely to invalidate all" \
+			"credentials but this is usually not necessary."
+	else
+		echo >&2 "_login failed"
+		return 1
+	fi
+}
+
+_logout() {
+	# Docker segregates credential state by registry and we maintain separate
+	# registries (both ECR and GitLab) per deployment so we won't need to log out
+	# of those registries when switching deployments. Above, we offer dedicated
+	# functons for explicitly logging our of those registries.
+	_logout_aws
+	# We segregate Google state by deployment and working copy (see
+	# CLOUDSDK_CONFIG in environment.py) so we don't need to log out of Google
+	# when switching deployments. Above we offer a dedicated function for
+	# explicitly logging out of Google.
+}
+
+_logout_completely() {
+  # We don't use `&&` between function invocations because failing to log out of
+  # one realm shouldn't prevent us from attempting to log out of the others.
+	_logout_google
+	_logout
+	_logout_docker_ecr
+	_logout_docker_gitlab
+}
+
+_login_google() {
+	if [ -n "$azul_google_user" ] ; then
+		if ! {
+			gcloud auth login --update-adc --quiet "$azul_google_user" &&
+			gcloud config set project "$GOOGLE_PROJECT" &&
+			gcloud auth application-default set-quota-project "$GOOGLE_PROJECT" ;
+		} ; then
+			echo >&2 "_login_google failed"
+			return 1
+		fi
+	fi
+}
+
+_logout_google() {
+	if [ -n "$azul_google_user" ] ; then
+		if ! {
+			gcloud auth application-default revoke --quiet &&
+			gcloud auth revoke --quiet ;
+		} ; then
+			echo >&2 "_logout_google failed"
+			return 1
+		fi
+	fi
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them
@@ -44,17 +141,7 @@ _link() {
 #
 # https://github.com/boto/boto3/issues/1179#issuecomment-569940530
 #
-_preauth() {
-	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
-		gcloud config set project "$GOOGLE_PROJECT"
-		if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
-			gcloud auth application-default login
-			if ! gcloud auth application-default print-access-token > /dev/null; then
-				echo >&2 "Google login failed!"
-				return 1
-			fi
-		fi
-	fi
+_login_aws() {
 	local env
 	if ! env="$(
 		python - <<- "EOF"
@@ -89,77 +176,85 @@ _preauth() {
 			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
 		EOF
-	)"; then
-		echo >&2 "AWS login failed!"
-		return 2
+	)" ; then
+		echo >&2 "_login_aws failed"
+		return 1
 	fi
 	eval "$env"
-	echo >&2
-  if ! {
-    [ -z "${azul_docker_registry:+x}" ] \
-    || aws ecr get-login-password --region us-east-1 \
-      | docker login \
-        --username AWS \
-        --password-stdin \
-        "${azul_docker_registry%/}"
-  }; then
-    echo >&2 "Login to ECR failed!"
-    return 3
-  fi
-  if ! {
-    [ -z "${azul_gitlab_access_token:+x}" ] \
-    || [ -z "${azul_gitlab_user:+x}" ] \
-    || printenv azul_gitlab_access_token \
-      | docker login \
-        --username "${azul_gitlab_user}" \
-        --password-stdin \
-        "docker.gitlab.${AZUL_DOMAIN_NAME}"
-  }; then
-    echo >&2 "Login to GitLab registry failed!"
-    return 3
-  fi
-	echo >&2
-	echo >&2 "Temporary session credentials are in effect for AWS, Google," \
-		"Amazon ECR and the GitLab docker registry." \
-		"Use '_deauth' to revert the effect of this command."
-	echo >&2
-	return 0
 }
 
-_deauth() {
-  if ! {
-    [ -z "${azul_docker_registry:+x}" ] \
-    || docker logout "${azul_docker_registry}"
-  }; then
-    echo >&2 "Warning: Logout from ECR failed!"
-  fi
-  if ! {
-    [ -z "${azul_gitlab_access_token:+x}" ] \
-    || [ -z "${azul_gitlab_user:+x}" ] \
-    || docker logout "docker.gitlab.${AZUL_DOMAIN_NAME}"
-  }; then
-    echo >&2 "Warning: Logout from GitLab registry failed!"
-  fi
+_logout_aws() {
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-	echo >&2
-	echo >&2 "Revoked temporary AWS credentials."
-	echo >&2
-	if [ -z ${GOOGLE_APPLICATION_CREDENTIALS+x} ]; then
-		echo >&2
-		echo >&2 "Google Cloud application default credentials are system-global." \
-			"You should revoke the existing credentials unless you are *certain* that" \
-			"you are already logged in using the appropriate account and project." \
-			"If in doubt, enter 'y'."
-		echo >&2
-		gcloud auth application-default revoke
-		echo >&2
-		echo >&2 "Revoked temporary Google credentials."
-		echo >&2
+}
+
+_login_docker_ecr() {
+	if [ -n "${azul_docker_registry:+x}" ] ; then
+		if ! (
+			set -o pipefail
+			aws ecr get-login-password --region us-east-1 |
+			docker login \
+				--username AWS \
+				--password-stdin \
+				"${azul_docker_registry%/}"
+		) ; then
+			echo >&2 "_login_docker_ecr failed"
+			return 1
+		fi
+	fi
+}
+
+_logout_docker_ecr() {
+	if [ -n "${azul_docker_registry:+x}" ] ; then
+		if ! {
+			docker logout "${azul_docker_registry}" ;
+		} ; then
+			echo >&2 "_logout_docker_ecr failed"
+			return 1
+		fi
+	fi
+}
+
+_login_docker_gitlab() {
+	if {
+		[ -n "${azul_gitlab_access_token:+x}" ] &&
+		[ -n "${azul_gitlab_user:+x}" ] ;
+	} ; then
+		if ! (
+			set -o pipefail
+			printenv azul_gitlab_access_token |
+			docker login \
+				--username "${azul_gitlab_user}" \
+				--password-stdin \
+				"docker.gitlab.${AZUL_DOMAIN_NAME}"
+		) ; then
+			echo >&2 "_login_docker_gitlab failed"
+			return 1
+		fi
+	fi
+}
+
+_logout_docker_gitlab() {
+	if {
+		[ -n "${azul_gitlab_access_token:+x}" ] &&
+		[ -n "${azul_gitlab_user:+x}" ] ;
+	} ; then
+		if ! docker logout "docker.gitlab.${AZUL_DOMAIN_NAME}" ; then
+			echo >&2 "_logout_docker_gitlab failed"
+			return 1
+		fi
 	fi
 }
 
 _revenv() {
-	deactivate && make virtualenv && source .venv/bin/activate && make requirements envhook
+	if ! {
+		deactivate &&
+		make virtualenv &&
+		source .venv/bin/activate &&
+		make requirements envhook ;
+	} ; then
+		echo >&2 "_revenv failed"
+		return 1
+	fi
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
@@ -181,4 +276,4 @@ _complete_env() {
 	return 0
 }
 
-complete -F _complete_env _select
+complete -F _complete_env _select _link _validate_link

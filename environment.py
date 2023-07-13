@@ -29,6 +29,13 @@ def env() -> Mapping[str, Optional[str]]:
     xdg_data_home = os.environ.get('XDG_DATA_HOME',
                                    os.path.expanduser('~/.local/share'))
     return {
+        # Only variables whose names start in `AZUL_` will be published to a
+        # deployed Lambda. Note that by implication, `azul_` variables will not
+        # be published, even though they are considered part of Azul. For secret
+        # values that should not be printed or logged, use a variable name
+        # containing any of the strings `secret`, `password` or `token`, either
+        # upper or lower case. Think twice before publishing a variable
+        # containing a secret.
 
         # Configure the catalogs to be managed by this Azul deployment. A
         # catalog is a group of indices populated from a particular source.
@@ -54,17 +61,18 @@ def env() -> Mapping[str, Optional[str]]:
         # }
         #
         # The `atlas` and `name` properties follow the same, fairly restrictive
-        # syntax defined by azul.Config.Catalog.validate_name.
-        # `plugin_type` is the name of a child package of `azul.plugins` and
-        # `plugin_package` is the name of a child package of that package. The
-        # `plugin_type` denotes the purpose (like accessing a repository or
-        # transforming metadata) and `plugin_package` denotes the concrete
-        # implementation of how to fulfill that purpose.
+        # syntax defined by azul.Config.Catalog.validate_name. `plugin_type` is
+        # the name of a child package of `azul.plugins` and `plugin_package` is
+        # the name of a child package of that package. The `plugin_type` denotes
+        # the purpose (like accessing a repository or transforming metadata) and
+        # `plugin_package` denotes the concrete implementation of how to fulfill
+        # that purpose.
         #
         # The first catalog listed is the default catalog.
         #
         # A source represents a TDR dataset, TDR snapshot, or canned staging
-        # area to index. Each source is a string matching the following EBNF grammar:
+        # area to index. Each source is a string matching the following EBNF
+        # grammar:
         #
         # source = TDR source | canned source ;
         #
@@ -82,23 +90,23 @@ def env() -> Mapping[str, Optional[str]]:
         #                 ':', [ prefix ],
         #                 '/', partition prefix length ;
         #
-        # The `prefix` is an optional string of hexadecimal digits
-        # constraining the set of indexed subgraphs from the source. A
-        # subgraph will be indexed if its UUID begins with the `prefix`. The
-        # default `prefix` is the empty string.
+        # The `prefix` is an optional string of hexadecimal digits constraining
+        # the set of indexed subgraphs from the source. A subgraph will be
+        # indexed if its UUID begins with the `prefix`. The default `prefix` is
+        # the empty string.
         #
         # The partition prefix length is an integer that is used to further
-        # partition the set of indexed subgraphs. Each partition is
-        # assigned a prefix of `partition prefix length` hexadecimal digits.
-        # A subgraph belongs to a partition if its UUID starts with the
-        # overall `prefix` followed by the partition's prefix. The number of
-        # partitions of a source is therefore `16 ** partition prefix length`.
-        # Partition prefixes that are too long result in many small or even
-        # empty partitions and waste some amount of resources. Partition
-        # prefixes that are too short result in few large partitions that could
-        # exceed the memory and running time limitations of the AWS Lambda
-        # function that processes them. If in doubt err on the side of too many
-        # small partitions.
+        # partition the set of indexed subgraphs. Each partition is assigned a
+        # prefix of `partition prefix length` hexadecimal digits. A subgraph
+        # belongs to a partition if its UUID starts with the overall `prefix`
+        # followed by the partition's prefix. The number of partitions of a
+        # source is therefore `16 ** partition prefix length`. Partition
+        # prefixes that are too long result in many small or even empty
+        # partitions and waste some amount of resources. Partition prefixes that
+        # are too short result in few large partitions that could exceed the
+        # memory and running time limitations of the AWS Lambda function that
+        # processes them. If in doubt err on the side of too many small
+        # partitions.
         #
         # The `partition prefix length` plus the length of `prefix` must not
         # exceed 8.
@@ -114,9 +122,9 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # This variable tends to be large. If you get `Argument list too long`
         # after sourcing the environment, a last-resort option is to compress
-        # the variable. The application automatically detects a compressed
-        # value and decompresses it on the fly. If the uncompressed definition
-        # of this variable is
+        # the variable. The application automatically detects a compressed value
+        # and decompresses it on the fly. If the uncompressed definition of this
+        # variable is
         #
         # 'AZUL_CATALOGS': json.dumps({
         #   ...
@@ -131,6 +139,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': None,
 
         # The Account ID number for AWS
+        #
         'AZUL_AWS_ACCOUNT_ID': None,
 
         # The region of the Azul deployment. This variable is primarily used by
@@ -140,18 +149,14 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AWS_DEFAULT_REGION': None,
 
-        # Only variables whose names start in `AZUL_` will be published to a deployed
-        # Lambda. Note that by implication, `azul_` variables will not be published,
-        # even though they are considered part of Azul. For secret values that should
-        # not be printed or logged, use a variable name containing any of the strings
-        # `secret`, `password` or `token`, either upper or lower case. Think twice
-        # before publishing a variable containing a secret.
-
         # The name of the billing accocunt that pays for this deployment.
+        #
         'AZUL_BILLING': None,
 
-        # The email address of a user that owns the cloud resources in the current
-        # deployment. This will become the value of the Owner tag on all resources.
+        # The email address of a user that owns the cloud resources in the
+        # current deployment. This will become the value of the Owner tag on all
+        # resources.
+        #
         'AZUL_OWNER': None,
 
         # An email address to subscribe to the SNS topic for monitoring
@@ -162,20 +167,23 @@ def env() -> Mapping[str, Optional[str]]:
         # unsubscribe link to unsubscribe the entire group from the topic.
         # Instead, confirmation of the subscription should be done when prompted
         # to do so during the `make deploy` process.
+        #
         'AZUL_MONITORING_EMAIL': None,
 
         # Controls the verbosity of application logs. Use 0 for no debug logging
         # 1 for debug logging by application code and info logging by other code
         # and 2 for debug logging by all code. This also controls app.debug, a
-        # Chalice setting that causes an app to return a traceback in the body of
-        # error responses: Setting AZUL_DEBUG to 0 disables the traceback
-        # (app.debug = False), 1 or higher enable it (app.debug = True).
-        # See https://github.com/aws/chalice#tutorial-error-messages for more.
+        # Chalice setting that causes an app to return a traceback in the body
+        # of error responses: Setting AZUL_DEBUG to 0 disables the traceback
+        # (app.debug = False), 1 or higher enable it (app.debug = True). See
+        # https://github.com/aws/chalice#tutorial-error-messages for more.
+        #
         'AZUL_DEBUG': '0',
 
-        # The name of the current deployment. This variable controls the name of all
-        # cloud resources and is the main vehicle for isolating cloud resources
-        # between deployments.
+        # The name of the current deployment. This variable controls the name of
+        # all cloud resources and is the main vehicle for isolating cloud
+        # resources between deployments.
+        #
         'AZUL_DEPLOYMENT_STAGE': None,
 
         # The Docker registry containing all 3rd party images used by this
@@ -186,48 +194,50 @@ def env() -> Mapping[str, Optional[str]]:
         # and the images therein are managed by the `shared` TF component, which
         # copies images from the upstream registry into the Azul registry. A
         # 3rd-party image at `<registry>/<username>/<repository>:tag`, is stored
-        # as `${azul_docker_registry>}<registry>/<username>/<repository>:tag`
-        # in the Azul registry. To disable the use of the Azul registry, set
-        # this variable to the empty string.
+        # as `${azul_docker_registry>}<registry>/<username>/<repository>:tag` in
+        # the Azul registry. To disable the use of the Azul registry, set this
+        # variable to the empty string.
         #
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
-        # Whether to enable direct access to objects in the DSS main bucket. If 0,
-        # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
-        # and GET /files/{UUID} endpoints. If 1, S3 GetObject requests are made
-        # directly to the underlying bucket. This requires intimate knowledge of DSS
-        # implementation details but was ten times faster. Recent optimizations to
-        # the DSS (mainly, the delayed eviction of metadata files from the checkout
-        # bucket made the performance gains less dramatic but the first hit to a
-        # metadata file is still going to be slow because the objects needs to be
-        # checked out. Aside from the latency improvements on a single request,
-        # direct access also bypasses DSS lambda concurrency limits, thereby
-        # increasing in the throughput of the Azul indexer, which is especially
-        # noticeable during reindexing and scale testing.
+        # Whether to enable direct access to objects in the DSS main bucket. If
+        # 0, bundles and files are retrieved from the DSS using the GET
+        # /bundles/{uuid} and GET /files/{UUID} endpoints. If 1, S3 GetObject
+        # requests are made directly to the underlying bucket. This requires
+        # intimate knowledge of DSS implementation details but was ten times
+        # faster. Recent optimizations to the DSS (mainly, the delayed eviction
+        # of metadata files from the checkout bucket made the performance gains
+        # less dramatic but the first hit to a metadata file is still going to
+        # be slow because the objects needs to be checked out. Aside from the
+        # latency improvements on a single request, direct access also bypasses
+        # DSS lambda concurrency limits, thereby increasing in the throughput of
+        # the Azul indexer, which is especially noticeable during reindexing and
+        # scale testing.
         #
-        # More importantly, direct access needs to be enabled for deletions to work
-        # properly as the Azul indexer needs to know the metadata of the deleted
-        # bundle in order to place the correct tombstone contributions into its
-        # index. Direct access is also required for the Azul service's DSS files
-        # proxy and DOS/DRS endpoints. Disabling DSS direct access will break these
-        # endpoints.
+        # More importantly, direct access needs to be enabled for deletions to
+        # work properly as the Azul indexer needs to know the metadata of the
+        # deleted bundle in order to place the correct tombstone contributions
+        # into its index. Direct access is also required for the Azul service's
+        # DSS files proxy and DOS/DRS endpoints. Disabling DSS direct access
+        # will break these endpoints.
         #
         'AZUL_DSS_DIRECT_ACCESS': '0',
 
-        # An optional ARN of a role to assume when directly accessing a DSS bucket.
-        # This can be useful when the DSS buckets are not owned by the same AWS
-        # account owning the current Azul deployment. If there is another Azul
-        # deployment in the account owning the DSS bucket, the role assumed by the
-        # other Azul indexer would be an obvious candidate for the current
-        # deployment's indexer to assume for direct access. Presumably that other
-        # indexer has sufficient privileges to directly access the DSS buckets.
+        # An optional ARN of a role to assume when directly accessing a DSS
+        # bucket. This can be useful when the DSS buckets are not owned by the
+        # same AWS account owning the current Azul deployment. If there is
+        # another Azul deployment in the account owning the DSS bucket, the role
+        # assumed by the other Azul indexer would be an obvious candidate for
+        # the current deployment's indexer to assume for direct access.
+        # Presumably that other indexer has sufficient privileges to directly
+        # access the DSS buckets.
         #
-        # The character '*' will be replaced with the name of the lambda
-        # wishing to gain access. This parameterization can be used to have the
-        # indexer lambda in the native deployment assume the role of the indexer
-        # lambda in the foreign deployment, while the native service lambda assumes
-        # the role of the foreign service lambda.
+        # The character '*' will be replaced with the name of the lambda wishing
+        # to gain access. This parameterization can be used to have the indexer
+        # lambda in the native deployment assume the role of the indexer lambda
+        # in the foreign deployment, while the native service lambda assumes the
+        # role of the foreign service lambda.
         #
         # If specified, this ARN must be of the following form:
         #
@@ -239,30 +249,31 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DSS_DIRECT_ACCESS_ROLE': None,
 
-        # The name of the hosted zone in Route 53 in which to create user friendly
-        # domain names for various API gateways. This hosted zone will have to be
-        # created manually prior to running `make deploy`. The value is typically
-        # not deployment specific. A subdomain will automatically be created for
-        # each deployment.
+        # The name of the hosted zone in Route 53 in which to create user
+        # friendly domain names for various API gateways. This hosted zone will
+        # have to be created manually prior to running `make deploy`. The value
+        # is typically not deployment specific. A subdomain will automatically
+        # be created for each deployment.
         'AZUL_DOMAIN_NAME': None,
 
-        # An optional list of roles in other AWS accounts that can assume the IAM
-        # role normally assumed by lambda functions in the active Azul deployment.
+        # An optional list of roles in other AWS accounts that can assume the
+        # IAM role normally assumed by lambda functions in the active Azul
+        # deployment.
         #
         # The syntax is <account>[,<role>...][:<account>[,<role>...]...] where
         # <account> is the numeric AWS account ID and role is a role name with
-        # optional * or ? wildcards for the StringLike operator in IAM conditions.
-        # Whitespace around separators and at the beginning or end of the value
-        # are ignored.
+        # optional * or ? wildcards for the StringLike operator in IAM
+        # conditions. Whitespace around separators and at the beginning or end
+        # of the value are ignored.
         #
-        # This parameter has profound security implications: the external role can
-        # do anything an Azul lambda can do. The external account and any principal
-        # with IAM access in that account, not just the specified roles, must be
-        # fully trusted.
+        # This parameter has profound security implications: the external role
+        # can do anything an Azul lambda can do. The external account and any
+        # principal with IAM access in that account, not just the specified
+        # roles, must be fully trusted.
         #
-        # This configuration is typically used to enable an external Azul deployment
-        # to directly access the same DSS buckets the active deployment has direct
-        # access to.
+        # This configuration is typically used to enable an external Azul
+        # deployment to directly access the same DSS buckets the active
+        # deployment has direct access to.
         #
         'AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS': None,
 
@@ -278,42 +289,50 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DRS_DOMAIN_NAME': '',
 
         # A template for the name of the Route 53 record set in the hosted zone
-        # specified by AZUL_DOMAIN_NAME. The character '*' in the template
-        # will be substituted with the name of the Lambda function, e.g. `indexer`
-        # or `service`. May contain periods.
+        # specified by AZUL_DOMAIN_NAME. The character '*' in the template will
+        # be substituted with the name of the Lambda function, e.g. `indexer` or
+        # `service`. May contain periods.
+        #
         'AZUL_SUBDOMAIN_TEMPLATE': '*',
 
         # Boolean value, 0 to create public APIs, 1 to create private APIs that
         # can only be accessed from within the VPC or through the VPN tunnel
         # into the VPC.
+        #
         'AZUL_PRIVATE_API': '0',
 
         # A prefix to be prepended to the names of AWS Lambda functions and
         # associated resources. Must not contain periods.
+        #
         'AZUL_RESOURCE_PREFIX': 'azul',
 
         # The host and port of the Elasticsearch instance to use. This takes
         # precedence over AZUL_ES_DOMAIN.
+        #
         'AZUL_ES_ENDPOINT': None,
 
-        # The name of the AWS-hosted Elasticsearch instance (not a domain name) to
-        # use. The given ES domain's endpoint will be looked up dynamically.
+        # The name of the AWS-hosted Elasticsearch instance (not a domain name)
+        # to use. The given ES domain's endpoint will be looked up dynamically.
+        #
         'AZUL_ES_DOMAIN': 'azul-index-{AZUL_DEPLOYMENT_STAGE}',
 
         # Boolean value, 1 to share `dev` ES domain, 0 to create your own
+        #
         'AZUL_SHARE_ES_DOMAIN': '0',
 
         # Prefix to describe ES indices
+        #
         'AZUL_INDEX_PREFIX': 'azul',
 
         # The number of nodes in the AWS-hosted Elasticsearch cluster
+        #
         'AZUL_ES_INSTANCE_COUNT': None,
 
         # The EC2 instance type to use for a cluster node.
         #
-        # Indexing performance benefits from the increased memory offered
-        # by the `r` family, especially now that the number of shards is
-        # tied to the indexer Lambda concurrency.
+        # Indexing performance benefits from the increased memory offered by the
+        # `r` family, especially now that the number of shards is tied to the
+        # indexer Lambda concurrency.
         #
         'AZUL_ES_INSTANCE_TYPE': None,
 
@@ -322,21 +341,24 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_ES_VOLUME_SIZE': '0',
 
-        # Elasticsearch operation timeout in seconds
-        # matches AWS' own timeout on the ELB sitting in front of ES:
+        # Elasticsearch operation timeout in seconds. Matches AWS' own timeout
+        # on the ELB sitting in front of ES:
+        #
         # https://forums.aws.amazon.com/thread.jspa?threadID=233378
+        #
         'AZUL_ES_TIMEOUT': '60',
 
-        # The number of workers pulling files from the DSS repository.
-        # There is one such set of repository workers per index worker.
+        # The number of workers pulling files from the DSS repository. There is
+        # one such set of repository workers per index worker.
+        #
         'AZUL_DSS_WORKERS': '8',
 
-        # The number of workers pulling metadata from the TDR repository.
-        # There is one such set of repository workers per index worker.
-        # Using one worker as opposed to 8 (or 4) improved the indexing time
-        # noticeably because it reduced retries due to exceeding BigQuery's
-        # limit on the # of concurrent queries. Using two workers wasn't
-        # significantly faster.
+        # The number of workers pulling metadata from the TDR repository. There
+        # is one such set of repository workers per index worker. Using one
+        # worker as opposed to 8 (or 4) improved the indexing time noticeably
+        # because it reduced retries due to exceeding BigQuery's limit on the #
+        # of concurrent queries. Using two workers wasn't significantly faster.
+        #
         'AZUL_TDR_WORKERS': '1',
 
         # The number of times a deployment has been destroyed and rebuilt. Some
@@ -345,6 +367,7 @@ def env() -> Mapping[str, Optional[str]]:
         # such resources will include this value, therefore making the names
         # distinct. If a deployment is being rebuilt, increment this value in
         # the deployment's `environment.py` file.
+        #
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
         # The name of the Google Cloud project to host the Azul deployment.
@@ -352,13 +375,70 @@ def env() -> Mapping[str, Optional[str]]:
         # GOOGLE_APPLICATION_CREDENTIALS environment variable to point to the
         # key file of a Google service account, or setting the application
         # default credentials using the `gcloud` CLI interactive login.
+        #
         'GOOGLE_PROJECT': None,
 
+        # The path of the directory where the Google Cloud Python libraries and
+        # the Google Cloud CLI (gcloud) put their state. If this variable is not
+        # set, the state is placed in ~/.config/gcloud by default. Since we want
+        # to segregate this state per working copy and deployment, we set this
+        # variable to the path of a deployment-specific directory in the working
+        # copy. Note that this variable does not affect the Google Cloud
+        # libraries for Go, or the Google Cloud provider for Terraform which
+        # uses these Go libraries. Luckily, the Go libraries don't write any
+        # state, they only read credentials from the location configured via
+        # GOOGLE_APPLICATION_CREDENTIALS below.
+        #
+        'CLOUDSDK_CONFIG': '{project_root}/deployments/.active/.gcloud',
+
+        # The path of a JSON file with credentials for an authorized user or a
+        # service account. The Google Cloud libraries for Python and Go will
+        # load the so called ADC (Application-default credentials) from this
+        # file and use them for any Google Cloud API requests. According to
+        # Google documentation, if this variable is not set,
+        # ~/.config/gcloud/application_default_credentials.json is used.
+        # However, the Google Cloud SDK and Python libraries will only default
+        # to that if CLOUDSDK_CONFIG is not set. If it is,
+        # $CLOUDSDK_CONFIG/application_default_credentials.json is used. Since
+        # the Go libraries are unaffected by CLOUDSDK_CONFIG, the offcially
+        # documented default applies. We'll work around the inconsistent
+        # defaults by setting both variables explicitly.
+        #
+        # If the azul_google_user variable is set, the _login helper defined
+        # in `environment` will populate this file with credentials (a
+        # long-lived refresh token) for that user. It does so by logging that
+        # user into Google Cloud, which requires a web browser. As a
+        # convenience, and to avoid confusion, it will, at the same time,
+        # provision credentials for the Google Cloud CLI, in a different file,
+        # but also in the directory configured via CLOUDSDK_CONFIG above.
+        #
+        # To have a service account (as opposed to a user account) manage Google
+        # Cloud resources, leave azul_google_user unset and change this variable
+        # to point to a file with the private key of that service account. Note
+        # that the service account would have to be different from the one whose
+        # name is set in AZUL_GOOGLE_SERVICE_ACCOUNT. In fact, the service
+        # account from this variable is used to manage those other service
+        # accounts, so generally, it needs elevated permissions to the project.
+        # We used to call this type of account "personal service account" but we
+        # don't use that type anymore. GitLab is nowadays the only place where
+        # this variable is set to service account credentials.
+        #
+        'GOOGLE_APPLICATION_CREDENTIALS': '{CLOUDSDK_CONFIG}/application_default_credentials.json',
+
+        # The name of a Google user account with authorization to manage the
+        # Google Cloud resources in the project referred to by GOOGLE_PROJECT.
+        # If this variable is not set, GOOGLE_APPLICATION_CREDENTIALS must be
+        # changed to the path of a file containing service account credentials.
+        #
+        'azul_google_user': None,
+
         # The name of the Google Cloud service account to represent the
-        # deployment. It is used to access all (meta)data in Google-based
-        # repositories. If unset, a canonical resource name will be used. That
-        # default allows one such account per Azul deployment and Google Cloud
-        # project.
+        # deployment. This service account will be created automatically during
+        # deployment and will then be used to access (meta)data in Google-based
+        # repositories, like the Terra Data Repository (TDR). If unset, a
+        # canonical resource name will be used. That default allows one such
+        # account per Azul deployment and Google Cloud project.
+        #
         'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
 
         # The name of the Google Cloud service account to be created and used
@@ -371,17 +451,21 @@ def env() -> Mapping[str, Optional[str]]:
         # The name of the Google Cloud service account to be created and used
         # to simulate access from users who are logged in but not registered
         # with SAM.
+        #
         'AZUL_GOOGLE_SERVICE_ACCOUNT_UNREGISTERED':
             'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-unreg-{AZUL_DEPLOYMENT_STAGE}',
 
         # The number of concurrently running lambda executions for the
         # contribution and aggregation stages of indexing, respectively.
         # Concurrency for the retry lambdas of each stage can be configured
-        # separately via a '/' separator, e.g. '{normal concurrency}/{retry concurrency}'.
-        # Chalice creates one Lambda function for handling HTTP requests from
-        # API Gateway and one additional Lambda function per event handler. The
-        # concurrency limit applies to each such function independently. See
+        # separately via a '/' separator, e.g. '{normal concurrency}/{retry
+        # concurrency}'. Chalice creates one Lambda function for handling HTTP
+        # requests from API Gateway and one additional Lambda function per event
+        # handler. The concurrency limit applies to each such function
+        # independently. See
+        #
         # https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+        #
         # for details. These settings may also be used to drive other scaling
         # choices. For example, the non-retry contribution concurrency
         # determines the number of shards in Elasticsearch.
@@ -391,10 +475,12 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The name of the S3 bucket where the manifest API stores the downloadable
         # content requested by client.
+        #
         'AZUL_S3_BUCKET': None,
 
         # Collect and monitor important health metrics of the deployment (1 yes, 0 no).
         # Typically only enabled on main deployments.
+        #
         'AZUL_ENABLE_MONITORING': '0',
 
         # Identifies the DSS repository endpoint and prefix to index.
@@ -411,6 +497,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # https://dss.data.humancellatlas.org/v1:/1
         # https://dss.data.humancellatlas.org/v1:aa/1
+        #
         'AZUL_DSS_SOURCE': None,
 
         # A short string (no punctuation allowed) that identifies a Terraform
@@ -420,13 +507,16 @@ def env() -> Mapping[str, Optional[str]]:
         # their own directory under `deployments`. The main component is identified
         # by the empty string and its resources are defined in the `terraform`
         # directory.
+        #
         'azul_terraform_component': '',
 
         # The slug of a the Github repository hosting this fork of Azul
+        #
         'azul_github_project': 'DataBiosphere/azul',
 
         # An Github REST API access token with permission to post status checks to
         # the repository defined in `azul_github_project`.
+        #
         'azul_github_access_token': '',
 
         # A GitLab private access token with scopes `read_api`, `read_registry`
@@ -460,6 +550,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # FIXME: Remove once we upgrade to botocore 1.28.x
         #        https://github.com/DataBiosphere/azul/issues/4560
+        #
         'BOTO_DISABLE_COMMONNAME': 'true',
 
         # The path of the directory where the public key infrastructure files
@@ -481,6 +572,7 @@ def env() -> Mapping[str, Optional[str]]:
         # location.
         #
         # https://cloud.google.com/bigquery/docs/locations
+        #
         'AZUL_TDR_SOURCE_LOCATION': None,
 
         # The full set of BigQuery dataset locations of the TDR snapshots
@@ -499,24 +591,29 @@ def env() -> Mapping[str, Optional[str]]:
         # enable batch mode.
         #
         # https://cloud.google.com/bigquery/docs/running-queries
+        #
         'AZUL_BIGQUERY_BATCH_MODE': '0',
 
         # Timeout in seconds for requests to Terra. Two different values are
         # configured, separated by a colon. The first is for time-sensitive
         # contexts such as API Gateway. The second is for contexts in which we
         # can afford to be more patient.
+        #
         'AZUL_TERRA_TIMEOUT': '5:20',
 
         # The URL of the Terra Data Repository instance to index metadata from.
+        #
         'AZUL_TDR_SERVICE_URL': None,
 
         # The URL of an instance of Broad Institute's SAM.
         # This needs to point to the SAM instance that's used by the TDR
         # instance configured in `AZUL_TDR_SERVICE_URL`.
+        #
         'AZUL_SAM_SERVICE_URL': None,
 
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
+        #
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
 
         # Maps a branch name to a list of names of deployments the branch may be
@@ -612,7 +709,6 @@ def env() -> Mapping[str, Optional[str]]:
         # manage incidents with AWS support as defined in CIS rule 1.20:
         #
         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.20
-        #
         #
         'azul_aws_support_roles': json.dumps([]),
 

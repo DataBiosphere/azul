@@ -33,7 +33,7 @@ RUN mkdir -p ${HOME}/.docker \
 #
 # Run
 #
-# $ _preauth
+# $ _login
 #
 # You should now be logged into the GitLab docker registry.
 #

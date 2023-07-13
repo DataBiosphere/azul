@@ -29,7 +29,7 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_terraform_component': 'browser',
         'azul_browser_sites': json.dumps({
             'ucsc/data-browser': {
-                'issues_hannes-ucsc_5015-anvilprod': {
+                'main': {
                     'anvil': {
                         'domain': '{AZUL_DOMAIN_NAME}',
                         'bucket': 'browser',
@@ -39,7 +39,7 @@ def env() -> Mapping[str, Optional[str]]:
                 }
             },
             'ucsc/anvil-portal': {
-                'issues_hannes-ucsc_5015-anvilprod': {
+                'main': {
                     'anvil': {
                         'domain': '{AZUL_DOMAIN_NAME}',
                         'bucket': 'portal',

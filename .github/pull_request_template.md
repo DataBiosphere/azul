@@ -31,8 +31,9 @@ title is `Fix: ` followed by the issue title
 
 - [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
 - [ ] Added `reindex` label to PR <sub>or this PR does not require reindexing</sub>
-- [ ] Added `a` (compatible changes) or `A` (incompatible ones) tag to commit title <sub>or this PR does not modify the Azul service API</sub>
-- [ ] Added `API` label to connected issues <sub>or this PR does not modify the Azul service API</sub>
+- [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
+- [ ] Added `a` (`A`) tag to commit title for backwards (in)compatible changes <sub>or this PR does not modify a REST API</sub>
+- [ ] Updated REST API version number in `app.py` <sub>or this PR does not modify a REST API</sub>
 
 
 ### Author (chains)
