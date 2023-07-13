@@ -1,6 +1,9 @@
 from base64 import (
     urlsafe_b64encode,
 )
+from collections import (
+    defaultdict,
+)
 from hashlib import (
     sha1,
 )
@@ -12,6 +15,7 @@ from typing import (
 
 import attr
 from more_itertools import (
+    one,
     padded,
 )
 
@@ -96,12 +100,18 @@ images = list(map(ImageRef.parse, config.docker_images))
 
 platforms = list(map(Platform.parse, config.docker_platforms))
 
+images_by_name: dict[str, list] = defaultdict(list)
+for image in images:
+    images_by_name[image.name].append(image)
+del image
+
+images_by_tf_repository: dict[tuple[str, str], list[ImageRef]] = (lambda: {
+    (name, one(set(image.tf_repository for image in images))): images
+    for name, images in images_by_name.items()
+})()
+
 
 def filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
-    """
-    >>> from azul import config
-    >>> filter_platforms(images[0], matching_plaforms)
-    """
     import docker
     allowed_platforms = {p.normalize() for p in allowed_platforms}
     log.info('Distribution for image %r …', image)

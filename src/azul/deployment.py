@@ -46,6 +46,9 @@ from azul.types import (
 )
 
 if TYPE_CHECKING:
+    from mypy_boto3_ecr import (
+        ECRClient,
+    )
     from mypy_boto3_iam import (
         IAMClient,
     )
@@ -151,6 +154,10 @@ class AWS:
     @property
     def apigateway(self):
         return self.client('apigateway')
+
+    @property
+    def ecr(self) -> 'ECRClient':
+        return self.client('ecr')
 
     @property
     def account(self):
