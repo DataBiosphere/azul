@@ -103,7 +103,6 @@ class LambdaMetric(Enum):
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class MetricThreshold:
     lambda_name: str
-    handler_name: Optional[str] = attr.ib(default=None)
     metric: LambdaMetric
     value: int
 
@@ -518,8 +517,8 @@ class AzulChaliceApp(Chalice):
                     threshold = getattr(handler, f'{metric.name}_threshold', default_threshold)
                     # We added the `name` attribute dynamically in _register_handler()
                     # so to avoid a PyCharm type warning we use `getattr` here.
-                    thresholds.append(MetricThreshold(lambda_name=lambda_name,
-                                                      handler_name=getattr(handler, 'name'),
+                    handler_name = getattr(handler, 'name')
+                    thresholds.append(MetricThreshold(lambda_name=f'{lambda_name}_{handler_name}',
                                                       metric=metric,
                                                       value=threshold))
         return thresholds
