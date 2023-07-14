@@ -4,14 +4,8 @@ from azul import (
     config,
     require,
 )
-from azul.chalice import (
-    MetricThreshold,
-)
 from azul.deployment import (
     aws,
-)
-from azul.modules import (
-    load_app_module,
 )
 from azul.queues import (
     Queues,
@@ -20,21 +14,6 @@ from azul.terraform import (
     emit_tf,
     vpc,
 )
-
-
-def alarm_resource_name(threshold: MetricThreshold) -> str:
-    handler_name = threshold.handler_name
-    # FIXME: Remove this hack of slicing off the prefix from the handler name
-    #        once the Lambda's have been renamed.
-    #        https://github.com/DataBiosphere/azul/issues/5337
-    if handler_name is not None and handler_name.startswith(threshold.lambda_name):
-        handler_name = handler_name[len(threshold.lambda_name):]
-    assert handler_name != '', threshold.handler_name
-    return '_'.join((
-        threshold.lambda_name,
-        *(() if handler_name is None else (handler_name,)),
-        threshold.metric.name
-    ))
 
 
 def dashboard_body() -> str:
@@ -290,35 +269,7 @@ emit_tf({
                             ]
                         }
                     }
-                },
-                *(
-                    {
-                        'aws_cloudwatch_metric_alarm': {
-                            alarm_resource_name(threshold): {
-                                'alarm_name': config.qualified_resource_name(
-                                    alarm_resource_name(threshold),
-                                    suffix='.alarm'
-                                ),
-                                'namespace': 'AWS/Lambda',
-                                'dimensions': {
-                                    'FunctionName': f'${{aws_lambda_function.{threshold.lambda_name}.function_name}}'
-                                },
-                                'metric_name': threshold.metric.aws_name,
-                                'comparison_operator': 'GreaterThanThreshold',
-                                'statistic': 'Sum',
-                                'threshold': threshold.value,
-                                'period': 5 * 60,
-                                'datapoints_to_alarm': 1,
-                                'evaluation_periods': 1,
-                                'treat_missing_data': 'notBreaching',
-                                'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                                'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                            }
-                        }
-                    }
-                    for lambda_name in config.lambda_names()
-                    for threshold in load_app_module(lambda_name).app.metric_thresholds()
-                ),
+                }
             )
             if config.enable_monitoring else
             ()

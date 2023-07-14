@@ -1,9 +1,6 @@
 from collections.abc import (
     Iterable,
 )
-from enum import (
-    Enum,
-)
 import json
 from json import (
     JSONEncoder,
@@ -23,7 +20,6 @@ from urllib.parse import (
 )
 
 import attr
-import chalice
 from chalice import (
     Chalice,
     ChaliceViewError,
@@ -48,9 +44,6 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
-)
-from azul.enums import (
-    auto,
 )
 from azul.json import (
     copy_json,
@@ -85,27 +78,6 @@ class BadGatewayError(ChaliceViewError):
 
 class ServiceUnavailableError(ChaliceViewError):
     STATUS_CODE = 503
-
-
-class LambdaMetric(Enum):
-    """
-    For the full list of supported metrics in the `AWS/Lambda` namespace, see:
-    https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html
-    """
-    errors = auto()
-    throttles = auto()
-
-    @property
-    def aws_name(self) -> str:
-        return self.name.capitalize()
-
-
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
-class MetricThreshold:
-    lambda_name: str
-    handler_name: Optional[str] = attr.ib(default=None)
-    metric: LambdaMetric
-    value: int
 
 
 C = TypeVar('C', bound='AppController')
@@ -494,35 +466,6 @@ class AzulChaliceApp(Chalice):
                 return Response(status_code=200,
                                 headers={'Content-Type': content_type},
                                 body=body)
-
-    def threshold(self, *, errors: int, throttles: int):
-        def wrapper(f):
-            f.errors_threshold = errors
-            f.throttles_threshold = throttles
-            return f
-
-        return wrapper
-
-    def metric_thresholds(self) -> list[MetricThreshold]:
-        default_threshold = 0
-        thresholds = []
-        lambda_name, _ = config.unqualified_resource_name(self.app_name)
-        for metric in LambdaMetric:
-            # The api_handler lambda functions (indexer & service) aren't included
-            # in the app_module's handler_map, so we account for those first.
-            thresholds.append(MetricThreshold(lambda_name=lambda_name,
-                                              metric=metric,
-                                              value=default_threshold))
-            for handler in self.handler_map.values():
-                if isinstance(handler, chalice.app.EventSourceHandler):
-                    threshold = getattr(handler, f'{metric.name}_threshold', default_threshold)
-                    # We added the `name` attribute dynamically in _register_handler()
-                    # so to avoid a PyCharm type warning we use `getattr` here.
-                    thresholds.append(MetricThreshold(lambda_name=lambda_name,
-                                                      handler_name=getattr(handler, 'name'),
-                                                      metric=metric,
-                                                      value=threshold))
-        return thresholds
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
