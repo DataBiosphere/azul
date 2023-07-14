@@ -32,7 +32,8 @@ def mksrc(google_project,
           subgraphs,
           flags: int = 0,
           /,
-          prefix: Optional[str] = None) -> tuple[str, str]:
+          prefix: Optional[str] = None
+          ) -> tuple[str, str]:
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= ma | pop
     if prefix is None:
@@ -230,7 +231,7 @@ def env() -> Mapping[str, Optional[str]]:
         # specific to you go into `environment.local.py` at the project root.
 
         # When using this file as a template for a personal deployment, replace
-        # `None` with a short string that is specific to to YOU.
+        # `None` with a short string that is specific to YOU.
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
@@ -285,7 +286,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_BILLING': 'hca',
 
         # When using this file as a template for a personal deployment, change
-        # `None` to a string contaiing YOUR email address.
+        # `None` to a string containing YOUR email address.
         #
         'AZUL_OWNER': 'hannes@ucsc.edu' if is_sandbox else None,
 

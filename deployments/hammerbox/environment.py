@@ -68,10 +68,18 @@ def mkdict(previous_catalog: dict[str, str],
     return catalog
 
 
-anvil_sources = mkdict({}, 3, mkdelta([
-    mksrc('datarepo-dev-e53e74aa', 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 6804),
-    mksrc('datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 28),
-    mksrc('datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25)
+anvil_sources = mkdict({}, 11, mkdelta([
+    mksrc('datarepo-1ba591a6', 'ANVIL_1000G_high_coverage_2019_20221019_ANV5_202303081523', 6804),
+    mksrc('datarepo-aa67671a', 'ANVIL_CMG_UWASH_DS_BAV_IRB_PUB_RD_20221020_ANV5_202303081451', 181),
+    mksrc('datarepo-b4e0bfd5', 'ANVIL_CMG_UWASH_DS_BDIS_20221020_ANV5_202303081501', 10),
+    mksrc('datarepo-333dd883', 'ANVIL_CMG_UWASH_DS_HFA_20221020_ANV5_202303081456', 198),
+    mksrc('datarepo-b968cbdb', 'ANVIL_CMG_UWASH_DS_NBIA_20221020_ANV5_202303081459', 110),
+    mksrc('datarepo-6a5b13ea', 'ANVIL_CMG_UWASH_HMB_20221020_ANV5_202303081455', 423),
+    mksrc('datarepo-3d4c42f7', 'ANVIL_CMG_UWASH_HMB_IRB_20221020_ANV5_202303081454', 45),
+    mksrc('datarepo-080b2c9e', 'ANVIL_CMG_UWash_DS_EP_20221020_ANV5_202303081452', 53),
+    mksrc('datarepo-4f75c9e3', 'ANVIL_CMG_UWash_GRU_20230308_ANV5_202303081731', 5861),
+    mksrc('datarepo-ec9365be', 'ANVIL_CMG_UWash_GRU_IRB_20221020_ANV5_202303081458', 563),
+    mksrc('datarepo-8392ac2c', 'ANVIL_GTEx_V8_hg38_20221013_ANV5_202303081502', 101205)
 ]))
 
 
@@ -94,8 +102,9 @@ def env() -> Mapping[str, Optional[str]]:
     provide the value.
     """
     return {
-        # Set variables for the `anvilbox` deployment here. The anvilbox is used
-        # to run integration tests against PRs and to perform CI/CD experiments.
+        # Set variables for the `hammerbox` deployment here. The hammerbox is
+        # used to run integration tests against PRs and to perform CI/CD
+        # experiments.
         #
         # You can use this file as a template for a personal deployment. Look
         # for conditionals using the `is_sandbox` variable and adjust the `else`
@@ -110,18 +119,18 @@ def env() -> Mapping[str, Optional[str]]:
         # When using this file as a template for a personal deployment, replace
         # `None` with a short string that is specific to YOU.
         #
-        'AZUL_DEPLOYMENT_STAGE': 'anvilbox' if is_sandbox else None,
+        'AZUL_DEPLOYMENT_STAGE': 'hammerbox' if is_sandbox else None,
 
         'AZUL_IS_SANDBOX': str(int(is_sandbox)),
 
-        # This deployment uses a subdomain of the `anvildev` deployment's
+        # This deployment uses a subdomain of the `anvilprod` deployment's
         # domain.
         #
-        'AZUL_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
+        'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
         'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
         'AZUL_PRIVATE_API': '1',
 
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-dev-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
@@ -139,8 +148,8 @@ def env() -> Mapping[str, Optional[str]]:
         }),
 
         'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
-        'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
-        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
+        'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 
         **(
             {
@@ -148,9 +157,9 @@ def env() -> Mapping[str, Optional[str]]:
                 'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
                 'AZUL_ES_INSTANCE_COUNT': '2',
             } if is_sandbox else {
-                # Personal deployments share an ES domain with `anvilbox`
+                # Personal deployments share an ES domain with `hammerbox`
                 'AZUL_SHARE_ES_DOMAIN': '1',
-                'AZUL_ES_DOMAIN': 'azul-index-anvilbox',
+                'AZUL_ES_DOMAIN': 'azul-index-hammerbox',
                 # Personal deployments use fewer Lambda invocations in parallel.
                 'AZUL_CONTRIBUTION_CONCURRENCY': '8',
                 'AZUL_AGGREGATION_CONCURRENCY': '8',
@@ -168,12 +177,12 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_MONITORING_EMAIL': '{AZUL_OWNER}',
 
-        'AZUL_AWS_ACCOUNT_ID': '289950828509',
+        'AZUL_AWS_ACCOUNT_ID': '465330168186',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        'GOOGLE_PROJECT': 'platform-anvil-dev',
+        'GOOGLE_PROJECT': 'platform-anvil-prod',
 
-        'AZUL_DEPLOYMENT_INCARNATION': '2',
+        'AZUL_DEPLOYMENT_INCARNATION': '0',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-cpo2avhomdh6t7fetp91js78cdhm9p47.apps.googleusercontent.com',
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
     }
