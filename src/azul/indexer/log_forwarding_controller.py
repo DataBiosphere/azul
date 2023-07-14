@@ -32,8 +32,6 @@ class LogForwardingController(AppController):
         return S3AccessLogForwardingService()
 
     def _forward_logs(self, event: chalice.app.S3Event, service: LogForwardingService) -> None:
-        # FIXME: Create alarm for log forwarding failures
-        #        https://github.com/DataBiosphere/azul/issues/4997
         for message in service.read_logs(event.bucket, event.key):
             json.dump(message, sys.stdout)
             sys.stdout.write('\n')
