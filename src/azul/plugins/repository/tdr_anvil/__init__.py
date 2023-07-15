@@ -100,6 +100,10 @@ class BundleEntityType(Enum):
     supplementary: EntityType = 'file'
 
 
+class AnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
+    entity_type: str
+
+
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class AnvilBundleFQID(TDRBundleFQID):
     entity_type: BundleEntityType = attr.ib(converter=BundleEntityType)

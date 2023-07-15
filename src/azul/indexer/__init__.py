@@ -57,6 +57,11 @@ class BundleFQID(SupportsLessThan):
         return attr.asdict(self, recurse=False)
 
 
+class BundleFQIDJSON(TypedDict):
+    uuid: BundleUUID
+    version: BundleVersion
+
+
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class Prefix:
     common: str = ''
@@ -363,9 +368,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
         return spec_cls
 
 
-class SourcedBundleFQIDJSON(TypedDict):
-    uuid: BundleUUID
-    version: BundleVersion
+class SourcedBundleFQIDJSON(BundleFQIDJSON):
     source: SourceJSON
 
 
