@@ -173,6 +173,8 @@ def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+# FIXME: Remove redundant prefix from name
+#        https://github.com/DataBiosphere/azul/issues/5337
 @app.schedule('rate(1 minute)', name='indexercachehealth')
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
