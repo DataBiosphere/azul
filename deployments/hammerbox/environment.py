@@ -184,5 +184,5 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '1055427471534-ienqfvg4fl2n7agcumn63b12npsjorlr.apps.googleusercontent.com',
     }
