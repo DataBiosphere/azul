@@ -111,6 +111,8 @@ deploy_browser:
       - terraform/browser/plan.json
 
 integration_test:
+  # FIXME: Use a dynamic GitLab job timeout based on deployment
+  #        https://github.com/DataBiosphere/azul/issues/5404
   extends: .base_on_push
   stage: integration_test
   timeout: 2h
@@ -134,6 +136,8 @@ on_failure:
     - python scripts/github_status_check.py "${status_context}" failure
 
 early_reindex:
+  # FIXME: Use a dynamic GitLab job timeout based on deployment
+  #        https://github.com/DataBiosphere/azul/issues/5404
   extends: .base_on_push
   stage: early_reindex
   when: manual
@@ -142,6 +146,8 @@ early_reindex:
     - make reindex
 
 reindex:
+  # FIXME: Use a dynamic GitLab job timeout based on deployment
+  #        https://github.com/DataBiosphere/azul/issues/5404
   extends: .base_on_push
   stage: reindex
   when: manual
