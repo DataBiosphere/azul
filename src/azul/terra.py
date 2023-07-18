@@ -500,6 +500,13 @@ class TDRClient(SAMClient):
 
     @cache
     def _bigquery(self, project: str) -> bigquery.Client:
+        # We get a false warning from PyCharm here, probably because of
+        #
+        # https://youtrack.jetbrains.com/issue/PY-23400/regression-PEP484-type-annotations-in-docstrings-nearly-completely-broken
+        #
+        # Google uses the docstring syntax to annotate types in its BQ client.
+        #
+        # noinspection PyTypeChecker
         return bigquery.Client(project=project, credentials=self.credentials)
 
     def run_sql(self, query: str) -> BigQueryRows:
