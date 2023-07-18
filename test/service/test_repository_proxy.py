@@ -185,6 +185,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             self.assertEqual(response.status, 404)
 
     @mock.patch.object(TDRClient, 'snapshot_names_by_id')
+    @mock.patch.object(TDRClient, 'validate', new=MagicMock())
     def test_list_sources(self,
                           mock_list_snapshots,
                           mock_get_cached_sources,

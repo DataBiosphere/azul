@@ -60,6 +60,9 @@ from zipfile import (
 )
 
 import attr
+from chalice import (
+    UnauthorizedError,
+)
 import chalice.cli
 import fastavro
 from furl import (
@@ -160,6 +163,7 @@ from azul.terra import (
     ServiceAccountCredentialsProvider,
     TDRClient,
     TDRSourceSpec,
+    UserCredentialsProvider,
 )
 from azul.types import (
     JSON,
@@ -1143,7 +1147,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             public_source_ids = list_source_ids()
         with self._unregistered_service_account_credentials:
             self.assertEqual(public_source_ids, list_source_ids())
-        with self._authorization_context(TDRClient.for_registered_user(OAuth2('foo'))):
+        invalid_auth = OAuth2('foo')
+        with self.assertRaises(UnauthorizedError):
+            TDRClient.for_registered_user(invalid_auth)
+        invalid_provider = UserCredentialsProvider(invalid_auth)
+        invalid_client = TDRClient(credentials_provider=invalid_provider)
+        with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())

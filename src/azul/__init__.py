@@ -1097,6 +1097,14 @@ class Config:
         """
         return self._lambda_env(outsource=True)
 
+    #: A set of names of other environment variables to export to the Lambda
+    #: function environment, in addition to those starting in `AZUL_`
+
+    lambda_env_variables = frozenset([
+        'BOTO_DISABLE_COMMONNAME',
+        'GOOGLE_PROJECT'
+    ])
+
     def _lambda_env(self, *, outsource: bool) -> dict[str, str]:
         return {
             k: v
@@ -1106,7 +1114,7 @@ class Config:
                     k.startswith('AZUL_')
                     # FIXME: Remove once we upgrade to botocore 1.28.x
                     #        https://github.com/DataBiosphere/azul/issues/4560
-                    or k == 'BOTO_DISABLE_COMMONNAME'
+                    or k in self.lambda_env_variables
                 )
                 and (len(v) > 128) == outsource)
         }

@@ -653,7 +653,14 @@ class TDRClient(SAMClient):
 
     @classmethod
     def for_registered_user(cls, authentication: OAuth2) -> 'TDRClient':
-        return cls(credentials_provider=UserCredentialsProvider(authentication))
+        self = cls(credentials_provider=UserCredentialsProvider(authentication))
+        try:
+            self.validate()
+        except RequirementError as e:
+            log.warning('Invalid credentials', exc_info=e)
+            raise UnauthorizedError('Invalid credentials')
+        else:
+            return self
 
     def drs_client(self):
         return DRSClient(http_client=self._http_client)

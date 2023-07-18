@@ -6,6 +6,9 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextlib import (
+    contextmanager,
+)
 from datetime import (
     timezone,
 )
@@ -23,6 +26,7 @@ from unittest import (
     mock,
 )
 from unittest.mock import (
+    Mock,
     PropertyMock,
     patch,
 )
@@ -51,6 +55,7 @@ from azul import (
     RequirementError,
     cache,
     cached_property,
+    config,
 )
 from azul.auth import (
     OAuth2,
@@ -354,9 +359,9 @@ class TestTDRSourceList(AzulUnitTestCase):
             'name': f'{access_token}_snapshot'
         }]
 
-    def _mock_urlopen(self,
-                      tdr_client: TDRClient
-                      ) -> Callable[..., HTTPResponse]:
+    def _mock_tdr_enumerate_snapshots(self,
+                                      tdr_client: TDRClient
+                                      ) -> Callable[..., HTTPResponse]:
         called = False
 
         def _mock_urlopen(_http_client, method, url, *, headers, **_kwargs):
@@ -376,9 +381,25 @@ class TestTDRSourceList(AzulUnitTestCase):
 
         return _mock_urlopen
 
+    def _mock_google_oauth_tokeninfo(self):
+        response = Mock()
+        response.status = 200
+        response.data = json.dumps({'azp': config.google_oauth2_client_id})
+        mock_urlopen = Mock()
+        mock_urlopen.return_value = response
+        return mock_urlopen
+
+    @contextmanager
+    def _patch_urlopen(self, **kwargs):
+        with mock.patch.object(target=urllib3.poolmanager.PoolManager,
+                               attribute='urlopen',
+                               **kwargs):
+            yield
+
     def test_auth_list_snapshots(self):
         for token in ('mock_token_1', 'mock_token_2'):
-            tdr_client = TDRClient.for_registered_user(OAuth2(token))
+            with self._patch_urlopen(new=self._mock_google_oauth_tokeninfo()):
+                tdr_client = TDRClient.for_registered_user(OAuth2(token))
             expected_snapshots = {
                 snapshot['id']: snapshot['name']
                 for snapshot in self._mock_snapshots(token)
@@ -386,9 +407,7 @@ class TestTDRSourceList(AzulUnitTestCase):
             # The patching here is deliberately "deep" into the implementation
             # to ensure that the proper authorization headers are being sent
             # when nothing is mocked.
-            with mock.patch.object(urllib3.poolmanager.PoolManager,
-                                   'urlopen',
-                                   new=self._mock_urlopen(tdr_client)):
+            with self._patch_urlopen(new=self._mock_tdr_enumerate_snapshots(tdr_client)):
                 self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
 
     def test_list_snapshots_paging(self):
