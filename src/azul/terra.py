@@ -270,8 +270,8 @@ class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider
 
 class UserCredentialsProvider(TerraCredentialsProvider):
 
-    def __init__(self, token: OAuth2):
-        self.token = token
+    def __init__(self, authentication: OAuth2):
+        self.token = authentication.identity()
 
     def oauth2_scopes(self) -> Sequence[str]:
         return ['https://www.googleapis.com/auth/userinfo.email']
@@ -279,10 +279,7 @@ class UserCredentialsProvider(TerraCredentialsProvider):
     @cache
     def scoped_credentials(self) -> TokenCredentials:
         # FIXME: this assumes the user has selected all required scopes.
-        return TokenCredentials(self.token.identity(), scopes=self.oauth2_scopes())
-
-    def identity(self) -> str:
-        return self.token.identity()
+        return TokenCredentials(self.token, scopes=self.oauth2_scopes())
 
     def insufficient_access(self, resource: str):
         scopes = ', '.join(self.oauth2_scopes())
@@ -655,8 +652,8 @@ class TDRClient(SAMClient):
         )
 
     @classmethod
-    def for_registered_user(cls, token: OAuth2) -> 'TDRClient':
-        return cls(credentials_provider=UserCredentialsProvider(token))
+    def for_registered_user(cls, authentication: OAuth2) -> 'TDRClient':
+        return cls(credentials_provider=UserCredentialsProvider(authentication))
 
     def drs_client(self):
         return DRSClient(http_client=self._http_client)
