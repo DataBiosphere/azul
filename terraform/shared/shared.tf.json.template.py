@@ -66,6 +66,10 @@ cis_alarms = [
                             '$.eventSource != "s3.amazonaws.com"',
                             '$.eventName != "HeadObject"',
                             '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
+                        ])),
+                        paren(' || '.join([
+                            '$.eventSource != "inspector2.amazonaws.com"',
+                            '$.eventName != "DescribeOrganizationConfiguration"',
                         ]))
                     ]) + '}'
                     ),
@@ -867,18 +871,16 @@ tf_config = {
             }
         },
         'aws_ecr_repository': {
-            image.tf_repository: {
-                'name': image.name,
+            tf_repository: {
+                'name': name,
                 'force_delete': True
             }
-            for image in docker.images
+            for name, tf_repository in docker.images_by_tf_repository.keys()
             if config.docker_registry
         },
         'null_resource': {
             **{
                 image.tf_image: {
-                    # FIXME: Delete unused images from ECR
-                    #        https://github.com/DataBiosphere/azul/issues/5189
                     'depends_on': [
                         'aws_ecr_repository.' + image.tf_repository
                     ],
@@ -904,6 +906,7 @@ tf_config = {
                             'command': ' '.join([
                                 'python',
                                 f'{config.project_root}/scripts/copy_images_to_ecr.py',
+                                '--copy',
                                 str(image)
                             ]),
                         }
@@ -929,7 +932,8 @@ tf_config = {
                             'local-exec': {
                                 'command': ' '.join([
                                     'python',
-                                    f'{config.project_root}/scripts/copy_images_to_ecr.py'
+                                    f'{config.project_root}/scripts/copy_images_to_ecr.py',
+                                    '--cleanup'
                                 ]),
                             }
                         }
@@ -937,7 +941,36 @@ tf_config = {
                 }
                 if config.docker_registry else
                 {}
-            )
+            ),
+            **{
+                tf_repository: {
+                    'depends_on': [
+                        'aws_ecr_repository.' + tf_repository,
+                        *('null_resource.' + image.tf_image for image in images),
+                        'null_resource.cleanup'
+                    ],
+                    'triggers': {
+                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root
+                    },
+                    'lifecycle': {
+                        'replace_triggered_by': [
+                            'aws_ecr_repository.' + tf_repository
+                        ]
+                    },
+                    'provisioner': {
+                        'local-exec': {
+                            'command': ' '.join([
+                                'python',
+                                f'{config.project_root}/scripts/copy_images_to_ecr.py',
+                                '--delete-unused',
+                                str(name)
+                            ]),
+                        }
+                    }
+                }
+                for (name, tf_repository), images in docker.images_by_tf_repository.items()
+                if config.docker_registry
+            }
         }
     }
 }
