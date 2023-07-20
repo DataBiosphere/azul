@@ -714,9 +714,10 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 
 ## 3.6 Private API
 
-Follow these steps to put a deployment's API Gateway in the GitLab VPC so that a 
-VPN connection is required to access the deployment. See
-[9.1 VPN access to GitLab](#91-vpn-access-to-gitlab) for details.
+Follow these steps to put a deployment's API Gateway in the GitLab VPC so that a
+VPN connection is required to access the deployment. See [9.1 VPN access to
+GitLab](#91-vpn-access-to-gitlab) for details. Read this entire section before
+following these steps.
 
 1. Destroy the current deployment (`make -C terraform destroy`).
 
@@ -725,6 +726,14 @@ VPN connection is required to access the deployment. See
 3. Set `AZUL_PRIVATE_API` to `1`.
  
 4. Redeploy (`make deploy`).
+
+Going in the opposite direction i.e., attempting to change `AZUL_PRIVATE_API`
+from `1` to `0` will result in `Cannot update endpoint from PRIVATE to EDGE`
+during `make deploy`. The error message will be shown for every REST API
+separately. It should be sufficient to simply `terraform taint` the REST API
+resources mentioned in the error messages and then to run `make deploy` again.
+It is possible that this also works when changing `AZUL_PRIVATE_API` from `0` to
+`1`. Try that first, before destroying the entire deployment.
 
 ### Troubleshooting
 

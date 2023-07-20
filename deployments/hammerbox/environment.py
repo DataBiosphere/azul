@@ -128,7 +128,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
         'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
-        'AZUL_PRIVATE_API': '1',
+        'AZUL_PRIVATE_API': '0',
 
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
@@ -184,5 +184,5 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '1055427471534-ienqfvg4fl2n7agcumn63b12npsjorlr.apps.googleusercontent.com',
     }
