@@ -53,6 +53,7 @@ from azul.es import (
 )
 from azul.indexer import (
     Bundle,
+    BundleFQIDJSON,
     BundlePartition,
     BundleUUID,
     BundleVersion,
@@ -623,8 +624,8 @@ class IndexService(DocumentService):
             transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
             bundles = [
-                dict(uuid=c.coordinates.bundle.uuid,
-                     version=c.coordinates.bundle.version)
+                BundleFQIDJSON(uuid=c.coordinates.bundle.uuid,
+                               version=c.coordinates.bundle.version)
                 for c in contributions
             ]
             # FIXME: Replace hard coded limit with a config property

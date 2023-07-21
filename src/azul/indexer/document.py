@@ -40,6 +40,7 @@ from azul.enums import (
 )
 from azul.indexer import (
     BundleFQID,
+    BundleFQIDJSON,
     SimpleSourceSpec,
     SourceJSON,
     SourceRef,
@@ -992,7 +993,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
     sources: set[DocumentSource]
-    bundles: Optional[list[JSON]]
+    bundles: Optional[list[BundleFQIDJSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
 
@@ -1008,7 +1009,7 @@ class Aggregate(Document[AggregateCoordinates]):
                  version: Optional[int],
                  sources: set[SourceRef[SimpleSourceSpec, SourceRef]],
                  contents: Optional[JSON],
-                 bundles: Optional[list[JSON]],
+                 bundles: Optional[list[BundleFQIDJSON]],
                  num_contributions: int) -> None: ...
 
     def __attrs_post_init__(self):
