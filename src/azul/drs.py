@@ -52,7 +52,11 @@ def drs_object_url_path(*, object_id: str, access_id: str = None) -> str:
     '/ga4gh/drs/v1/objects/abc/access/123'
     """
     drs_url = '/ga4gh/drs/v1/objects'
-    return '/'.join((drs_url, object_id, *(('access', access_id) if access_id else ())))
+    return '/'.join((
+        drs_url,
+        object_id,
+        *(('access', access_id) if access_id else ())
+    ))
 
 
 def dos_object_url_path(object_id: str) -> str:
