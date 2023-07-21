@@ -1,6 +1,13 @@
 ARG registry
 FROM ${registry}docker.io/library/python:3.9.17-bullseye
 
+# Increment the value of this variable to ensure that all installed OS packages
+# are updated.
+#
+ENV azul_docker_image_version=1
+RUN apt-get update \
+    && apt-get upgrade -y
+
 RUN curl -o /usr/bin/docker-credential-ecr-login \
     https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-amd64/docker-credential-ecr-login \
     && printf 'c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db /usr/bin/docker-credential-ecr-login\n' | sha256sum -c \
