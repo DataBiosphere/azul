@@ -694,6 +694,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **self._entity(project),
             'project_title': project.project_title,
+            # FIXME: Omit large project fields from non-project contributions
+            #        https://github.com/DataBiosphere/azul/issues/5346
             'project_description': project.project_description,
             'project_short_name': project.project_short_name,
             'laboratory': list(laboratories),

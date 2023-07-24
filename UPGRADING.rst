@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5292 Update/harden docker.elastic.co/elasticsearch/elasticsearch
+=================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5407 False positive for unauthorized alarm from MandoService
 =============================================================
 
