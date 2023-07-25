@@ -50,8 +50,6 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK}
 
 ARG make_target
 
-ARG cache_seed
-
 RUN make virtualenv \
     && source .venv/bin/activate \
     && make $make_target \
