@@ -1,3 +1,7 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from collections import (
     namedtuple,
 )
@@ -26,9 +30,18 @@ import urllib3
 
 from azul import (
     RequirementError,
+    cache,
+    cached_property,
     mutable_furl,
     reject,
     require,
+)
+from azul.http import (
+    http_client,
+)
+from azul.types import (
+    MutableJSON,
+    MutableJSONs,
 )
 
 log = logging.getLogger(__name__)
@@ -52,7 +65,11 @@ def drs_object_url_path(*, object_id: str, access_id: str = None) -> str:
     '/ga4gh/drs/v1/objects/abc/access/123'
     """
     drs_url = '/ga4gh/drs/v1/objects'
-    return '/'.join((drs_url, object_id, *(('access', access_id) if access_id else ())))
+    return '/'.join((
+        drs_url,
+        object_id,
+        *(('access', access_id) if access_id else ())
+    ))
 
 
 def dos_object_url_path(object_id: str) -> str:
@@ -74,9 +91,144 @@ class Access:
     headers: Optional[Mapping[str, str]] = None
 
 
+class DRSURI(metaclass=ABCMeta):
+
+    @classmethod
+    def parse(cls, drs_uri: str) -> 'DRSURI':
+        prefix = 'drs://'
+        require(drs_uri.startswith(prefix), drs_uri)
+        # "The colon character is not allowed in a hostname-based DRS URI".
+        #
+        # https://ga4gh.github.io/data-repository-service-schemas/preview/develop/docs/#_drs_uris
+        #
+        subcls = CompactDRSURI if drs_uri.find(':', len(prefix)) >= 0 else RegularDRSURI
+        return subcls.parse(drs_uri)
+
+    @abstractmethod
+    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> str:
+        """
+        Translate the DRS URI into a DRS URL. All query params included in the
+        DRS URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
+        """
+        raise NotImplementedError
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True, slots=True)
+class RegularDRSURI(DRSURI):
+    uri: furl
+
+    def __attrs_post_init__(self):
+        assert self.uri.scheme == 'drs', self.uri
+
+    @classmethod
+    def parse(cls, drs_uri: str) -> 'RegularDRSURI':
+        return cls(uri=furl(drs_uri))
+
+    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> str:
+        url = self.uri.copy().set(scheme='https')
+        url.set(path=drs_object_url_path(object_id=one(self.uri.path.segments),
+                                         access_id=access_id))
+        return str(url)
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True, slots=True)
+class CompactDRSURI(DRSURI):
+    """
+    So-called DRS "URIs" [1] for Compact Identifiers [2] are NOT URIs according
+    to RFC 3986 [3] so we can't use off-the-shelf URI parsers.
+
+    [1] https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.3.0/docs/
+
+    [2] https://www.nature.com/articles/sdata201829
+
+    [3] https://datatracker.ietf.org/doc/html/rfc3986
+    """
+    namespace: str
+    accession: str
+
+    def __attrs_post_init__(self):
+        assert '/' not in self.namespace and '?' not in self.accession, self
+
+    @classmethod
+    def parse(cls, drs_uri: str) -> 'CompactDRSURI':
+        scheme, netloc = drs_uri.split('://', 1)
+        # Compact identifier-based URIs can be hard to parse when following
+        # RFC3986, with the 'namespace:accession' part matching either the
+        # heir-part or path production depending if the optional provider code
+        # and following slash is included.
+        #
+        # https://ga4gh.github.io/data-repository-service-schemas/preview/develop/docs/#compact-identifier-based-drs-uris
+        #
+        prefix, accession = netloc.split(':', 1)
+        reject('/' in prefix,
+               'Compact identifiers with provider codes are not supported', drs_uri)
+        reject('?' in accession,
+               'Compact identifiers must not contain query parameters', drs_uri)
+        return cls(namespace=prefix,
+                   accession=accession)
+
+    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> str:
+        url = client.id_client.resolve(self.namespace, self.accession)
+        # The URL pattern registered at identifiers.org ought to replicate the
+        # DRS spec, but we have to re-create the path using the spec because the
+        # registered pattern does not support embedding the access ID.
+        require(str(url.path) == drs_object_url_path(object_id=self.accession),
+                'Unexpected DRS URL format', url)
+        url.set(path=drs_object_url_path(object_id=self.accession, access_id=access_id))
+        return str(url)
+
+
+class IdentifiersDotOrgClient:
+
+    def resolve(self, prefix: str, accession: str) -> mutable_furl:
+        namespace_id = self._prefix_to_namespace(prefix)
+        log.info('Resolved prefix %r to namespace ID %r', prefix, namespace_id)
+        resource_name, url_pattern = self._namespace_to_host(namespace_id)
+        log.info('Obtained URL pattern %r from resource %r', url_pattern, resource_name)
+        placeholder = '{$id}'
+        require(placeholder in url_pattern, url_pattern)
+        url = url_pattern.replace(placeholder, accession)
+        return furl(url)
+
+    @cached_property
+    def _http_client(self) -> urllib3.PoolManager:
+        return http_client()
+
+    _api_url = 'https://registry.api.identifiers.org/restApi/'
+
+    @cache
+    def _prefix_to_namespace(self, prefix: str) -> str:
+        prefix_info = self._api_request('namespaces/search/findByPrefix', prefix=prefix)
+        return furl(prefix_info['_links']['self']['href']).path.segments[-1]
+
+    @cache
+    def _namespace_to_host(self, namespace_id: str) -> tuple[str, str]:
+        namespace_info = self._api_request('resources/search/findAllByNamespaceId',
+                                           id=namespace_id)
+        resources: MutableJSONs = namespace_info['_embedded']['resources']
+        resource = one(resources)
+        return resource['name'], resource['urlPattern']
+
+    def _api_request(self, path: str, **args) -> MutableJSON:
+        url = furl(self._api_url).add(path=path, args=args)
+        response = self._request(str(url))
+        require(response.status == 200)
+        return json.loads(response.data)
+
+    def _request(self, url: str) -> urllib3.HTTPResponse:
+        log.info('GET %s …', url)
+        response = self._http_client.request('GET', url)
+        log.info('-> %r %r %r', response.status, response.data, response.headers)
+        return response
+
+
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class DRSClient:
     http_client: urllib3.PoolManager
+
+    @cached_property
+    def id_client(self) -> IdentifiersDotOrgClient:
+        return IdentifiersDotOrgClient()
 
     def get_object(self,
                    drs_uri: str,
@@ -89,33 +241,8 @@ class DRSClient:
         """
         return self._get_object(drs_uri, access_method)
 
-    def _uri_to_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
-        """
-        Translate a DRS URI into a DRS URL. All query params included in the DRS
-        URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
-        Only hostname-based DRS URIs (drs://<hostname>/<id>) are supported while
-        compact, identifier-based URIs (drs://[provider_code/]namespace:accession)
-        are not.
-        """
-        parsed = furl(drs_uri)
-        scheme = 'drs'
-        require(parsed.scheme == scheme,
-                f'The URI {drs_uri!r} does not have the {scheme!r} scheme')
-        # "The colon character is not allowed in a hostname-based DRS URI".
-        # https://ga4gh.github.io/data-repository-service-schemas/preview/develop/docs/#_drs_uris
-        # It is worth noting that compact identifier-based URI can be hard to
-        # parse when following RFC3986, with the 'namespace:accession' part
-        # matching either the heir-part or path production depending if the
-        # optional provider code and following slash is included.
-        reject(':' in parsed.netloc or ':' in str(parsed.path),
-               f'The DRS URI {drs_uri!r} is not hostname-based')
-        parsed.scheme = 'https'
-        object_id = one(parsed.path.segments)
-        parsed.path.set(drs_object_url_path(object_id=object_id, access_id=access_id))
-        return str(parsed)
-
     def _get_object(self, drs_uri: str, access_method: AccessMethod) -> Access:
-        url = self._uri_to_url(drs_uri)
+        url = DRSURI.parse(drs_uri).to_url(self)
         while True:
             response = self._request(url)
             if response.status == 200:
@@ -155,7 +282,7 @@ class DRSClient:
                            access_id: str,
                            access_method: AccessMethod
                            ) -> Access:
-        url = self._uri_to_url(drs_uri, access_id=access_id)
+        url = DRSURI.parse(drs_uri).to_url(self, access_id)
         while True:
             response = self._request(url)
             if response.status == 200:
