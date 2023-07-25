@@ -34,6 +34,7 @@ build_image:
   # requirements*.txt, common.mk and the Makefile.
   extends: .on_push
   stage: build_image
+  timeout: 6m
   rules:
     - if: $CI_COMMIT_BRANCH
   script:
@@ -65,12 +66,14 @@ build_image:
 setup:
   extends: .base_on_push
   stage: setup
+  timeout: 30s
   script:
     - python scripts/github_status_check.py "${status_context}" pending
 
 test:
   extends: .base_on_push
   stage: test
+  timeout: 1h
   script:
     - make format  # Any ill-formatted sources, ...
     - test "$azul_is_sandbox" = 1 && make requirements_update  # ... stale transitive dependencies ...
@@ -82,6 +85,7 @@ test:
 deploy:
   extends: .base_on_push
   stage: deploy
+  timeout: 45m
   script:
     - make auto_deploy
     - make create
@@ -92,6 +96,7 @@ deploy:
 deploy_browser:
   extends: .base_on_push
   stage: deploy
+  timeout: 5m
   needs:
     - build_image
     - deploy
@@ -106,8 +111,11 @@ deploy_browser:
       - terraform/browser/plan.json
 
 integration_test:
+  # FIXME: Use a dynamic GitLab job timeout based on deployment
+  #        https://github.com/DataBiosphere/azul/issues/5404
   extends: .base_on_push
   stage: integration_test
+  timeout: 2h
   script:
     - make integration_test
 
@@ -115,6 +123,7 @@ on_success:
   extends: .base_on_push
   stage: teardown
   when: on_success
+  timeout: 30s
   script:
     - python scripts/github_status_check.py "${status_context}" success
 
@@ -122,28 +131,34 @@ on_failure:
   extends: .base_on_push
   stage: teardown
   when: on_failure
+  timeout: 30s
   script:
     - python scripts/github_status_check.py "${status_context}" failure
 
 early_reindex:
+  # FIXME: Use a dynamic GitLab job timeout based on deployment
+  #        https://github.com/DataBiosphere/azul/issues/5404
   extends: .base_on_push
   stage: early_reindex
   when: manual
-  timeout: 24h
+  timeout: 4d
   script:
     - make reindex
 
 reindex:
+  # FIXME: Use a dynamic GitLab job timeout based on deployment
+  #        https://github.com/DataBiosphere/azul/issues/5404
   extends: .base_on_push
   stage: reindex
   when: manual
-  timeout: 24h
+  timeout: 4d
   script:
     - make reindex
 
 sell_unused_slots:
   extends: .base
   stage: schedule
+  timeout: 30s
   rules:
     - if: $CI_PIPELINE_SOURCE == 'schedule'
         && $azul_gitlab_schedule == 'sell_unused_slots'
@@ -153,6 +168,7 @@ sell_unused_slots:
 fedramp_inventory:
   extends: .base
   stage: schedule
+  timeout: 5m
   rules:
     - if: $CI_PIPELINE_SOURCE == 'schedule'
         && $azul_gitlab_schedule == 'fedramp_inventory'
