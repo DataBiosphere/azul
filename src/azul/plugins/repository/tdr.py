@@ -125,6 +125,8 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
                        authentication: Optional[Authentication],
                        tdr_callback: Callable[[TDRClient], T]
                        ) -> T:
+        # The line below raises UnauthorizedError for invalid tokens. We don't
+        # want to fall back to anonymous authentication in that case.
         tdr = self._user_authenticated_tdr(authentication)
         try:
             return tdr_callback(tdr)

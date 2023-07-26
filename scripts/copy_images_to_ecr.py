@@ -14,10 +14,14 @@ from typing import (
 )
 
 import docker
+from more_itertools import (
+    partition,
+)
 import posix_ipc
 
 from azul import (
     config,
+    reject,
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
@@ -82,7 +86,16 @@ def copy_image(src: str):
 
 
 def make_platform_tag(tag, platform: Platform):
-    return tag + '-' + str(platform).replace('/', '-')
+    reject(is_platform_tag(tag), 'Input already looks like a platform tag', tag)
+    return tag + platform_tag_suffix(platform)
+
+
+def is_platform_tag(tag):
+    return any(tag.endswith(platform_tag_suffix(p)) for p in platforms)
+
+
+def platform_tag_suffix(platform):
+    return '-' + str(platform).replace('/', '-')
 
 
 def delete_unused_images(repository):
@@ -100,16 +113,25 @@ def delete_unused_images(repository):
     )
     log.info('Listing images in repository %r', repository)
     image_ids = aws.ecr.list_images(repositoryName=repository)['imageIds']
-    image_ids_to_delete = [
+    unused_image_ids = [
         image_id
         for image_id in image_ids
         if image_id.get('imageTag') not in expected_tags
     ]
-    if image_ids_to_delete:
-        log.info('Deleting images %r from repository %r',
-                 image_ids_to_delete, repository)
-        aws.ecr.batch_delete_image(repositoryName=repository,
-                                   imageIds=image_ids_to_delete)
+    if unused_image_ids:
+        # ECR enforces referential integrity so we have to delete index
+        # images before we delete the platform images they refer to.
+        def is_platform_image(image_id):
+            return is_platform_tag(image_id['imageTag'])
+
+        batches = map(list, partition(is_platform_image, unused_image_ids))
+        for batch in batches:
+            if batch:
+                log.info('Deleting images %r from repository %r', batch, repository)
+                response = aws.ecr.batch_delete_image(repositoryName=repository,
+                                                      imageIds=batch)
+                reject(bool(response['failures']),
+                       'Failed to delete images', response['failures'])
     else:
         log.info('No stale images found, nothing to delete')
 

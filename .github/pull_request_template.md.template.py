@@ -127,9 +127,7 @@ class T(Enum):
             {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
-                # No sandbox for anvilprod, either, even though it's a defacto
-                # non-production deployment at the moment
-                'anvilprod': None
+                'anvilprod': 'hammerbox'
             }
         )
 

@@ -60,6 +60,9 @@ from zipfile import (
 )
 
 import attr
+from chalice import (
+    UnauthorizedError,
+)
 import chalice.cli
 import fastavro
 from furl import (
@@ -111,8 +114,10 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
+    SourceJSON,
     SourceRef,
     SourcedBundleFQID,
+    SourcedBundleFQIDJSON,
 )
 from azul.indexer.document import (
     EntityReference,
@@ -141,6 +146,7 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.plugins.repository.tdr_anvil import (
+    AnvilBundleFQIDJSON,
     BundleEntityType,
 )
 from azul.portal_service import (
@@ -157,6 +163,7 @@ from azul.terra import (
     ServiceAccountCredentialsProvider,
     TDRClient,
     TDRSourceSpec,
+    UserCredentialsProvider,
 )
 from azul.types import (
     JSON,
@@ -978,23 +985,21 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for hit in hits:
             source = one(hit['sources'])
             for bundle in hit.get('bundles', ()):
-                bundle_fqid = dict(
-                    # FIXME: Encapsulate source JSON representations
-                    #        https://github.com/databiosphere/azul/issues/3889
-                    source=dict(id=source['sourceId'], spec=source['sourceSpec']),
-                    uuid=bundle['bundleUuid'],
-                    version=bundle['bundleVersion']
-                )
+                bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
+                                                    version=bundle['bundleVersion'],
+                                                    source=SourceJSON(id=source['sourceId'],
+                                                                      spec=source['sourceSpec']))
                 if config.is_anvil_enabled(catalog):
                     is_supplementary = only(set(chain.from_iterable(
                         always_iterable(file['is_supplementary'])
                         for file in hit['files']
                     )), default=False)
+                    bundle_fqid = cast(AnvilBundleFQIDJSON, bundle_fqid)
                     bundle_fqid['entity_type'] = (
-                        BundleEntityType.supplementary.value
+                        BundleEntityType.supplementary
                         if is_supplementary else
-                        BundleEntityType.primary.value
-                    )
+                        BundleEntityType.primary
+                    ).value
                 bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
                 indexed_fqids.add(bundle_fqid)
         return indexed_fqids
@@ -1142,7 +1147,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             public_source_ids = list_source_ids()
         with self._unregistered_service_account_credentials:
             self.assertEqual(public_source_ids, list_source_ids())
-        with self._authorization_context(TDRClient.for_registered_user(OAuth2('foo'))):
+        invalid_auth = OAuth2('foo')
+        with self.assertRaises(UnauthorizedError):
+            TDRClient.for_registered_user(invalid_auth)
+        invalid_provider = UserCredentialsProvider(invalid_auth)
+        invalid_client = TDRClient(credentials_provider=invalid_provider)
+        with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())

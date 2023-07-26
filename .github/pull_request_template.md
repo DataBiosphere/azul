@@ -110,16 +110,22 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Pushed PR branch to GitHub
 - [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `sandbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
 - [ ] Deleted unreferenced indices in `anvilbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
+- [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
 - [ ] Started reindex in `sandbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Started reindex in `anvilbox` <sub>or this PR does not require reindexing `sandbox`</sub>
+- [ ] Started reindex in `hammerbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `anvilbox` <sub>or this PR does not require reindexing `sandbox`</sub>
+- [ ] Checked for failures in `hammerbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Added commit title tags to merge commit title

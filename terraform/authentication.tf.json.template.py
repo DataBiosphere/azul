@@ -13,8 +13,8 @@ emit_tf({
             "google_service_account": {
                 'azul' + service_account.value: {
                     "project": "${local.google_project}",
-                    "account_id": service_account.id,
-                    "display_name": service_account.id,
+                    "account_id": service_account.id(config),
+                    "display_name": service_account.id(config),
                     "description": f"Azul service account in {config.deployment_stage}",
                     "provisioner": [
                         {

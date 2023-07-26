@@ -1097,6 +1097,14 @@ class Config:
         """
         return self._lambda_env(outsource=True)
 
+    #: A set of names of other environment variables to export to the Lambda
+    #: function environment, in addition to those starting in `AZUL_`
+
+    lambda_env_variables = frozenset([
+        'BOTO_DISABLE_COMMONNAME',
+        'GOOGLE_PROJECT'
+    ])
+
     def _lambda_env(self, *, outsource: bool) -> dict[str, str]:
         return {
             k: v
@@ -1106,7 +1114,7 @@ class Config:
                     k.startswith('AZUL_')
                     # FIXME: Remove once we upgrade to botocore 1.28.x
                     #        https://github.com/DataBiosphere/azul/issues/4560
-                    or k == 'BOTO_DISABLE_COMMONNAME'
+                    or k in self.lambda_env_variables
                 )
                 and (len(v) > 128) == outsource)
         }
@@ -1163,7 +1171,7 @@ class Config:
 
     @property
     def terra_client_timeout(self) -> float:
-        value = os.environ['AZUL_TERRA_TIMEOUT']
+        value = self.environ['AZUL_TERRA_TIMEOUT']
         short_timeout, long_timeout = map(float, value.split(':'))
         require(short_timeout <= long_timeout, short_timeout, long_timeout)
         return short_timeout if self._timing_is_restricted else long_timeout
@@ -1209,9 +1217,8 @@ class Config:
         public = '_public'
         unregistered = '_unregistered'
 
-        @property
-        def id(self) -> str:
-            return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT' + self.value.upper()]
+        def id(self, config: 'Config') -> str:
+            return config.environ['AZUL_GOOGLE_SERVICE_ACCOUNT' + self.value.upper()]
 
         @property
         def secret_name(self) -> str:
@@ -1275,7 +1282,7 @@ class Config:
 
     @property
     def bigquery_batch_mode(self) -> bool:
-        return self._boolean(os.environ['AZUL_BIGQUERY_BATCH_MODE'])
+        return self._boolean(self.environ['AZUL_BIGQUERY_BATCH_MODE'])
 
     def notifications_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_notifications_queue_name(retry=retry, fail=fail)
@@ -1391,7 +1398,7 @@ class Config:
 
     @property
     def google_oauth2_client_id(self) -> Optional[str]:
-        return os.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
+        return self.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
 
     @property
     def monitoring_email(self) -> str:
@@ -1439,7 +1446,7 @@ class Config:
     # the `shared` TF component.
 
     docker_images = [
-        'docker.elastic.co/elasticsearch/elasticsearch:7.10.1',
+        'docker.io/ucscgi/azul-elasticsearch:7.17.10-2',
         'docker.elastic.co/kibana/kibana-oss:7.10.2',
         'docker.io/clamav/clamav:1.1.0-1',
         'docker.io/cllunsford/aws-signing-proxy:0.2.2',
