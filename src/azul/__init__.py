@@ -1180,7 +1180,12 @@ class Config:
     def terra_client_retries(self) -> int:
         return 0 if self._timing_is_restricted else 2
 
-    term_re = re.compile(r'[a-z][a-z0-9_]{1,28}[a-z0-9]')
+    # The length limit is more or less arbitrary. It was determined a few years
+    # ago by looking at the resource name length limits for various types of AWS
+    # resources. We've since increased the length limit from 30 to 40 and will
+    # deal with any API errors resulting from situations which we generate a
+    # qualified resource name that is too long for AWS.
+    term_re = re.compile(r'[a-z][a-z0-9_]{1,38}[a-z0-9]')
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
         value = self.environ.get(env_var_name, default='')
