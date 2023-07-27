@@ -391,10 +391,16 @@ class TestTDRSourceList(AzulUnitTestCase):
                                  attribute='urlopen',
                                  **kwargs)
 
+    def _patch_client_id(self):
+        return patch.object(type(config),
+                            'google_oauth2_client_id',
+                            '123-foobar.apps.googleusercontent.com')
+
     def test_auth_list_snapshots(self):
         for token in ('mock_token_1', 'mock_token_2'):
-            with self._patch_urlopen(new=self._mock_google_oauth_tokeninfo()):
-                tdr_client = TDRClient.for_registered_user(OAuth2(token))
+            with self._patch_client_id():
+                with self._patch_urlopen(new=self._mock_google_oauth_tokeninfo()):
+                    tdr_client = TDRClient.for_registered_user(OAuth2(token))
             expected_snapshots = {
                 snapshot['id']: snapshot['name']
                 for snapshot in self._mock_snapshots(token)
