@@ -21,6 +21,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
     get_args,
 )
 
@@ -39,7 +40,9 @@ from azul.enums import (
 )
 from azul.indexer import (
     BundleFQID,
+    BundleFQIDJSON,
     SimpleSourceSpec,
+    SourceJSON,
     SourceRef,
 )
 from azul.openapi import (
@@ -958,7 +961,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
         self = super().from_json(coordinates=coordinates,
                                  document=document,
                                  version=version,
-                                 source=DocumentSource.from_json(document['source']),
+                                 source=DocumentSource.from_json(cast(SourceJSON, document['source'])),
                                  **kwargs)
         assert isinstance(self, Contribution)
         assert self.coordinates.document_id == document['document_id']
@@ -990,7 +993,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
     sources: set[DocumentSource]
-    bundles: Optional[list[JSON]]
+    bundles: Optional[list[BundleFQIDJSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
 
@@ -1006,7 +1009,7 @@ class Aggregate(Document[AggregateCoordinates]):
                  version: Optional[int],
                  sources: set[SourceRef[SimpleSourceSpec, SourceRef]],
                  contents: Optional[JSON],
-                 bundles: Optional[list[JSON]],
+                 bundles: Optional[list[BundleFQIDJSON]],
                  num_contributions: int) -> None: ...
 
     def __attrs_post_init__(self):
@@ -1040,7 +1043,8 @@ class Aggregate(Document[AggregateCoordinates]):
                                  document=document,
                                  version=version,
                                  num_contributions=document['num_contributions'],
-                                 sources=map(DocumentSource.from_json, document['sources']),
+                                 sources=map(DocumentSource.from_json,
+                                             cast(list[SourceJSON], document['sources'])),
                                  bundles=document.get('bundles'))
         assert isinstance(self, Aggregate)
         return self

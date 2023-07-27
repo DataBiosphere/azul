@@ -173,6 +173,8 @@ def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+# FIXME: Remove redundant prefix from name
+#        https://github.com/DataBiosphere/azul/issues/5337
 @app.schedule('rate(1 minute)', name='indexercachehealth')
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
@@ -245,12 +247,16 @@ def post_notification(catalog: CatalogName, action: str):
 
 
 @app.on_sqs_message(queue=config.notifications_queue_name(), batch_size=1)
+@app.threshold(errors=int(config.contribution_concurrency(retry=False) * 2 / 3),
+               throttles=int(15000 / config.contribution_concurrency(retry=False)))
 def contribute(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event)
 
 
 @app.on_sqs_message(queue=config.tallies_queue_name(),
                     batch_size=IndexController.document_batch_size)
+@app.threshold(errors=int(config.aggregation_concurrency(retry=False) * 3),
+               throttles=int(9000 / config.aggregation_concurrency(retry=False)))
 def aggregate(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event)
 
@@ -260,6 +266,8 @@ def aggregate(event: chalice.app.SQSEvent):
 
 @app.on_sqs_message(queue=config.tallies_queue_name(retry=True),
                     batch_size=IndexController.document_batch_size)
+@app.threshold(errors=int(config.aggregation_concurrency(retry=True) * 1 / 16),
+               throttles=0)
 def aggregate_retry(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event, retry=True)
 
@@ -269,6 +277,8 @@ def aggregate_retry(event: chalice.app.SQSEvent):
 
 @app.on_sqs_message(queue=config.notifications_queue_name(retry=True),
                     batch_size=1)
+@app.threshold(errors=int(config.contribution_concurrency(retry=True) * 1 / 4),
+               throttles=int(15000 / config.contribution_concurrency(retry=True)))
 def contribute_retry(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event, retry=True)
 
