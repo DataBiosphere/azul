@@ -15,7 +15,6 @@ from operator import (
 from typing import (
     ClassVar,
     MutableSet,
-    cast,
 )
 from uuid import (
     UUID,
@@ -72,8 +71,8 @@ renamed_fields = {
 
 
 def write_pfb_entities(entities: Iterable[JSON], pfb_schema: JSON, path: str):
-    # fastavro doesn't know about our JSON type, hence the cast
-    parsed_schema = fastavro.parse_schema(cast(dict, pfb_schema))
+    assert isinstance(pfb_schema, dict)
+    parsed_schema = fastavro.parse_schema(pfb_schema)
     with open(path, 'w+b') as fh:
         # Writing the entities one at a time is ~2.5 slower, but makes it clear
         # which entities fail, which is useful for debugging.
@@ -575,7 +574,6 @@ def _entity_schema_recursive(field_types: FieldTypes,
             yield {
                 "name": field_name,
                 "namespace": namespace,
-                "default": None,
                 "type": ["string"],
                 "logicalType": "UUID"
             }
