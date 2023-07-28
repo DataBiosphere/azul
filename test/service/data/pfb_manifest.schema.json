@@ -887,7 +887,6 @@
                             ]
                         },
                         {
-                            "default": null,
                             "logicalType": "UUID",
                             "name": "uuid",
                             "namespace": "files",
@@ -1210,7 +1209,6 @@
                                             }
                                         },
                                         {
-                                            "default": null,
                                             "logicalType": "UUID",
                                             "name": "uuid",
                                             "namespace": "matrices.file",
@@ -1435,7 +1433,6 @@
                                             }
                                         },
                                         {
-                                            "default": null,
                                             "logicalType": "UUID",
                                             "name": "uuid",
                                             "namespace": "contributed_analyses.file",

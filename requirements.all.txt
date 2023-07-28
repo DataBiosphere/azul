@@ -30,7 +30,7 @@ docutils==0.16
 elasticsearch==7.10.1
 elasticsearch-dsl==7.4.0
 et-xmlfile==1.1.0
-fastavro==1.6.1
+fastavro==1.8.2
 flake8==5.0.4
 flask==2.3.2
 flask-basicauth==0.2.0
