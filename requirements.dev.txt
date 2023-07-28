@@ -18,7 +18,7 @@ openpyxl==3.0.6
 posix-ipc==1.1.1
 pygithub==1.56
 python-gitlab==3.13.0
-pyyaml==5.4.1  # can't upgrade beyond that b/c awscli 1.25.95 depends on PyYAML<5.5 and >=3.10
+pyyaml==6.0.1
 git+https://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
 responses==0.22.0
 strict-rfc3339==0.7
