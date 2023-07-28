@@ -19,12 +19,65 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#5139 CloudWatch metrics and alarms for GitLab EC2 instance
+===========================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5155 Update AnVIL catalogs in `anvilprod` with replacement snapshots
 =====================================================================
 
 Update the snapshots for any personal deployments that share an Elasticsearch
 domain with ``hammerbox``, using that deployment's ``environment.py`` as a
 template.
+
+
+#5413 Make anvildev and anvilbox public
+=======================================
+
+Operator
+~~~~~~~~
+
+The ``deploy`` job will fail for ``anvildev`` when building the merge commit on
+the ``develop`` branch. It may also fail for ``anvilbox`` when building the feature
+branch. The expected failure produces the following output::
+
+   ╷
+   │ Error: updating REST API (1yxdxpa3db): BadRequestException: Cannot update endpoint from PRIVATE to EDGE
+   │
+   │   with aws_api_gateway_rest_api.indexer,
+   │   on api_gateway.tf.json line 862, in resource[6].aws_api_gateway_rest_api[0].indexer:
+   │  862:                     }
+   │
+   ╵
+   ╷
+   │ Error: updating REST API (pmmwi1i8la): BadRequestException: Cannot update endpoint from PRIVATE to EDGE
+   │
+   │   with aws_api_gateway_rest_api.service,
+   │   on api_gateway.tf.json line 1467, in resource[24].aws_api_gateway_rest_api[0].service:
+   │ 1467:                     }
+   │
+   ╵
+
+To work around this, check out the respective branch and perform the commands
+below. If you have the feature branch checked out, you will need to prefix the
+``make`` invocations with ``CI_COMMIT_REF_NAME=develop``. ::
+
+   make lambdas
+   cd terraform
+   make validate
+   terraform taint aws_api_gateway_rest_api.indexer
+   terraform taint aws_api_gateway_rest_api.service
+
+Retry the ``deploy`` job on GitLab. It should succeed now. If the subsequent
+``integration_test`` job fails with 403 or 503 errors returned by the service or
+indexer, simply retry it. It appears that the edge distribution process in AWS
+is subject to several minutes of latency aka eventual consistency.
 
 
 #5292 Update/harden docker.elastic.co/elasticsearch/elasticsearch

@@ -972,8 +972,8 @@ on Gitlab might identify updated transitive requirements even though doing `make
 requirements_update` locally doesn't.
 
 This is a side effect of the Docker build cache on two different machines
-diverging to reflect different states on PyPI. This can be fixed by running
-`make requirements_update_force` instead.
+diverging to reflect different states on PyPI. This can be fixed by incrementing
+`azul_docker_image_version` in the Dockerfile.
 
 
 ##  Unable to re-register service account with SAM
