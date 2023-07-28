@@ -136,7 +136,7 @@ watchdog==2.1.9
 wcwidth==0.2.6
 websocket-client==1.6.1
 werkzeug==2.3.3
-wheel==0.38.0
+wheel==0.38.4
 wrapt==1.15.0
 xmltodict==0.13.0
 zipp==3.16.2
