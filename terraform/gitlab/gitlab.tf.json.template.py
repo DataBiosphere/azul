@@ -193,14 +193,9 @@ vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
 
 vpn_subnet = f'10.{42 + cidr_offset}.0.0/16'  # can't overlap VPC CIDR and subnet mask must be <= 22 bits
 
-# The name of the SSH keypair whose public key is to be deposited on the
-# instance by AWS
-#
-key_name = 'hannes@ucsc.edu'
-
 # The public key of that keypair
 #
-public_key = (
+administrator_key = (
     'ssh-rsa'
     ' '
     'AAAAB3NzaC1yc2EAAAADAQABAAABAQDhRBbejN2qT5+6nfpzxPTfTFuSDSiPrAyDKH+V/A9+Xw4ZT8Z3K4d0w0KlwjtRZ'
@@ -1171,7 +1166,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_key_pair': {
             'gitlab': {
                 'key_name': 'azul-gitlab',
-                'public_key': public_key
+                'public_key': administrator_key
             }
         },
         'aws_iam_role': {
