@@ -250,7 +250,7 @@ other_public_keys = {
 # deploying the `gitlab` component.
 
 clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
-dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
+dind_image = config.docker_registry + 'docker.io/library/docker:24.0.2-dind'
 gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.1.2-ce.0'
 runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.1.0'
 
