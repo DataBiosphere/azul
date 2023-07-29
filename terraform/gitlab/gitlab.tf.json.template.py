@@ -237,7 +237,9 @@ other_public_keys = {
     'dev': operator_keys,
     'anvildev': operator_keys,
     'anvilprod': operator_keys,
-    'prod': []
+    # FIXME: Change back to []
+    #        https://github.com/DataBiosphere/azul/issues/5408
+    'prod': operator_keys
 }
 
 # Note that a change to the image references here also requires updating
