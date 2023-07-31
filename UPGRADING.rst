@@ -19,6 +19,17 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#5408 Prepare for vacation
+==========================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5139 CloudWatch metrics and alarms for GitLab EC2 instance
 ===========================================================
 
@@ -153,6 +164,7 @@ Retry the ``deploy`` job on GitLab. It should succeed now. If the subsequent
 ``integration_test`` job fails with 403 or 503 errors returned by the service or
 indexer, simply retry it. It appears that the edge distribution process in AWS
 is subject to several minutes of latency aka eventual consistency.
+
 
 #5189 Delete unused Docker images from ECR
 ==========================================
