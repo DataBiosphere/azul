@@ -283,23 +283,23 @@ def pfb_metadata_entity(field_types: FieldTypes):
     Unfortunately Terra does not display the relations between the nodes.
     """
     return {
-        "id": None,
-        "name": "Metadata",
-        "object": {
-            "nodes": [
+        'id': None,
+        'name': 'Metadata',
+        'object': {
+            'nodes': [
                 {
-                    "name": field_type,
-                    "ontology_reference": "",
-                    "values": {},
-                    "links": [] if field_type == 'files' else [{
-                        "multiplicity": "MANY_TO_MANY",
-                        "dst": "files",
-                        "name": "files"
+                    'name': field_type,
+                    'ontology_reference': '',
+                    'values': {},
+                    'links': [] if field_type == 'files' else [{
+                        'multiplicity': 'MANY_TO_MANY',
+                        'dst': 'files',
+                        'name': 'files'
                     }],
-                    "properties": []
+                    'properties': []
                 } for field_type in field_types
             ],
-            "misc": {}
+            'misc': {}
         }
     }
 
@@ -308,10 +308,10 @@ def pfb_schema_from_field_types(field_types: FieldTypes) -> JSON:
     field_types = _inject_reference_handover_columns(field_types)
     entity_schemas = (
         {
-            "name": entity_type,
-            "namespace": "",
-            "type": "record",
-            "fields": list(_entity_schema_recursive(field_type, entity_type))
+            'name': entity_type,
+            'namespace': '',
+            'type': 'record',
+            'fields': list(_entity_schema_recursive(field_type, entity_type))
         }
         for entity_type, field_type in field_types.items()
         # We skip primitive top-level fields like total_estimated_cells
@@ -333,102 +333,102 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
     :return: The complete and valid Avro schema
     """
     return {
-        "type": "record",
-        "name": "Entity",
-        "fields": [
+        'type': 'record',
+        'name': 'Entity',
+        'fields': [
             {
-                "name": "id",
-                "type": ["null", "string"],
-                "default": None
+                'name': 'id',
+                'type': ['null', 'string'],
+                'default': None
             },
             {
-                "name": "name",
-                "type": "string"
+                'name': 'name',
+                'type': 'string'
             },
             {
-                "name": "object",
-                "type": [
+                'name': 'object',
+                'type': [
                     {
-                        "type": "record",
-                        "name": "Metadata",
-                        "fields": [
+                        'type': 'record',
+                        'name': 'Metadata',
+                        'fields': [
                             {
-                                "name": "nodes",
-                                "type": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "record",
-                                        "name": "Node",
-                                        "fields": [
+                                'name': 'nodes',
+                                'type': {
+                                    'type': 'array',
+                                    'items': {
+                                        'type': 'record',
+                                        'name': 'Node',
+                                        'fields': [
                                             {
-                                                "name": "name",
-                                                "type": "string"
+                                                'name': 'name',
+                                                'type': 'string'
                                             },
                                             {
-                                                "name": "ontology_reference",
-                                                "type": "string",
+                                                'name': 'ontology_reference',
+                                                'type': 'string',
                                             },
                                             {
-                                                "name": "values",
-                                                "type": {
-                                                    "type": "map",
-                                                    "values": "string",
+                                                'name': 'values',
+                                                'type': {
+                                                    'type': 'map',
+                                                    'values': 'string',
                                                 },
                                             },
                                             {
-                                                "name": "links",
-                                                "type": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "record",
-                                                        "name": "Link",
-                                                        "fields": [
+                                                'name': 'links',
+                                                'type': {
+                                                    'type': 'array',
+                                                    'items': {
+                                                        'type': 'record',
+                                                        'name': 'Link',
+                                                        'fields': [
                                                             {
-                                                                "name": "multiplicity",
-                                                                "type": {
-                                                                    "type": "enum",
-                                                                    "name": "Multiplicity",
-                                                                    "symbols": [
-                                                                        "ONE_TO_ONE",
-                                                                        "ONE_TO_MANY",
-                                                                        "MANY_TO_ONE",
-                                                                        "MANY_TO_MANY",
+                                                                'name': 'multiplicity',
+                                                                'type': {
+                                                                    'type': 'enum',
+                                                                    'name': 'Multiplicity',
+                                                                    'symbols': [
+                                                                        'ONE_TO_ONE',
+                                                                        'ONE_TO_MANY',
+                                                                        'MANY_TO_ONE',
+                                                                        'MANY_TO_MANY',
                                                                     ],
                                                                 },
                                                             },
                                                             {
-                                                                "name": "dst",
-                                                                "type": "string",
+                                                                'name': 'dst',
+                                                                'type': 'string',
                                                             },
                                                             {
-                                                                "name": "name",
-                                                                "type": "string",
+                                                                'name': 'name',
+                                                                'type': 'string',
                                                             },
                                                         ],
                                                     },
                                                 },
                                             },
                                             {
-                                                "name": "properties",
-                                                "type": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "record",
-                                                        "name": "Property",
-                                                        "fields": [
+                                                'name': 'properties',
+                                                'type': {
+                                                    'type': 'array',
+                                                    'items': {
+                                                        'type': 'record',
+                                                        'name': 'Property',
+                                                        'fields': [
                                                             {
-                                                                "name": "name",
-                                                                "type": "string",
+                                                                'name': 'name',
+                                                                'type': 'string',
                                                             },
                                                             {
-                                                                "name": "ontology_reference",
-                                                                "type": "string",
+                                                                'name': 'ontology_reference',
+                                                                'type': 'string',
                                                             },
                                                             {
-                                                                "name": "values",
-                                                                "type": {
-                                                                    "type": "map",
-                                                                    "values": "string",
+                                                                'name': 'values',
+                                                                'type': {
+                                                                    'type': 'map',
+                                                                    'values': 'string',
                                                                 },
                                                             },
                                                         ],
@@ -440,10 +440,10 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                                 },
                             },
                             {
-                                "name": "misc",
-                                "type": {
-                                    "type": "map",
-                                    "values": "string"
+                                'name': 'misc',
+                                'type': {
+                                    'type': 'map',
+                                    'values': 'string'
                                 },
                             },
                         ],
@@ -452,25 +452,25 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                 ]
             },
             {
-                "name": "relations",
-                "type": {
-                    "type": "array",
-                    "items": {
-                        "type": "record",
-                        "name": "Relation",
-                        "fields": [
+                'name': 'relations',
+                'type': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'record',
+                        'name': 'Relation',
+                        'fields': [
                             {
-                                "name": "dst_id",
-                                "type": "string"
+                                'name': 'dst_id',
+                                'type': 'string'
                             },
                             {
-                                "name": "dst_name",
-                                "type": "string"
+                                'name': 'dst_name',
+                                'type': 'string'
                             },
                         ],
                     },
                 },
-                "default": [],
+                'default': [],
             },
         ],
     }
@@ -531,16 +531,16 @@ def _entity_schema_recursive(field_types: FieldTypes,
 
         if isinstance(field_type, dict):
             yield {
-                "name": field_name,
-                "namespace": namespace,
-                "type": {
+                'name': field_name,
+                'namespace': namespace,
+                'type': {
                     # This is always an array, even if singleton is passed in
-                    "type": "array",
-                    "items": {
-                        "name": field_name,
-                        "namespace": namespace,
-                        "type": "record",
-                        "fields": list(_entity_schema_recursive(field_type, *path, field_name))
+                    'type': 'array',
+                    'items': {
+                        'name': field_name,
+                        'namespace': namespace,
+                        'type': 'record',
+                        'fields': list(_entity_schema_recursive(field_type, *path, field_name))
                     }
                 }
             }
@@ -557,37 +557,37 @@ def _entity_schema_recursive(field_types: FieldTypes,
             #        https://github.com/DataBiosphere/azul/issues/4094
             if path[0] == 'files' and not plural or field_name in exceptions:
                 yield {
-                    "name": field_name,
-                    "namespace": namespace,
-                    "type": _nullable_to_pfb_types[field_type],
+                    'name': field_name,
+                    'namespace': namespace,
+                    'type': _nullable_to_pfb_types[field_type],
                 }
             else:
                 yield {
-                    "name": field_name,
-                    "namespace": namespace,
-                    "type": {
-                        "type": "array",
-                        "items": _nullable_to_pfb_types[field_type],
+                    'name': field_name,
+                    'namespace': namespace,
+                    'type': {
+                        'type': 'array',
+                        'items': _nullable_to_pfb_types[field_type],
                     }
                 }
         elif field_type is pass_thru_uuid4:
             yield {
-                "name": field_name,
-                "namespace": namespace,
-                "type": ["string"],
-                "logicalType": "UUID"
+                'name': field_name,
+                'namespace': namespace,
+                'type': ['string'],
+                'logicalType': 'UUID'
             }
         elif isinstance(field_type, ClosedRange):
             yield {
-                "name": field_name,
-                "namespace": namespace,
-                "type": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            int: "long",
-                            float: "double"
+                'name': field_name,
+                'namespace': namespace,
+                'type': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'array',
+                        'items': {
+                            int: 'long',
+                            float: 'double'
                         }[field_type.ends_type.native_type]
                     }
                 }
@@ -597,29 +597,29 @@ def _entity_schema_recursive(field_types: FieldTypes,
         #        https://github.com/DataBiosphere/azul/issues/4094
         elif field_type is value_and_unit:
             yield {
-                "name": field_name,
-                "namespace": namespace,
-                "type": {
-                    "name": field_name,
-                    "namespace": namespace,
-                    "type": "array",
-                    "items": [
+                'name': field_name,
+                'namespace': namespace,
+                'type': {
+                    'name': field_name,
+                    'namespace': namespace,
+                    'type': 'array',
+                    'items': [
                         # FIXME: Change 'string' to 'null'
                         #        https://github.com/DataBiosphere/azul/issues/2462
-                        "string",
+                        'string',
                         {
                             # FIXME: Why do we need to repeat `name` and `namespace`
                             #        with the same values at three different depths?
                             #        https://github.com/DataBiosphere/azul/issues/4094
-                            "name": field_name,
-                            "namespace": namespace,
-                            "type": "record",
-                            "fields": [
+                            'name': field_name,
+                            'namespace': namespace,
+                            'type': 'record',
+                            'fields': [
                                 {
-                                    "name": name,
-                                    "namespace": namespace + '.' + field_name,
+                                    'name': name,
+                                    'namespace': namespace + '.' + field_name,
                                     # Although, not technically a null_str, it's effectively the same
-                                    "type": _nullable_to_pfb_types[null_str]
+                                    'type': _nullable_to_pfb_types[null_str]
                                 }
                                 for name in ('value', 'unit')
                             ]
