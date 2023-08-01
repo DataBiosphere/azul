@@ -75,6 +75,10 @@ cis_alarms = [
                             '$.eventSource != "elasticloadbalancing.amazonaws.com"',
                             '$.eventName != "DescribeTargetGroupAttributes"',
                             '$.userIdentity.invokedBy != "inspector2.amazonaws.com"',
+                        ])),
+                        paren(' || '.join([
+                            '$.eventSource != "ec2.amazonaws.com"',
+                            '$.eventName != "CreateNetworkInterface"',
                         ]))
                     ]) + '}'
                     ),
