@@ -57,8 +57,6 @@ from azul.plugins.metadata.hca.indexer.transform import (
     value_and_unit,
 )
 from azul.types import (
-    AnyJSON,
-    AnyMutableJSON,
     JSON,
     MutableJSON,
 )
@@ -182,7 +180,6 @@ class PFBEntity:
         entities by comparing their IDs.
         """
         cls._add_missing_fields(name, object_, schema)
-        object_ = cls._replace_null_with_empty_string(object_)
         ids = object_['document_id']
         # document_id is an array unless the inner entity type matches the
         # outer entity type
@@ -195,9 +192,7 @@ class PFBEntity:
     def _add_missing_fields(cls, name: str, object_: MutableJSON, schema):
         """
         Compare entities against the schema and add any fields that are missing.
-
-        None is the default value, but because of https://github.com/DataBiosphere/azul/issues/2370
-        this isn't currently reflected in the schema.
+        None is the default value.
         """
         if schema['type'] == 'record':
             object_schema = one(f for f in schema['fields'] if f['name'] == 'object')
@@ -210,18 +205,14 @@ class PFBEntity:
             field_name, field_type = field['name'], field['type']
             if field_name not in object_:
                 if isinstance(field_type, list):
-                    # FIXME: Change 'string' to 'null'
-                    #        https://github.com/DataBiosphere/azul/issues/2462
-                    assert 'string' in field_type or 'null' in field_type, field
+                    assert 'null' in field_type, field
                     default_value = None
                 elif field_type['type'] == 'array':
                     if isinstance(field_type['items'], dict):
                         assert field_type['items']['type'] in ('record', 'array'), field
                         default_value = []
                     else:
-                        # FIXME: Change 'string' to 'null'
-                        #        https://github.com/DataBiosphere/azul/issues/2462
-                        assert 'string' in field_type['items'], field
+                        assert 'null' in field_type['items'], field
                         default_value = [None]
                 else:
                     assert False, field
@@ -236,24 +227,6 @@ class PFBEntity:
                     cls._add_missing_fields(name=field_name,
                                             object_=sub_object,
                                             schema=field)
-
-    @classmethod
-    def _replace_null_with_empty_string(cls, object_json: AnyJSON) -> AnyMutableJSON:
-        # FIXME: remove with https://github.com/DataBiosphere/azul/issues/2462
-        if object_json is None:
-            return ''
-        elif isinstance(object_json, dict):
-            return {
-                k: cls._replace_null_with_empty_string(v)
-                for k, v in object_json.items()
-            }
-        elif isinstance(object_json, list):
-            return [
-                cls._replace_null_with_empty_string(item)
-                for item in object_json
-            ]
-        else:
-            return object_json
 
     def to_json(self, relations: Iterable['PFBRelation']) -> JSON:
         return {
@@ -502,11 +475,11 @@ def _inject_reference_handover_values(entity: MutableJSON, doc: JSON):
 #        https://github.com/DataBiosphere/azul/issues/4094
 
 _nullable_to_pfb_types = {
-    null_bool: ['string', 'boolean'],
-    null_float: ['string', 'double'],
-    null_int: ['string', 'long'],
-    null_str: ['string'],
-    null_datetime: ['string'],
+    null_bool: ['null', 'boolean'],
+    null_float: ['null', 'double'],
+    null_int: ['null', 'long'],
+    null_str: ['null', 'string'],
+    null_datetime: ['null', 'string'],
 }
 
 
@@ -606,9 +579,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     'namespace': namespace,
                     'type': 'array',
                     'items': [
-                        # FIXME: Change 'string' to 'null'
-                        #        https://github.com/DataBiosphere/azul/issues/2462
-                        'string',
+                        'null',
                         {
                             # FIXME: Why do we need to repeat `name` and `namespace`
                             #        with the same values at three different depths?
