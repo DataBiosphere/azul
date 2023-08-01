@@ -151,7 +151,7 @@ class PFBConverter:
             yield entity.to_json(sorted(relations, key=attrgetter('dst_name', 'dst_id')))
 
 
-def _reversible_join(joiner: str, parts: Iterable[str]):
+def _reversible_join(joiner: str, parts: Iterable[str]) -> str:
     parts = list(parts)
     reject(any(joiner in part for part in parts), parts)
     return joiner.join(parts)
@@ -175,7 +175,8 @@ class PFBEntity:
     def from_json(cls,
                   name: str,
                   object_: MutableJSON,
-                  schema: JSON) -> 'PFBEntity':
+                  schema: JSON
+                  ) -> 'PFBEntity':
         """
         Derive ID from object in a reproducible way so that we can distinguish
         entities by comparing their IDs.
@@ -254,7 +255,7 @@ class PFBEntity:
         else:
             return object_json
 
-    def to_json(self, relations: Iterable['PFBRelation']):
+    def to_json(self, relations: Iterable['PFBRelation']) -> JSON:
         return {
             'id': self.id,
             'name': self.name,
@@ -272,7 +273,7 @@ class PFBRelation:
     dst_name: str
 
     @classmethod
-    def to_entity(cls, entity: PFBEntity):
+    def to_entity(cls, entity: PFBEntity) -> 'PFBRelation':
         return cls(dst_id=entity.id, dst_name=entity.name)
 
 
@@ -510,7 +511,8 @@ _nullable_to_pfb_types = {
 
 
 def _entity_schema_recursive(field_types: FieldTypes,
-                             *path: str) -> Iterable[JSON]:
+                             *path: str
+                             ) -> Iterable[JSON]:
     for field_name, field_type in field_types.items():
         namespace = '.'.join(path)
         plural = isinstance(field_type, list)
