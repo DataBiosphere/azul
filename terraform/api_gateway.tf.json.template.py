@@ -246,7 +246,25 @@ emit_tf({
                             'statement': {
                                 'managed_rule_group_statement': {
                                     'name': 'AWSManagedRulesCommonRuleSet',
-                                    'vendor_name': 'AWS'
+                                    'vendor_name': 'AWS',
+                                    'rule_action_override': [
+                                        {
+                                            # This rule would limit the query
+                                            # string to 2048 bytes, which would
+                                            # block valid requests made during
+                                            # the integration tests. We disarm
+                                            # it by setting the action to
+                                            # `count`. API Gateway protects us
+                                            # from over-sized query strings by
+                                            # limiting the total combined size
+                                            # of the request line and header
+                                            # values to 10240 bytes.
+                                            'name': 'SizeRestrictions_QUERYSTRING',
+                                            'action_to_use': {
+                                                'count': {}
+                                            }
+                                        }
+                                    ]
                                 }
                             },
                             'visibility_config': {

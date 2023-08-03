@@ -5,7 +5,6 @@ include common.mk
 
 azul_docker_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
 azul_docker_image_tag ?= latest
-azul_docker_image_cache_seed ?=
 
 .PHONY: virtualenv
 virtualenv: check_env
@@ -37,7 +36,6 @@ docker$1: check_docker
 	       --build-arg registry=$$(azul_docker_registry) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
-	       --build-arg cache_seed=${azul_docker_image_cache_seed} \
 	       --tag $$(azul_docker_image)$3:$$(azul_docker_image_tag) \
 	       .
 
@@ -73,10 +71,6 @@ requirements_update: check_venv check_docker
 	    --no-deps \
 	    -r requirements.txt \
 	    --dest=${azul_chalice_bin}
-
-.PHONY: requirements_update_force
-requirements_update_force: check_venv check_docker
-	azul_docker_image_cache_seed=$$(python -c 'import uuid; print(uuid.uuid4())') $(MAKE) requirements_update
 
 .PHONY: hello
 hello: check_python

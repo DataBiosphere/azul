@@ -193,14 +193,9 @@ vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
 
 vpn_subnet = f'10.{42 + cidr_offset}.0.0/16'  # can't overlap VPC CIDR and subnet mask must be <= 22 bits
 
-# The name of the SSH keypair whose public key is to be deposited on the
-# instance by AWS
-#
-key_name = 'hannes@ucsc.edu'
-
 # The public key of that keypair
 #
-public_key = (
+administrator_key = (
     'ssh-rsa'
     ' '
     'AAAAB3NzaC1yc2EAAAADAQABAAABAQDhRBbejN2qT5+6nfpzxPTfTFuSDSiPrAyDKH+V/A9+Xw4ZT8Z3K4d0w0KlwjtRZ'
@@ -242,8 +237,30 @@ other_public_keys = {
     'dev': operator_keys,
     'anvildev': operator_keys,
     'anvilprod': operator_keys,
-    'prod': []
+    # FIXME: Change back to []
+    #        https://github.com/DataBiosphere/azul/issues/5408
+    'prod': operator_keys
 }
+
+# Note that a change to the image references here also requires updating
+# azul.config.docker_images and redeploying the `shared` TF component prior to
+# deploying the `gitlab` component.
+
+clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
+dind_image = config.docker_registry + 'docker.io/library/docker:24.0.2-dind'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.1.2-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.1.0'
+
+# For instructions on finding the latest CIS-hardened AMI, see
+# OPERATOR.rst#upgrading-linux-ami
+#
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.21 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+#
+ami_id = {
+    'us-east-1': 'ami-0e1af243f15d4567f'
+}
+
+gitlab_mount = '/mnt/gitlab'
 
 
 @lru_cache(maxsize=1)
@@ -319,25 +336,6 @@ def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-# Note that a change to the image references here also requires updating
-# azul.config.docker_images and redeploying the `shared` TF component prior to
-# deploying the `gitlab` component.
-
-clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
-dind_image = config.docker_registry + 'docker.io/library/docker:20.10.18-dind'
-gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.1.2-ce.0'
-runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.1.0'
-
-# For instructions on finding the latest CIS-hardened AMI, see
-# OPERATOR.rst#upgrading-linux-ami
-#
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.21 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
-#
-ami_id = {
-    'us-east-1': 'ami-0e1af243f15d4567f'
-}
-
-
 def jw(*words):
     return ' '.join(words)
 
@@ -352,6 +350,11 @@ def qq(*words):
 
 emit_tf({} if config.terraform_component != 'gitlab' else {
     'data': {
+        'aws_sns_topic': {
+            'monitoring': {
+                'name': aws.monitoring_topic_name
+            }
+        },
         'aws_availability_zones': {
             'available': {}
         },
@@ -1165,7 +1168,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_key_pair': {
             'gitlab': {
                 'key_name': 'azul-gitlab',
-                'public_key': public_key
+                'public_key': administrator_key
             }
         },
         'aws_iam_role': {
@@ -1334,7 +1337,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'user_data_replace_on_change': True,
                 'user_data': '#cloud-config\n' + yaml.dump({
                     'mounts': [
-                        ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
+                        ['/dev/nvme1n1', gitlab_mount, 'ext4', '']
                     ],
                     'packages': [
                         'docker',
@@ -1422,8 +1425,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # DNS server and don't fall back to the
                                     # Google ones.
                                     '--volume /etc/resolv.conf:/etc/resolv.conf',
-                                    '--volume /mnt/gitlab/docker:/var/lib/docker',
-                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    f'--volume {gitlab_mount}/docker:/var/lib/docker',
+                                    f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
                                     dind_image
                                 ),
                                 '[Install]',
@@ -1454,9 +1457,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--publish 80:80',
                                     '--publish 2222:22',
                                     '--rm',
-                                    '--volume /mnt/gitlab/config:/etc/gitlab',
-                                    '--volume /mnt/gitlab/logs:/var/log/gitlab',
-                                    '--volume /mnt/gitlab/data:/var/opt/gitlab',
+                                    f'--volume {gitlab_mount}/config:/etc/gitlab',
+                                    f'--volume {gitlab_mount}/logs:/var/log/gitlab',
+                                    f'--volume {gitlab_mount}/data:/var/opt/gitlab',
                                     gitlab_image
                                 ),
                                 '[Install]',
@@ -1483,7 +1486,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'run',
                                     '--name gitlab-runner',
                                     '--rm',
-                                    '--volume /mnt/gitlab/runner/config:/etc/gitlab-runner',
+                                    f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
                                     '--network gitlab-runner-net',
                                     '--env DOCKER_HOST=tcp://gitlab-dind:2375',
                                     runner_image
@@ -1514,7 +1517,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--rm',
                                     '--volume /var/run/docker.sock:/var/run/docker.sock',
                                     '--volume /:/scan:ro',
-                                    '--volume /mnt/gitlab/clamav:/var/lib/clamav:rw',
+                                    f'--volume {gitlab_mount}/clamav:/var/lib/clamav:rw',
                                     clamav_image,
                                     '/bin/sh',
                                     '-c',
@@ -1622,6 +1625,46 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'logfile': '/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log',
                                     'debug': bool(config.debug)
                                 },
+                                'metrics': {
+                                    'metrics_collected': {
+                                        'cpu': {
+                                            'resources': [
+                                                "*"
+                                            ],
+                                            'measurement': [
+                                                'cpu_usage_active'
+                                            ]
+                                        },
+                                        'mem': {
+                                            'measurement': [
+                                                'used_percent'
+                                            ],
+                                        },
+                                        'disk': {
+                                            'measurement': [
+                                                'used_percent'
+                                            ],
+                                            'resources': [
+                                                '/',
+                                                gitlab_mount
+                                            ],
+                                            # This drops the name of the device
+                                            # from the dimensions in each data
+                                            # point. Since the device name
+                                            # correlates with the mount point,
+                                            # maintaining that dimension is
+                                            # redundant. Note that we cannot
+                                            # drop the fstype dimension this
+                                            # way, and therefore have to
+                                            # specify it explicitly when we
+                                            # create the alarm below.
+                                            'drop_device': True
+                                        }
+                                    },
+                                    'append_dimensions': {
+                                        'InstanceId': '$${aws:InstanceId}'
+                                    },
+                                },
                                 'logs': {
                                     'logs_collected': {
                                         'files': {
@@ -1649,7 +1692,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                                     ]
 
                                                 ] + [
-                                                    f'/mnt/gitlab/logs/{file}.log'
+                                                    f'{gitlab_mount}/logs/{file}.log'
                                                     for file in
                                                     [
                                                         'gitaly/gitaly_ruby_json',
@@ -1666,7 +1709,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                                         'reconfigure/*'
                                                     ]
                                                 ] + [
-                                                    f'/mnt/gitlab/logs/gitlab-rails/{file}.log'
+                                                    f'{gitlab_mount}/logs/gitlab-rails/{file}.log'
                                                     for file in
                                                     [
                                                         'api_json',
@@ -1731,6 +1774,35 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Owner': config.owner
                 }
+            }
+        },
+        'aws_cloudwatch_metric_alarm': {
+            **{
+                'gitlab_' + resource: {
+                    'alarm_name': 'azul-gitlab_' + resource,
+                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                    'evaluation_periods': periods,
+                    'period': 60 * 10,
+                    'metric_name': metric,
+                    'namespace': 'CWAgent',
+                    'dimensions': dimensions | {
+                        'InstanceId': '${aws_instance.gitlab.id}',
+                    },
+                    'statistic': stat,
+                    'threshold': threshold,
+                    'treat_missing_data': 'missing',
+                    **{
+                        state + '_actions': ['${data.aws_sns_topic.monitoring.arn}']
+                        for state in ('insufficient_data', 'alarm', 'ok')
+                    },
+                } for resource, metric, periods, stat, threshold, dimensions in
+                [
+                    # FIXME: Add `mem_used_percent` alarm
+                    #        https://github.com/DataBiosphere/azul/issues/5139
+                    ('data_disk_use', 'disk_used_percent', 1, 'Maximum', 75, {'path': gitlab_mount, 'fstype': 'ext4'}),
+                    ('root_disk_use', 'disk_used_percent', 1, 'Maximum', 75, {'path': '/', 'fstype': 'xfs'}),
+                    ('cpu_use', 'cpu_usage_active', 6, 'Average', 90, {'cpu': 'cpu-total'})
+                ]
             }
         }
     }

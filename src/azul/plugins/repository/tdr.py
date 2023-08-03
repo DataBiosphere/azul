@@ -82,14 +82,6 @@ class TDRBundle(Bundle[TDRBundleFQID], ABC):
     def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_uri')
 
-    def _validate_drs_uri(self, drs_uri: Optional[str]) -> None:
-        # These requirements prevent mismatches in the DRS domain, and ensure
-        # that changes to the column syntax don't go undetected.
-        if drs_uri is not None:
-            drs_uri = furl(drs_uri)
-            require(drs_uri.scheme == 'drs')
-            require(drs_uri.netloc == config.tdr_service_url.netloc)
-
 
 T = TypeVar('T')
 
@@ -109,6 +101,8 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def sources(self) -> Set[TDRSourceSpec]:
         return self._sources
 
+    # FIXME: Improve caching of DRS and TDR clients
+    #        https://github.com/DataBiosphere/azul/issues/5357
     def _user_authenticated_tdr(self,
                                 authentication: Optional[Authentication]
                                 ) -> TDRClient:
@@ -229,6 +223,8 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
         raise NotImplementedError
 
+    # FIXME: Improve caching of DRS and TDR clients
+    #        https://github.com/DataBiosphere/azul/issues/5357
     def drs_client(self,
                    authentication: Optional[Authentication] = None
                    ) -> DRSClient:

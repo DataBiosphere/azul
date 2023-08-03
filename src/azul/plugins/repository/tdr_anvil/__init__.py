@@ -30,6 +30,9 @@ from azul import (
 from azul.bigquery import (
     backtick,
 )
+from azul.drs import (
+    DRSURI,
+)
 from azul.indexer import (
     SourcedBundleFQIDJSON,
 )
@@ -128,8 +131,9 @@ class TDRAnvilBundle(AnvilBundle[AnvilBundleFQID], TDRBundle):
         metadata = dict(row,
                         version=version)
         if entity.entity_type == 'file':
-            drs_uri = row.get('file_ref')
-            self._validate_drs_uri(drs_uri)
+            drs_uri = row['file_ref']
+            # Validate URI syntax
+            DRSURI.parse(drs_uri)
             metadata.update(drs_uri=drs_uri,
                             sha256='',
                             crc32='')

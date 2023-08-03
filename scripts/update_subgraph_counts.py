@@ -4,6 +4,9 @@ expedite updated source configurations.
 """
 
 import argparse
+from concurrent.futures import (
+    ThreadPoolExecutor,
+)
 import sys
 
 import attr
@@ -40,15 +43,18 @@ class SourceSpecArgs:
 
 def generate_sources(catalog: str) -> list[SourceSpecArgs]:
     plugin = AzulClient().repository_plugin(catalog)
-    sources = []
-    for spec in plugin.sources:
-        spec: TDRSourceSpec = attr.evolve(spec, prefix=Prefix.of_everything)
+
+    def generate_source(spec: TDRSourceSpec) -> SourceSpecArgs:
+        spec = attr.evolve(spec, prefix=Prefix.of_everything)
         ref = plugin.resolve_source(str(spec))
         partitions = plugin.list_partitions(ref)
-        sources.append(SourceSpecArgs(project=spec.project,
-                                      snapshot=spec.name,
-                                      subgraph_count=sum(partitions.values())))
-    return sources
+        return SourceSpecArgs(project=spec.project,
+                              snapshot=spec.name,
+                              subgraph_count=sum(partitions.values()))
+
+    with ThreadPoolExecutor(max_workers=8) as tpe:
+        sources = tpe.map(generate_source, plugin.sources)
+    return list(sources)
 
 
 def main(args: list[str]):
