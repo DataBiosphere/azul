@@ -402,6 +402,29 @@ tf_config = {
                             }
                         })
                     }
+                },
+                'aws_cloudwatch_event_bus': {
+                    'inspector': {
+                        'name': 'inspector'
+                    }
+                },
+                'aws_cloudwatch_event_rule': {
+                    'inspector': {
+                        'name': 'inspector',
+                        'event_bus_name': '${aws_cloudwatch_event_bus.inspector.arn}',
+                        'event_pattern': json.dumps({
+                            'source': ['aws.inspector2'],
+                            'detail-type': ['Inspector2 Finding'],
+                            'detail.severity': ['HIGH', 'MEDIUM']
+                        })
+                    }
+                },
+                'aws_cloudwatch_event_target': {
+                    'inspector_to_sns': {
+                        'event_bus_name': '${aws_cloudwatch_event_bus.inspector.arn}',
+                        'rule': '${aws_cloudwatch_event_rule.inspector.name}',
+                        'arn': '${aws_sns_topic.monitoring.arn}'
+                    }
                 }
             }
             if config.slack_integration else
