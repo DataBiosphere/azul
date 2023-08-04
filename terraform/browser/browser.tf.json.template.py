@@ -36,8 +36,10 @@ from azul.terraform import (
 )
 
 buckets = {
-    bucket: aws.qualified_bucket_name(bucket)
-    for bucket in ['portal', 'browser']
+    site['bucket']: aws.qualified_bucket_name(site['bucket'])
+    for project, branches in config.browser_sites.items()
+    for branch, sites in branches.items()
+    for site_name, site in sites.items()
 }
 
 
