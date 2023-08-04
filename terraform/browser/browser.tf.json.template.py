@@ -137,6 +137,13 @@ def emit():
                                          explorer_domain_router=True,
                                          add_response_security_headers=False),
                         google_search_behavior(),
+                        *(
+                            bucket_behaviour('consortia',
+                                             path_pattern=path_pattern,
+                                             ptm_next_path_mapper=True,
+                                             ptm_add_response_headers=False)
+                            for path_pattern in ['/consortia*', '_next/*']
+                        ),
                     ],
                     'default_cache_behavior':
                         bucket_behaviour('portal',
