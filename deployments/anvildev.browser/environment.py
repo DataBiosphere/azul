@@ -45,6 +45,12 @@ def env() -> Mapping[str, Optional[str]]:
                         'bucket': 'portal',
                         'tarball_path': 'public',
                         'real_path': ''
+                    },
+                    'consortia': {
+                        'domain': '{AZUL_DOMAIN_NAME}',
+                        'bucket': 'consortia',
+                        'tarball_path': 'out',
+                        'real_path': ''
                     }
                 }
             }
