@@ -69,7 +69,7 @@ anvil_sources = mkdict({}, 11, mkdelta([
     mksrc('datarepo-4150bd87', 'ANVIL_GTEx_V8_hg38_20230419_ANV5_202304202007', 100367)
 ]))
 
-anvil1_sources = mkdict(anvil_sources, 65, mkdelta([
+anvil1_sources = mkdict(anvil_sources, 69, mkdelta([
     mksrc('datarepo-d53aa186', 'ANVIL_CMG_BROAD_BRAIN_ENGLE_WES_20221102_ANV5_202304241525', 473),
     mksrc('datarepo-69b2535a', 'ANVIL_CMG_BROAD_BRAIN_SHERR_WGS_20221102_ANV5_202304241530', 3),
     mksrc('datarepo-490be510', 'ANVIL_CMG_BROAD_ORPHAN_SCOTT_WGS_20221102_ANV5_202304241538', 15),
@@ -123,6 +123,10 @@ anvil1_sources = mkdict(anvil_sources, 65, mkdelta([
     mksrc('datarepo-d51578f4', 'ANVIL_CMG_Yale_GRU_20221020_ANV5_202304211517', 2196),
     mksrc('datarepo-bcedc554', 'ANVIL_CMG_Yale_HMB_20221020_ANV5_202304211813', 125),
     mksrc('datarepo-f485fa3e', 'ANVIL_CMG_Yale_HMB_GSO_20221020_ANV5_202304211519', 4264),
+    mksrc('datarepo-45487b69', 'ANVIL_GTEx_Somatic_WGS_20230331_ANV5_202304211636', 707),
+    mksrc('datarepo-5ebc368c', 'ANVIL_GTEx_V7_hg19_20221128_ANV5_202304211804', 15974),
+    mksrc('datarepo-864913f2', 'ANVIL_GTEx_V9_hg38_20221128_ANV5_202304211853', 8298),
+    mksrc('datarepo-b093b69d', 'ANVIL_GTEx_public_data_20221115_ANV5_202304211659', 81),
     mksrc('datarepo-d948d21a', 'ANVIL_cmg_broad_brain_engle_wgs_20221202_ANV5_202304271345', 95),
     mksrc('datarepo-1cb73890', 'ANVIL_cmg_broad_heart_ware_wes_20221215_ANV5_202304242145', 40),
 ]))
