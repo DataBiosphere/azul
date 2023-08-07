@@ -404,24 +404,25 @@ tf_config = {
                     }
                 },
                 'aws_cloudwatch_event_bus': {
-                    'inspector': {
-                        'name': 'inspector'
+                    'securityhub': {
+                        'name': 'securityhub'
                     }
                 },
                 'aws_cloudwatch_event_rule': {
                     'inspector': {
                         'name': 'inspector',
-                        'event_bus_name': '${aws_cloudwatch_event_bus.inspector.arn}',
+                        'event_bus_name': '${aws_cloudwatch_event_bus.securityhub.arn}',
                         'event_pattern': json.dumps({
-                            'source': ['aws.inspector2'],
-                            'detail-type': ['Inspector2 Finding'],
-                            'detail.severity': ['HIGH', 'MEDIUM']
+                            'source': ['aws.securityhub'],
+                            'detail-type': ['Security Hub Findings - Imported'],
+                            'detail.ProductArn': ['arn:aws:securityhub:us-east-1::product/aws/inspector'],
+                            'detail.Severity.Label': ['CRITICAL', 'HIGH']
                         })
                     }
                 },
                 'aws_cloudwatch_event_target': {
                     'inspector_to_sns': {
-                        'event_bus_name': '${aws_cloudwatch_event_bus.inspector.arn}',
+                        'event_bus_name': '${aws_cloudwatch_event_bus.securityhub.arn}',
                         'rule': '${aws_cloudwatch_event_rule.inspector.name}',
                         'arn': '${aws_sns_topic.monitoring.arn}'
                     }
