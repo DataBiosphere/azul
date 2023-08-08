@@ -294,11 +294,11 @@ emit_tf({
                                 ),
                                 'namespace': 'AWS/Lambda',
                                 'dimensions': {
-                                    'FunctionName': '.'.join((
+                                    'FunctionName': '${' + '.'.join((
                                         'aws_lambda_function',
                                         lambda_resource_name(threshold),
                                         'function_name'
-                                    ))
+                                    )) + '}'
                                 },
                                 'metric_name': threshold.metric.aws_name,
                                 'comparison_operator': 'GreaterThanThreshold',
