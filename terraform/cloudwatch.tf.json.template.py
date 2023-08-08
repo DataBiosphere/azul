@@ -313,6 +313,41 @@ emit_tf({
                             }
                             for lambda_name in config.lambda_names()
                             for threshold in load_app_module(lambda_name).app.metric_thresholds
+                        },
+                        'waf_blocked': {
+                            'alarm_name': config.qualified_resource_name('waf_blocked'),
+                            'comparison_operator': 'GreaterThanThreshold',
+                            'threshold': 25,  # percent blocked of total requests in a period
+                            'evaluation_periods': 4,
+                            'datapoints_to_alarm': 4,
+                            'treat_missing_data': 'notBreaching',
+                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            'metric_query': [
+                                {
+                                    'id': 'waf',
+                                    'label': 'Percentage of blocked requests',
+                                    'expression': 'm1/(m0+m1)*100',
+                                    'return_data': 'true',
+                                },
+                                *(
+                                    {
+                                        'id': f'm{i}',
+                                        'metric': {
+                                            'namespace': 'AWS/WAFV2',
+                                            'metric_name': metric,
+                                            'period': 15 * 60,
+                                            'stat': 'Sum',
+                                            'dimensions': {
+                                                'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
+                                                'Region': config.region,
+                                                'Rule': 'ALL'
+                                            }
+                                        }
+                                    }
+                                    for i, metric in enumerate(['AllowedRequests', 'BlockedRequests'])
+                                )
+                            ]
                         }
                     }
                 }
