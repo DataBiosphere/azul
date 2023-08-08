@@ -122,6 +122,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -132,6 +133,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -142,6 +144,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -152,6 +155,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -162,6 +166,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -172,6 +177,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -182,6 +188,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -192,6 +199,7 @@
                             "namespace": "samples",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -209,6 +217,7 @@
                             "namespace": "sample_cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -219,6 +228,7 @@
                             "namespace": "sample_cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -229,6 +239,7 @@
                             "namespace": "sample_cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -239,6 +250,7 @@
                             "namespace": "sample_cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -256,6 +268,7 @@
                             "namespace": "sample_organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -266,6 +279,7 @@
                             "namespace": "sample_organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -276,6 +290,7 @@
                             "namespace": "sample_organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -286,6 +301,7 @@
                             "namespace": "sample_organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -303,6 +319,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -313,6 +330,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -323,6 +341,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -333,6 +352,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -343,6 +363,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -353,6 +374,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -363,6 +385,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -373,6 +396,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -383,6 +407,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -393,6 +418,7 @@
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -410,6 +436,7 @@
                             "namespace": "sequencing_inputs",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -420,6 +447,7 @@
                             "namespace": "sequencing_inputs",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -430,6 +458,7 @@
                             "namespace": "sequencing_inputs",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -447,6 +476,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -457,6 +487,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -467,6 +498,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -477,6 +509,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -487,6 +520,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -497,6 +531,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -507,6 +542,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -517,6 +553,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -527,6 +564,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -537,6 +575,7 @@
                             "namespace": "specimens",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -554,6 +593,7 @@
                             "namespace": "cell_suspensions",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -564,6 +604,7 @@
                             "namespace": "cell_suspensions",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -573,7 +614,7 @@
                             "name": "total_estimated_cells",
                             "namespace": "cell_suspensions",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         },
@@ -581,7 +622,7 @@
                             "name": "total_estimated_cells_redundant",
                             "namespace": "cell_suspensions",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         },
@@ -590,6 +631,7 @@
                             "namespace": "cell_suspensions",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -600,6 +642,7 @@
                             "namespace": "cell_suspensions",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -610,6 +653,7 @@
                             "namespace": "cell_suspensions",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -627,6 +671,7 @@
                             "namespace": "cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -637,6 +682,7 @@
                             "namespace": "cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -647,6 +693,7 @@
                             "namespace": "cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -657,6 +704,7 @@
                             "namespace": "cell_lines",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -674,6 +722,7 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -684,6 +733,7 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -694,6 +744,7 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -704,6 +755,7 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -714,6 +766,7 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -724,6 +777,7 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -734,13 +788,14 @@
                             "namespace": "donors",
                             "type": {
                                 "items": [
-                                    "string",
+                                    "null",
                                     {
                                         "fields": [
                                             {
                                                 "name": "value",
                                                 "namespace": "donors.organism_age",
                                                 "type": [
+                                                    "null",
                                                     "string"
                                                 ]
                                             },
@@ -748,6 +803,7 @@
                                                 "name": "unit",
                                                 "namespace": "donors.organism_age",
                                                 "type": [
+                                                    "null",
                                                     "string"
                                                 ]
                                             }
@@ -777,7 +833,7 @@
                             "name": "donor_count",
                             "namespace": "donors",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         }
@@ -793,6 +849,7 @@
                             "namespace": "organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -803,6 +860,7 @@
                             "namespace": "organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -813,6 +871,7 @@
                             "namespace": "organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -823,6 +882,7 @@
                             "namespace": "organoids",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -839,6 +899,7 @@
                             "name": "document_id",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -846,6 +907,7 @@
                             "name": "content-type",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -853,7 +915,7 @@
                             "name": "indexed",
                             "namespace": "files",
                             "type": [
-                                "string",
+                                "null",
                                 "boolean"
                             ]
                         },
@@ -861,6 +923,7 @@
                             "name": "name",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -868,6 +931,7 @@
                             "name": "crc32c",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -875,6 +939,7 @@
                             "name": "sha256",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -882,7 +947,7 @@
                             "name": "size",
                             "namespace": "files",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         },
@@ -898,6 +963,7 @@
                             "name": "drs_uri",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -905,6 +971,7 @@
                             "name": "version",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -912,6 +979,7 @@
                             "name": "file_type",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -919,6 +987,7 @@
                             "name": "file_format",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -927,6 +996,7 @@
                             "namespace": "files",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -936,7 +1006,7 @@
                             "name": "is_intermediate",
                             "namespace": "files",
                             "type": [
-                                "string",
+                                "null",
                                 "boolean"
                             ]
                         },
@@ -944,6 +1014,7 @@
                             "name": "file_source",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -951,6 +1022,7 @@
                             "name": "_type",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -958,6 +1030,7 @@
                             "name": "read_index",
                             "namespace": "files",
                             "type": [
+                                "null",
                                 "string"
                             ]
                         },
@@ -965,7 +1038,7 @@
                             "name": "lane_index",
                             "namespace": "files",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         },
@@ -973,7 +1046,7 @@
                             "name": "matrix_cell_count",
                             "namespace": "files",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         }
@@ -989,6 +1062,7 @@
                             "namespace": "analysis_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -999,6 +1073,7 @@
                             "namespace": "analysis_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1016,6 +1091,7 @@
                             "namespace": "imaging_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1033,6 +1109,7 @@
                             "namespace": "library_preparation_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1043,6 +1120,7 @@
                             "namespace": "library_preparation_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1053,6 +1131,7 @@
                             "namespace": "library_preparation_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1070,6 +1149,7 @@
                             "namespace": "sequencing_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1080,6 +1160,7 @@
                             "namespace": "sequencing_protocols",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1090,7 +1171,7 @@
                             "namespace": "sequencing_protocols",
                             "type": {
                                 "items": [
-                                    "string",
+                                    "null",
                                     "boolean"
                                 ],
                                 "type": "array"
@@ -1108,6 +1189,7 @@
                             "namespace": "sequencing_processes",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1125,6 +1207,7 @@
                             "namespace": "matrices",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1141,6 +1224,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1151,6 +1235,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1161,7 +1246,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "boolean"
                                                 ],
                                                 "type": "array"
@@ -1172,6 +1257,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1182,6 +1268,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1192,6 +1279,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1202,7 +1290,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "long"
                                                 ],
                                                 "type": "array"
@@ -1221,6 +1309,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1231,6 +1320,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1241,6 +1331,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1251,6 +1342,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1261,6 +1353,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1271,7 +1364,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "boolean"
                                                 ],
                                                 "type": "array"
@@ -1282,6 +1375,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1292,6 +1386,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1302,6 +1397,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1312,7 +1408,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "long"
                                                 ],
                                                 "type": "array"
@@ -1323,7 +1419,7 @@
                                             "namespace": "matrices.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "long"
                                                 ],
                                                 "type": "array"
@@ -1349,6 +1445,7 @@
                             "namespace": "contributed_analyses",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1365,6 +1462,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1375,6 +1473,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1385,7 +1484,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "boolean"
                                                 ],
                                                 "type": "array"
@@ -1396,6 +1495,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1406,6 +1506,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1416,6 +1517,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1426,7 +1528,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "long"
                                                 ],
                                                 "type": "array"
@@ -1445,6 +1547,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1455,6 +1558,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1465,6 +1569,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1475,6 +1580,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1485,6 +1591,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1495,7 +1602,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "boolean"
                                                 ],
                                                 "type": "array"
@@ -1506,6 +1613,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1516,6 +1624,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1526,6 +1635,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1536,7 +1646,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "long"
                                                 ],
                                                 "type": "array"
@@ -1547,7 +1657,7 @@
                                             "namespace": "contributed_analyses.file",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "long"
                                                 ],
                                                 "type": "array"
@@ -1573,6 +1683,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1583,6 +1694,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1593,6 +1705,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1603,6 +1716,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1613,6 +1727,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1623,6 +1738,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1633,6 +1749,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1649,6 +1766,7 @@
                                             "namespace": "projects.contributors",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1659,7 +1777,7 @@
                                             "namespace": "projects.contributors",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "boolean"
                                                 ],
                                                 "type": "array"
@@ -1670,6 +1788,7 @@
                                             "namespace": "projects.contributors",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1680,6 +1799,7 @@
                                             "namespace": "projects.contributors",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1690,6 +1810,7 @@
                                             "namespace": "projects.contributors",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1700,6 +1821,7 @@
                                             "namespace": "projects.contributors",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1718,6 +1840,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1734,6 +1857,7 @@
                                             "namespace": "projects.publications",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1744,6 +1868,7 @@
                                             "namespace": "projects.publications",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1754,7 +1879,7 @@
                                             "namespace": "projects.publications",
                                             "type": {
                                                 "items": [
-                                                    "string",
+                                                    "null",
                                                     "boolean"
                                                 ],
                                                 "type": "array"
@@ -1765,6 +1890,7 @@
                                             "namespace": "projects.publications",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1783,6 +1909,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1793,6 +1920,7 @@
                             "namespace": "projects",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1809,6 +1937,7 @@
                                             "namespace": "projects.accessions",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1819,6 +1948,7 @@
                                             "namespace": "projects.accessions",
                                             "type": {
                                                 "items": [
+                                                    "null",
                                                     "string"
                                                 ],
                                                 "type": "array"
@@ -1836,7 +1966,7 @@
                             "name": "estimated_cell_count",
                             "namespace": "projects",
                             "type": [
-                                "string",
+                                "null",
                                 "long"
                             ]
                         }
@@ -1852,6 +1982,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1862,6 +1993,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1872,6 +2004,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1882,6 +2015,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1892,6 +2026,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1902,6 +2037,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
@@ -1912,6 +2048,7 @@
                             "namespace": "dates",
                             "type": {
                                 "items": [
+                                    "null",
                                     "string"
                                 ],
                                 "type": "array"
