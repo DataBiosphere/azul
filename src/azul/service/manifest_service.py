@@ -836,7 +836,10 @@ class ManifestGenerator(metaclass=ABCMeta):
             return field_type.to_tsv(field_value)
 
         def validate(field_value: str) -> str:
-            assert self.catalog == 'dcp1' or self.column_joiner not in field_value
+            assert (
+                self.catalog in {'dcp1', 'dcp1-it'}
+                or self.column_joiner not in field_value
+            )
             return field_value
 
         for field_name, column_name in column_mapping.items():
