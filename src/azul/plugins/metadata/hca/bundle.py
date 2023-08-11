@@ -45,7 +45,7 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
         # The dcp1 release has project metadata containing the character string
         # we use as a manifest column joiner, and since we won't be getting an
         # updated snapshot for dcp1 we skip the joiner check when using dcp1.
-        if catalog == 'dcp1':
+        if catalog in {'dcp1', 'dcp1-it'}:
             pass
         else:
             self._reject_joiner(self.manifest)
