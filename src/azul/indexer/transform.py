@@ -5,6 +5,9 @@ from abc import (
 from collections.abc import (
     Iterable,
 )
+from typing import (
+    Optional,
+)
 
 from azul.indexer import (
     BundlePartition,
@@ -14,6 +17,7 @@ from azul.indexer.aggregate import (
 )
 from azul.indexer.document import (
     Contribution,
+    EntityType,
     FieldTypes,
 )
 
@@ -22,7 +26,7 @@ class Transformer(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def entity_type(cls) -> str:
+    def entity_type(cls) -> EntityType:
         """
         The type of entity this transformer creates and aggregates
         contributions for.
@@ -63,7 +67,7 @@ class Transformer(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def get_aggregator(cls, entity_type) -> EntityAggregator:
+    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         """
         Returns the aggregator to be used for entities of the given type that
         occur in the document to be aggregated. A document for an entity of

@@ -120,7 +120,7 @@ def none_safe_tuple_key(none_last: bool = False
     return inner_func
 
 
-def none_safe_itemgetter(*items):
+def none_safe_itemgetter(*items: str) -> Callable:
     """
     Like `itemgetter` except that the returned callable returns `None`
     (or a tuple of `None`) if it's passed None.
@@ -157,7 +157,7 @@ def none_safe_itemgetter(*items):
     return f
 
 
-def compose_keys(f, g):
+def compose_keys(f: Callable, g: Callable) -> Callable:
     """
     Composes unary functions.
 
@@ -270,7 +270,7 @@ class NestedDict(defaultdict):
                          if depth else
                          leaf_factory)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             k: v.to_dict() if isinstance(v, NestedDict) else v
             for k, v in self.items()

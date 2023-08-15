@@ -57,6 +57,7 @@ from azul.indexer import (
     BundlePartition,
 )
 from azul.indexer.aggregate import (
+    EntityAggregator,
     SimpleAggregator,
 )
 from azul.indexer.document import (
@@ -64,6 +65,7 @@ from azul.indexer.document import (
     Contribution,
     ContributionCoordinates,
     EntityReference,
+    EntityType,
     FieldType,
     FieldTypes,
     Nested,
@@ -470,7 +472,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         ...
 
     @classmethod
-    def get_aggregator(cls, entity_type):
+    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return FileAggregator()
         elif entity_type in SampleTransformer.inner_entity_types():
@@ -1696,7 +1698,7 @@ class BundleTransformer(SingletonTransformer):
         return BundleAsEntity(self.api_bundle)
 
     @classmethod
-    def get_aggregator(cls, entity_type):
+    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return None
         else:

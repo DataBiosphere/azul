@@ -166,7 +166,7 @@ class UUIDPartition(Generic[UUID_PARTITION]):
     def to_json(self) -> JSON:
         return attr.asdict(self)
 
-    def contains(self, member: UUID):
+    def contains(self, member: UUID) -> bool:
         """
         >>> p = UUIDPartition(prefix_length=7, prefix=0b0111_1111)
         >>> p.contains(UUID('fdd4524e-14c4-41d7-9071-6cadab09d75c'))

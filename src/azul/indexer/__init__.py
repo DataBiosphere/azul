@@ -390,7 +390,7 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
         source = cls.source_ref_cls().from_json(json.pop('source'))
         return cls(source=source, **json)
 
-    def upcast(self):
+    def upcast(self) -> BundleFQID:
         return BundleFQID(uuid=self.uuid,
                           version=self.version)
 

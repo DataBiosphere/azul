@@ -1172,7 +1172,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
         }
 
     @classmethod
-    def _option(cls, s: str):
+    def _option(cls, s: str) -> str:
         """
         >>> f = CurlManifestGenerator._option
         >>> f('')

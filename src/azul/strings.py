@@ -10,12 +10,12 @@ from more_itertools import (
 )
 
 
-def to_camel_case(text: str):
+def to_camel_case(text: str) -> str:
     camel_cased = ''.join(part.title() for part in text.split('_'))
     return camel_cased[0].lower() + camel_cased[1:]
 
 
-def departition(before, sep, after):
+def departition(before: Optional[str], sep: str, after: Optional[str]) -> str:
     """
     >>> departition(None, '.', 'after')
     'after'

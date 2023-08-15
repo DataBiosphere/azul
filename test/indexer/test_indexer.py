@@ -17,6 +17,7 @@ from itertools import (
 )
 import re
 from typing import (
+    Optional,
     cast,
 )
 import unittest
@@ -988,9 +989,10 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         self._assert_new_bundle(num_expected_old_contributions=6)
 
     def _assert_old_bundle(self,
-                           num_expected_new_contributions=0,
-                           num_expected_new_deleted_contributions=0,
-                           ignore_aggregates=False):
+                           num_expected_new_contributions: int = 0,
+                           num_expected_new_deleted_contributions: int = 0,
+                           ignore_aggregates: bool = False
+                           ) -> Mapping[tuple[str, bool], JSON]:
         """
         Assert that the old bundle is still indexed correctly
 
@@ -1044,9 +1046,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         return hits_by_id
 
     def _assert_new_bundle(self,
-                           num_expected_old_contributions=0,
-                           old_hits_by_id=None
-                           ):
+                           num_expected_old_contributions: int = 0,
+                           old_hits_by_id: Optional[Mapping[tuple[str, bool], JSON]] = None
+                           ) -> None:
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
         # Six entities (two files, one project, one cell suspension, one sample
