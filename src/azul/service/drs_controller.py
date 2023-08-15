@@ -357,7 +357,7 @@ def dss_drs_object_uri(*,
 
     :param file_version: the DSS file version of the file
 
-    :param base_url: an optional service endpoint, e.g for local test servers.
+    :param base_url: an optional service endpoint, e.g. for local test servers.
                      If absent, the service endpoint for the current deployment
                      will be used.
     """
@@ -383,7 +383,7 @@ def dss_dos_object_url(*,
 
     :param file_version: the DSS file version of the file
 
-    :param base_url: an optional service endpoint, e.g for local test servers.
+    :param base_url: an optional service endpoint, e.g. for local test servers.
                      If absent, the service endpoint for the current deployment
                      will be used.
     """
@@ -407,7 +407,7 @@ def dss_drs_object_url(*,
 
     :param file_version: the optional DSS file version of the file
 
-    :param base_url: an optional service endpoint, e.g for local test servers.
+    :param base_url: an optional service endpoint, e.g. for local test servers.
                      If absent, the service endpoint for the current deployment
                      will be used.
 

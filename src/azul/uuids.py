@@ -144,7 +144,7 @@ class UUIDPartition(Generic[UUID_PARTITION]):
     prefix_length: int
     prefix: int
 
-    root: ClassVar[UUID_PARTITION]  # see meta-class above
+    root: ClassVar[UUID_PARTITION]  # see metaclass above
 
     # This stub is only needed to aid PyCharm's type inference. Without this,
     # a constructor invocation that doesn't refer to the class explicitly, but

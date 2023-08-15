@@ -281,7 +281,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         return {
             'numeric_detection': False,
             'properties': {
-                # Declare the primary key since it's used as the tie breaker when
+                # Declare the primary key since it's used as the tiebreaker when
                 # sorting. We used to use _uid for that but that's gone in ES 7 and
                 # _id can't be used for sorting:
                 #

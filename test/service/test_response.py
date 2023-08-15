@@ -1311,9 +1311,9 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
 
     def test_multivalued_field_sorting(self):
         """
-        Test that sorting by a multi-valued field responds with hits that are
-        correctly sorted based on the first value from each multi-valued field, and
-        that each multi-valued field itself is sorted low to high regardless of the search sort
+        Test that sorting by a multivalued field responds with hits that are
+        correctly sorted based on the first value from each multivalued field, and
+        that each multivalued field itself is sorted low to high regardless of the search sort
         """
         for order, reverse in (('asc', False), ('desc', True)):
             with self.subTest(order=order, reverse=reverse):

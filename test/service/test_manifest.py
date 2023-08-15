@@ -689,7 +689,7 @@ class TestManifestEndpoints(ManifestTestCase):
     @manifest_test
     def test_terra_bdbag_manifest(self):
         """
-        moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
+        moto will mock the requests.get call so we can't hit localhost; add_passthru lets us hit
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
         self.maxDiff = None
@@ -1256,7 +1256,7 @@ class TestManifestCache(ManifestTestCase):
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru lets us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         def log_messages_from_manifest_request(seconds_until_expire: int) -> list[str]:
             get_seconds.return_value = seconds_until_expire

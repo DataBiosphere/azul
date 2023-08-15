@@ -149,7 +149,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AWS_DEFAULT_REGION': None,
 
-        # The name of the billing accocunt that pays for this deployment.
+        # The name of the billing account that pays for this deployment.
         #
         'AZUL_BILLING': None,
 
@@ -393,14 +393,14 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The path of a JSON file with credentials for an authorized user or a
         # service account. The Google Cloud libraries for Python and Go will
-        # load the so called ADC (Application-default credentials) from this
+        # load the so-called ADC (Application-default credentials) from this
         # file and use them for any Google Cloud API requests. According to
         # Google documentation, if this variable is not set,
         # ~/.config/gcloud/application_default_credentials.json is used.
         # However, the Google Cloud SDK and Python libraries will only default
         # to that if CLOUDSDK_CONFIG is not set. If it is,
         # $CLOUDSDK_CONFIG/application_default_credentials.json is used. Since
-        # the Go libraries are unaffected by CLOUDSDK_CONFIG, the offcially
+        # the Go libraries are unaffected by CLOUDSDK_CONFIG, the officially
         # documented default applies. We'll work around the inconsistent
         # defaults by setting both variables explicitly.
         #
@@ -510,11 +510,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_terraform_component': '',
 
-        # The slug of a the Github repository hosting this fork of Azul
+        # The slug of the Github repository hosting this fork of Azul
         #
         'azul_github_project': 'DataBiosphere/azul',
 
-        # An Github REST API access token with permission to post status checks to
+        # A Github REST API access token with permission to post status checks to
         # the repository defined in `azul_github_project`.
         #
         'azul_github_access_token': '',

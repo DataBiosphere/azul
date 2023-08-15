@@ -693,7 +693,7 @@ class Config:
     @cached_property
     def main_deployment_stage(self) -> str:
         """
-        The name of the main deployment the current deployment is colocated
+        The name of the main deployment the current deployment is collocated
         with. If the current deployment is a main deployment, the return value
         is the name of the current deployment.
         """
@@ -1707,7 +1707,7 @@ class IndexName:
 
 class RequirementError(RuntimeError):
     """
-    Unlike assertions, unsatisfied requirements do not consitute a bug in the program.
+    Unlike assertions, unsatisfied requirements do not constitute a bug in the program.
     """
 
 
@@ -1813,7 +1813,7 @@ E = TypeVar('E')
 def iif(condition: bool, then: T, otherwise: E = absent) -> Union[T, E]:
     """
     An alternative to ``if`` expressions, that, in certain situations, might
-    be more convenient or readable, such as when when the ``else`` branch
+    be more convenient or readable, such as when the ``else`` branch
     evaluates to the zero value of a given type. Example zero values are
     ``0`` for ``int``, ``[]`` for ``list``, ``()`` for ``tuple``, ``{}`` for
     ``dict`` and ``''`` for ``str``.

@@ -1139,7 +1139,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             elif entity_type in ('samples', 'projects'):
                 if aggregate:
                     self.assertEqual(2, len(hit['_source']['bundles']))
-                    # All four files are fastqs so the are grouped together
+                    # All four files are fastqs so they are grouped together
                     self.assertEqual(4, one(contents['files'])['count'])
                 else:
                     self.assertEqual(2, len(contents['files']))
@@ -1321,7 +1321,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 contents = hit["_source"]['contents']
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
-                # This bundle contains three specimens which are pooled into the a single cell suspension with
+                # This bundle contains three specimens which are pooled into a single cell suspension with
                 # 10000 cells. Until we introduced cell suspensions as an inner entity we used to associate cell
                 # counts with specimen which would have inflated the total cell count to 30000 in this case.
                 self.assertEqual(10000, cell_suspensions[0]['total_estimated_cells'])

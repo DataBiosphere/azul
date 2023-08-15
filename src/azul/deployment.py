@@ -336,7 +336,7 @@ class AWS:
         contexts cannot use the same role, since a role cannot assume itself.
 
         The given role is assumed using currently active credentials, either the
-        the default ones or those from another assumed_role_credentials context.
+        default ones or those from another assumed_role_credentials context.
 
         :param role_arn: the ARN of the role to assume. If None, the context
                          manager does nothing and calls to the .client() method

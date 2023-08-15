@@ -149,7 +149,7 @@ class IndexService(DocumentService):
             # There is no need to replicate the contribution indices because
             # their durability does not matter to us as much. If a node goes
             # down, we'll just reindex. Since service requests only hit the
-            # aggregate indices, we can loose all but one node before
+            # aggregate indices, we can lose all but one node before
             # customers are affected.
             #
             num_shards = 1 if aggregate else max(num_nodes, num_workers // 8)
@@ -331,7 +331,7 @@ class IndexService(DocumentService):
                 else:
                     yield (*path, k), v
 
-        # Compare the index settins
+        # Compare the index settings
         expected, actual = (
             setify(dict(flatten(stringify(s))))
             for s in [settings, index['settings']]

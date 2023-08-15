@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 
 class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
 
-    def __init__(self, *args, **kwags):
-        super().__init__(*args, **kwags)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         # We use the botocore session from Boto3 since it is pre-configured by
         # envhook.py to use cached credentials for the AssumeRoleProvider. This
         # avoids repeated entry of MFA tokens when running this code locally.

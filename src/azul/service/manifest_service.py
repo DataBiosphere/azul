@@ -1561,7 +1561,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     def _remove_redundant_entries(cls, bundles: Bundles) -> None:
         """
         Remove bundle entries from dict that are redundant based on the set of
-        files it contains (eg. a primary bundle is made redundant by its derived
+        files it contains (e.g. a primary bundle is made redundant by its derived
         analysis bundle if the primary only has a subset of files that the
         analysis bundle contains or if they both have the same files).
         """
@@ -1677,7 +1677,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             for qualifier, groups in bundle.items():
                 # Sort the groups by reversed file name. This essentially sorts
                 # by file extension and any other more general suffixes
-                # preceding the extension. It ensure that `patient1_qc.bam` and
+                # preceding the extension. It ensures that `patient1_qc.bam` and
                 # `patient2_qc.bam` always end up in qualifier `bam[0]` while
                 # `patient1_metric.bam` and `patient2_metric.bam` end up in
                 # qualifier `bam[1]`.

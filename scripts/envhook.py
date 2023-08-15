@@ -253,8 +253,8 @@ class Path(pathlib.PosixPath):
 
     def follow(self) -> 'Path':
         """
-        This methods performs one level of symbolic link resolution. For paths
-        representing a symbolic link with an absolute target, this methods is
+        This method performs one level of symbolic link resolution. For paths
+        representing a symbolic link with an absolute target, this method is
         equivalent to readlink(). For symbolic links with relative targets, this
         method returns the result of appending the target to the parent of this
         path. The returned path is always absolute.

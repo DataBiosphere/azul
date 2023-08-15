@@ -535,7 +535,7 @@ class Chalice:
         renamed = {}
 
         def rename(block_name, resource_type, old):
-            # Rename and track the renaming as a side-effect
+            # Rename and track the renaming as a side effect
             new = self._rename_chalice_resource(app_name, old)
             renamed[(block_name, resource_type, old)] = new
             return new

@@ -263,7 +263,7 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
                 self.assertEqual([2] * len(fqids), list(map(len, partitions.values())))
             else:
                 # The partitions resulting from the first iteration should not
-                # need to be paritioned again
+                # need to be partitioned again
                 self.assertEqual([], notifications)
 
         # We got a tally of one for each

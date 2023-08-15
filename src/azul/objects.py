@@ -5,12 +5,12 @@ from azul import (
 
 class InternMeta(type):
     """
-    A meta class that interns instances of its instances such that the invariant (x == y) == (x is y) holds for all
-    instances x and y of any instance of this meta class. Note that an instance of a metaclass is a class.
+    A metaclass that interns instances of its instances such that the invariant (x == y) == (x is y) holds for all
+    instances x and y of any instance of this metaclass. Note that an instance of a metaclass is a class.
 
-    This meta class does not consider thread safety. It should be as safe or unsafe as lru_cache from functools.
+    This metaclass does not consider thread safety. It should be as safe or unsafe as lru_cache from functools.
 
-    Note also that this meta class never releases the memory used by instances of its instances.
+    Note also that this metaclass never releases the memory used by instances of its instances.
 
     >>> class C(metaclass=InternMeta):
     ...     def __init__(self, x):

@@ -135,17 +135,17 @@ class BigQueryReservation:
     def _ensure_capacity_commitment(self) -> None:
         """
         Idempotently purchase capacity commitment, ensuring that the number of
-        reserved slots is sufficent for the current configuration.
+        reserved slots is sufficient for the current configuration.
         """
         self._refresh('capacity_commitment')
         if self.capacity_commitment is None:
             self._create_capacity_commitment(self.slots)
         else:
-            current_capcaity = self.capacity_commitment.slot_count
+            current_capacity = self.capacity_commitment.slot_count
             log.info('Slot commitment with %d slots already purchased in location %r',
-                     current_capcaity, self.location)
-            if current_capcaity < self.slots:
-                deficit = self.slots - current_capcaity
+                     current_capacity, self.location)
+            if current_capacity < self.slots:
+                deficit = self.slots - current_capacity
                 log.info('Slot deficit is %d', deficit)
                 # To increase the capacity of an existing commitment, we must
                 # create a new commitment and then merge it with the old one.
@@ -173,7 +173,7 @@ class BigQueryReservation:
                     log.info('Merged capacity commitments {%r, %r} to create %r with %d total slots',
                              old_commitment.name, new_commitment.name, self.capacity_commitment.name,
                              self.capacity_commitment.slot_count)
-            elif current_capcaity > self.slots:
+            elif current_capacity > self.slots:
                 log.warning('Existing slot commitment has more slots than requested; '
                             'excessive costs may be incurred. If a smaller capacity '
                             'is desired, it must be reduced manually.')

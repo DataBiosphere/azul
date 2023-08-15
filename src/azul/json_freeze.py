@@ -92,7 +92,7 @@ def sort_frozen(x: AnyJSON) -> AnyJSON:
     """
     if isinstance(x, frozendict):
         # Note that each key occurs exactly once, so there will be no ties that have to be broken by comparing the
-        # values. The values may of heterogeneous types and therefore can't be compared.
+        # values. The values may be of heterogeneous types and therefore can't be compared.
         return tuple(sorted((k, sort_frozen(v)) for k, v in x.items()))
     elif isinstance(x, tuple):
         return tuple(sorted((sort_frozen(v) for v in x), key=TupleKey))

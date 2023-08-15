@@ -90,7 +90,7 @@ class AzulClient(SignatureHelper):
 
     def synthesize_notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
-        Generate a indexer notification for the given bundle.
+        Generate an indexer notification for the given bundle.
         """
         # Organic notifications sent by DSS have a different structure,
         # but since DSS is end-of-life these synthetic notifications are now the

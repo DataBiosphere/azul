@@ -162,7 +162,7 @@ class TestPortalService(VersionTableTestCase):
             ('read', (lambda db: db), self.dummy_db)
         ]
 
-        # Note that bucket is not re-emptied between sub-tests
+        # Note that bucket is not re-emptied between subtests
         for op, callback, expected in test_cases:
             with self.subTest(operation=op):
                 actual = self.portal_service._crud(callback)

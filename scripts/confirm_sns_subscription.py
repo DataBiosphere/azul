@@ -85,7 +85,7 @@ def prompt_for_subscription_url() -> furl:
 
 def confirm_subscription(url: furl) -> None:
     """
-    Confirm a SNS subscription and enable AuthenticateOnUnsubscribe.
+    Confirm an SNS subscription and enable AuthenticateOnUnsubscribe.
     """
     topic_arn = url.args['TopicArn']
     token = url.args['Token']

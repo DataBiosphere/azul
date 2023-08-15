@@ -65,7 +65,7 @@ class SpecificRemainingTime(RemainingTimeUntil):
     """
 
     def __init__(self, amount: float) -> None:
-        require(amount >= 0, "Inital remaining time must be non-negative")
+        require(amount >= 0, "Initial remaining time must be non-negative")
         super().__init__(time.time() + amount)
 
 

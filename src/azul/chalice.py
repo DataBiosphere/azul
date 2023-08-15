@@ -447,7 +447,7 @@ class AzulChaliceApp(Chalice):
     def catalog(self) -> str:
         request = self.current_request
         # A request is only present when this Lambda function is invoked by API
-        # Gateway (or a simulation like `make local`). Prominient examples of
+        # Gateway (or a simulation like `make local`). Prominent examples of
         # when the request is absent are `chalice package` or when the Lambda
         # function is invoked via an event schedule.
         if request is not None:

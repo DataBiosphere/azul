@@ -296,7 +296,7 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
         The default implementation assumes that the REST API representation
         of the value is already of the native type, and just returns the
         argument. Subclasses must override this if the native and API
-        representaations differ. An API representation of a field only occurs
+        representations differ. An API representation of a field only occurs
         in inputs to a REST API. Outputs like the body of a response use the
         native representation.
         """
