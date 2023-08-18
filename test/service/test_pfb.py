@@ -23,6 +23,7 @@ from azul_test_case import (
 class TestPFB(AzulUnitTestCase):
 
     def test_pfb_schema(self):
+        self.maxDiff = None
         field_types = FileTransformer.field_types()
         schema = avro_pfb.pfb_schema_from_field_types(field_types)
         fastavro.parse_schema(schema)

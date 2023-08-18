@@ -27,6 +27,7 @@ from typing import (
 )
 
 import attr
+import urllib3
 
 from azul import (
     CatalogName,
@@ -583,12 +584,14 @@ class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, 
         """
         raise NotImplementedError
 
-    # FIXME: Improve caching of DRS and TDR clients
-    #        https://github.com/DataBiosphere/azul/issues/5357
     def drs_client(self,
                    authentication: Optional[Authentication] = None
                    ) -> DRSClient:
-        return DRSClient(http_client=http_client())
+        return DRSClient(http_client=self._http_client)
+
+    @cached_property
+    def _http_client(self) -> urllib3.PoolManager:
+        return http_client()
 
     @abstractmethod
     def file_download_class(self) -> Type['RepositoryFileDownload']:
