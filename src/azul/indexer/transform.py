@@ -9,7 +9,10 @@ from typing import (
     Optional,
 )
 
+import attr
+
 from azul.indexer import (
+    Bundle,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -17,12 +20,20 @@ from azul.indexer.aggregate import (
 )
 from azul.indexer.document import (
     Contribution,
+    ContributionCoordinates,
+    EntityReference,
     EntityType,
     FieldTypes,
 )
+from azul.types import (
+    MutableJSON,
+)
 
 
+@attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class Transformer(metaclass=ABCMeta):
+    bundle: Bundle
+    deleted: bool
 
     @classmethod
     @abstractmethod
@@ -75,3 +86,15 @@ class Transformer(metaclass=ABCMeta):
         entities of types other than X.
         """
         raise NotImplementedError
+
+    def _contribution(self,
+                      contents: MutableJSON,
+                      entity: EntityReference
+                      ) -> Contribution:
+        coordinates = ContributionCoordinates(entity=entity,
+                                              bundle=self.bundle.fqid.upcast(),
+                                              deleted=self.deleted)
+        return Contribution(coordinates=coordinates,
+                            version=None,
+                            source=self.bundle.fqid.source,
+                            contents=contents)

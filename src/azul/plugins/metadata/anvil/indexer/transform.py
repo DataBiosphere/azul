@@ -39,7 +39,6 @@ from azul.indexer.aggregate import (
 )
 from azul.indexer.document import (
     Contribution,
-    ContributionCoordinates,
     EntityReference,
     EntityType,
     FieldTypes,
@@ -120,7 +119,6 @@ class LinkedEntities:
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: AnvilBundle
-    deleted: bool
 
     @classmethod
     def field_types(cls) -> FieldTypes:
@@ -307,8 +305,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _contribution(self,
-                      entity: EntityReference,
                       contents: MutableJSON,
+                      entity: EntityReference,
                       ) -> Contribution:
         # The entity type is used to determine the index name.
         # All activities go into the same index, regardless of their polymorphic type.
@@ -317,13 +315,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                                 if entity.entity_type.endswith('activity') else
                                 entity.entity_type)
         entity = attr.evolve(entity, entity_type=entity_type)
-        coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=self.bundle.fqid.upcast(),
-                                              deleted=self.deleted)
-        return Contribution(coordinates=coordinates,
-                            version=None,
-                            source=self.bundle.fqid.source,
-                            contents=contents)
+        return super()._contribution(contents, entity)
 
     def _entity(self,
                 entity: EntityReference,
@@ -422,7 +414,7 @@ class ActivityTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
-        return self._contribution(entity, contents)
+        return self._contribution(contents, entity)
 
 
 class BiosampleTransformer(BaseTransformer):
@@ -444,7 +436,7 @@ class BiosampleTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
-        return self._contribution(entity, contents)
+        return self._contribution(contents, entity)
 
 
 class DatasetTransformer(BaseTransformer):
@@ -465,7 +457,7 @@ class DatasetTransformer(BaseTransformer):
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file']),
         )
-        return self._contribution(entity, contents)
+        return self._contribution(contents, entity)
 
 
 class DonorTransformer(BaseTransformer):
@@ -487,7 +479,7 @@ class DonorTransformer(BaseTransformer):
             donors=[self._donor(entity)],
             files=self._entities(self._file, linked['file']),
         )
-        return self._contribution(entity, contents)
+        return self._contribution(contents, entity)
 
 
 class FileTransformer(BaseTransformer):
@@ -509,4 +501,4 @@ class FileTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=[self._file(entity)],
         )
-        return self._contribution(entity, contents)
+        return self._contribution(contents, entity)

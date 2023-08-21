@@ -63,7 +63,6 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     ClosedRange,
     Contribution,
-    ContributionCoordinates,
     EntityReference,
     EntityType,
     FieldType,
@@ -455,7 +454,6 @@ class DatedEntity(Entity, Protocol):
 class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: HCABundle
     api_bundle: api.Bundle
-    deleted: bool
 
     # This stub is only needed to aid PyCharm's type inference. Without this,
     # a constructor invocation that doesn't refer to the class explicitly, but
@@ -1206,19 +1204,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
-    def _contribution(self,
-                      contents: MutableJSON,
-                      entity_id: api.UUID4
-                      ) -> Contribution:
-        entity = EntityReference(entity_type=self.entity_type(),
-                                 entity_id=str(entity_id))
-        coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=self.bundle.fqid.upcast(),
-                                              deleted=self.deleted)
-        return Contribution(coordinates=coordinates,
-                            version=None,
-                            source=self.bundle.fqid.source,
-                            contents=contents)
+    def _entity_ref(self, entity_id: api.UUID4) -> EntityReference:
+        return EntityReference(entity_id=str(entity_id), entity_type=self.entity_type())
 
     @classmethod
     def field_types(cls) -> FieldTypes:
@@ -1436,7 +1423,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         additional_contents = self.matrix_stratification_values(file)
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
-                yield self._contribution(contents, file.document_id)
+                yield self._contribution(contents, self._entity_ref(file.document_id))
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
@@ -1531,7 +1518,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
-            yield self._contribution(contents, cell_suspension.document_id)
+            yield self._contribution(contents, self._entity_ref(cell_suspension.document_id))
 
 
 class SampleTransformer(PartitionedTransformer):
@@ -1578,7 +1565,7 @@ class SampleTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
-            yield self._contribution(contents, sample.document_id)
+            yield self._contribution(contents, self._entity_ref(sample.document_id))
 
 
 class BundleAsEntity(DatedEntity):
@@ -1678,8 +1665,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],
                         projects=[self._project(self._api_project)])
-
-        return self._contribution(contents, self._singleton_id)
+        return self._contribution(contents, self._entity_ref(self._singleton_id))
 
 
 class ProjectTransformer(SingletonTransformer):
