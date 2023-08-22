@@ -173,7 +173,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                   entity: EntityReference
                   ) -> bool:
         return (
-            pluralize(entity.entity_type).endswith(self.entity_type())
+            self._pluralize(entity.entity_type).endswith(self.entity_type())
             and partition.contains(UUID(entity.entity_id))
         )
 
