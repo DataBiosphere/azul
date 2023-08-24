@@ -60,7 +60,7 @@ from humancellatlas.data.metadata.helpers.staging_area import (
 # noinspection PyPep8Naming
 def setUpModule():
     logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(name)s %(threadName)s: %(message)s", )
+                        format='%(asctime)s %(levelname)s %(name)s %(threadName)s: %(message)s', )
     logging.getLogger('humancellatlas').setLevel(logging.DEBUG)
 
 
@@ -96,7 +96,7 @@ class TestAccessorApi(AzulUnitTestCase):
                                   diseases={'normal'},
                                   project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
                                   library_construction_methods={"Chromium 3' Single Cell v2"},
-                                  selected_cell_types={"neural cell"})
+                                  selected_cell_types={'neural cell'})
 
     def test_mouse(self):
         self._test_example_bundle(directory='Mouse Melanoma',
@@ -181,7 +181,7 @@ class TestAccessorApi(AzulUnitTestCase):
                           diseases={'subcutaneous melanoma'}),
 
     # TODO: Use bundle from production to fix test broken by missing bundle
-    @skip("Test bundle no longer exists on staging")
+    @skip('Test bundle no longer exists on staging')
     def test_vx_primary_cs_bundle(self):
         """
         A vx primary bundle with a cell_suspension as sequencing input
@@ -192,7 +192,7 @@ class TestAccessorApi(AzulUnitTestCase):
                           diseases={'glioblastoma'})
 
     # TODO: Use bundle from production to fix test broken by missing bundle
-    @skip("Test bundle no longer exists on staging")
+    @skip('Test bundle no longer exists on staging')
     def test_vx_analysis_cs_bundle(self):
         """
         A vx analysis bundle for the primary bundle with a cell_suspension as
@@ -204,7 +204,7 @@ class TestAccessorApi(AzulUnitTestCase):
                           diseases={'glioblastoma'}),
 
     # TODO: Use bundle from production to fix test broken by missing bundle
-    @skip("Test bundle no longer exists on staging")
+    @skip('Test bundle no longer exists on staging')
     def test_vx_analysis_specimen_bundle(self):
         """
         A vx primary bundle with a specimen_from_organism as sequencing input
@@ -254,7 +254,7 @@ class TestAccessorApi(AzulUnitTestCase):
                                    age_range=AgeRange(1734480000.0, 1860624000.0),
                                    diseases={'normal'},
                                    project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
-                                   library_construction_methods={"10X v2 sequencing"},
+                                   library_construction_methods={'10X v2 sequencing'},
                                    selected_cell_types={'neural cell'})
         protocols = [p for p in bundle.protocols.values() if isinstance(p, LibraryPreparationProtocol)]
         protocol = one(protocols)
@@ -435,26 +435,26 @@ class TestAccessorApi(AzulUnitTestCase):
         if is_sequencing_bundle:
             sequencing_input = bundle.sequencing_input
             self.assertGreater(len(sequencing_input), 0,
-                               "There should be at least one sequencing input")
+                               'There should be at least one sequencing input')
             self.assertEqual(len(set(si.document_id for si in sequencing_input)), len(sequencing_input),
-                             "Sequencing inputs should be distinct entities")
+                             'Sequencing inputs should be distinct entities')
             self.assertEqual(len(set(si.biomaterial_id for si in sequencing_input)), len(sequencing_input),
-                             "Sequencing inputs should have distinct biomaterial IDs")
+                             'Sequencing inputs should have distinct biomaterial IDs')
             self.assertTrue(all(isinstance(si, Biomaterial) for si in sequencing_input),
-                            "All sequencing inputs should be instances of Biomaterial")
+                            'All sequencing inputs should be instances of Biomaterial')
             sequencing_input_schema_names = set(si.schema_name for si in sequencing_input)
             self.assertTrue({'cell_suspension', 'specimen_from_organism'}.issuperset(sequencing_input_schema_names),
-                            "The sequencing inputs in the test bundle are of specific schemas")
+                            'The sequencing inputs in the test bundle are of specific schemas')
 
             sequencing_output = bundle.sequencing_output
             self.assertGreater(len(sequencing_output), 0,
-                               "There should be at least one sequencing output")
+                               'There should be at least one sequencing output')
             self.assertEqual(len(set(so.document_id for so in sequencing_output)), len(sequencing_output),
-                             "Sequencing outputs should be distinct entities")
+                             'Sequencing outputs should be distinct entities')
             self.assertTrue(all(isinstance(so, SequenceFile) for so in sequencing_output),
-                            "All sequencing outputs should be instances of SequenceFile")
+                            'All sequencing outputs should be instances of SequenceFile')
             self.assertTrue(all(so.manifest_entry.name.endswith('.fastq.gz') for so in sequencing_output),
-                            "All sequencing outputs in the test bundle are fastq files.")
+                            'All sequencing outputs in the test bundle are fastq files.')
 
         has_specimens = storage_methods or preservation_methods
         specimen_types = {type(s) for s in bundle.specimens}

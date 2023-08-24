@@ -57,7 +57,7 @@ class ESClientFactory:
         common_params = dict(hosts=[dict(host=host, port=port)],
                              timeout=timeout,
                              max_retries=0)
-        if host.endswith(".amazonaws.com"):
+        if host.endswith('.amazonaws.com'):
             aws_auth = CachedBotoAWSRequestsAuth(aws_host=host,
                                                  aws_region=aws.region_name,
                                                  aws_service='es')

@@ -160,7 +160,7 @@ class CredentialsProvisioner:
                         key_id, service_account_email)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Suppress noisy warning from Google library. See
     # https://github.com/googleapis/google-api-python-client/issues/299#issuecomment-255793971
     logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)

@@ -618,12 +618,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _contact(self, p: api.ProjectContact):
         # noinspection PyDeprecation
         return {
-            "contact_name": p.contact_name,
-            "corresponding_contributor": p.corresponding_contributor,
-            "email": p.email,
-            "institution": p.institution,
-            "laboratory": p.laboratory,
-            "project_role": p.project_role
+            'contact_name': p.contact_name,
+            'corresponding_contributor': p.corresponding_contributor,
+            'email': p.email,
+            'institution': p.institution,
+            'laboratory': p.laboratory,
+            'project_role': p.project_role
         }
 
     @classmethod
@@ -638,10 +638,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _publication(self, p: api.ProjectPublication):
         # noinspection PyDeprecation
         return {
-            "publication_title": p.publication_title,
-            "publication_url": p.publication_url,
-            "official_hca_publication": p.official_hca,
-            "doi": p.doi
+            'publication_title': p.publication_title,
+            'publication_url': p.publication_url,
+            'official_hca_publication': p.official_hca,
+            'doi': p.doi
         }
 
     def _accession(self, p: api.Accession):

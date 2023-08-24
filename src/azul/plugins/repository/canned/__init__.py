@@ -154,7 +154,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                               manifest=cast(MutableJSONs, manifest),
                               metadata_files=cast(MutableJSON, metadata))
         assert version == bundle.version, (version, bundle)
-        log.info("It took %.003fs to download bundle %s.%s",
+        log.info('It took %.003fs to download bundle %s.%s',
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
 

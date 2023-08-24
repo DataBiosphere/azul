@@ -391,7 +391,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 file['uuid'] = new_file_uuid
                 break
         else:
-            assert False, f"Unable to find file name {file_name}"
+            assert False, f'Unable to find file name {file_name}'
 
         def _walkthrough(v):
             if isinstance(v, dict):
@@ -1073,23 +1073,23 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 self.assertLess(old_version, version)
                 old_contents = old_source['contents']
                 old_project = one(old_contents['projects'])
-                self.assertNotEqual(old_project["project_title"], project["project_title"])
-                self.assertNotEqual(old_project["project_short_name"], project["project_short_name"])
-                self.assertNotEqual(old_project["laboratory"], project["laboratory"])
+                self.assertNotEqual(old_project['project_title'], project['project_title'])
+                self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
+                self.assertNotEqual(old_project['laboratory'], project['laboratory'])
                 if aggregate and entity_type != 'projects':
-                    self.assertNotEqual(old_project["institutions"], project["institutions"])
+                    self.assertNotEqual(old_project['institutions'], project['institutions'])
                 else:
-                    self.assertNotEqual(old_project["contributors"], project["contributors"])
-                self.assertNotEqual(old_contents["donors"][0]["genus_species"],
-                                    contents["donors"][0]["genus_species"])
+                    self.assertNotEqual(old_project['contributors'], project['contributors'])
+                self.assertNotEqual(old_contents['donors'][0]['genus_species'],
+                                    contents['donors'][0]['genus_species'])
 
-            self.assertEqual("Single cell transcriptome analysis of human pancreas reveals transcriptional "
-                             "signatures of aging and somatic mutation patterns.",
-                             get(project["project_title"]))
-            self.assertEqual("Single cell transcriptome analysis of human pancreas",
-                             get(project["project_short_name"]))
-            self.assertNotIn("Sarah Teichmann", project["laboratory"])
-            self.assertIn("Molecular Atlas", project["laboratory"])
+            self.assertEqual('Single cell transcriptome analysis of human pancreas reveals transcriptional '
+                             'signatures of aging and somatic mutation patterns.',
+                             get(project['project_title']))
+            self.assertEqual('Single cell transcriptome analysis of human pancreas',
+                             get(project['project_short_name']))
+            self.assertNotIn('Sarah Teichmann', project['laboratory'])
+            self.assertIn('Molecular Atlas', project['laboratory'])
             if aggregate and entity_type != 'projects':
                 self.assertNotIn('Farmers Trucks', project['institutions'])
             else:
@@ -1126,9 +1126,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
                 self.assertIsNotNone(cm.records)
                 num_hits = sum(1 for log_msg in cm.output
-                               if "There was a conflict with document" in log_msg
-                               and (f"_{self.catalog}_samples_aggregate" in log_msg
-                                    or f"_{self.catalog}_projects_aggregate" in log_msg))
+                               if 'There was a conflict with document' in log_msg
+                               and (f'_{self.catalog}_samples_aggregate' in log_msg
+                                    or f'_{self.catalog}_projects_aggregate' in log_msg))
                 # One conflict for the specimen and one for the project
                 self.assertEqual(2, num_hits)
 
@@ -1308,7 +1308,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
-            contents = hit["_source"]['contents']
+            contents = hit['_source']['contents']
             entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
                 cell_suspensions = contents['cell_suspensions']
@@ -1338,7 +1338,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
-                contents = hit["_source"]['contents']
+                contents = hit['_source']['contents']
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
                 # This bundle contains three specimens which are pooled into a
@@ -1360,8 +1360,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         donor `diseases` value and assert that both values are represented in
         the indexed document.
         """
-        bundle_fqid = self.bundle_fqid(uuid="3db604da-940e-49b1-9bcc-25699a55b295",
-                                       version="2018-11-02T18:40:48.983513Z")
+        bundle_fqid = self.bundle_fqid(uuid='3db604da-940e-49b1-9bcc-25699a55b295',
+                                       version='2018-11-02T18:40:48.983513Z')
         self._index_canned_bundle(bundle_fqid)
 
         hits = self._get_all_hits()
@@ -1371,9 +1371,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             specimen_diseases = contents['specimens'][0]['disease']
             donor_diseases = contents['donors'][0]['diseases']
             self.assertEqual(1, len(specimen_diseases))
-            self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_diseases[0])
+            self.assertEqual('atrophic vulva (specimen_from_organism)', specimen_diseases[0])
             self.assertEqual(1, len(donor_diseases))
-            self.assertEqual("atrophic vulva (donor_organism)", donor_diseases[0])
+            self.assertEqual('atrophic vulva (donor_organism)', donor_diseases[0])
 
     def test_organoid_priority(self):
         """
@@ -1974,5 +1974,5 @@ def get(v):
     return one(v) if isinstance(v, list) else v
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

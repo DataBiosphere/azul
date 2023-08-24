@@ -143,9 +143,9 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
         Fetches hits from ES instance searching for a particular entity ID
         """
         body = {
-            "query": {
-                "term": {
-                    "entity_id.keyword": entity_id
+            'query': {
+                'term': {
+                    'entity_id.keyword': entity_id
                 }
             }
         }

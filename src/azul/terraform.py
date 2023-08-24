@@ -679,7 +679,7 @@ class Chalice:
 
         for resource in resources['aws_lambda_function'].values():
             assert 'layers' not in resource
-            resource['layers'] = ["${aws_lambda_layer_version.dependencies.arn}"]
+            resource['layers'] = ['${aws_lambda_layer_version.dependencies.arn}']
             env = config.es_endpoint_env(
                 es_endpoint=(
                     aws.es_endpoint
@@ -689,7 +689,7 @@ class Chalice:
                 es_instance_count=(
                     aws.es_instance_count
                     if config.share_es_domain else
-                    "${aws_elasticsearch_domain.index.cluster_config[0].instance_count}"
+                    '${aws_elasticsearch_domain.index.cluster_config[0].instance_count}'
                 )
             )
             resource['environment']['variables'].update(env)

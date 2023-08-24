@@ -62,19 +62,19 @@ class TestPortalService(VersionTableTestCase):
     @property
     def multiplex_db(self) -> JSONs:
         return [{
-            "integrations": [
+            'integrations': [
                 # this should be flattened
                 {
-                    "entity_ids": {
-                        self.portal_service.catalog_source: ["good"],
-                        "other": ["bad"],
+                    'entity_ids': {
+                        self.portal_service.catalog_source: ['good'],
+                        'other': ['bad'],
                     }
                 },
                 # this should be removed (entity_ids defined but missing for current stage)
                 {
-                    "entity_ids": {
+                    'entity_ids': {
                         self.portal_service.catalog_source: [],
-                        "other": ["whatever"]
+                        'other': ['whatever']
                     }
                 },
                 # this should be present but still empty (missing entity_ids field is ignored)
@@ -86,8 +86,8 @@ class TestPortalService(VersionTableTestCase):
 
     demultiplex_db = [
         {
-            "integrations": [
-                {"entity_ids": ["good"]},
+            'integrations': [
+                {'entity_ids': ['good']},
                 {}
             ]
         }

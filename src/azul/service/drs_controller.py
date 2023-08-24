@@ -167,7 +167,7 @@ class DRSController(SourceController):
             assert file_version is None or data_obj['version'] == file_version
             return Response({'data_object': data_obj}, status_code=200)
         else:
-            return Response({'msg': "Data object not found."}, status_code=404)
+            return Response({'msg': 'Data object not found.'}, status_code=404)
 
     @deprecated('DOS support will be removed')
     def _dos_gs_url(self, file_uuid, version) -> mutable_furl:

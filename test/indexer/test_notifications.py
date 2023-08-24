@@ -37,7 +37,7 @@ class TestValidNotificationRequests(LocalAppTestCase,
 
     @classmethod
     def lambda_name(cls) -> str:
-        return "indexer"
+        return 'indexer'
 
     @mock_sts
     @mock_sqs
@@ -59,27 +59,27 @@ class TestValidNotificationRequests(LocalAppTestCase,
     @mock_sqs
     def test_invalid_notifications(self):
         bodies = {
-            "Missing body": {},
-            "Missing bundle uuid":
+            'Missing body': {},
+            'Missing bundle uuid':
                 {
                     'bundle_fqid': {
                         'version': '2018-03-28T13:55:26.044Z'
                     }
                 },
-            "bundle uuid is None":
+            'bundle uuid is None':
                 {
                     'bundle_fqid': {
                         'uuid': None,
                         'version': '2018-03-28T13:55:26.044Z'
                     }
                 },
-            "Missing bundle_version":
+            'Missing bundle_version':
                 {
                     'bundle_fqid': {
                         'uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd'
                     }
                 },
-            "bundle version is None":
+            'bundle version is None':
                 {
                     'bundle_fqid': {
                         'uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
@@ -90,7 +90,7 @@ class TestValidNotificationRequests(LocalAppTestCase,
                 {
                     'bundle_fqid': {
                         'uuid': f'}}{str(uuid4())}{{',
-                        'version': "2019-12-31T00:00:00.000Z"
+                        'version': '2019-12-31T00:00:00.000Z'
                     }
                 },
             'Malformed bundle version':

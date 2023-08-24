@@ -265,9 +265,9 @@ class TestManifestEndpoints(ManifestTestCase):
         metadata_files = self._replace_uuids(bundle.metadata_files, old_to_new)
         # Change organ to prevent cell_suspensions aggregating together
         metadata_files['specimen_from_organism_0.json']['organ'] = {
-            "text": "lung",
-            "ontology": "UBERON:0002048",
-            "ontology_label": "lung"
+            'text': 'lung',
+            'ontology': 'UBERON:0002048',
+            'ontology_label': 'lung'
         }
         assert isinstance(manifest, list)
         return DSSBundle(fqid=self.bundle_fqid(uuid=old_to_new[bundle.uuid],
@@ -645,7 +645,7 @@ class TestManifestEndpoints(ManifestTestCase):
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(bundle_fqid)
-        filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
+        filters = {'fileFormat': {'is': ['matrix', 'mtx']}}
         url = self.base_url.set(path='/index/files',
                                 args=dict(catalog=self.catalog,
                                           filters=json.dumps(filters)))
@@ -709,12 +709,12 @@ class TestManifestEndpoints(ManifestTestCase):
         self._index_canned_bundle(bundle_fqid)
         domain = self.drs_domain
 
-        bam_b0_0_uuid, bam_b0_0_version = "51c9ad31-5888-47eb-9e0c-02f042373c4e", "2018-10-10T03:10:35.284782Z"
-        bam_b0_1_uuid, bam_b0_1_version = "b1c167da-0825-4c63-9cbc-2aada1ab367c", "2018-10-10T03:10:35.971561Z"
-        fastq_b0_r1_uuid, fastq_b0_r1_version = "c005f647-b3fb-45a8-857a-8f5e6a878ccf", "2018-10-10T02:38:11.612423Z"
-        fastq_b0_r2_uuid, fastq_b0_r2_version = "b764ce7d-3938-4451-b68c-678feebc8f2a", "2018-10-10T02:38:11.851483Z"
-        fastq_b1_r1_uuid, fastq_b1_r1_version = "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb", "2018-11-02T11:33:44.698028Z"
-        fastq_b1_r2_uuid, fastq_b1_r2_version = "74897eb7-0701-4e4f-9e6b-8b9521b2816b", "2018-11-02T11:33:44.450442Z"
+        bam_b0_0_uuid, bam_b0_0_version = '51c9ad31-5888-47eb-9e0c-02f042373c4e', '2018-10-10T03:10:35.284782Z'
+        bam_b0_1_uuid, bam_b0_1_version = 'b1c167da-0825-4c63-9cbc-2aada1ab367c', '2018-10-10T03:10:35.971561Z'
+        fastq_b0_r1_uuid, fastq_b0_r1_version = 'c005f647-b3fb-45a8-857a-8f5e6a878ccf', '2018-10-10T02:38:11.612423Z'
+        fastq_b0_r2_uuid, fastq_b0_r2_version = 'b764ce7d-3938-4451-b68c-678feebc8f2a', '2018-10-10T02:38:11.851483Z'
+        fastq_b1_r1_uuid, fastq_b1_r1_version = '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb', '2018-11-02T11:33:44.698028Z'
+        fastq_b1_r2_uuid, fastq_b1_r2_version = '74897eb7-0701-4e4f-9e6b-8b9521b2816b', '2018-11-02T11:33:44.450442Z'
         expected_rows = [
             {
                 'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',

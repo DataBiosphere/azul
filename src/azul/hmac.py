@@ -100,4 +100,4 @@ class SignatureHelper(HTTPSignatureKeyResolver):
         key, key_id = aws.get_hmac_key_and_id()
         self.signer.sign(request,
                          key_id=key_id,
-                         covered_component_ids=("@method", "@path", "content-digest"))
+                         covered_component_ids=('@method', '@path', 'content-digest'))

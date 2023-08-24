@@ -84,7 +84,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
 
     @classmethod
     def lambda_name(cls) -> str:
-        return "service"
+        return 'service'
 
     @classmethod
     def _setup_indices(cls):

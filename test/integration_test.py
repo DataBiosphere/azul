@@ -1397,16 +1397,16 @@ class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
                 if not running:
                     break
                 mock_entry = {
-                    "portal_id": "foo",
-                    "integrations": [
+                    'portal_id': 'foo',
+                    'integrations': [
                         {
-                            "integration_id": "bar",
-                            "entity_type": "project",
-                            "integration_type": "get",
-                            "entity_ids": ["baz"]
+                            'integration_id': 'bar',
+                            'entity_type': 'project',
+                            'integration_type': 'get',
+                            'entity_ids': ['baz']
                         }
                     ],
-                    "mock-count": entry_format.format(thread_count, op_count)
+                    'mock-count': entry_format.format(thread_count, op_count)
                 }
                 self.portal_service._crud(lambda db: [*db, mock_entry])
 

@@ -52,5 +52,5 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
 
 del HealthCheckTestCase
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

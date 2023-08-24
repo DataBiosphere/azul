@@ -115,7 +115,7 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
             except Exception:
                 if time.time() > deadline:
                     raise
-                log.debug("Unable to connect to server", exc_info=True)
+                log.debug('Unable to connect to server', exc_info=True)
                 time.sleep(1)
             else:
                 break

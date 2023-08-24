@@ -209,7 +209,7 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
         self._assert_source(bundle_fqid.source)
         now = time.time()
         bundle = self._emulate_bundle(bundle_fqid)
-        log.info("It took %.003fs to download bundle %s.%s",
+        log.info('It took %.003fs to download bundle %s.%s',
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
 

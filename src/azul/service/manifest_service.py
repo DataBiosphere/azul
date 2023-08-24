@@ -927,7 +927,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         if base_name:
             file_name_prefix = unicodedata.normalize('NFKD', base_name)
             file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
-            timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+            timestamp = datetime.now().strftime('%Y-%m-%d %H.%M')
             file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension}'
         else:
             # FIXME: Consolidate parsing of manifest object key
@@ -1671,8 +1671,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # one file per file format
         def qualify(qualifier, column_name, index=None):
             if index is not None:
-                qualifier = f"{qualifier}_{index}"
-            return f"{self.column_path_separator}{qualifier}{self.column_path_separator}{column_name}"
+                qualifier = f'{qualifier}_{index}'
+            return f'{self.column_path_separator}{qualifier}{self.column_path_separator}{column_name}'
 
         num_groups_per_qualifier = defaultdict(int)
 

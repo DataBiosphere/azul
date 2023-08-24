@@ -78,7 +78,7 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
     @mock_sts
     def test_presigned_url(self):
         sample_key = 'foo-presigned-url'
-        sample_content = json.dumps({"a": 1})
+        sample_content = json.dumps({'a': 1})
 
         self.storage_service.create_bucket()
         self.storage_service.put(sample_key, sample_content.encode())

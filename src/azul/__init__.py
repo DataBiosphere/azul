@@ -112,9 +112,9 @@ class Config:
         return roles
 
     def _boolean(self, value: str) -> bool:
-        if value == "0":
+        if value == '0':
             return False
-        elif value == "1":
+        elif value == '1':
             return True
         else:
             raise ValueError('Expected "0" or "1"', value)
@@ -131,7 +131,7 @@ class Config:
         self.environ['AZUL_DEBUG'] = str(debug)
 
     def _validate_debug(self, debug):
-        require(debug in (0, 1, 2), "AZUL_DEBUG must be either 0, 1 or 2")
+        require(debug in (0, 1, 2), 'AZUL_DEBUG must be either 0, 1 or 2')
 
     _es_endpoint_env_name = 'AZUL_ES_ENDPOINT'
 
@@ -461,7 +461,7 @@ class Config:
         self._validate_term(resource_name)
         if stage is None:
             stage = self.deployment_stage
-        return f"{self.resource_prefix}-{resource_name}-{stage}{suffix}"
+        return f'{self.resource_prefix}-{resource_name}-{stage}{suffix}'
 
     # FIXME: Eliminate hard-coded separator
     #        https://github.com/databiosphere/azul/issues/2964
@@ -611,7 +611,7 @@ class Config:
         return self.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
 
     def api_lambda_domain(self, lambda_name: str) -> str:
-        return self.subdomain(lambda_name) + "." + self.domain_name
+        return self.subdomain(lambda_name) + '.' + self.domain_name
 
     @property
     def drs_domain(self):

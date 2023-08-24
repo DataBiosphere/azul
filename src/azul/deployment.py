@@ -221,7 +221,7 @@ class AWS:
         return es_domain['DomainStatus']
 
     def get_lambda_arn(self, function_name, suffix):
-        return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
+        return f'arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}'
 
     @property
     @_cache
