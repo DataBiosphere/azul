@@ -407,11 +407,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         return old_file_uuid
 
     def _num_docs_by_index(self, hits) -> Mapping[tuple[str, bool], int]:
-        counter = Counter()
-        for hit in hits:
-            entity_type, aggregate = self._parse_index_name(hit)
-            counter[entity_type, aggregate] += 1
-        return counter
+        return Counter(map(self._parse_index_name, hits))
 
     def test_indexed_matrices(self):
         """
