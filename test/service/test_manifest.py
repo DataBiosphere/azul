@@ -1048,7 +1048,7 @@ class TestManifestEndpoints(ManifestTestCase):
             self.assertEqual(200, response.status_code)
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
-                self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
+                self.assertTrue(all('manifest' == first(name.split('/')) for name in zip_fh.namelist()))
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')

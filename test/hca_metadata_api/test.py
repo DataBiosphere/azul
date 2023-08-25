@@ -518,7 +518,7 @@ class TestAccessorApi(AzulUnitTestCase):
         version = '2019-04-03T103426.471000Z'
         manifest, metadata_files = self._canned_bundle('staging', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
-        imaging_protocol = one([p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol)])
+        imaging_protocol = one(p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol))
         self.assertEqual(len(imaging_protocol.probe), 240)
         assay_types = {probe.assay_type for probe in imaging_protocol.probe}
         self.assertEqual(assay_types, {'in situ sequencing'})
@@ -547,7 +547,7 @@ class TestAccessorApi(AzulUnitTestCase):
         manifest, metadata_files = self._canned_bundle('prod', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         for expected_count, link_type in [(6, 'process_link'), (2, 'supplementary_file_link')]:
-            actual_count = sum([1 for link in bundle.links if link.link_type == link_type])
+            actual_count = sum(1 for link in bundle.links if link.link_type == link_type)
             self.assertEqual(expected_count, actual_count)
         for link in bundle.links:
             self.assertIn(link.source_type, api_entity_types)

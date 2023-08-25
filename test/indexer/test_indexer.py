@@ -1595,7 +1595,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                     document_ids = one(contents[sample_entity_type])['document_id']
                 else:
                     document_ids = [d['document_id'] for d in contents[sample_entity_type]]
-                    entity = one([d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id']])
+                    entity = one(d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id'])
                     self.assertEqual(sample['biomaterial_id'], entity['biomaterial_id'])
                 self.assertTrue(sample['document_id'] in document_ids)
                 self.assertEqual(one(contents['specimens'])['organ'], ['blood'] if aggregate else 'blood')
