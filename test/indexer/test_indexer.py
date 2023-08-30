@@ -61,7 +61,9 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     IndexName,
+    Replica,
     ReplicaCoordinates,
+    VersionType,
     null_bool,
     null_int,
     null_str,
@@ -2116,6 +2118,31 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         contributor['institution'] += ' || LabMED'
         with self.assertRaisesRegex(RequirementError, "'||' is disallowed"):
             self._index_bundle(bundle)
+
+    def test_replica_update(self):
+        contents = {'replica': {}}
+        coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
+                                         entity=CataloguedEntityReference(catalog=self.catalog,
+                                                                          entity_type='replica',
+                                                                          entity_id='foo'))
+        replica = Replica(version=None,
+                          replica_type='file',
+                          contents=contents,
+                          hub_ids=[],
+                          coordinates=coordinates)
+
+        for case, hub_ids, expected_hub_ids in [
+            ('New replica', ['1', '1'], ['1']),
+            ('Additional hub IDs', ['3', '2', '1'], ['1', '2', '3']),
+            ('Redundant hub IDs', ['1', '2'], ['1', '2', '3'])
+        ]:
+            with self.subTest(case):
+                replica.hub_ids[:] = hub_ids
+                replica.version_type = VersionType.create_only
+                self.index_service.replicate(self.catalog, [replica])
+                hit = one(self._get_all_hits())
+                self.assertEqual(hit['_id'], coordinates.document_id)
+                self.assertEqual(hit['_source']['hub_ids'], expected_hub_ids)
 
 
 class TestIndexManagement(AzulUnitTestCase):
