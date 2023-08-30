@@ -512,19 +512,26 @@ class IndexService(DocumentService):
             writer.write(replicas)
             retry_replicas = []
             for r in replicas:
-                if r.coordinates in writer.retries:
-                    conflicts = writer.conflicts[r.coordinates]
-                    if conflicts == 0:
+                if r.version_type is VersionType.create_only:
+                    if r.coordinates in writer.retries:
                         retry_replicas.append(r)
-                    elif conflicts == 1:
-                        # FIXME: Track replica hub IDs
-                        #        https://github.com/DataBiosphere/azul/issues/5360
-                        writer.conflicts.pop(r.coordinates)
-                        num_present += 1
                     else:
-                        assert False, (conflicts, r.coordinates)
+                        num_written += 1
+                elif r.version_type is VersionType.none:
+                    if r.coordinates in writer.retries:
+                        retry_replicas.append(r)
+                        conflicts = writer.conflicts[r.coordinates]
+                        if conflicts in (0, 1):
+                            num_present += conflicts
+                        else:
+                            assert False, (conflicts, r.coordinates)
+                    else:
+                        # Replica was already counted in `num_present`, so
+                        # incrementing `num_written` would result in an incorrect
+                        # final count
+                        pass
                 else:
-                    num_written += 1
+                    assert False, r.version_type
             replicas = retry_replicas
 
         writer.raise_on_errors()
@@ -851,8 +858,6 @@ class IndexWriter:
     def _write_individually(self, documents: Iterable[Document]):
         log.info('Writing documents individually')
         for doc in documents:
-            if isinstance(doc, Replica):
-                assert doc.version_type is VersionType.create_only, doc
             try:
                 method = getattr(self.es_client, doc.op_type.name)
                 method(refresh=self.refresh, **doc.to_index(self.catalog, self.field_types))
@@ -912,6 +917,8 @@ class IndexWriter:
         if isinstance(doc, Aggregate):
             log.debug('Successfully wrote %s with %i contribution(s).',
                       coordinates, doc.num_contributions)
+        elif isinstance(doc, Replica) and doc.version_type is VersionType.none:
+            log.debug('Successfully updated %s.', coordinates)
         else:
             log.debug('Successfully wrote %s.', coordinates)
 
