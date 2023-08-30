@@ -180,6 +180,9 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEBUG': '0',
 
+        # Whether to create and populate an index for replica documents.
+        'AZUL_ENABLE_REPLICAS': '1',
+
         # The name of the current deployment. This variable controls the name of
         # all cloud resources and is the main vehicle for isolating cloud
         # resources between deployments.

@@ -3329,5 +3329,228 @@
             "effective_cell_count": 1,
             "effective_cell_count_": 1
         }
+    },
+    {
+        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_4628c80cede8a4dd39584f8b50619edacc7f62e7",
+        "_index": "azul_v2_dev_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
+                "schema_type": "file",
+                "file_core": {
+                    "file_name": "SRR3562915_1.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "read_index": "read1",
+                "read_length": 75,
+                "insdc_run": [
+                    "SRR3562915"
+                ],
+                "provenance": {
+                    "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                    "submission_date": "2018-11-02T10:03:39.600Z",
+                    "update_date": "2018-11-02T10:35:07.705Z"
+                }
+            },
+            "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+            "replica_type": "file",
+            "hub_ids": []
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_f8ca7504548249c223277135af497beb5fba29df",
+        "_index": "azul_v2_dev_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+                "schema_type": "biomaterial",
+                "biomaterial_core": {
+                    "biomaterial_id": "GSM2172585 1",
+                    "biomaterial_description": "Single cell from human pancreas",
+                    "ncbi_taxon_id": [
+                        9606
+                    ],
+                    "insdc_biomaterial": "SRS1459312"
+                },
+                "genus_species": [
+                    {
+                        "text": "Homo sapiens",
+                        "ontology": "NCBITaxon:9606",
+                        "ontology_label": "Homo sapiens"
+                    }
+                ],
+                "total_estimated_cells": 1,
+                "provenance": {
+                    "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                    "submission_date": "2018-11-02T10:02:28.599Z",
+                    "update_date": "2018-11-02T10:10:10.908Z"
+                }
+            },
+            "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+            "replica_type": "cell_suspension",
+            "hub_ids": []
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_8ee6fbddb7c933ebe39b31b977c51af21687f036",
+        "_index": "azul_v2_dev_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
+                "schema_type": "file",
+                "file_core": {
+                    "file_name": "SRR3562915_2.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "read_index": "read2",
+                "read_length": 75,
+                "insdc_run": [
+                    "SRR3562915"
+                ],
+                "provenance": {
+                    "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                    "submission_date": "2018-11-02T10:03:39.593Z",
+                    "update_date": "2018-11-02T10:35:03.810Z"
+                }
+            },
+            "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+            "replica_type": "file",
+            "hub_ids": []
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_0bb754590d94de62d6fb15bdbac5f64f54072cb0",
+        "_index": "azul_v2_dev_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+                "schema_type": "biomaterial",
+                "biomaterial_core": {
+                    "biomaterial_id": "DID_scRSq06_pancreas",
+                    "ncbi_taxon_id": [
+                        9606
+                    ]
+                },
+                "genus_species": [
+                    {
+                        "text": "Australopithecus",
+                        "ontology": "NCBITaxon:9606",
+                        "ontology_label": "Australopithecus"
+                    }
+                ],
+                "organ": {
+                    "text": "pancreas",
+                    "ontology": "UBERON:0001264",
+                    "ontology_label": "pancreas"
+                },
+                "organ_part": {
+                    "text": "islet of Langerhans",
+                    "ontology": "UBERON:0000006",
+                    "ontology_label": "islet of Langerhans"
+                },
+                "diseases": [
+                    {
+                        "text": "normal",
+                        "ontology": "PATO:0000461",
+                        "ontology_label": "normal"
+                    }
+                ],
+                "provenance": {
+                    "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                    "submission_date": "2018-11-02T10:02:12.298Z",
+                    "update_date": "2018-11-02T10:09:26.517Z"
+                }
+            },
+            "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+            "replica_type": "sample",
+            "hub_ids": []
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_42d51043dcd0030b5ee9ce47fa30c85bcc92bac6",
+        "_index": "azul_v2_dev_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/project/9.0.3/project",
+                "schema_type": "project",
+                "project_core": {
+                    "project_short_name": "Single of human pancreas",
+                    "project_title": "Single cell transcriptome patterns.",
+                    "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue"
+                },
+                "supplementary_links": [
+                    "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                ],
+                "insdc_project": "SRP075496",
+                "geo_series": "GSE81547",
+                "contributors": [
+                    {
+                        "contact_name": "Martin, Enge",
+                        "email": "martin.enge@gmail.com",
+                        "institution": "University",
+                        "address": "Bioengineering, Stanford University, James H. Clark Center, 318 Campus Drive,, Stanford, CA, USA",
+                        "country": "USA"
+                    },
+                    {
+                        "contact_name": "Laura,,Huerta",
+                        "email": "lauhuema@ebi.ac.uk",
+                        "institution": "Farmers Trucks",
+                        "laboratory": "John Dear",
+                        "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                        "country": "UK",
+                        "project_role": "external curator",
+                        "orcid_id": "0000-0002-8748-599X",
+                        "corresponding_contributor": false
+                    },
+                    {
+                        "contact_name": "Matthew,,Green",
+                        "email": "hewgreen@ebi.ac.uk",
+                        "phone": "(+44) 122-349-4444",
+                        "institution": "Farmers Trucks",
+                        "laboratory": "John Dear",
+                        "address": "Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SD",
+                        "country": "UK",
+                        "project_role": "Human Cell Atlas wrangler",
+                        "orcid_id": "0000-0003-2771-9894",
+                        "corresponding_contributor": false
+                    }
+                ],
+                "publications": [
+                    {
+                        "authors": [
+                            "Enge M",
+                            "Arda HE",
+                            "Mignardi M",
+                            "Beausang J",
+                            "Bottino R",
+                            "Kim SK",
+                            "Quake SR"
+                        ],
+                        "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                        "doi": "10.1016/j.cell.2017.09.004",
+                        "pmid": 28965763,
+                        "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                    }
+                ],
+                "provenance": {
+                    "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                    "submission_date": "2018-11-02T10:02:12.133Z",
+                    "update_date": "2018-11-02T10:07:39.499Z"
+                }
+            },
+            "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+            "replica_type": "project",
+            "hub_ids": []
+        },
+        "_type": "_doc"
     }
 ]
