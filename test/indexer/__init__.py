@@ -45,6 +45,9 @@ from azul.indexer.index_service import (
 from azul.plugins import (
     FieldPath,
 )
+from azul.plugins.metadata.hca import (
+    HCABundle,
+)
 from azul.types import (
     AnyJSON,
     JSON,
@@ -152,8 +155,12 @@ class IndexerTestCase(CatalogTestCase,
 
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
-            # DUOS contributions contain no lists
-            if not is_duos_contribution(entity_type, doc_type):
+            if not (
+                # Replicas may contain (intentionally) unsorted metadata
+                doc_type is DocumentType.replica
+                # DUOS contributions contain no lists
+                or is_duos_contribution(entity_type, doc_type)
+            ):
                 self._verify_sorted_lists(hit['_source'])
         return hits
 
@@ -195,11 +202,13 @@ class IndexerTestCase(CatalogTestCase,
             cls.index_service.index(cls.catalog, bundle)
 
     @classmethod
-    def _write_contributions(cls, bundle: Bundle) -> Tallies:
+    def _write_transforms(cls, bundle: HCABundle) -> Tallies:
         bundle = attr.evolve(bundle,
                              manifest=deepcopy(bundle.manifest),
                              metadata_files=deepcopy(bundle.metadata_files))
-        contributions = cls.index_service.transform(cls.catalog, bundle, delete=False)
+        transforms = cls.index_service.transform(cls.catalog, bundle, delete=False)
+        contributions, replicas = transforms
+        cls.index_service.replicate(cls.catalog, replicas)
         return cls.index_service.contribute(cls.catalog, contributions)
 
     def _verify_sorted_lists(self, data: AnyJSON):

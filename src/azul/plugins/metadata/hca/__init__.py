@@ -10,6 +10,7 @@ from typing import (
 
 from azul.indexer.document import (
     Aggregate,
+    DocumentType,
     EntityType,
     IndexName,
 )
@@ -89,57 +90,58 @@ class Plugin(MetadataPlugin[HCABundle]):
 
     def mapping(self, index_name: IndexName) -> MutableJSON:
         mapping = super().mapping(index_name)
-        mapping['properties']['contents'] = {
-            'properties': {
-                'projects': {
-                    'properties': {
-                        'accessions': {
-                            'type': 'nested'
+        if index_name.doc_type in (DocumentType.contribution, DocumentType.aggregate):
+            mapping['properties']['contents'] = {
+                'properties': {
+                    'projects': {
+                        'properties': {
+                            'accessions': {
+                                'type': 'nested'
+                            }
                         }
                     }
                 }
             }
-        }
-        mapping['dynamic_templates'][0:0] = [
-            {
-                'donor_age_range': {
-                    'path_match': 'contents.donors.organism_age_range',
-                    'mapping': self.range_mapping
-                }
-            },
-            {
-                'exclude_metadata_field': {
-                    'path_match': 'contents.metadata',
-                    'mapping': {
-                        'enabled': False
+            mapping['dynamic_templates'][0:0] = [
+                {
+                    'donor_age_range': {
+                        'path_match': 'contents.donors.organism_age_range',
+                        'mapping': self.range_mapping
+                    }
+                },
+                {
+                    'exclude_metadata_field': {
+                        'path_match': 'contents.metadata',
+                        'mapping': {
+                            'enabled': False
+                        }
+                    }
+                },
+                {
+                    'exclude_metadata_field': {
+                        'path_match': 'contents.files.related_files',
+                        'mapping': {
+                            'enabled': False
+                        }
+                    }
+                },
+                {
+                    'project_nested_contributors': {
+                        'path_match': 'contents.projects.contributors',
+                        'mapping': {
+                            'enabled': False
+                        }
+                    }
+                },
+                {
+                    'project_nested_publications': {
+                        'path_match': 'contents.projects.publications',
+                        'mapping': {
+                            'enabled': False
+                        }
                     }
                 }
-            },
-            {
-                'exclude_metadata_field': {
-                    'path_match': 'contents.files.related_files',
-                    'mapping': {
-                        'enabled': False
-                    }
-                }
-            },
-            {
-                'project_nested_contributors': {
-                    'path_match': 'contents.projects.contributors',
-                    'mapping': {
-                        'enabled': False
-                    }
-                }
-            },
-            {
-                'project_nested_publications': {
-                    'path_match': 'contents.projects.publications',
-                    'mapping': {
-                        'enabled': False
-                    }
-                }
-            }
-        ]
+            ]
         return mapping
 
     @property

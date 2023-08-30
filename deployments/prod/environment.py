@@ -1134,4 +1134,6 @@ def env() -> Mapping[str, Optional[str]]:
             'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
             'channel_id': 'C04JWDFCPFZ'  # #team-boardwalk-prod
         }),
+
+        'AZUL_ENABLE_REPLICAS': '0',
     }

@@ -26,11 +26,18 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     FieldTypes,
+    Replica,
+    ReplicaCoordinates,
+)
+from azul.json import (
+    json_hash,
 )
 from azul.types import (
     JSON,
     MutableJSON,
 )
+
+Transform = tuple[Optional[Contribution], Optional[Replica]]
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
@@ -44,6 +51,15 @@ class Transformer(metaclass=ABCMeta):
         """
         The type of outer entity this transformer creates and aggregates
         contributions for.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def replica_type(self, entity: EntityReference) -> str:
+        """
+        The type of replica emitted by this transformer.
+
+        See :py:attr:`Replica.replica_type`
         """
         raise NotImplementedError
 
@@ -71,7 +87,7 @@ class Transformer(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
+    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
         """
         Return the contributions by the current bundle to the entities it
         contains metadata about. More than one bundle can contribute to a
@@ -107,6 +123,16 @@ class Transformer(metaclass=ABCMeta):
                             version=None,
                             source=self.bundle.fqid.source,
                             contents=contents)
+
+    def _replica(self, contents: MutableJSON, entity: EntityReference) -> Replica:
+        coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
+                                         entity=attr.evolve(entity,
+                                                            entity_type='replica'))
+        return Replica(coordinates=coordinates,
+                       version=None,
+                       replica_type=self.replica_type(entity),
+                       contents=contents,
+                       hub_ids=[])
 
     @classmethod
     @abstractmethod
