@@ -20,6 +20,26 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5301 Alarm on detection of new vulnerabilities by Inspector
+============================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5363 Noisy alarm from EC2 for CreateNetworkInterface during initial deploy
+===========================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5408 Prepare for vacation
 ==========================
 

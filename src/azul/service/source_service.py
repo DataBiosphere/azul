@@ -68,19 +68,10 @@ class SourceService:
         assert not any(joiner in c for c in cache_key), cache_key
         cache_key = joiner.join(cache_key)
         try:
-            source_ids = self._get(cache_key)
+            source_ids = set(self._get(cache_key))
         except CacheMiss:
-            pass
-        else:
-            # FIXME: Remove safety net from source cache format transition
-            #        https://github.com/DataBiosphere/azul/issues/5204
-            try:
-                return set(source_ids)
-            except TypeError as e:
-                if e.args != ("unhashable type: 'dict'",):
-                    raise
-        source_ids = plugin.list_source_ids(authentication)
-        self._put(cache_key, list(source_ids))
+            source_ids = plugin.list_source_ids(authentication)
+            self._put(cache_key, list(source_ids))
         return source_ids
 
     def list_sources(self,
