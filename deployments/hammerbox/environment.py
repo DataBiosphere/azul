@@ -202,7 +202,6 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('anvil', 'anvil1', anvil1_sources),
-                ('anvil', 'anvil', anvil_sources),
             ]
             for suffix, internal in [
                 ('', False),
