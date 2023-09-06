@@ -1413,7 +1413,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 'insdc_study': ['PRJNA000000']
             }
             entity_type, aggregate = self._parse_index_name(hit)
-            if entity_type == 'project':
+            if entity_type == 'projects':
                 expected_accessions = [
                     {'namespace': namespace, 'accession': accession}
                     for namespace, accessions in accessions_by_namespace.items()
