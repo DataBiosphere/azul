@@ -492,15 +492,6 @@ class ManifestService(ElasticsearchService):
             else:
                 raise e
         else:
-            # FIXME: This is a temporary workaround. We can't implement 1-hour
-            #        objects lifespans using S3's lifecycle rules because the
-            #        minimum expiration time is 1 day.
-            #        https://github.com/DataBiosphere/azul-private/issues/96
-            lm = response['LastModified']
-            age = datetime.now(lm.tzinfo) - lm
-            logger.info('Cached manifest is %s old', age)
-            if age > timedelta(hours=1):
-                return None
             seconds_until_expire = self._get_seconds_until_expire(response)
             if seconds_until_expire > config.manifest_expiration_margin:
                 tagging = self.storage_service.get_object_tagging(object_key)
