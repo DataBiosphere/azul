@@ -1407,9 +1407,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             contents = hit['_source']['contents']
             project = one(contents['projects'])
             accessions_by_namespace = {
-                'array_express': ['E-AAAA-00'],
-                'geo_series': ['GSE00000'],
                 'insdc_project': ['SRP000000', 'SRP000001'],
+                'geo_series': ['GSE00000'],
+                'array_express': ['E-AAAA-00'],
                 'insdc_study': ['PRJNA000000']
             }
             entity_type, aggregate = self._parse_index_name(hit)
