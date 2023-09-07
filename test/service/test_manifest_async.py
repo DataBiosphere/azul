@@ -302,7 +302,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 mock_get_manifest.reset_mock()
                     mock_start_execution.assert_not_called()
                     mock_describe_execution.assert_called_once()
-                    expected_url = str(manifest_url) if fetch else object_url
+                    expect_redirect = fetch and format_ is ManifestFormat.curl
+                    expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
                     reset()
 
