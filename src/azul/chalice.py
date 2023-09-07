@@ -497,6 +497,7 @@ class AzulChaliceApp(Chalice):
 
     def threshold(self, *, errors: int, throttles: int):
         def wrapper(f):
+            assert isinstance(f, chalice.app.EventSourceHandler), f
             f.errors_threshold = errors
             f.throttles_threshold = throttles
             return f
