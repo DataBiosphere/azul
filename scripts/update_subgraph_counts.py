@@ -70,25 +70,21 @@ def main(args: list[str]):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=AzulArgumentHelpFormatter)
 
-    parser.add_argument('--catalogs',
-                        nargs='+',
+    parser.add_argument('--catalog',
                         metavar='NAME',
-                        default=[
-                            c for c in config.catalogs
-                            if c not in config.integration_test_catalogs
-                        ],
-                        help='The names of the catalogs to determine source specs for.')
+                        default=config.default_catalog,
+                        help='The name of the catalog to determine source specs for.')
+                        metavar='NAME',
 
     args = parser.parse_args(args)
 
-    for catalog in args.catalogs:
-        print(catalog)
-        print('-' * len(catalog))
-        sep = ''
-        for spec_args in generate_sources(catalog):
-            print(f'{sep}{spec_args}', end='')
-            sep = ',\n'
-        print()
+    print(args.catalog)
+    print('-' * len(args.catalog))
+    sep = ''
+    for spec_args in generate_sources(args.catalog):
+        print(f'{sep}{spec_args}', end='')
+        sep = ',\n'
+    print()
 
     print(format_description('''
         -----------------
