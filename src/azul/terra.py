@@ -458,13 +458,6 @@ class TDRClient(SAMClient):
                 'Source name changed unexpectedly', source, response)
         return response
 
-    def check_api_access(self, source: TDRSourceSpec) -> None:
-        """
-        Verify that the client is authorized to read from the TDR service API.
-        """
-        self._lookup_source(source)
-        log.info('TDR client is authorized for API access to %s.', source)
-
     def _lookup_source(self, source: TDRSourceSpec) -> MutableJSON:
         endpoint = self._repository_endpoint(source.type_name + 's')
         endpoint.set(args=dict(filter=source.bq_name, limit='2'))
