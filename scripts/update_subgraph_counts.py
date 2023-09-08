@@ -18,6 +18,9 @@ from azul import (
 from azul.args import (
     AzulArgumentHelpFormatter,
 )
+from azul.auth import (
+    OAuth2,
+)
 from azul.azulclient import (
     AzulClient,
 )
@@ -28,7 +31,8 @@ from azul.openapi import (
     format_description,
 )
 from azul.terra import (
-    TDRSourceSpec,
+    SourceRef as TDRSourceRef,
+    TDRClient,
 )
 
 
@@ -42,19 +46,23 @@ class SourceSpecArgs:
         return f'mksrc({self.project!r}, {self.snapshot!r}, {self.subgraph_count!r})'
 
 
+indexer_auth = OAuth2(TDRClient.for_indexer().credentials.token)
+
+
 def generate_sources(catalog: CatalogName) -> list[SourceSpecArgs]:
     plugin = AzulClient().repository_plugin(catalog)
+    sources = plugin.list_sources(indexer_auth)
 
-    def generate_source(spec: TDRSourceSpec) -> SourceSpecArgs:
-        spec = attr.evolve(spec, prefix=Prefix.of_everything)
-        ref = plugin.resolve_source(str(spec))
-        partitions = plugin.list_partitions(ref)
+    def generate_source(source: TDRSourceRef) -> SourceSpecArgs:
+        spec = attr.evolve(source.spec, prefix=Prefix.of_everything)
+        source = attr.evolve(source, spec=spec)
+        partitions = plugin.list_partitions(source)
         return SourceSpecArgs(project=spec.project,
                               snapshot=spec.name,
                               subgraph_count=sum(partitions.values()))
 
     with ThreadPoolExecutor(max_workers=8) as tpe:
-        sources = tpe.map(generate_source, plugin.sources)
+        sources = tpe.map(generate_source, sources)
     return list(sources)
 
 
