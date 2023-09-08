@@ -8,6 +8,9 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 import sys
+from typing import (
+    Optional,
+)
 
 import attr
 
@@ -49,9 +52,16 @@ class SourceSpecArgs:
 indexer_auth = OAuth2(TDRClient.for_indexer().credentials.token)
 
 
-def generate_sources(catalog: CatalogName) -> list[SourceSpecArgs]:
-    plugin = AzulClient().repository_plugin(catalog)
-    sources = sorted(plugin.list_sources(indexer_auth),
+def generate_sources(catalog: CatalogName,
+                     old_catalog: Optional[CatalogName] = None
+                     ) -> list[SourceSpecArgs]:
+    client = AzulClient()
+    plugin = client.repository_plugin(catalog)
+    sources = plugin.list_sources(indexer_auth)
+    if old_catalog is not None:
+        old_plugin = client.repository_plugin(old_catalog)
+        sources = filter(lambda ref: ref.spec not in old_plugin.sources, sources)
+    sources = sorted(sources,
                      key=lambda ref: ref.spec.name)
 
     def generate_source(source: TDRSourceRef) -> SourceSpecArgs:
@@ -73,15 +83,19 @@ def main(args: list[str]):
     parser.add_argument('--catalog',
                         metavar='NAME',
                         default=config.default_catalog,
-                        help='The name of the catalog to determine source specs for.')
+                        help='The name of the catalogs to determine source specs for.')
+    parser.add_argument('--old-catalog',
                         metavar='NAME',
+                        default=None,
+                        help='If the chosen catalog is based on an older catalog, this option can be '
+                             'used to exclude the sources from the older catalog.')
 
     args = parser.parse_args(args)
 
     print(args.catalog)
     print('-' * len(args.catalog))
     sep = ''
-    for spec_args in generate_sources(args.catalog):
+    for spec_args in generate_sources(args.catalog, args.old_catalog):
         print(f'{sep}{spec_args}', end='')
         sep = ',\n'
     print()
