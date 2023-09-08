@@ -1276,7 +1276,7 @@ class TestManifestCache(ManifestTestCase):
 
         # If the cached manifest has a long time till it expires then no log message expected
         logs_output = log_messages_from_manifest_request(seconds_until_expire=3600)
-        self.assertFalse(any('Cached manifest is about to expire' in message for message in logs_output))
+        self.assertFalse(any('Cached manifest' in message for message in logs_output))
 
         # If the cached manifest has a short time till it expires then a log message is expected
         logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
@@ -1399,7 +1399,8 @@ class TestManifestResponse(ManifestTestCase):
                     request_url = self.base_url.set(path='/manifest/files', args=args)
                     redirect_url = self.base_url.set(path='/manifest/files',
                                                      args=dict(args, objectKey=object_key))
-                    expected_url = redirect_url if fetch else object_url
+                    expect_redirect = fetch and format_ is ManifestFormat.curl
+                    expected_url = redirect_url if expect_redirect else object_url
                     if format_ is ManifestFormat.curl:
                         expected = {
                             'cmd.exe': f'curl.exe --location --fail "{expected_url}" | curl.exe --config -',
@@ -1420,7 +1421,7 @@ class TestManifestResponse(ManifestTestCase):
                         response = requests.get(str(request_url)).json()
                         expected = {
                             'Status': 302,
-                            'Location': str(redirect_url),
+                            'Location': str(expected_url),
                             'CommandLine': expected
                         }
                         self.assertEqual(expected, response)
