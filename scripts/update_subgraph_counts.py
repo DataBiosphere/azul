@@ -51,7 +51,8 @@ indexer_auth = OAuth2(TDRClient.for_indexer().credentials.token)
 
 def generate_sources(catalog: CatalogName) -> list[SourceSpecArgs]:
     plugin = AzulClient().repository_plugin(catalog)
-    sources = plugin.list_sources(indexer_auth)
+    sources = sorted(plugin.list_sources(indexer_auth),
+                     key=lambda ref: ref.spec.name)
 
     def generate_source(source: TDRSourceRef) -> SourceSpecArgs:
         spec = attr.evolve(source.spec, prefix=Prefix.of_everything)
@@ -62,8 +63,7 @@ def generate_sources(catalog: CatalogName) -> list[SourceSpecArgs]:
                               subgraph_count=sum(partitions.values()))
 
     with ThreadPoolExecutor(max_workers=8) as tpe:
-        sources = tpe.map(generate_source, sources)
-    return list(sources)
+        yield from tpe.map(generate_source, sources)
 
 
 def main(args: list[str]):
@@ -84,9 +84,11 @@ def main(args: list[str]):
     for catalog in args.catalogs:
         print(catalog)
         print('-' * len(catalog))
-        spec_args_list = generate_sources(catalog)
-        spec_args_list.sort(key=lambda spec_args: spec_args.snapshot)
-        print(',\n'.join(map(str, spec_args_list)), end='\n\n')
+        sep = ''
+        for spec_args in generate_sources(catalog):
+            print(f'{sep}{spec_args}', end='')
+            sep = ',\n'
+        print()
 
     print(format_description('''
         -----------------
