@@ -101,20 +101,6 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def sources(self) -> Set[TDRSourceSpec]:
         return self._sources
 
-    # FIXME: Improve caching of DRS and TDR clients
-    #        https://github.com/DataBiosphere/azul/issues/5357
-    def _user_authenticated_tdr(self,
-                                authentication: Optional[Authentication]
-                                ) -> TDRClient:
-        if authentication is None:
-            tdr = TDRClient.for_anonymous_user()
-        elif isinstance(authentication, OAuth2):
-            tdr = TDRClient.for_registered_user(authentication)
-        else:
-            raise PermissionError('Unsupported authentication format',
-                                  type(authentication))
-        return tdr
-
     def _auth_fallback(self,
                        authentication: Optional[Authentication],
                        tdr_callback: Callable[[TDRClient], T]
@@ -166,15 +152,16 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def tdr(self):
         return self._tdr()
 
-    # To utilize the caching of certain TDR responses that's occurring within
-    # the client instance we need to cache client instances. If we cached the
-    # client instance within the plugin instance, we would get one client
+    # To utilize the caching of certain responses that's occurring within
+    # the TDR and DRS client instances (from the TDR API and identifiers.org,
+    # respectively), we need to cache these client instances. If we cached the
+    # client instances within the plugin instance, we would get one client
     # instance per plugin instance. The plugin is instantiated frequently and in
     # a variety of contexts.
     #
     # Because of that, caching the plugin instances would be a more invasive
-    # change than simply caching the client instance per plugin class. That's
-    # why this is a class method. The client uses urllib3, whose thread-safety
+    # change than simply caching the client instances per plugin class. That's
+    # why these are class methods. The clients use urllib3, whose thread-safety
     # is disputed (https://github.com/urllib3/urllib3/issues/1252), so have to
     # cache client instances per-class AND per-thread.
 
@@ -182,6 +169,27 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     @cache_per_thread
     def _tdr(cls):
         return TDRClient.for_indexer()
+
+    @classmethod
+    @cache_per_thread
+    def _user_authenticated_tdr(cls,
+                                authentication: Optional[Authentication]
+                                ) -> TDRClient:
+        if authentication is None:
+            tdr = TDRClient.for_anonymous_user()
+        elif isinstance(authentication, OAuth2):
+            tdr = TDRClient.for_registered_user(authentication)
+        else:
+            raise PermissionError('Unsupported authentication format',
+                                  type(authentication))
+        return tdr
+
+    @classmethod
+    @cache_per_thread
+    def _drs_client(cls,
+                    authentication: Optional[Authentication] = None
+                    ) -> DRSClient:
+        return cls._user_authenticated_tdr(authentication).drs_client()
 
     def _lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id
@@ -223,12 +231,10 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
         raise NotImplementedError
 
-    # FIXME: Improve caching of DRS and TDR clients
-    #        https://github.com/DataBiosphere/azul/issues/5357
     def drs_client(self,
                    authentication: Optional[Authentication] = None
                    ) -> DRSClient:
-        return self._user_authenticated_tdr(authentication).drs_client()
+        return self._drs_client(authentication)
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload

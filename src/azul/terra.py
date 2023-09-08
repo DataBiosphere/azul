@@ -662,5 +662,5 @@ class TDRClient(SAMClient):
         else:
             return self
 
-    def drs_client(self):
+    def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
