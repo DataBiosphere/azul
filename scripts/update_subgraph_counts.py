@@ -12,6 +12,7 @@ import sys
 import attr
 
 from azul import (
+    CatalogName,
     config,
 )
 from azul.args import (
@@ -41,7 +42,7 @@ class SourceSpecArgs:
         return f'mksrc({self.project!r}, {self.snapshot!r}, {self.subgraph_count!r})'
 
 
-def generate_sources(catalog: str) -> list[SourceSpecArgs]:
+def generate_sources(catalog: CatalogName) -> list[SourceSpecArgs]:
     plugin = AzulClient().repository_plugin(catalog)
 
     def generate_source(spec: TDRSourceSpec) -> SourceSpecArgs:
