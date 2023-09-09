@@ -7,12 +7,17 @@ import argparse
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
+import os
 import sys
 from typing import (
+    Mapping,
     Optional,
 )
 
 import attr
+from more_itertools import (
+    first,
+)
 
 from azul import (
     CatalogName,
@@ -30,13 +35,70 @@ from azul.azulclient import (
 from azul.indexer import (
     Prefix,
 )
+from azul.modules import (
+    load_module,
+)
 from azul.openapi import (
     format_description,
+)
+from azul.plugins import (
+    RepositoryPlugin,
 )
 from azul.terra import (
     SourceRef as TDRSourceRef,
     TDRClient,
 )
+
+environment = load_module(module_name='environment',
+                          path=os.path.join(config.project_root,
+                                            'deployments',
+                                            '.active',
+                                            'environment.py'))
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class SubgraphCounter:
+    partition_sizes: Mapping[str, int]
+
+    @classmethod
+    def for_source(cls,
+                   plugin: RepositoryPlugin,
+                   source: TDRSourceRef,
+                   prefix: Prefix
+                   ) -> 'SubgraphCounter':
+        spec = attr.evolve(source.spec, prefix=prefix)
+        source = attr.evolve(source, spec=spec)
+        return cls(partition_sizes=plugin.list_partitions(source))
+
+    @property
+    def count(self) -> int:
+        return sum(self.partition_sizes.values())
+
+    def default_common_prefix(self) -> str:
+        """
+        The common prefix that will be used for the supplied source if none is
+        explicitly configured.
+        """
+        try:
+            func = getattr(environment, 'common_prefix')
+        except AttributeError:
+            assert not config.is_sandbox_or_personal_deployment, environment.__path__
+            return ''
+        else:
+            return func(self.count)
+
+    def ideal_common_prefix(self) -> str:
+        """
+        A common prefix of the same length as the :meth:`default_common_prefix`
+        that yields an optimally sized, nonempty partition of subgraphs in the
+        supplied source.
+        """
+        best_prefix, best_count = first(self.partition_sizes.items())
+        ideal_size = 16
+        for prefix, count in sorted(self.partition_sizes.items()):
+            if count > 0 and abs(count - ideal_size) < abs(best_count - ideal_size):
+                best_prefix, best_count = prefix, count
+        return best_prefix
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
@@ -44,9 +106,13 @@ class SourceSpecArgs:
     project: str
     snapshot: str
     subgraph_count: int
+    explicit_prefix: Optional[str]
 
     def __str__(self) -> str:
-        return f'mksrc({self.project!r}, {self.snapshot!r}, {self.subgraph_count!r})'
+        params = f'{self.project!r}, {self.snapshot!r}, {self.subgraph_count!r}'
+        if self.explicit_prefix is not None:
+            params += f', prefix={self.explicit_prefix!r}'
+        return f'mksrc({params})'
 
 
 indexer_auth = OAuth2(TDRClient.for_indexer().credentials.token)
@@ -65,12 +131,18 @@ def generate_sources(catalog: CatalogName,
                      key=lambda ref: ref.spec.name)
 
     def generate_source(source: TDRSourceRef) -> SourceSpecArgs:
-        spec = attr.evolve(source.spec, prefix=Prefix.of_everything)
-        source = attr.evolve(source, spec=spec)
-        partitions = plugin.list_partitions(source)
-        return SourceSpecArgs(project=spec.project,
-                              snapshot=spec.name,
-                              subgraph_count=sum(partitions.values()))
+        explicit_prefix = None
+        counter = SubgraphCounter.for_source(plugin, source, Prefix.of_everything)
+        default_prefix = counter.default_common_prefix()
+        if len(default_prefix) > 0:
+            counter_prefix = Prefix(common='', partition=len(default_prefix))
+            prefixed_counter = SubgraphCounter.for_source(plugin, source, counter_prefix)
+            if prefixed_counter.partition_sizes.get(default_prefix, 0) == 0:
+                explicit_prefix = prefixed_counter.ideal_common_prefix()
+        return SourceSpecArgs(project=source.spec.project,
+                              snapshot=source.spec.name,
+                              subgraph_count=counter.count,
+                              explicit_prefix=explicit_prefix)
 
     with ThreadPoolExecutor(max_workers=8) as tpe:
         yield from tpe.map(generate_source, sources)
@@ -107,8 +179,7 @@ def main(args: list[str]):
 
         This script does *not* populate the `ma` or `pop` flags for the source
         specs. Do not copy/paste the above output without checking whether these
-        flags should be applied. If `mksrc` generates a common prefix, manual
-        adjustment of the generated common prefix may be required.
+        flags should be applied.
     '''))
 
 
