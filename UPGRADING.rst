@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#15 Insecure Transportation Security Protocol Supported (TLS 1.0)
+===========================================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5189 Delete unused Docker images from ECR
 ==========================================
 
