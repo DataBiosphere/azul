@@ -891,6 +891,26 @@ dcp30_sources = mkdict(dcp29_sources, 391, mkdelta([
     mksrc('datarepo-80208d02', 'hca_prod_f86f1ab41fbb4510ae353ffd752d4dfc__20220119_dcp2_20230815_dcp30', 21),
 ]))
 
+dcp31_sources = mkdict(dcp30_sources, 400, mkdelta([
+    mksrc('datarepo-36295e0b', 'hca_prod_0911cc0406d64ffc8318b90b0039e8ad__20230905_dcp2_20230905_dcp31', 42),
+    mksrc('datarepo-83dafa1a', 'hca_prod_279f176633194e3c9f996fb59ba9b3e5__20230815_dcp2_20230905_dcp31', 3),
+    mksrc('datarepo-789ec382', 'hca_prod_326b36bd0975475f983b56ddb8f73a4d__20230905_dcp2_20230905_dcp31', 5),
+    mksrc('datarepo-b68fee1b', 'hca_prod_3e92c74d256c40cd927316f155da8342__20220729_dcp2_20230905_dcp31', 58),
+    mksrc('datarepo-d8916247', 'hca_prod_453d7ee2319f496c986299d397870b63__20230905_dcp2_20230906_dcp31', 47),
+    mksrc('datarepo-7ad0a304', 'hca_prod_4ef86852aca04a9185229968e0e54dbe__20230313_dcp2_20230905_dcp31', 34),
+    mksrc('datarepo-18691416', 'hca_prod_51f02950ee254f4b8d0759aa99bb3498__20220117_dcp2_20230905_dcp31', 12),
+    mksrc('datarepo-d6c0be70', 'hca_prod_577c946d6de54b55a854cd3fde40bff2__20220117_dcp2_20230905_dcp31', 21),
+    mksrc('datarepo-3352a319', 'hca_prod_6936da41369246bbbca1cd0f507991e9__20230905_dcp2_20230905_dcp31', 1081),
+    mksrc('datarepo-ff7365d6', 'hca_prod_739ef78aba5d4487a0139982db66d222__20230815_dcp2_20230905_dcp31', 16),
+    mksrc('datarepo-517878d7', 'hca_prod_7dcffc327c8243969a4f88b5579bfe8a__20230905_dcp2_20230905_dcp31', 22),
+    mksrc('datarepo-088b9165', 'hca_prod_7f9766ffbb124279b34078d140bdd7ba__20230905_dcp2_20230905_dcp31', 110),
+    mksrc('datarepo-4450b12b', 'hca_prod_92892ab213344b1c976114f5a73548ea__20230616_dcp2_20230905_dcp31', 10),
+    mksrc('datarepo-f305a966', 'hca_prod_9746f4e0d3b2454389b310288162851b__20230526_dcp2_20230905_dcp31', 2),
+    mksrc('datarepo-922314cf', 'hca_prod_dcc28fb37bab48cebc4b684c00e133ce__20230905_dcp2_20230905_dcp31', 35),
+    mksrc('datarepo-6a51c34a', 'hca_prod_e374c1cf73fd4a7a866979dc41714984__20230905_dcp2_20230905_dcp31', 106),
+    mksrc('datarepo-2abbf49d', 'hca_prod_e456c042f6b64ceca3381a8ef80bd779__20230905_dcp2_20230905_dcp31', 291),
+]))
+
 lungmap_sources = mkdict({}, 3, mkdelta([
     mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
     mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
@@ -950,6 +970,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=mklist(sources))
             for atlas, catalog, sources in [
                 ('hca', 'dcp30', dcp30_sources),
+                ('hca', 'dcp31', dcp31_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
                 ('lungmap', 'lm3', lm3_sources)
