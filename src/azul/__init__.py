@@ -1442,7 +1442,7 @@ class Config:
         'docker.io/library/docker:24.0.2-dind',
         'docker.io/library/python:3.9.17-bullseye',
         'docker.io/lmenezes/cerebro:0.9.4',
-        'docker.io/ucscgi/azul-pycharm:2022.3.3',
+        'docker.io/ucscgi/azul-pycharm:2022.3.3-3',
     ]
 
     docker_platforms = [
