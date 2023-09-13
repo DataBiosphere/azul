@@ -20,6 +20,17 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5408 Prepare for vacation
+==========================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment. Only the
+``prod.gitlab`` deployment should actually have a non-empty plan.
+
+
 DataBiosphere/azul-private#95 Resolve vulnerabilities in AMI for GitLab
 =======================================================================
 
