@@ -1453,10 +1453,10 @@ class Config:
     docker_images = [
         'docker.io/ucscgi/azul-elasticsearch:7.17.10-2',
         'docker.elastic.co/kibana/kibana-oss:7.10.2',
-        'docker.io/clamav/clamav:1.1.0-1',
+        'docker.io/clamav/clamav:1.2.0-1',
         'docker.io/cllunsford/aws-signing-proxy:0.2.2',
-        'docker.io/gitlab/gitlab-ce:16.1.2-ce.0',
-        'docker.io/gitlab/gitlab-runner:ubuntu-v16.1.0',
+        'docker.io/gitlab/gitlab-ce:16.3.2-ce.0',
+        'docker.io/gitlab/gitlab-runner:ubuntu-v16.3.0',
         'docker.io/library/docker:24.0.2',
         'docker.io/library/docker:24.0.2-dind',
         'docker.io/library/python:3.9.17-bullseye',
