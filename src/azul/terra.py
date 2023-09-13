@@ -431,6 +431,8 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
+    # FIXME: Eliminate azul.terra.TDRClient.TDRSource
+    #        https://github.com/DataBiosphere/azul/issues/5524
     @attr.s(frozen=True, kw_only=True, auto_attribs=True)
     class TDRSource:
         project: str
