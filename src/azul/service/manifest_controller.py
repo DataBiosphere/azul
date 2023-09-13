@@ -178,25 +178,21 @@ class ManifestController(SourceController):
             }
         else:
             # The manifest is ultimately downloaded via a signed URL that points
-            # to the storage bucket. This signed URL expires after one hour,
-            # which is desirable because it is a client and its short lifespan
-            # reduces the risk of it being shared. However, this also makes it
-            # unsuitable for cURL downloads that may need to be retried over
-            # longer timespans (https://github.com/DataBiosphere/azul/issues/2875)
-            # To allow for cURL manifests to remain valid for longer than 1
-            # hour, we instead return a 301 redirect to the non-fetch
-            # `/manifest/files` endpoint with the object key of the cached
-            # manifest specified as a query parameter. This object key is also a
-            # client secret; it is mutually exclusive with OAuth tokens and
-            # allows for the cached manifest to be downloaded without
-            # authentication for as long as the cached manifest persists in S3.
-            # This increases the risk of the secret being shared, but is
-            # necessary to preserve the functionality of the cURL download.
-            if fetch and manifest.format_ is ManifestFormat.curl:
-                # For AnVIL, we are prohibited from exposing a manifest URL that
-                # remains valid for longer than 1 hour. Currently, the AnVIL
-                # plugin does not support cURL-format manifests.
-                assert not config.is_anvil_enabled(catalog)
+            # to the storage bucket. This signed URL expires after one hour and
+            # is a client secret which should not be shared, so we prefer to
+            # hide it behind a 301 redirect to the non-fetch `/manifest/files`
+            # endpoint, which is not secret and enforces access controls via a
+            # bearer token. This was implemented as a solution to
+            # https://github.com/DataBiosphere/azul/issues/2875
+            # However, enabling the private API will prevent servers outside the
+            # VPN (e.g. Terra) from accessing the `/manifest/files` endpoint to
+            # obtain the redirect, forcing us to return the signed URL directly
+            # to facilitate handovers. The risk of the secret being shared in
+            # this case is mitigated by 1) the URL's short lifespan and 2) the
+            # very small size of the set of users who will ever be authorized to
+            # access the private API.
+            handover_formats = (ManifestFormat.terra_pfb, ManifestFormat.terra_bdbag)
+            if fetch and not (config.private_api and manifest.format_ in handover_formats):
                 url = self.manifest_url_func(fetch=False,
                                              catalog=manifest.catalog,
                                              format_=manifest.format_,
