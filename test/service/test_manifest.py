@@ -1399,7 +1399,8 @@ class TestManifestResponse(ManifestTestCase):
                     request_url = self.base_url.set(path='/manifest/files', args=args)
                     redirect_url = self.base_url.set(path='/manifest/files',
                                                      args=dict(args, objectKey=object_key))
-                    expected_url = redirect_url if fetch else object_url
+                    expect_redirect = fetch and format_ is ManifestFormat.curl
+                    expected_url = redirect_url if expect_redirect else object_url
                     if format_ is ManifestFormat.curl:
                         expected = {
                             'cmd.exe': f'curl.exe --location --fail "{expected_url}" | curl.exe --config -',
@@ -1420,7 +1421,7 @@ class TestManifestResponse(ManifestTestCase):
                         response = requests.get(str(request_url)).json()
                         expected = {
                             'Status': 302,
-                            'Location': str(redirect_url),
+                            'Location': str(expected_url),
                             'CommandLine': expected
                         }
                         self.assertEqual(expected, response)
