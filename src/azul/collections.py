@@ -45,6 +45,49 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     return dict(items)
 
 
+def deep_dict_merge(dicts: Iterable[Mapping]) -> Mapping:
+    """
+    Merge all dictionaries yielded by the argument. If more than one dictionary
+    contains a given key, and all values associated with this key are themselves
+    dictionaries, then the value present in the result is the recursive merging
+    of those nested dictionaries.
+
+    >>> deep_dict_merge(({0: 1}, {1: 0}))
+    {0: 1, 1: 0}
+
+    >>> deep_dict_merge(({0: {'a': 1}}, {0: {'b': 2}}))
+    {0: {'a': 1, 'b': 2}}
+
+    Key collisions where either value is not a dictionary raise an exception,
+    unless the values compare equal to each other, in which case the entries
+    from *earlier* dictionaries takes precedence. This behavior is the opposite
+    of `dict_merge`, where later entries take precedence.
+
+    >>> deep_dict_merge(({0: 1}, {0: 2}))
+    Traceback (most recent call last):
+    ...
+    ValueError: 1 != 2
+
+    >>> l1, l2 = [], []
+    >>> d = deep_dict_merge(({0: l1}, {0: l2}))
+    >>> d
+    {0: []}
+    >>> id(d[0]) == id(l1)
+    True
+    """
+    merged = {}
+    for m in dicts:
+        for k, v2 in m.items():
+            v1 = merged.setdefault(k, v2)
+            if v1 != v2:
+                if isinstance(v1, dict) and isinstance(v2, dict):
+                    merged[k] = deep_dict_merge((v1, v2))
+                else:
+                    raise ValueError(f'{v1!r} != {v2!r}')
+
+    return merged
+
+
 K = TypeVar('K')
 V = TypeVar('V')
 
