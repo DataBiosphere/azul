@@ -40,6 +40,7 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    DocumentType,
     cache,
     config,
     freeze,
@@ -119,7 +120,7 @@ class IndexService(DocumentService):
     def settings(self, index_name) -> JSON:
 
         index_name = config.parse_es_index_name(index_name)
-        aggregate = index_name.aggregate
+        aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
         assert catalog is not None, catalog
         if config.catalogs[catalog].is_integration_test_catalog:
@@ -168,9 +169,9 @@ class IndexService(DocumentService):
         return [
             config.es_index_name(catalog=catalog,
                                  entity_type=entity_type,
-                                 aggregate=aggregate)
+                                 doc_type=doc_type)
             for entity_type in self.entity_types(catalog)
-            for aggregate in (False, True)
+            for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ]
 
     def fetch_bundle(self,
@@ -515,7 +516,7 @@ class IndexService(DocumentService):
         for entity in tallies.keys():
             index = config.es_index_name(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
-                                         aggregate=False)
+                                         doc_type=DocumentType.contribution)
             entity_ids_by_index[index].add(entity.entity_id)
 
         query = {

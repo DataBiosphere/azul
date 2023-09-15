@@ -81,6 +81,14 @@ else:
 mutable_furl = furl
 
 
+class DocumentType(Enum):
+    contribution = 'contribution'
+    aggregate = 'aggregate'
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}.{self._name_}>'
+
+
 class Config:
     """
     See `environment` for documentation of these settings.
@@ -936,14 +944,14 @@ class Config:
     def es_index_name(self,
                       catalog: CatalogName,
                       entity_type: str,
-                      aggregate: bool
+                      doc_type: DocumentType
                       ) -> str:
         return str(IndexName(prefix=self._index_prefix,
                              version=2,
                              deployment=self.deployment_stage,
                              catalog=catalog,
                              entity_type=entity_type,
-                             aggregate=aggregate))
+                             doc_type=doc_type))
 
     def parse_es_index_name(self, index_name: str) -> 'IndexName':
         """
@@ -1509,20 +1517,46 @@ class IndexName:
     entity_type: str
 
     #: Whether the documents in the index are contributions or aggregates
-    aggregate: bool = False
+    doc_type: DocumentType = DocumentType.contribution
 
     index_name_version_re: ClassVar[re.Pattern] = re.compile(r'v(\d+)')
 
     def __attrs_post_init__(self):
         """
-        >>> IndexName(prefix='azul', version=1, deployment='dev', entity_type='foo_bar')
-        IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar', aggregate=False)
+        >>> IndexName(prefix='azul',
+        ...           version=1,
+        ...           deployment='dev',
+        ...           entity_type='foo_bar') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.contribution>)
 
-        >>> IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar')
-        IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar', aggregate=False)
+        >>> IndexName(prefix='azul',
+        ...           version=1,
+        ...           deployment='dev',
+        ...           catalog=None,
+        ...           entity_type='foo_bar')  # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.contribution>)
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=False)
+        >>> IndexName(prefix='azul',
+        ...           version=2,
+        ...           deployment='dev',
+        ...           catalog='main',
+        ...           entity_type='foo_bar') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=2,
+                  deployment='dev',
+                  catalog='main',
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.contribution>)
 
         >>> IndexName(prefix='azul', version=1, deployment='dev', catalog='hca', entity_type='foo')
         Traceback (most recent call last):
@@ -1579,20 +1613,45 @@ class IndexName:
         """
         Parse the name of an index from any deployment and any version of Azul.
 
-        >>> IndexName.parse('azul_foo_dev')
-        IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo', aggregate=False)
+        >>> IndexName.parse('azul_foo_dev') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo',
+                  doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_foo_aggregate_dev')
-        IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo', aggregate=True)
+        >>> IndexName.parse('azul_foo_aggregate_dev') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo',
+                  doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_foo_bar_dev')
-        IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar', aggregate=False)
+        >>> IndexName.parse('azul_foo_bar_dev') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_foo_bar_aggregate_dev')
-        IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar', aggregate=True)
+        >>> IndexName.parse('azul_foo_bar_aggregate_dev') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('good_foo_dev', expected_prefix='good')
-        IndexName(prefix='good', version=1, deployment='dev', catalog=None, entity_type='foo', aggregate=False)
+        >>> IndexName.parse('good_foo_dev', expected_prefix='good') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='good',
+                  version=1,
+                  deployment='dev',
+                  catalog=None,
+                  entity_type='foo',
+                  doc_type=<DocumentType.contribution>)
 
         >>> IndexName.parse('bad_foo_dev')
         Traceback (most recent call last):
@@ -1609,20 +1668,45 @@ class IndexName:
         ...
         azul.RequirementError: entity_type ... ''
 
-        >>> IndexName.parse('azul_v2_dev_main_foo')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo', aggregate=False)
+        >>> IndexName.parse('azul_v2_dev_main_foo') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=2,
+                  deployment='dev',
+                  catalog='main',
+                  entity_type='foo',
+                  doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo', aggregate=True)
+        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=2,
+                  deployment='dev',
+                  catalog='main',
+                  entity_type='foo',
+                  doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_bar')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=False)
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=2,
+                  deployment='dev',
+                  catalog='main',
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=True)
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=2,
+                  deployment='dev',
+                  catalog='main',
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate')
-        IndexName(prefix='azul', version=2, deployment='staging', catalog='hca', entity_type='foo_bar', aggregate=True)
+        >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate') # doctest: +NORMALIZE_WHITESPACE
+        IndexName(prefix='azul',
+                  version=2,
+                  deployment='staging',
+                  catalog='hca',
+                  entity_type='foo_bar',
+                  doc_type=<DocumentType.aggregate>)
 
         >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate') # doctest: +ELLIPSIS
         Traceback (most recent call last):
@@ -1651,9 +1735,9 @@ class IndexName:
             *index_name, deployment = index_name
         if index_name[-1] == 'aggregate':
             *index_name, _ = index_name
-            aggregate = True
+            doc_type = DocumentType.aggregate
         else:
-            aggregate = False
+            doc_type = DocumentType.contribution
         entity_type = '_'.join(index_name)
         Config.validate_entity_type(entity_type)
         return cls(prefix=prefix,
@@ -1661,38 +1745,50 @@ class IndexName:
                    deployment=deployment,
                    catalog=catalog,
                    entity_type=entity_type,
-                   aggregate=aggregate)
+                   doc_type=doc_type)
 
     def __str__(self) -> str:
         """
         >>> str(IndexName(version=1, deployment='dev', entity_type='foo'))
         'azul_foo_dev'
 
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo', aggregate=True))
+        >>> str(IndexName(version=1, deployment='dev', entity_type='foo', doc_type=DocumentType.aggregate))
         'azul_foo_aggregate_dev'
 
         >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar'))
         'azul_foo_bar_dev'
 
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar', aggregate=True))
+        >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar', doc_type=DocumentType.aggregate))
         'azul_foo_bar_aggregate_dev'
 
         >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo'))
         'azul_v2_dev_main_foo'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo', aggregate=True))
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='main',
+        ...               entity_type='foo',
+        ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_aggregate'
 
         >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo_bar'))
         'azul_v2_dev_main_foo_bar'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=True))
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='main',
+        ...               entity_type='foo_bar',
+        ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_bar_aggregate'
 
-        >>> str(IndexName(version=2, deployment='staging', catalog='hca', entity_type='foo_bar', aggregate=True))
+        >>> str(IndexName(version=2,
+        ...               deployment='staging',
+        ...               catalog='hca',
+        ...               entity_type='foo_bar',
+        ...               doc_type=DocumentType.aggregate))
         'azul_v2_staging_hca_foo_bar_aggregate'
         """
-        aggregate = ['aggregate'] if self.aggregate else []
+        aggregate = ['aggregate'] if self.doc_type is DocumentType.aggregate else []
         if self.version == 1:
             require(self.catalog is None)
             return '_'.join([

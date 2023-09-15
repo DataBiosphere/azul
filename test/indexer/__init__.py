@@ -150,7 +150,7 @@ class IndexerTestCase(CatalogTestCase,
             index_name = IndexName.parse(hit['_index'])
             hit['_index'] = config.es_index_name(catalog=self.catalog,
                                                  entity_type=index_name.entity_type,
-                                                 aggregate=index_name.aggregate)
+                                                 doc_type=index_name.doc_type)
         return expected_hits
 
     @classmethod

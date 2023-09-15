@@ -31,6 +31,7 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
+    DocumentType,
     JSON,
     cached_property,
     config,
@@ -183,7 +184,7 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
     def _index_name(self):
         return config.es_index_name(catalog=self.catalog,
                                     entity_type='files',
-                                    aggregate=True)
+                                    doc_type=DocumentType.aggregate)
 
 
 class StorageServiceTestMixin:

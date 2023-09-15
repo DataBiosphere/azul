@@ -32,6 +32,7 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    DocumentType,
     IndexName,
     config,
 )
@@ -107,7 +108,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     be generic in E, the type of EntityReference.
     """
     entity: E
-    aggregate: bool
+    doc_type: DocumentType
 
     @property
     def index_name(self) -> str:
@@ -119,7 +120,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
         assert isinstance(self.entity, CataloguedEntityReference)
         return config.es_index_name(catalog=self.entity.catalog,
                                     entity_type=self.entity.entity_type,
-                                    aggregate=self.aggregate)
+                                    doc_type=self.doc_type)
 
     @property
     @abstractmethod
@@ -132,7 +133,12 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
                  ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         index_name = config.parse_es_index_name(hit['_index'])
         document_id = hit['_id']
-        subcls = AggregateCoordinates if index_name.aggregate else ContributionCoordinates
+        if index_name.doc_type is DocumentType.contribution:
+            subcls = ContributionCoordinates
+        elif index_name.doc_type is DocumentType.aggregate:
+            subcls = AggregateCoordinates
+        else:
+            assert False, index_name.doc_type
         assert issubclass(subcls, cls)
         return subcls._from_index(index_name, document_id)
 
@@ -163,7 +169,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
-    aggregate: bool = attr.ib(init=False, default=False)
+    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.contribution)
     bundle: BundleFQID
     deleted: bool
 
@@ -199,7 +205,7 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
                     document_id: str
                     ) -> 'ContributionCoordinates[CataloguedEntityReference]':
         entity_type = index_name.entity_type
-        assert index_name.aggregate is False
+        assert index_name.doc_type is DocumentType.contribution
         entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
         if deleted == 'deleted':
             deleted = True
@@ -228,7 +234,7 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     Document coordinates for aggregates. Aggregate coordinates always carry a
     catalog.
     """
-    aggregate: bool = attr.ib(init=False, default=True)
+    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.aggregate)
 
     @classmethod
     def _from_index(cls,
@@ -236,7 +242,7 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
                     document_id: str
                     ) -> 'AggregateCoordinates':
         entity_type = index_name.entity_type
-        assert index_name.aggregate is True
+        assert index_name.doc_type is DocumentType.aggregate
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
                                                     entity_type=entity_type,
                                                     entity_id=document_id))
@@ -950,7 +956,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, ContributionCoordinates)
-        assert self.coordinates.aggregate is False
+        assert self.coordinates.doc_type is DocumentType.contribution
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -1028,7 +1034,7 @@ class Aggregate(Document[AggregateCoordinates]):
 
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
-        assert self.coordinates.aggregate is True
+        assert self.coordinates.doc_type is DocumentType.aggregate
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
