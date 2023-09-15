@@ -28,9 +28,15 @@ include $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/../common.mk
 # Set literals will compile in a non-deterministic order unless PYTHONHASHSEED
 # is set. For a full explanation see http://benno.id.au/blog/2013/01/15/python-determinism
 #
+# `compileall` ignores symlinks to directories during traversal, so we must
+# explicitly list them as arguments to ensure all files in vendor/ are
+# deterministically compiled.
+#
 .PHONY: compile
 compile: check_python
-	PYTHONHASHSEED=0 python -m compileall -f -q --invalidation-mode checked-hash vendor vendor/azul
+	PYTHONHASHSEED=0 python -m compileall \
+		-f -q --invalidation-mode checked-hash \
+		vendor $(shell find -L $$(find vendor -maxdepth 1 -type l) -maxdepth 0 -type d)
 
 .PHONY: config
 config: .chalice/config.json
