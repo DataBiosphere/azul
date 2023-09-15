@@ -22,10 +22,7 @@ emit_tf(None if config.share_es_domain else {
             "aws_cloudwatch_log_group": {
                 f"{log}_log": {
                     "name": f"/aws/aes/domains/{domain}/{log}-logs",
-                    "retention_in_days":
-                        config.verbose_log_retention_days
-                        if log == 'error' else
-                        config.audit_log_retention_days
+                    "retention_in_days": config.audit_log_retention_days
                 }
             }
         } for log in logs.keys()),

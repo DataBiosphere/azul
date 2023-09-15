@@ -259,8 +259,6 @@ class Config:
 
     audit_log_retention_days = 180  # FedRAMP mandates 90 days
 
-    verbose_log_retention_days = 30
-
     @property
     def es_timeout(self) -> int:
         return int(self.environ['AZUL_ES_TIMEOUT'])
