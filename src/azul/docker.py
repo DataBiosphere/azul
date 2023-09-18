@@ -67,7 +67,7 @@ class ImageRef:
 
     @cached_property
     def platforms(self):
-        return filter_platforms(self, platforms)
+        return _filter_platforms(self, platforms)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -111,7 +111,7 @@ images_by_tf_repository: dict[tuple[str, str], list[ImageRef]] = (lambda: {
 })()
 
 
-def filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
+def _filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
     import docker
     allowed_platforms = {p.normalize() for p in allowed_platforms}
     log.info('Distribution for image %r …', image)
