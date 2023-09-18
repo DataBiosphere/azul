@@ -986,7 +986,8 @@ tf_config = {
                         'null_resource.cleanup'
                     ],
                     'triggers': {
-                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root
+                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root,
+                        'images': ','.join(sorted(image.tf_image for image in images))
                     },
                     'lifecycle': {
                         'replace_triggered_by': [
