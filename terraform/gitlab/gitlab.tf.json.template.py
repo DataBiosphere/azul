@@ -1369,6 +1369,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service',
                                 'Requires=docker.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab-dind',
@@ -1441,6 +1445,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service',
                                 'Requires=docker.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab',
@@ -1474,6 +1482,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service gitlab.service',
                                 'Requires=docker.service gitlab-dind.service gitlab.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab-runner',
@@ -1503,6 +1515,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop clamscan',
@@ -1565,6 +1581,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop prune-images',
@@ -1731,6 +1751,19 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 # FIXME: Re-enable formatting of the JSON above
                                 #        https://github.com/DataBiosphere/azul/issues/5314
                             })
+                        },
+                        {
+                            'path': '/etc/docker/daemon.json',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': json.dumps(
+                                {
+                                    'log-driver': 'journald',
+                                    'log-opts': {
+                                        'tag': 'docker: {{.Name}}'
+                                    }
+                                }
+                            )
                         },
                     ],
                     # Reboot to realize the added kernel parameter the changed sshd configuration
