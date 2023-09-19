@@ -20,6 +20,18 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5189 Delete unused Docker images from ECR
+==========================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment. Retain a
+terminal transcript for each deployment so that the author can diagnose any
+issues that may come up.
+
+
 #4468 Logs by different containers are hard to distinguish
 ==========================================================
 
