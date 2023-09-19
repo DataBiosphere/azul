@@ -123,7 +123,12 @@ class TestValidNotificationRequests(LocalAppTestCase,
                 response = self._test(body, delete, valid_auth=False)
                 self.assertEqual(401, response.status_code)
 
-    def _test(self, body: JSON, delete: bool, *, valid_auth: bool) -> requests.Response:
+    def _test(self,
+              body: JSON,
+              delete: bool,
+              *,
+              valid_auth: bool
+              ) -> requests.Response:
         with patch.object(aws, 'get_hmac_key_and_id') as get_hmac_key_and_id:
             get_hmac_key_and_id.return_value = b'good key', 'the id'
             url = self.base_url.set(path=(self.catalog, 'delete' if delete else 'add'))

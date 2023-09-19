@@ -22,7 +22,8 @@ from azul.types import (
 
 class RemainingTime(metaclass=ABCMeta):
     """
-    A monotonically decreasing, non-negative estimate of time remaining in a particular context
+    A monotonically decreasing, non-negative estimate of time remaining in a
+    particular context
     """
 
     @abstractmethod
@@ -48,7 +49,8 @@ class RemainingLambdaContextTime(RemainingTime):
 
 class RemainingTimeUntil(RemainingTime):
     """
-    The remaining wall clock time up to a given absolute deadline in terms of time.time()
+    The remaining wall clock time up to a given absolute deadline in terms of
+    time.time()
     """
 
     def __init__(self, deadline: float) -> None:
@@ -71,8 +73,9 @@ class SpecificRemainingTime(RemainingTimeUntil):
 
 class AdjustedRemainingTime(RemainingTime):
     """
-    Some other estimate of remaining time, adjusted by a fixed offset. Use a negative offset to reduce the remaining
-    time or a positive offset to increase it.
+    Some other estimate of remaining time, adjusted by a fixed offset. Use a
+    negative offset to reduce the remaining time or a positive offset to
+    increase it.
     """
 
     def __init__(self, offset: float, actual: RemainingTime) -> None:
@@ -90,8 +93,8 @@ def parse_http_date(http_date: str, base_time: Optional[float] = None) -> float:
 
     :param http_date: a string matching https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1
 
-    :param base_time: the timestamp for converting a relative HTTP date into Python timestamp, if None, the current
-                      time will be used.
+    :param base_time: the timestamp for converting a relative HTTP date into
+                      Python timestamp, if None, the current time will be used.
 
     >>> parse_http_date('123', 0.4)
     123.4

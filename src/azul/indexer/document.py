@@ -127,7 +127,9 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    def from_hit(cls, hit: JSON) -> 'DocumentCoordinates[CataloguedEntityReference]':
+    def from_hit(cls,
+                 hit: JSON
+                 ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         index_name = config.parse_es_index_name(hit['_index'])
         document_id = hit['_id']
         subcls = AggregateCoordinates if index_name.aggregate else ContributionCoordinates
@@ -142,7 +144,9 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
                     ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         raise NotImplementedError
 
-    def with_catalog(self, catalog: Optional[CatalogName]) -> 'DocumentCoordinates[CataloguedEntityReference]':
+    def with_catalog(self,
+                     catalog: Optional[CatalogName]
+                     ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         """
         Return coordinates for the given catalog. Only works for instances that
         have no catalog or ones having the same catalog in which case `self` is
@@ -190,8 +194,10 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
         ))
 
     @classmethod
-    def _from_index(cls, index_name: IndexName,
-                    document_id: str) -> 'ContributionCoordinates[CataloguedEntityReference]':
+    def _from_index(cls,
+                    index_name: IndexName,
+                    document_id: str
+                    ) -> 'ContributionCoordinates[CataloguedEntityReference]':
         entity_type = index_name.entity_type
         assert index_name.aggregate is False
         entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
@@ -225,7 +231,10 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     aggregate: bool = attr.ib(init=False, default=True)
 
     @classmethod
-    def _from_index(cls, index_name: IndexName, document_id: str) -> 'AggregateCoordinates':
+    def _from_index(cls,
+                    index_name: IndexName,
+                    document_id: str
+                    ) -> 'AggregateCoordinates':
         entity_type = index_name.entity_type
         assert index_name.aggregate is True
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
@@ -833,7 +842,8 @@ class Document(Generic[C]):
                    field_types: CataloguedFieldTypes,
                    hit: JSON,
                    *,
-                   coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None) -> 'Document':
+                   coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None
+                   ) -> 'Document':
         if coordinates is None:
             coordinates = DocumentCoordinates.from_hit(hit)
         document = cls.translate_fields(hit['_source'],
@@ -853,7 +863,11 @@ class Document(Generic[C]):
                              document=document,
                              version=version)
 
-    def to_index(self, catalog: Optional[CatalogName], field_types: CataloguedFieldTypes, bulk: bool = False) -> JSON:
+    def to_index(self,
+                 catalog: Optional[CatalogName],
+                 field_types: CataloguedFieldTypes,
+                 bulk: bool = False
+                 ) -> JSON:
         """
         Build request parameters from the document for indexing
 

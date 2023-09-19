@@ -103,7 +103,10 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
         cls.index_service.delete_indices(cls.catalog)
         cls.indexed_bundles = None
 
-    def _params(self, filters: Optional[JSON] = None, **params: Any) -> dict[str, Any]:
+    def _params(self,
+                filters: Optional[JSON] = None,
+                **params: Any
+                ) -> dict[str, Any]:
         return {
             **({} if filters is None else {'filters': json.dumps(filters)}),
             'catalog': self.catalog,

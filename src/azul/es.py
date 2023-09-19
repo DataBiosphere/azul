@@ -47,11 +47,13 @@ class ESClientFactory:
     @lru_cache(maxsize=32)
     def _create_client(cls, host, port, timeout):
         log.debug(f'Creating ES client [{host}:{port}]')
-        # Implicit retries don't make much sense in conjunction with optimistic locking (versioning). Consider a
-        # write request that times out in ELB with a 504 while the upstream ES node actually finishes the request.
-        # Retrying that individual write request will fail with a 409. Instead of retrying just the write request,
-        # the entire read-modify-write transaction needs to be retried. In order to be in full control of error
-        # handling, we disable the implicit retries via max_retries=0.
+        # Implicit retries don't make much sense in conjunction with optimistic
+        # locking (versioning). Consider a write request that times out in ELB
+        # with a 504 while the upstream ES node actually finishes the request.
+        # Retrying that individual write request will fail with a 409. Instead
+        # of retrying just the write request, the entire read-modify-write
+        # transaction needs to be retried. In order to be in full control of
+        # error handling, we disable the implicit retries via max_retries=0.
         common_params = dict(hosts=[dict(host=host, port=port)],
                              timeout=timeout,
                              max_retries=0)

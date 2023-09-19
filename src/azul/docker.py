@@ -175,7 +175,9 @@ def _normalize_os(os: str) -> str:
 
 # https://github.com/containerd/containerd/blob/1fbd70374134b891f97ce19c70b6e50c7b9f4e0d/platforms/database.go#L76
 
-def _normalize_arch(arch: str, variant: Optional[str]) -> tuple[str, Optional[str]]:
+def _normalize_arch(arch: str,
+                    variant: Optional[str]
+                    ) -> tuple[str, Optional[str]]:
     arch = arch.lower()
     variant = variant and variant.lower()
     if arch == 'i386':

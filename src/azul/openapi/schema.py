@@ -250,7 +250,10 @@ def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
     }
 
 
-def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSON:
+def with_default(default: PrimitiveJSON,
+                 /,
+                 type_: Optional[TYPE] = None
+                 ) -> JSON:
     """
     Add a documented default value to the type schema.
 
@@ -277,7 +280,10 @@ def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSO
 N = TypeVar('N', bound=Union[int, float])
 
 
-def in_range(minimum: Optional[N], maximum: Optional[N], type_: Optional[TYPE] = None) -> JSON:
+def in_range(minimum: Optional[N],
+             maximum: Optional[N],
+             type_: Optional[TYPE] = None
+             ) -> JSON:
     """
     >>> from azul.doctests import assert_json
 

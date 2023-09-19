@@ -139,7 +139,8 @@ class Lambdas:
                 try:
                     concurrency = lambda_settings['Concurrency']
                 except KeyError:
-                    # If a lambda doesn't have a limit for concurrency executions, Lambda.Client.get_function()
+                    # If a lambda doesn't have a limit for concurrency
+                    # executions, Lambda.Client.get_function()
                     # doesn't return a response with the key, `Concurrency`.
                     concurrency_limit = None
                 else:

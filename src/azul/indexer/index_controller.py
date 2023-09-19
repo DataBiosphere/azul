@@ -194,7 +194,11 @@ class IndexController(AppController):
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
 
-    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> list[Contribution]:
+    def transform(self,
+                  catalog: CatalogName,
+                  notification: JSON,
+                  delete: bool
+                  ) -> list[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document

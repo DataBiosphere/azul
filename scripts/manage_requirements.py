@@ -265,7 +265,10 @@ class Main:
         with open(path) as f:
             return self.parse_reqs(f)
 
-    def write_transitive_reqs(self, reqs: PinnedRequirements, qualifier: Qualifier) -> None:
+    def write_transitive_reqs(self,
+                              reqs: PinnedRequirements,
+                              qualifier: Qualifier
+                              ) -> None:
         self.write_reqs(reqs,
                         file_name=f'requirements{qualifier.extension}.trans.txt',
                         type='transitive')

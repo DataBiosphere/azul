@@ -233,7 +233,8 @@ class TestRequestBuilder(DCP1TestCase, WebServiceTestCase):
 
     def test_create_request_terms_and_missing_values(self):
         """
-        Tests creation of a request for a combination of facets that do and do not have a value
+        Tests creation of a request for a combination of facets that do and do
+        not have a value
         """
         expected_output = {
             "post_filter": {
@@ -313,7 +314,11 @@ class TestRequestBuilder(DCP1TestCase, WebServiceTestCase):
         }
         self._test_create_request(expected_output, sample_filter)
 
-    def _test_create_request(self, expected_output, sample_filter, post_filter=True):
+    def _test_create_request(self,
+                             expected_output,
+                             sample_filter,
+                             post_filter=True
+                             ):
         service = self.Service(self.MockPlugin())
         filters = Filters(explicit=sample_filter, source_ids=set())
         request = self._prepare_request(filters, post_filter, service)

@@ -69,13 +69,20 @@ class PortalService:
             md5.update(source.encode())
         return md5.hexdigest()
 
-    def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[set[str]]) -> JSONs:
+    def list_integrations(self,
+                          entity_type: str,
+                          integration_type: str,
+                          entity_ids: Optional[set[str]]
+                          ) -> JSONs:
         """
         Return matching portal integrations.
 
-        :param entity_type: The type of the entity to which an integration applies (e.g. project, file, bundle)
-        :param integration_type: The kind of integration (e.g. get, get_entity, get_entities, get_manifest)
-        :param entity_ids: If given results will be limited to this set of entity UUIDs
+        :param entity_type: The type of the entity to which an integration
+                            applies (e.g. project, file, bundle)
+        :param integration_type: The kind of integration (e.g. get, get_entity,
+                                 get_entities, get_manifest)
+        :param entity_ids: If given results will be limited to this set of entity
+                           UUIDs
         :return: A list of portals that have one or more matching integrations
         """
         result = []

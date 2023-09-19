@@ -945,7 +945,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'related_files': cls._related_file_types(),
         }
 
-    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+    def _file(self,
+              file: api.File,
+              related_files: Iterable[api.File] = ()
+              ) -> MutableJSON:
         # noinspection PyDeprecation
         return {
             **self._file_base(file),
@@ -994,7 +997,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'nucleic_acid_source': null_str
         }
 
-    def _library_preparation_protocol(self, protocol: api.LibraryPreparationProtocol) -> MutableJSON:
+    def _library_preparation_protocol(self,
+                                      protocol: api.LibraryPreparationProtocol
+                                      ) -> MutableJSON:
         return {
             **self._entity(protocol),
             'library_construction_approach': protocol.library_construction_method,
@@ -1199,7 +1204,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
-    def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
+    def _contribution(self,
+                      contents: MutableJSON,
+                      entity_id: api.UUID4
+                      ) -> Contribution:
         entity = EntityReference(entity_type=self.entity_type(),
                                  entity_id=str(entity_id))
         coordinates = ContributionCoordinates(entity=entity,
@@ -1268,7 +1276,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 BaseTransformer.validate_class()
 
 
-def _parse_zarr_file_name(file_name: str) -> tuple[bool, Optional[str], Optional[str]]:
+def _parse_zarr_file_name(file_name: str
+                          ) -> tuple[bool, Optional[str], Optional[str]]:
     file_name = file_name.split('.zarr/')
     if len(file_name) == 1:
         return False, None, None
@@ -1280,7 +1289,8 @@ def _parse_zarr_file_name(file_name: str) -> tuple[bool, Optional[str], Optional
 
 
 class TransformerVisitor(api.EntityVisitor):
-    # Entities are tracked by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
+    # Entities are tracked by ID to ensure uniqueness if an entity is visited
+    # twice while descending the entity DAG
     specimens: dict[api.UUID4, api.SpecimenFromOrganism]
     cell_suspensions: dict[api.UUID4, api.CellSuspension]
     cell_lines: dict[api.UUID4, api.CellLine]
@@ -1469,7 +1479,9 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     )
         return contents
 
-    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, list[api.File]]:
+    def group_zarrs(self,
+                    files: Iterable[api.File]
+                    ) -> Mapping[str, list[api.File]]:
         zarr_stores = defaultdict(list)
         for file in files:
             file_name = file.manifest_entry.name
@@ -1492,7 +1504,9 @@ class CellSuspensionTransformer(PartitionedTransformer):
             if isinstance(biomaterial, api.CellSuspension):
                 yield biomaterial
 
-    def _transform(self, cell_suspensions: Iterable[api.CellSuspension]) -> Iterable[Contribution]:
+    def _transform(self,
+                   cell_suspensions: Iterable[api.CellSuspension]
+                   ) -> Iterable[Contribution]:
         for cell_suspension in cell_suspensions:
             samples: dict[str, Sample] = dict()
             self._find_ancestor_samples(cell_suspension, samples)

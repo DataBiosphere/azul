@@ -131,7 +131,11 @@ class AzulClient(SignatureHelper):
         self.index(catalog, notifications)
         return len(notifications)
 
-    def index(self, catalog: CatalogName, notifications: Iterable[JSON], delete: bool = False):
+    def index(self,
+              catalog: CatalogName,
+              notifications: Iterable[JSON],
+              delete: bool = False
+              ):
         errors = defaultdict(int)
         missing = []
         indexed = 0

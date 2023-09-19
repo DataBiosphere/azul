@@ -195,7 +195,8 @@ class TestAccessorApi(AzulUnitTestCase):
     @skip("Test bundle no longer exists on staging")
     def test_vx_analysis_cs_bundle(self):
         """
-        A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
+        A vx analysis bundle for the primary bundle with a cell_suspension as
+        sequencing input
         """
         self._test_bundle(uuid='859a8bd2-de3c-4c78-91dd-9e35a3418972',
                           version='2018-09-20T232924.687620Z',
@@ -339,7 +340,12 @@ class TestAccessorApi(AzulUnitTestCase):
         self.assertEqual(len(sequencing_protocols), 1)
         self.assertEqual(sequencing_protocols[0].paired_end, True)
 
-    def _test_bundle(self, uuid, version, deployment='prod', **assertion_kwargs) -> Bundle:
+    def _test_bundle(self,
+                     uuid,
+                     version,
+                     deployment='prod',
+                     **assertion_kwargs
+                     ) -> Bundle:
 
         manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
 

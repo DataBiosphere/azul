@@ -154,7 +154,8 @@ class HealthCheckTestCase(LocalAppTestCase,
             response = requests.get(str(self.base_url.set(path='/health/cached')))
             self.assertEqual(200, response.status_code)
 
-        # Another failure is observed when the cache health object is older than 2 minutes
+        # Another failure is observed when the cache health object is older than
+        # 2 minutes
         future_time = time.time() + 3 * 60
         with self.helper():
             with patch('time.time', new=lambda: future_time):
@@ -180,7 +181,10 @@ class HealthCheckTestCase(LocalAppTestCase,
             self.assertEqual(expected_response, response.json())
 
     @abstractmethod
-    def _expected_health(self, endpoint_states: Mapping[str, bool], es_up: bool = True):
+    def _expected_health(self,
+                         endpoint_states: Mapping[str, bool],
+                         es_up: bool = True
+                         ):
         raise NotImplementedError
 
     @mock_sts
@@ -271,7 +275,11 @@ class HealthCheckTestCase(LocalAppTestCase,
             }
         }
 
-    def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
+    def _test(self,
+              endpoint_states: Mapping[str, bool],
+              lambdas_up: bool,
+              path: str = '/health/fast'
+              ):
         with self.helper() as helper:
             self._mock_other_lambdas(helper, lambdas_up)
             self._mock_service_endpoints(helper, endpoint_states)

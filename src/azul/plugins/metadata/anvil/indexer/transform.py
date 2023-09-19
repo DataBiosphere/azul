@@ -170,7 +170,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             return pluralize(entity_type)
 
-    def _contains(self, partition: BundlePartition, entity: EntityReference) -> bool:
+    def _contains(self,
+                  partition: BundlePartition,
+                  entity: EntityReference
+                  ) -> bool:
         return (
             pluralize(entity.entity_type).endswith(self.entity_type())
             and partition.contains(UUID(entity.entity_id))

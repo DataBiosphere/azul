@@ -114,7 +114,8 @@ class AnvilSearchResponseStage(SearchResponseStage):
             for bucket in agg['myTerms']['buckets']
         ]
 
-        # Add the untagged_count to the existing termObj for a None value, or add a new one
+        # Add the untagged_count to the existing termObj for a None value,
+        # or add a new one
         untagged_count = agg['untagged']['doc_count']
         if untagged_count > 0:
             for term in terms:

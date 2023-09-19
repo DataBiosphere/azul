@@ -122,7 +122,10 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
             for spec in self.sources
         ]
 
-    def list_bundles(self, source: DSSSourceRef, prefix: str) -> list[DSSBundleFQID]:
+    def list_bundles(self,
+                     source: DSSSourceRef,
+                     prefix: str
+                     ) -> list[DSSBundleFQID]:
         assert False, 'DSS is EOL'
         # noinspection PyUnreachableCode
         return []
@@ -182,7 +185,8 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
 
     def portal_db(self) -> Sequence[JSON]:
         """
-        A hardcoded example database for use during development of the integrations API implementation
+        A hardcoded example database for use during development of the
+        integrations API implementation
         """
         return [
             {

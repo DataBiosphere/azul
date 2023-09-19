@@ -34,7 +34,11 @@ class VersionService:
         else:
             return item[self.value_name]['S']
 
-    def put(self, object_url: str, version: Optional[str], new_version: str) -> None:
+    def put(self,
+            object_url: str,
+            version: Optional[str],
+            new_version: str
+            ) -> None:
         """
         Update object's current version from `version` to `new_version`, or fail
         if `version` does not match the stored current version.

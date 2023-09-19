@@ -123,7 +123,10 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
     def _assert_source(self, source: CannedSourceRef):
         assert source.spec in self.sources, (source, self.sources)
 
-    def list_bundles(self, source: CannedSourceRef, prefix: str) -> list[CannedBundleFQID]:
+    def list_bundles(self,
+                     source: CannedSourceRef,
+                     prefix: str
+                     ) -> list[CannedBundleFQID]:
         self._assert_source(source)
         prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)

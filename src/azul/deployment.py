@@ -261,7 +261,11 @@ class AWS:
         return self._dss_bucket(dss_endpoint, 'checkout', lambda_name='service')
 
     @_cache
-    def _dss_bucket(self, dss_endpoint: str, *qualifiers: str, lambda_name: str) -> str:
+    def _dss_bucket(self,
+                    dss_endpoint: str,
+                    *qualifiers: str,
+                    lambda_name: str
+                    ) -> str:
         with self.direct_access_credentials(dss_endpoint, lambda_name):
             stage = config.dss_deployment_stage(dss_endpoint)
             name = f'/dcp/dss/{stage}/environment'

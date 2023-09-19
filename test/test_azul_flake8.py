@@ -190,7 +190,9 @@ class TestAzulFlake8(AzulUnitTestCase):
                 import azul.chalice
         """)
 
-    def assertFlake8Error(self, expected_err: azul_flake8.ImportErrors, source: str):
+    def assertFlake8Error(self,
+                          expected_err: azul_flake8.ImportErrors,
+                          source: str):
         self.assertEqual([expected_err.value], [err.msg for err in self._collect_errors(source)])
 
     def assertNoErrors(self, source: str):

@@ -253,13 +253,13 @@ class ImportVisitor(ast.NodeVisitor):
             if module_name not in self.expected_resolution_failures:
                 self._error(node, ImportErrors.unresolvable)
         else:
-            # The order in which NodeVisitor traverses the syntax tree is unspecified
-            # so we can't be sure which nodes have already been visited.
-            # To prevent a single out-of-order import from causing errors on every
-            # other line, we only compare each import statement with one other statement.
-            # To prevent the same line from being reported twice, the error is always
-            # reported for the node we're currently visiting, regardless of whether it
-            # comes first or second.
+            # The order in which NodeVisitor traverses the syntax tree is
+            # unspecified so we can't be sure which nodes have already been
+            # visited. To prevent a single out-of-order import from causing
+            # errors on every other line, we only compare each import statement
+            # with one other statement. To prevent the same line from being
+            # reported twice, the error is always reported for the node we're
+            # currently visiting, regardless of whether it comes first or second.
             pred = self._visited_predecessor(node)
             succ = self._visited_successor(node)
             if pred is not None and not self._is_correct_order(pred, ordered_import):

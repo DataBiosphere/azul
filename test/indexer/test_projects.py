@@ -78,9 +78,9 @@ class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
                 total_samples = self.es_client.count(index=index_name('samples'))
                 self.assertEqual(129, total_samples["count"])
 
-    # When two processes point at a file (this is the case for most files in production)
-    # there was a bug where the files index contains duplicate dictionaries for the file.
-    #
+    # When two processes point at a file (this is the case for most files in
+    # production) there was a bug where the files index contains duplicate
+    # dictionaries for the file.
     def test_no_duplicate_files_in_specimen(self):
         bundle_fqid = self.bundle_fqid(uuid='8543d32f-4c01-48d5-a79f-1c5439659da3',
                                        version='2018-03-29T14:38:28.884167Z')

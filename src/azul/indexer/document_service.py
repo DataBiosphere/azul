@@ -45,7 +45,9 @@ class DocumentService:
     def aggregate_class(self, catalog: CatalogName) -> Type[Aggregate]:
         return self.metadata_plugin(catalog).aggregate_class()
 
-    def transformer_types(self, catalog: CatalogName) -> Iterable[Type[Transformer]]:
+    def transformer_types(self,
+                          catalog: CatalogName
+                          ) -> Iterable[Type[Transformer]]:
         return self.metadata_plugin(catalog).transformer_types()
 
     @cache
@@ -79,7 +81,8 @@ class DocumentService:
         """
         Returns a mapping of fields to field types
 
-        :return: dict with nested keys matching Elasticsearch fields and values with the field's type
+        :return: dict with nested keys matching Elasticsearch fields and values
+                 with the field's type
         """
         field_types = {}
         aggregate_cls = self.aggregate_class(catalog)
@@ -96,5 +99,10 @@ class DocumentService:
             for catalog in config.catalogs
         }
 
-    def translate_fields(self, catalog: CatalogName, doc: AnyJSON, *, forward: bool) -> AnyMutableJSON:
+    def translate_fields(self,
+                         catalog: CatalogName,
+                         doc: AnyJSON,
+                         *,
+                         forward: bool
+                         ) -> AnyMutableJSON:
         return Document.translate_fields(doc, self.field_types(catalog), forward=forward)

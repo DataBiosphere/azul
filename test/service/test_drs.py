@@ -240,7 +240,14 @@ class TestDRSEndpoint(DCP1TestCase, LocalAppTestCase):
                             else:
                                 assert False, f'Access type {method["type"]} is not supported'
 
-    def _dss_response(self, file_uuid, file_version, replica, head=False, initial=True, _301=False):
+    def _dss_response(self,
+                      file_uuid,
+                      file_version,
+                      replica,
+                      head=False,
+                      initial=True,
+                      _301=False
+                      ):
         request_query = {
             'replica': replica,
             **({'version': file_version} if file_version else {}),
@@ -260,7 +267,8 @@ class TestDRSEndpoint(DCP1TestCase, LocalAppTestCase):
         headers_302 = {'location': self.gs_url if replica == 'gcp' else self.signed_url}
         headers_301 = {
             'location': retry_url,
-            'retry-after': '1'  # the value is arbitrary for our purposes, but nonetheless expected
+            # the value is arbitrary for our purposes, but nonetheless expected
+            'retry-after': '1'
         }
         if head:
             return responses.Response(method=responses.HEAD, url=initial_url, status=200, headers=self.dss_headers)

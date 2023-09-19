@@ -53,7 +53,9 @@ class SignatureHelper(HTTPSignatureKeyResolver):
         return HTTPMessageSigner(signature_algorithm=HMAC_SHA256,
                                  key_resolver=self)
 
-    def auth_from_request(self, request: chalice.app.Request) -> Optional[HMACAuthentication]:
+    def auth_from_request(self,
+                          request: chalice.app.Request
+                          ) -> Optional[HMACAuthentication]:
         try:
             request.headers['signature']
         except KeyError:

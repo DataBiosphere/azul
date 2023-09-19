@@ -49,7 +49,8 @@ K = TypeVar('K')
 V = TypeVar('V')
 
 
-def explode_dict(d: Mapping[K, Union[V, list[V], set[V], tuple[V]]]) -> Iterable[dict[K, V]]:
+def explode_dict(d: Mapping[K, Union[V, list[V], set[V], tuple[V]]]
+                 ) -> Iterable[dict[K, V]]:
     """
     An iterable of dictionaries, one dictionary for every possible combination
     of items from iterable values in the argument dictionary. Only instances of

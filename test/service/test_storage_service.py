@@ -93,8 +93,9 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
                 else:
                     # noinspection PyUnreachableCode
                     if False:  # no coverage
-                        # Unfortunately, moto does not support emulating S3's mechanism of specifying response headers
-                        # via request parameters (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html,
+                        # Unfortunately, moto does not support emulating S3's
+                        # mechanism of specifying response headers via request
+                        # parameters (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html,
                         # section Request Parameters).
                         self.assertEqual(response.headers['Content-Disposition'], f'attachment;filename="{file_name}"')
                 self.assertEqual(sample_content, response.text)

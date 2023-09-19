@@ -99,9 +99,9 @@ class Latch:
 
 class DeferredTaskExecutor(metaclass=ABCMeta):
     """
-    A wrapper around ThreadPoolExecutor that allows for conveniently deferring method calls to be performed
-    concurrently, optionally after other deferred method calls have completed and/or a given amount of time has
-    passed.
+    A wrapper around ThreadPoolExecutor that allows for conveniently deferring
+    method calls to be performed concurrently, optionally after other deferred
+    method calls have completed and/or a given amount of time has passed.
 
     >>> class MyExecutor(DeferredTaskExecutor):
     ...

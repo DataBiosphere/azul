@@ -342,7 +342,10 @@ class Config:
     def dss_direct_access(self) -> bool:
         return self._boolean(self.environ['AZUL_DSS_DIRECT_ACCESS'])
 
-    def dss_direct_access_role(self, lambda_name: str, stage: Optional[str] = None) -> Optional[str]:
+    def dss_direct_access_role(self,
+                               lambda_name: str,
+                               stage: Optional[str] = None
+                               ) -> Optional[str]:
         key = 'AZUL_DSS_DIRECT_ACCESS_ROLE'
         try:
             role_arn = self.environ[key]
@@ -909,7 +912,10 @@ class Config:
     def is_anvil_enabled(self, catalog: Optional[str] = None) -> bool:
         return self._is_plugin_enabled('anvil', catalog)
 
-    def _is_plugin_enabled(self, plugin_prefix: str, catalog: Optional[str]) -> bool:
+    def _is_plugin_enabled(self,
+                           plugin_prefix: str,
+                           catalog: Optional[str]
+                           ) -> bool:
         def predicate(catalog):
             return any(
                 plugin.name.split('_')[0] == plugin_prefix
@@ -929,7 +935,11 @@ class Config:
             if catalog.is_integration_test_catalog
         }
 
-    def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
+    def es_index_name(self,
+                      catalog: CatalogName,
+                      entity_type: str,
+                      aggregate: bool
+                      ) -> str:
         return str(IndexName(prefix=self._index_prefix,
                              version=2,
                              deployment=self.deployment_stage,
@@ -1032,7 +1042,8 @@ class Config:
         real_path: str
 
     @property
-    def browser_sites(self) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
+    def browser_sites(self
+                      ) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
         import json
         return json.loads(self.environ['azul_browser_sites'])
 
@@ -1148,9 +1159,10 @@ class Config:
 
     api_gateway_timeout = 29
 
-    # The number of seconds to extend the timeout of a Lambda fronted by API Gateway so that API Gateway times out
-    # before the Lambda. We pad the Lambda timeout so we get consistent behaviour. Without this padding we'd have a
-    # race between the Lambda being killed and API Gateway timing out.
+    # The number of seconds to extend the timeout of a Lambda fronted by
+    # API Gateway so that API Gateway times out before the Lambda. We pad the
+    # Lambda timeout so we get consistent behaviour. Without this padding we'd
+    # have a race between the Lambda being killed and API Gateway timing out.
     #
     api_gateway_timeout_padding = 2
 

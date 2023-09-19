@@ -876,7 +876,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(field_path[-1], [])
         return entities
 
-    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> Optional[str]:
+    def _azul_file_url(self,
+                       file: JSON,
+                       args: Mapping = frozendict()
+                       ) -> Optional[str]:
         if self.repository_plugin.file_download_class().needs_drs_uri and file['drs_uri'] is None:
             return None
         else:
@@ -1652,7 +1655,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                                      column_mapping=bundle_column_mapping,
                                      row=bundle_cells)
 
-                # Register the three extracted sets of fields as a group for this bundle and qualifier
+                # Register the three extracted sets of fields as a group for
+                # this bundle and qualifier
                 group = {
                     'file': file_cells,
                     'bundle': bundle_cells,
@@ -1716,13 +1720,16 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                             else:
                                 assert cells.items() <= row.items()
                         elif entity == 'other':
-                            # Cells from other entities need to be concatenated. Note that for fields that differ
-                            # between the files in a bundle this algorithm retains the values but loses the
-                            # association between each individual value and the respective file.
+                            # Cells from other entities need to be concatenated.
+                            # Note that for fields that differ between the files
+                            # in a bundle this algorithm retains the values but
+                            # loses the association between each individual
+                            # value and the respective file.
                             for column_name, cell_value in cells.items():
                                 row.setdefault(column_name, set()).update(cell_value.split(self.padded_joiner))
                         elif entity == 'file':
-                            # Since file-specific cells are placed into qualified columns, no concatenation is necessary
+                            # Since file-specific cells are placed into
+                            # qualified columns, no concatenation is necessary
                             index = None if num_groups_per_qualifier[qualifier] == 1 else i
                             row.update((qualify(qualifier, column_name, index=index), cell)
                                        for column_name, cell in cells.items())

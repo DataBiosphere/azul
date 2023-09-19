@@ -147,12 +147,19 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: ManifestFormat, filters: FiltersJSON, stream=False) -> Response:
+    def _get_manifest(self,
+                      format_: ManifestFormat,
+                      filters: FiltersJSON,
+                      stream=False
+                      ) -> Response:
         manifest, num_partitions = self._get_manifest_object(format_, filters)
         self.assertEqual(1, num_partitions)
         return requests.get(manifest.location, stream=stream)
 
-    def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> tuple[Manifest, int]:
+    def _get_manifest_object(self,
+                             format_: ManifestFormat,
+                             filters: JSON
+                             ) -> tuple[Manifest, int]:
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
         filters = self._filters(filters)
         partition = ManifestPartition.first()
@@ -188,7 +195,9 @@ def manifest_test(test):
 class TestManifestEndpoints(ManifestTestCase):
     _drs_domain_name = 'drs-test.lan'
 
-    def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
+    def run(self,
+            result: Optional[unittest.result.TestResult] = None
+            ) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
         with mock.patch.object(ManifestService,
                                '_get_cached_manifest_file_name',
@@ -493,8 +502,9 @@ class TestManifestEndpoints(ManifestTestCase):
     @manifest_test
     def test_manifest_zarr(self):
         """
-        Test that when downloading a manifest with a zarr, all of the files are added into the manifest even
-        if they are not listed in the service response.
+        Test that when downloading a manifest with a zarr, all of the files are
+        added into the manifest even if they are not listed in the service
+        response.
         """
         self.maxDiff = None
         expected = [
@@ -689,8 +699,9 @@ class TestManifestEndpoints(ManifestTestCase):
     @manifest_test
     def test_terra_bdbag_manifest(self):
         """
-        moto will mock the requests.get call so we can't hit localhost; add_passthru lets us hit
-        the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
+        moto will mock the requests.get call so we can't hit localhost;
+        add_passthru lets us hit the server (see GitHub issue and comment:
+        https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
@@ -1029,7 +1040,9 @@ class TestManifestEndpoints(ManifestTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters: FiltersJSON) -> tuple[list[dict[str, str]], list[str]]:
+    def _extract_bdbag_response(self,
+                                filters: FiltersJSON
+                                ) -> tuple[list[dict[str, str]], list[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code)
@@ -1055,8 +1068,10 @@ class TestManifestEndpoints(ManifestTestCase):
             return str(uuid.uuid4())
 
         bundles: Bundles = {}
-        # Create sample data that can be passed to BDBagManifestGenerator._remove_redundant_entries()
-        # Each entry is given a timestamp 1 second later than the previous entry to have variety in the entries
+        # Create sample data that can be passed to
+        # BDBagManifestGenerator._remove_redundant_entries()
+        # Each entry is given a timestamp 1 second later than the previous entry
+        # to have variety in the entries
         num_of_entries = 100_000
         for i in range(num_of_entries):
             bundle_fqid = u(), v(i)
@@ -1069,22 +1084,30 @@ class TestManifestEndpoints(ManifestTestCase):
             }
         fqids = {}
         keys = list(bundles.keys())
-        # Add an entry with the same set of files as another entry though with a later timestamp
+        # Add an entry with the same set of files as another entry though with a
+        # later timestamp
         bundle_fqid = u(), v(num_of_entries + 1)
-        bundles[bundle_fqid] = deepcopy(bundles[keys[100]])  # An arbitrary entry in bundles
-        fqids['equal'] = bundle_fqid, keys[100]  # With same set of files [1] will be removed (earlier timestamp)
+        # An arbitrary entry in bundles
+        bundles[bundle_fqid] = deepcopy(bundles[keys[100]])
+        # With same set of files [1] will be removed (earlier timestamp)
+        fqids['equal'] = bundle_fqid, keys[100]
         # Add an entry with a subset of files compared to another entry
         bundle_fqid = u(), v(num_of_entries + 2)
-        bundles[bundle_fqid] = deepcopy(bundles[keys[200]])  # An arbitrary entry in bundles
+        # An arbitrary entry in bundles
+        bundles[bundle_fqid] = deepcopy(bundles[keys[200]])
         del bundles[bundle_fqid]['bam'][2]
-        fqids['subset'] = bundle_fqid, keys[200]  # [0] will be removed as it has a subset of files that [1] has
+        # [0] will be removed as it has a subset of files that [1] has
+        fqids['subset'] = bundle_fqid, keys[200]
         # Add an entry with a superset of files compared to another entry
         bundle_fqid = u(), v(num_of_entries + 3)
-        bundles[bundle_fqid] = deepcopy(bundles[keys[300]])  # An arbitrary entry in bundles
+        # An arbitrary entry in bundles
+        bundles[bundle_fqid] = deepcopy(bundles[keys[300]])
         bundles[bundle_fqid]['bam'].append({'file': {'file_uuid': u()}})
-        fqids['superset'] = bundle_fqid, keys[300]  # [0] has a superset of files that [0] has so [0] wil be removed
+        # [0] has a superset of files that [0] has so [0] wil be removed
+        fqids['superset'] = bundle_fqid, keys[300]
 
-        self.assertEqual(len(bundles), num_of_entries + 3)  # the generated entries plus 3 redundant entries
+        # the generated entries plus 3 redundant entries
+        self.assertEqual(len(bundles), num_of_entries + 3)
         self.assertIn(fqids['equal'][0], bundles)
         self.assertIn(fqids['equal'][1], bundles)
         self.assertIn(fqids['subset'][0], bundles)
@@ -1094,13 +1117,17 @@ class TestManifestEndpoints(ManifestTestCase):
 
         BDBagManifestGenerator._remove_redundant_entries(bundles)
 
-        self.assertEqual(len(bundles), num_of_entries)  # 3 redundant entries removed
-        self.assertNotIn(fqids['equal'][1], bundles)  # Removed for a duplicate file set with an earlier timestamp
+        # 3 redundant entries removed
+        self.assertEqual(len(bundles), num_of_entries)
+        # Removed for a duplicate file set with an earlier timestamp
+        self.assertNotIn(fqids['equal'][1], bundles)
         self.assertIn(fqids['equal'][0], bundles)
-        self.assertNotIn(fqids['subset'][0], bundles)  # Removed for having a subset of files as another entry
+        # Removed for having a subset of files as another entry
+        self.assertNotIn(fqids['subset'][0], bundles)
         self.assertIn(fqids['subset'][1], bundles)
         self.assertIn(fqids['superset'][0], bundles)
-        self.assertNotIn(fqids['superset'][1], bundles)  # Removed for having a subset of files as another entry
+        # Removed for having a subset of files as another entry
+        self.assertNotIn(fqids['superset'][1], bundles)
 
     @manifest_test
     def test_bdbag_manifest_for_redundant_entries(self):
@@ -1123,8 +1150,10 @@ class TestManifestEndpoints(ManifestTestCase):
         # In both subtests below we expect the primary bundle to be omitted from
         # the results as it is redundant compared to the analysis bundle.
         expected_bundle_uuids = {
-            'f0731ab4-6b80-4eed-97c9-4984de81a47c',  # analysis bundle
-            'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'  # bundle with no shared files (added by WebServiceTestCase)
+            # analysis bundle
+            'f0731ab4-6b80-4eed-97c9-4984de81a47c',
+            # bundle with no shared files (added by WebServiceTestCase)
+            'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
         }
         for filters in [
             # With a filter limiting to fastq both the primary and analysis
@@ -1256,8 +1285,9 @@ class TestManifestCache(ManifestTestCase):
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        # moto will mock the requests.get call so we can't hit localhost; add_passthru lets us hit the server
-        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        # moto will mock the requests.get call so we can't hit localhost;
+        # add_passthru lets us hit the server. See this GitHub issue and comment:
+        # https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         def log_messages_from_manifest_request(seconds_until_expire: int) -> list[str]:
             get_seconds.return_value = seconds_until_expire
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
@@ -1274,11 +1304,13 @@ class TestManifestCache(ManifestTestCase):
         logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
         self.assertTrue(any('Cached manifest not found' in message for message in logs_output))
 
-        # If the cached manifest has a long time till it expires then no log message expected
+        # If the cached manifest has a long time till it expires then no log
+        # message expected
         logs_output = log_messages_from_manifest_request(seconds_until_expire=3600)
         self.assertFalse(any('Cached manifest' in message for message in logs_output))
 
-        # If the cached manifest has a short time till it expires then a log message is expected
+        # If the cached manifest has a short time till it expires then a log
+        # message is expected
         logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
         self.assertTrue(any('Cached manifest is about to expire' in message for message in logs_output))
 
@@ -1301,7 +1333,8 @@ class TestManifestCache(ManifestTestCase):
             ]
             file_names = defaultdict(list)
 
-            # Run the generation of manifests twice to verify generated file names are the same when re-run
+            # Run the generation of manifests twice to verify generated file
+            # names are the same when re-run
             for project_id in project_ids * 2:
                 response = self._get_manifest(ManifestFormat.compact,
                                               filters={'projectId': {'is': [project_id]}})
@@ -1338,8 +1371,8 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(old_bundle_object_key, generator.compute_object_key())
                 old_object_keys[format_] = old_bundle_object_key
 
-        # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
-        # will generate a different object_key ...
+        # ... until a new bundle belonging to the same project is indexed, at
+        # which point a manifest request will generate a different object_key...
         update_fqid = self.bundle_fqid(uuid=bundle_uuid,
                                        version='2018-11-04T11:33:44.698028Z')
         self._index_canned_bundle(update_fqid)
@@ -1356,7 +1389,8 @@ class TestManifestCache(ManifestTestCase):
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
                 new_object_keys[format_] = new_bundle_object_key
 
-        # Updates or additions, unrelated to that project do not affect object key generation
+        # Updates or additions, unrelated to that project do not affect object
+        # key generation
         other_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(other_fqid)

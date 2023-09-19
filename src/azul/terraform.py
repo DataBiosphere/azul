@@ -289,7 +289,9 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     }
 
 
-def _adjust_name_tag(resource_type: str, tags: dict[str, str]) -> dict[str, str]:
+def _adjust_name_tag(resource_type: str,
+                     tags: dict[str, str]
+                     ) -> dict[str, str]:
     return {
         'Name' if k == 'name' and resource_type.startswith('aws_') else k: v
         for k, v in tags.items()
