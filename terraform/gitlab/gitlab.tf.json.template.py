@@ -237,19 +237,17 @@ other_public_keys = {
     'dev': operator_keys,
     'anvildev': operator_keys,
     'anvilprod': operator_keys,
-    # FIXME: Change back to []
-    #        https://github.com/DataBiosphere/azul/issues/5408
-    'prod': operator_keys
+    'prod': []
 }
 
 # Note that a change to the image references here also requires updating
 # azul.config.docker_images and redeploying the `shared` TF component prior to
 # deploying the `gitlab` component.
 
-clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.1.0-1'
+clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.2.0-1'
 dind_image = config.docker_registry + 'docker.io/library/docker:24.0.2-dind'
-gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.1.2-ce.0'
-runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.1.0'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.3.2-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.3.0'
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
@@ -1371,6 +1369,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service',
                                 'Requires=docker.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab-dind',
@@ -1443,6 +1445,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service',
                                 'Requires=docker.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab',
@@ -1476,6 +1482,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service gitlab.service',
                                 'Requires=docker.service gitlab-dind.service gitlab.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab-runner',
@@ -1505,6 +1515,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop clamscan',
@@ -1567,6 +1581,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop prune-images',
@@ -1733,6 +1751,19 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 # FIXME: Re-enable formatting of the JSON above
                                 #        https://github.com/DataBiosphere/azul/issues/5314
                             })
+                        },
+                        {
+                            'path': '/etc/docker/daemon.json',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': json.dumps(
+                                {
+                                    'log-driver': 'journald',
+                                    'log-opts': {
+                                        'tag': 'docker: {{.Name}}'
+                                    }
+                                }
+                            )
                         },
                     ],
                     # Reboot to realize the added kernel parameter the changed sshd configuration
