@@ -370,7 +370,8 @@ emit_tf({
                 'aws_api_gateway_domain_name': {
                     f'{app.name}_{i}': {
                         'domain_name': '${aws_acm_certificate.%s_%i.domain_name}' % (app.name, i),
-                        'certificate_arn': '${aws_acm_certificate_validation.%s_%i.certificate_arn}' % (app.name, i)
+                        'certificate_arn': '${aws_acm_certificate_validation.%s_%i.certificate_arn}' % (app.name, i),
+                        'security_policy': 'TLS_1_2'
                     } for i, domain in enumerate(app.domains)
                 },
                 'aws_api_gateway_method_settings': {
@@ -618,7 +619,7 @@ emit_tf({
                             app.name: {
                                 'port': 443,
                                 'protocol': 'HTTPS',
-                                'ssl_policy': 'ELBSecurityPolicy-2016-08',
+                                'ssl_policy': 'ELBSecurityPolicy-FS-1-2-Res-2019-08',
                                 'certificate_arn': '${aws_acm_certificate.%s_0.arn}' % app.name,
                                 'default_action': [
                                     {
