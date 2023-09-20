@@ -699,7 +699,7 @@ class TestManifestEndpoints(ManifestTestCase):
     @manifest_test
     def test_terra_bdbag_manifest(self):
         """
-        moto will mock the requests.get call so we can't hit localhost;
+        Moto will mock the requests.get call so we can't hit localhost;
         add_passthru lets us hit the server (see GitHub issue and comment:
         https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
@@ -1150,9 +1150,9 @@ class TestManifestEndpoints(ManifestTestCase):
         # In both subtests below we expect the primary bundle to be omitted from
         # the results as it is redundant compared to the analysis bundle.
         expected_bundle_uuids = {
-            # analysis bundle
+            # An analysis bundle
             'f0731ab4-6b80-4eed-97c9-4984de81a47c',
-            # bundle with no shared files (added by WebServiceTestCase)
+            # A bundle with no shared files (added by WebServiceTestCase)
             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
         }
         for filters in [
@@ -1285,7 +1285,7 @@ class TestManifestCache(ManifestTestCase):
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        # moto will mock the requests.get call so we can't hit localhost;
+        # Moto will mock the requests.get call so we can't hit localhost;
         # add_passthru lets us hit the server. See this GitHub issue and comment:
         # https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         def log_messages_from_manifest_request(seconds_until_expire: int) -> list[str]:
@@ -1372,7 +1372,7 @@ class TestManifestCache(ManifestTestCase):
                 old_object_keys[format_] = old_bundle_object_key
 
         # ... until a new bundle belonging to the same project is indexed, at
-        # which point a manifest request will generate a different object_key...
+        # which point a manifest request will generate a different object_key ...
         update_fqid = self.bundle_fqid(uuid=bundle_uuid,
                                        version='2018-11-04T11:33:44.698028Z')
         self._index_canned_bundle(update_fqid)

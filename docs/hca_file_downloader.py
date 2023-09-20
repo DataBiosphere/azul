@@ -257,6 +257,7 @@ class HCAFileDownloader:
         """
         # Work around https://github.com/DataBiosphere/azul/issues/2908
         url = url.replace('/fetch', '')
+
         response = requests.get(url, stream=True)
         response.raise_for_status()
         try:

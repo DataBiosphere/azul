@@ -79,10 +79,13 @@ class PortalService:
 
         :param entity_type: The type of the entity to which an integration
                             applies (e.g. project, file, bundle)
+
         :param integration_type: The kind of integration (e.g. get, get_entity,
                                  get_entities, get_manifest)
+
         :param entity_ids: If given results will be limited to this set of entity
                            UUIDs
+
         :return: A list of portals that have one or more matching integrations
         """
         result = []

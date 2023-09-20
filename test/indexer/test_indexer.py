@@ -1003,10 +1003,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
         hits = self._get_all_hits()
-        # Six entities
-        # (two files, one project, one cell suspension, one sample, and one bundle)
-        # One contribution and one aggregate per entity
-        # Two times number of deleted contributions since deletes don't remove a
+        # Six entities (two files, one project, one cell suspension, one sample,
+        # and one bundle) One contribution and one aggregate per entity. Two
+        # times number of deleted contributions since deletes don't remove a
         # contribution, but add a new one
         self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions * 2, len(hits))
         hits_by_id = {}
@@ -1050,9 +1049,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                            ):
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
-        # Six entities
-        # (two files, one project, one cell suspension, one sample and one bundle)
-        # One contribution and one aggregate per entity
+        # Six entities (two files, one project, one cell suspension, one sample
+        # and one bundle). One contribution and one aggregate per entity
         self.assertEqual(6 + 6 + num_expected_old_contributions, len(hits))
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
@@ -1239,7 +1237,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 for file in files:
                     file_name = file['name']
                     file_names.add(file_name)
-        # a project, a specimen, a cell suspension and a bundle
+        # A project, a specimen, a cell suspension and a bundle
         self.assertEqual(4, len(entities_with_matrix_files))
         self.assertEqual(aggregate_file_names, file_names)
         matrix_file_names = {file_name for file_name in file_names if '.zarr/' in file_name}
@@ -1287,7 +1285,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 else:
                     self.assertEqual(expected_cell_count, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
                 documents_with_cell_suspension += 1
-        # times 2 for original document and aggregate
+        # Times 2 for original document and aggregate
         self.assertEqual(expected_cell_count * 2, counted_cell_count)
         # Cell suspensions should be mentioned in 1 bundle, 1 project,
         # 1 specimen, 384 cell suspensions, and 2 files (one per fastq).
