@@ -221,7 +221,7 @@ class Main:
         transitive_build_reqs = build_only_reqs - direct_build_reqs
         transitive_runtime_reqs = runtime_reqs - direct_runtime_reqs
         assert not transitive_build_reqs & transitive_runtime_reqs
-        # Assert that all_reqs really includes everyting
+        # Assert that all_reqs really includes everything
         for i, reqs in enumerate([
             pip_reqs,
             direct_runtime_reqs,
@@ -240,7 +240,7 @@ class Main:
         parsed_reqs = set(map(PinnedRequirement.create, parsed_reqs))
         return PinnedRequirements(parsed_reqs - {None})
 
-    def get_reqs(self, qualfier: Qualifier) -> PinnedRequirements:
+    def get_reqs(self, qualifier: Qualifier) -> PinnedRequirements:
         # Some major version of pip between 19 and 22 changed the format of the
         # output of `pip freeze` for VCS dependencies. We'll likely have to
         # upgrade the dependency parser to absorb that. For now we'll just use
@@ -248,10 +248,10 @@ class Main:
         # name==version format.
         #
         command = '.venv/bin/pip list --format=freeze'
-        docker_command = f'docker run {qualfier.image} {command}'
+        docker_command = f'docker run {qualifier.image} {command}'
         log.info('Getting direct and transitive %s requirements using %r',
-                 qualfier.name, docker_command)
-        stdout = self.docker.containers.run(image=qualfier.image,
+                 qualifier.name, docker_command)
+        stdout = self.docker.containers.run(image=qualifier.image,
                                             command=command,
                                             detach=False,
                                             stdout=True,
@@ -265,7 +265,10 @@ class Main:
         with open(path) as f:
             return self.parse_reqs(f)
 
-    def write_transitive_reqs(self, reqs: PinnedRequirements, qualifier: Qualifier) -> None:
+    def write_transitive_reqs(self,
+                              reqs: PinnedRequirements,
+                              qualifier: Qualifier
+                              ) -> None:
         self.write_reqs(reqs,
                         file_name=f'requirements{qualifier.extension}.trans.txt',
                         type='transitive')

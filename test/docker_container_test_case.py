@@ -50,7 +50,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
     def _create_container(cls, image: str, container_port: int, **kwargs) -> Netloc:
         """
         Create a Docker container from the given image, exposing the given
-        container port on a interface that is within reach of the current
+        container port on an interface that is within reach of the current
         process.
 
         :param image: the fully qualified name of the Docker image to run

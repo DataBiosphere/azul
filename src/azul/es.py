@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 
 class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
 
-    def __init__(self, *args, **kwags):
-        super().__init__(*args, **kwags)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         # We use the botocore session from Boto3 since it is pre-configured by
         # envhook.py to use cached credentials for the AssumeRoleProvider. This
         # avoids repeated entry of MFA tokens when running this code locally.
@@ -47,15 +47,17 @@ class ESClientFactory:
     @lru_cache(maxsize=32)
     def _create_client(cls, host, port, timeout):
         log.debug(f'Creating ES client [{host}:{port}]')
-        # Implicit retries don't make much sense in conjunction with optimistic locking (versioning). Consider a
-        # write request that times out in ELB with a 504 while the upstream ES node actually finishes the request.
-        # Retrying that individual write request will fail with a 409. Instead of retrying just the write request,
-        # the entire read-modify-write transaction needs to be retried. In order to be in full control of error
-        # handling, we disable the implicit retries via max_retries=0.
+        # Implicit retries don't make much sense in conjunction with optimistic
+        # locking (versioning). Consider a write request that times out in ELB
+        # with a 504 while the upstream ES node actually finishes the request.
+        # Retrying that individual write request will fail with a 409. Instead
+        # of retrying just the write request, the entire read-modify-write
+        # transaction needs to be retried. In order to be in full control of
+        # error handling, we disable the implicit retries via max_retries=0.
         common_params = dict(hosts=[dict(host=host, port=port)],
                              timeout=timeout,
                              max_retries=0)
-        if host.endswith(".amazonaws.com"):
+        if host.endswith('.amazonaws.com'):
             aws_auth = CachedBotoAWSRequestsAuth(aws_host=host,
                                                  aws_region=aws.region_name,
                                                  aws_service='es')

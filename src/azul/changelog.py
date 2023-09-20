@@ -40,12 +40,14 @@ def compact_changes(limit=None) -> list[JSON]:
 
 def write_changes(output_dir_path):
     """
-    Write the change log as a Python literal to a module in the given directory. We're using Python syntax because it
-    can be looked up and loaded very easily. See changes().
+    Write the change log as a Python literal to a module in the given directory.
+    We're using Python syntax because it can be looked up and loaded very
+    easily. See changes().
     """
     with write_file_atomically(os.path.join(output_dir_path, module_name + '.py')) as f:
-        # Write each change as a single line. I tried pprint() but it reorders the keys in dictionaries and its line
-        # wrapping algorithm is creating a non-uniform output.
+        # Write each change as a single line. I tried pprint() but it reorders
+        # the keys in dictionaries and its line wrapping algorithm is creating a
+        # non-uniform output.
         f.write(variable_name + ' = [\n')
         for change in changelog()[variable_name]:
             f.write('    ' + repr(change) + ',\n')

@@ -171,7 +171,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                         if fetch:
                             response = json.loads(response.data)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
-                            self.assertEqual(302, response["Status"])
+                            self.assertEqual(302, response['Status'])
                         else:
                             response = dict(response.headers)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
@@ -262,10 +262,10 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
     def test_repository_files_proxy(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None
-        key = ("blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779"
-               ".f2237ad0a776fd7057eb3d3498114c85e2f521d7"
-               ".7e892bf8f6aa489ccb08a995c7f017e1."
-               "847325b6")
+        key = ('blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779'
+               '.f2237ad0a776fd7057eb3d3498114c85e2f521d7'
+               '.7e892bf8f6aa489ccb08a995c7f017e1.'
+               '847325b6')
         bucket_name = 'org-humancellatlas-dss-checkout-staging'
         s3 = aws.s3
         s3.create_bucket(Bucket=bucket_name,
@@ -339,7 +339,7 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
                                     if fetch:
                                         self.assertEqual(200, response.status_code)
                                         response = response.json()
-                                        self.assertEqual(expect_status, response["Status"])
+                                        self.assertEqual(expect_status, response['Status'])
                                     else:
                                         if response.status_code != expect_status:
                                             response.raise_for_status()

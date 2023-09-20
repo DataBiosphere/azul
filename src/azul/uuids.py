@@ -144,7 +144,7 @@ class UUIDPartition(Generic[UUID_PARTITION]):
     prefix_length: int
     prefix: int
 
-    root: ClassVar[UUID_PARTITION]  # see meta-class above
+    root: ClassVar[UUID_PARTITION]  # see metaclass above
 
     # This stub is only needed to aid PyCharm's type inference. Without this,
     # a constructor invocation that doesn't refer to the class explicitly, but
@@ -166,7 +166,7 @@ class UUIDPartition(Generic[UUID_PARTITION]):
     def to_json(self) -> JSON:
         return attr.asdict(self)
 
-    def contains(self, member: UUID):
+    def contains(self, member: UUID) -> bool:
         """
         >>> p = UUIDPartition(prefix_length=7, prefix=0b0111_1111)
         >>> p.contains(UUID('fdd4524e-14c4-41d7-9071-6cadab09d75c'))

@@ -35,7 +35,8 @@ Entities = MutableJSONs
 
 class Accumulator(metaclass=ABCMeta):
     """
-    Accumulates multiple values into a single value, not necessarily of the same type.
+    Accumulates multiple values into a single value, not necessarily of the same
+    type.
     """
 
     @abstractmethod
@@ -200,8 +201,8 @@ class DictAccumulator(Accumulator):
 
 class FrequencySetAccumulator(Accumulator):
     """
-    An accumulator that accepts any number of values and returns a list with length max_size or smaller containing
-    the most frequent values accumulated.
+    An accumulator that accepts any number of values and returns a list with
+    length max_size or smaller containing the most frequent values accumulated.
 
     >>> a = FrequencySetAccumulator(2)
     >>> a.accumulate('x')
@@ -232,7 +233,8 @@ class FrequencySetAccumulator(Accumulator):
 
 class LastValueAccumulator(Accumulator):
     """
-    An accumulator that accepts any number of values and returns the value most recently seen.
+    An accumulator that accepts any number of values and returns the value most
+    recently seen.
     """
 
     def __init__(self) -> None:
@@ -248,8 +250,9 @@ class LastValueAccumulator(Accumulator):
 
 class SingleValueAccumulator(LastValueAccumulator):
     """
-    An accumulator that accepts any number of values given that they all are the same value and returns a single value.
-    Occurrence of any value that is different than the first accumulated value raises a ValueError.
+    An accumulator that accepts any number of values given that they all are the
+    same value and returns a single value. Occurrence of any value that is
+    different than the first accumulated value raises a ValueError.
     """
 
     def accumulate(self, value):
@@ -327,8 +330,9 @@ class MaxAccumulator(LastValueAccumulator):
 
 class DistinctAccumulator(Accumulator):
     """
-    An accumulator for (key, value) tuples. Of two pairs with the same key, only the value from the first pair will
-    be accumulated. The actual values will be accumulated in another accumulator instance specified at construction.
+    An accumulator for (key, value) tuples. Of two pairs with the same key, only
+    the value from the first pair will be accumulated. The actual values will be
+    accumulated in another accumulator instance specified at construction.
 
         >>> a = DistinctAccumulator(SumAccumulator(initially=0), max_size=3)
 
@@ -416,7 +420,10 @@ class SimpleAggregator(EntityAggregator):
             }
         ] if aggregate else []
 
-    def _accumulate(self, aggregate: dict[str, Optional[Accumulator]], entity: JSON):
+    def _accumulate(self,
+                    aggregate: dict[str, Optional[Accumulator]],
+                    entity: JSON
+                    ):
         entity = self._transform_entity(entity)
         for field_, value in entity.items():
             try:

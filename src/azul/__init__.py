@@ -112,9 +112,9 @@ class Config:
         return roles
 
     def _boolean(self, value: str) -> bool:
-        if value == "0":
+        if value == '0':
             return False
-        elif value == "1":
+        elif value == '1':
             return True
         else:
             raise ValueError('Expected "0" or "1"', value)
@@ -131,7 +131,7 @@ class Config:
         self.environ['AZUL_DEBUG'] = str(debug)
 
     def _validate_debug(self, debug):
-        require(debug in (0, 1, 2), "AZUL_DEBUG must be either 0, 1 or 2")
+        require(debug in (0, 1, 2), 'AZUL_DEBUG must be either 0, 1 or 2')
 
     _es_endpoint_env_name = 'AZUL_ES_ENDPOINT'
 
@@ -342,7 +342,10 @@ class Config:
     def dss_direct_access(self) -> bool:
         return self._boolean(self.environ['AZUL_DSS_DIRECT_ACCESS'])
 
-    def dss_direct_access_role(self, lambda_name: str, stage: Optional[str] = None) -> Optional[str]:
+    def dss_direct_access_role(self,
+                               lambda_name: str,
+                               stage: Optional[str] = None
+                               ) -> Optional[str]:
         key = 'AZUL_DSS_DIRECT_ACCESS_ROLE'
         try:
             role_arn = self.environ[key]
@@ -458,7 +461,7 @@ class Config:
         self._validate_term(resource_name)
         if stage is None:
             stage = self.deployment_stage
-        return f"{self.resource_prefix}-{resource_name}-{stage}{suffix}"
+        return f'{self.resource_prefix}-{resource_name}-{stage}{suffix}'
 
     # FIXME: Eliminate hard-coded separator
     #        https://github.com/databiosphere/azul/issues/2964
@@ -608,7 +611,7 @@ class Config:
         return self.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
 
     def api_lambda_domain(self, lambda_name: str) -> str:
-        return self.subdomain(lambda_name) + "." + self.domain_name
+        return self.subdomain(lambda_name) + '.' + self.domain_name
 
     @property
     def drs_domain(self):
@@ -693,7 +696,7 @@ class Config:
     @cached_property
     def main_deployment_stage(self) -> str:
         """
-        The name of the main deployment the current deployment is colocated
+        The name of the main deployment the current deployment is collocated
         with. If the current deployment is a main deployment, the return value
         is the name of the current deployment.
         """
@@ -909,7 +912,10 @@ class Config:
     def is_anvil_enabled(self, catalog: Optional[str] = None) -> bool:
         return self._is_plugin_enabled('anvil', catalog)
 
-    def _is_plugin_enabled(self, plugin_prefix: str, catalog: Optional[str]) -> bool:
+    def _is_plugin_enabled(self,
+                           plugin_prefix: str,
+                           catalog: Optional[str]
+                           ) -> bool:
         def predicate(catalog):
             return any(
                 plugin.name.split('_')[0] == plugin_prefix
@@ -929,7 +935,11 @@ class Config:
             if catalog.is_integration_test_catalog
         }
 
-    def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
+    def es_index_name(self,
+                      catalog: CatalogName,
+                      entity_type: str,
+                      aggregate: bool
+                      ) -> str:
         return str(IndexName(prefix=self._index_prefix,
                              version=2,
                              deployment=self.deployment_stage,
@@ -1032,7 +1042,8 @@ class Config:
         real_path: str
 
     @property
-    def browser_sites(self) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
+    def browser_sites(self
+                      ) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
         import json
         return json.loads(self.environ['azul_browser_sites'])
 
@@ -1148,9 +1159,10 @@ class Config:
 
     api_gateway_timeout = 29
 
-    # The number of seconds to extend the timeout of a Lambda fronted by API Gateway so that API Gateway times out
-    # before the Lambda. We pad the Lambda timeout so we get consistent behaviour. Without this padding we'd have a
-    # race between the Lambda being killed and API Gateway timing out.
+    # The number of seconds to extend the timeout of a Lambda fronted by
+    # API Gateway so that API Gateway times out before the Lambda. We pad the
+    # Lambda timeout so we get consistent behaviour. Without this padding we'd
+    # have a race between the Lambda being killed and API Gateway timing out.
     #
     api_gateway_timeout_padding = 2
 
@@ -1707,7 +1719,7 @@ class IndexName:
 
 class RequirementError(RuntimeError):
     """
-    Unlike assertions, unsatisfied requirements do not consitute a bug in the program.
+    Unlike assertions, unsatisfied requirements do not constitute a bug in the program.
     """
 
 
@@ -1813,7 +1825,7 @@ E = TypeVar('E')
 def iif(condition: bool, then: T, otherwise: E = absent) -> Union[T, E]:
     """
     An alternative to ``if`` expressions, that, in certain situations, might
-    be more convenient or readable, such as when when the ``else`` branch
+    be more convenient or readable, such as when the ``else`` branch
     evaluates to the zero value of a given type. Example zero values are
     ``0`` for ``int``, ``[]`` for ``list``, ``()`` for ``tuple``, ``{}`` for
     ``dict`` and ``''`` for ``str``.

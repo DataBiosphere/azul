@@ -100,7 +100,7 @@ class OAuth2Client:
         validity cannot be determined.
 
         For a user's access token to be valid, it must not be expired, and
-        originate from an Google OAuth 2.0 client belonging to the current
+        originate from a Google OAuth 2.0 client belonging to the current
         Google Cloud project.
 
         For service account credentials (those with a private key) to be valid,

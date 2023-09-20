@@ -31,7 +31,10 @@ class LogForwardingController(AppController):
     def s3(self) -> LogForwardingService:
         return S3AccessLogForwardingService()
 
-    def _forward_logs(self, event: chalice.app.S3Event, service: LogForwardingService) -> None:
+    def _forward_logs(self,
+                      event: chalice.app.S3Event,
+                      service: LogForwardingService
+                      ) -> None:
         for message in service.read_logs(event.bucket, event.key):
             json.dump(message, sys.stdout)
             sys.stdout.write('\n')

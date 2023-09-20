@@ -18,7 +18,7 @@ def parse_jsonschema_date_time(s: str) -> Optional[datetime]:
     to a timezone-aware `datetime` instance. Only up to 6 digits of fractional
     seconds are supported. This is a deviation from the standard which allows an
     arbitrary number of digits (impracticably so) but Python does not support
-    more and silent truncation or rounding is not an good option. I never
+    more and silent truncation or rounding is not a good option. I never
     observed more than six digits in the wild, anyways.
 
     No fractional seconds, UTC
@@ -79,7 +79,7 @@ def parse_jsonschema_date_time(s: str) -> Optional[datetime]:
         ...
     ValueError: ('Not an RFC-3339 datetime', '2021-05-05T14:24:26.174274-0700')
 
-    Out of range hour: (this is just an sample; we're relying in datetime to
+    Out of range hour: (this is just a sample; we're relying in datetime to
     enforce ranges on all components)
 
     >>> parse_jsonschema_date_time('2021-05-05T24:24:26Z')

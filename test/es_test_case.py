@@ -27,8 +27,8 @@ log = get_test_logger(__name__)
 
 class ElasticsearchTestCase(DockerContainerTestCase):
     """
-    A test case that uses an Elasticsearch instance running in a container. The same Elasticsearch instance will be
-    shared by all tests in the class.
+    A test case that uses an Elasticsearch instance running in a container.
+    The same Elasticsearch instance will be shared by all tests in the class.
     """
     es_client = None
     _env_patch = None
@@ -65,8 +65,9 @@ class ElasticsearchTestCase(DockerContainerTestCase):
 
     def assertElasticEqual(self, first, second):
         """
-        The ordering of list items in our Elasticsearch responses typically doesn't matter.
-        The comparison done by this method is insensitive to ordering differences in lists.
+        The ordering of list items in our Elasticsearch responses typically
+        doesn't matter. The comparison done by this method is insensitive to
+        ordering differences in lists.
 
         For details see the doc string for sort_frozen() and freeze()
         """

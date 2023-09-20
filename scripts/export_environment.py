@@ -84,7 +84,7 @@ class BadParentDeployment(RuntimeError):
 
     def __init__(self, parent: Path, component: Path) -> None:
         super().__init__(
-            f"Component {component} refers to non-existent parent deployment {parent}"
+            f'Component {component} refers to non-existent parent deployment {parent}'
         )
 
 

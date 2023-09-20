@@ -71,7 +71,7 @@ def actions():
         escaped_service_name = service_name.replace('/', '\u00b6')  # Don't ask me
         service_actions = get(f'/services/{escaped_service_name}/actions')
         for link, action in service_actions['_embedded'].items():
-            action_name = service['serviceName'] + ":" + posixpath.basename(urlparse(link).path)
+            action_name = service['serviceName'] + ':' + posixpath.basename(urlparse(link).path)
             actions[service_name][action_name] = {
                 'resources': action['requiredResources'] + action['optionalResources'],
                 'type': ServiceActionType.for_action_groups(set(action['actionGroups']))

@@ -289,7 +289,9 @@ def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     }
 
 
-def _adjust_name_tag(resource_type: str, tags: dict[str, str]) -> dict[str, str]:
+def _adjust_name_tag(resource_type: str,
+                     tags: dict[str, str]
+                     ) -> dict[str, str]:
     return {
         'Name' if k == 'name' and resource_type.startswith('aws_') else k: v
         for k, v in tags.items()
@@ -535,7 +537,7 @@ class Chalice:
         renamed = {}
 
         def rename(block_name, resource_type, old):
-            # Rename and track the renaming as a side-effect
+            # Rename and track the renaming as a side effect
             new = self._rename_chalice_resource(app_name, old)
             renamed[(block_name, resource_type, old)] = new
             return new
@@ -677,7 +679,7 @@ class Chalice:
 
         for resource in resources['aws_lambda_function'].values():
             assert 'layers' not in resource
-            resource['layers'] = ["${aws_lambda_layer_version.dependencies.arn}"]
+            resource['layers'] = ['${aws_lambda_layer_version.dependencies.arn}']
             env = config.es_endpoint_env(
                 es_endpoint=(
                     aws.es_endpoint
@@ -687,7 +689,7 @@ class Chalice:
                 es_instance_count=(
                     aws.es_instance_count
                     if config.share_es_domain else
-                    "${aws_elasticsearch_domain.index.cluster_config[0].instance_count}"
+                    '${aws_elasticsearch_domain.index.cluster_config[0].instance_count}'
                 )
             )
             resource['environment']['variables'].update(env)

@@ -233,7 +233,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                         translated_none = field_type.to_index(None)
                         if translated_none in values:
                             # Note that at this point None values in filters have already
-                            # been translated eg. {'is': ['~null']} and if the filter has a
+                            # been translated e.g. {'is': ['~null']} and if the filter has a
                             # None our query needs to find fields with None values as well
                             # as absent fields
                             absent_query = Q('bool', must_not=[Q('exists', field=dotted(field_path))])
@@ -300,7 +300,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         """
-        Creates an aggregation to be used in a Elasticsearch search request.
+        Creates an aggregation to be used in an Elasticsearch search request.
         """
         # Create a filter agg using a query that represents all filters
         # except for the current facet.
@@ -462,7 +462,7 @@ class Pagination:
         :param previous: True, for a link to the previous page, False for a link
                          to the next one.
 
-        :param params: Additional query parameters to embed in the the URL
+        :param params: Additional query parameters to embed in the URL
         """
         return None
 
@@ -516,9 +516,9 @@ class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
                         )
                     }
                 },
-                # This secondary sort field serves as the tie breaker for when
+                # This secondary sort field serves as the tiebreaker for when
                 # the primary sort field is not unique across documents.
-                # Otherwise it's redundant, especially its the same as the
+                # Otherwise it's redundant, especially if it's the same as the
                 # primary sort field. However, always having a secondary
                 # simplifies the code and most real-world use cases use sort
                 # fields that are not unique.

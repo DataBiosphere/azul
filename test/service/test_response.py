@@ -143,9 +143,9 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
         Fetches hits from ES instance searching for a particular entity ID
         """
         body = {
-            "query": {
-                "term": {
-                    "entity_id.keyword": entity_id
+            'query': {
+                'term': {
+                    'entity_id.keyword': entity_id
                 }
             }
         }
@@ -459,8 +459,8 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
 
     def test_response_factory_projects(self):
         """
-        Test building response for projects
-        Response should include project detail fields that do not appear for other entity type responses
+        Test building response for projects. Response should include project
+        detail fields that do not appear for other entity type responses
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
@@ -1119,7 +1119,8 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
 
     def test_sample(self):
         """
-        Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
+        Test that sample(s) in the response contain values matching values in
+        the source cellLine/organoid/specimen
         """
         for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
@@ -1311,9 +1312,10 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
 
     def test_multivalued_field_sorting(self):
         """
-        Test that sorting by a multi-valued field responds with hits that are
-        correctly sorted based on the first value from each multi-valued field, and
-        that each multi-valued field itself is sorted low to high regardless of the search sort
+        Test that sorting by a multivalued field responds with hits that are
+        correctly sorted based on the first value from each multivalued field,
+        and that each multivalued field itself is sorted low to high regardless
+        of the search sort
         """
         for order, reverse in (('asc', False), ('desc', True)):
             with self.subTest(order=order, reverse=reverse):
@@ -2009,7 +2011,8 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
 
     def test_pagination_search_after_search_before(self):
         """
-        Test search_after and search_before values when using sorting on a field containing None values
+        Test search_after and search_before values when using sorting on a field
+        containing None values
         """
         params = self._params(size=3, sort='workflow', order='asc')
         url = self.base_url.set(path='/index/samples', args=params)
@@ -3647,7 +3650,8 @@ class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
     @mock.patch('azul.portal_service.PortalService._crud')
     def test_integrations(self, portal_crud):
         """
-        Verify requests specifying `integration_type` and `entity_type` only return integrations matching those types
+        Verify requests specifying `integration_type` and `entity_type` only
+        return integrations matching those types
         """
         test_cases = [
             ('get_manifest', 'file', ['b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35']),
@@ -3680,7 +3684,8 @@ class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
     @mock.patch('azul.portal_service.PortalService._crud')
     def test_integrations_by_entity_ids(self, portal_crud):
         """
-        Verify requests specifying `entity_ids` only return integrations matching those entity_ids
+        Verify requests specifying `entity_ids` only return integrations
+        matching those entity_ids
         """
 
         # 224b1d42-b939-4d10-8a8f-2b2ac304b813 must appear in every test since it lacks the entity_ids field

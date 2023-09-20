@@ -76,7 +76,7 @@ class TestCachePoisoning2(CachePoisoningTestCase, DCP1TestCase):
     SourceService._repository_plugin is still poisoned, the plugin from the test
     above will be asked instead. That plugin needs service account credentials
     and so it will attempt to load them from AWS Secrets Manager which is not
-    mocked, and would hit our counter measures against AWS API requests leaking
+    mocked, and would hit our countermeasures against AWS API requests leaking
     out of unit tests (intentionally invalid credentials).
     """
 

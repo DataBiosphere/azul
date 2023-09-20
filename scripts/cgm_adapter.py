@@ -440,7 +440,11 @@ class CGMAdapter:
         self.rows_completed.extend(rows_processed)
         return True
 
-    def get_blob(self, project_uuid: str, shortname: str, file_name: str) -> gcs.Blob:
+    def get_blob(self,
+                 project_uuid: str,
+                 shortname: str,
+                 file_name: str
+                 ) -> gcs.Blob:
         """
         Return the blob from the source bucket.
         """

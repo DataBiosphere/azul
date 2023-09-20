@@ -159,9 +159,9 @@ def _filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) ->
         Platform(os=p['os'], arch=p['architecture'], variant=p.get('variant')).normalize()
         for p in dist['Platforms']
     }
-    matching_plaforms = allowed_platforms & actual_platforms
-    log.info('     … declares matching platforms %r', matching_plaforms)
-    return matching_plaforms
+    matching_platforms = allowed_platforms & actual_platforms
+    log.info('     … declares matching platforms %r', matching_platforms)
+    return matching_platforms
 
 
 # https://github.com/containerd/containerd/blob/1fbd70374134b891f97ce19c70b6e50c7b9f4e0d/platforms/database.go#L62
@@ -175,7 +175,9 @@ def _normalize_os(os: str) -> str:
 
 # https://github.com/containerd/containerd/blob/1fbd70374134b891f97ce19c70b6e50c7b9f4e0d/platforms/database.go#L76
 
-def _normalize_arch(arch: str, variant: Optional[str]) -> tuple[str, Optional[str]]:
+def _normalize_arch(arch: str,
+                    variant: Optional[str]
+                    ) -> tuple[str, Optional[str]]:
     arch = arch.lower()
     variant = variant and variant.lower()
     if arch == 'i386':

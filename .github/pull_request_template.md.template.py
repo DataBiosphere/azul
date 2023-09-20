@@ -115,7 +115,7 @@ class T(Enum):
     @property
     def deployments(self) -> Mapping[str, str]:
         """
-        Maps the name of the each deployment to that of the respective sandbox.
+        Maps the name of each deployment to that of the respective sandbox.
         """
         return (
             {

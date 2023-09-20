@@ -209,11 +209,11 @@ class RepositoryService(ElasticsearchService):
 
         for facet in filters.explicit.keys():
             if facet not in field_mapping:
-                raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
+                raise BadArgumentException(f'Unable to filter by undefined facet {facet}.')
 
         facet = pagination.sort
         if facet not in field_mapping:
-            raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
+            raise BadArgumentException(f'Unable to sort by undefined facet {facet}.')
 
         chain = self.create_chain(catalog=catalog,
                                   entity_type=entity_type,
@@ -246,7 +246,7 @@ class RepositoryService(ElasticsearchService):
         try:
             response = request.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
-            raise IndexNotFoundError(e.info["error"]["index"])
+            raise IndexNotFoundError(e.info['error']['index'])
         response = chain.process_response(response)
         return response
 

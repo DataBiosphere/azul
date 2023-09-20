@@ -35,7 +35,10 @@ def path(name: str, type_: TYPE, **kwargs: PrimitiveJSON) -> JSON:
     return _make_param(name, in_='path', type_=type_, **kwargs)
 
 
-def query(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
+def query(name: str,
+          type_: Union[TYPE, schema.optional],
+          **kwargs: PrimitiveJSON
+          ) -> JSON:
     """
     Returns an OpenAPI `parameters` specification of a URL query parameter.
 
@@ -54,7 +57,10 @@ def query(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSO
     return _make_param(name, in_='query', type_=type_, **kwargs)
 
 
-def header(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
+def header(name: str,
+           type_: Union[TYPE, schema.optional],
+           **kwargs: PrimitiveJSON
+           ) -> JSON:
     """
     Returns an OpenAPI `parameters` specification of a request header.
 
@@ -73,7 +79,11 @@ def header(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJS
     return _make_param(name, in_='header', type_=type_, **kwargs)
 
 
-def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
+def _make_param(name: str,
+                in_: str,
+                type_: Union[TYPE, schema.optional],
+                **kwargs: PrimitiveJSON
+                ) -> JSON:
     is_optional = isinstance(type_, schema.optional)
     if is_optional:
         type_ = type_.type_

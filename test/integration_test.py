@@ -248,7 +248,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         return tdr
 
     @cached_property
-    def managed_access_sources_by_catalog(self) -> dict[CatalogName, set[TDRSourceRef]]:
+    def managed_access_sources_by_catalog(self
+                                          ) -> dict[CatalogName, set[TDRSourceRef]]:
         public_sources = self._public_tdr_client.snapshot_names_by_id()
         all_sources = self._tdr_client.snapshot_names_by_id()
         configured_sources = {
@@ -859,7 +860,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             if False:
                 self.assertEqual(1, len(content.read(1)))
 
-    def _validate_file_response(self, response: urllib3.HTTPResponse, file_ext: str):
+    def _validate_file_response(self,
+                                response: urllib3.HTTPResponse,
+                                file_ext: str):
         """
         Note: The response object must have been obtained with stream=True
         """
@@ -930,7 +933,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def _prepare_notifications(self, catalog: CatalogName) -> tuple[JSONs, set[SourcedBundleFQID]]:
+    def _prepare_notifications(self,
+                               catalog: CatalogName
+                               ) -> tuple[JSONs, set[SourcedBundleFQID]]:
         bundle_fqids = set()
         notifications = []
 
@@ -1392,16 +1397,16 @@ class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
                 if not running:
                     break
                 mock_entry = {
-                    "portal_id": "foo",
-                    "integrations": [
+                    'portal_id': 'foo',
+                    'integrations': [
                         {
-                            "integration_id": "bar",
-                            "entity_type": "project",
-                            "integration_type": "get",
-                            "entity_ids": ["baz"]
+                            'integration_id': 'bar',
+                            'entity_type': 'project',
+                            'integration_type': 'get',
+                            'entity_ids': ['baz']
                         }
                     ],
-                    "mock-count": entry_format.format(thread_count, op_count)
+                    'mock-count': entry_format.format(thread_count, op_count)
                 }
                 self.portal_service._crud(lambda db: [*db, mock_entry])
 

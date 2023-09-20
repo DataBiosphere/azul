@@ -72,15 +72,15 @@ class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
 
                 total_projects = self.es_client.count(index=index_name('projects'))
                 # Three unique projects, six project contributions
-                self.assertEqual(3 if aggregate else 6, total_projects["count"])
+                self.assertEqual(3 if aggregate else 6, total_projects['count'])
                 total_files = self.es_client.count(index=index_name('files'))
-                self.assertEqual(776, total_files["count"])
+                self.assertEqual(776, total_files['count'])
                 total_samples = self.es_client.count(index=index_name('samples'))
-                self.assertEqual(129, total_samples["count"])
+                self.assertEqual(129, total_samples['count'])
 
-    # When two processes point at a file (this is the case for most files in production)
-    # there was a bug where the files index contains duplicate dictionaries for the file.
-    #
+    # When two processes point at a file (this is the case for most files in
+    # production) there was a bug where the files index contains duplicate
+    # dictionaries for the file.
     def test_no_duplicate_files_in_specimen(self):
         bundle_fqid = self.bundle_fqid(uuid='8543d32f-4c01-48d5-a79f-1c5439659da3',
                                        version='2018-03-29T14:38:28.884167Z')
@@ -108,5 +108,5 @@ class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
                     self.assertEqual(num_files, len(set(file_ids)))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

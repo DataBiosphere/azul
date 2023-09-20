@@ -10,12 +10,12 @@ from more_itertools import (
 )
 
 
-def to_camel_case(text: str):
+def to_camel_case(text: str) -> str:
     camel_cased = ''.join(part.title() for part in text.split('_'))
     return camel_cased[0].lower() + camel_cased[1:]
 
 
-def departition(before, sep, after):
+def departition(before: Optional[str], sep: str, after: Optional[str]) -> str:
     """
     >>> departition(None, '.', 'after')
     'after'
@@ -128,7 +128,7 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     Truncates a string (bytes array) to the specified length, appending an
     ellipses character (sequence of three dots) to indicate truncation, if the
     argument is longer. Otherwise, returns the argument unchanged. The return
-    value, including the ellipses is never longer than the specified number of
+    value, including the ellipses, is never longer than the specified number of
     characters (bytes).
 
     >>> trunc_ellipses('shorter than limit', 50)
@@ -140,7 +140,7 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     >>> trunc_ellipses('impossible limit', 0)
     Traceback (most recent call last):
     ...
-    ValueError: ('max_len argument to small to accomodate ellipsis', 0, 1)
+    ValueError: ('max_len argument too small to accommodate ellipsis', 0, 1)
 
     Edge cases with strings and byte arrays:
 
@@ -159,7 +159,7 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     >>> trunc_ellipses(b'01', 1)
     Traceback (most recent call last):
     ...
-    ValueError: ('max_len argument to small to accomodate ellipsis', 1, 3)
+    ValueError: ('max_len argument too small to accommodate ellipsis', 1, 3)
 
     >>> trunc_ellipses(b'012', 3)
     b'012'
@@ -189,7 +189,7 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
         raise TypeError('max_len argument must be int', type(max_len))
     if len(s) > max_len:
         if max_len < len(ellipses):
-            raise ValueError('max_len argument to small to accomodate ellipsis',
+            raise ValueError('max_len argument too small to accommodate ellipsis',
                              max_len, len(ellipses))
         s = s[:max_len - len(ellipses)] + ellipses
     assert len(s) <= max_len, (len(s), max_len)

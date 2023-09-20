@@ -39,7 +39,7 @@ def emit_text(*, remove: bool = False):
             os.unlink(f.name)
             raise
         else:
-            print(f"Creating {path}")
+            print(f'Creating {path}')
             os.rename(f.name, path)
         finally:
             f.close()

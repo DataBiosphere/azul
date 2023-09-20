@@ -71,7 +71,8 @@ class CredentialsProvisioner:
 
     @classmethod
     def _random_hmac_key(cls):
-        # Even though an HMAC key can be any sequence of bytes, we restrict to base64 in order to encode as string
+        # Even though an HMAC key can be any sequence of bytes, we restrict to
+        # base64 in order to encode as string
         key = base64.encodebytes(os.urandom(48)).decode().replace('=', '').replace('\n', '')
         assert len(key) == 64
         return json.dumps({'key': key, 'key_id': str(uuid.uuid4())})
@@ -159,7 +160,7 @@ class CredentialsProvisioner:
                         key_id, service_account_email)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Suppress noisy warning from Google library. See
     # https://github.com/googleapis/google-api-python-client/issues/299#issuecomment-255793971
     logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)

@@ -149,7 +149,7 @@ class IndexService(DocumentService):
             # There is no need to replicate the contribution indices because
             # their durability does not matter to us as much. If a node goes
             # down, we'll just reindex. Since service requests only hit the
-            # aggregate indices, we can loose all but one node before
+            # aggregate indices, we can lose all but one node before
             # customers are affected.
             #
             num_shards = 1 if aggregate else max(num_nodes, num_workers // 8)
@@ -316,7 +316,8 @@ class IndexService(DocumentService):
                 str(value)
             )
 
-        def setify(value: CompositeJSON) -> Union[set[tuple[str, AnyJSON]], set[AnyJSON]]:
+        def setify(value: CompositeJSON
+                   ) -> Union[set[tuple[str, AnyJSON]], set[AnyJSON]]:
             value = freeze(value)
             return set(
                 value.items()
@@ -331,7 +332,7 @@ class IndexService(DocumentService):
                 else:
                     yield (*path, k), v
 
-        # Compare the index settins
+        # Compare the index settings
         expected, actual = (
             setify(dict(flatten(stringify(s))))
             for s in [settings, index['settings']]
@@ -375,7 +376,10 @@ class IndexService(DocumentService):
             if es_client.indices.exists(index_name):
                 es_client.indices.delete(index=index_name)
 
-    def contribute(self, catalog: CatalogName, contributions: list[Contribution]) -> CataloguedTallies:
+    def contribute(self,
+                   catalog: CatalogName,
+                   contributions: list[Contribution]
+                   ) -> CataloguedTallies:
         """
         Write the given entity contributions to the index and return tallies, a
         dictionary tracking the number of contributions made to each entity.
@@ -459,7 +463,9 @@ class IndexService(DocumentService):
             }
         writer.raise_on_errors()
 
-    def _read_aggregates(self, entities: CataloguedTallies) -> dict[CataloguedEntityReference, Aggregate]:
+    def _read_aggregates(self,
+                         entities: CataloguedTallies
+                         ) -> dict[CataloguedEntityReference, Aggregate]:
         coordinates = [
             AggregateCoordinates(entity=entity)
             for entity in entities
@@ -498,7 +504,9 @@ class IndexService(DocumentService):
 
         return {a.coordinates.entity: a for a in aggregates()}
 
-    def _read_contributions(self, tallies: CataloguedTallies) -> list[CataloguedContribution]:
+    def _read_contributions(self,
+                            tallies: CataloguedTallies
+                            ) -> list[CataloguedContribution]:
         es_client = ESClientFactory.get()
 
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
@@ -570,7 +578,9 @@ class IndexService(DocumentService):
             )
         return contributions
 
-    def _aggregate(self, contributions: list[CataloguedContribution]) -> list[Aggregate]:
+    def _aggregate(self,
+                   contributions: list[CataloguedContribution]
+                   ) -> list[Aggregate]:
         # Group contributions by entity and bundle UUID
         contributions_by_bundle: Mapping[
             tuple[CataloguedEntityReference, BundleUUID],
@@ -585,7 +595,8 @@ class IndexService(DocumentService):
             assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
             tallies[contribution.coordinates.entity] += 1
 
-        # For each entity and bundle, find the most recent contribution that is not a deletion
+        # For each entity and bundle, find the most recent contribution that is
+        # not a deletion
         contributions_by_entity: dict[
             CataloguedEntityReference, list[CataloguedContribution]] = defaultdict(list)
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
@@ -668,12 +679,15 @@ class IndexService(DocumentService):
             assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
-    def _select_latest(self, contributions: Sequence[Contribution]) -> dict[EntityType, Entities]:
+    def _select_latest(self,
+                       contributions: Sequence[Contribution]
+                       ) -> dict[EntityType, Entities]:
         """
         Collect the latest version of each inner entity from multiple given documents.
 
-        If two or more contributions contain copies of the same inner entity, potentially with different contents, the
-        copy from the contribution with the latest bundle version will be selected.
+        If two or more contributions contain copies of the same inner entity,
+        potentially with different contents, the copy from the contribution with
+        the latest bundle version will be selected.
         """
         if len(contributions) == 1:
             return one(contributions).contents
@@ -684,7 +698,8 @@ class IndexService(DocumentService):
                     collated_entities = contents[entity_type]
                     entity: JSON
                     for entity in entities:
-                        entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
+                        # FIXME: the key 'document_id' is HCA specific
+                        entity_id = entity['document_id']
                         cur_bundle_uuid, cur_bundle_version, cur_entity = \
                             collated_entities.get(entity_id, (None, '', None))
                         if cur_entity is not None and entity.keys() != cur_entity.keys():

@@ -561,7 +561,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_iam': {
                 'statement': [
                     # Let Gitlab manage roles as long as they specify the
-                    # permissions boundary This prevent privilege escalation.
+                    # permissions boundary This prevents privilege escalation.
                     {
                         'actions': [
                             'iam:CreateRole',
@@ -1610,7 +1610,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # would risk failing the requirements
                                     # check on sandbox builds since that
                                     # check depends on image caching. The
-                                    # dead line below assumes that the most
+                                    # deadline below assumes that the most
                                     # recent pipeline was run less than a
                                     # month ago.
                                 ),
@@ -1785,7 +1785,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'systemctl',
                             'enable',
                             '--now',  # also start the units
-                            '--no-block',  # avoid dead-lock with cloud-init which is an active systemd unit, too
+                            '--no-block',  # avoid deadlock with cloud-init which is an active systemd unit, too
                             'docker',
                             'gitlab-dind',
                             'gitlab',

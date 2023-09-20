@@ -93,7 +93,7 @@ _logout() {
 	# Docker segregates credential state by registry and we maintain separate
 	# registries (both ECR and GitLab) per deployment so we won't need to log out
 	# of those registries when switching deployments. Above, we offer dedicated
-	# functons for explicitly logging our of those registries.
+	# functions for explicitly logging our of those registries.
 	_logout_aws
 	# We segregate Google state by deployment and working copy (see
 	# CLOUDSDK_CONFIG in environment.py) so we don't need to log out of Google

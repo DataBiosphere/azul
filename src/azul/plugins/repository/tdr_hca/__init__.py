@@ -318,7 +318,10 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def _list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
+    def _list_bundles(self,
+                      source: TDRSourceRef,
+                      prefix: str
+                      ) -> list[TDRBundleFQID]:
         source_prefix = source.spec.prefix.common
         validate_uuid_prefix(source_prefix + prefix)
         current_bundles = self._query_latest_version(source.spec, f'''
@@ -333,13 +336,20 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
             for row in current_bundles
         ]
 
-    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> list[BigQueryRow]:
+    def _query_latest_version(self,
+                              source: TDRSourceSpec,
+                              query: str,
+                              group_by: str
+                              ) -> list[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
         groups = groupby(sorted(iter_rows, key=key), key=key)
         return [self._choose_one_version(source, group) for _, group in groups]
 
-    def _choose_one_version(self, source: TDRSourceSpec, versioned_items: BigQueryRows) -> BigQueryRow:
+    def _choose_one_version(self,
+                            source: TDRSourceSpec,
+                            versioned_items: BigQueryRows
+                            ) -> BigQueryRow:
         if source.is_snapshot:
             return one(versioned_items)
         else:

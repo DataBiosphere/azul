@@ -57,13 +57,14 @@ from azul.indexer import (
     BundlePartition,
 )
 from azul.indexer.aggregate import (
+    EntityAggregator,
     SimpleAggregator,
 )
 from azul.indexer.document import (
     ClosedRange,
     Contribution,
-    ContributionCoordinates,
     EntityReference,
+    EntityType,
     FieldType,
     FieldTypes,
     Nested,
@@ -453,7 +454,6 @@ class DatedEntity(Entity, Protocol):
 class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: HCABundle
     api_bundle: api.Bundle
-    deleted: bool
 
     # This stub is only needed to aid PyCharm's type inference. Without this,
     # a constructor invocation that doesn't refer to the class explicitly, but
@@ -470,7 +470,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         ...
 
     @classmethod
-    def get_aggregator(cls, entity_type):
+    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return FileAggregator()
         elif entity_type in SampleTransformer.inner_entity_types():
@@ -616,12 +616,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _contact(self, p: api.ProjectContact):
         # noinspection PyDeprecation
         return {
-            "contact_name": p.contact_name,
-            "corresponding_contributor": p.corresponding_contributor,
-            "email": p.email,
-            "institution": p.institution,
-            "laboratory": p.laboratory,
-            "project_role": p.project_role
+            'contact_name': p.contact_name,
+            'corresponding_contributor': p.corresponding_contributor,
+            'email': p.email,
+            'institution': p.institution,
+            'laboratory': p.laboratory,
+            'project_role': p.project_role
         }
 
     @classmethod
@@ -636,10 +636,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _publication(self, p: api.ProjectPublication):
         # noinspection PyDeprecation
         return {
-            "publication_title": p.publication_title,
-            "publication_url": p.publication_url,
-            "official_hca_publication": p.official_hca,
-            "doi": p.doi
+            'publication_title': p.publication_title,
+            'publication_url': p.publication_url,
+            'official_hca_publication': p.official_hca,
+            'doi': p.doi
         }
 
     def _accession(self, p: api.Accession):
@@ -945,7 +945,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'related_files': cls._related_file_types(),
         }
 
-    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+    def _file(self,
+              file: api.File,
+              related_files: Iterable[api.File] = ()
+              ) -> MutableJSON:
         # noinspection PyDeprecation
         return {
             **self._file_base(file),
@@ -994,7 +997,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'nucleic_acid_source': null_str
         }
 
-    def _library_preparation_protocol(self, protocol: api.LibraryPreparationProtocol) -> MutableJSON:
+    def _library_preparation_protocol(self,
+                                      protocol: api.LibraryPreparationProtocol
+                                      ) -> MutableJSON:
         return {
             **self._entity(protocol),
             'library_construction_approach': protocol.library_construction_method,
@@ -1199,16 +1204,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
-    def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
-        entity = EntityReference(entity_type=self.entity_type(),
-                                 entity_id=str(entity_id))
-        coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=self.bundle.fqid.upcast(),
-                                              deleted=self.deleted)
-        return Contribution(coordinates=coordinates,
-                            version=None,
-                            source=self.bundle.fqid.source,
-                            contents=contents)
+    def _entity_ref(self, entity_id: api.UUID4) -> EntityReference:
+        return EntityReference(entity_id=str(entity_id), entity_type=self.entity_type())
 
     @classmethod
     def field_types(cls) -> FieldTypes:
@@ -1268,7 +1265,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 BaseTransformer.validate_class()
 
 
-def _parse_zarr_file_name(file_name: str) -> tuple[bool, Optional[str], Optional[str]]:
+def _parse_zarr_file_name(file_name: str
+                          ) -> tuple[bool, Optional[str], Optional[str]]:
     file_name = file_name.split('.zarr/')
     if len(file_name) == 1:
         return False, None, None
@@ -1280,7 +1278,8 @@ def _parse_zarr_file_name(file_name: str) -> tuple[bool, Optional[str], Optional
 
 
 class TransformerVisitor(api.EntityVisitor):
-    # Entities are tracked by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
+    # Entities are tracked by ID to ensure uniqueness if an entity is visited
+    # twice while descending the entity DAG
     specimens: dict[api.UUID4, api.SpecimenFromOrganism]
     cell_suspensions: dict[api.UUID4, api.CellSuspension]
     cell_lines: dict[api.UUID4, api.CellLine]
@@ -1424,7 +1423,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         additional_contents = self.matrix_stratification_values(file)
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
-                yield self._contribution(contents, file.document_id)
+                yield self._contribution(contents, self._entity_ref(file.document_id))
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
@@ -1469,7 +1468,9 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     )
         return contents
 
-    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, list[api.File]]:
+    def group_zarrs(self,
+                    files: Iterable[api.File]
+                    ) -> Mapping[str, list[api.File]]:
         zarr_stores = defaultdict(list)
         for file in files:
             file_name = file.manifest_entry.name
@@ -1492,7 +1493,9 @@ class CellSuspensionTransformer(PartitionedTransformer):
             if isinstance(biomaterial, api.CellSuspension):
                 yield biomaterial
 
-    def _transform(self, cell_suspensions: Iterable[api.CellSuspension]) -> Iterable[Contribution]:
+    def _transform(self,
+                   cell_suspensions: Iterable[api.CellSuspension]
+                   ) -> Iterable[Contribution]:
         for cell_suspension in cell_suspensions:
             samples: dict[str, Sample] = dict()
             self._find_ancestor_samples(cell_suspension, samples)
@@ -1515,7 +1518,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
-            yield self._contribution(contents, cell_suspension.document_id)
+            yield self._contribution(contents, self._entity_ref(cell_suspension.document_id))
 
 
 class SampleTransformer(PartitionedTransformer):
@@ -1562,7 +1565,7 @@ class SampleTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
-            yield self._contribution(contents, sample.document_id)
+            yield self._contribution(contents, self._entity_ref(sample.document_id))
 
 
 class BundleAsEntity(DatedEntity):
@@ -1662,8 +1665,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],
                         projects=[self._project(self._api_project)])
-
-        return self._contribution(contents, self._singleton_id)
+        return self._contribution(contents, self._entity_ref(self._singleton_id))
 
 
 class ProjectTransformer(SingletonTransformer):
@@ -1682,7 +1684,7 @@ class BundleTransformer(SingletonTransformer):
         return BundleAsEntity(self.api_bundle)
 
     @classmethod
-    def get_aggregator(cls, entity_type):
+    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return None
         else:
