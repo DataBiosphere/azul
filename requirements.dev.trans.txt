@@ -1,7 +1,7 @@
 arrow==1.2.3
 blessed==1.20.0
 blinker==1.6.2
-botocore-stubs==1.31.49
+botocore-stubs==1.31.52
 brotli==1.1.0
 click==8.1.7
 colorama==0.4.4
@@ -26,12 +26,12 @@ jsonschema==4.17.3
 jsonschema-spec==0.1.6
 lazy-object-proxy==1.9.0
 mccabe==0.7.0
-msgpack==1.0.5
+msgpack==1.0.6
 mypy-boto3-dynamodb==1.28.36
 mypy-boto3-ecr==1.28.45
 mypy-boto3-iam==1.28.37
 mypy-boto3-lambda==1.28.36
-mypy-boto3-s3==1.28.36
+mypy-boto3-s3==1.28.52
 mypy-boto3-sqs==1.28.36
 openapi-schema-validator==0.3.4
 pathable==0.4.3
