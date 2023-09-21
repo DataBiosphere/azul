@@ -82,7 +82,7 @@ anvil_sources = mkdict({}, 11, mkdelta([
     mksrc('datarepo-4150bd87', 'ANVIL_GTEx_V8_hg38_20230419_ANV5_202304202007', 100367)
 ]))
 
-anvil1_sources = mkdict(anvil_sources, 69, mkdelta([
+anvil1_sources = mkdict(anvil_sources, 67, mkdelta([
     mksrc('datarepo-d53aa186', 'ANVIL_CMG_BROAD_BRAIN_ENGLE_WES_20221102_ANV5_202304241525', 473),
     mksrc('datarepo-69b2535a', 'ANVIL_CMG_BROAD_BRAIN_SHERR_WGS_20221102_ANV5_202304241530', 3),
     mksrc('datarepo-490be510', 'ANVIL_CMG_BROAD_ORPHAN_SCOTT_WGS_20221102_ANV5_202304241538', 15),
@@ -95,7 +95,6 @@ anvil1_sources = mkdict(anvil_sources, 69, mkdelta([
     mksrc('datarepo-c361373f', 'ANVIL_CMG_Broad_Brain_Muntoni_WES_20221102_ANV5_202304241527', 39),
     mksrc('datarepo-12ac342c', 'ANVIL_CMG_Broad_Brain_NeuroDev_WES_20221102_ANV5_202304241529', 292),
     mksrc('datarepo-d7bfafc6', 'ANVIL_CMG_Broad_Brain_Thaker_WES_20221102_ANV5_202304241531', 46),
-    mksrc('datarepo-3c031cc3', 'ANVIL_CMG_Broad_Brain_Walsh_WES_20230605_ANV5_202306131445', 2777),
     mksrc('datarepo-29812b42', 'ANVIL_CMG_Broad_Eye_Pierce_WES_20221205_ANV5_202304242250', 2150),
     mksrc('datarepo-48134558', 'ANVIL_CMG_Broad_Eye_Pierce_WGS_20221117_ANV5_202304241507', 35),
     mksrc('datarepo-36ebaa12', 'ANVIL_CMG_Broad_Heart_PCGC_Tristani_WGS_20221025_ANV5_202304211840', 214),
@@ -109,7 +108,6 @@ anvil1_sources = mkdict(anvil_sources, 69, mkdelta([
     mksrc('datarepo-6be3fb25', 'ANVIL_CMG_Broad_Muscle_Bonnemann_WGS_20221117_ANV5_202304241510', 152),
     mksrc('datarepo-b168eb10', 'ANVIL_CMG_Broad_Muscle_KNC_WES_20221116_ANV5_202304242219', 169),
     mksrc('datarepo-372244aa', 'ANVIL_CMG_Broad_Muscle_KNC_WGS_20221117_ANV5_202304242221', 16),
-    mksrc('datarepo-72d751e6', 'ANVIL_CMG_Broad_Muscle_Kang_WES_20230525_ANV5_202305251745', 118),
     mksrc('datarepo-77a6c0aa', 'ANVIL_CMG_Broad_Muscle_Kang_WGS_20221025_ANV5_202304211849', 8),
     mksrc('datarepo-736a5f1f', 'ANVIL_CMG_Broad_Muscle_Laing_WES_20221208_ANV5_202304271308', 31),
     mksrc('datarepo-5019143b', 'ANVIL_CMG_Broad_Muscle_Myoseq_WES_20230621_ANV5_202306211852', 1382),
@@ -144,7 +142,7 @@ anvil1_sources = mkdict(anvil_sources, 69, mkdelta([
     mksrc('datarepo-1cb73890', 'ANVIL_cmg_broad_heart_ware_wes_20221215_ANV5_202304242145', 40),
 ]))
 
-anvil2_sources = mkdict(anvil1_sources, 117, mkdelta([
+anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     # @formatter:off
     mksrc('datarepo-36124817', 'ANVIL_African_American_Seq_HGV_20230727_ANV5_202308291753', 4656),
     mksrc('datarepo-d795027d', 'ANVIL_CCDG_Broad_CVD_AF_VAFAR_Arrays_20221020_ANV5_202304211823', 1390),
@@ -166,7 +164,6 @@ anvil2_sources = mkdict(anvil1_sources, 117, mkdelta([
     mksrc('datarepo-1c89dcac', 'ANVIL_CSER_CHARM_GRU_20221208_ANV5_202304271348', 2392),
     mksrc('datarepo-12d56848', 'ANVIL_CSER_NCGENES2_GRU_20221208_ANV5_202304271349', 104),
     mksrc('datarepo-8a4d67ef', 'ANVIL_CSER_SouthSeq_GRU_20221208_ANV5_202304271351', 800),
-    mksrc('datarepo-bf58b120', 'ANVIL_HPRC_20230721_ANV5_202307241534', 139548),
     mksrc('datarepo-f622180d', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_VillageData_20230109_ANV5_202304242045', 71),  # noqa E501
     mksrc('datarepo-732d1a55', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_WGS_20230109_ANV5_202304242048', 445),  # noqa E501
     mksrc('datarepo-90bab913', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_Finkel_SMA_DS_WGS_20230109_ANV5_202304242043', 3),  # noqa E501
@@ -176,10 +173,8 @@ anvil2_sources = mkdict(anvil1_sources, 117, mkdelta([
     mksrc('datarepo-aca6a582', 'ANVIL_NIMH_CIRM_FCDI_ConvergentNeuro_McCarroll_Eggan_GRU_Arrays_20230109_ANV5_202304242046', 6510),  # noqa E501
     mksrc('datarepo-06abb598', 'ANVIL_PAGE_BioMe_GRU_WGS_20221128_ANV5_202304211817', 308),
     mksrc('datarepo-7c4410ed', 'ANVIL_PAGE_MEC_GRU_WGS_20230131_ANV5_202304211721', 70),
-    mksrc('datarepo-a0cddf4b', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202304271353', 646),
     mksrc('datarepo-84d2e3b1', 'ANVIL_PAGE_Stanford_Global_Reference_Panel_GRU_WGS_20221128_ANV5_202304211827', 78),
     mksrc('datarepo-ffbc38fd', 'ANVIL_PAGE_WHI_HMB_IRB_WGS_20221019_ANV5_202304211722', 235),
-    mksrc('datarepo-84b68087', 'ANVIL_T2T_20230714_ANV5_202307181429', 261247),
     mksrc('datarepo-b1f3e0d1', 'ANVIL_ccdg_asc_ndd_daly_talkowski_cdcseed_asd_gsa_md_20221024_ANV5_202304211749', 2888),
     mksrc('datarepo-11330a21', 'ANVIL_ccdg_asc_ndd_daly_talkowski_schloesser_asd_gsa_md_20221025_ANV5_202304211759', 158),  # noqa E501
     mksrc('datarepo-86a1dbf3', 'ANVIL_ccdg_broad_ai_ibd_daly_bernstein_gsa_20221025_ANV5_202304241921', 543),
