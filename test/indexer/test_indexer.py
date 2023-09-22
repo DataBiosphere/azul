@@ -192,12 +192,12 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                     self.assertEqual(len(hits), 2 * size)
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
-                        doc = Contribution.from_index(field_types, hit)
-                        docs_by_entity[doc.entity].append(doc)
                         entity_type, aggregate = self._parse_index_name(hit)
                         # Since there is only one bundle and it was deleted,
                         # nothing should be aggregated
                         self.assertFalse(aggregate)
+                        doc = Contribution.from_index(field_types, hit)
+                        docs_by_entity[doc.entity].append(doc)
                         self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
 
                     for pair in docs_by_entity.values():
