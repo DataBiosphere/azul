@@ -347,7 +347,7 @@ class TerraClient(OAuth2Client):
             # from the pool are reused after a long period of idleness.
             retry = urllib3.Retry(total=None,
                                   connect=retries,
-                                  read=2,
+                                  read=0,
                                   redirect=0,
                                   status=0,
                                   other=retries)
