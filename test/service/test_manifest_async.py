@@ -80,7 +80,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
                       request_index=42,
                       wait_time=123)
-        self.assertRaises(InvalidTokenError, token.decode, token.encode()[-1])
+        self.assertRaises(InvalidTokenError, token.decode, token.encode()[:-1])
 
     def test_status_success(self):
         """
