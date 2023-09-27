@@ -1572,7 +1572,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         """
         redundant_keys = set()
         # Get a forward mapping of bundle FQID to a set of file uuid
-        bundle_to_file = defaultdict(set)
+        bundle_to_file: dict[FQID, set[str]] = defaultdict(set)
         for bundle_fqid, file_types in bundles.items():
             for groups in file_types.values():
                 for group in groups:
@@ -1586,8 +1586,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         for fqid_a, files_a in bundle_to_file.items():
             if fqid_a in redundant_keys:
                 continue
-            related_bundles = set(fqid_b for file in files_a for fqid_b in file_to_bundle[file]
-                                  if fqid_b != fqid_a and fqid_b not in redundant_keys)
+            related_bundles: set[FQID] = set(fqid_b
+                                             for file in files_a
+                                             for fqid_b in file_to_bundle[file]
+                                             if fqid_b != fqid_a and fqid_b not in redundant_keys)
             for fqid_b in related_bundles:
                 files_b = bundle_to_file[fqid_b]
                 # If sets are equal remove the one with a lesser bundle version
