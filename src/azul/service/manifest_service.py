@@ -481,6 +481,7 @@ class ManifestService(ElasticsearchService):
         won't be expiring soon. Otherwise return None.
 
         :param generator: The generator of the manifest
+
         :param object_key: The object key of the cached manifest
         """
         try:
@@ -516,6 +517,7 @@ class ManifestService(ElasticsearchService):
         Get the number of seconds before a cached manifest is past its expiration.
 
         :param head_response: A storage service object header dict
+
         :return: time to expiration in seconds
         """
         # example Expiration: 'expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"'
