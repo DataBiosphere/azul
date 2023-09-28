@@ -352,7 +352,7 @@ tf_config = {
                         }
                     },
                     'noncurrent_version_expiration': {
-                        'noncurrent_days': 30
+                        'noncurrent_days': 90
                     }
                 }
             },
