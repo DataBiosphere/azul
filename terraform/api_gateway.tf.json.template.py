@@ -221,7 +221,7 @@ emit_tf({
                         },
                         {
                             'priority': 1,
-                            'name': 'RateRule',
+                            'name': config.waf_rate_rule_name,
                             'action': {
                                 'block': {}
                             },
@@ -232,7 +232,7 @@ emit_tf({
                                 }
                             },
                             'visibility_config': {
-                                'metric_name': 'RateRule',
+                                'metric_name': config.waf_rate_rule_name,
                                 'sampled_requests_enabled': True,
                                 'cloudwatch_metrics_enabled': True
                             }
