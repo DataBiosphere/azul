@@ -11,7 +11,7 @@ blinker==1.6.2
 boto3==1.28.12
 boto3-stubs==1.28.12
 botocore==1.31.12
-botocore-stubs==1.31.52
+botocore-stubs==1.31.56
 brotli==1.1.0
 cachetools==5.3.1
 certifi==2023.7.22
@@ -74,13 +74,14 @@ markupsafe==2.1.3
 mccabe==0.7.0
 more-itertools==9.0.0
 moto==4.1.13
-msgpack==1.0.6
-mypy-boto3-dynamodb==1.28.36
+msgpack==1.0.7
+mypy-boto3-dynamodb==1.28.55
 mypy-boto3-ecr==1.28.45
 mypy-boto3-iam==1.28.37
 mypy-boto3-lambda==1.28.36
-mypy-boto3-s3==1.28.52
+mypy-boto3-s3==1.28.55
 mypy-boto3-sqs==1.28.36
+mypy-boto3-stepfunctions==1.28.36
 openapi-schema-validator==0.3.4
 openapi-spec-validator==0.5.1
 openpyxl==3.0.6
@@ -127,7 +128,7 @@ strict-rfc3339==0.7
 tinyquery==1.2+2
 toml==0.10.2
 types-awscrt==0.19.1
-types-s3transfer==0.6.2
+types-s3transfer==0.7.0
 types-toml==0.10.8.7
 typing_extensions==4.8.0
 tzlocal==2.1
