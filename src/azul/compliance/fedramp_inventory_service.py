@@ -123,7 +123,11 @@ class Mapper(metaclass=ABCMeta):
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         raise NotImplementedError
 
-    def _common_fields(self, resource: ResourceConfig, *, id_suffix: Optional[str] = None) -> dict:
+    def _common_fields(self,
+                       resource: ResourceConfig,
+                       *,
+                       id_suffix: Optional[str] = None
+                       ) -> dict:
         return dict(
             asset_tag=resource.name,
             location=resource.region,
@@ -496,7 +500,9 @@ class FedRAMPInventoryService:
                     yield from map(ResourceConfig.from_response, items)
                     resource_keys = response['unprocessedResourceKeys']
 
-    def get_inventory(self, resources: Iterable[ResourceConfig]) -> Iterable[InventoryRow]:
+    def get_inventory(self,
+                      resources: Iterable[ResourceConfig]
+                      ) -> Iterable[InventoryRow]:
         rows_by_mapper: defaultdict[Mapper, list[InventoryRow]] = defaultdict(list)
         resource_counts = Counter()
         row_counts = Counter()

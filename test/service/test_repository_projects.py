@@ -37,7 +37,7 @@ class RepositoryProjectsEndpointTest(DCP1TestCase, WebServiceTestCase):
         """
         Verify some basic properties of the /index/projects response and
         that each hit in the response is equal to the single hit response of a
-        a request for one project (eg. /index/projects/{uuid})
+        request for one project (e.g. /index/projects/{uuid})
         """
 
         def get_response_json(uuid=None):

@@ -41,6 +41,8 @@ from azul.types import (
     AnyJSON,
     JSON,
     JSONs,
+    MutableJSON,
+    MutableJSONs,
 )
 
 logger = logging.getLogger(__name__)
@@ -185,7 +187,7 @@ class SummaryResponseFactory:
         super().__init__()
         self.aggs = aggs
 
-    def make_response(self):
+    def make_response(self) -> SummaryResponse:
         def agg_value(*path: str) -> AnyJSON:
             agg = self.aggs
             for name in path:
@@ -294,24 +296,24 @@ class SearchResponseFactory:
         self.entity_type = entity_type
         self.catalog = catalog
 
-    def make_response(self):
+    def make_response(self) -> SearchResponse:
         return SearchResponse(pagination=self.pagination,
                               termFacets=self.make_facets(),
                               hits=self.make_hits())
 
-    def make_bundles(self, entry):
+    def make_bundles(self, entry) -> MutableJSONs:
         return [
-            {"bundleUuid": b["uuid"], "bundleVersion": b["version"]}
-            for b in entry["bundles"]
+            {'bundleUuid': b['uuid'], 'bundleVersion': b['version']}
+            for b in entry['bundles']
         ]
 
-    def make_sources(self, entry):
+    def make_sources(self, entry) -> MutableJSONs:
         return [
             {'sourceId': s['id'], 'sourceSpec': s['spec']}
             for s in entry['sources']
         ]
 
-    def make_protocols(self, entry):
+    def make_protocols(self, entry) -> MutableJSONs:
         return [
             *(
                 {
@@ -340,7 +342,7 @@ class SearchResponseFactory:
             )
         ]
 
-    def make_dates(self, entry):
+    def make_dates(self, entry) -> MutableJSONs:
         return [
             {
                 'aggregateLastModifiedDate': dates['aggregate_last_modified_date'],
@@ -353,10 +355,10 @@ class SearchResponseFactory:
             for dates in entry['contents']['dates']
         ]
 
-    def make_projects(self, entry):
+    def make_projects(self, entry) -> MutableJSONs:
         projects = []
         contents = entry['contents']
-        for project in contents["projects"]:
+        for project in contents['projects']:
             translated_project = {
                 'projectId': project['document_id'],
                 'projectTitle': project.get('project_title'),
@@ -420,18 +422,18 @@ class SearchResponseFactory:
         }
         return translated_file
 
-    def make_specimen(self, specimen):
+    def make_specimen(self, specimen) -> MutableJSON:
         return {
-            "id": specimen["biomaterial_id"],
-            "organ": specimen.get("organ", None),
-            "organPart": specimen.get("organ_part", None),
-            "disease": specimen.get("disease", None),
-            "preservationMethod": specimen.get("preservation_method", None),
-            "source": specimen.get("_source", None)
+            'id': specimen['biomaterial_id'],
+            'organ': specimen.get('organ', None),
+            'organPart': specimen.get('organ_part', None),
+            'disease': specimen.get('disease', None),
+            'preservationMethod': specimen.get('preservation_method', None),
+            'source': specimen.get('_source', None)
         }
 
-    def make_specimens(self, entry):
-        return [self.make_specimen(specimen) for specimen in entry["contents"]["specimens"]]
+    def make_specimens(self, entry) -> MutableJSONs:
+        return [self.make_specimen(specimen) for specimen in entry['contents']['specimens']]
 
     cell_suspension_fields = [
         ('organ', 'organ'),
@@ -441,51 +443,51 @@ class SearchResponseFactory:
         ('totalCellsRedundant', 'total_estimated_cells_redundant')
     ]
 
-    def make_cell_suspension(self, cell_suspension):
+    def make_cell_suspension(self, cell_suspension) -> MutableJSON:
         return {
             k: cell_suspension.get(v, None)
             for k, v in self.cell_suspension_fields
         }
 
-    def make_cell_suspensions(self, entry):
-        return [self.make_cell_suspension(cs) for cs in entry["contents"]["cell_suspensions"]]
+    def make_cell_suspensions(self, entry) -> MutableJSONs:
+        return [self.make_cell_suspension(cs) for cs in entry['contents']['cell_suspensions']]
 
-    def make_cell_line(self, cell_line):
+    def make_cell_line(self, cell_line) -> MutableJSON:
         return {
-            "id": cell_line["biomaterial_id"],
-            "cellLineType": cell_line.get("cell_line_type", None),
-            "modelOrgan": cell_line.get("model_organ", None),
+            'id': cell_line['biomaterial_id'],
+            'cellLineType': cell_line.get('cell_line_type', None),
+            'modelOrgan': cell_line.get('model_organ', None),
         }
 
-    def make_cell_lines(self, entry):
-        return [self.make_cell_line(cell_line) for cell_line in entry["contents"]["cell_lines"]]
+    def make_cell_lines(self, entry) -> MutableJSONs:
+        return [self.make_cell_line(cell_line) for cell_line in entry['contents']['cell_lines']]
 
-    def make_donor(self, donor):
+    def make_donor(self, donor) -> MutableJSON:
         return {
-            "id": donor["biomaterial_id"],
-            "donorCount": donor.get("donor_count", None),
-            "developmentStage": donor.get("development_stage", None),
-            "genusSpecies": donor.get("genus_species", None),
-            "organismAge": donor.get("organism_age", None),
-            "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
-            "biologicalSex": donor.get("biological_sex", None),
-            "disease": donor.get("diseases", None)
+            'id': donor['biomaterial_id'],
+            'donorCount': donor.get('donor_count', None),
+            'developmentStage': donor.get('development_stage', None),
+            'genusSpecies': donor.get('genus_species', None),
+            'organismAge': donor.get('organism_age', None),
+            'organismAgeRange': donor.get('organism_age_range', None),  # list of dict
+            'biologicalSex': donor.get('biological_sex', None),
+            'disease': donor.get('diseases', None)
         }
 
-    def make_donors(self, entry):
-        return [self.make_donor(donor) for donor in entry["contents"]["donors"]]
+    def make_donors(self, entry) -> MutableJSONs:
+        return [self.make_donor(donor) for donor in entry['contents']['donors']]
 
-    def make_organoid(self, organoid):
+    def make_organoid(self, organoid) -> MutableJSON:
         return {
-            "id": organoid["biomaterial_id"],
-            "modelOrgan": organoid.get("model_organ", None),
-            "modelOrganPart": organoid.get("model_organ_part", None)
+            'id': organoid['biomaterial_id'],
+            'modelOrgan': organoid.get('model_organ', None),
+            'modelOrganPart': organoid.get('model_organ_part', None)
         }
 
-    def make_organoids(self, entry):
-        return [self.make_organoid(organoid) for organoid in entry["contents"]["organoids"]]
+    def make_organoids(self, entry) -> MutableJSONs:
+        return [self.make_organoid(organoid) for organoid in entry['contents']['organoids']]
 
-    def make_sample(self, sample, entity_dict, entity_type):
+    def make_sample(self, sample, entity_dict, entity_type) -> MutableJSON:
         is_aggregate = isinstance(sample['document_id'], list)
         organ_prop = 'organ' if entity_type == 'specimens' else 'model_organ'
         return {
@@ -494,7 +496,7 @@ class SearchResponseFactory:
             **entity_dict
         }
 
-    def make_samples(self, entry):
+    def make_samples(self, entry) -> MutableJSONs:
         pieces = [
             (self.make_cell_line, 'cellLines', 'sample_cell_lines'),
             (self.make_organoid, 'organoids', 'sample_organoids'),
@@ -506,10 +508,10 @@ class SearchResponseFactory:
             for sample in entry['contents'].get(sample_entity_type, [])
         ]
 
-    def make_hits(self):
+    def make_hits(self) -> MutableJSONs:
         return list(map(self.make_hit, self.hits))
 
-    def make_hit(self, es_hit):
+    def make_hit(self, es_hit) -> MutableJSON:
         hit = Hit(protocols=self.make_protocols(es_hit),
                   entryId=es_hit['entity_id'],
                   sources=self.make_sources(es_hit),
@@ -577,7 +579,8 @@ class SearchResponseFactory:
 
         untagged_count = agg['untagged']['doc_count']
 
-        # Add the untagged_count to the existing termObj for a None value, or add a new one
+        # Add the untagged_count to the existing termObj for a None value, or
+        # add a new one
         if untagged_count > 0:
             for term in terms:
                 if term['term'] is None:
@@ -593,7 +596,7 @@ class SearchResponseFactory:
                      #        https://github.com/DataBiosphere/azul/issues/2460
                      type='terms')
 
-    def make_facets(self):
+    def make_facets(self) -> MutableJSON:
         facets = {}
         for facet, agg in self.aggs.items():
             if facet != '_project_agg':  # Filter out project specific aggs

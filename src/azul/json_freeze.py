@@ -40,8 +40,8 @@ def freeze(x: AnyJSON) -> AnyJSON:
 
 def thaw(x: AnyJSON) -> AnyMutableJSON:
     """
-    Return a copy of the argument JSON structure with every `frozendict` in that structure converted to a `dict` and
-    every tuple converted to a list.
+    Return a copy of the argument JSON structure with every `frozendict` in that
+    structure converted to a `dict` and every tuple converted to a list.
 
     >>> d = {"1":[2, 3]}
     >>> d_ = thaw(freeze(d))
@@ -65,16 +65,19 @@ def thaw(x: AnyJSON) -> AnyMutableJSON:
 
 def sort_frozen(x: AnyJSON) -> AnyJSON:
     """
-    Attempt to recursively sort a frozen JSON structure. Not all JSON structures are supported. The restrictions are
-    noted below. This method is really only useful when comparing Elasticsearch documents. Elasticsearches semantics
-    for lists is that the order in which list elements occur doesn't really matter. The "term" query {"foo": "bar"}
-    matches a documents with "foo": "bar" and ones with "foo":["baz","bar"].
+    Attempt to recursively sort a frozen JSON structure. Not all JSON structures
+    are supported. The restrictions are noted below. This method is really only
+    useful when comparing Elasticsearch documents. Elasticsearches semantics
+    for lists is that the order in which list elements occur doesn't really
+    matter. The "term" query {"foo": "bar"} matches a documents with
+    "foo": "bar" and ones with "foo":["baz","bar"].
 
         >>> sort_frozen(freeze({"2": [{"3": True}, {"4": [5, None, None]}], "1": 1}))
         (('1', 1), ('2', ((('3', True),), (('4', (None, None, 5)),))))
 
-    Tuples in the frozen JSON must only contain values that are either None or of types that are comparable against
-    each other. All None values in a tuple are put first in the sorted tuple, as if None were less than any other
+    Tuples in the frozen JSON must only contain values that are either None or
+    of types that are comparable against each other. All None values in a tuple
+    are put first in the sorted tuple, as if None were less than any other
     value.
 
         >>> sort_frozen(freeze([0, ""]))
@@ -91,8 +94,9 @@ def sort_frozen(x: AnyJSON) -> AnyJSON:
     ((('x', None),), (('x', True),))
     """
     if isinstance(x, frozendict):
-        # Note that each key occurs exactly once, so there will be no ties that have to be broken by comparing the
-        # values. The values may of heterogeneous types and therefore can't be compared.
+        # Note that each key occurs exactly once, so there will be no ties that
+        # have to be broken by comparing the values. The values may be of
+        # heterogeneous types and therefore can't be compared.
         return tuple(sorted((k, sort_frozen(v)) for k, v in x.items()))
     elif isinstance(x, tuple):
         return tuple(sorted((sort_frozen(v) for v in x), key=TupleKey))

@@ -30,7 +30,10 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
     def lambda_name(cls) -> str:
         return 'indexer'
 
-    def _expected_health(self, endpoint_states: Mapping[str, bool], es_up: bool = True):
+    def _expected_health(self,
+                         endpoint_states: Mapping[str, bool],
+                         es_up: bool = True
+                         ):
         return {
             'up': False,
             **self._expected_elasticsearch(es_up),
@@ -49,5 +52,5 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
 
 del HealthCheckTestCase
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

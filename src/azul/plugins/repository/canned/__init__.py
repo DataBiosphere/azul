@@ -123,7 +123,10 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
     def _assert_source(self, source: CannedSourceRef):
         assert source.spec in self.sources, (source, self.sources)
 
-    def list_bundles(self, source: CannedSourceRef, prefix: str) -> list[CannedBundleFQID]:
+    def list_bundles(self,
+                     source: CannedSourceRef,
+                     prefix: str
+                     ) -> list[CannedBundleFQID]:
         self._assert_source(source)
         prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)
@@ -151,7 +154,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                               manifest=cast(MutableJSONs, manifest),
                               metadata_files=cast(MutableJSON, metadata))
         assert version == bundle.version, (version, bundle)
-        log.info("It took %.003fs to download bundle %s.%s",
+        log.info('It took %.003fs to download bundle %s.%s',
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
 

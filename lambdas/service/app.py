@@ -769,7 +769,7 @@ def get_integrations():
     portal_service = PortalService()
     body = portal_service.list_integrations(entity_type, integration_type, entity_ids)
     return Response(status_code=200,
-                    headers={"content-type": "application/json"},
+                    headers={'content-type': 'application/json'},
                     body=json.dumps(body))
 
 

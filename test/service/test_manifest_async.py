@@ -109,7 +109,8 @@ class TestAsyncManifestService(AzulUnitTestCase):
 
     def test_status_running(self):
         """
-        A running manifest job should return a 301 status and a url to retry checking the job status
+        A running manifest job should return a 301 status and a url to retry
+        checking the job status
         """
         execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
         service = AsyncManifestService(state_machine_name)
@@ -155,7 +156,9 @@ class TestAsyncManifestService(AzulUnitTestCase):
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
     object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
 
-    def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
+    def run(self,
+            result: Optional[unittest.result.TestResult] = None
+            ) -> Optional[unittest.result.TestResult]:
         manifest = None
         with mock.patch.object(ManifestService,
                                'get_cached_manifest',
@@ -359,7 +362,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
     def test_boto_error(self):
         """
-        Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
+        Manifest status check should reraise any ClientError that is not caused
+        by ExecutionDoesNotExist
         """
         with patch.object(AsyncManifestService, '_describe_execution') as mock:
             mock.side_effect = ClientError({
@@ -384,7 +388,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
     def test_invalid_token(self):
         """
-        Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
+        Manifest endpoint should raise a BadRequestError when given a token that
+        cannot be decoded
         """
         params = {'token': 'Invalid base64'}
         url = self.base_url.set(path='/fetch/manifest/files', args=params)

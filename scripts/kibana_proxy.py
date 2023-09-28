@@ -155,15 +155,15 @@ def main(argv):
     import argparse
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('--kibana-port', '-k', metavar='PORT', default=5601, type=int,
-                     help="The port Kibana should be listening on.")
+                     help='The port Kibana should be listening on.')
     cli.add_argument('--cerebro-port', '-c', metavar='PORT', type=int,
-                     help="The port Cerebro should be listening on. "
-                          "The default is the Kibana port plus 1.")
+                     help='The port Cerebro should be listening on. '
+                          'The default is the Kibana port plus 1.')
     cli.add_argument('--proxy-port', '-p', metavar='PORT', type=int,
-                     help="The port the AWS signing proxy should be listening on. "
-                          "The default is the Kibana port plus 2.")
+                     help='The port the AWS signing proxy should be listening on. '
+                          'The default is the Kibana port plus 2.')
     cli.add_argument('--domain', '-d', metavar='DOMAIN', default=os.environ.get('AZUL_ES_DOMAIN'),
-                     help="The AWS Elasticsearch domain to use.")
+                     help='The AWS Elasticsearch domain to use.')
     options = cli.parse_args(argv)
     if not options.domain:
         raise RuntimeError('Please pass --domain or set AZUL_ES_DOMAIN')

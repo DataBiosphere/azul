@@ -90,7 +90,7 @@ class AzulClient(SignatureHelper):
 
     def synthesize_notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
-        Generate a indexer notification for the given bundle.
+        Generate an indexer notification for the given bundle.
         """
         # Organic notifications sent by DSS have a different structure,
         # but since DSS is end-of-life these synthetic notifications are now the
@@ -131,7 +131,11 @@ class AzulClient(SignatureHelper):
         self.index(catalog, notifications)
         return len(notifications)
 
-    def index(self, catalog: CatalogName, notifications: Iterable[JSON], delete: bool = False):
+    def index(self,
+              catalog: CatalogName,
+              notifications: Iterable[JSON],
+              delete: bool = False
+              ):
         errors = defaultdict(int)
         missing = []
         indexed = 0
@@ -144,17 +148,17 @@ class AzulClient(SignatureHelper):
             def attempt(notification, i):
                 log_args = (indexer_url, notification, i)
                 try:
-                    logger.info("Notifying %s about %s, attempt %i.", *log_args)
+                    logger.info('Notifying %s about %s, attempt %i.', *log_args)
                     self.post_bundle(indexer_url, notification)
                 except (requests.HTTPError, requests.ConnectionError) as e:
                     if i < 3:
-                        logger.warning("Retrying to notify %s about %s, attempt %i, after error %s.", *log_args, e)
+                        logger.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
                         return notification, tpe.submit(partial(attempt, notification, i + 1))
                     else:
-                        logger.warning("Failed to notify %s about %s, attempt %i: after error %s.", *log_args, e)
+                        logger.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
                         return notification, e
                 else:
-                    logger.info("Success notifying %s about %s, attempt %i.", *log_args)
+                    logger.info('Success notifying %s about %s, attempt %i.', *log_args)
                     return notification, None
 
             def handle_future(future):
@@ -182,13 +186,13 @@ class AzulClient(SignatureHelper):
                 handle_future(future)
 
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
-        logger.info("Sent notifications for %i of %i bundles for catalog %r.",
+        logger.info('Sent notifications for %i of %i bundles for catalog %r.',
                     indexed, total, catalog)
         if errors:
-            logger.error("Number of errors by HTTP status code:\n%s",
+            logger.error('Number of errors by HTTP status code:\n%s',
                          printer.pformat(dict(errors)))
         if missing:
-            logger.error("Unsent notifications and their HTTP status code:\n%s",
+            logger.error('Unsent notifications and their HTTP status code:\n%s',
                          printer.pformat(missing))
         if errors or missing:
             raise AzulClientNotificationError

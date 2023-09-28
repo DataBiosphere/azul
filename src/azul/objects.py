@@ -5,12 +5,15 @@ from azul import (
 
 class InternMeta(type):
     """
-    A meta class that interns instances of its instances such that the invariant (x == y) == (x is y) holds for all
-    instances x and y of any instance of this meta class. Note that an instance of a metaclass is a class.
+    A metaclass that interns instances of its instances such that the invariant
+    (x == y) == (x is y) holds for all instances x and y of any instance of this
+    metaclass. Note that an instance of a metaclass is a class.
 
-    This meta class does not consider thread safety. It should be as safe or unsafe as lru_cache from functools.
+    This metaclass does not consider thread safety. It should be as safe or
+    unsafe as lru_cache from functools.
 
-    Note also that this meta class never releases the memory used by instances of its instances.
+    Note also that this metaclass never releases the memory used by instances of
+    its instances.
 
     >>> class C(metaclass=InternMeta):
     ...     def __init__(self, x):
@@ -37,9 +40,11 @@ class InternMeta(type):
     >>> d1 is d2  # but they are still not the same, violating the invariant.
     False
 
-    Instances of an instance are interned based on the arguments they were constructed with. That means that instance
-    equality must be consistent with the equality of the construction arguments. If it isn't i.e., if two instances
-    are equal even if their construction arguments are not, the invariant will be violated.
+    Instances of an instance are interned based on the arguments they were
+    constructed with. That means that instance equality must be consistent with
+    the equality of the construction arguments. If it isn't i.e., if two
+    instances are equal even if their construction arguments are not, the
+    invariant will be violated.
 
     >>> @dataclass
     ... class E(metaclass=InternMeta):

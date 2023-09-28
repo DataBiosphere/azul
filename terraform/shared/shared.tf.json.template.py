@@ -913,6 +913,7 @@ tf_config = {
         },
         'null_resource': {
             **{
+                # Copy image from upstream to ECR
                 image.tf_image: {
                     'depends_on': [
                         'aws_ecr_repository.' + image.tf_repository
@@ -950,6 +951,7 @@ tf_config = {
             },
             **(
                 {
+                    # Clean up leftovers from copying
                     'cleanup': {
                         'depends_on': [
                             'null_resource.' + image.tf_image
@@ -976,6 +978,7 @@ tf_config = {
                 {}
             ),
             **{
+                # Delete unused images
                 tf_repository: {
                     'depends_on': [
                         'aws_ecr_repository.' + tf_repository,
@@ -983,7 +986,8 @@ tf_config = {
                         'null_resource.cleanup'
                     ],
                     'triggers': {
-                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root
+                        'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root,
+                        'images': ','.join(sorted(image.tf_image for image in images))
                     },
                     'lifecycle': {
                         'replace_triggered_by': [

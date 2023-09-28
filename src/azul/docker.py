@@ -30,9 +30,26 @@ log = logging.getLogger(__name__)
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class ImageRef:
+    """
+    A fully qualified reference to a Docker image. Does not support any
+    abbreviations such as omitting the registry (defaulting to ``docker.io``),
+    username (defaulting to ``library``) or tag (defaulting to ``latest``).
+    """
+    #: The part before the first slash. This is usually the domain name of image
+    #: registry e.g., ``"docker.io"``
     registry: str
+
+    #: The part between the first and second slash. This is usually the name of
+    #: the user or organisation owning the image. It can also be a generic term
+    #: such as ``"library"``.
     username: str
+
+    #: The part after the second slash, split on the remaining slashes. Will
+    #: have at least one element.
     repository: list[str]
+
+    #: The part after the colon. This is the name of a tag assigned to the
+    #: image.
     tag: str
 
     @classmethod
@@ -49,25 +66,46 @@ class ImageRef:
                    tag=tag)
 
     def __str__(self) -> str:
+        """
+        The inverse of :py:meth:`parse`.
+        """
         return self.name + ':' + self.tag
 
     @property
     def name(self):
+        """
+        The part before the first colon i.e., everything except the tag.
+        """
         return '/'.join([self.registry, self.username, *self.repository])
 
     @property
     def tf_repository(self):
+        """
+        A string suitable for identifying (in Terraform config) the ECR
+        repository resource holding this image.
+        """
         hash = urlsafe_b64encode(sha1(self.name.encode()).digest()).decode()[:-1]
         return 'repository_' + hash
 
     @property
     def tf_image(self):
+        """
+        A string suitable for identifying (in Terraform config) any resource
+        specific to this image.
+        """
         hash = urlsafe_b64encode(sha1(str(self).encode()).digest()).decode()[:-1]
         return 'image_' + hash
 
     @cached_property
-    def platforms(self):
-        return filter_platforms(self, platforms)
+    def platforms(self) -> set['Platform']:
+        """
+        The set of relevant platforms this image is available for. A relevant
+        platform is one that is listed in :py:attr:`config.docker_platforms`.
+        This method uses the Docker client library to inspect the image in the
+        registry that hosts it, via the Docker daemon the client is configured
+        to use.
+        """
+        return _filter_platforms(self, platforms)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -111,7 +149,7 @@ images_by_tf_repository: dict[tuple[str, str], list[ImageRef]] = (lambda: {
 })()
 
 
-def filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
+def _filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
     import docker
     allowed_platforms = {p.normalize() for p in allowed_platforms}
     log.info('Distribution for image %r …', image)
@@ -121,9 +159,9 @@ def filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> 
         Platform(os=p['os'], arch=p['architecture'], variant=p.get('variant')).normalize()
         for p in dist['Platforms']
     }
-    matching_plaforms = allowed_platforms & actual_platforms
-    log.info('     … declares matching platforms %r', matching_plaforms)
-    return matching_plaforms
+    matching_platforms = allowed_platforms & actual_platforms
+    log.info('     … declares matching platforms %r', matching_platforms)
+    return matching_platforms
 
 
 # https://github.com/containerd/containerd/blob/1fbd70374134b891f97ce19c70b6e50c7b9f4e0d/platforms/database.go#L62
@@ -137,7 +175,9 @@ def _normalize_os(os: str) -> str:
 
 # https://github.com/containerd/containerd/blob/1fbd70374134b891f97ce19c70b6e50c7b9f4e0d/platforms/database.go#L76
 
-def _normalize_arch(arch: str, variant: Optional[str]) -> tuple[str, Optional[str]]:
+def _normalize_arch(arch: str,
+                    variant: Optional[str]
+                    ) -> tuple[str, Optional[str]]:
     arch = arch.lower()
     variant = variant and variant.lower()
     if arch == 'i386':

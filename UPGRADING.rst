@@ -20,6 +20,46 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#15 Insecure Transportation Security Protocol Supported (TLS 1.0)
+===========================================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5189 Delete unused Docker images from ECR
+==========================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment. Retain a
+terminal transcript for each deployment so that the author can diagnose any
+issues that may come up.
+
+
+#4468 Logs by different containers are hard to distinguish
+==========================================================
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5408 Prepare for vacation
+==========================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment. Only the
+``prod.gitlab`` deployment should actually have a non-empty plan.
+
+
 DataBiosphere/azul-private#95 Resolve vulnerabilities in AMI for GitLab
 =======================================================================
 

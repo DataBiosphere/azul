@@ -431,6 +431,8 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
+    # FIXME: Eliminate azul.terra.TDRClient.TDRSource
+    #        https://github.com/DataBiosphere/azul/issues/5524
     @attr.s(frozen=True, kw_only=True, auto_attribs=True)
     class TDRSource:
         project: str
@@ -457,13 +459,6 @@ class TDRClient(SAMClient):
         require(source.spec.name == response['name'],
                 'Source name changed unexpectedly', source, response)
         return response
-
-    def check_api_access(self, source: TDRSourceSpec) -> None:
-        """
-        Verify that the client is authorized to read from the TDR service API.
-        """
-        self._lookup_source(source)
-        log.info('TDR client is authorized for API access to %s.', source)
 
     def _lookup_source(self, source: TDRSourceSpec) -> MutableJSON:
         endpoint = self._repository_endpoint(source.type_name + 's')

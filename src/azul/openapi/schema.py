@@ -48,7 +48,7 @@ class optional(NamedTuple):
 
 
 # noinspection PyShadowingBuiltins
-def object(additional_properties=False, **props: Union[TYPE, optional]):
+def object(additional_properties=False, **props: Union[TYPE, optional]) -> JSON:
     """
     >>> from azul.doctests import assert_json
     >>> assert_json(object(x=int, y=int, relative=optional(bool)))
@@ -96,7 +96,7 @@ def object(additional_properties=False, **props: Union[TYPE, optional]):
                        additionalProperties=additional_properties)
 
 
-def properties(**props: TYPE):
+def properties(**props: TYPE) -> JSON:
     """
     Returns a JSON schema `properties` attribute value.
 
@@ -115,7 +115,7 @@ def properties(**props: TYPE):
     return {name: make_type(prop) for name, prop in props.items()}
 
 
-def array(item: TYPE, *items: TYPE, **kwargs):
+def array(item: TYPE, *items: TYPE, **kwargs) -> JSON:
     """
     Returns the schema for an array of items of a given type, or a sequence of
     types.
@@ -213,7 +213,7 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
     }
 
 
-def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
+def pattern(regex: Union[str, re.Pattern], _type: TYPE = str) -> JSON:
     """
     Returns schema for a JSON string matching the given pattern.
 
@@ -250,7 +250,10 @@ def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
     }
 
 
-def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSON:
+def with_default(default: PrimitiveJSON,
+                 /,
+                 type_: Optional[TYPE] = None
+                 ) -> JSON:
     """
     Add a documented default value to the type schema.
 
@@ -277,7 +280,10 @@ def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSO
 N = TypeVar('N', bound=Union[int, float])
 
 
-def in_range(minimum: Optional[N], maximum: Optional[N], type_: Optional[TYPE] = None) -> JSON:
+def in_range(minimum: Optional[N],
+             maximum: Optional[N],
+             type_: Optional[TYPE] = None
+             ) -> JSON:
     """
     >>> from azul.doctests import assert_json
 
@@ -457,7 +463,7 @@ def make_type(t: TYPE) -> JSON:
         assert False, type(t)
 
 
-def union(*ts: TYPE, for_openapi: bool = True):
+def union(*ts: TYPE, for_openapi: bool = True) -> JSON:
     """
     The union of one or more types.
 
@@ -490,7 +496,7 @@ def union(*ts: TYPE, for_openapi: bool = True):
         return {'anyOf': ts}
 
 
-def nullable(t: TYPE, for_openapi: bool = True):
+def nullable(t: TYPE, for_openapi: bool = True) -> JSON:
     """
     Given a schema, return a schema that additionally permits the `null` value.
 

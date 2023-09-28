@@ -221,7 +221,7 @@ class AWS:
         return es_domain['DomainStatus']
 
     def get_lambda_arn(self, function_name, suffix):
-        return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
+        return f'arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}'
 
     @property
     @_cache
@@ -261,7 +261,11 @@ class AWS:
         return self._dss_bucket(dss_endpoint, 'checkout', lambda_name='service')
 
     @_cache
-    def _dss_bucket(self, dss_endpoint: str, *qualifiers: str, lambda_name: str) -> str:
+    def _dss_bucket(self,
+                    dss_endpoint: str,
+                    *qualifiers: str,
+                    lambda_name: str
+                    ) -> str:
         with self.direct_access_credentials(dss_endpoint, lambda_name):
             stage = config.dss_deployment_stage(dss_endpoint)
             name = f'/dcp/dss/{stage}/environment'
@@ -336,7 +340,7 @@ class AWS:
         contexts cannot use the same role, since a role cannot assume itself.
 
         The given role is assumed using currently active credentials, either the
-        the default ones or those from another assumed_role_credentials context.
+        default ones or those from another assumed_role_credentials context.
 
         :param role_arn: the ARN of the role to assume. If None, the context
                          manager does nothing and calls to the .client() method

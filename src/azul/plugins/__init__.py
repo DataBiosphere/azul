@@ -266,11 +266,12 @@ class MetadataPlugin(Plugin[BUNDLE]):
     }
 
     range_mapping = {
-        # A float (single precision IEEE-754) can represent all integers up to 16,777,216. If we
-        # used float values for organism ages in seconds, we would not be able to accurately
-        # represent an organism age of 16,777,217 seconds. That is 194 days and 15617 seconds.
-        # A double precision IEEE-754 representation loses accuracy at 9,007,199,254,740,993 which
-        # is more than 285616415 years.
+        # A float (single precision IEEE-754) can represent all integers up to
+        # 16,777,216. If we used float values for organism ages in seconds, we
+        # would not be able to accurately represent an organism age of
+        # 16,777,217 seconds. That is 194 days and 15617 seconds.
+        # A double precision IEEE-754 representation loses accuracy at
+        # 9,007,199,254,740,993 which is more than 285616415 years.
 
         # Note that Python's float uses double precision IEEE-754.
         # (https://docs.python.org/3/tutorial/floatingpoint.html#representation-error)
@@ -281,7 +282,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         return {
             'numeric_detection': False,
             'properties': {
-                # Declare the primary key since it's used as the tie breaker when
+                # Declare the primary key since it's used as the tiebreaker when
                 # sorting. We used to use _uid for that but that's gone in ES 7 and
                 # _id can't be used for sorting:
                 #

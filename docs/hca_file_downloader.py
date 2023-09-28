@@ -255,7 +255,9 @@ class HCAFileDownloader:
         """
         Download a file from the given URL.
         """
-        url = url.replace('/fetch', '')  # Work around https://github.com/DataBiosphere/azul/issues/2908
+        # Work around https://github.com/DataBiosphere/azul/issues/2908
+        url = url.replace('/fetch', '')
+
         response = requests.get(url, stream=True)
         response.raise_for_status()
         try:

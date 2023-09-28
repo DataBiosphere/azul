@@ -80,7 +80,7 @@ class DependenciesLayer:
 
     def _filter_package(self, input_zip_path: Path, output_zip_path: Path):
         """
-        Filter a ZIP file, removing `app.py` and prefixingother archive member
+        Filter a ZIP file, removing `app.py` and prefixing other archive member
         paths with `python/`.
         """
         log.info('Filtering %r to %r', str(input_zip_path), str(output_zip_path))

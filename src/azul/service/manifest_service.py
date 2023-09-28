@@ -876,7 +876,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(field_path[-1], [])
         return entities
 
-    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> Optional[str]:
+    def _azul_file_url(self,
+                       file: JSON,
+                       args: Mapping = frozendict()
+                       ) -> Optional[str]:
         if self.repository_plugin.file_download_class().needs_drs_uri and file['drs_uri'] is None:
             return None
         else:
@@ -924,7 +927,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         if base_name:
             file_name_prefix = unicodedata.normalize('NFKD', base_name)
             file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
-            timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+            timestamp = datetime.now().strftime('%Y-%m-%d %H.%M')
             file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension}'
         else:
             # FIXME: Consolidate parsing of manifest object key
@@ -1169,7 +1172,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
         }
 
     @classmethod
-    def _option(cls, s: str):
+    def _option(cls, s: str) -> str:
         """
         >>> f = CurlManifestGenerator._option
         >>> f('')
@@ -1561,7 +1564,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     def _remove_redundant_entries(cls, bundles: Bundles) -> None:
         """
         Remove bundle entries from dict that are redundant based on the set of
-        files it contains (eg. a primary bundle is made redundant by its derived
+        files it contains (e.g. a primary bundle is made redundant by its derived
         analysis bundle if the primary only has a subset of files that the
         analysis bundle contains or if they both have the same files).
         """
@@ -1652,7 +1655,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                                      column_mapping=bundle_column_mapping,
                                      row=bundle_cells)
 
-                # Register the three extracted sets of fields as a group for this bundle and qualifier
+                # Register the three extracted sets of fields as a group for
+                # this bundle and qualifier
                 group = {
                     'file': file_cells,
                     'bundle': bundle_cells,
@@ -1667,8 +1671,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # one file per file format
         def qualify(qualifier, column_name, index=None):
             if index is not None:
-                qualifier = f"{qualifier}_{index}"
-            return f"{self.column_path_separator}{qualifier}{self.column_path_separator}{column_name}"
+                qualifier = f'{qualifier}_{index}'
+            return f'{self.column_path_separator}{qualifier}{self.column_path_separator}{column_name}'
 
         num_groups_per_qualifier = defaultdict(int)
 
@@ -1677,7 +1681,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             for qualifier, groups in bundle.items():
                 # Sort the groups by reversed file name. This essentially sorts
                 # by file extension and any other more general suffixes
-                # preceding the extension. It ensure that `patient1_qc.bam` and
+                # preceding the extension. It ensures that `patient1_qc.bam` and
                 # `patient2_qc.bam` always end up in qualifier `bam[0]` while
                 # `patient1_metric.bam` and `patient2_metric.bam` end up in
                 # qualifier `bam[1]`.
@@ -1716,13 +1720,16 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                             else:
                                 assert cells.items() <= row.items()
                         elif entity == 'other':
-                            # Cells from other entities need to be concatenated. Note that for fields that differ
-                            # between the files in a bundle this algorithm retains the values but loses the
-                            # association between each individual value and the respective file.
+                            # Cells from other entities need to be concatenated.
+                            # Note that for fields that differ between the files
+                            # in a bundle this algorithm retains the values but
+                            # loses the association between each individual
+                            # value and the respective file.
                             for column_name, cell_value in cells.items():
                                 row.setdefault(column_name, set()).update(cell_value.split(self.padded_joiner))
                         elif entity == 'file':
-                            # Since file-specific cells are placed into qualified columns, no concatenation is necessary
+                            # Since file-specific cells are placed into
+                            # qualified columns, no concatenation is necessary
                             index = None if num_groups_per_qualifier[qualifier] == 1 else i
                             row.update((qualify(qualifier, column_name, index=index), cell)
                                        for column_name, cell in cells.items())

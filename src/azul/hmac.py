@@ -53,7 +53,9 @@ class SignatureHelper(HTTPSignatureKeyResolver):
         return HTTPMessageSigner(signature_algorithm=HMAC_SHA256,
                                  key_resolver=self)
 
-    def auth_from_request(self, request: chalice.app.Request) -> Optional[HMACAuthentication]:
+    def auth_from_request(self,
+                          request: chalice.app.Request
+                          ) -> Optional[HMACAuthentication]:
         try:
             request.headers['signature']
         except KeyError:
@@ -98,4 +100,4 @@ class SignatureHelper(HTTPSignatureKeyResolver):
         key, key_id = aws.get_hmac_key_and_id()
         self.signer.sign(request,
                          key_id=key_id,
-                         covered_component_ids=("@method", "@path", "content-digest"))
+                         covered_component_ids=('@method', '@path', 'content-digest'))

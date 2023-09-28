@@ -45,7 +45,7 @@ class Filters:
         return cls(explicit=json['explicit'],
                    source_ids=set(json['source_ids']))
 
-    def to_json(self):
+    def to_json(self) -> JSON:
         return {
             'explicit': self.explicit,
             'source_ids': sorted(self.source_ids)

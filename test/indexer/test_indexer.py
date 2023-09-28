@@ -17,6 +17,7 @@ from itertools import (
 )
 import re
 from typing import (
+    Optional,
     cast,
 )
 import unittest
@@ -194,7 +195,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                         doc = Contribution.from_index(field_types, hit)
                         docs_by_entity[doc.entity].append(doc)
                         entity_type, aggregate = self._parse_index_name(hit)
-                        # Since there is only one bundle and it was deleted, nothing should be aggregated
+                        # Since there is only one bundle and it was deleted,
+                        # nothing should be aggregated
                         self.assertFalse(aggregate)
                         self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
 
@@ -313,7 +315,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def test_bundle_delete_downgrade(self):
         """
-        Delete an updated version of a bundle, and ensure that the index reverts to the previous bundle.
+        Delete an updated version of a bundle, and ensure that the index reverts
+        to the previous bundle.
         """
         self._index_canned_bundle(self.old_bundle)
         old_hits_by_id = self._assert_old_bundle()
@@ -324,8 +327,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def test_multi_entity_contributing_bundles(self):
         """
-        Delete a bundle which shares entities with another bundle and ensure shared entities
-        are not deleted. Only entity associated with deleted bundle should be marked as deleted.
+        Delete a bundle which shares entities with another bundle and ensure
+        shared entities are not deleted. Only entity associated with deleted
+        bundle should be marked as deleted.
         """
         bundle_fqid = self.bundle_fqid(uuid='8543d32f-4c01-48d5-a79f-1c5439659da3',
                                        version='2018-03-29T14:38:28.884167Z')
@@ -346,9 +350,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         num_docs_by_index_after = self._num_docs_by_index(hits_after)
 
         for entity_type, aggregate in num_docs_by_index_after.keys():
-            # Both bundles reference two files. They both share one file
-            # and exclusively own another one. Deleting one of the bundles removes the file owned exclusively by
-            # that bundle, as well as the bundle itself.
+            # Both bundles reference two files. They both share one file and
+            # exclusively own another one. Deleting one of the bundles removes
+            # the file owned exclusively by that bundle, as well as the bundle itself.
             if aggregate:
                 difference = 1 if entity_type in ('files', 'bundles') else 0
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
@@ -387,7 +391,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 file['uuid'] = new_file_uuid
                 break
         else:
-            assert False, f"Unable to find file name {file_name}"
+            assert False, f'Unable to find file name {file_name}'
 
         def _walkthrough(v):
             if isinstance(v, dict):
@@ -403,11 +407,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         return old_file_uuid
 
     def _num_docs_by_index(self, hits) -> Mapping[tuple[str, bool], int]:
-        counter = Counter()
-        for hit in hits:
-            entity_type, aggregate = self._parse_index_name(hit)
-            counter[entity_type, aggregate] += 1
-        return counter
+        return Counter(map(self._parse_index_name, hits))
 
     def test_indexed_matrices(self):
         """
@@ -925,8 +925,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def test_derived_files(self):
         """
-        Index an analysis bundle, which, unlike a primary bundle, has data files derived from other data
-        files, and assert that the resulting `files` index document contains exactly one file entry.
+        Index an analysis bundle, which, unlike a primary bundle, has data files
+        derived from other data files, and assert that the resulting `files`
+        index document contains exactly one file entry.
         """
         analysis_bundle = self.bundle_fqid(uuid='d5e01f9d-615f-4153-8a56-f2317d7d9ce8',
                                            version='2018-09-06T18:57:59.326912Z')
@@ -974,7 +975,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def test_bundle_downgrade(self):
         """
-        Indexing an old version of a bundle *after* a new version should not have an effect on aggregates.
+        Indexing an old version of a bundle *after* a new version should not
+        have an effect on aggregates.
         """
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=0)
@@ -983,9 +985,10 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         self._assert_new_bundle(num_expected_old_contributions=6)
 
     def _assert_old_bundle(self,
-                           num_expected_new_contributions=0,
-                           num_expected_new_deleted_contributions=0,
-                           ignore_aggregates=False):
+                           num_expected_new_contributions: int = 0,
+                           num_expected_new_deleted_contributions: int = 0,
+                           ignore_aggregates: bool = False
+                           ) -> Mapping[tuple[str, bool], JSON]:
         """
         Assert that the old bundle is still indexed correctly
 
@@ -998,9 +1001,10 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
         hits = self._get_all_hits()
-        # Six entities (two files, one project, one cell suspension, one sample, and one bundle)
-        # One contribution and one aggregate per entity
-        # Two times number of deleted contributions since deletes don't remove a contribution, but add a new one
+        # Six entities (two files, one project, one cell suspension, one sample,
+        # and one bundle) One contribution and one aggregate per entity. Two
+        # times number of deleted contributions since deletes don't remove a
+        # contribution, but add a new one
         self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions * 2, len(hits))
         hits_by_id = {}
         for hit in hits:
@@ -1030,17 +1034,21 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 else:
                     self.assertLess(self.old_bundle.version, version)
                     num_actual_new_contributions += 1
-        # We count the deleted contributions here too since they should have a corresponding addition contribution
+        # We count the deleted contributions here too since they should have a
+        # corresponding addition contribution
         self.assertEqual(num_expected_new_contributions + num_expected_new_deleted_contributions,
                          num_actual_new_contributions)
         self.assertEqual(num_expected_new_deleted_contributions, num_actual_new_deleted_contributions)
         return hits_by_id
 
-    def _assert_new_bundle(self, num_expected_old_contributions=0, old_hits_by_id=None):
+    def _assert_new_bundle(self,
+                           num_expected_old_contributions: int = 0,
+                           old_hits_by_id: Optional[Mapping[tuple[str, bool], JSON]] = None
+                           ) -> None:
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
-        # Six entities (two files, one project, one cell suspension, one sample and one bundle)
-        # One contribution and one aggregate per entity
+        # Six entities (two files, one project, one cell suspension, one sample
+        # and one bundle). One contribution and one aggregate per entity
         self.assertEqual(6 + 6 + num_expected_old_contributions, len(hits))
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
@@ -1061,23 +1069,23 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 self.assertLess(old_version, version)
                 old_contents = old_source['contents']
                 old_project = one(old_contents['projects'])
-                self.assertNotEqual(old_project["project_title"], project["project_title"])
-                self.assertNotEqual(old_project["project_short_name"], project["project_short_name"])
-                self.assertNotEqual(old_project["laboratory"], project["laboratory"])
+                self.assertNotEqual(old_project['project_title'], project['project_title'])
+                self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
+                self.assertNotEqual(old_project['laboratory'], project['laboratory'])
                 if aggregate and entity_type != 'projects':
-                    self.assertNotEqual(old_project["institutions"], project["institutions"])
+                    self.assertNotEqual(old_project['institutions'], project['institutions'])
                 else:
-                    self.assertNotEqual(old_project["contributors"], project["contributors"])
-                self.assertNotEqual(old_contents["donors"][0]["genus_species"],
-                                    contents["donors"][0]["genus_species"])
+                    self.assertNotEqual(old_project['contributors'], project['contributors'])
+                self.assertNotEqual(old_contents['donors'][0]['genus_species'],
+                                    contents['donors'][0]['genus_species'])
 
-            self.assertEqual("Single cell transcriptome analysis of human pancreas reveals transcriptional "
-                             "signatures of aging and somatic mutation patterns.",
-                             get(project["project_title"]))
-            self.assertEqual("Single cell transcriptome analysis of human pancreas",
-                             get(project["project_short_name"]))
-            self.assertNotIn("Sarah Teichmann", project["laboratory"])
-            self.assertIn("Molecular Atlas", project["laboratory"])
+            self.assertEqual('Single cell transcriptome analysis of human pancreas reveals transcriptional '
+                             'signatures of aging and somatic mutation patterns.',
+                             get(project['project_title']))
+            self.assertEqual('Single cell transcriptome analysis of human pancreas',
+                             get(project['project_short_name']))
+            self.assertNotIn('Sarah Teichmann', project['laboratory'])
+            self.assertIn('Molecular Atlas', project['laboratory'])
             if aggregate and entity_type != 'projects':
                 self.assertNotIn('Farmers Trucks', project['institutions'])
             else:
@@ -1087,7 +1095,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def test_concurrent_specimen_submissions(self):
         """
-        Index two bundles contributing to the same specimen and project, ensure that conflicts are detected and handled
+        Index two bundles contributing to the same specimen and project, ensure
+        that conflicts are detected and handled
         """
         bundles = [
             self.bundle_fqid(uuid='9dec1bd6-ced8-448a-8e45-1fc7846d8995',
@@ -1113,9 +1122,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
                 self.assertIsNotNone(cm.records)
                 num_hits = sum(1 for log_msg in cm.output
-                               if "There was a conflict with document" in log_msg
-                               and (f"_{self.catalog}_samples_aggregate" in log_msg
-                                    or f"_{self.catalog}_projects_aggregate" in log_msg))
+                               if 'There was a conflict with document' in log_msg
+                               and (f'_{self.catalog}_samples_aggregate' in log_msg
+                                    or f'_{self.catalog}_projects_aggregate' in log_msg))
                 # One conflict for the specimen and one for the project
                 self.assertEqual(2, num_hits)
 
@@ -1139,7 +1148,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             elif entity_type in ('samples', 'projects'):
                 if aggregate:
                     self.assertEqual(2, len(hit['_source']['bundles']))
-                    # All four files are fastqs so the are grouped together
+                    # All four files are fastqs so they are grouped together
                     self.assertEqual(4, one(contents['files'])['count'])
                 else:
                     self.assertEqual(2, len(contents['files']))
@@ -1226,7 +1235,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 for file in files:
                     file_name = file['name']
                     file_names.add(file_name)
-        self.assertEqual(4, len(entities_with_matrix_files))  # a project, a specimen, a cell suspension and a bundle
+        # A project, a specimen, a cell suspension and a bundle
+        self.assertEqual(4, len(entities_with_matrix_files))
         self.assertEqual(aggregate_file_names, file_names)
         matrix_file_names = {file_name for file_name in file_names if '.zarr/' in file_name}
         self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs'}, matrix_file_names)
@@ -1240,7 +1250,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         counted_cell_count = 0
-        expected_cell_count = 380  # 384 wells in total, four of them empty, the rest with a single cell
+        # 384 wells in total, four of them empty, the rest with a single cell
+        expected_cell_count = 380
         documents_with_cell_suspension = 0
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
@@ -1272,9 +1283,12 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 else:
                     self.assertEqual(expected_cell_count, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
                 documents_with_cell_suspension += 1
-        self.assertEqual(expected_cell_count * 2, counted_cell_count)  # times 2 for original document and aggregate
-        # Cell suspensions should be mentioned in 1 bundle, 1 project, 1 specimen, 384 cell suspensions, and 2 files
-        # (one per fastq). There should be one original and one aggregate document for each of those. (389 * 2 = 778)
+        # Times 2 for original document and aggregate
+        self.assertEqual(expected_cell_count * 2, counted_cell_count)
+        # Cell suspensions should be mentioned in 1 bundle, 1 project,
+        # 1 specimen, 384 cell suspensions, and 2 files (one per fastq).
+        # There should be one original and one aggregate document for each of
+        # those. (389 * 2 = 778)
         self.assertEqual(778, documents_with_cell_suspension)
 
     def test_well_bundles(self):
@@ -1290,14 +1304,16 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
-            contents = hit["_source"]['contents']
+            contents = hit['_source']['contents']
             entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
-                # Each bundle contributes a well with one cell. The data files in each bundle are derived from
-                # the cell in that well. This is why each data file and bundle should only have a cell count of 1.
-                # Both bundles refer to the same specimen and project, so the cell count for those should be 2.
+                # Each bundle contributes a well with one cell. The data files
+                # in each bundle are derived from the cell in that well. This is
+                # why each data file and bundle should only have a cell count of
+                # 1. Both bundles refer to the same specimen and project, so the
+                # cell count for those should be 2.
                 expected_cells = 1 if entity_type in ('files', 'cell_suspensions', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
                 self.assertEqual(one(contents['analysis_protocols'])['workflow'], ['smartseq2_v2.1.0'])
@@ -1318,12 +1334,14 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
-                contents = hit["_source"]['contents']
+                contents = hit['_source']['contents']
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
-                # This bundle contains three specimens which are pooled into the a single cell suspension with
-                # 10000 cells. Until we introduced cell suspensions as an inner entity we used to associate cell
-                # counts with specimen which would have inflated the total cell count to 30000 in this case.
+                # This bundle contains three specimens which are pooled into a
+                # single cell suspension with 10000 cells. Until we introduced
+                # cell suspensions as an inner entity we used to associate cell
+                # counts with specimen which would have inflated the total cell
+                # count to 30000 in this case.
                 self.assertEqual(10000, cell_suspensions[0]['total_estimated_cells'])
                 sample = one(contents['samples'])
                 self.assertEqual(sample['organ'], sample['effective_organ'])
@@ -1334,11 +1352,12 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def test_diseases_field(self):
         """
-        Index a bundle with a specimen `diseases` value that differs from the donor `diseases` value
-        and assert that both values are represented in the indexed document.
+        Index a bundle with a specimen `diseases` value that differs from the
+        donor `diseases` value and assert that both values are represented in
+        the indexed document.
         """
-        bundle_fqid = self.bundle_fqid(uuid="3db604da-940e-49b1-9bcc-25699a55b295",
-                                       version="2018-11-02T18:40:48.983513Z")
+        bundle_fqid = self.bundle_fqid(uuid='3db604da-940e-49b1-9bcc-25699a55b295',
+                                       version='2018-11-02T18:40:48.983513Z')
         self._index_canned_bundle(bundle_fqid)
 
         hits = self._get_all_hits()
@@ -1348,14 +1367,15 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             specimen_diseases = contents['specimens'][0]['disease']
             donor_diseases = contents['donors'][0]['diseases']
             self.assertEqual(1, len(specimen_diseases))
-            self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_diseases[0])
+            self.assertEqual('atrophic vulva (specimen_from_organism)', specimen_diseases[0])
             self.assertEqual(1, len(donor_diseases))
-            self.assertEqual("atrophic vulva (donor_organism)", donor_diseases[0])
+            self.assertEqual('atrophic vulva (donor_organism)', donor_diseases[0])
 
     def test_organoid_priority(self):
         """
-        Index a bundle containing an Organoid and assert that the "organ" and "organ_part"
-        values saved are the ones from the Organoid and not the SpecimenFromOrganism
+        Index a bundle containing an Organoid and assert that the "organ" and
+        "organ_part" values saved are the ones from the Organoid and not the
+        SpecimenFromOrganism
         """
         bundle_fqid = self.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
                                        version='2018-10-18T20:46:55.866661Z')
@@ -1407,13 +1427,13 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             contents = hit['_source']['contents']
             project = one(contents['projects'])
             accessions_by_namespace = {
-                'array_express': ['E-AAAA-00'],
-                'geo_series': ['GSE00000'],
                 'insdc_project': ['SRP000000', 'SRP000001'],
+                'geo_series': ['GSE00000'],
+                'array_express': ['E-AAAA-00'],
                 'insdc_study': ['PRJNA000000']
             }
             entity_type, aggregate = self._parse_index_name(hit)
-            if entity_type == 'project':
+            if entity_type == 'projects':
                 expected_accessions = [
                     {'namespace': namespace, 'accession': accession}
                     for namespace, accessions in accessions_by_namespace.items()
@@ -1527,7 +1547,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
             sources[entity_type, aggregate].append(hit['_source'])
-            # bundle has 240 imaging_protocol_0.json['target'] items, each with an assay_type of 'in situ sequencing'
+            # bundle has 240 imaging_protocol_0.json['target'] items, each with
+            # an assay_type of 'in situ sequencing'
             assay_type = ['in situ sequencing'] if aggregate else {'in situ sequencing': 240}
             self.assertEqual(one(hit['_source']['contents']['imaging_protocols'])['assay_type'], assay_type)
         for aggregate in True, False:
@@ -1556,8 +1577,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         """
         Index a bundle with the following structure:
         donor -> specimen -> cell_line -> cell_line -> cell_suspension -> sequence_files
-        and assert the singleton sample matches the first cell_line up from the sequence_files
-        and assert cell_suspension inherits the organ value from the nearest ancestor cell_line
+        and assert the singleton sample matches the first cell_line up from the
+        sequence_files and assert cell_suspension inherits the organ value from
+        the nearest ancestor cell_line
         """
         bundle_fqid = self.bundle_fqid(uuid='e0ae8cfa-2b51-4419-9cde-34df44c6458a',
                                        version='2018-12-05T23:09:17.591044Z')
@@ -1573,7 +1595,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                     document_ids = one(contents[sample_entity_type])['document_id']
                 else:
                     document_ids = [d['document_id'] for d in contents[sample_entity_type]]
-                    entity = one([d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id']])
+                    entity = one(d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id'])
                     self.assertEqual(sample['biomaterial_id'], entity['biomaterial_id'])
                 self.assertTrue(sample['document_id'] in document_ids)
                 self.assertEqual(one(contents['specimens'])['organ'], ['blood'] if aggregate else 'blood')
@@ -1948,5 +1970,5 @@ def get(v):
     return one(v) if isinstance(v, list) else v
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

@@ -20,11 +20,14 @@ def load_module(path: str,
                 module_name: str,
                 module_attributes: Optional[Mapping[str, Any]] = None):
     """
-    Load a module from the .py file at the given path without affecting `sys.path` or `sys.modules`.
+    Load a module from the .py file at the given path without affecting
+    `sys.path` or `sys.modules`.
 
-    :param path: the file system path to the module file (typically ending in .py)
+    :param path: the file system path to the module file
+                 (typically ending in .py)
 
-    :param module_name: the value to assign to the __name__ attribute of the module.
+    :param module_name: the value to assign to the __name__ attribute of the
+                        module.
 
     :param module_attributes: a dictionary of additional attributes to set on
                               the module before executing it. These attributes

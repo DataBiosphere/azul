@@ -40,7 +40,8 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
-AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880  # 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
+# 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
+AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880
 
 MULTIPART_UPLOAD_MAX_WORKERS = 4
 

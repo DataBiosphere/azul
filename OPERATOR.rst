@@ -16,7 +16,7 @@ Getting started as operator
   - give you Maintainer access to the GitLab ``dev``, ``anvildev``,
     ``anvilprod`` and ``prod`` instances
 
-  - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud
+  - assign you the ``Editor`` role on the ``platform-hca-prod`` Google Cloud
     project
 
 * Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Ben and Hannes) to:

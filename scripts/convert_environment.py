@@ -131,7 +131,7 @@ def write(output_path: Path, variables: list[Variable], comments: list[str]):
 
 
 def convert_value(value: str) -> Optional[str]:
-    if value == "~null":
+    if value == '~null':
         return None
     else:
         # Convert shell-style interpolations to Python str.format() templates.

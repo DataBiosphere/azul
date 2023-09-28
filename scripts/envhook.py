@@ -219,7 +219,10 @@ OV = TypeVar('OV')
 NV = TypeVar('NV')
 
 
-def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> dict[K, tuple[OV, NV]]:
+def zip_dict(old: Mapping[K, OV],
+             new: Mapping[K, NV],
+             missing=None
+             ) -> dict[K, tuple[OV, NV]]:
     """
     Merge two dictionaries. The resulting dictionary contains an entry for every
     key in either `old` or `new`. Each entry in the result associates a key to
@@ -253,8 +256,8 @@ class Path(pathlib.PosixPath):
 
     def follow(self) -> 'Path':
         """
-        This methods performs one level of symbolic link resolution. For paths
-        representing a symbolic link with an absolute target, this methods is
+        This method performs one level of symbolic link resolution. For paths
+        representing a symbolic link with an absolute target, this method is
         equivalent to readlink(). For symbolic links with relative targets, this
         method returns the result of appending the target to the parent of this
         path. The returned path is always absolute.

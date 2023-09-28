@@ -171,7 +171,7 @@ class IndexTaskSet(BrowserTaskSet):
     Browse multiple pages of the samples index
     """
 
-    organ_filter = {"organ": {"is": ["brain"]}}
+    organ_filter = {'organ': {'is': ['brain']}}
 
     @task
     def start_page(self):
@@ -204,7 +204,7 @@ class MatrixTaskSet(BrowserTaskSet):
     def projects_start_page(self):
         # By default, the Data Browser only shows human data
         self.browse_page('projects',
-                         {"genusSpecies": {"is": ["Homo sapiens"]}},
+                         {'genusSpecies': {'is': ['Homo sapiens']}},
                          size=15,
                          sort='projectTitle',
                          order='asc')
@@ -212,7 +212,7 @@ class MatrixTaskSet(BrowserTaskSet):
     @task
     def filter_mtx_files(self):
         self.browse_page('projects',
-                         {"fileFormat": {"is": ["mtx"]}},
+                         {'fileFormat': {'is': ['mtx']}},
                          **self.browser_search_params)
 
 
@@ -222,10 +222,10 @@ class ManifestTaskSet(BrowserTaskSet, FileFetchTaskSet):
     """
 
     # Select islet of Langerhans since it's present in the develop deployment.
-    organ_part_filter = {"organPart": {"is": ["islet of Langerhans"]}}
+    organ_part_filter = {'organPart': {'is': ['islet of Langerhans']}}
     manifest_file_format_filter = {
-        "fileFormat": {
-            "is": ["fastq.gz", "bai", "bam", "csv", "results", "txt"]
+        'fileFormat': {
+            'is': ['fastq.gz', 'bai', 'bam', 'csv', 'results', 'txt']
         }
     }
 
@@ -258,7 +258,7 @@ class RepositoryTaskSet(FileSelectionTaskSet, FileFetchTaskSet):
 
     @task
     def choose_file(self):
-        self._choose_file({"fileFormat": {"is": ["fastq", "fastq.gz"]}})
+        self._choose_file({'fileFormat': {'is': ['fastq', 'fastq.gz']}})
 
     def _download(self, path: str):
         url = self.endpoint(path.format(file_uuid=self.file_uuid))
@@ -285,7 +285,7 @@ class DRSTaskSet(FileSelectionTaskSet):
 
     @task
     def choose_file(self):
-        self._choose_file({"fileFormat": {"is": ["fastq", "fastq.gz"]}})
+        self._choose_file({'fileFormat': {'is': ['fastq', 'fastq.gz']}})
 
     @task
     def drs(self):
