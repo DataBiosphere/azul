@@ -168,8 +168,7 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
             partition = service.get_manifest(format_=format_,
                                              catalog=self.catalog,
                                              filters=filters,
-                                             partition=partition,
-                                             authentication=None)
+                                             partition=partition)
             if isinstance(partition, Manifest):
                 return partition, num_partitions
             # Emulate controller serializing the partition between steps
@@ -1363,8 +1362,7 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters,
-                                                         authentication=None)
+                                                         filters=filters)
 
                 old_bundle_object_key = generator.compute_object_key()
                 # and should remain valid ...
@@ -1382,8 +1380,7 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters,
-                                                         authentication=None)
+                                                         filters=filters)
                 new_bundle_object_key = generator.compute_object_key()
                 # ... invalidating the cached object previously used for the same filter.
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
@@ -1399,8 +1396,7 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters,
-                                                         authentication=None)
+                                                         filters=filters)
                 latest_bundle_object_key = generator.compute_object_key()
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 

@@ -49,7 +49,6 @@ from azul.service.async_manifest_service import (
 )
 from azul.service.manifest_service import (
     CachedManifestNotFound,
-    CachedManifestSourcesChanged,
     Manifest,
     ManifestPartition,
     ManifestService,
@@ -253,7 +252,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                              catalog=self.catalog,
                                              filters=filters.to_json(),
                                              object_key=self.object_key,
-                                             authentication=None,
                                              partition=partitions[0].to_json())
                                 mock_start_execution.assert_called_once_with(
                                     state_machine_name,
@@ -273,7 +271,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                     catalog=state['catalog'],
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
-                                    authentication=None,
                                     object_key=state['object_key']
                                 )
                                 mock_get_manifest.reset_mock()
@@ -299,7 +296,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                     catalog=state['catalog'],
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
-                                    authentication=None,
                                     object_key=state['object_key']
                                 )
                                 mock_get_manifest.reset_mock()
@@ -312,8 +308,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
             manifest_states = [
                 manifest,
-                CachedManifestNotFound,
-                CachedManifestSourcesChanged
+                CachedManifestNotFound
             ]
             with mock.patch.object(ManifestService,
                                    'get_cached_manifest_with_object_key',
@@ -328,8 +323,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         else:
                             if manifest is CachedManifestNotFound:
                                 cause = 'expired'
-                            elif manifest is CachedManifestSourcesChanged:
-                                cause = 'become invalid due to an authorization change'
                             else:
                                 assert False
                             expected_response = {

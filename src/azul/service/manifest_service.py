@@ -316,10 +316,6 @@ class CachedManifestNotFound(Exception):
     pass
 
 
-class CachedManifestSourcesChanged(Exception):
-    pass
-
-
 class ManifestService(ElasticsearchService):
 
     def __init__(self, storage_service: StorageService, file_url_func: FileUrlFunc):
@@ -333,7 +329,6 @@ class ManifestService(ElasticsearchService):
                      catalog: CatalogName,
                      filters: Filters,
                      partition: ManifestPartition,
-                     authentication: Optional[Authentication],
                      object_key: Optional[str] = None
                      ) -> Union[Manifest, ManifestPartition]:
         """
@@ -366,9 +361,6 @@ class ManifestService(ElasticsearchService):
                           instance will be returned. Otherwise, the next
                           ManifestPartition instance will be returned.
 
-        :param authentication: The authentication accompanying the manifest
-                               request
-
         :param object_key: An optional S3 object key of the cached manifest. If
                            None, the key will be computed dynamically. This may
                            take a few seconds. If a valid cached manifest exists
@@ -378,8 +370,7 @@ class ManifestService(ElasticsearchService):
         generator = ManifestGenerator.for_format(format_=format_,
                                                  service=self,
                                                  catalog=catalog,
-                                                 filters=filters,
-                                                 authentication=authentication)
+                                                 filters=filters)
         if object_key is None:
             object_key = generator.compute_object_key()
         file_name = self._get_cached_manifest_file_name(generator, object_key)
@@ -413,14 +404,12 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
-                            filters: Filters,
-                            authentication: Optional[Authentication]
+                            filters: Filters
                             ) -> tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_,
                                                  self,
                                                  catalog,
-                                                 filters,
-                                                 authentication)
+                                                 filters)
         object_key = generator.compute_object_key()
         file_name = self._get_cached_manifest_file_name(generator, object_key)
         if file_name is None:
@@ -439,23 +428,12 @@ class ManifestService(ElasticsearchService):
                                             format_: ManifestFormat,
                                             catalog: CatalogName,
                                             filters: Filters,
-                                            object_key: str,
-                                            authentication: Optional[Authentication]
+                                            object_key: str
                                             ) -> Manifest:
         generator = ManifestGenerator.for_format(format_,
                                                  self,
                                                  catalog,
-                                                 filters,
-                                                 authentication)
-        # FIXME: Add support for long-lived API tokens
-        #        https://github.com/DataBiosphere/azul/issues/3328
-        if False:
-            current_source_key = generator.compute_source_key()
-            # FIXME: Consolidate parsing of manifest object key
-            #        https://github.com/DataBiosphere/azul/issues/4050
-            manifest_key, source_key, extension = object_key.rsplit('/', 1)[-1].split('.')
-            if source_key != current_source_key:
-                raise CachedManifestSourcesChanged
+                                                 filters)
         file_name = self._get_cached_manifest_file_name(generator, object_key)
         if file_name is None:
             raise CachedManifestNotFound
@@ -646,8 +624,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                    format_: ManifestFormat,
                    service: ManifestService,
                    catalog: CatalogName,
-                   filters: Filters,
-                   authentication: Optional[Authentication]) -> 'ManifestGenerator':
+                   filters: Filters
+                   ) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -661,14 +639,11 @@ class ManifestGenerator(metaclass=ABCMeta):
 
         :param service: the service to use when querying the index
 
-        :param authentication: the authentication accompanying the manifest
-                               request
-
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
         sub_cls = cls._cls_for_format[format_]
-        return sub_cls(service, catalog, filters, authentication)
+        return sub_cls(service, catalog, filters)
 
     _cls_for_format: dict[ManifestFormat, Type['ManifestGenerator']] = {}
 
@@ -738,15 +713,13 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: Filters,
-                 authentication: Optional[Authentication]
+                 filters: Filters
                  ) -> None:
         super().__init__()
         self.service = service
         self.catalog = catalog
         self.filters = filters
         self.file_url_func = service.file_url_func
-        self.authentication = authentication
 
     def compute_object_key(self) -> str:
         """
