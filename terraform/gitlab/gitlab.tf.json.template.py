@@ -1766,10 +1766,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             )
                         },
                     ],
-                    # Reboot to realize the added kernel parameter the changed sshd configuration
-                    'power_state': {
-                        'mode': 'reboot'
-                    },
                     'runcmd': [
                         ['systemctl', 'daemon-reload'],
                         ['dracut', '-f'],
@@ -1801,6 +1797,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             '-s'  # restart agent afterwards
                         ]
                     ],
+                    # Reboot to realize the added kernel parameter the changed sshd configuration
+                    'power_state': {
+                        'mode': 'reboot'
+                    },
                 }, indent=2),
                 'tags': {
                     'Owner': config.owner
