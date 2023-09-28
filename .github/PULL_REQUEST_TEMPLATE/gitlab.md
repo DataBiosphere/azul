@@ -46,7 +46,7 @@ Connected issue: #4014
 - [ ] Pushed PR branch to GitHub
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
-- [ ] Added commit title tags to merge commit title
+- [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
 - [ ] Moved connected issue to Merged column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
