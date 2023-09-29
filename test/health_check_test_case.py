@@ -6,6 +6,7 @@ from collections.abc import (
     Mapping,
 )
 import os
+import random
 import time
 from unittest import (
     TestSuite,
@@ -31,6 +32,9 @@ from app_test_case import (
 )
 from azul import (
     config,
+)
+from azul.health import (
+    Health,
 )
 from azul.logging import (
     configure_test_logging,
@@ -98,7 +102,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             **self._expected_elasticsearch(True),
             **self._expected_queues(True),
             **self._expected_other_lambdas(True),
-            **self._expected_api_endpoints(endpoint_states),
+            **self._expected_api_endpoints(True),
             **self._expected_progress()
         }, response.json())
 
@@ -114,7 +118,7 @@ class HealthCheckTestCase(LocalAppTestCase,
                 ('elasticsearch', self._expected_elasticsearch(True)),
                 ('queues', self._expected_queues(True)),
                 ('other_lambdas', self._expected_other_lambdas(True)),
-                ('api_endpoints', self._expected_api_endpoints(endpoint_states)),
+                ('api_endpoints', self._expected_api_endpoints(True)),
                 ('progress', self._expected_progress()),
                 ('progress,queues', {**self._expected_progress(), **self._expected_queues(True)}),
             ]
@@ -124,8 +128,8 @@ class HealthCheckTestCase(LocalAppTestCase,
             with self.subTest(keys=keys):
                 with self.helper() as helper:
                     self._mock_other_lambdas(helper, up=True)
-                    self._mock_service_endpoints(helper, endpoint_states)
-                    response = requests.get(str(self.base_url.set(path=('health', keys))))
+                    with self._mock_service_endpoints(helper, endpoint_states):
+                        response = requests.get(str(self.base_url.set(path=('health', keys))))
                     self.assertEqual(200, response.status_code)
                     self.assertEqual(expected_response, response.json())
 
@@ -149,8 +153,8 @@ class HealthCheckTestCase(LocalAppTestCase,
         endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name(), unit_test=True)
         with self.helper() as helper:
-            self._mock_service_endpoints(helper, endpoint_states)
-            app.update_health_cache(MagicMock(), MagicMock())
+            with self._mock_service_endpoints(helper, endpoint_states):
+                app.update_health_cache(MagicMock(), MagicMock())
             response = requests.get(str(self.base_url.set(path='/health/cached')))
             self.assertEqual(200, response.status_code)
 
@@ -219,21 +223,17 @@ class HealthCheckTestCase(LocalAppTestCase,
             }
         }
 
-    def _expected_api_endpoints(self, endpoint_states: Mapping[str, bool]) -> JSON:
+    def _expected_api_endpoints(self, up: bool) -> JSON:
         return {
             'api_endpoints': {
-                'up': all(up for endpoint, up in endpoint_states.items()),
-                **({
-                    self._endpoint(endpoint): {
-                        'up': up
-                    } if up else {
-                        'up': up,
-                        'error': (
-                            "HTTPError('503 Server Error: "
-                            "Service Unavailable for url: "
-                            f"{self._endpoint(endpoint)}')")
-                    } for endpoint, up in endpoint_states.items()
-                })
+                'up': up
+            } if up else {
+                'up': up,
+                'error': (
+                    "HTTPError('503 Server Error: "
+                    "Service Unavailable for url: "
+                    f"{self._endpoint('/index/bundles?size=1')}')"
+                )
             }
         }
 
@@ -282,8 +282,8 @@ class HealthCheckTestCase(LocalAppTestCase,
               ):
         with self.helper() as helper:
             self._mock_other_lambdas(helper, lambdas_up)
-            self._mock_service_endpoints(helper, endpoint_states)
-            return requests.get(str(self.base_url.set(path=path)))
+            with self._mock_service_endpoints(helper, endpoint_states):
+                return requests.get(str(self.base_url.set(path=path)))
 
     def helper(self):
         helper = responses.RequestsMock()
@@ -298,12 +298,16 @@ class HealthCheckTestCase(LocalAppTestCase,
 
     def _mock_service_endpoints(self,
                                 helper: responses.RequestsMock,
-                                endpoint_states: Mapping[str, bool]) -> None:
-        for endpoint, endpoint_up in endpoint_states.items():
-            helper.add(responses.Response(method='HEAD',
-                                          url=self._endpoint(endpoint),
-                                          status=200 if endpoint_up else 503,
-                                          json={}))
+                                endpoint_states: Mapping[str, bool]):
+        endpoints_up = any(endpoint_states.values())
+        helper.add(responses.Response(method='HEAD',
+                                      url=self._endpoint('/index/bundles?size=1'),
+                                      status=200 if endpoints_up else 503,
+                                      json={}))
+        # Patching the Health class to use a random generator with a pinned
+        # seed allows us to predict the service endpoint that will be picked
+        # to check the health of the service REST API.
+        return patch.object(Health, '_random', random.Random(x=42))
 
     def _mock_other_lambdas(self, helper: responses.RequestsMock, up: bool):
         for lambda_name in self._other_lambda_names():

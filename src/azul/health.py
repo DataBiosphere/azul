@@ -3,14 +3,12 @@ from collections.abc import (
     Mapping,
     Set,
 )
-from concurrent.futures import (
-    ThreadPoolExecutor,
-)
 from itertools import (
     chain,
 )
 import json
 import logging
+import random
 import time
 from typing import (
     ClassVar,
@@ -168,6 +166,7 @@ class Health:
     """
     controller: HealthController
     catalog: str
+    _random: ClassVar[random.Random] = random.Random()
 
     @property
     def lambda_name(self):
@@ -238,16 +237,20 @@ class Health:
             ))
         }
 
-    def _api_endpoint(self, relative_url: furl) -> tuple[str, JSON]:
+    def _api_endpoint(self, entity_type: str) -> JSON:
+        relative_url = furl(path=('index', entity_type), args={'size': '1'})
         url = str(config.service_endpoint.join(relative_url))
-        log.info('Requesting %r', url)
+        log.info('Making HEAD request to %s', url)
+        start = time.time()
         response = requests.head(url)
+        log.info('Got %s response after %.3fs from HEAD request to %s',
+                 response.status_code, time.time() - start, url)
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            return url, {'up': False, 'error': repr(e)}
+            return {'up': False, 'error': repr(e)}
         else:
-            return url, {'up': True}
+            return {'up': True}
 
     @cached_property
     def entity_types(self):
@@ -258,14 +261,8 @@ class Health:
         """
         Indicates whether important service API endpoints are operational.
         """
-        endpoints = [
-            furl(path=('index', entity_type), args={'size': '1'})
-            for entity_type in self.entity_types
-        ]
-        with ThreadPoolExecutor(len(endpoints)) as tpe:
-            status = dict(tpe.map(self._api_endpoint, endpoints))
-        status['up'] = all(v['up'] for v in status.values())
-        return status
+        entity_type = self._random.choice(list(self.entity_types))
+        return self._api_endpoint(entity_type)
 
     @health_property
     def elasticsearch(self):

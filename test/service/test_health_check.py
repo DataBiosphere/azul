@@ -37,7 +37,7 @@ class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
         return {
             'up': False,
             **self._expected_elasticsearch(es_up),
-            **self._expected_api_endpoints(endpoint_states),
+            **self._expected_api_endpoints(any(endpoint_states.values())),
         }
 
     @mock_sts
@@ -46,16 +46,6 @@ class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
         self._create_mock_queues()
         endpoint_states = self._endpoint_states(up_endpoints=(),
                                                 down_endpoints=self.endpoints)
-        response = self._test(endpoint_states, lambdas_up=True)
-        self.assertEqual(503, response.status_code)
-        self.assertEqual(self._expected_health(endpoint_states), response.json())
-
-    @mock_sts
-    @mock_sqs
-    def test_one_api_endpoint_down(self):
-        self._create_mock_queues()
-        endpoint_states = self._endpoint_states(up_endpoints=self.endpoints[1:],
-                                                down_endpoints=self.endpoints[:1])
         response = self._test(endpoint_states, lambdas_up=True)
         self.assertEqual(503, response.status_code)
         self.assertEqual(self._expected_health(endpoint_states), response.json())
