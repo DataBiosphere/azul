@@ -2,9 +2,6 @@ from contextlib import (
     contextmanager,
 )
 import logging
-from unittest.mock import (
-    patch,
-)
 
 from aws_requests_auth.boto_utils import (
     BotoAWSRequestsAuth,
@@ -73,7 +70,7 @@ class ESClientFactory:
 def silenced_es_logger():
     """
     Does nothing if AZUL_DEBUG is 2. Temporarily sets the level of the
-    Elasticsearch logger to WARNING if AZUL_DEBUG is 1, or ERRROR if it is 0.
+    Elasticsearch logger to WARNING if AZUL_DEBUG is 1, or ERROR if it is 0.
 
     Use sparingly since it assumes that only the current thread uses the ES
     client. If other threads use the ES client concurrently, their logging will
@@ -84,5 +81,9 @@ def silenced_es_logger():
     else:
         patched_log_level = logging.WARNING if config.debug else logging.ERROR
         es_log = logging.getLogger('elasticsearch')
-        with patch.object(es_log, 'level', new=patched_log_level):
+        original_log_level = es_log.level
+        try:
+            es_log.setLevel(patched_log_level)
             yield
+        finally:
+            es_log.setLevel(original_log_level)
