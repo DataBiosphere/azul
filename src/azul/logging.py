@@ -1,3 +1,6 @@
+from contextlib import (
+    contextmanager,
+)
 import logging
 from typing import (
     Optional,
@@ -9,6 +12,9 @@ from more_itertools import (
 )
 
 import azul
+from azul import (
+    config,
+)
 from azul.chalice import (
     AzulChaliceApp,
 )
@@ -104,8 +110,7 @@ def _configure_log_levels(*loggers):
     azul_level_ = azul_log_level()
     root_level = root_log_level()
     logging.getLogger().setLevel(root_level)
-    es_logger = logging.getLogger('elasticsearch')
-    es_logger.setLevel(es_log_level())
+    es_log.setLevel(es_log_level())
     for logger in {*loggers, azul.log}:
         logger.setLevel(azul_level_)
 
@@ -118,7 +123,34 @@ def azul_log_level():
     return [logging.INFO, logging.DEBUG, logging.DEBUG][azul.config.debug]
 
 
+es_log = logging.getLogger('elasticsearch')
+
+
 # FIXME: ElasticSearch logs are excessive during reindex
 #        https://github.com/DataBiosphere/azul/issues/4233
 def es_log_level():
     return root_log_level()
+
+
+@contextmanager
+def silenced_es_logger():
+    """
+    Does nothing if AZUL_DEBUG is 2. Temporarily sets the level of the
+    Elasticsearch logger to WARNING if AZUL_DEBUG is 1, or ERROR if it is 0.
+
+    Use sparingly since it assumes that only the current thread uses the ES
+    client. If other threads use the ES client concurrently, their logging will
+    be affected, too.
+    """
+    if config.debug > 1:
+        yield
+    else:
+        patched_log_level = logging.WARNING if config.debug else logging.ERROR
+        original_log_level = es_log.level
+        try:
+            es_log.setLevel(patched_log_level)
+            assert es_log.level == patched_log_level
+            yield
+        finally:
+            es_log.setLevel(original_log_level)
+            assert es_log.level == original_log_level

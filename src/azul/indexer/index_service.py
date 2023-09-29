@@ -49,7 +49,6 @@ from azul.deployment import (
 )
 from azul.es import (
     ESClientFactory,
-    silenced_es_logger,
 )
 from azul.indexer import (
     Bundle,
@@ -81,6 +80,9 @@ from azul.indexer.document_service import (
 )
 from azul.indexer.transform import (
     Transformer,
+)
+from azul.logging import (
+    silenced_es_logger,
 )
 from azul.plugins import (
     RepositoryPlugin,

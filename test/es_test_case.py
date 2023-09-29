@@ -9,7 +9,6 @@ from azul import (
 )
 from azul.es import (
     ESClientFactory,
-    silenced_es_logger,
 )
 from azul.json_freeze import (
     freeze,
@@ -17,6 +16,7 @@ from azul.json_freeze import (
 )
 from azul.logging import (
     get_test_logger,
+    silenced_es_logger,
 )
 from docker_container_test_case import (
     DockerContainerTestCase,
