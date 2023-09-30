@@ -89,8 +89,9 @@ def configure_test_logging(*loggers):
 
 log_format = ' '.join([
     '%(asctime)s',
-    '%(levelname)-7s',
-    '%(threadName)s:',
+    '%(levelname)+7s',
+    '%(threadName)s',
+    '%(name)s:',
     '%(message)s'
 ])
 
