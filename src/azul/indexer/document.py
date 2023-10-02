@@ -34,7 +34,6 @@ from azul import (
     CatalogName,
     DocumentType,
     IndexName,
-    config,
 )
 from azul.enums import (
     auto,
@@ -131,7 +130,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     def from_hit(cls,
                  hit: JSON
                  ) -> 'DocumentCoordinates[CataloguedEntityReference]':
-        index_name = config.parse_es_index_name(hit['_index'])
+        index_name = IndexName.parse(hit['_index'])
         document_id = hit['_id']
         if index_name.doc_type is DocumentType.contribution:
             subcls = ContributionCoordinates

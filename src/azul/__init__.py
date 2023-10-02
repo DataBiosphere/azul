@@ -668,13 +668,13 @@ class Config:
 
     @classmethod
     def validate_prefix(cls, prefix):
-        require(Config._is_valid_qualifier(prefix),
+        require(cls._is_valid_qualifier(prefix),
                 f'Prefix {prefix!r} is to short, '
                 f'too long or contains invalid characters.')
 
     @classmethod
     def validate_deployment_name(cls, deployment_name):
-        require(Config._is_valid_qualifier(deployment_name),
+        require(cls._is_valid_qualifier(deployment_name),
                 f'Deployment name {deployment_name!r} is to short, '
                 f'too long or contains invalid characters.')
 
@@ -932,9 +932,6 @@ class Config:
             for name, catalog in self.catalogs.items()
             if catalog.is_integration_test_catalog
         }
-
-    def parse_es_index_name(self, index_name: str) -> 'IndexName':
-        return IndexName.parse(index_name)
 
     @property
     def domain_name(self) -> str:
@@ -1567,9 +1564,9 @@ class IndexName:
         ...
         azul.RequirementError: entity_type is either too short, too long or contains invalid characters: '_'
         """
-        Config.validate_prefix(self.prefix)
+        config.validate_prefix(self.prefix)
         require(self.version > 0, f'Version must be at least 1, not {self.version}.')
-        Config.validate_deployment_name(self.deployment)
+        config.validate_deployment_name(self.deployment)
         if self.version == 1:
             require(self.catalog is None,
                     f'Version {self.version} prohibits a catalog name ({self.catalog!r}).')
@@ -1577,7 +1574,7 @@ class IndexName:
             require(self.catalog is not None,
                     f'Version {self.version} requires a catalog name ({self.catalog!r}).')
             config.Catalog.validate_name(self.catalog)
-        Config.validate_entity_type(self.entity_type)
+        config.validate_entity_type(self.entity_type)
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
@@ -1721,7 +1718,7 @@ class IndexName:
         else:
             doc_type = DocumentType.contribution
         entity_type = '_'.join(index_name)
-        Config.validate_entity_type(entity_type)
+        config.validate_entity_type(entity_type)
         self = cls(prefix=prefix,
                    version=version,
                    deployment=deployment,
