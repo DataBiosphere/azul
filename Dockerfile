@@ -1,5 +1,5 @@
 ARG registry
-FROM ${registry}docker.io/library/python:3.9.17-bullseye
+FROM ${registry}docker.io/library/python:3.9.18-bullseye
 
 # Increment the value of this variable to ensure that all installed OS packages
 # are updated.

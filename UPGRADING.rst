@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5299 Keep Python updated
+=========================
+
+Everyone
+~~~~~~~~
+
+Update Python on your developer machines to version 3.9.18.
+
+
 #5518 GitLab updates cause false positive insufficient_data alarms
 ==================================================================
 
