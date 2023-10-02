@@ -938,21 +938,12 @@ class Config:
                       entity_type: str,
                       doc_type: 'DocumentType'
                       ) -> str:
-        return str(IndexName(prefix=self.index_prefix,
-                             version=2,
-                             deployment=self.deployment_stage,
-                             catalog=catalog,
-                             entity_type=entity_type,
-                             doc_type=doc_type))
+        return str(IndexName.create(catalog=catalog,
+                                    entity_type=entity_type,
+                                    doc_type=doc_type))
 
     def parse_es_index_name(self, index_name: str) -> 'IndexName':
-        """
-        Parse the name of an index in the current deployment.
-        """
-        index_name = IndexName.parse(index_name)
-        assert index_name.prefix == self.index_prefix
-        assert index_name.deployment == self.deployment_stage
-        return index_name
+        return IndexName.parse(index_name)
 
     @property
     def domain_name(self) -> str:
@@ -1601,7 +1592,21 @@ class IndexName:
         assert self.catalog is None or '_' not in self.catalog, self.catalog
 
     @classmethod
-    def parse(cls, index_name, expected_prefix=prefix) -> 'IndexName':
+    def create(cls,
+               *,
+               catalog: CatalogName,
+               entity_type: str,
+               doc_type: 'DocumentType'
+               ) -> 'IndexName':
+        return cls(prefix=config.index_prefix,
+                   version=2,
+                   deployment=config.deployment_stage,
+                   catalog=catalog,
+                   entity_type=entity_type,
+                   doc_type=doc_type)
+
+    @classmethod
+    def parse(cls, index_name: str) -> 'IndexName':
         """
         Parse the name of an index from any deployment and any version of Azul.
 
@@ -1637,18 +1642,13 @@ class IndexName:
                   entity_type='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('good_foo_dev', expected_prefix='good') # doctest: +NORMALIZE_WHITESPACE
+        >>> IndexName.parse('good_foo_dev') # doctest: +NORMALIZE_WHITESPACE
         IndexName(prefix='good',
                   version=1,
                   deployment='dev',
                   catalog=None,
                   entity_type='foo',
                   doc_type=<DocumentType.contribution>)
-
-        >>> IndexName.parse('bad_foo_dev')
-        Traceback (most recent call last):
-        ...
-        azul.RequirementError: bad
 
         >>> IndexName.parse('azul_dev')
         Traceback (most recent call last):
@@ -1714,7 +1714,6 @@ class IndexName:
         index_name = index_name.split('_')
         require(len(index_name) > 2, index_name)
         prefix, *index_name = index_name
-        require(prefix == expected_prefix, prefix)
         version = cls.index_name_version_re.fullmatch(index_name[0])
         if version:
             _, *index_name = index_name
@@ -1732,12 +1731,13 @@ class IndexName:
             doc_type = DocumentType.contribution
         entity_type = '_'.join(index_name)
         Config.validate_entity_type(entity_type)
-        return cls(prefix=prefix,
+        self = cls(prefix=prefix,
                    version=version,
                    deployment=deployment,
                    catalog=catalog,
                    entity_type=entity_type,
                    doc_type=doc_type)
+        return self
 
     def __str__(self) -> str:
         """
