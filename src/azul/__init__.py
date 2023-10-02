@@ -81,14 +81,6 @@ else:
 mutable_furl = furl
 
 
-class DocumentType(Enum):
-    contribution = 'contribution'
-    aggregate = 'aggregate'
-
-    def __repr__(self) -> str:
-        return f'<{self.__class__.__name__}.{self._name_}>'
-
-
 class Config:
     """
     See `environment` for documentation of these settings.
@@ -944,7 +936,7 @@ class Config:
     def es_index_name(self,
                       catalog: CatalogName,
                       entity_type: str,
-                      doc_type: DocumentType
+                      doc_type: 'DocumentType'
                       ) -> str:
         return str(IndexName(prefix=self.index_prefix,
                              version=2,
@@ -1489,6 +1481,14 @@ class Config:
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm
+
+
+class DocumentType(Enum):
+    contribution = 'contribution'
+    aggregate = 'aggregate'
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}.{self._name_}>'
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
