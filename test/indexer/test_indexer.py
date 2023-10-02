@@ -281,7 +281,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
         }
         for doc_id in doc_ids:
-            message_re = re.compile(fr'INFO:elasticsearch:PUT .*_aggregate/_doc/{doc_id}.* \[status:201 .*]')
+            message_re = re.compile(fr'INFO:elasticsearch:'
+                                    fr'Got 201 response after [^ ]+ from PUT to '
+                                    fr'.*_aggregate/_doc/{doc_id}.*')
             self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
