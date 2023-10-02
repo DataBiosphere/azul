@@ -753,7 +753,7 @@ class Config:
         return int(self.environ['AZUL_ES_VOLUME_SIZE'])
 
     @property
-    def _index_prefix(self) -> str:
+    def index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
     # Because this property is relatively expensive to produce and frequently
@@ -946,7 +946,7 @@ class Config:
                       entity_type: str,
                       doc_type: DocumentType
                       ) -> str:
-        return str(IndexName(prefix=self._index_prefix,
+        return str(IndexName(prefix=self.index_prefix,
                              version=2,
                              deployment=self.deployment_stage,
                              catalog=catalog,
@@ -958,7 +958,7 @@ class Config:
         Parse the name of an index in the current deployment.
         """
         index_name = IndexName.parse(index_name)
-        assert index_name.prefix == self._index_prefix
+        assert index_name.prefix == self.index_prefix
         assert index_name.deployment == self.deployment_stage
         return index_name
 
@@ -968,7 +968,7 @@ class Config:
         Azul provided that the deployment doesn't override the default index
         name prefix (AZUL_INDEX_PREFIX).
         """
-        return IndexName.parse(index_name, expected_prefix=self._index_prefix)
+        return IndexName.parse(index_name, expected_prefix=self.index_prefix)
 
     @property
     def domain_name(self) -> str:
