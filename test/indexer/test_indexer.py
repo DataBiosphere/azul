@@ -40,6 +40,7 @@ from more_itertools import (
 
 from azul import (
     DocumentType,
+    IndexName,
     RequirementError,
     cached_property,
     config,
@@ -1788,9 +1789,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
 
         # Check that the dynamic mapping has the related_files field disabled
-        index = config.es_index_name(catalog=self.catalog,
+        index = str(IndexName.create(catalog=self.catalog,
                                      entity_type='files',
-                                     doc_type=DocumentType.aggregate)
+                                     doc_type=DocumentType.aggregate))
         mapping = self.es_client.indices.get_mapping(index=index)
         contents = mapping[index]['mappings']['properties']['contents']
         self.assertFalse(contents['properties']['files']['properties']['related_files']['enabled'])

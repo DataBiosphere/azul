@@ -46,6 +46,7 @@ from app_test_case import (
 )
 from azul import (
     DocumentType,
+    IndexName,
     cached_property,
     config,
 )
@@ -151,9 +152,9 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
             }
         }
         # Tests are assumed to only ever run with the azul dev index
-        results = self.es_client.search(index=config.es_index_name(catalog=self.catalog,
+        results = self.es_client.search(index=str(IndexName.create(catalog=self.catalog,
                                                                    entity_type=entity_type,
-                                                                   doc_type=DocumentType.aggregate),
+                                                                   doc_type=DocumentType.aggregate)),
                                         body=body)
         return self._index_service.translate_fields(catalog=self.catalog,
                                                     doc=[results['hits']['hits'][0]['_source']],

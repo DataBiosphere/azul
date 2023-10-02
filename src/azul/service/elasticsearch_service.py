@@ -46,6 +46,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     DocumentType,
+    IndexName,
     cached_property,
     config,
     reject,
@@ -666,6 +667,6 @@ class ElasticsearchService(DocumentService):
         documents for the given entity type in the given catalog.
         """
         return Search(using=self._es_client,
-                      index=config.es_index_name(catalog=catalog,
+                      index=str(IndexName.create(catalog=catalog,
                                                  entity_type=entity_type,
-                                                 doc_type=DocumentType.aggregate))
+                                                 doc_type=DocumentType.aggregate)))

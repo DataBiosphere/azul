@@ -6,7 +6,7 @@ from more_itertools import (
 
 from azul import (
     DocumentType,
-    config,
+    IndexName,
 )
 from azul.es import (
     ESClientFactory,
@@ -68,9 +68,9 @@ class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
             with self.subTest(aggregate=aggregate):
                 def index_name(entity_type):
                     doc_type = DocumentType.aggregate if aggregate else DocumentType.contribution
-                    return config.es_index_name(catalog=self.catalog,
+                    return str(IndexName.create(catalog=self.catalog,
                                                 entity_type=entity_type,
-                                                doc_type=doc_type)
+                                                doc_type=doc_type))
 
                 total_projects = self.es_client.count(index=index_name('projects'))
                 # Three unique projects, six project contributions

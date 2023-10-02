@@ -118,9 +118,9 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
         entity reference. You can use `.with_catalog()` to create one.
         """
         assert isinstance(self.entity, CataloguedEntityReference)
-        return config.es_index_name(catalog=self.entity.catalog,
+        return str(IndexName.create(catalog=self.entity.catalog,
                                     entity_type=self.entity.entity_type,
-                                    doc_type=self.doc_type)
+                                    doc_type=self.doc_type))
 
     @property
     @abstractmethod

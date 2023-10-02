@@ -23,7 +23,6 @@ from elasticsearch.helpers import (
 from azul import (
     CatalogName,
     IndexName,
-    config,
 )
 from azul.indexer import (
     BUNDLE,
@@ -148,9 +147,9 @@ class IndexerTestCase(CatalogTestCase,
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
             index_name = IndexName.parse(hit['_index'])
-            hit['_index'] = config.es_index_name(catalog=self.catalog,
+            hit['_index'] = str(IndexName.create(catalog=self.catalog,
                                                  entity_type=index_name.entity_type,
-                                                 doc_type=index_name.doc_type)
+                                                 doc_type=index_name.doc_type))
         return expected_hits
 
     @classmethod

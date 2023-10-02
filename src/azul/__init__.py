@@ -933,15 +933,6 @@ class Config:
             if catalog.is_integration_test_catalog
         }
 
-    def es_index_name(self,
-                      catalog: CatalogName,
-                      entity_type: str,
-                      doc_type: 'DocumentType'
-                      ) -> str:
-        return str(IndexName.create(catalog=catalog,
-                                    entity_type=entity_type,
-                                    doc_type=doc_type))
-
     def parse_es_index_name(self, index_name: str) -> 'IndexName':
         return IndexName.parse(index_name)
 

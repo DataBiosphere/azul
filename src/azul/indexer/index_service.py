@@ -41,6 +41,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     DocumentType,
+    IndexName,
     cache,
     config,
     freeze,
@@ -167,9 +168,9 @@ class IndexService(DocumentService):
 
     def index_names(self, catalog: CatalogName) -> list[str]:
         return [
-            config.es_index_name(catalog=catalog,
+            str(IndexName.create(catalog=catalog,
                                  entity_type=entity_type,
-                                 doc_type=doc_type)
+                                 doc_type=doc_type))
             for entity_type in self.entity_types(catalog)
             for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ]
@@ -514,9 +515,9 @@ class IndexService(DocumentService):
 
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
-            index = config.es_index_name(catalog=entity.catalog,
+            index = str(IndexName.create(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
-                                         doc_type=DocumentType.contribution)
+                                         doc_type=DocumentType.contribution))
             entity_ids_by_index[index].add(entity.entity_id)
 
         query = {
