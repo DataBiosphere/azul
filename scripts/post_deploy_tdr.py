@@ -45,7 +45,7 @@ def verify_sources():
     assert tdr_catalogs, tdr_catalogs
     futures = []
     all_sources = set()
-    with ThreadPoolExecutor(max_workers=16) as tpe:
+    with ThreadPoolExecutor(max_workers=8) as tpe:
         for catalog in tdr_catalogs:
             catalog_sources = config.sources(catalog)
             for source in catalog_sources - all_sources:
