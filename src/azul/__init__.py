@@ -954,14 +954,6 @@ class Config:
         assert index_name.deployment == self.deployment_stage
         return index_name
 
-    def parse_foreign_es_index_name(self, index_name) -> 'IndexName':
-        """
-        Parse the name of an index in any deployment and from any version of
-        Azul provided that the deployment doesn't override the default index
-        name prefix (AZUL_INDEX_PREFIX).
-        """
-        return IndexName.parse(index_name, expected_prefix=self.index_prefix)
-
     @property
     def domain_name(self) -> str:
         return self.environ['AZUL_DOMAIN_NAME']
