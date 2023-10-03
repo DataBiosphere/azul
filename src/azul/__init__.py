@@ -1450,6 +1450,8 @@ class Config:
         'linux/amd64'
     ]
 
+    waf_rate_rule_name = 'RateRule'
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 
