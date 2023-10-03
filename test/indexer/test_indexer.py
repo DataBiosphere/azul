@@ -214,6 +214,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
     def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
         index_name = IndexName.parse(hit['_index'])
+        index_name.validate()
         return index_name.entity_type, index_name.doc_type
 
     def _filter_hits(self,

@@ -121,6 +121,7 @@ class IndexService(DocumentService):
     def settings(self, index_name) -> JSON:
 
         index_name = IndexName.parse(index_name)
+        index_name.validate()
         aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
         assert catalog is not None, catalog

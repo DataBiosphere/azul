@@ -221,6 +221,12 @@ class IndexName:
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
 
+    def validate(self):
+        require(self.deployment == config.deployment_stage,
+                'Index name does not use current deployment', self, config.deployment_stage)
+        require(self.prefix == config.index_prefix,
+                'Index name has invalid prefix', self, config.index_prefix)
+
     @classmethod
     def create(cls,
                *,
@@ -469,6 +475,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
                  hit: JSON
                  ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         index_name = IndexName.parse(hit['_index'])
+        index_name.validate()
         document_id = hit['_id']
         if index_name.doc_type is DocumentType.contribution:
             subcls = ContributionCoordinates

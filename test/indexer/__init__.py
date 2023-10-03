@@ -149,9 +149,10 @@ class IndexerTestCase(CatalogTestCase,
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
             index_name = IndexName.parse(hit['_index'])
-            hit['_index'] = str(IndexName.create(catalog=self.catalog,
-                                                 entity_type=index_name.entity_type,
-                                                 doc_type=index_name.doc_type))
+            index_name = IndexName.create(catalog=self.catalog,
+                                          entity_type=index_name.entity_type,
+                                          doc_type=index_name.doc_type)
+            hit['_index'] = str(index_name)
         return expected_hits
 
     @classmethod
