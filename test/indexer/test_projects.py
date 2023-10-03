@@ -4,10 +4,6 @@ from more_itertools import (
     one,
 )
 
-from azul import (
-    DocumentType,
-    IndexName,
-)
 from azul.es import (
     ESClientFactory,
 )
@@ -15,6 +11,8 @@ from azul.indexer.document import (
     AggregateCoordinates,
     CataloguedEntityReference,
     ContributionCoordinates,
+    DocumentType,
+    IndexName,
 )
 from azul.logging import (
     configure_test_logging,

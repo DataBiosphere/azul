@@ -31,8 +31,6 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
-    DocumentType,
-    IndexName,
     JSON,
     cached_property,
 )
@@ -40,6 +38,10 @@ from azul.indexer import (
     Bundle,
     BundleUUID,
     SourcedBundleFQID,
+)
+from azul.indexer.document import (
+    DocumentType,
+    IndexName,
 )
 from azul.logging import (
     configure_test_logging,

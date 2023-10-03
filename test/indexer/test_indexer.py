@@ -39,8 +39,6 @@ from more_itertools import (
 )
 
 from azul import (
-    DocumentType,
-    IndexName,
     RequirementError,
     cached_property,
     config,
@@ -56,8 +54,10 @@ from azul.indexer.document import (
     CataloguedEntityReference,
     Contribution,
     ContributionCoordinates,
+    DocumentType,
     EntityReference,
     EntityType,
+    IndexName,
     null_bool,
     null_int,
     null_str,

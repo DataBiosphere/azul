@@ -22,13 +22,15 @@ from elasticsearch.helpers import (
 
 from azul import (
     CatalogName,
-    IndexName,
 )
 from azul.indexer import (
     BUNDLE,
     Bundle,
     BundleFQID,
     SourcedBundleFQID,
+)
+from azul.indexer.document import (
+    IndexName,
 )
 from azul.indexer.index_service import (
     IndexService,

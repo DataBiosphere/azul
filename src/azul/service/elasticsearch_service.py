@@ -45,8 +45,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    DocumentType,
-    IndexName,
     cached_property,
     config,
     reject,
@@ -56,6 +54,8 @@ from azul.es import (
     ESClientFactory,
 )
 from azul.indexer.document import (
+    DocumentType,
+    IndexName,
     Nested,
 )
 from azul.indexer.document_service import (

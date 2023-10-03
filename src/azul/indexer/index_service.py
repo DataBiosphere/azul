@@ -40,8 +40,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    DocumentType,
-    IndexName,
     cache,
     config,
     freeze,
@@ -72,9 +70,11 @@ from azul.indexer.document import (
     Contribution,
     Document,
     DocumentCoordinates,
+    DocumentType,
     EntityID,
     EntityReference,
     EntityType,
+    IndexName,
     VersionType,
 )
 from azul.indexer.document_service import (

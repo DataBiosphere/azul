@@ -45,8 +45,6 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
-    DocumentType,
-    IndexName,
     cached_property,
     config,
 )
@@ -59,6 +57,8 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
+    DocumentType,
+    IndexName,
     null_str,
 )
 from azul.indexer.index_service import (
