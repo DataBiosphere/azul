@@ -22,14 +22,15 @@ from elasticsearch.helpers import (
 
 from azul import (
     CatalogName,
-    IndexName,
-    config,
 )
 from azul.indexer import (
     BUNDLE,
     Bundle,
     BundleFQID,
     SourcedBundleFQID,
+)
+from azul.indexer.document import (
+    IndexName,
 )
 from azul.indexer.index_service import (
     IndexService,
@@ -148,9 +149,10 @@ class IndexerTestCase(CatalogTestCase,
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
             index_name = IndexName.parse(hit['_index'])
-            hit['_index'] = config.es_index_name(catalog=self.catalog,
-                                                 entity_type=index_name.entity_type,
-                                                 aggregate=index_name.aggregate)
+            index_name = IndexName.create(catalog=self.catalog,
+                                          entity_type=index_name.entity_type,
+                                          doc_type=index_name.doc_type)
+            hit['_index'] = str(index_name)
         return expected_hits
 
     @classmethod

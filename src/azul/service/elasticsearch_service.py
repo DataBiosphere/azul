@@ -54,6 +54,8 @@ from azul.es import (
     ESClientFactory,
 )
 from azul.indexer.document import (
+    DocumentType,
+    IndexName,
     Nested,
 )
 from azul.indexer.document_service import (
@@ -665,6 +667,6 @@ class ElasticsearchService(DocumentService):
         documents for the given entity type in the given catalog.
         """
         return Search(using=self._es_client,
-                      index=config.es_index_name(catalog=catalog,
+                      index=str(IndexName.create(catalog=catalog,
                                                  entity_type=entity_type,
-                                                 aggregate=True))
+                                                 doc_type=DocumentType.aggregate)))

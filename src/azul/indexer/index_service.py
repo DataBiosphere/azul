@@ -70,9 +70,11 @@ from azul.indexer.document import (
     Contribution,
     Document,
     DocumentCoordinates,
+    DocumentType,
     EntityID,
     EntityReference,
     EntityType,
+    IndexName,
     VersionType,
 )
 from azul.indexer.document_service import (
@@ -118,8 +120,9 @@ class IndexService(DocumentService):
 
     def settings(self, index_name) -> JSON:
 
-        index_name = config.parse_es_index_name(index_name)
-        aggregate = index_name.aggregate
+        index_name = IndexName.parse(index_name)
+        index_name.validate()
+        aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
         assert catalog is not None, catalog
         if config.catalogs[catalog].is_integration_test_catalog:
@@ -166,11 +169,11 @@ class IndexService(DocumentService):
 
     def index_names(self, catalog: CatalogName) -> list[str]:
         return [
-            config.es_index_name(catalog=catalog,
+            str(IndexName.create(catalog=catalog,
                                  entity_type=entity_type,
-                                 aggregate=aggregate)
+                                 doc_type=doc_type))
             for entity_type in self.entity_types(catalog)
-            for aggregate in (False, True)
+            for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ]
 
     def fetch_bundle(self,
@@ -513,9 +516,9 @@ class IndexService(DocumentService):
 
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
-            index = config.es_index_name(catalog=entity.catalog,
+            index = str(IndexName.create(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
-                                         aggregate=False)
+                                         doc_type=DocumentType.contribution))
             entity_ids_by_index[index].add(entity.entity_id)
 
         query = {
