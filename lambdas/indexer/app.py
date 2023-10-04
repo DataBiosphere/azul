@@ -38,7 +38,7 @@ from azul.logging import (
     configure_app_logging,
 )
 from azul.openapi import (
-    format_description,
+    format_description as fd,
     params,
     schema,
 )
@@ -55,7 +55,7 @@ spec = {
     'openapi': '3.0.1',
     'info': {
         'title': config.indexer_name,
-        'description': format_description('''
+        'description': fd('''
             This is the internal API for Azul's indexer component.
         '''),
         # This property should be updated in any PR connected to an issue
@@ -218,7 +218,7 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     method_spec={
         'tags': ['Indexing'],
         'summary': 'Notify the indexer to perform an action on a bundle',
-        'description': format_description('''
+        'description': fd('''
             Queue a bundle for addition to or deletion from the index.
 
             The request must be authenticated using HMAC via the ``signature``

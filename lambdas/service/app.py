@@ -69,7 +69,7 @@ from azul.logging import (
 )
 from azul.openapi import (
     application_json,
-    format_description,
+    format_description as fd,
     params,
     responses,
     schema,
@@ -124,7 +124,7 @@ spec = {
     'openapi': '3.0.1',
     'info': {
         'title': config.service_name,
-        'description': format_description(f'''
+        'description': fd(f'''
             # Overview
 
             Azul is a REST web service for querying metadata associated with
@@ -227,38 +227,38 @@ spec = {
     'tags': [
         {
             'name': 'Index',
-            'description': format_description('''
+            'description': fd('''
                 Query the indices for entities of interest
             ''')
         },
         {
             'name': 'Manifests',
-            'description': format_description('''
+            'description': fd('''
                 Complete listing of files matching a given filter in TSV and
                 other formats
             ''')
         },
         {
             'name': 'Repository',
-            'description': format_description('''
+            'description': fd('''
                 Access to data files in the underlying repository
             ''')
         },
         {
             'name': 'DSS',
-            'description': format_description('''
+            'description': fd('''
                 Access to files maintained in the Data Store
             ''')
         },
         {
             'name': 'DRS',
-            'description': format_description('''
+            'description': fd('''
                 DRS-compliant proxy of the underlying repository
             ''')
         },
         {
             'name': 'Auxiliary',
-            'description': format_description('''
+            'description': fd('''
                 Describes various aspects of the Azul service
             ''')
         }
@@ -830,7 +830,7 @@ def get_integrations():
         'tags': ['Index'],
         'responses': {
             '200': {
-                'description': format_description('''
+                'description': fd('''
                     The name of the default catalog and a list of all available
                     catalogs. For each catalog, the response includes the name
                     of the atlas the catalog belongs to, a flag indicating
@@ -906,7 +906,7 @@ filters_param_spec = params.query(
             for field in app.fields
         }
     ))),
-    description=format_description('''
+    description=fd('''
         Criteria to filter entities from the search results.
 
         Each filter consists of a field name, a relation (relational operator),
@@ -980,7 +980,7 @@ def repository_search_params_spec():
             params.query(
                 param,
                 schema.optional(str),
-                description=format_description('''
+                description=fd('''
                     Use the `next` and `previous` properties of the
                     `pagination` response element to navigate between pages.
                 '''),
@@ -1003,7 +1003,7 @@ def repository_search_spec():
         'parameters': repository_search_params_spec(),
         'responses': {
             '200': {
-                'description': format_description(f'''
+                'description': fd(f'''
                     Paginated list of entities that meet the search criteria
                     ("hits"). The structure of these hits is documented under
                     the [corresponding endpoint for a specific
@@ -1041,7 +1041,7 @@ def repository_id_spec():
         ],
         'responses': {
             '200': {
-                'description': format_description(f'''
+                'description': fd(f'''
                     This response describes a single entity. To search the index
                     for multiple entities, see the [corresponding search
                     endpoint]({search_spec_link}).
@@ -1076,7 +1076,7 @@ def repository_head_spec(for_summary: bool = False):
         'tags': ['Index'],
         'responses': {
             '200': {
-                'description': format_description(f'''
+                'description': fd(f'''
                     The HEAD method can be used to test whether an index is
                     operational, or to check the validity of query parameters
                     for the [GET method]({search_spec_link}).
@@ -1140,7 +1140,7 @@ def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON
             '200': {
                 # FIXME: Add 'projects' to API documentation & schema
                 #        https://github.com/DataBiosphere/azul/issues/3917
-                'description': format_description('''
+                'description': fd('''
                     Counts the total number and total size in bytes of assorted
                     entities, subject to the provided filters.
 
@@ -1275,7 +1275,7 @@ def manifest_path_spec(*, fetch: bool):
     method_spec={
         'tags': ['Manifests'],
         'summary': 'Request a download link to a manifest file and redirect',
-        'description': format_description('''
+        'description': fd('''
             Initiate and check status of a manifest generation job, returning
             either a 301 response redirecting to a URL to re-check the status of
             the manifest generation or a 302 response redirecting to the
@@ -1288,21 +1288,21 @@ def manifest_path_spec(*, fetch: bool):
             '''),
         'responses': {
             '301': {
-                'description': format_description('''
+                'description': fd('''
                     The manifest generation has been started or is ongoing. The
                     response is a redirect back to this endpoint, so the client
                     should expect a subsequent response of the same kind.
                 '''),
                 'headers': {
                     'Location': {
-                        'description': format_description('''
+                        'description': fd('''
                             URL to recheck the status of the manifest
                             generation.
                         '''),
                         'schema': {'type': 'string', 'format': 'url'}
                     },
                     'Retry-After': {
-                        'description': format_description('''
+                        'description': fd('''
                             Recommended number of seconds to wait before
                             requesting the URL specified in the Location header.
                         '''),
@@ -1311,18 +1311,18 @@ def manifest_path_spec(*, fetch: bool):
                 }
             },
             '302': {
-                'description': format_description('''
+                'description': fd('''
                     The manifest generation is complete and ready for download.
                 '''),
                 'headers': {
                     'Location': {
-                        'description': format_description('''
+                        'description': fd('''
                             URL that will yield the actual manifest file.
                         '''),
                         'schema': {'type': 'string', 'format': 'url'}
                     },
                     'Retry-After': {
-                        'description': format_description('''
+                        'description': fd('''
                             Recommended number of seconds to wait before
                             requesting the URL specified in the `Location`
                             header.
@@ -1332,7 +1332,7 @@ def manifest_path_spec(*, fetch: bool):
                 }
             },
             '410': {
-                'description': format_description('''
+                'description': fd('''
                     The manifest associated with the `objectKey` in this request
                     has expired. Request a new manifest.
                 ''')
@@ -1358,14 +1358,14 @@ command_line_spec = schema.object(**{key: str for key in keys})
     method_spec={
         'tags': ['Manifests'],
         'summary': 'Request a download link to a manifest file and check status',
-        'description': format_description('''
+        'description': fd('''
             Initiate a manifest generation or check the status of an already
             ongoing generation, returning a 200 response with simulated HTTP
             headers in the body.
         '''),
         'responses': {
             '200': {
-                'description': format_description('''
+                'description': fd('''
                     Manifest generation with status report, emulating the
                     response code and headers of the `/manifest/files` endpoint.
                     Note that the actual HTTP response will have status 200
@@ -1443,7 +1443,7 @@ file_fqid_parameters_spec = [
     params.query(
         'version',
         schema.optional(str),
-        description=format_description('''
+        description=fd('''
             The version of the file to be returned. File versions are opaque
             strings with only one documented property: they can be
             lexicographically compared with each other in order to determine
@@ -1461,7 +1461,7 @@ repository_files_spec = {
         params.query(
             'fileName',
             schema.optional(str),
-            description=format_description('''
+            description=fd('''
                 The desired name of the file. The given value will be included
                 in the Content-Disposition header of the response. If absent, a
                 best effort to determine the file name from metadata will be
@@ -1471,7 +1471,7 @@ repository_files_spec = {
         params.query(
             'wait',
             schema.optional(int),
-            description=format_description('''
+            description=fd('''
                 If 0, the client is responsible for honoring the waiting period
                 specified in the Retry-After response header. If 1, the server
                 will delay the response in order to consume as much of that
@@ -1486,7 +1486,7 @@ repository_files_spec = {
         params.query(
             'replica',
             schema.optional(str),
-            description=format_description('''
+            description=fd('''
                 If the underlying repository offers multiple replicas of the
                 requested file, use the specified replica. Otherwise, this
                 parameter is ignored. If absent, the only replica — for
@@ -1518,7 +1518,7 @@ repository_files_spec = {
         **repository_files_spec,
         'summary': 'Redirect to a URL for downloading a given data file from the '
                    'underlying repository',
-        'description': format_description('''
+        'description': fd('''
             This endpoint is not suitable for interactive use via the Swagger
             UI. Please use the [/fetch endpoint][1] instead.
 
@@ -1526,18 +1526,18 @@ repository_files_spec = {
         '''),
         'responses': {
             '301': {
-                'description': format_description('''
+                'description': fd('''
                     A URL to the given file is still being prepared. Retry by
                     waiting the number of seconds specified in the `Retry-After`
                     header of the response and the requesting the URL specified
                     in the `Location` header.
                 '''),
                 'headers': {
-                    'Location': responses.header(str, description=format_description('''
+                    'Location': responses.header(str, description=fd('''
                         A URL pointing back at this endpoint, potentially with
                         different or additional request parameters.
                     ''')),
-                    'Retry-After': responses.header(int, description=format_description('''
+                    'Retry-After': responses.header(int, description=fd('''
                         Recommended number of seconds to wait before requesting
                         the URL specified in the `Location` header. The response
                         may carry this header even if server-side waiting was
@@ -1546,15 +1546,15 @@ repository_files_spec = {
                 }
             },
             '302': {
-                'description': format_description('''
+                'description': fd('''
                     The file can be downloaded from the URL returned in the
                     `Location` header.
                 '''),
                 'headers': {
-                    'Location': responses.header(str, description=format_description('''
+                    'Location': responses.header(str, description=fd('''
                             A URL that will yield the actual content of the file.
                     ''')),
-                    'Content-Disposition': responses.header(str, description=format_description('''
+                    'Content-Disposition': responses.header(str, description=fd('''
                         Set to a value that makes user agents download the file
                         instead of rendering it, suggesting a meaningful name
                         for the downloaded file stored on the user's file
@@ -1586,7 +1586,7 @@ def repository_files(file_uuid: str) -> Response:
         'summary': 'Request a URL for downloading a given data file',
         'responses': {
             '200': {
-                'description': format_description(f'''
+                'description': fd(f'''
                     Emulates the response code and headers of
                     {one(repository_files.path)} while bypassing the default
                     user agent behavior. Note that the status code of a
@@ -1673,7 +1673,7 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
         'parameters': [catalog_param_spec],
         'responses': {
             '200': {
-                'description': format_description('''
+                'description': fd('''
                     List the sources the currently authenticated user is
                     authorized to access in the underlying data repository.
                 '''),
@@ -1702,7 +1702,7 @@ def hash_url(url):
     return base64.urlsafe_b64encode(url_hash).decode()
 
 
-drs_spec_description = format_description('''
+drs_spec_description = fd('''
     This is a partial implementation of the [DRS 1.0.0 spec][1]. Not all
     features are implemented. This endpoint acts as a DRS-compliant proxy for
     accessing files in the underlying repository.
@@ -1722,14 +1722,14 @@ drs_spec_description = format_description('''
     method_spec={
         'summary': 'Get file DRS object',
         'tags': ['DRS'],
-        'description': format_description('''
+        'description': fd('''
             This endpoint returns object metadata, and a list of access methods
             that can be used to fetch object bytes.
         ''') + drs_spec_description,
         'parameters': file_fqid_parameters_spec,
         'responses': {
             '200': {
-                'description': format_description(
+                'description': fd(
                     '''
                     A DRS object is returned. Two [`AccessMethod`s][1] are
                     included:
@@ -1769,7 +1769,7 @@ def get_data_object(file_uuid):
     cors=True,
     method_spec={
         'summary': 'Get a file with an access ID',
-        'description': format_description('''
+        'description': fd('''
             This endpoint returns a URL that can be used to fetch the bytes of a
             DRS object.
 
@@ -1786,19 +1786,19 @@ def get_data_object(file_uuid):
         ],
         'responses': {
             '202': {
-                'description': format_description('''
+                'description': fd('''
                     This response is issued if the object is not yet ready.
                     Respect the `Retry-After` header, then try again.
                 '''),
                 'headers': {
-                    'Retry-After': responses.header(str, description=format_description('''
+                    'Retry-After': responses.header(str, description=fd('''
                         Recommended number of seconds to wait before requesting
                         the URL specified in the Location header.
                     '''))
                 }
             },
             '200': {
-                'description': format_description('''
+                'description': fd('''
                     The object is ready. The URL is in the response object.
                 '''),
                 **responses.json_content(schema.object(url=str))
