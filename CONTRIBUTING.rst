@@ -902,6 +902,17 @@ Commit title tags
   - ``A``: the commit modifies the Azul service API in a way that is likely to
     break existing clients (changing or removing functionality)
 
+  - ``p``: the commit only partially addresses the issues it references. A
+    commit referencing more than one issue must not resolve some of those issues
+    partially and others completely. In other words, the ``p`` tag applies
+    uniformly to all referenced issues. Since merge commits from feature
+    branches represent a combination of individual commits, this rule prevents
+    the merge commit from mentioning all issues referenced by those individual
+    commits. A merge commit title only references the connected issues, and a
+    ``p`` tag in such a title applies to all of them uniformly. Merge commits
+    for promotions, backports, GitLab updates and hotfixes don't mention the
+    ``p`` tag in their titles.
+
 * Tags must appear in a title in the order they are defined above, as in
   ``[u r R 1/2]``. This ensures that more consequential tags appear earlier.
 

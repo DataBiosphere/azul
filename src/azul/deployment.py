@@ -55,6 +55,9 @@ if TYPE_CHECKING:
     from mypy_boto3_s3 import (
         S3Client,
     )
+    from mypy_boto3_stepfunctions import (
+        SFNClient,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -173,7 +176,7 @@ class AWS:
         return self.client('es')
 
     @property
-    def stepfunctions(self):
+    def stepfunctions(self) -> 'SFNClient':
         return self.client('stepfunctions')
 
     @property

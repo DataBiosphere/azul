@@ -237,11 +237,22 @@ def main():
                 'type': 'cli',
                 'content': f'PR description links to connected {t.issues}'
             }),
-            iif(t is T.default, {
-                'type': 'cli',
-                'content': 'Added `partial` label to PR',
-                'alt': 'or this PR completely resolves all connected issues'
-            }),
+            *iif(t is T.default, [
+                {
+                    'type': 'cli',
+                    'content': 'Added `p` tag to titles of partial commits'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'Added `partial` label to PR',
+                    'alt': 'or this PR completely resolves all connected issues'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'All connected issues are resolved partially',
+                    'alt': 'or this PR does not have the `partial` label'
+                }
+            ]),
             iif(t is T.default, {
                 'type': 'p',
                 'content': '<sup>1</sup> when the issue title describes a problem, the corresponding PR title is '
@@ -592,7 +603,10 @@ def main():
             },
             {
                 'type': 'cli',
-                'content': 'Added commit title tags to merge commit title'
+                'content': 'Collected commit title tags in merge commit title',
+                'alt': iif(t is T.default,
+                           'but only include `p` if the PR is labeled `partial`',
+                           'but exclude any `p` tags')
             },
             iif(t in (T.default, T.gitlab, T.hotfix), {
                 'type': 'cli',

@@ -21,7 +21,9 @@ Connected issues: #0000
 - [ ] For each connected issue, there is at least one commit whose title references that issue
 - [ ] PR is connected to all connected issues via ZenHub
 - [ ] PR description links to connected issues
+- [ ] Added `p` tag to titles of partial commits
 - [ ] Added `partial` label to PR <sub>or this PR completely resolves all connected issues</sub>
+- [ ] All connected issues are resolved partially <sub>or this PR does not have the `partial` label</sub>
 
 <sup>1</sup> when the issue title describes a problem, the corresponding PR
 title is `Fix: ` followed by the issue title
@@ -128,7 +130,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Checked for failures in `hammerbox` <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
-- [ ] Added commit title tags to merge commit title
+- [ ] Collected commit title tags in merge commit title <sub>but only include `p` if the PR is labeled `partial`</sub>
 - [ ] Moved connected issues to Merged column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
