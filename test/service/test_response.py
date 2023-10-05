@@ -2802,7 +2802,8 @@ class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
                 }
             ),
             'catalog': self.catalog,
-            'size': 500
+            'size': min(sorting.max_page_size
+                        for sorting in self.app_module.app.metadata_plugin.exposed_indices.values())
         }
 
     def test_file_source_facet(self):

@@ -2148,10 +2148,9 @@
                             "type": "integer",
                             "format": "int64",
                             "minimum": 1,
-                            "maximum": 1000,
                             "default": 10
                         },
-                        "description": "The number of hits included per page."
+                        "description": "\nThe number of hits included per page. The maximum size allowed\ndepends on the catalog and entity type.\n"
                     },
                     {
                         "name": "sort",
@@ -3542,10 +3541,9 @@
                             "type": "integer",
                             "format": "int64",
                             "minimum": 1,
-                            "maximum": 1000,
                             "default": 10
                         },
-                        "description": "The number of hits included per page."
+                        "description": "\nThe number of hits included per page. The maximum size allowed\ndepends on the catalog and entity type.\n"
                     },
                     {
                         "name": "sort",
