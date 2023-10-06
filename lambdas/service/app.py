@@ -102,6 +102,7 @@ from azul.service.manifest_controller import (
 )
 from azul.service.manifest_service import (
     CurlManifestGenerator,
+    ManifestUrlFunc,
 )
 from azul.service.repository_controller import (
     RepositoryController,
@@ -314,9 +315,10 @@ class ServiceApp(AzulChaliceApp):
 
     @cached_property
     def manifest_controller(self) -> ManifestController:
+        manifest_url_func: ManifestUrlFunc = self.manifest_url
         return self._service_controller(ManifestController,
                                         step_function_lambda_name=generate_manifest.name,
-                                        manifest_url_func=self.manifest_url)
+                                        manifest_url_func=manifest_url_func)
 
     def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
         return self._controller(controller_cls, file_url_func=self.file_url, **kwargs)
@@ -421,16 +423,13 @@ class ServiceApp(AzulChaliceApp):
     def manifest_url(self,
                      *,
                      fetch: bool,
-                     catalog: CatalogName,
                      format_: ManifestFormat,
                      **params: str
                      ) -> mutable_furl:
         view_function = fetch_file_manifest if fetch else file_manifest
         path = one(view_function.path)
         url = self.base_url.add(path=path)
-        return url.set(args=dict(catalog=catalog,
-                                 format=format_.value,
-                                 **params))
+        return url.set(args=dict(format=format_.value, **params))
 
 
 app = ServiceApp()

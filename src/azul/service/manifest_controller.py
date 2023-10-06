@@ -1,7 +1,6 @@
 from collections.abc import (
     Mapping,
 )
-import json
 from typing import (
     Optional,
     get_origin,
@@ -126,17 +125,11 @@ class ManifestController(SourceController):
                     }
                     token = self.async_service.start_generation(state)
             else:
-                if authentication is None:
-                    filters = self.get_filters(catalog, authentication, query_params.get('filters'))
-                else:
+                if authentication is not None:
                     raise BadRequestError("Must omit authentication when passing 'objectKey'")
                 try:
-                    manifest = self.service.get_cached_manifest_with_object_key(
-                        format_=format_,
-                        catalog=catalog,
-                        filters=filters,
-                        object_key=object_key
-                    )
+                    manifest = self.service.get_cached_manifest_with_object_key(format_=format_,
+                                                                                object_key=object_key)
                 except CachedManifestNotFound:
                     raise GoneError('The requested manifest has expired, '
                                     'please request a new one')
@@ -186,9 +179,7 @@ class ManifestController(SourceController):
                 # plugin does not support cURL-format manifests.
                 assert not config.is_anvil_enabled(catalog)
                 url = self.manifest_url_func(fetch=False,
-                                             catalog=manifest.catalog,
                                              format_=manifest.format_,
-                                             filters=json.dumps(manifest.filters.explicit),
                                              objectKey=manifest.object_key)
             else:
                 url = furl(manifest.location)

@@ -1355,15 +1355,16 @@ class TestManifestCache(ManifestTestCase):
         filters = self._filters({'project': {'is': ['Single of human pancreas']}})
         old_object_keys = {}
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
+
+        def manifest_generator(format_: ManifestFormat) -> ManifestGenerator:
+            generator_cls = ManifestGenerator.cls_for_format(format_)
+            return generator_cls(service, self.catalog, filters)
+
         for format_ in ManifestFormat:
             with self.subTest('indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its compact manifest cached,
                 # a matching object_key is generated ...
-                generator = ManifestGenerator.for_format(format_=format_,
-                                                         service=service,
-                                                         catalog=self.catalog,
-                                                         filters=filters)
-
+                generator = manifest_generator(format_)
                 old_bundle_object_key = generator.compute_object_key()
                 # and should remain valid ...
                 self.assertEqual(old_bundle_object_key, generator.compute_object_key())
@@ -1377,10 +1378,7 @@ class TestManifestCache(ManifestTestCase):
         new_object_keys = {}
         for format_ in ManifestFormat:
             with self.subTest('indexing second bundle', format_=format_):
-                generator = ManifestGenerator.for_format(format_=format_,
-                                                         service=service,
-                                                         catalog=self.catalog,
-                                                         filters=filters)
+                generator = manifest_generator(format_)
                 new_bundle_object_key = generator.compute_object_key()
                 # ... invalidating the cached object previously used for the same filter.
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
@@ -1393,10 +1391,7 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(other_fqid)
         for format_ in ManifestFormat:
             with self.subTest('indexing unrelated bundle', format_=format_):
-                generator = ManifestGenerator.for_format(format_=format_,
-                                                         service=service,
-                                                         catalog=self.catalog,
-                                                         filters=filters)
+                generator = manifest_generator(format_)
                 latest_bundle_object_key = generator.compute_object_key()
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
@@ -1418,8 +1413,6 @@ class TestManifestResponse(ManifestTestCase):
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format_=format_,
-                                        catalog=self.catalog,
-                                        filters=self._filters({}),
                                         object_key=object_key,
                                         file_name=default_file_name)
                     get_cached_manifest.return_value = None, manifest
@@ -1428,7 +1421,8 @@ class TestManifestResponse(ManifestTestCase):
                                 filters='{}')
                     request_url = self.base_url.set(path='/manifest/files', args=args)
                     redirect_url = self.base_url.set(path='/manifest/files',
-                                                     args=dict(args, objectKey=object_key))
+                                                     args=dict(format=format_.value,
+                                                               objectKey=object_key))
                     expect_redirect = fetch and format_ is ManifestFormat.curl
                     expected_url = redirect_url if expect_redirect else object_url
                     if format_ is ManifestFormat.curl:

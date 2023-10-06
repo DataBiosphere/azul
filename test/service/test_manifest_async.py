@@ -204,8 +204,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format_=format_,
-                                        catalog=self.catalog,
-                                        filters=filters,
                                         object_key=object_key,
                                         file_name=file_name)
                     url = self.base_url.set(path=path, args=params)
