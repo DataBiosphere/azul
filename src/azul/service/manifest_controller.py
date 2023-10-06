@@ -97,7 +97,6 @@ class ManifestController(SourceController):
 
     def get_manifest_async(self,
                            *,
-                           self_url: furl,
                            catalog: CatalogName,
                            query_params: Mapping[str, str],
                            fetch: bool,
@@ -150,7 +149,7 @@ class ManifestController(SourceController):
                     assert False, token_or_state
 
         if manifest is None:
-            location = furl(url=self_url, args={'token': token.encode()})
+            location = self.manifest_url_func(fetch=fetch, token=token.encode())
             body = {
                 'Status': 301,
                 'Location': str(location),
@@ -179,7 +178,7 @@ class ManifestController(SourceController):
                 # plugin does not support cURL-format manifests.
                 assert not config.is_anvil_enabled(catalog)
                 url = self.manifest_url_func(fetch=False,
-                                             format_=manifest.format_,
+                                             format=manifest.format_.value,
                                              objectKey=manifest.object_key)
             else:
                 url = furl(manifest.location)

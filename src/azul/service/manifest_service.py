@@ -139,7 +139,6 @@ class ManifestUrlFunc(Protocol):
     def __call__(self,
                  *,
                  fetch: bool = True,
-                 format_: ManifestFormat,
                  **params: str
                  ) -> mutable_furl: ...
 

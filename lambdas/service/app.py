@@ -423,13 +423,12 @@ class ServiceApp(AzulChaliceApp):
     def manifest_url(self,
                      *,
                      fetch: bool,
-                     format_: ManifestFormat,
                      **params: str
                      ) -> mutable_furl:
         view_function = fetch_file_manifest if fetch else file_manifest
         path = one(view_function.path)
         url = self.base_url.add(path=path)
-        return url.set(args=dict(format=format_.value, **params))
+        return url.set(args=params)
 
 
 app = ServiceApp()
@@ -1418,8 +1417,7 @@ def _file_manifest(fetch: bool):
     default_format = app.metadata_plugin.manifest_formats[0].value
     query_params.setdefault('format', default_format)
     validate_filters(query_params['filters'])
-    return app.manifest_controller.get_manifest_async(self_url=app.self_url,
-                                                      catalog=catalog,
+    return app.manifest_controller.get_manifest_async(catalog=catalog,
                                                       query_params=query_params,
                                                       fetch=fetch,
                                                       authentication=request.authentication)
