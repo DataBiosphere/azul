@@ -359,31 +359,17 @@ class ManifestService(ElasticsearchService):
         generator = generator_cls(self, catalog, filters)
         if object_key is None:
             object_key = generator.compute_object_key()
-        file_name = self._get_cached_manifest_file_name(generator_cls, object_key)
-        if file_name is None:
+        try:
+            return self._get_cached_manifest(generator_cls, object_key)
+        except CachedManifestNotFound:
             partition = generator.write(object_key, partition)
             if partition.is_last:
-                file_name = partition.file_name
-                was_cached = False
+                return self._presign_manifest(generator_cls=generator_cls,
+                                              object_key=object_key,
+                                              file_name=partition.file_name,
+                                              was_cached=False)
             else:
                 return partition
-        else:
-            was_cached = True
-        presigned_url = self._presign_url(generator_cls, object_key, file_name)
-        return Manifest(location=presigned_url,
-                        was_cached=was_cached,
-                        format_=format_,
-                        object_key=object_key,
-                        file_name=file_name)
-
-    def _presign_url(self,
-                     generator_cls: Type['ManifestGenerator'],
-                     object_key: str,
-                     file_name: Optional[str]) -> str:
-        if not generator_cls.use_content_disposition_file_name:
-            file_name = None
-        return self.storage_service.get_presigned_url(object_key,
-                                                      file_name=file_name)
 
     def get_cached_manifest(self,
                             format_: ManifestFormat,
@@ -393,32 +379,45 @@ class ManifestService(ElasticsearchService):
         generator_cls = ManifestGenerator.cls_for_format(format_)
         generator = generator_cls(self, catalog, filters)
         object_key = generator.compute_object_key()
-        file_name = self._get_cached_manifest_file_name(generator_cls, object_key)
-        if file_name is None:
+        try:
+            return object_key, self._get_cached_manifest(generator_cls, object_key)
+        except CachedManifestNotFound:
             return object_key, None
-        else:
-            presigned_url = self._presign_url(generator_cls, object_key, file_name)
-            return object_key, Manifest(location=presigned_url,
-                                        was_cached=True,
-                                        format_=format_,
-                                        object_key=object_key,
-                                        file_name=file_name)
 
     def get_cached_manifest_with_object_key(self,
                                             format_: ManifestFormat,
                                             object_key: str
                                             ) -> Manifest:
         generator_cls = ManifestGenerator.cls_for_format(format_)
+        return self._get_cached_manifest(generator_cls, object_key)
+
+    def _get_cached_manifest(self,
+                             generator_cls: Type['ManifestGenerator'],
+                             object_key: str
+                             ) -> Manifest:
         file_name = self._get_cached_manifest_file_name(generator_cls, object_key)
         if file_name is None:
             raise CachedManifestNotFound
         else:
-            presigned_url = self._presign_url(generator_cls, object_key, file_name)
-            return Manifest(location=presigned_url,
-                            was_cached=True,
-                            format_=format_,
-                            object_key=object_key,
-                            file_name=file_name)
+            return self._presign_manifest(generator_cls=generator_cls,
+                                          object_key=object_key,
+                                          file_name=file_name,
+                                          was_cached=True)
+
+    def _presign_manifest(self,
+                          generator_cls: Type['ManifestGenerator'],
+                          object_key: str,
+                          file_name: Optional[str],
+                          was_cached: bool
+                          ) -> Manifest:
+        if not generator_cls.use_content_disposition_file_name:
+            file_name = None
+        presigned_url = self.storage_service.get_presigned_url(object_key, file_name)
+        return Manifest(location=presigned_url,
+                        was_cached=was_cached,
+                        format_=generator_cls.format(),
+                        object_key=object_key,
+                        file_name=file_name)
 
     def manifest_file_name(self,
                            object_key: str,
