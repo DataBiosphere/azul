@@ -10,6 +10,7 @@ from typing import (
 
 from azul.indexer.document import (
     Aggregate,
+    EntityType,
 )
 from azul.plugins import (
     DocumentSlice,
@@ -137,7 +138,7 @@ class Plugin(MetadataPlugin[HCABundle]):
         return mapping
 
     @property
-    def exposed_indices(self) -> Mapping[str, Sorting]:
+    def exposed_indices(self) -> Mapping[EntityType, Sorting]:
         return dict(
             bundles=Sorting(field_name='bundleVersion', descending=True),
             files=Sorting(field_name='fileName'),
