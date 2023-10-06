@@ -20,6 +20,17 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5301 Alarm on detection of new vulnerabilities by Inspector
+============================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` and ``gitlab`` component (in that order) of any
+main deployment just before pushing the merge commit to the GitLab instance in
+that deployment.
+
+
 #5518 GitLab updates cause false positive insufficient_data alarms
 ==================================================================
 

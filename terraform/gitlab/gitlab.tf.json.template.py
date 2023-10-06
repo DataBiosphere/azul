@@ -1766,10 +1766,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             )
                         },
                     ],
-                    # Reboot to realize the added kernel parameter the changed sshd configuration
-                    'power_state': {
-                        'mode': 'reboot'
-                    },
                     'runcmd': [
                         ['systemctl', 'daemon-reload'],
                         ['dracut', '-f'],
@@ -1799,8 +1795,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             '-a', 'fetch-config',  # action (fetch file from location specified in -c)
                             '-c', 'file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
                             '-s'  # restart agent afterwards
-                        ]
+                        ],
+                        ['yum', '-y', 'update']
                     ],
+                    # Reboot to realize the added kernel parameter the changed sshd configuration
+                    'power_state': {
+                        'mode': 'reboot'
+                    },
                 }, indent=2),
                 'tags': {
                     'Owner': config.owner
