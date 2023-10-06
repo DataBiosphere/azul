@@ -910,6 +910,39 @@ dcp31_sources = mkdict(dcp30_sources, 399, mkdelta([
     mksrc('datarepo-2abbf49d', 'hca_prod_e456c042f6b64ceca3381a8ef80bd779__20230905_dcp2_20230905_dcp31', 291),
 ]))
 
+dcp32_sources = mkdict(dcp31_sources, 408, mkdelta([
+    mksrc('datarepo-6885133e', 'hca_prod_0792db3480474e62802c9177c9cd8e28__20220107_dcp2_20231002_dcp32', 1451),
+    mksrc('datarepo-03b554f8', 'hca_prod_0911cc0406d64ffc8318b90b0039e8ad__20230905_dcp2_20231002_dcp32', 42),
+    mksrc('datarepo-a5249352', 'hca_prod_279f176633194e3c9f996fb59ba9b3e5__20230815_dcp2_20231002_dcp32', 3),
+    mksrc('datarepo-e676a270', 'hca_prod_2a72a4e566b2405abb7c1e463e8febb0__20220111_dcp2_20231002_dcp32', 2292),
+    mksrc('datarepo-803e3a81', 'hca_prod_2a8117e29d6344f0ab5009f98de80970__20231002_dcp2_20231002_dcp32', 6),
+    mksrc('datarepo-720eb4d9', 'hca_prod_31887183a72c43089eacc6140313f39c__20220111_dcp2_20231002_dcp32', 7),
+    mksrc('datarepo-8c4f04c0', 'hca_prod_326b36bd0975475f983b56ddb8f73a4d__20230905_dcp2_20231002_dcp32', 5),
+    mksrc('datarepo-9f296da3', 'hca_prod_376a7f55b8764f609cf3ed7bc83d5415__20220111_dcp2_20231002_dcp32', 46),
+    mksrc('datarepo-223a067e', 'hca_prod_3e92c74d256c40cd927316f155da8342__20220729_dcp2_20231002_dcp32', 58),
+    mksrc('datarepo-f053f0b1', 'hca_prod_421bc6cdbbb44398ac60a32ea94f02ae__20230929_dcp2_20231003_dcp32', 16),
+    mksrc('datarepo-7221e50b', 'hca_prod_453d7ee2319f496c986299d397870b63__20230905_dcp2_20231002_dcp32', 47),
+    mksrc('datarepo-262093aa', 'hca_prod_48f60534ba4e45bcaa5b6d3a6c45962e__20230929_dcp2_20231002_dcp32', 59),
+    mksrc('datarepo-129b6bcc', 'hca_prod_4a95101c9ffc4f30a809f04518a23803__20220113_dcp2_20231002_dcp32', 38),
+    mksrc('datarepo-85e28021', 'hca_prod_4ef86852aca04a9185229968e0e54dbe__20230313_dcp2_20231002_dcp32', 34),
+    mksrc('datarepo-ad300086', 'hca_prod_50154d1e230844bf960810c7afaa560b__20230427_dcp2_20231002_dcp32', 322),
+    mksrc('datarepo-6d4f90e5', 'hca_prod_51f02950ee254f4b8d0759aa99bb3498__20220117_dcp2_20231002_dcp32', 12),
+    mksrc('datarepo-d13e36e7', 'hca_prod_53c53cd481274e12bc7f8fe1610a715c__20220117_dcp2_20231002_dcp32', 35),
+    mksrc('datarepo-0287a0ba', 'hca_prod_577c946d6de54b55a854cd3fde40bff2__20220117_dcp2_20231002_dcp32', 21),
+    mksrc('datarepo-4d2eebce', 'hca_prod_5a54c6170eed486e8c1a8a8041fc1729__20230616_dcp2_20231002_dcp32', 53),
+    mksrc('datarepo-069ac8d2', 'hca_prod_67a3de0945b949c3a068ff4665daa50e__20220117_dcp2_20231002_dcp32', 735),
+    mksrc('datarepo-7be1db07', 'hca_prod_6936da41369246bbbca1cd0f507991e9__20230905_dcp2_20231003_dcp32', 1081),
+    mksrc('datarepo-b59acd40', 'hca_prod_72ff481856924bbc8886e47763531023__20230929_dcp2_20231002_dcp32', 32),
+    mksrc('datarepo-a2f56dc5', 'hca_prod_739ef78aba5d4487a0139982db66d222__20230815_dcp2_20231002_dcp32', 16),
+    mksrc('datarepo-114ecc76', 'hca_prod_74e2ef9d7c9f418cb2817fb38f3b1571__20220906_dcp2_20231002_dcp32', 179),
+    mksrc('datarepo-87452786', 'hca_prod_7dcffc327c8243969a4f88b5579bfe8a__20230905_dcp2_20231002_dcp32', 22),
+    mksrc('datarepo-1da84e2b', 'hca_prod_a1375150dda440818318c1593622da55__20221101_dcp2_20231002_dcp32', 47),
+    mksrc('datarepo-c844e919', 'hca_prod_bfaedc29fe844e72a46175dc8aabbd1b__20230929_dcp2_20231002_dcp32', 5),
+    mksrc('datarepo-46a39a89', 'hca_prod_c412be53cf9547c7980cc0a0caa2d3a0__20230929_dcp2_20231002_dcp32', 4),
+    mksrc('datarepo-89205d73', 'hca_prod_cfece4d2f18d44ada46a42bbcb5cb3b7__20230929_dcp2_20231002_dcp32', 2),
+    mksrc('datarepo-48284a59', 'hca_prod_dcc28fb37bab48cebc4b684c00e133ce__20230905_dcp2_20231002_dcp32', 35),
+]))
+
 lungmap_sources = mkdict({}, 3, mkdelta([
     mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
     mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
@@ -969,6 +1002,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=mklist(sources))
             for atlas, catalog, sources in [
                 ('hca', 'dcp31', dcp31_sources),
+                ('hca', 'dcp32', dcp32_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
                 ('lungmap', 'lm3', lm3_sources)
