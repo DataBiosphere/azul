@@ -35,10 +35,6 @@ from unittest.mock import (
     patch,
 )
 import unittest.result
-from urllib.parse import (
-    parse_qs,
-    urlparse,
-)
 import uuid
 from zipfile import (
     ZipFile,
@@ -1265,9 +1261,9 @@ class TestManifestEndpoints(ManifestTestCase):
                         manifest, num_partitions = self._get_manifest_object(format, filters)
                         self.assertFalse(manifest.was_cached)
                         self.assertEqual(1, num_partitions)
-                        query = urlparse(manifest.location).query
+                        query = furl(manifest.location).query
                         expected_cd = f'attachment;filename="{expected_name}.tsv"'
-                        actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                        actual_cd = query.params['response-content-disposition']
                         self.assertEqual(expected_cd, actual_cd)
 
 
@@ -1332,7 +1328,7 @@ class TestManifestCache(ManifestTestCase):
                 response = self._get_manifest(ManifestFormat.compact,
                                               filters={'projectId': {'is': [project_id]}})
                 self.assertEqual(200, response.status_code)
-                file_name = urlparse(response.url).path
+                file_name = str(furl(response.url).path)
                 file_names[project_id].append(file_name)
 
             self.assertEqual(file_names.keys(), set(project_ids))
