@@ -132,7 +132,7 @@ from azul.vendored.frozendict import (
     frozendict,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class ManifestUrlFunc(Protocol):
@@ -475,7 +475,7 @@ class ManifestService(ElasticsearchService):
             response = self.storage_service.head(object_key)
         except self.storage_service.client.exceptions.ClientError as e:
             if int(e.response['Error']['Code']) == 404:
-                logger.info('Cached manifest not found: %s', manifest_key)
+                log.info('Cached manifest not found: %s', manifest_key)
                 return None
             else:
                 raise e
@@ -488,14 +488,14 @@ class ManifestService(ElasticsearchService):
                 except KeyError:
                     # FIXME: Can't be absent under S3's strong consistency
                     #        https://github.com/DataBiosphere/azul/issues/3255
-                    logger.warning('Manifest object %r does not have the %r tag.',
-                                   object_key, self.file_name_tag)
+                    log.warning('Manifest object %r does not have the %r tag.',
+                                object_key, self.file_name_tag)
                     return generator_cls.file_name(manifest_key)
                 else:
                     encoded_file_name = encoded_file_name.encode('ascii')
                     return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
             else:
-                logger.info('Cached manifest is about to expire: %s', object_key)
+                log.info('Cached manifest is about to expire: %s', object_key)
                 return None
 
     @classmethod
@@ -525,10 +525,10 @@ class ManifestService(ElasticsearchService):
             expiration_in_days += 1
         expected_date = last_modified_floor + timedelta(days=expiration_in_days)
         if expiry_datetime == expected_date:
-            logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+            log.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
         else:
-            logger.error('The actual object expiration (%s) does not match expected value (%s)',
-                         expiration, expected_date)
+            log.error('The actual object expiration (%s) does not match expected value (%s)',
+                      expiration, expected_date)
         return expiry_seconds
 
     def command_lines(self,
@@ -899,7 +899,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def manifest_content_hash(self) -> int:
-        logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
+        log.debug('Computing content hash for manifest using filters %r ...', self.filters)
         start_time = time.time()
         request = self._create_request()
         request.aggs.metric(
@@ -927,8 +927,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         response = request.execute()
         assert len(response.hits) == 0
         hash_value = response.aggregations.hash.value
-        logger.info('Manifest content hash %i was computed in %.3fs using filters %r.',
-                    hash_value, time.time() - start_time, self.filters)
+        log.info('Manifest content hash %i was computed in %.3fs using filters %r.',
+                 hash_value, time.time() - start_time, self.filters)
         return hash_value
 
     def tagging(self, file_name: Optional[str]) -> Optional[Mapping[str, str]]:
