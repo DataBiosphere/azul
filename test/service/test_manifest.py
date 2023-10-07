@@ -193,7 +193,6 @@ def manifest_test(test):
 
 
 class TestManifestEndpoints(ManifestTestCase):
-    _drs_domain_name = 'drs-test.lan'
 
     def run(self,
             result: Optional[unittest.result.TestResult] = None
@@ -203,6 +202,8 @@ class TestManifestEndpoints(ManifestTestCase):
                                '_get_cached_manifest_file_name',
                                return_value=None):
             return super().run(result)
+
+    _drs_domain_name = 'drs-test.lan'  # see canned PFB results
 
     @manifest_test
     def test_pfb_manifest(self):
