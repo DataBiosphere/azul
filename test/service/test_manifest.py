@@ -1270,77 +1270,85 @@ class TestManifestEndpoints(ManifestTestCase):
 class TestManifestCache(ManifestTestCase):
 
     @manifest_test
-    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
-    def test_metadata_cache_expiration(self, get_seconds):
+    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    def test_metadata_cache_expiration(self, _get_seconds_until_expire):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        def log_messages_from_manifest_request(seconds_until_expire: int) -> list[str]:
-            get_seconds.return_value = seconds_until_expire
+        def test(expiration: int) -> list[str]:
+            _get_seconds_until_expire.return_value = expiration
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
             from azul.service.manifest_service import (
-                log as logger_,
+                log as service_log,
             )
-            with self.assertLogs(logger=logger_, level='INFO') as logs:
+            with self.assertLogs(logger=service_log, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.compact, filters)
                 self.assertEqual(200, response.status_code)
-                logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                 return logs.output
 
         # On the first request the cached manifest doesn't exist yet
-        logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-        self.assertTrue(any('Cached manifest not found' in message for message in logs_output))
+        logs = test(expiration=30)
+        self.assertTrue(any('Cached manifest not found' in message
+                            for message in logs))
 
         # If the cached manifest has a long time till it expires then no log
         # message expected
-        logs_output = log_messages_from_manifest_request(seconds_until_expire=3600)
-        self.assertFalse(any('Cached manifest' in message for message in logs_output))
+        logs = test(expiration=3600)
+        self.assertFalse(any('Cached manifest' in message
+                             for message in logs))
 
         # If the cached manifest has a short time till it expires then a log
         # message is expected
-        logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-        self.assertTrue(any('Cached manifest is about to expire' in message for message in logs_output))
+        logs = test(expiration=30)
+        self.assertTrue(any('Cached manifest is about to expire' in message
+                            for message in logs))
 
     @manifest_test
-    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
-    def test_compact_metadata_cache(self, get_seconds):
-        get_seconds.return_value = 3600
+    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    def test_compact_metadata_cache(self, _get_seconds_until_expire):
         self.maxDiff = None
-        for bundle_fqid in [
+        _get_seconds_until_expire.return_value = 3600
+        bundle_fqids = [
             self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                              version='2018-09-14T13:33:14.453337Z'),
             self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                              version='2018-09-14T13:33:14.453337Z')
-        ]:
-            self._index_canned_bundle(bundle_fqid)
+        ]
+        for bundle_fqid in bundle_fqids:
+            with self.subTest(bundle_fqid=bundle_fqid):
+                self._index_canned_bundle(bundle_fqid)
 
-            project_ids = [
-                '67bc798b-a34a-4104-8cab-cad648471f69',
-                '6615efae-fca8-4dd2-a223-9cfcf30fe94d'
-            ]
-            file_names = defaultdict(list)
+                project_ids = [
+                    '67bc798b-a34a-4104-8cab-cad648471f69',
+                    '6615efae-fca8-4dd2-a223-9cfcf30fe94d'
+                ]
 
-            # Run the generation of manifests twice to verify generated file
-            # names are the same when re-run
-            for project_id in project_ids * 2:
-                response = self._get_manifest(ManifestFormat.compact,
-                                              filters={'projectId': {'is': [project_id]}})
-                self.assertEqual(200, response.status_code)
-                file_name = str(furl(response.url).path)
-                file_names[project_id].append(file_name)
+                # Run the generation of manifests twice to verify generated file
+                # names are the same when re-run
+                file_names = defaultdict(list)
+                for i, project_id in enumerate(project_ids * 2):
+                    with self.subTest(project_id=project_id, i=i):
+                        filters = {'projectId': {'is': [project_id]}}
+                        response = self._get_manifest(ManifestFormat.compact,
+                                                      filters=filters)
+                        self.assertEqual(200, response.status_code)
+                    file_name = str(furl(response.url).path)
+                    file_names[project_id].append(file_name)
 
-            self.assertEqual(file_names.keys(), set(project_ids))
-            self.assertEqual([2, 2], list(map(len, file_names.values())))
-            self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
+                self.assertEqual(file_names.keys(), set(project_ids))
+                self.assertEqual([2, 2], list(map(len, file_names.values())))
+                self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
     @manifest_test
     def test_hash_validity(self):
         self.maxDiff = None
         bundle_uuid = 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
-        original_fqid = self.bundle_fqid(uuid=bundle_uuid,
-                                         version='2018-11-02T11:33:44.698028Z')
+        version1 = '2018-11-02T11:33:44.698028Z'
+        version2 = '2018-11-04T11:33:44.698028Z'
+        assert (version1 != version2)
+        original_fqid = self.bundle_fqid(uuid=bundle_uuid, version=version1)
         self._index_canned_bundle(original_fqid)
         filters = self._filters({'project': {'is': ['Single of human pancreas']}})
         old_keys = {}
@@ -1362,8 +1370,7 @@ class TestManifestCache(ManifestTestCase):
 
         # ... until a new bundle belonging to the same project is indexed, at
         # which point a manifest request will generate a different key ...
-        update_fqid = self.bundle_fqid(uuid=bundle_uuid,
-                                       version='2018-11-04T11:33:44.698028Z')
+        update_fqid = self.bundle_fqid(uuid=bundle_uuid, version=version2)
         self._index_canned_bundle(update_fqid)
         new_keys = {}
         for format in ManifestFormat:
