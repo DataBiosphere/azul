@@ -760,7 +760,11 @@ def validate_params(query_params: Mapping[str, str],
 
     provided_params = query_params.keys()
     validation_params = validators.keys()
-    mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
+    mandatory_params = {
+        param_name
+        for param_name, validator in validators.items()
+        if isinstance(validator, Mandatory)
+    }
 
     if not allow_extra_params:
         extra_params = provided_params - validation_params
@@ -772,9 +776,9 @@ def validate_params(query_params: Mapping[str, str],
         if missing_params:
             raise BRE(fmt_error('Missing required', missing_params))
 
-    for param_name, param_value in query_params.items():
+    for param_name, validator in validators.items():
         try:
-            validator = validators[param_name]
+            param_value = query_params[param_name]
         except KeyError:
             pass
         else:
@@ -1399,26 +1403,25 @@ def fetch_file_manifest():
 
 
 def _file_manifest(fetch: bool):
-    catalog = app.catalog
     request = app.current_request
     query_params = request.query_params or {}
-    query_params.setdefault('filters', '{}')
-    # FIXME: Remove `object_key` when Swagger validation lands
-    #        https://github.com/DataBiosphere/azul/issues/1465
-    # The objectKey query parameter is not allowed in /fetch/manifest/files
-    object_key = {} if fetch else {'objectKey': str}
-    validate_params(query_params,
-                    format=validate_manifest_format,
-                    catalog=validate_catalog,
-                    filters=str,
-                    token=str,
-                    **object_key)
-    # Wait to load metadata plugin until we've validated the catalog
-    default_format = app.metadata_plugin.manifest_formats[0].value
-    query_params.setdefault('format', default_format)
-    validate_filters(query_params['filters'])
-    return app.manifest_controller.get_manifest_async(catalog=catalog,
-                                                      query_params=query_params,
+    if 'objectKey' in query_params and not fetch:
+        validate_params(query_params, objectKey=str)
+    elif 'token' in query_params:
+        validate_params(query_params, token=str)
+    else:
+        query_params.setdefault('filters', '{}')
+        # We list the `catalog` validator first so that the catalog is validated
+        # before any other potentially catalog-dependent validators are invoked
+        validate_params(query_params,
+                        catalog=validate_catalog,
+                        format=validate_manifest_format,
+                        filters=validate_filters)
+        # Now that the catalog is valid, we can provide the default format that
+        # depends on it
+        default_format = app.metadata_plugin.manifest_formats[0].value
+        query_params.setdefault('format', default_format)
+    return app.manifest_controller.get_manifest_async(query_params=query_params,
                                                       fetch=fetch,
                                                       authentication=request.authentication)
 

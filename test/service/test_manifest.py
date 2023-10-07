@@ -91,6 +91,7 @@ from azul.service.manifest_service import (
     Bundles,
     Manifest,
     ManifestGenerator,
+    ManifestKey,
     ManifestPartition,
     ManifestService,
     PagedManifestGenerator,
@@ -1353,7 +1354,7 @@ class TestManifestCache(ManifestTestCase):
                                          version='2018-11-02T11:33:44.698028Z')
         self._index_canned_bundle(original_fqid)
         filters = self._filters({'project': {'is': ['Single of human pancreas']}})
-        old_object_keys = {}
+        old_keys = {}
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
 
         def manifest_generator(format_: ManifestFormat) -> ManifestGenerator:
@@ -1363,26 +1364,26 @@ class TestManifestCache(ManifestTestCase):
         for format_ in ManifestFormat:
             with self.subTest('indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its compact manifest cached,
-                # a matching object_key is generated ...
+                # a matching manifest key is generated ...
                 generator = manifest_generator(format_)
-                old_bundle_object_key = generator.compute_object_key()
+                old_bundle_key = generator.manifest_key()
                 # and should remain valid ...
-                self.assertEqual(old_bundle_object_key, generator.compute_object_key())
-                old_object_keys[format_] = old_bundle_object_key
+                self.assertEqual(old_bundle_key, generator.manifest_key())
+                old_keys[format_] = old_bundle_key
 
         # ... until a new bundle belonging to the same project is indexed, at
-        # which point a manifest request will generate a different object_key ...
+        # which point a manifest request will generate a different key ...
         update_fqid = self.bundle_fqid(uuid=bundle_uuid,
                                        version='2018-11-04T11:33:44.698028Z')
         self._index_canned_bundle(update_fqid)
-        new_object_keys = {}
+        new_keys = {}
         for format_ in ManifestFormat:
             with self.subTest('indexing second bundle', format_=format_):
                 generator = manifest_generator(format_)
-                new_bundle_object_key = generator.compute_object_key()
+                new_bundle_key = generator.manifest_key()
                 # ... invalidating the cached object previously used for the same filter.
-                self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
-                new_object_keys[format_] = new_bundle_object_key
+                self.assertNotEqual(old_keys[format_], new_bundle_key)
+                new_keys[format_] = new_bundle_key
 
         # Updates or additions, unrelated to that project do not affect object
         # key generation
@@ -1392,8 +1393,8 @@ class TestManifestCache(ManifestTestCase):
         for format_ in ManifestFormat:
             with self.subTest('indexing unrelated bundle', format_=format_):
                 generator = manifest_generator(format_)
-                latest_bundle_object_key = generator.compute_object_key()
-                self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
+                latest_bundle_key = generator.manifest_key()
+                self.assertEqual(latest_bundle_key, new_keys[format_])
 
 
 class TestManifestResponse(ManifestTestCase):
@@ -1408,21 +1409,23 @@ class TestManifestResponse(ManifestTestCase):
             for fetch in True, False:
                 with self.subTest(format=format_, fetch=fetch):
                     object_url = 'https://url.to.manifest?foo=bar'
-                    default_file_name = 'some_object_key'
-                    object_key = f'manifests/{default_file_name}'
+                    default_file_name = 'some_object_key.csv'
+                    manifest_key = ManifestKey(catalog=self.catalog,
+                                               format=format_,
+                                               manifest_hash='',
+                                               source_hash='')
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format_=format_,
-                                        object_key=object_key,
+                                        manifest_key=manifest_key,
                                         file_name=default_file_name)
-                    get_cached_manifest.return_value = None, manifest
+                    get_cached_manifest.return_value = manifest
                     args = dict(catalog=self.catalog,
                                 format=format_.value,
                                 filters='{}')
                     request_url = self.base_url.set(path='/manifest/files', args=args)
                     redirect_url = self.base_url.set(path='/manifest/files',
-                                                     args=dict(format=format_.value,
-                                                               objectKey=object_key))
+                                                     args=dict(objectKey=manifest_key.encode()))
                     expect_redirect = fetch and format_ is ManifestFormat.curl
                     expected_url = redirect_url if expect_redirect else object_url
                     if format_ is ManifestFormat.curl:

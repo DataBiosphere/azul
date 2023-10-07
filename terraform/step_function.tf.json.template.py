@@ -10,7 +10,7 @@ from azul.modules import (
     load_app_module,
 )
 from azul.service.manifest_controller import (
-    ManifestController,
+    manifest_state_key,
 )
 from azul.terraform import (
     emit_tf,
@@ -71,7 +71,7 @@ emit_tf({
                             "Default": "Manifest",
                             "Choices": [
                                 {
-                                    "Variable": f"$.{ManifestController.manifest_state_key}",
+                                    "Variable": f"$.{manifest_state_key}",
                                     "IsPresent": True,
                                     "Next": "Done"
                                 }

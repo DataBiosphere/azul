@@ -3,7 +3,9 @@ from collections.abc import (
 )
 from typing import (
     Optional,
-    get_origin,
+    TypedDict,
+    cast,
+    get_type_hints,
 )
 
 import attr
@@ -16,7 +18,6 @@ from furl import (
 )
 
 from azul import (
-    CatalogName,
     cached_property,
     config,
 )
@@ -40,6 +41,7 @@ from azul.service.async_manifest_service import (
 from azul.service.manifest_service import (
     CachedManifestNotFound,
     Manifest,
+    ManifestKey,
     ManifestPartition,
     ManifestService,
     ManifestUrlFunc,
@@ -53,6 +55,18 @@ from azul.service.storage_service import (
 from azul.types import (
     JSON,
 )
+
+manifest_state_key = 'manifest'
+
+
+class ManifestGenerationState(TypedDict, total=False):
+    manifest_key: JSON
+    filters: JSON
+    partition: Optional[JSON]
+    manifest: Optional[JSON]
+
+
+assert manifest_state_key in get_type_hints(ManifestGenerationState)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -70,70 +84,70 @@ class ManifestController(SourceController):
     def service(self) -> ManifestService:
         return ManifestService(StorageService(), self.file_url_func)
 
-    partition_state_key = 'partition'
-
-    manifest_state_key = 'manifest'
-
-    def get_manifest(self, state: JSON) -> JSON:
-        partition = ManifestPartition.from_json(state[self.partition_state_key])
-        result = self.service.get_manifest(format_=ManifestFormat(state['format_']),
-                                           catalog=state['catalog'],
+    def get_manifest(self, state: JSON) -> ManifestGenerationState:
+        # We trust StepFunctions to pass
+        state: ManifestGenerationState
+        partition = ManifestPartition.from_json(state['partition'])
+        manifest_key = ManifestKey.from_json(state['manifest_key'])
+        result = self.service.get_manifest(format_=manifest_key.format,
+                                           catalog=manifest_key.catalog,
                                            filters=Filters.from_json(state['filters']),
                                            partition=partition,
-                                           object_key=state['object_key'])
+                                           manifest_key=manifest_key)
         if isinstance(result, ManifestPartition):
             assert not result.is_last, result
             return {
                 **state,
-                self.partition_state_key: result.to_json()
+                'partition': result.to_json()
             }
         elif isinstance(result, Manifest):
             return {
                 # The presence of this key terminates the step function loop
-                self.manifest_state_key: result.to_json()
+                'manifest': result.to_json()
             }
         else:
             assert False, type(result)
 
     def get_manifest_async(self,
                            *,
-                           catalog: CatalogName,
                            query_params: Mapping[str, str],
                            fetch: bool,
                            authentication: Optional[Authentication]):
 
         token = query_params.get('token')
         if token is None:
-            format_ = ManifestFormat(query_params['format'])
             try:
-                object_key = query_params['objectKey']
+                manifest_key = query_params['objectKey']
             except KeyError:
+                format_ = ManifestFormat(query_params['format'])
+                catalog = query_params.get('catalog', config.default_catalog)
                 filters = self.get_filters(catalog, authentication, query_params.get('filters'))
-                object_key, manifest = self.service.get_cached_manifest(format_=format_,
-                                                                        catalog=catalog,
-                                                                        filters=filters)
-                if manifest is None:
-                    assert object_key is not None
+                try:
+                    manifest = self.service.get_cached_manifest(format_=format_,
+                                                                catalog=catalog,
+                                                                filters=filters)
+                except CachedManifestNotFound as e:
+                    manifest, manifest_key = None, e.manifest_key
                     partition = ManifestPartition.first()
-                    state = {
-                        'format_': format_.value,
-                        'catalog': catalog,
+                    state: ManifestGenerationState = {
                         'filters': filters.to_json(),
-                        'object_key': object_key,
-                        self.partition_state_key: partition.to_json()
+                        'manifest_key': manifest_key.to_json(),
+                        'partition': partition.to_json()
                     }
-                    token = self.async_service.start_generation(state)
+                    # ManifestGenerationState is also JSON but there is no way
+                    # to express that since TypedDict rejects a co-parent class.
+                    token = self.async_service.start_generation(cast(JSON, state))
+                else:
+                    manifest_key = manifest.manifest_key
             else:
+                manifest_key = ManifestKey.decode(manifest_key)
                 if authentication is not None:
                     raise BadRequestError("Must omit authentication when passing 'objectKey'")
                 try:
-                    manifest = self.service.get_cached_manifest_with_object_key(format_=format_,
-                                                                                object_key=object_key)
+                    manifest = self.service.get_cached_manifest_with_key(manifest_key)
                 except CachedManifestNotFound:
                     raise GoneError('The requested manifest has expired, '
                                     'please request a new one')
-                else:
-                    assert manifest is not None
         else:
             try:
                 token = Token.decode(token)
@@ -142,21 +156,24 @@ class ManifestController(SourceController):
                 raise BadRequestError(e.args) from e
             else:
                 if isinstance(token_or_state, Token):
-                    token, manifest = token_or_state, None
-                elif isinstance(token_or_state, get_origin(JSON)):
-                    manifest = Manifest.from_json(token_or_state[self.manifest_state_key])
+                    token, manifest, manifest_key = token_or_state, None, None
+                elif isinstance(token_or_state, dict):
+                    state = token_or_state
+                    manifest = Manifest.from_json(state['manifest'])
+                    manifest_key = manifest.manifest_key
                 else:
                     assert False, token_or_state
 
         if manifest is None:
-            location = self.manifest_url_func(fetch=fetch, token=token.encode())
+            url = self.manifest_url_func(fetch=fetch, token=token.encode())
             body = {
                 'Status': 301,
-                'Location': str(location),
+                'Location': str(url),
                 'Retry-After': token.wait_time,
-                'CommandLine': self.service.command_lines(manifest, location, authentication)
+                'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
         else:
+            assert manifest.manifest_key == manifest_key
             # The manifest is ultimately downloaded via a signed URL that points
             # to the storage bucket. This signed URL expires after one hour,
             # which is desirable because it is a client and its short lifespan
@@ -176,10 +193,8 @@ class ManifestController(SourceController):
                 # For AnVIL, we are prohibited from exposing a manifest URL that
                 # remains valid for longer than 1 hour. Currently, the AnVIL
                 # plugin does not support cURL-format manifests.
-                assert not config.is_anvil_enabled(catalog)
-                url = self.manifest_url_func(fetch=False,
-                                             format=manifest.format_.value,
-                                             objectKey=manifest.object_key)
+                assert not config.is_anvil_enabled(manifest_key.catalog)
+                url = self.manifest_url_func(fetch=False, objectKey=manifest_key.encode())
             else:
                 url = furl(manifest.location)
             body = {

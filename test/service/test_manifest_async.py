@@ -1,15 +1,11 @@
 import datetime
 import json
-from typing import (
-    Optional,
-)
 from unittest import (
     mock,
 )
 from unittest.mock import (
     patch,
 )
-import unittest.result
 
 from botocore.exceptions import (
     ClientError,
@@ -47,9 +43,13 @@ from azul.service.async_manifest_service import (
     StateMachineError,
     Token,
 )
+from azul.service.manifest_controller import (
+    ManifestGenerationState,
+)
 from azul.service.manifest_service import (
     CachedManifestNotFound,
     Manifest,
+    ManifestKey,
     ManifestPartition,
     ManifestService,
 )
@@ -153,16 +153,6 @@ class TestAsyncManifestService(AzulUnitTestCase):
 
 
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
-    object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
-
-    def run(self,
-            result: Optional[unittest.result.TestResult] = None
-            ) -> Optional[unittest.result.TestResult]:
-        manifest = None
-        with mock.patch.object(ManifestService,
-                               'get_cached_manifest',
-                               return_value=(self.object_key, manifest)):
-            return super().run(result)
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -181,7 +171,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
             mock_start_execution.reset_mock()
             mock_describe_execution.reset_mock()
 
-        with responses.RequestsMock() as helper:
+        with (responses.RequestsMock() as helper):
             helper.add_passthru(str(self.base_url))
             for fetch in (True, False):
                 with self.subTest(fetch=fetch):
@@ -198,13 +188,16 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     path = '/manifest/files'
                     object_url = 'https://url.to.manifest?foo=bar'
                     file_name = 'some_file_name'
-                    object_key = f'manifests/{file_name}'
+                    manifest_key = ManifestKey(catalog=self.catalog,
+                                               format=format_,
+                                               manifest_hash='',
+                                               source_hash='')
                     manifest_url = self.base_url.set(path=path,
-                                                     args=dict(params, objectKey=object_key))
+                                                     args=dict(objectKey=manifest_key.encode()))
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format_=format_,
-                                        object_key=object_key,
+                                        manifest_key=manifest_key,
                                         file_name=file_name)
                     url = self.base_url.set(path=path, args=params)
                     if fetch:
@@ -231,7 +224,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                           search_after=('foo', 'doc#bar'))
                     )
 
-                    with mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest:
+                    with (
+                        mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest,
+                        mock.patch.object(ManifestService, 'get_cached_manifest',
+                                          side_effect=CachedManifestNotFound(manifest_key))
+                    ):
                         for i, expected_status in enumerate(3 * [301] + [302]):
                             response = requests.get(str(url), allow_redirects=False)
                             if fetch:
@@ -246,11 +243,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 self.assertGreaterEqual(int(headers['Retry-After']), 0)
                             url = furl(headers['Location'])
                             if i == 0:
-                                state = dict(format_=format_.value,
-                                             catalog=self.catalog,
-                                             filters=filters.to_json(),
-                                             object_key=self.object_key,
-                                             partition=partitions[0].to_json())
+                                state: ManifestGenerationState = dict(filters=filters.to_json(),
+                                                                      manifest_key=manifest_key.to_json(),
+                                                                      partition=partitions[0].to_json())
                                 mock_start_execution.assert_called_once_with(
                                     state_machine_name,
                                     execution_id,
@@ -265,11 +260,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 self.assertEqual(partitions[1],
                                                  ManifestPartition.from_json(state['partition']))
                                 mock_get_manifest.assert_called_once_with(
-                                    format_=ManifestFormat(state['format_']),
-                                    catalog=state['catalog'],
+                                    format_=format_,
+                                    catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
-                                    object_key=state['object_key']
+                                    manifest_key=ManifestKey.from_json(state['manifest_key'])
                                 )
                                 mock_get_manifest.reset_mock()
                                 mock_start_execution.assert_not_called()
@@ -290,11 +285,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 }
                             elif i == 3:
                                 mock_get_manifest.assert_called_once_with(
-                                    format_=ManifestFormat(state['format_']),
-                                    catalog=state['catalog'],
+                                    format_=format_,
+                                    catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
-                                    object_key=state['object_key']
+                                    manifest_key=ManifestKey.from_json(state['manifest_key'])
                                 )
                                 mock_get_manifest.reset_mock()
                     mock_start_execution.assert_not_called()
@@ -304,22 +299,22 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(expected_url, str(url))
                     reset()
 
-            manifest_states = [
+            mock_effects = [
                 manifest,
-                CachedManifestNotFound
+                CachedManifestNotFound(manifest_key)
             ]
             with mock.patch.object(ManifestService,
-                                   'get_cached_manifest_with_object_key',
-                                   side_effect=manifest_states):
-                for manifest in manifest_states:
-                    with self.subTest(manifest=manifest):
-                        self.assertEqual(object_key, manifest_url.args['objectKey'])
+                                   'get_cached_manifest_with_key',
+                                   side_effect=mock_effects):
+                for mock_effect in mock_effects:
+                    with self.subTest(mock_effect=mock_effect):
+                        assert manifest_key.encode() == manifest_url.args['objectKey']
                         response = requests.get(str(manifest_url), allow_redirects=False)
-                        if isinstance(manifest, Manifest):
+                        if isinstance(mock_effect, Manifest):
                             self.assertEqual(302, response.status_code)
                             self.assertEqual(object_url, response.headers['Location'])
                         else:
-                            if manifest is CachedManifestNotFound:
+                            if isinstance(mock_effect, CachedManifestNotFound):
                                 cause = 'expired'
                             else:
                                 assert False
