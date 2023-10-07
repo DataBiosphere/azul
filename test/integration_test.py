@@ -565,14 +565,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
             ManifestFormat.curl: self._check_curl_manifest
         }
-        for format_ in [None, *supported_formats]:
-            with self.subTest('manifest', catalog=catalog, format=format_):
+        for format in [None, *supported_formats]:
+            with self.subTest('manifest', catalog=catalog, format=format):
                 args = dict(catalog=catalog)
-                if format_ is None:
+                if format is None:
                     validator = validators[first(supported_formats)]
                 else:
-                    validator = validators[format_]
-                    args['format'] = format_.value
+                    validator = validators[format]
+                    args['format'] = format.value
                 start = time.time()
                 response = self._check_endpoint(GET, '/manifest/files', args=args)
                 log.info('Request took %.3fs to execute.', time.time() - start)

@@ -149,16 +149,16 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
         os.environ.pop('azul_git_dirty')
 
     def _get_manifest(self,
-                      format_: ManifestFormat,
+                      format: ManifestFormat,
                       filters: FiltersJSON,
                       stream=False
                       ) -> Response:
-        manifest, num_partitions = self._get_manifest_object(format_, filters)
+        manifest, num_partitions = self._get_manifest_object(format, filters)
         self.assertEqual(1, num_partitions)
         return requests.get(manifest.location, stream=stream)
 
     def _get_manifest_object(self,
-                             format_: ManifestFormat,
+                             format: ManifestFormat,
                              filters: JSON
                              ) -> tuple[Manifest, int]:
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
@@ -166,7 +166,7 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
         partition = ManifestPartition.first()
         num_partitions = 1
         while True:
-            partition = service.get_manifest(format_=format_,
+            partition = service.get_manifest(format=format,
                                              catalog=self.catalog,
                                              filters=filters,
                                              partition=partition)
@@ -1245,7 +1245,7 @@ class TestManifestEndpoints(ManifestTestCase):
         self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            for format_ in [ManifestFormat.compact]:
+            for format in [ManifestFormat.compact]:
                 for filters, expected_name in [
                     # For a single project, the content disposition file name should
                     # be the project name followed by the date and time
@@ -1265,8 +1265,8 @@ class TestManifestEndpoints(ManifestTestCase):
                         'hca-manifest-c3cf398e-1927-5aae-ba2a-81d8d1800b2d.4bc67e84-4873-591f-b524-a5fe4ec215eb'
                     )
                 ]:
-                    with self.subTest(filters=filters, format_=format_):
-                        manifest, num_partitions = self._get_manifest_object(format_, filters)
+                    with self.subTest(filters=filters, format=format):
+                        manifest, num_partitions = self._get_manifest_object(format, filters)
                         self.assertFalse(manifest.was_cached)
                         self.assertEqual(1, num_partitions)
                         query = urlparse(manifest.location).query
@@ -1357,19 +1357,19 @@ class TestManifestCache(ManifestTestCase):
         old_keys = {}
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
 
-        def manifest_generator(format_: ManifestFormat) -> ManifestGenerator:
-            generator_cls = ManifestGenerator.cls_for_format(format_)
+        def manifest_generator(format: ManifestFormat) -> ManifestGenerator:
+            generator_cls = ManifestGenerator.cls_for_format(format)
             return generator_cls(service, self.catalog, filters)
 
-        for format_ in ManifestFormat:
-            with self.subTest('indexing new bundle', format_=format_):
+        for format in ManifestFormat:
+            with self.subTest('indexing new bundle', format=format):
                 # When a new bundle is indexed and its compact manifest cached,
                 # a matching manifest key is generated ...
-                generator = manifest_generator(format_)
+                generator = manifest_generator(format)
                 old_bundle_key = generator.manifest_key()
                 # and should remain valid ...
                 self.assertEqual(old_bundle_key, generator.manifest_key())
-                old_keys[format_] = old_bundle_key
+                old_keys[format] = old_bundle_key
 
         # ... until a new bundle belonging to the same project is indexed, at
         # which point a manifest request will generate a different key ...
@@ -1377,24 +1377,24 @@ class TestManifestCache(ManifestTestCase):
                                        version='2018-11-04T11:33:44.698028Z')
         self._index_canned_bundle(update_fqid)
         new_keys = {}
-        for format_ in ManifestFormat:
-            with self.subTest('indexing second bundle', format_=format_):
-                generator = manifest_generator(format_)
+        for format in ManifestFormat:
+            with self.subTest('indexing second bundle', format=format):
+                generator = manifest_generator(format)
                 new_bundle_key = generator.manifest_key()
                 # ... invalidating the cached object previously used for the same filter.
-                self.assertNotEqual(old_keys[format_], new_bundle_key)
-                new_keys[format_] = new_bundle_key
+                self.assertNotEqual(old_keys[format], new_bundle_key)
+                new_keys[format] = new_bundle_key
 
         # Updates or additions, unrelated to that project do not affect object
         # key generation
         other_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(other_fqid)
-        for format_ in ManifestFormat:
-            with self.subTest('indexing unrelated bundle', format_=format_):
-                generator = manifest_generator(format_)
+        for format in ManifestFormat:
+            with self.subTest('indexing unrelated bundle', format=format):
+                generator = manifest_generator(format)
                 latest_bundle_key = generator.manifest_key()
-                self.assertEqual(latest_bundle_key, new_keys[format_])
+                self.assertEqual(latest_bundle_key, new_keys[format])
 
 
 class TestManifestResponse(ManifestTestCase):
@@ -1405,36 +1405,36 @@ class TestManifestResponse(ManifestTestCase):
         """
         Verify the response from manifest endpoints for all manifest formats
         """
-        for format_ in self.app_module.app.metadata_plugin.manifest_formats:
+        for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
-                with self.subTest(format=format_, fetch=fetch):
+                with self.subTest(format=format, fetch=fetch):
                     object_url = 'https://url.to.manifest?foo=bar'
                     default_file_name = 'some_object_key.csv'
                     manifest_key = ManifestKey(catalog=self.catalog,
-                                               format=format_,
+                                               format=format,
                                                manifest_hash='',
                                                source_hash='')
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
-                                        format_=format_,
+                                        format=format,
                                         manifest_key=manifest_key,
                                         file_name=default_file_name)
                     get_cached_manifest.return_value = manifest
                     args = dict(catalog=self.catalog,
-                                format=format_.value,
+                                format=format.value,
                                 filters='{}')
                     request_url = self.base_url.set(path='/manifest/files', args=args)
                     redirect_url = self.base_url.set(path='/manifest/files',
                                                      args=dict(objectKey=manifest_key.encode()))
-                    expect_redirect = fetch and format_ is ManifestFormat.curl
+                    expect_redirect = fetch and format is ManifestFormat.curl
                     expected_url = redirect_url if expect_redirect else object_url
-                    if format_ is ManifestFormat.curl:
+                    if format is ManifestFormat.curl:
                         expected = {
                             'cmd.exe': f'curl.exe --location --fail "{expected_url}" | curl.exe --config -',
                             'bash': f"curl --location --fail '{expected_url}' | curl --config -"
                         }
                     else:
-                        if format_ is ManifestFormat.terra_bdbag:
+                        if format is ManifestFormat.terra_bdbag:
                             file_name = default_file_name
                         else:
                             file_name = manifest.file_name

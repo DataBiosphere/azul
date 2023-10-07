@@ -195,7 +195,7 @@ class Manifest:
     was_cached: bool
 
     #: The format of the manifest
-    format_: ManifestFormat
+    format: ManifestFormat
 
     #: The key under which the manifest is stored
     manifest_key: ManifestKey
@@ -208,7 +208,7 @@ class Manifest:
         return {
             'location': self.location,
             'was_cached': self.was_cached,
-            'format_': self.format_.value,
+            'format': self.format.value,
             'manifest_key': self.manifest_key.to_json(),
             'file_name': self.file_name
         }
@@ -217,7 +217,7 @@ class Manifest:
     def from_json(cls, json: JSON) -> 'Manifest':
         return cls(location=json['location'],
                    was_cached=json['was_cached'],
-                   format_=ManifestFormat(json['format_']),
+                   format=ManifestFormat(json['format']),
                    manifest_key=ManifestKey.from_json(json['manifest_key']),
                    file_name=json['file_name'])
 
@@ -353,7 +353,7 @@ class ManifestService(ElasticsearchService):
 
     def get_manifest(self,
                      *,
-                     format_: ManifestFormat,
+                     format: ManifestFormat,
                      catalog: CatalogName,
                      filters: Filters,
                      partition: ManifestPartition,
@@ -377,7 +377,7 @@ class ManifestService(ElasticsearchService):
         the next one. Repeat calling this method with the returned partition
         until the return value is a Manifest instance.
 
-        :param format_: The desired format of the manifest.
+        :param format: The desired format of the manifest.
 
         :param catalog: The name of the catalog to generate the manifest from.
 
@@ -396,7 +396,7 @@ class ManifestService(ElasticsearchService):
                              Otherwise, a new manifest will be created and
                              stored at the given key.
         """
-        generator_cls = ManifestGenerator.cls_for_format(format_)
+        generator_cls = ManifestGenerator.cls_for_format(format)
         generator = generator_cls(self, catalog, filters)
         if manifest_key is None:
             manifest_key = generator.manifest_key()
@@ -413,11 +413,11 @@ class ManifestService(ElasticsearchService):
                 return partition
 
     def get_cached_manifest(self,
-                            format_: ManifestFormat,
+                            format: ManifestFormat,
                             catalog: CatalogName,
                             filters: Filters
                             ) -> Manifest:
-        generator_cls = ManifestGenerator.cls_for_format(format_)
+        generator_cls = ManifestGenerator.cls_for_format(format)
         generator = generator_cls(self, catalog, filters)
         manifest_key = generator.manifest_key()
         return self._get_cached_manifest(generator_cls, manifest_key)
@@ -451,7 +451,7 @@ class ManifestService(ElasticsearchService):
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name)
         return Manifest(location=presigned_url,
                         was_cached=was_cached,
-                        format_=generator_cls.format(),
+                        format=generator_cls.format(),
                         manifest_key=manifest_key,
                         file_name=file_name)
 
@@ -536,7 +536,7 @@ class ManifestService(ElasticsearchService):
                       url: furl,
                       authentication: Optional[Authentication]
                       ) -> Optional[JSON]:
-        format = None if manifest is None else manifest.format_
+        format = None if manifest is None else manifest.format
         generator_cls = ManifestGenerator.cls_for_format(format)
         file_name = None if manifest is None else manifest.file_name
         return generator_cls.command_lines(url, file_name, authentication)

@@ -89,7 +89,7 @@ class ManifestController(SourceController):
         state: ManifestGenerationState
         partition = ManifestPartition.from_json(state['partition'])
         manifest_key = ManifestKey.from_json(state['manifest_key'])
-        result = self.service.get_manifest(format_=manifest_key.format,
+        result = self.service.get_manifest(format=manifest_key.format,
                                            catalog=manifest_key.catalog,
                                            filters=Filters.from_json(state['filters']),
                                            partition=partition,
@@ -119,11 +119,11 @@ class ManifestController(SourceController):
             try:
                 manifest_key = query_params['objectKey']
             except KeyError:
-                format_ = ManifestFormat(query_params['format'])
+                format = ManifestFormat(query_params['format'])
                 catalog = query_params.get('catalog', config.default_catalog)
                 filters = self.get_filters(catalog, authentication, query_params.get('filters'))
                 try:
-                    manifest = self.service.get_cached_manifest(format_=format_,
+                    manifest = self.service.get_cached_manifest(format=format,
                                                                 catalog=catalog,
                                                                 filters=filters)
                 except CachedManifestNotFound as e:
@@ -189,7 +189,7 @@ class ManifestController(SourceController):
             # authentication for as long as the cached manifest persists in S3.
             # This increases the risk of the secret being shared, but is
             # necessary to preserve the functionality of the cURL download.
-            if fetch and manifest.format_ is ManifestFormat.curl:
+            if fetch and manifest.format is ManifestFormat.curl:
                 # For AnVIL, we are prohibited from exposing a manifest URL that
                 # remains valid for longer than 1 hour. Currently, the AnVIL
                 # plugin does not support cURL-format manifests.

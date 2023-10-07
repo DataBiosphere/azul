@@ -177,26 +177,26 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 with self.subTest(fetch=fetch):
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_id
-                    format_ = ManifestFormat.compact
+                    format = ManifestFormat.compact
                     filters = Filters(explicit={'organ': {'is': ['lymph node']}},
                                       source_ids={self.source.id})
                     params = {
                         'catalog': self.catalog,
-                        'format': format_.value,
+                        'format': format.value,
                         'filters': json.dumps(filters.explicit)
                     }
                     path = '/manifest/files'
                     object_url = 'https://url.to.manifest?foo=bar'
                     file_name = 'some_file_name'
                     manifest_key = ManifestKey(catalog=self.catalog,
-                                               format=format_,
+                                               format=format,
                                                manifest_hash='',
                                                source_hash='')
                     manifest_url = self.base_url.set(path=path,
                                                      args=dict(objectKey=manifest_key.encode()))
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
-                                        format_=format_,
+                                        format=format,
                                         manifest_key=manifest_key,
                                         file_name=file_name)
                     url = self.base_url.set(path=path, args=params)
@@ -260,7 +260,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 self.assertEqual(partitions[1],
                                                  ManifestPartition.from_json(state['partition']))
                                 mock_get_manifest.assert_called_once_with(
-                                    format_=format_,
+                                    format=format,
                                     catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
@@ -285,7 +285,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 }
                             elif i == 3:
                                 mock_get_manifest.assert_called_once_with(
-                                    format_=format_,
+                                    format=format,
                                     catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
@@ -294,7 +294,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 mock_get_manifest.reset_mock()
                     mock_start_execution.assert_not_called()
                     mock_describe_execution.assert_called_once()
-                    expect_redirect = fetch and format_ is ManifestFormat.curl
+                    expect_redirect = fetch and format is ManifestFormat.curl
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
                     reset()

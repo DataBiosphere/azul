@@ -666,16 +666,16 @@ def validate_field(field: str):
         raise BRE(f'Unknown field `{field}`')
 
 
-def validate_manifest_format(format_: str):
+def validate_manifest_format(format: str):
     supported_formats = {f.value for f in app.metadata_plugin.manifest_formats}
     try:
-        ManifestFormat(format_)
+        ManifestFormat(format)
     except ValueError:
-        raise BRE(f'Unknown manifest format `{format_}`. '
+        raise BRE(f'Unknown manifest format `{format}`. '
                   f'Must be one of {supported_formats}')
     else:
-        if format_ not in supported_formats:
-            raise BRE(f'Manifest format `{format_}` is not supported for '
+        if format not in supported_formats:
+            raise BRE(f'Manifest format `{format}` is not supported for '
                       f'catalog {app.catalog}. Must be one of {supported_formats}')
 
 
@@ -1219,8 +1219,8 @@ def manifest_path_spec(*, fetch: bool):
                 schema.optional(
                     schema.enum(
                         *[
-                            format_.value
-                            for format_ in app.metadata_plugin.manifest_formats
+                            format.value
+                            for format in app.metadata_plugin.manifest_formats
                         ],
                         type_=str
                     )
