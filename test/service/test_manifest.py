@@ -40,6 +40,7 @@ from zipfile import (
     ZipFile,
 )
 
+import attrs
 import fastavro
 from furl import (
     furl,
@@ -85,6 +86,7 @@ from azul.service import (
 from azul.service.manifest_service import (
     BDBagManifestGenerator,
     Bundles,
+    CachedManifestNotFound,
     Manifest,
     ManifestGenerator,
     ManifestKey,
@@ -144,6 +146,10 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
+    @property
+    def _service(self):
+        return ManifestService(self.storage_service, self.app_module.app.file_url)
+
     def _get_manifest(self,
                       format: ManifestFormat,
                       filters: FiltersJSON,
@@ -157,15 +163,14 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
                              format: ManifestFormat,
                              filters: JSON
                              ) -> tuple[Manifest, int]:
-        service = ManifestService(self.storage_service, self.app_module.app.file_url)
         filters = self._filters(filters)
         partition = ManifestPartition.first()
         num_partitions = 1
         while True:
-            partition = service.get_manifest(format=format,
-                                             catalog=self.catalog,
-                                             filters=filters,
-                                             partition=partition)
+            partition = self._service.get_manifest(format=format,
+                                                   catalog=self.catalog,
+                                                   filters=filters,
+                                                   partition=partition)
             if isinstance(partition, Manifest):
                 return partition, num_partitions
             # Emulate controller serializing the partition between steps
@@ -1391,6 +1396,43 @@ class TestManifestCache(ManifestTestCase):
                 generator = manifest_generator(format)
                 latest_bundle_key = generator.manifest_key()
                 self.assertEqual(latest_bundle_key, new_keys[format])
+
+    @manifest_test
+    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    def test_get_cached_manifest(self, _get_seconds_until_expire):
+        format = ManifestFormat.curl
+        filters = {}
+
+        manifest, _ = self._get_manifest_object(format=format, filters=filters)
+        self.assertFalse(manifest.was_cached)
+        manifest_key = manifest.manifest_key
+
+        # Ensure manifest is considered fresh
+        _get_seconds_until_expire.return_value = 3000
+        filters = self._filters(filters)
+        cached_manifest_1 = self._service.get_cached_manifest(format=format,
+                                                              catalog=manifest_key.catalog,
+                                                              filters=filters)
+        self.assertTrue(cached_manifest_1.was_cached)
+        # The was_cached property should be the only difference
+        manifest = attrs.evolve(manifest, was_cached=True)
+        self.assertEqual(manifest, cached_manifest_1)
+
+        cached_manifest_2 = self._service.get_cached_manifest_with_key(manifest_key)
+        self.assertEqual(cached_manifest_1, cached_manifest_2)
+
+        # Ensure manifest is considered stale
+        _get_seconds_until_expire.return_value = 30
+
+        with self.assertRaises(CachedManifestNotFound) as e:
+            self._service.get_cached_manifest(format=format,
+                                              catalog=manifest_key.catalog,
+                                              filters=filters)
+        self.assertEqual(manifest_key, e.exception.manifest_key)
+
+        with self.assertRaises(CachedManifestNotFound):
+            self._service.get_cached_manifest_with_key(manifest_key)
+        self.assertEqual(manifest_key, e.exception.manifest_key)
 
 
 class TestManifestResponse(ManifestTestCase):
