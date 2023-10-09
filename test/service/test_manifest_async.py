@@ -325,11 +325,15 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                             self.assertEqual(410, response.status_code)
                             self.assertEqual(expected_response, response.json())
 
-    params = {
-        'token': Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
-                       request_index=0,
-                       wait_time=0).encode()
-    }
+    token = Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
+                  request_index=0,
+                  wait_time=0).encode()
+
+    def _test(self, *, expected_status, token=token):
+        url = self.base_url.set(path='/fetch/manifest/files',
+                                args=dict(token=token))
+        response = requests.get(str(url))
+        self.assertEqual(expected_status, response.status_code)
 
     def test_execution_not_found(self):
         """
@@ -342,9 +346,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     'Code': 'ExecutionDoesNotExist'
                 }
             }, '')
-            url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
-            response = requests.get(str(url))
-        self.assertEqual(400, response.status_code)
+            self._test(expected_status=400)
 
     def test_boto_error(self):
         """
@@ -357,9 +359,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     'Code': 'OtherError'
                 }
             }, '')
-            url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
-            response = requests.get(str(url))
-        self.assertEqual(500, response.status_code)
+            self._test(expected_status=500)
 
     def test_execution_error(self):
         """
@@ -368,16 +368,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         """
         with patch.object(AsyncManifestService, 'inspect_generation') as mock:
             mock.side_effect = StateMachineError
-            url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
-            response = requests.get(str(url))
-        self.assertEqual(500, response.status_code)
+            self._test(expected_status=500)
 
     def test_invalid_token(self):
         """
         Manifest endpoint should raise a BadRequestError when given a token that
         cannot be decoded
         """
-        params = {'token': 'Invalid base64'}
-        url = self.base_url.set(path='/fetch/manifest/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code)
+        self._test(token='Invalid base64', expected_status=400)
