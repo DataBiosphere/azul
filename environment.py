@@ -206,7 +206,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Makefile so that a change to the version does not require updating
         # requirements.
         #
-        'azul_docker_pycharm_version': '2022.3.3-3',
+        'azul_docker_pycharm_version': '2022.3.3-4',
 
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET
