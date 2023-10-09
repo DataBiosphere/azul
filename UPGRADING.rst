@@ -20,6 +20,22 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#94 Resolve vulnerabilities in azul-pycharm
+=====================================================================
+
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to the ``sandbox``, ``anvilbox``, or ``hammerbox``
+deployments, manually deploy the ``shared`` component of the corresponding main
+deployment. If the PR fails during testing and is not merged, roll back the
+changes made to the main deployments by deploying the ``shared`` component from
+the ``develop`` branch.
+
+When deploying to ``prod``, manually deploy ``prod.gitlab`` just before
+pushing the merge commit to the GitLab instance.
+
+
 #5301 Alarm on detection of new vulnerabilities by Inspector
 ============================================================
 
