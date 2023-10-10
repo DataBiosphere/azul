@@ -436,7 +436,8 @@ class IndexService(DocumentService):
                 old_aggregate.coordinates.entity: old_aggregate.num_contributions
                 for old_aggregate in old_aggregates.values()
             })
-            # Read all contributions from Elasticsearch
+
+            # Read all contributions
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.coordinates.entity
                                      for contribution in contributions)
@@ -446,26 +447,34 @@ class IndexService(DocumentService):
                 raise EventualConsistencyException(message, *args)
             assert all(tallies[entity] <= actual_tally
                        for entity, actual_tally in actual_tallies.items())
-            # Combine the contributions into old_aggregates, one per entity
+
+            # Combine the contributions into new aggregates, one per entity
             new_aggregates = self._aggregate(contributions)
-            # Set the expected document version from the old version
+
+            # Remove old aggregates (leaving over only deletions) while
+            # propagating the expected document version to the corresponding new
+            # aggregate
             for new_aggregate in new_aggregates:
                 old_aggregate = old_aggregates.pop(new_aggregate.coordinates.entity, None)
                 new_aggregate.version = None if old_aggregate is None else old_aggregate.version
-            # Empty out any unreferenced aggregates (can only happen for deletions)
+
+            # Empty out the left-over, deleted aggregates
             for old_aggregate in old_aggregates.values():
                 old_aggregate.contents = {}
                 new_aggregates.append(old_aggregate)
-            # Write aggregates to Elasticsearch
+
+            # Write new aggregates
             writer.write(new_aggregates)
-            # Retry if necessary
-            if not writer.retries:
+
+            # Retry writes if necessary
+            if writer.retries:
+                tallies: CataloguedTallies = {
+                    aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
+                    for aggregate in new_aggregates
+                    if aggregate.coordinates in writer.retries
+                }
+            else:
                 break
-            tallies: CataloguedTallies = {
-                aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
-                for aggregate in new_aggregates
-                if aggregate.coordinates in writer.retries
-            }
         writer.raise_on_errors()
 
     def _read_aggregates(self,

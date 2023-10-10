@@ -1407,8 +1407,8 @@ class Aggregate(Document[AggregateCoordinates]):
                                  document=document,
                                  version=version,
                                  num_contributions=document['num_contributions'],
-                                 sources=map(DocumentSource.from_json,
-                                             cast(list[SourceJSON], document['sources'])),
+                                 sources=set(map(DocumentSource.from_json,
+                                                 cast(list[SourceJSON], document['sources']))),
                                  bundles=document.get('bundles'))
         assert isinstance(self, Aggregate)
         return self
@@ -1418,7 +1418,7 @@ class Aggregate(Document[AggregateCoordinates]):
         return super().mandatory_source_fields() + [
             'num_contributions',
             'sources.id',
-            'sources.name',
+            'sources.spec'
         ]
 
     def to_json(self) -> JSON:
