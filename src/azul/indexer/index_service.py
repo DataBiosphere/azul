@@ -515,6 +515,8 @@ class IndexService(DocumentService):
                     if conflicts == 0:
                         retry_replicas.append(r)
                     elif conflicts == 1:
+                        # FIXME: Track replica hub IDs
+                        #        https://github.com/DataBiosphere/azul/issues/5360
                         writer.conflicts.pop(r.coordinates)
                         num_present += 1
                     else:
