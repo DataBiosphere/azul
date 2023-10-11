@@ -44,7 +44,6 @@ from typing import (
     IO,
     Optional,
     Protocol,
-    Union,
     cast,
 )
 import unittest
@@ -110,7 +109,6 @@ from azul.es import (
     ESClientFactory,
 )
 from azul.http import (
-    RetryAfter301,
     http_client,
 )
 from azul.indexer import (
@@ -391,9 +389,14 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     num_fastq_bytes = 1024 * 1024
 
+    _http: urllib3.PoolManager
+    _plain_http: urllib3.PoolManager
+
     def setUp(self) -> None:
         super().setUp()
-        self._http = http_client()
+        self._plain_http = http_client()
+        # Note that this attribute is swizzled in self._authorization_context
+        self._http = self._plain_http
 
     @contextmanager
     def subTest(self, msg: Any = None, **params: Any):
@@ -674,47 +677,66 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return json.loads(self._get_url_content(method, url))
 
     def _get_url_content(self, method: str, url: furl) -> bytes:
-        return self._get_url(method, url).data
+        while True:
+            response = self._get_url(method, url)
+            if response.status in [301, 302]:
+                retry_after = response.headers.get('Retry-After')
+                if retry_after is not None:
+                    retry_after = float(retry_after)
+                    log.info('Sleeping %.3fs to honor Retry-After header', retry_after)
+                    time.sleep(retry_after)
+                url = furl(response.headers['Location'])
+                method = GET
+            else:
+                return response.data
 
     def _get_url(self,
                  method: str,
-                 url: Union[furl, str],
-                 allow_redirects: bool = True,
+                 url: furl,
                  stream: bool = False
                  ) -> urllib3.HTTPResponse:
-        retry = RetryAfter301(total=30, redirect=30 if allow_redirects else 0)
-        response = self._get_url_unchecked(method,
-                                           url,
-                                           retries=retry,
-                                           preload_content=not stream)
-        expected_statuses = (200,) if allow_redirects else (200, 301, 302)
-        self._assertResponseStatus(response, expected_statuses)
+        response = self._get_url_unchecked(method, url, stream=stream)
+        self._assertResponseStatus(response, 200, 301, 302)
         return response
+
+    #: Hosts that require an OAuth 2.0 bearer token via the Authorization header
+
+    authenticating_hosts = {
+        config.sam_service_url.host,
+        config.tdr_service_url.host,
+        config.indexer_endpoint.host,
+        config.service_endpoint.host
+    }
 
     def _get_url_unchecked(self,
                            method: str,
-                           url: Union[furl, str],
+                           url: furl,
                            *,
-                           retries: Optional[Union[urllib3.util.retry.Retry, bool, int]] = None,
-                           redirect: bool = True,
-                           preload_content: bool = True) -> urllib3.HTTPResponse:
+                           stream: bool = False
+                           ) -> urllib3.HTTPResponse:
+        if url.host in self.authenticating_hosts:
+            http, text = self._http, 'contextual'
+        else:
+            http, text = self._plain_http, 'plain'
         url = str(url)
-        log.info('%s %s ...', method, url)
-        response = self._http.request(method,
-                                      url,
-                                      retries=retries,
-                                      redirect=redirect,
-                                      preload_content=preload_content)
+        log.info('%s %s using %s client...', method, url, text)
+        response = http.request(method=method,
+                                url=url,
+                                retries=urllib3.Retry(total=30, redirect=0),
+                                redirect=False,
+                                preload_content=not stream)
         assert isinstance(response, urllib3.HTTPResponse)
         log.info('... -> %i', response.status)
         return response
 
     def _assertResponseStatus(self,
                               response: urllib3.HTTPResponse,
-                              expected_statuses: tuple[int, ...] = (200,)):
+                              expected_status: int,
+                              /,
+                              *expected_statuses: int):
         # Using assert to avoid tampering with response content prematurely
         # (in case the response is streamed)
-        assert response.status in expected_statuses, (
+        assert response.status in [expected_status, *expected_statuses], (
             response.status,
             response.reason,
             (
@@ -765,12 +787,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # https://github.com/ga4gh/data-repository-service-schemas/issues/360
         # https://github.com/ga4gh/data-repository-service-schemas/issues/361
         self.assertIsNone(access.headers)
-        self.assertEqual('https', furl(access.url).scheme)
+        access_url = furl(access.url)
+        self.assertEqual('https', access_url.scheme)
         # Try HEAD first because it's more efficient, fall back to GET if the
         # DRS implementations prohibits it, like Azul's DRS proxy of DSS.
-        for method in (HEAD, GET):
-            # The signed access URL shouldn't require any authentication
-            response = self._get_url_unchecked(method, access.url)
+        for method in [HEAD, GET]:
+            response = self._get_url_unchecked(method, access_url)
             if response.status != 403:
                 break
         self.assertEqual(200, response.status, response.data)
@@ -846,7 +868,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertEqual(301, response['Status'])
                     response = self._get_url_json(GET, furl(response['Location']))
 
-                response = self._get_url(GET, response['Location'], stream=True)
+                response = self._get_url(GET, furl(response['Location']), stream=True)
                 self._validate_file_response(response, self._file_ext(file))
 
     def _file_ext(self, file: JSON) -> str:
@@ -890,10 +912,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 access = drs.get_object(drs_uri, access_method=access_method)
                 self.assertIsNone(access.headers)
                 if access.method is AccessMethod.https:
-                    response = self._get_url(GET, access.url, stream=True)
+                    response = self._get_url(GET, furl(access.url), stream=True)
                     self._validate_file_response(response, file_ext)
                 elif access.method is AccessMethod.gs:
-                    content = self._get_gs_url_content(access.url, size=self.num_fastq_bytes)
+                    content = self._get_gs_url_content(furl(access.url), size=self.num_fastq_bytes)
                     self._validate_file_content(content, file_ext)
                 else:
                     self.fail(access_method)
@@ -909,10 +931,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 with self._get_url(method=GET,
                                    url=file_url,
-                                   allow_redirects=False,
                                    stream=True
                                    ) as response:
-                    # We handle redirects ourselves so we can log each request
                     if response.status in (301, 302):
                         file_url = response.headers['Location']
                         try:
@@ -923,20 +943,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                             time.sleep(int(retry_after))
                     else:
                         break
-            self._assertResponseStatus(response)
+            self._assertResponseStatus(response, 200)
             self._validate_file_content(response, file_ext)
 
     def _get_gs_url_content(self,
-                            url: Union[furl, str],
+                            url: furl,
                             size: Optional[int] = None
                             ) -> BytesIO:
-        url = str(url)
-        self.assertTrue(url.startswith('gs://'))
+        self.assertEquals('gs', url.scheme)
         path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
         credentials = service_account.Credentials.from_service_account_file(path)
         storage_client = storage.Client(credentials=credentials)
         content = BytesIO()
-        storage_client.download_blob_to_file(url, content, start=0, end=size)
+        storage_client.download_blob_to_file(str(url), content, start=0, end=size)
         return content
 
     def _validate_fastq_content(self, content: ReadableFileObject):
@@ -1100,9 +1119,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             entities.extend(hits)
             url = body['pagination']['next']
             if url is None:
-                break
-
-        return entities
+                return entities
+            else:
+                url = furl(url)
 
     def _assert_indices_exist(self, catalog: CatalogName):
         """
@@ -1241,10 +1260,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for file in files
         }
         file_url = furl(first(managed_access_file_urls))
-        response = self._get_url_unchecked(GET, file_url, redirect=False)
+        response = self._get_url_unchecked(GET, file_url)
         self.assertEqual(404, response.status)
         with self._service_account_credentials:
-            response = self._get_url_unchecked(GET, file_url, redirect=False)
+            response = self._get_url_unchecked(GET, file_url)
             self.assertIn(response.status, (301, 302))
         return files
 
@@ -1333,7 +1352,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             })
             while True:
                 with self._service_account_credentials:
-                    response = self._get_url_unchecked(GET, manifest_url, redirect=False)
+                    response = self._get_url_unchecked(GET, manifest_url)
                 if response.status == 302:
                     break
                 else:
