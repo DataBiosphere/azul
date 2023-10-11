@@ -198,6 +198,7 @@ class ReadableFileObject(Protocol):
 
 GET = 'GET'
 HEAD = 'HEAD'
+PUT = 'PUT'
 POST = 'POST'
 
 
@@ -574,7 +575,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     validator = validators[format]
                     args['format'] = format.value
                 start = time.time()
-                response = self._check_endpoint(GET, '/manifest/files', args=args)
+                response = self._check_endpoint(PUT, '/manifest/files', args=args)
                 log.info('Request took %.3fs to execute.', time.time() - start)
                 validator(catalog, response)
 
@@ -1317,9 +1318,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
         def assert_manifest(expected_bundles):
-            manifest_rows = self._read_csv_manifest(BytesIO(
-                self._get_url_content(GET, manifest_url)
-            ))
+            manifest = BytesIO(self._get_url_content(PUT, manifest_url))
+            manifest_rows = self._read_csv_manifest(manifest)
             all_found_bundles = set()
             for row in manifest_rows:
                 row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.padded_joiner))
@@ -1345,22 +1345,23 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             # Create a single-file curl manifest and verify that the OAuth2
             # token is present on the command line
             managed_access_file_id = one(self.random.choice(files)['files'])['uuid']
-            manifest_url.set(args={
-                'catalog': catalog,
-                'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
-                'format': 'curl'
-            })
+            filters = {'fileId': {'is': [managed_access_file_id]}}
+            manifest_url.set(args=dict(catalog=catalog,
+                                       filters=json.dumps(filters),
+                                       format='curl'))
+            method = PUT
             while True:
                 with self._service_account_credentials:
-                    response = self._get_url_unchecked(GET, manifest_url)
+                    response = self._get_url_unchecked(method, manifest_url)
                 if response.status == 302:
                     break
                 else:
                     self.assertEqual(response.status, 301)
-                    time.sleep(int(response.headers['Retry-After']))
-                    manifest_url.url = response.headers['Location']
+                    time.sleep(float(response.headers['Retry-After']))
+                    manifest_url = furl(response.headers['Location'])
+                    method = GET
             token = self._tdr_client.credentials.token
-            expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
+            expected_auth_header = f'Authorization: Bearer {token}'.encode()
             command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
             for command_line in command_lines:
                 self.assertIn(expected_auth_header, command_line)

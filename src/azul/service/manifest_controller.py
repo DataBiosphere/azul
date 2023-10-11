@@ -40,6 +40,7 @@ from azul.service.async_manifest_service import (
 )
 from azul.service.manifest_service import (
     CachedManifestNotFound,
+    InvalidManifestKey,
     Manifest,
     ManifestKey,
     ManifestPartition,
@@ -110,15 +111,24 @@ class ManifestController(SourceController):
 
     def get_manifest_async(self,
                            *,
+                           token_or_key: str,
                            query_params: Mapping[str, str],
                            fetch: bool,
                            authentication: Optional[Authentication]):
-
-        token = query_params.get('token')
-        if token is None:
+        if token_or_key is None:
+            token, manifest_key = None, None
+        else:
             try:
-                manifest_key = query_params['objectKey']
-            except KeyError:
+                token, manifest_key = Token.decode(token_or_key), None
+            except InvalidTokenError:
+                try:
+                    token, manifest_key = None, ManifestKey.decode(token_or_key)
+                except InvalidManifestKey:
+                    # The OpenAPI spec doesn't distinguish key and token
+                    raise BadRequestError('Invalid token')
+
+        if token is None:
+            if manifest_key is None:
                 format = ManifestFormat(query_params['format'])
                 catalog = query_params.get('catalog', config.default_catalog)
                 filters = self.get_filters(catalog, authentication, query_params.get('filters'))
@@ -140,32 +150,30 @@ class ManifestController(SourceController):
                 else:
                     manifest_key = manifest.manifest_key
             else:
-                manifest_key = ManifestKey.decode(manifest_key)
+                if fetch:
+                    raise BadRequestError('The fetch endpoint does not support a manifest key')
                 if authentication is not None:
-                    raise BadRequestError("Must omit authentication when passing 'objectKey'")
+                    raise BadRequestError('Must omit authentication when passing a manifest key')
                 try:
                     manifest = self.service.get_cached_manifest_with_key(manifest_key)
                 except CachedManifestNotFound:
-                    raise GoneError('The requested manifest has expired, '
-                                    'please request a new one')
+                    raise GoneError('The requested manifest has expired, please request a new one')
         else:
             try:
-                token = Token.decode(token)
                 token_or_state = self.async_service.inspect_generation(token)
-            except InvalidTokenError as e:
-                raise BadRequestError(e.args) from e
+            except InvalidTokenError:
+                raise BadRequestError('Invalid token')
+            if isinstance(token_or_state, Token):
+                token, manifest, manifest_key = token_or_state, None, None
+            elif isinstance(token_or_state, dict):
+                state = token_or_state
+                manifest = Manifest.from_json(state['manifest'])
+                manifest_key = manifest.manifest_key
             else:
-                if isinstance(token_or_state, Token):
-                    token, manifest, manifest_key = token_or_state, None, None
-                elif isinstance(token_or_state, dict):
-                    state = token_or_state
-                    manifest = Manifest.from_json(state['manifest'])
-                    manifest_key = manifest.manifest_key
-                else:
-                    assert False, token_or_state
+                assert False, token_or_state
 
         if manifest is None:
-            url = self.manifest_url_func(fetch=fetch, token=token.encode())
+            url = self.manifest_url_func(fetch=fetch, token_or_key=token.encode())
             body = {
                 'Status': 301,
                 'Location': str(url),
@@ -194,7 +202,7 @@ class ManifestController(SourceController):
                 # remains valid for longer than 1 hour. Currently, the AnVIL
                 # plugin does not support cURL-format manifests.
                 assert not config.is_anvil_enabled(manifest_key.catalog)
-                url = self.manifest_url_func(fetch=False, objectKey=manifest_key.encode())
+                url = self.manifest_url_func(fetch=False, token_or_key=manifest_key.encode())
             else:
                 url = furl(manifest.location)
             body = {
@@ -202,6 +210,7 @@ class ManifestController(SourceController):
                 'Location': str(url),
                 'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
+
         if fetch:
             return Response(body=body)
         else:

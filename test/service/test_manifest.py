@@ -1225,14 +1225,14 @@ class TestManifestEndpoints(ManifestTestCase):
     def test_manifest_format_validation(self):
         url = self.base_url.set(path='/manifest/files',
                                 args=dict(format='invalid-type'))
-        response = requests.get(str(url))
+        response = requests.put(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
     def test_manifest_filter_validation(self):
         url = self.base_url.set(path='/manifest/files',
                                 args=dict(format='compact',
                                           filters=dict(fileFormat=['pdf'])))
-        response = requests.get(str(url))
+        response = requests.put(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
     @manifest_test
@@ -1445,7 +1445,7 @@ class TestManifestResponse(ManifestTestCase):
         """
         for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
-                with self.subTest(format=format, fetch=fetch):
+                with (self.subTest(format=format, fetch=fetch)):
                     object_url = 'https://url.to.manifest?foo=bar'
                     default_file_name = 'some_object_key.csv'
                     manifest_key = ManifestKey(catalog=self.catalog,
@@ -1461,15 +1461,19 @@ class TestManifestResponse(ManifestTestCase):
                     args = dict(catalog=self.catalog,
                                 format=format.value,
                                 filters='{}')
-                    request_url = self.base_url.set(path='/manifest/files', args=args)
-                    redirect_url = self.base_url.set(path='/manifest/files',
-                                                     args=dict(objectKey=manifest_key.encode()))
-                    expect_redirect = fetch and format is ManifestFormat.curl
-                    expected_url = redirect_url if expect_redirect else object_url
+                    path = ['manifest', 'files']
+                    request_url = self.base_url.set(path=path, args=args)
+                    if fetch and format is ManifestFormat.curl:
+                        expected_url = str(self.base_url.set(path=[*path, manifest_key.encode()]))
+                        expected_url_for_bash = expected_url
+                    else:
+                        expected_url = object_url
+                        expected_url_for_bash = f"'{expected_url}'"
                     if format is ManifestFormat.curl:
+                        options = "--location --fail"
                         expected = {
-                            'cmd.exe': f'curl.exe --location --fail "{expected_url}" | curl.exe --config -',
-                            'bash': f"curl --location --fail '{expected_url}' | curl --config -"
+                            'cmd.exe': f'curl.exe {options} "{expected_url}" | curl.exe --config -',
+                            'bash': f'curl {options} {expected_url_for_bash} | curl --config -'
                         }
                     else:
                         if format is ManifestFormat.terra_bdbag:
@@ -1479,19 +1483,21 @@ class TestManifestResponse(ManifestTestCase):
                         options = '--location --fail --output'
                         expected = {
                             'cmd.exe': f'curl.exe {options} "{file_name}" "{expected_url}"',
-                            'bash': f"curl {options} {file_name} '{expected_url}'"
+                            'bash': f'curl {options} {file_name} {expected_url_for_bash}'
                         }
                     if fetch:
                         request_url.path.segments.insert(0, 'fetch')
-                        response = requests.get(str(request_url)).json()
                         expected = {
                             'Status': 302,
-                            'Location': str(expected_url),
+                            'Location': expected_url,
                             'CommandLine': expected
                         }
-                        self.assertEqual(expected, response)
+                        for method in ['PUT', 'GET']:
+                            with self.subTest(method=method):
+                                response = requests.request(method, str(request_url)).json()
+                                self.assertEqual(expected, response)
                     else:
-                        response = requests.get(str(request_url), allow_redirects=False)
+                        response = requests.put(str(request_url), allow_redirects=False)
                         expected = ''.join(
                             f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
                             for shell, cmd in expected.items()

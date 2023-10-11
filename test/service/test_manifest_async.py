@@ -1,4 +1,7 @@
 import datetime
+from itertools import (
+    product,
+)
 import json
 from unittest import (
     mock,
@@ -173,8 +176,12 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
         with (responses.RequestsMock() as helper):
             helper.add_passthru(str(self.base_url))
-            for fetch in (True, False):
-                with self.subTest(fetch=fetch):
+            # FIXME: Remove put=False and therefore `put`
+            #        https://github.com/DataBiosphere/azul/issues/5533
+            for put, fetch in product((True, False), repeat=2):
+                if not fetch and not put:
+                    continue  # we provide the backwards-compatible GET only for fetch
+                with self.subTest(put=put, fetch=fetch):
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_id
                     format = ManifestFormat.compact
@@ -192,8 +199,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                format=format,
                                                manifest_hash='',
                                                source_hash='')
-                    manifest_url = self.base_url.set(path=path,
-                                                     args=dict(objectKey=manifest_key.encode()))
+                    manifest_url = self.base_url.set(path=path)
+                    manifest_url.path.segments.append(manifest_key.encode())
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format=format,
@@ -230,7 +237,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                           side_effect=CachedManifestNotFound(manifest_key))
                     ):
                         for i, expected_status in enumerate(3 * [301] + [302]):
-                            response = requests.get(str(url), allow_redirects=False)
+                            response = requests.request(method='PUT' if put and i == 0 else 'GET',
+                                                        url=str(url),
+                                                        allow_redirects=False)
                             if fetch:
                                 self.assertEqual(200, response.status_code)
                                 response = response.json()
@@ -298,7 +307,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
                     reset()
-
             mock_effects = [
                 manifest,
                 CachedManifestNotFound(manifest_key)
@@ -308,7 +316,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                    side_effect=mock_effects):
                 for mock_effect in mock_effects:
                     with self.subTest(mock_effect=mock_effect):
-                        assert manifest_key.encode() == manifest_url.args['objectKey']
+                        assert manifest_key.encode() == manifest_url.path.segments[-1]
                         response = requests.get(str(manifest_url), allow_redirects=False)
                         if isinstance(mock_effect, Manifest):
                             self.assertEqual(302, response.status_code)
@@ -330,8 +338,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                   wait_time=0).encode()
 
     def _test(self, *, expected_status, token=token):
-        url = self.base_url.set(path='/fetch/manifest/files',
-                                args=dict(token=token))
+        url = self.base_url.set(path=['fetch', 'manifest', 'files', token])
         response = requests.get(str(url))
         self.assertEqual(expected_status, response.status_code)
 
@@ -345,7 +352,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 'Error': {
                     'Code': 'ExecutionDoesNotExist'
                 }
-            }, '')
+            }, 'DescribeExecution')
             self._test(expected_status=400)
 
     def test_boto_error(self):

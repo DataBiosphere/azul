@@ -38,7 +38,11 @@ class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
         super().tearDownClass()
 
     def assertResponseStatus(self, url: furl, status: int) -> Response:
-        response = requests.get(str(url))
+        if str(url.path) in {'/manifest/files', '/fetch/manifest/files'}:
+            method = 'PUT'
+        else:
+            method = 'GET'
+        response = requests.request(method, str(url))
         self.assertEqual(status, response.status_code, response.content)
         return response
 
