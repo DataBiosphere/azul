@@ -17,6 +17,6 @@ jmespath==1.0.1
 more-itertools==9.0.0
 requests==2.31.0
 rsa==4.7.2  # resolve ambiguity with build-time dependency
-urllib3==1.26.12
+urllib3==1.26.17
 werkzeug==2.3.3
 -r requirements.trans.txt

@@ -221,7 +221,7 @@ emit_tf({
                         },
                         {
                             'priority': 1,
-                            'name': 'RateRule',
+                            'name': config.waf_rate_rule_name,
                             'action': {
                                 'block': {}
                             },
@@ -232,7 +232,7 @@ emit_tf({
                                 }
                             },
                             'visibility_config': {
-                                'metric_name': 'RateRule',
+                                'metric_name': config.waf_rate_rule_name,
                                 'sampled_requests_enabled': True,
                                 'cloudwatch_metrics_enabled': True
                             }
@@ -315,6 +315,34 @@ emit_tf({
                         'cloudwatch_metrics_enabled': True,
                         'metric_name': 'WebACL',
                         'sampled_requests_enabled': True,
+                    }
+                }
+            },
+            'aws_cloudwatch_log_group': {
+                'waf_api_gateway': {
+                    # WAF logging requires this specific log group name prefix
+                    # https://docs.aws.amazon.com/waf/latest/developerguide/logging-cw-logs.html#logging-cw-logs-naming
+                    'name': 'aws-waf-logs-' + config.qualified_resource_name('api_gateway'),
+                    'retention_in_days': config.audit_log_retention_days
+                }
+            },
+            'aws_wafv2_web_acl_logging_configuration': {
+                'waf_api_gateway': {
+                    'log_destination_configs': [
+                        '${aws_cloudwatch_log_group.waf_api_gateway.arn}'
+                    ],
+                    'resource_arn': '${aws_wafv2_web_acl.api_gateway.arn}',
+                    'logging_filter': {
+                        'default_behavior': 'DROP',
+                        'filter': {
+                            'behavior': 'KEEP',
+                            'requirement': 'MEETS_ALL',
+                            'condition': {
+                                'action_condition': {
+                                    'action': 'BLOCK'
+                                }
+                            }
+                        }
                     }
                 }
             }

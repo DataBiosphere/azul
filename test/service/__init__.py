@@ -33,12 +33,15 @@ from app_test_case import (
 from azul import (
     JSON,
     cached_property,
-    config,
 )
 from azul.indexer import (
     Bundle,
     BundleUUID,
     SourcedBundleFQID,
+)
+from azul.indexer.document import (
+    DocumentType,
+    IndexName,
 )
 from azul.logging import (
     configure_test_logging,
@@ -181,9 +184,9 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
 
     @property
     def _index_name(self):
-        return config.es_index_name(catalog=self.catalog,
+        return str(IndexName.create(catalog=self.catalog,
                                     entity_type='files',
-                                    aggregate=True)
+                                    doc_type=DocumentType.aggregate))
 
 
 class StorageServiceTestMixin:

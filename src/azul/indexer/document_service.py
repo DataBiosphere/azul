@@ -14,6 +14,9 @@ from azul import (
     cache,
     config,
 )
+from azul.collections import (
+    deep_dict_merge,
+)
 from azul.indexer.document import (
     Aggregate,
     CataloguedFieldTypes,
@@ -88,10 +91,10 @@ class DocumentService:
         aggregate_cls = self.aggregate_class(catalog)
         for transformer_cls in self.transformer_types(catalog):
             field_types.update(transformer_cls.field_types())
-        return {
-            **Contribution.field_types(field_types),
-            **aggregate_cls.field_types(field_types)
-        }
+        return deep_dict_merge((
+            Contribution.field_types(field_types),
+            aggregate_cls.field_types(field_types)
+        ))
 
     def catalogued_field_types(self) -> CataloguedFieldTypes:
         return {

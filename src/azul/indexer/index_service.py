@@ -70,9 +70,11 @@ from azul.indexer.document import (
     Contribution,
     Document,
     DocumentCoordinates,
+    DocumentType,
     EntityID,
     EntityReference,
     EntityType,
+    IndexName,
     VersionType,
 )
 from azul.indexer.document_service import (
@@ -118,8 +120,9 @@ class IndexService(DocumentService):
 
     def settings(self, index_name) -> JSON:
 
-        index_name = config.parse_es_index_name(index_name)
-        aggregate = index_name.aggregate
+        index_name = IndexName.parse(index_name)
+        index_name.validate()
+        aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
         assert catalog is not None, catalog
         if config.catalogs[catalog].is_integration_test_catalog:
@@ -166,11 +169,11 @@ class IndexService(DocumentService):
 
     def index_names(self, catalog: CatalogName) -> list[str]:
         return [
-            config.es_index_name(catalog=catalog,
+            str(IndexName.create(catalog=catalog,
                                  entity_type=entity_type,
-                                 aggregate=aggregate)
+                                 doc_type=doc_type))
             for entity_type in self.entity_types(catalog)
-            for aggregate in (False, True)
+            for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ]
 
     def fetch_bundle(self,
@@ -433,7 +436,8 @@ class IndexService(DocumentService):
                 old_aggregate.coordinates.entity: old_aggregate.num_contributions
                 for old_aggregate in old_aggregates.values()
             })
-            # Read all contributions from Elasticsearch
+
+            # Read all contributions
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.coordinates.entity
                                      for contribution in contributions)
@@ -443,26 +447,34 @@ class IndexService(DocumentService):
                 raise EventualConsistencyException(message, *args)
             assert all(tallies[entity] <= actual_tally
                        for entity, actual_tally in actual_tallies.items())
-            # Combine the contributions into old_aggregates, one per entity
+
+            # Combine the contributions into new aggregates, one per entity
             new_aggregates = self._aggregate(contributions)
-            # Set the expected document version from the old version
+
+            # Remove old aggregates (leaving over only deletions) while
+            # propagating the expected document version to the corresponding new
+            # aggregate
             for new_aggregate in new_aggregates:
                 old_aggregate = old_aggregates.pop(new_aggregate.coordinates.entity, None)
                 new_aggregate.version = None if old_aggregate is None else old_aggregate.version
-            # Empty out any unreferenced aggregates (can only happen for deletions)
+
+            # Empty out the left-over, deleted aggregates
             for old_aggregate in old_aggregates.values():
                 old_aggregate.contents = {}
                 new_aggregates.append(old_aggregate)
-            # Write aggregates to Elasticsearch
+
+            # Write new aggregates
             writer.write(new_aggregates)
-            # Retry if necessary
-            if not writer.retries:
+
+            # Retry writes if necessary
+            if writer.retries:
+                tallies: CataloguedTallies = {
+                    aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
+                    for aggregate in new_aggregates
+                    if aggregate.coordinates in writer.retries
+                }
+            else:
                 break
-            tallies: CataloguedTallies = {
-                aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
-                for aggregate in new_aggregates
-                if aggregate.coordinates in writer.retries
-            }
         writer.raise_on_errors()
 
     def _read_aggregates(self,
@@ -513,9 +525,9 @@ class IndexService(DocumentService):
 
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
-            index = config.es_index_name(catalog=entity.catalog,
+            index = str(IndexName.create(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
-                                         aggregate=False)
+                                         doc_type=DocumentType.contribution))
             entity_ids_by_index[index].add(entity.entity_id)
 
         query = {
