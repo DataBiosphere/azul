@@ -557,9 +557,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
         assert supported_formats
         validators: dict[ManifestFormat, Callable[[str, bytes], None]] = {
-            ManifestFormat.compact: self._check_manifest,
-            ManifestFormat.terra_bdbag: self._check_terra_bdbag,
-            ManifestFormat.terra_pfb: self._check_terra_pfb,
+            ManifestFormat.compact: self._check_compact_manifest,
+            ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
+            ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
             ManifestFormat.curl: self._check_curl_manifest
         }
         for format_ in [None, *supported_formats]:
@@ -724,15 +724,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             )
         )
 
-    def _check_manifest(self, _catalog: CatalogName, response: bytes):
-        self.__check_manifest(BytesIO(response), 'bundle_uuid')
+    def _check_compact_manifest(self, _catalog: CatalogName, response: bytes):
+        self.__check_csv_manifest(BytesIO(response), 'bundle_uuid')
 
-    def _check_terra_bdbag(self, catalog: CatalogName, response: bytes):
+    def _check_terra_bdbag_manifest(self, catalog: CatalogName, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
             with zip_fh.open(file_path) as file:
-                rows = self.__check_manifest(file, 'bundle_uuid')
+                rows = self.__check_csv_manifest(file, 'bundle_uuid')
                 for row in rows:
                     # Terra doesn't allow colons in this column, but they may
                     # exist in versions indexed by TDR
@@ -776,7 +776,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(200, response.status, response.data)
         self.assertEqual(size, int(response.headers['Content-Length']))
 
-    def _check_terra_pfb(self, _catalog: CatalogName, response: bytes):
+    def _check_terra_pfb_manifest(self, _catalog: CatalogName, response: bytes):
         reader = fastavro.reader(BytesIO(response))
         for record in reader:
             fastavro.validate(record, reader.writer_schema)
@@ -789,15 +789,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             rows_expected = set(f['name'] for f in fields)
             self.assertEqual(rows_present, rows_expected)
 
-    def _read_manifest(self, file: IO[bytes]) -> csv.DictReader:
+    def _read_csv_manifest(self, file: IO[bytes]) -> csv.DictReader:
         text = TextIOWrapper(file)
         return csv.DictReader(text, delimiter='\t')
 
-    def __check_manifest(self,
-                         file: IO[bytes],
-                         uuid_field_name: str
-                         ) -> list[Mapping[str, str]]:
-        reader = self._read_manifest(file)
+    def __check_csv_manifest(self,
+                             file: IO[bytes],
+                             uuid_field_name: str
+                             ) -> list[Mapping[str, str]]:
+        reader = self._read_csv_manifest(file)
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
@@ -1298,7 +1298,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
         def assert_manifest(expected_bundles):
-            manifest_rows = self._read_manifest(BytesIO(
+            manifest_rows = self._read_csv_manifest(BytesIO(
                 self._get_url_content(GET, manifest_url)
             ))
             all_found_bundles = set()
