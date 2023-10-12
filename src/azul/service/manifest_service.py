@@ -31,6 +31,7 @@ import itertools
 from itertools import (
     chain,
 )
+import json
 import logging
 from operator import (
     itemgetter,
@@ -131,7 +132,7 @@ from azul.vendored.frozendict import (
     frozendict,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class ManifestUrlFunc(Protocol):
@@ -139,10 +140,47 @@ class ManifestUrlFunc(Protocol):
     def __call__(self,
                  *,
                  fetch: bool = True,
-                 catalog: CatalogName,
-                 format_: ManifestFormat,
+                 token_or_key: Optional[str] = None,
                  **params: str
                  ) -> mutable_furl: ...
+
+
+@attr.s(auto_attribs=True, kw_only=False, frozen=True)
+class InvalidManifestKey(Exception):
+    value: str
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class ManifestKey:
+    catalog: CatalogName
+    format: ManifestFormat
+    manifest_hash: str
+    source_hash: str
+
+    def to_json(self):
+        return {
+            'catalog': self.catalog,
+            'format': self.format.value,
+            'manifest_hash': self.manifest_hash,
+            'source_hash': self.source_hash
+        }
+
+    @classmethod
+    def from_json(cls, json: JSON) -> 'ManifestKey':
+        return cls(catalog=json['catalog'],
+                   format=ManifestFormat(json['format']),
+                   manifest_hash=json['manifest_hash'],
+                   source_hash=json['source_hash'])
+
+    def encode(self) -> str:
+        return base64.urlsafe_b64encode(json.dumps(self.to_json()).encode()).decode()
+
+    @classmethod
+    def decode(cls, value: str) -> 'ManifestKey':
+        try:
+            return cls.from_json(json.loads(base64.urlsafe_b64decode(value).decode()))
+        except Exception as e:
+            raise InvalidManifestKey(value) from e
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -158,16 +196,10 @@ class Manifest:
     was_cached: bool
 
     #: The format of the manifest
-    format_: ManifestFormat
+    format: ManifestFormat
 
-    #: The catalog used to generate the manifest
-    catalog: CatalogName
-
-    #: The filters used to generate the manifest
-    filters: Filters
-
-    #: The object_key associated with the manifest
-    object_key: str
+    #: The key under which the manifest is stored
+    manifest_key: ManifestKey
 
     #: The proposed file name of the manifest when downloading it to a user's
     #: system
@@ -177,10 +209,8 @@ class Manifest:
         return {
             'location': self.location,
             'was_cached': self.was_cached,
-            'format_': self.format_.value,
-            'catalog': self.catalog,
-            'filters': self.filters.to_json(),
-            'object_key': self.object_key,
+            'format': self.format.value,
+            'manifest_key': self.manifest_key.to_json(),
             'file_name': self.file_name
         }
 
@@ -188,10 +218,8 @@ class Manifest:
     def from_json(cls, json: JSON) -> 'Manifest':
         return cls(location=json['location'],
                    was_cached=json['was_cached'],
-                   format_=ManifestFormat(json['format_']),
-                   catalog=json['catalog'],
-                   filters=Filters.from_json(json['filters']),
-                   object_key=json['object_key'],
+                   format=ManifestFormat(json['format']),
+                   manifest_key=ManifestKey.from_json(json['manifest_key']),
                    file_name=json['file_name'])
 
 
@@ -312,8 +340,9 @@ class ManifestPartition:
                            is_last=True)
 
 
+@attr.s(auto_attribs=True, kw_only=False, frozen=True)
 class CachedManifestNotFound(Exception):
-    pass
+    manifest_key: ManifestKey
 
 
 class ManifestService(ElasticsearchService):
@@ -325,11 +354,11 @@ class ManifestService(ElasticsearchService):
 
     def get_manifest(self,
                      *,
-                     format_: ManifestFormat,
+                     format: ManifestFormat,
                      catalog: CatalogName,
                      filters: Filters,
                      partition: ManifestPartition,
-                     object_key: Optional[str] = None
+                     manifest_key: Optional[ManifestKey] = None
                      ) -> Union[Manifest, ManifestPartition]:
         """
         Return a fully populated manifest that ends with the given partition or
@@ -349,7 +378,7 @@ class ManifestService(ElasticsearchService):
         the next one. Repeat calling this method with the returned partition
         until the return value is a Manifest instance.
 
-        :param format_: The desired format of the manifest.
+        :param format: The desired format of the manifest.
 
         :param catalog: The name of the catalog to generate the manifest from.
 
@@ -361,112 +390,93 @@ class ManifestService(ElasticsearchService):
                           instance will be returned. Otherwise, the next
                           ManifestPartition instance will be returned.
 
-        :param object_key: An optional S3 object key of the cached manifest. If
-                           None, the key will be computed dynamically. This may
-                           take a few seconds. If a valid cached manifest exists
-                           with the given key, it will be used. Otherwise, a new
-                           manifest will be created and stored at the given key.
+        :param manifest_key: An optional key identifying the cached manifest.
+                             If None, the key will be computed dynamically. This
+                             may take a few seconds. If a valid cached manifest
+                             exists with the given key, it will be used.
+                             Otherwise, a new manifest will be created and
+                             stored at the given key.
         """
-        generator = ManifestGenerator.for_format(format_=format_,
-                                                 service=self,
-                                                 catalog=catalog,
-                                                 filters=filters)
-        if object_key is None:
-            object_key = generator.compute_object_key()
-        file_name = self._get_cached_manifest_file_name(generator, object_key)
-        if file_name is None:
-            partition = generator.write(object_key, partition)
+        generator_cls = ManifestGenerator.cls_for_format(format)
+        generator = generator_cls(self, catalog, filters)
+        if manifest_key is None:
+            manifest_key = generator.manifest_key()
+        try:
+            return self._get_cached_manifest(generator_cls, manifest_key)
+        except CachedManifestNotFound:
+            partition = generator.write(manifest_key, partition)
             if partition.is_last:
-                file_name = partition.file_name
-                was_cached = False
+                return self._presign_manifest(generator_cls=generator_cls,
+                                              manifest_key=manifest_key,
+                                              file_name=partition.file_name,
+                                              was_cached=False)
             else:
                 return partition
-        else:
-            was_cached = True
-        presigned_url = self._presign_url(generator, object_key, file_name)
-        return Manifest(location=presigned_url,
-                        was_cached=was_cached,
-                        format_=format_,
-                        catalog=catalog,
-                        filters=filters,
-                        object_key=object_key,
-                        file_name=file_name)
-
-    def _presign_url(self,
-                     generator: 'ManifestGenerator',
-                     object_key: str,
-                     file_name: Optional[str]) -> str:
-        if not generator.use_content_disposition_file_name:
-            file_name = None
-        return self.storage_service.get_presigned_url(object_key,
-                                                      file_name=file_name)
 
     def get_cached_manifest(self,
-                            format_: ManifestFormat,
+                            format: ManifestFormat,
                             catalog: CatalogName,
                             filters: Filters
-                            ) -> tuple[str, Optional[Manifest]]:
-        generator = ManifestGenerator.for_format(format_,
-                                                 self,
-                                                 catalog,
-                                                 filters)
-        object_key = generator.compute_object_key()
-        file_name = self._get_cached_manifest_file_name(generator, object_key)
-        if file_name is None:
-            return object_key, None
-        else:
-            presigned_url = self._presign_url(generator, object_key, file_name)
-            return object_key, Manifest(location=presigned_url,
-                                        was_cached=True,
-                                        format_=format_,
-                                        catalog=catalog,
-                                        filters=filters,
-                                        object_key=object_key,
-                                        file_name=file_name)
+                            ) -> Manifest:
+        generator_cls = ManifestGenerator.cls_for_format(format)
+        generator = generator_cls(self, catalog, filters)
+        manifest_key = generator.manifest_key()
+        return self._get_cached_manifest(generator_cls, manifest_key)
 
-    def get_cached_manifest_with_object_key(self,
-                                            format_: ManifestFormat,
-                                            catalog: CatalogName,
-                                            filters: Filters,
-                                            object_key: str
-                                            ) -> Manifest:
-        generator = ManifestGenerator.for_format(format_,
-                                                 self,
-                                                 catalog,
-                                                 filters)
-        file_name = self._get_cached_manifest_file_name(generator, object_key)
+    def get_cached_manifest_with_key(self, manifest_key: ManifestKey) -> Manifest:
+        generator_cls = ManifestGenerator.cls_for_format(manifest_key.format)
+        return self._get_cached_manifest(generator_cls, manifest_key)
+
+    def _get_cached_manifest(self,
+                             generator_cls: Type['ManifestGenerator'],
+                             manifest_key: ManifestKey
+                             ) -> Manifest:
+        file_name = self._get_cached_manifest_file_name(generator_cls, manifest_key)
         if file_name is None:
-            raise CachedManifestNotFound
+            raise CachedManifestNotFound(manifest_key)
         else:
-            presigned_url = self._presign_url(generator, object_key, file_name)
-            return Manifest(location=presigned_url,
-                            was_cached=True,
-                            format_=format_,
-                            catalog=catalog,
-                            filters=filters,
-                            object_key=object_key,
-                            file_name=file_name)
+            return self._presign_manifest(generator_cls=generator_cls,
+                                          manifest_key=manifest_key,
+                                          file_name=file_name,
+                                          was_cached=True)
+
+    def _presign_manifest(self,
+                          generator_cls: Type['ManifestGenerator'],
+                          manifest_key: ManifestKey,
+                          file_name: Optional[str],
+                          was_cached: bool
+                          ) -> Manifest:
+        if not generator_cls.use_content_disposition_file_name:
+            file_name = None
+        object_key = generator_cls.s3_object_key(manifest_key)
+        presigned_url = self.storage_service.get_presigned_url(object_key, file_name)
+        return Manifest(location=presigned_url,
+                        was_cached=was_cached,
+                        format=generator_cls.format(),
+                        manifest_key=manifest_key,
+                        file_name=file_name)
 
     file_name_tag = 'azul_file_name'
 
     def _get_cached_manifest_file_name(self,
-                                       generator: 'ManifestGenerator',
-                                       object_key: str
+                                       generator_cls: Type['ManifestGenerator'],
+                                       manifest_key: ManifestKey
                                        ) -> Optional[str]:
         """
         Return the proposed local file name of the manifest with the given
         object key if it was previously created, still exists in the bucket, and
         won't be expiring soon. Otherwise return None.
 
-        :param generator: The generator of the manifest
+        :param generator_cls: The generator class of the manifest
 
-        :param object_key: The object key of the cached manifest
+        :param manifest_key: The key of the cached manifest
         """
+        object_key = generator_cls.s3_object_key(manifest_key)
         try:
             response = self.storage_service.head(object_key)
         except self.storage_service.client.exceptions.ClientError as e:
             if int(e.response['Error']['Code']) == 404:
-                logger.info('Cached manifest not found: %s', object_key)
+                log.info('Cached manifest not found: %s', manifest_key)
                 return None
             else:
                 raise e
@@ -479,14 +489,14 @@ class ManifestService(ElasticsearchService):
                 except KeyError:
                     # FIXME: Can't be absent under S3's strong consistency
                     #        https://github.com/DataBiosphere/azul/issues/3255
-                    logger.warning('Manifest object %r does not have the %r tag.',
-                                   object_key, self.file_name_tag)
-                    return generator.file_name(object_key, base_name=None)
+                    log.warning('Manifest object %r does not have the %r tag.',
+                                object_key, self.file_name_tag)
+                    return generator_cls.file_name(manifest_key)
                 else:
                     encoded_file_name = encoded_file_name.encode('ascii')
                     return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
             else:
-                logger.info('Cached manifest is about to expire: %s', object_key)
+                log.info('Cached manifest is about to expire: %s', object_key)
                 return None
 
     @classmethod
@@ -516,10 +526,10 @@ class ManifestService(ElasticsearchService):
             expiration_in_days += 1
         expected_date = last_modified_floor + timedelta(days=expiration_in_days)
         if expiry_datetime == expected_date:
-            logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+            log.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
         else:
-            logger.error('The actual object expiration (%s) does not match expected value (%s)',
-                         expiration, expected_date)
+            log.error('The actual object expiration (%s) does not match expected value (%s)',
+                      expiration, expected_date)
         return expiry_seconds
 
     def command_lines(self,
@@ -527,7 +537,7 @@ class ManifestService(ElasticsearchService):
                       url: furl,
                       authentication: Optional[Authentication]
                       ) -> Optional[JSON]:
-        format = None if manifest is None else manifest.format_
+        format = None if manifest is None else manifest.format
         generator_cls = ManifestGenerator.cls_for_format(format)
         file_name = None if manifest is None else manifest.file_name
         return generator_cls.command_lines(url, file_name, authentication)
@@ -561,9 +571,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         catalog = self.catalog
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    @property
+    @classmethod
     @abstractmethod
-    def file_name_extension(self) -> str:
+    def file_name_extension(cls) -> str:
         """
         The file name extension to use when persisting the output of this
         generator to a file system or an object store.
@@ -578,8 +588,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    @property
-    def use_content_disposition_file_name(self) -> bool:
+    @classmethod
+    def use_content_disposition_file_name(cls) -> bool:
         """
         True if the manifest output produced by the generator should use a custom
         file name when stored on a file system.
@@ -619,32 +629,6 @@ class ManifestGenerator(metaclass=ABCMeta):
             for field_name in column_mapping.keys()
         ]
 
-    @classmethod
-    def for_format(cls,
-                   format_: ManifestFormat,
-                   service: ManifestService,
-                   catalog: CatalogName,
-                   filters: Filters
-                   ) -> 'ManifestGenerator':
-        """
-        Return a generator instance for the given format and filters.
-
-        :param format_: format specifying which generator to use
-
-        :param catalog: the name of the catalog to use when querying the index
-                        for the documents to be transformed into the manifest
-
-        :param filters: the filter to use when querying the index for the
-                        documents to be transformed into the manifest
-
-        :param service: the service to use when querying the index
-
-        :return: a ManifestGenerator instance. Note that the protocol used for
-                 consuming the generator output is defined in subclasses.
-        """
-        sub_cls = cls._cls_for_format[format_]
-        return sub_cls(service, catalog, filters)
-
     _cls_for_format: dict[ManifestFormat, Type['ManifestGenerator']] = {}
 
     def __init_subclass__(cls) -> None:
@@ -658,6 +642,13 @@ class ManifestGenerator(metaclass=ABCMeta):
     def cls_for_format(cls,
                        format: Optional[ManifestFormat]
                        ) -> Type['ManifestGenerator']:
+        """
+        Return the generator class  for the given format.
+
+        :param format: format specifying which type of generator to use
+
+        :return: a concrete subclass of ManifestGenerator
+        """
         if format is None:
             return cls
         else:
@@ -715,13 +706,28 @@ class ManifestGenerator(metaclass=ABCMeta):
                  catalog: CatalogName,
                  filters: Filters
                  ) -> None:
+        """
+        Construct a generator instance.
+
+        :param catalog: the name of the catalog to use when querying the index
+                        for the documents to be transformed into the manifest
+
+        :param filters: the filter to use when querying the index for the
+                        documents to be transformed into the manifest
+
+        :param service: the service to use when querying the index
+        """
         super().__init__()
         self.service = service
         self.catalog = catalog
         self.filters = filters
         self.file_url_func = service.file_url_func
 
-    def compute_object_key(self) -> str:
+    manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
+
+    source_namespace = uuid.UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
+
+    def manifest_key(self) -> ManifestKey:
         """
         Return a manifest object key deterministically derived from this
         generator's parameters (its concrete type and the arguments passed to
@@ -731,31 +737,59 @@ class ManifestGenerator(metaclass=ABCMeta):
         different return values.
         """
         git_commit = config.lambda_git_status['commit']
-        manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
         filter_string = repr(sort_frozen(freeze(self.filters.explicit)))
         content_hash = str(self.manifest_content_hash)
-        manifest_key_params = (
+        catalog = self.catalog
+        format = self.format()
+        manifest_hash_input = [
             git_commit,
-            self.catalog,
-            self.format().value,
+            catalog,
+            format.value,
             content_hash,
             filter_string
-        )
-        assert not any(',' in param for param in manifest_key_params[:-1])
-        manifest_key = str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
-        source_key = self.compute_source_key()
-        for part in manifest_key, source_key:
-            assert '.' not in part, part
-        object_key = f'manifests/{manifest_key}.{source_key}.{self.file_name_extension}'
-        return object_key
-
-    source_namespace = uuid.UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
-
-    def compute_source_key(self) -> str:
-        source_ids = sorted(self.filters.source_ids)
+        ]
         joiner = ','
+        assert not any(joiner in param for param in manifest_hash_input[:-1])
+        manifest_hash = str(uuid.uuid5(self.manifest_namespace, joiner.join(manifest_hash_input)))
+
+        source_ids = sorted(self.filters.source_ids)
         assert not any(joiner in source_id for source_id in source_ids), source_ids
-        return str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
+        source_hash = str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
+
+        for part in manifest_hash, source_hash:
+            for joiner in '.', '/':
+                assert joiner not in part, (joiner, part)
+
+        return ManifestKey(catalog=catalog,
+                           format=format,
+                           manifest_hash=manifest_hash,
+                           source_hash=source_hash)
+
+    @classmethod
+    def s3_object_key(cls, manifest_key: ManifestKey) -> str:
+        return 'manifests' + '/' + cls.s3_object_key_base(manifest_key)
+
+    @classmethod
+    def s3_object_key_base(cls, manifest_key: ManifestKey) -> str:
+        return '.'.join([
+            manifest_key.manifest_hash,
+            manifest_key.source_hash,
+            cls.file_name_extension()
+        ])
+
+    @classmethod
+    def file_name(cls,
+                  manifest_key: ManifestKey,
+                  base_name: Optional[str] = None
+                  ) -> str:
+        if base_name:
+            file_name_prefix = unicodedata.normalize('NFKD', base_name)
+            file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
+            timestamp = datetime.now().strftime('%Y-%m-%d %H.%M')
+            file_name = f'{file_name_prefix} {timestamp}.{cls.file_name_extension()}'
+        else:
+            file_name = 'hca-manifest-' + cls.s3_object_key_base(manifest_key)
+        return file_name
 
     def _create_request(self) -> Search:
         pipeline = self._create_pipeline()
@@ -866,7 +900,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def manifest_content_hash(self) -> int:
-        logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
+        log.debug('Computing content hash for manifest using filters %r ...', self.filters)
         start_time = time.time()
         request = self._create_request()
         request.aggs.metric(
@@ -894,21 +928,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         response = request.execute()
         assert len(response.hits) == 0
         hash_value = response.aggregations.hash.value
-        logger.info('Manifest content hash %i was computed in %.3fs using filters %r.',
-                    hash_value, time.time() - start_time, self.filters)
+        log.info('Manifest content hash %i was computed in %.3fs using filters %r.',
+                 hash_value, time.time() - start_time, self.filters)
         return hash_value
-
-    def file_name(self, object_key, base_name: Optional[str] = None) -> str:
-        if base_name:
-            file_name_prefix = unicodedata.normalize('NFKD', base_name)
-            file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
-            timestamp = datetime.now().strftime('%Y-%m-%d %H.%M')
-            file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension}'
-        else:
-            # FIXME: Consolidate parsing of manifest object key
-            #        https://github.com/DataBiosphere/azul/issues/4050
-            file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
-        return file_name
 
     def tagging(self, file_name: Optional[str]) -> Optional[Mapping[str, str]]:
         if file_name is None:
@@ -919,21 +941,21 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @abstractmethod
     def write(self,
-              object_key: str,
+              manifest_key: ManifestKey,
               partition: ManifestPartition,
               ) -> ManifestPartition:
         """
-        Write the given partition of the manifest to the specified object in S3
-        storage and return the next partition to be written. Unless the returned
-        partition is the last one, this method will soon be invoked again,
-        passing the partition returned by the previous invocation.
+        Write the given partition of a manifest to object storage under the
+        specified key and return the next partition to be written. Unless the
+        returned partition is the last one, this method will soon be invoked
+        again, passing the partition returned by the previous invocation.
 
         A minimal implementation of this method would write the entire manifest
         in just one large partition and return that partition with the is_last
         flag set.
 
-        :param object_key: The S3 object key under which to store the manifest
-                           partition.
+        :param manifest_key: The manifest key under which to store the manifest
+                             partition.
 
         :param partition: The partition to write.
         """
@@ -975,7 +997,7 @@ class PagedManifestGenerator(ManifestGenerator):
     assert part_size >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
 
     def write(self,
-              object_key: str,
+              manifest_key: ManifestKey,
               partition: ManifestPartition,
               ) -> ManifestPartition:
         assert not partition.is_last, partition
@@ -987,6 +1009,7 @@ class PagedManifestGenerator(ManifestGenerator):
         else:
             config = {tuple(k): v for k, v in partition.config}
             type(self).manifest_config.fset(self, config)
+        object_key = self.s3_object_key(manifest_key)
         if partition.multipart_upload_id is None:
             upload = self.storage.create_multipart_upload(object_key)
             partition = partition.with_upload(upload.id)
@@ -1010,7 +1033,7 @@ class PagedManifestGenerator(ManifestGenerator):
                     if buffer.tell() > 0:
                         partition = partition.next(part_etag=upload_part())
                     self.storage.complete_multipart_upload(upload, partition.part_etags)
-                    file_name = self.file_name(object_key, partition.file_name)
+                    file_name = self.file_name(manifest_key, base_name=partition.file_name)
                     tagging = self.tagging(file_name)
                     if tagging is not None:
                         self.storage.put_object_tagging(object_key, tagging)
@@ -1057,7 +1080,7 @@ class FileBasedManifestGenerator(ManifestGenerator):
         raise NotImplementedError
 
     def write(self,
-              object_key: str,
+              manifest_key: ManifestKey,
               partition: ManifestPartition,
               ) -> ManifestPartition:
         """
@@ -1066,10 +1089,10 @@ class FileBasedManifestGenerator(ManifestGenerator):
         """
         assert partition.index == 0 and partition.page_index is None, partition
         file_path, base_name = self.create_file()
-        file_name = self.file_name(object_key, base_name)
+        file_name = self.file_name(manifest_key, base_name)
         try:
-            self.storage.upload(file_path,
-                                object_key,
+            self.storage.upload(file_path=file_path,
+                                object_key=(self.s3_object_key(manifest_key)),
                                 content_type=self.content_type,
                                 tagging=self.tagging(file_name))
         finally:
@@ -1088,8 +1111,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
     def content_type(self) -> str:
         return 'text/plain'
 
-    @property
-    def file_name_extension(self):
+    @classmethod
+    def file_name_extension(cls):
         return 'curlrc'
 
     @property
@@ -1336,8 +1359,8 @@ class CompactManifestGenerator(PagedManifestGenerator):
     def content_type(self) -> str:
         return 'text/tab-separated-values'
 
-    @property
-    def file_name_extension(self):
+    @classmethod
+    def file_name_extension(cls):
         return 'tsv'
 
     @property
@@ -1428,8 +1451,8 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
     def format(cls) -> ManifestFormat:
         return ManifestFormat.terra_pfb
 
-    @property
-    def file_name_extension(self) -> str:
+    @classmethod
+    def file_name_extension(cls):
         return 'avro'
 
     @property
@@ -1480,8 +1503,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     def format(cls) -> ManifestFormat:
         return ManifestFormat.terra_bdbag
 
-    @property
-    def file_name_extension(self) -> str:
+    @classmethod
+    def file_name_extension(cls):
         return 'zip'
 
     @property
@@ -1499,8 +1522,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             'contents.files.drs_uri'
         ]
 
-    @property
-    def use_content_disposition_file_name(self) -> bool:
+    @classmethod
+    def use_content_disposition_file_name(cls) -> bool:
         # Apparently, Terra does not like the content disposition header
         return False
 

@@ -35,15 +35,12 @@ from unittest.mock import (
     patch,
 )
 import unittest.result
-from urllib.parse import (
-    parse_qs,
-    urlparse,
-)
 import uuid
 from zipfile import (
     ZipFile,
 )
 
+import attrs
 import fastavro
 from furl import (
     furl,
@@ -89,8 +86,10 @@ from azul.service import (
 from azul.service.manifest_service import (
     BDBagManifestGenerator,
     Bundles,
+    CachedManifestNotFound,
     Manifest,
     ManifestGenerator,
+    ManifestKey,
     ManifestPartition,
     ManifestService,
     PagedManifestGenerator,
@@ -147,28 +146,31 @@ class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
+    @property
+    def _service(self):
+        return ManifestService(self.storage_service, self.app_module.app.file_url)
+
     def _get_manifest(self,
-                      format_: ManifestFormat,
+                      format: ManifestFormat,
                       filters: FiltersJSON,
                       stream=False
                       ) -> Response:
-        manifest, num_partitions = self._get_manifest_object(format_, filters)
+        manifest, num_partitions = self._get_manifest_object(format, filters)
         self.assertEqual(1, num_partitions)
         return requests.get(manifest.location, stream=stream)
 
     def _get_manifest_object(self,
-                             format_: ManifestFormat,
+                             format: ManifestFormat,
                              filters: JSON
                              ) -> tuple[Manifest, int]:
-        service = ManifestService(self.storage_service, self.app_module.app.file_url)
         filters = self._filters(filters)
         partition = ManifestPartition.first()
         num_partitions = 1
         while True:
-            partition = service.get_manifest(format_=format_,
-                                             catalog=self.catalog,
-                                             filters=filters,
-                                             partition=partition)
+            partition = self._service.get_manifest(format=format,
+                                                   catalog=self.catalog,
+                                                   filters=filters,
+                                                   partition=partition)
             if isinstance(partition, Manifest):
                 return partition, num_partitions
             # Emulate controller serializing the partition between steps
@@ -192,7 +194,6 @@ def manifest_test(test):
 
 
 class TestManifestEndpoints(ManifestTestCase):
-    _drs_domain_name = 'drs-test.lan'
 
     def run(self,
             result: Optional[unittest.result.TestResult] = None
@@ -202,6 +203,8 @@ class TestManifestEndpoints(ManifestTestCase):
                                '_get_cached_manifest_file_name',
                                return_value=None):
             return super().run(result)
+
+    _drs_domain_name = 'drs-test.lan'  # see canned PFB results
 
     @manifest_test
     def test_pfb_manifest(self):
@@ -697,11 +700,6 @@ class TestManifestEndpoints(ManifestTestCase):
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
-        """
-        Moto will mock the requests.get call so we can't hit localhost;
-        add_passthru lets us hit the server (see GitHub issue and comment:
-        https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
-        """
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-09-14T13:33:14.453337Z')
@@ -1227,14 +1225,14 @@ class TestManifestEndpoints(ManifestTestCase):
     def test_manifest_format_validation(self):
         url = self.base_url.set(path='/manifest/files',
                                 args=dict(format='invalid-type'))
-        response = requests.get(str(url))
+        response = requests.put(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
     def test_manifest_filter_validation(self):
         url = self.base_url.set(path='/manifest/files',
                                 args=dict(format='compact',
                                           filters=dict(fileFormat=['pdf'])))
-        response = requests.get(str(url))
+        response = requests.put(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
     @manifest_test
@@ -1244,7 +1242,7 @@ class TestManifestEndpoints(ManifestTestCase):
         self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            for format_ in [ManifestFormat.compact]:
+            for format in [ManifestFormat.compact]:
                 for filters, expected_name in [
                     # For a single project, the content disposition file name should
                     # be the project name followed by the date and time
@@ -1264,141 +1262,177 @@ class TestManifestEndpoints(ManifestTestCase):
                         'hca-manifest-c3cf398e-1927-5aae-ba2a-81d8d1800b2d.4bc67e84-4873-591f-b524-a5fe4ec215eb'
                     )
                 ]:
-                    with self.subTest(filters=filters, format_=format_):
-                        manifest, num_partitions = self._get_manifest_object(format_, filters)
+                    with self.subTest(filters=filters, format=format):
+                        manifest, num_partitions = self._get_manifest_object(format, filters)
                         self.assertFalse(manifest.was_cached)
                         self.assertEqual(1, num_partitions)
-                        query = urlparse(manifest.location).query
+                        query = furl(manifest.location).query
                         expected_cd = f'attachment;filename="{expected_name}.tsv"'
-                        actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                        actual_cd = query.params['response-content-disposition']
                         self.assertEqual(expected_cd, actual_cd)
 
 
 class TestManifestCache(ManifestTestCase):
 
     @manifest_test
-    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
-    def test_metadata_cache_expiration(self, get_seconds):
+    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    def test_metadata_cache_expiration(self, _get_seconds_until_expire):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        # Moto will mock the requests.get call so we can't hit localhost;
-        # add_passthru lets us hit the server. See this GitHub issue and comment:
-        # https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        def log_messages_from_manifest_request(seconds_until_expire: int) -> list[str]:
-            get_seconds.return_value = seconds_until_expire
+        def test(expiration: int) -> list[str]:
+            _get_seconds_until_expire.return_value = expiration
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
             from azul.service.manifest_service import (
-                logger as logger_,
+                log as service_log,
             )
-            with self.assertLogs(logger=logger_, level='INFO') as logs:
+            with self.assertLogs(logger=service_log, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.compact, filters)
                 self.assertEqual(200, response.status_code)
-                logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                 return logs.output
 
         # On the first request the cached manifest doesn't exist yet
-        logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-        self.assertTrue(any('Cached manifest not found' in message for message in logs_output))
+        logs = test(expiration=30)
+        self.assertTrue(any('Cached manifest not found' in message
+                            for message in logs))
 
         # If the cached manifest has a long time till it expires then no log
         # message expected
-        logs_output = log_messages_from_manifest_request(seconds_until_expire=3600)
-        self.assertFalse(any('Cached manifest' in message for message in logs_output))
+        logs = test(expiration=3600)
+        self.assertFalse(any('Cached manifest' in message
+                             for message in logs))
 
         # If the cached manifest has a short time till it expires then a log
         # message is expected
-        logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-        self.assertTrue(any('Cached manifest is about to expire' in message for message in logs_output))
+        logs = test(expiration=30)
+        self.assertTrue(any('Cached manifest is about to expire' in message
+                            for message in logs))
 
     @manifest_test
-    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
-    def test_compact_metadata_cache(self, get_seconds):
-        get_seconds.return_value = 3600
+    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    def test_compact_metadata_cache(self, _get_seconds_until_expire):
         self.maxDiff = None
-        for bundle_fqid in [
+        _get_seconds_until_expire.return_value = 3600
+        bundle_fqids = [
             self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                              version='2018-09-14T13:33:14.453337Z'),
             self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                              version='2018-09-14T13:33:14.453337Z')
-        ]:
-            self._index_canned_bundle(bundle_fqid)
+        ]
+        for bundle_fqid in bundle_fqids:
+            with self.subTest(bundle_fqid=bundle_fqid):
+                self._index_canned_bundle(bundle_fqid)
 
-            project_ids = [
-                '67bc798b-a34a-4104-8cab-cad648471f69',
-                '6615efae-fca8-4dd2-a223-9cfcf30fe94d'
-            ]
-            file_names = defaultdict(list)
+                project_ids = [
+                    '67bc798b-a34a-4104-8cab-cad648471f69',
+                    '6615efae-fca8-4dd2-a223-9cfcf30fe94d'
+                ]
 
-            # Run the generation of manifests twice to verify generated file
-            # names are the same when re-run
-            for project_id in project_ids * 2:
-                response = self._get_manifest(ManifestFormat.compact,
-                                              filters={'projectId': {'is': [project_id]}})
-                self.assertEqual(200, response.status_code)
-                file_name = urlparse(response.url).path
-                file_names[project_id].append(file_name)
+                # Run the generation of manifests twice to verify generated file
+                # names are the same when re-run
+                file_names = defaultdict(list)
+                for i, project_id in enumerate(project_ids * 2):
+                    with self.subTest(project_id=project_id, i=i):
+                        filters = {'projectId': {'is': [project_id]}}
+                        response = self._get_manifest(ManifestFormat.compact,
+                                                      filters=filters)
+                        self.assertEqual(200, response.status_code)
+                    file_name = str(furl(response.url).path)
+                    file_names[project_id].append(file_name)
 
-            self.assertEqual(file_names.keys(), set(project_ids))
-            self.assertEqual([2, 2], list(map(len, file_names.values())))
-            self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
+                self.assertEqual(file_names.keys(), set(project_ids))
+                self.assertEqual([2, 2], list(map(len, file_names.values())))
+                self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
     @manifest_test
     def test_hash_validity(self):
         self.maxDiff = None
         bundle_uuid = 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
-        original_fqid = self.bundle_fqid(uuid=bundle_uuid,
-                                         version='2018-11-02T11:33:44.698028Z')
+        version1 = '2018-11-02T11:33:44.698028Z'
+        version2 = '2018-11-04T11:33:44.698028Z'
+        assert (version1 != version2)
+        original_fqid = self.bundle_fqid(uuid=bundle_uuid, version=version1)
         self._index_canned_bundle(original_fqid)
         filters = self._filters({'project': {'is': ['Single of human pancreas']}})
-        old_object_keys = {}
+        old_keys = {}
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
-        for format_ in ManifestFormat:
-            with self.subTest('indexing new bundle', format_=format_):
-                # When a new bundle is indexed and its compact manifest cached,
-                # a matching object_key is generated ...
-                generator = ManifestGenerator.for_format(format_=format_,
-                                                         service=service,
-                                                         catalog=self.catalog,
-                                                         filters=filters)
 
-                old_bundle_object_key = generator.compute_object_key()
+        def manifest_generator(format: ManifestFormat) -> ManifestGenerator:
+            generator_cls = ManifestGenerator.cls_for_format(format)
+            return generator_cls(service, self.catalog, filters)
+
+        for format in ManifestFormat:
+            with self.subTest('indexing new bundle', format=format):
+                # When a new bundle is indexed and its compact manifest cached,
+                # a matching manifest key is generated ...
+                generator = manifest_generator(format)
+                old_bundle_key = generator.manifest_key()
                 # and should remain valid ...
-                self.assertEqual(old_bundle_object_key, generator.compute_object_key())
-                old_object_keys[format_] = old_bundle_object_key
+                self.assertEqual(old_bundle_key, generator.manifest_key())
+                old_keys[format] = old_bundle_key
 
         # ... until a new bundle belonging to the same project is indexed, at
-        # which point a manifest request will generate a different object_key ...
-        update_fqid = self.bundle_fqid(uuid=bundle_uuid,
-                                       version='2018-11-04T11:33:44.698028Z')
+        # which point a manifest request will generate a different key ...
+        update_fqid = self.bundle_fqid(uuid=bundle_uuid, version=version2)
         self._index_canned_bundle(update_fqid)
-        new_object_keys = {}
-        for format_ in ManifestFormat:
-            with self.subTest('indexing second bundle', format_=format_):
-                generator = ManifestGenerator.for_format(format_=format_,
-                                                         service=service,
-                                                         catalog=self.catalog,
-                                                         filters=filters)
-                new_bundle_object_key = generator.compute_object_key()
+        new_keys = {}
+        for format in ManifestFormat:
+            with self.subTest('indexing second bundle', format=format):
+                generator = manifest_generator(format)
+                new_bundle_key = generator.manifest_key()
                 # ... invalidating the cached object previously used for the same filter.
-                self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
-                new_object_keys[format_] = new_bundle_object_key
+                self.assertNotEqual(old_keys[format], new_bundle_key)
+                new_keys[format] = new_bundle_key
 
         # Updates or additions, unrelated to that project do not affect object
         # key generation
         other_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(other_fqid)
-        for format_ in ManifestFormat:
-            with self.subTest('indexing unrelated bundle', format_=format_):
-                generator = ManifestGenerator.for_format(format_=format_,
-                                                         service=service,
-                                                         catalog=self.catalog,
-                                                         filters=filters)
-                latest_bundle_object_key = generator.compute_object_key()
-                self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
+        for format in ManifestFormat:
+            with self.subTest('indexing unrelated bundle', format=format):
+                generator = manifest_generator(format)
+                latest_bundle_key = generator.manifest_key()
+                self.assertEqual(latest_bundle_key, new_keys[format])
+
+    @manifest_test
+    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    def test_get_cached_manifest(self, _get_seconds_until_expire):
+        format = ManifestFormat.curl
+        filters = {}
+
+        manifest, _ = self._get_manifest_object(format=format, filters=filters)
+        self.assertFalse(manifest.was_cached)
+        manifest_key = manifest.manifest_key
+
+        # Ensure manifest is considered fresh
+        _get_seconds_until_expire.return_value = 3000
+        filters = self._filters(filters)
+        cached_manifest_1 = self._service.get_cached_manifest(format=format,
+                                                              catalog=manifest_key.catalog,
+                                                              filters=filters)
+        self.assertTrue(cached_manifest_1.was_cached)
+        # The was_cached property should be the only difference
+        manifest = attrs.evolve(manifest, was_cached=True)
+        self.assertEqual(manifest, cached_manifest_1)
+
+        cached_manifest_2 = self._service.get_cached_manifest_with_key(manifest_key)
+        self.assertEqual(cached_manifest_1, cached_manifest_2)
+
+        # Ensure manifest is considered stale
+        _get_seconds_until_expire.return_value = 30
+
+        with self.assertRaises(CachedManifestNotFound) as e:
+            self._service.get_cached_manifest(format=format,
+                                              catalog=manifest_key.catalog,
+                                              filters=filters)
+        self.assertEqual(manifest_key, e.exception.manifest_key)
+
+        with self.assertRaises(CachedManifestNotFound):
+            self._service.get_cached_manifest_with_key(manifest_key)
+        self.assertEqual(manifest_key, e.exception.manifest_key)
 
 
 class TestManifestResponse(ManifestTestCase):
@@ -1409,54 +1443,61 @@ class TestManifestResponse(ManifestTestCase):
         """
         Verify the response from manifest endpoints for all manifest formats
         """
-        for format_ in self.app_module.app.metadata_plugin.manifest_formats:
+        for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
-                with self.subTest(format=format_, fetch=fetch):
+                with (self.subTest(format=format, fetch=fetch)):
                     object_url = 'https://url.to.manifest?foo=bar'
-                    default_file_name = 'some_object_key'
-                    object_key = f'manifests/{default_file_name}'
+                    default_file_name = 'some_object_key.csv'
+                    manifest_key = ManifestKey(catalog=self.catalog,
+                                               format=format,
+                                               manifest_hash='',
+                                               source_hash='')
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
-                                        format_=format_,
-                                        catalog=self.catalog,
-                                        filters=self._filters({}),
-                                        object_key=object_key,
+                                        format=format,
+                                        manifest_key=manifest_key,
                                         file_name=default_file_name)
-                    get_cached_manifest.return_value = None, manifest
+                    get_cached_manifest.return_value = manifest
                     args = dict(catalog=self.catalog,
-                                format=format_.value,
+                                format=format.value,
                                 filters='{}')
-                    request_url = self.base_url.set(path='/manifest/files', args=args)
-                    redirect_url = self.base_url.set(path='/manifest/files',
-                                                     args=dict(args, objectKey=object_key))
-                    expect_redirect = fetch and format_ is ManifestFormat.curl
-                    expected_url = redirect_url if expect_redirect else object_url
-                    if format_ is ManifestFormat.curl:
+                    path = ['manifest', 'files']
+                    request_url = self.base_url.set(path=path, args=args)
+                    if fetch and format is ManifestFormat.curl:
+                        expected_url = str(self.base_url.set(path=[*path, manifest_key.encode()]))
+                        expected_url_for_bash = expected_url
+                    else:
+                        expected_url = object_url
+                        expected_url_for_bash = f"'{expected_url}'"
+                    if format is ManifestFormat.curl:
+                        options = "--location --fail"
                         expected = {
-                            'cmd.exe': f'curl.exe --location --fail "{expected_url}" | curl.exe --config -',
-                            'bash': f"curl --location --fail '{expected_url}' | curl --config -"
+                            'cmd.exe': f'curl.exe {options} "{expected_url}" | curl.exe --config -',
+                            'bash': f'curl {options} {expected_url_for_bash} | curl --config -'
                         }
                     else:
-                        if format_ is ManifestFormat.terra_bdbag:
+                        if format is ManifestFormat.terra_bdbag:
                             file_name = default_file_name
                         else:
                             file_name = manifest.file_name
                         options = '--location --fail --output'
                         expected = {
                             'cmd.exe': f'curl.exe {options} "{file_name}" "{expected_url}"',
-                            'bash': f"curl {options} {file_name} '{expected_url}'"
+                            'bash': f'curl {options} {file_name} {expected_url_for_bash}'
                         }
                     if fetch:
                         request_url.path.segments.insert(0, 'fetch')
-                        response = requests.get(str(request_url)).json()
                         expected = {
                             'Status': 302,
-                            'Location': str(expected_url),
+                            'Location': expected_url,
                             'CommandLine': expected
                         }
-                        self.assertEqual(expected, response)
+                        for method in ['PUT', 'GET']:
+                            with self.subTest(method=method):
+                                response = requests.request(method, str(request_url)).json()
+                                self.assertEqual(expected, response)
                     else:
-                        response = requests.get(str(request_url), allow_redirects=False)
+                        response = requests.put(str(request_url), allow_redirects=False)
                         expected = ''.join(
                             f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
                             for shell, cmd in expected.items()
@@ -1479,7 +1520,7 @@ class TestManifestExpiration(AzulUnitTestCase):
                 with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
                     mock_datetime.now.return_value = now
-                    with self.assertLogs(logger=manifest_service.logger, level='DEBUG') as logs:
+                    with self.assertLogs(logger=manifest_service.log, level='DEBUG') as logs:
                         headers = {
                             'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
                             'LastModified': now - timedelta(days=float(config.manifest_expiration),
