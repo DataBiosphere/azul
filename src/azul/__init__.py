@@ -1445,7 +1445,7 @@ class Config:
             'docker.io/gitlab/gitlab-runner:ubuntu-v16.4.1',
             'docker.io/library/docker:24.0.6',
             'docker.io/library/docker:24.0.6-dind',
-            'docker.io/library/python:3.9.17-bullseye',
+            'docker.io/library/python:3.11.5-bullseye',
             'docker.io/lmenezes/cerebro:0.9.4',
             f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
         ]
