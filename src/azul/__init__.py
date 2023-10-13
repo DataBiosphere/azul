@@ -1428,22 +1428,27 @@ class Config:
     def docker_registry(self) -> str:
         return self.environ['azul_docker_registry']
 
-    # Note that a change to the image references here also requires redeploying
-    # the `shared` TF component.
+    @property
+    def docker_pycharm_version(self) -> str:
+        return self.environ['azul_docker_pycharm_version']
 
-    docker_images = [
-        'docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
-        'docker.elastic.co/kibana/kibana-oss:7.10.2',
-        'docker.io/clamav/clamav:1.2.0-7',
-        'docker.io/cllunsford/aws-signing-proxy:0.2.2',
-        'docker.io/gitlab/gitlab-ce:16.4.1-ce.0',
-        'docker.io/gitlab/gitlab-runner:ubuntu-v16.4.1',
-        'docker.io/library/docker:24.0.2',
-        'docker.io/library/docker:24.0.2-dind',
-        'docker.io/library/python:3.9.17-bullseye',
-        'docker.io/lmenezes/cerebro:0.9.4',
-        'docker.io/ucscgi/azul-pycharm:2022.3.3-3',
-    ]
+    @property
+    def docker_images(self) -> list[str]:
+        # Note that a change to the image references here also requires
+        # redeploying the `shared` TF component.
+        return [
+            'docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
+            'docker.elastic.co/kibana/kibana-oss:7.10.2',
+            'docker.io/clamav/clamav:1.2.0-7',
+            'docker.io/cllunsford/aws-signing-proxy:0.2.2',
+            'docker.io/gitlab/gitlab-ce:16.4.1-ce.0',
+            'docker.io/gitlab/gitlab-runner:ubuntu-v16.4.1',
+            'docker.io/library/docker:24.0.2',
+            'docker.io/library/docker:24.0.2-dind',
+            'docker.io/library/python:3.9.17-bullseye',
+            'docker.io/lmenezes/cerebro:0.9.4',
+            f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
+        ]
 
     docker_platforms = [
         'linux/arm64',
