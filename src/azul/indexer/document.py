@@ -1091,6 +1091,18 @@ class VersionType(Enum):
 
 InternalVersion = tuple[int, int]
 
+
+class OpType(Enum):
+    #: Write the document to the index, overwriting it if it already exists
+    index = auto()
+
+    #: Write the document to the index or fail if it already exists
+    create = auto()
+
+    #: Remove the document from the index or fail if it does not exist
+    delete = auto()
+
+
 C = TypeVar('C', bound=DocumentCoordinates)
 
 
@@ -1287,13 +1299,13 @@ class Document(Generic[C]):
         :param bulk: If bulk indexing
         :return: Request parameters for indexing
         """
-        delete = self.delete
+        op_type = self.op_type
         coordinates = self.coordinates.with_catalog(catalog)
         result = {
             '_index' if bulk else 'index': coordinates.index_name,
             **(
                 {}
-                if delete else
+                if op_type is OpType.delete else
                 {
                     '_source' if bulk else 'body':
                         self.translate_fields(doc=self.to_json(),
@@ -1305,46 +1317,31 @@ class Document(Generic[C]):
             ),
             '_id' if bulk else 'id': self.coordinates.document_id
         }
+        # For non-bulk updates, self.op_type determines which client
+        # method is invoked.
+        if bulk:
+            result['_op_type'] = self.op_type.name
         if self.version_type is VersionType.none:
             assert not self.needs_seq_no_primary_term
-            if bulk:
-                result['_op_type'] = 'delete' if delete else 'index'
-            else:
-                # For non-bulk updates, the op-type is determined by which
-                # client method is invoked.
-                pass
         elif self.version_type is VersionType.create_only:
             assert not self.needs_seq_no_primary_term
             if bulk:
-                if delete:
-                    result['_op_type'] = 'delete'
+                if op_type is OpType.delete:
                     result['if_seq_no'], result['if_primary_term'] = self.version
-                else:
-                    result['_op_type'] = 'create'
             else:
-                assert not delete
-                result['op_type'] = 'create'
+                assert op_type is OpType.create, op_type
         elif self.version_type is VersionType.internal:
             assert self.needs_seq_no_primary_term
-            if bulk:
-                result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
-            elif not delete:
-                if self.version is None:
-                    result['op_type'] = 'create'
-            else:
-                # For non-bulk updates 'delete' is not a possible op-type.
-                # Instead, self.delete controls which client method is invoked.
-                pass
             if self.version is not None:
                 # For internal versioning, self.version is None for new documents
                 result['if_seq_no'], result['if_primary_term'] = self.version
         else:
-            assert False
+            assert False, self.version_type
         return result
 
     @property
-    def delete(self):
-        return False
+    def op_type(self) -> OpType:
+        raise NotImplementedError
 
 
 class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
@@ -1417,6 +1414,15 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_version=self.coordinates.bundle.version,
                     bundle_deleted=self.coordinates.deleted)
 
+    @property
+    def op_type(self) -> OpType:
+        if self.version_type is VersionType.create_only:
+            return OpType.create
+        elif self.version_type is VersionType.none:
+            return OpType.index
+        else:
+            assert False, self.version_type
+
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
@@ -1478,9 +1484,12 @@ class Aggregate(Document[AggregateCoordinates]):
                     bundles=self.bundles)
 
     @property
-    def delete(self):
-        # Aggregates are deleted when their contents goes blank
-        return super().delete or not self.contents
+    def op_type(self) -> OpType:
+        if self.contents:
+            return OpType.create if self.version is None else OpType.index
+        else:
+            # Aggregates are deleted when their contents goes blank
+            return OpType.delete
 
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
@@ -1533,6 +1542,10 @@ class Replica(Document[ReplicaCoordinates[E]]):
         return dict(super().to_json(),
                     replica_type=self.replica_type,
                     hub_ids=self.hub_ids)
+
+    @property
+    def op_type(self) -> OpType:
+        return OpType.create
 
 
 CataloguedContribution = Contribution[CataloguedEntityReference]

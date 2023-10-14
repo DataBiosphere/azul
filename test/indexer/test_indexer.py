@@ -449,7 +449,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         for doc_id in doc_ids:
             message_re = re.compile(fr'INFO:elasticsearch:'
                                     fr'Got 201 response after [^ ]+ from PUT to '
-                                    fr'.*_aggregate/_doc/{doc_id}.*')
+                                    fr'.*_aggregate/_create/{doc_id}.*')
             self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
