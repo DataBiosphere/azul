@@ -214,7 +214,7 @@ class IdentifiersDotOrgClient(HTTPClient):
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class DRSClient:
-    http_client: urllib3.PoolManager
+    http_client: HTTPClient
 
     @cached_property
     def id_client(self) -> IdentifiersDotOrgClient:
@@ -288,10 +288,7 @@ class DRSClient:
                 raise DRSError(response)
 
     def _request(self, url: str) -> urllib3.HTTPResponse:
-        log.info('GET %s ...', url)
-        response = self.http_client.request('GET', url, redirect=False)
-        log.info('-> %r %r %r', response.status, response.data, response.headers)
-        return response
+        return self.http_client.request('GET', url, redirect=False)
 
 
 class DRSError(Exception):

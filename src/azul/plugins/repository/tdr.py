@@ -189,7 +189,7 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     def _drs_client(cls,
                     authentication: Optional[Authentication] = None
                     ) -> DRSClient:
-        return cls._user_authenticated_tdr(authentication).drs_client()
+        return DRSClient(http_client=cls._user_authenticated_tdr(authentication))
 
     def _lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id

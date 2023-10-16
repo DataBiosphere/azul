@@ -67,9 +67,6 @@ from azul.bigquery import (
 from azul.deployment import (
     aws,
 )
-from azul.drs import (
-    DRSClient,
-)
 from azul.indexer import (
     SourceRef as BaseSourceRef,
     SourceSpec,
@@ -643,6 +640,3 @@ class TDRClient(SAMClient):
             raise UnauthorizedError('Invalid credentials')
         else:
             return self
-
-    def drs_client(self) -> DRSClient:
-        return DRSClient(http_client=self._http)
