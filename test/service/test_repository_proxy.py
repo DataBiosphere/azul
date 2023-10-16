@@ -47,7 +47,7 @@ from azul.drs import (
     DRSClient,
 )
 from azul.http import (
-    http_client,
+    HTTPClient,
 )
 from azul.logging import (
     configure_test_logging,
@@ -120,12 +120,12 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
 
     @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
     @mock.patch.object(TerraClient,
-                       '_http_client',
+                       '_http',
                        AuthorizedHttp(MagicMock(),
                                       urllib3.PoolManager(ca_certs=certifi.where())))
     def test_repository_files_proxy(self, mock_get_cached_sources):
         mock_get_cached_sources.return_value = []
-        client = http_client()
+        client = HTTPClient()
 
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
         file_version = '2018-09-12T12:11:54.054628Z'
@@ -166,7 +166,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                                            'get_object',
                                            return_value=Access(method=AccessMethod.https,
                                                                url=str(pre_signed_gs))):
-                        response = client.request('GET', str(azul_url), redirect=False)
+                        response = client.request('GET', azul_url, redirect=False)
                         self.assertEqual(200 if fetch else 302, response.status)
                         if fetch:
                             response = json.loads(response.data)
@@ -181,7 +181,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             with mock.patch.object(RepositoryService,
                                    'get_data_file',
                                    return_value=file_doc):
-                response = client.request('GET', str(azul_url), redirect=False)
+                response = client.request('GET', azul_url, redirect=False)
             self.assertEqual(response.status, 404)
 
     @mock.patch.object(TDRClient, 'snapshot_names_by_id')
@@ -198,15 +198,13 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             for i, source_name in enumerate(self.mock_source_names + extra_sources)
         }
         mock_list_snapshots.return_value = mock_source_names_by_id
-        client = http_client()
+        client = HTTPClient()
         azul_url = furl(url=self.base_url,
                         path='/repository/sources',
                         query_params=dict(catalog=self.catalog))
 
         def _list_sources(headers) -> JSON:
-            response = client.request('GET',
-                                      str(azul_url),
-                                      headers=headers)
+            response = client.request('GET', azul_url, headers=headers)
             self.assertEqual(response.status, 200)
             return json.loads(response.data)
 

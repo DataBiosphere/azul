@@ -109,7 +109,7 @@ from azul.es import (
     ESClientFactory,
 )
 from azul.http import (
-    http_client,
+    HTTPClient,
 )
 from azul.indexer import (
     SourceJSON,
@@ -390,12 +390,12 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     num_fastq_bytes = 1024 * 1024
 
-    _http: urllib3.PoolManager
-    _plain_http: urllib3.PoolManager
+    _http: HTTPClient
+    _plain_http: HTTPClient
 
     def setUp(self) -> None:
         super().setUp()
-        self._plain_http = http_client()
+        self._plain_http = HTTPClient()
         # Note that this attribute is swizzled in self._authorization_context
         self._http = self._plain_http
 
@@ -642,21 +642,21 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     @property
     def _service_account_credentials(self) -> AbstractContextManager:
-        return self._authorization_context(self._tdr_client)
+        return self._http_context(self._tdr_client)
 
     @property
     def _public_service_account_credentials(self) -> AbstractContextManager:
-        return self._authorization_context(self._public_tdr_client)
+        return self._http_context(self._public_tdr_client)
 
     @property
     def _unregistered_service_account_credentials(self) -> AbstractContextManager:
-        return self._authorization_context(self._unregistered_tdr_client)
+        return self._http_context(self._unregistered_tdr_client)
 
     @contextmanager
-    def _authorization_context(self, tdr: TDRClient) -> AbstractContextManager:
+    def _http_context(self, http: HTTPClient) -> AbstractContextManager:
         old_http = self._http
         try:
-            self._http = tdr._http_client
+            self._http = http
             yield
         finally:
             self._http = old_http
@@ -731,19 +731,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                            *,
                            stream: bool = False
                            ) -> urllib3.HTTPResponse:
-        if url.host in self.authenticating_hosts:
-            http, text = self._http, 'contextual'
-        else:
-            http, text = self._plain_http, 'plain'
-        url = str(url)
-        log.info('%s %s using %s client...', method, url, text)
+        http = self._http if url.host in self.authenticating_hosts else self._plain_http
         response = http.request(method=method,
                                 url=url,
                                 retries=urllib3.Retry(total=30, redirect=0),
                                 redirect=False,
                                 preload_content=not stream)
-        assert isinstance(response, urllib3.HTTPResponse)
-        log.info('... -> %i', response.status)
         return response
 
     def _assertResponseStatus(self,
@@ -1210,7 +1203,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
         invalid_client = TDRClient(credentials_provider=invalid_provider)
-        with self._authorization_context(invalid_client):
+        with self._http_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())
@@ -1660,7 +1653,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
 class SwaggerResourceIntegrationTest(AzulTestCase):
 
     def test(self):
-        http = http_client()
+        http = HTTPClient()
         for component, base_url in [
             ('service', config.service_endpoint),
             ('indexer', config.indexer_endpoint)
@@ -1676,5 +1669,5 @@ class SwaggerResourceIntegrationTest(AzulTestCase):
                 ('..%2Fdoes-not-exist', 403),
             ]:
                 with self.subTest(component=component, file=file):
-                    response = http.request(GET, str(base_url / 'static' / file))
+                    response = http.request(GET, base_url / 'static' / file)
                     self.assertEqual(expected_status, response.status)

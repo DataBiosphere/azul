@@ -445,7 +445,7 @@ class TestTDRSourceList(AzulUnitTestCase):
 
                             with mock.patch.object(TDRClient, 'page_size', new=page_size):
                                 self.assertEqual(page_size, tdr_client.page_size)
-                                with mock.patch.object(TerraClient, '_request') as _request:
+                                with mock.patch.object(TerraClient, 'request') as _request:
                                     _request.side_effect = responses()
                                     actual = tdr_client.snapshot_names_by_id(filter=filter)
                             self.assertEqual(expected, actual)

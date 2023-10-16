@@ -33,7 +33,7 @@ from azul import (
     require,
 )
 from azul.http import (
-    http_client,
+    HTTPClient,
 )
 
 ScopedCredentials = Union[ServiceAccountCredentials, TokenCredentials]
@@ -63,7 +63,7 @@ class TokenInfo(TypedDict):
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class OAuth2Client:
+class OAuth2Client(HTTPClient):
     credentials_provider: CredentialsProvider
 
     @property
@@ -71,7 +71,7 @@ class OAuth2Client:
         return self.credentials_provider.scoped_credentials()
 
     @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
+    def _http(self) -> urllib3.PoolManager:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials
         """
@@ -83,15 +83,15 @@ class OAuth2Client:
         # `google.auth.exceptions.RefreshError` due to the credentials not being
         # configured with (among other fields) the client secret.
         return AuthorizedHttp(self.credentials,
-                              self._http_client_without_credentials,
+                              self._http_without_credentials,
                               refresh_status_codes=())
 
     @cached_property
-    def _http_client_without_credentials(self):
+    def _http_without_credentials(self):
         """
         A urllib3 HTTP client for making unauthenticated requests
         """
-        return http_client()
+        return self._raw_http()
 
     def validate(self):
         """
@@ -119,7 +119,7 @@ class OAuth2Client:
         credentials = self.credentials
         url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args=dict(access_token=credentials.token))
-        response = self._http_client_without_credentials.request('GET', str(url))
+        response = self._http_without_credentials.request('GET', str(url))
         reject(response.status == 400,
                'The token is not valid')
         require(response.status == 200,

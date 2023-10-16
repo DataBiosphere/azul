@@ -37,7 +37,7 @@ from azul import (
     require,
 )
 from azul.http import (
-    http_client,
+    HTTPClient,
 )
 from azul.types import (
     MutableJSON,
@@ -178,7 +178,7 @@ class CompactDRSURI(DRSURI):
         return str(url)
 
 
-class IdentifiersDotOrgClient:
+class IdentifiersDotOrgClient(HTTPClient):
 
     def resolve(self, prefix: str, accession: str) -> mutable_furl:
         namespace_id = self._prefix_to_namespace(prefix)
@@ -189,10 +189,6 @@ class IdentifiersDotOrgClient:
         require(placeholder in url_pattern, url_pattern)
         url = url_pattern.replace(placeholder, accession)
         return furl(url)
-
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        return http_client()
 
     _api_url = 'https://registry.api.identifiers.org/restApi/'
 
@@ -211,15 +207,9 @@ class IdentifiersDotOrgClient:
 
     def _api_request(self, path: str, **args) -> MutableJSON:
         url = furl(self._api_url).add(path=path, args=args)
-        response = self._request(str(url))
+        response = self.request('GET', url)
         require(response.status == 200)
         return json.loads(response.data)
-
-    def _request(self, url: str) -> urllib3.HTTPResponse:
-        log.info('GET %s …', url)
-        response = self._http_client.request('GET', url)
-        log.info('-> %r %r %r', response.status, response.data, response.headers)
-        return response
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)

@@ -9,7 +9,6 @@ import json
 import logging
 from time import (
     sleep,
-    time,
 )
 from typing import (
     ClassVar,
@@ -329,41 +328,32 @@ class TerraClient(OAuth2Client):
     """
     credentials_provider: TerraCredentialsProvider
 
-    def _request(self,
-                 method: str,
-                 url: furl,
-                 *,
-                 headers=None,
-                 body=None
-                 ) -> urllib3.HTTPResponse:
+    def request(self,
+                method: str,
+                url: furl,
+                **kwargs
+                ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
         retries = config.terra_client_retries
-        log.info('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
-                  method, url, headers, timeout, body)
-        start = time()
+        # Limited retries on I/O errors such as refused or dropped
+        # connections. The latter are actually very likely if connections
+        # from the pool are reused after a long period of idleness. That's
+        # why we need at least one retry on read.
+        retry = urllib3.Retry(total=None,
+                              connect=retries,
+                              read=retries + 1,
+                              redirect=0,
+                              status=0,
+                              other=retries)
+        kwargs.setdefault('timeout', timeout)
+        kwargs.setdefault('retries', retry)
         try:
-            # Limited retries on I/O errors such as refused or dropped
-            # connections. The latter are actually very likely if connections
-            # from the pool are reused after a long period of idleness. That's
-            # why we need at least one retry on read.
-            retry = urllib3.Retry(total=None,
-                                  connect=retries,
-                                  read=retries + 1,
-                                  redirect=0,
-                                  status=0,
-                                  other=retries)
-            response = self._http_client.request(method,
-                                                 str(url),
-                                                 headers=headers,
-                                                 timeout=timeout,
-                                                 retries=retry,
-                                                 body=body)
+            return super().request(method, url, **kwargs)
         except (TimeoutError, MaxRetryError):
             raise TerraTimeoutException(url, timeout)
 
-        assert isinstance(response, urllib3.HTTPResponse)
-        log.info('_request(…) -> %.3fs %r %r',
-                  time() - start, response.status, trunc_ellipses(response.data, 256))
+    def _log_response(self, start: float, response: urllib3.HTTPResponse):
+        super()._log_response(start, response)
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]
@@ -371,7 +361,6 @@ class TerraClient(OAuth2Client):
             pass
         else:
             log.warning('_request(…) -> %r: %r', header_name, header_value)
-        return response
 
 
 class SAMClient(TerraClient):
@@ -388,7 +377,7 @@ class SAMClient(TerraClient):
         """
         email = self.credentials.service_account_email
         url = config.sam_service_url.set(path='/register/user/v1')
-        response = self._request('POST', url, body='')
+        response = self.request('POST', url, body='')
         if response.status == 201:
             log.info('Google service account %r successfully registered with SAM.', email)
         elif response.status == 409:
@@ -409,7 +398,7 @@ class SAMClient(TerraClient):
         client's credentials is registered with SAM.
         """
         endpoint = config.sam_service_url.set(path='/register/user/v1')
-        response = self._request('GET', endpoint)
+        response = self.request('GET', endpoint)
         auth_header = response.headers.get('WWW-Authenticate')
         if response.status == 200:
             return True
@@ -452,7 +441,7 @@ class TDRClient(SAMClient):
 
     def _retrieve_source(self, source: SourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint(source.spec.type_name + 's', source.id)
-        response = self._request('GET', endpoint)
+        response = self.request('GET', endpoint)
         response = self._check_response(endpoint, response)
         require(source.spec.name == response['name'],
                 'Source name changed unexpectedly', source, response)
@@ -461,7 +450,7 @@ class TDRClient(SAMClient):
     def _lookup_source(self, source: TDRSourceSpec) -> MutableJSON:
         endpoint = self._repository_endpoint(source.type_name + 's')
         endpoint.set(args=dict(filter=source.bq_name, limit='2'))
-        response = self._request('GET', endpoint)
+        response = self.request('GET', endpoint)
         response = self._check_response(endpoint, response)
         total = response['filteredTotal']
         if total == 0:
@@ -574,7 +563,7 @@ class TDRClient(SAMClient):
         Much faster than listing the snapshots' names.
         """
         endpoint = self._repository_endpoint('snapshots', 'roleMap')
-        response = self._request('GET', endpoint)
+        response = self.request('GET', endpoint)
         response = self._check_response(endpoint, response)
         return set(response['roleMap'].keys())
 
@@ -611,7 +600,7 @@ class TDRClient(SAMClient):
             if filter is not None:
                 args['filter'] = filter
             endpoint.set(args=args)
-            response = self._request('GET', endpoint)
+            response = self.request('GET', endpoint)
             response = self._check_response(endpoint, response)
             snapshots.update({
                 snapshot['id']: snapshot['name']
@@ -656,4 +645,4 @@ class TDRClient(SAMClient):
             return self
 
     def drs_client(self) -> DRSClient:
-        return DRSClient(http_client=self._http_client)
+        return DRSClient(http_client=self._http)

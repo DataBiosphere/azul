@@ -27,7 +27,6 @@ from typing import (
 )
 
 import attr
-import urllib3
 
 from azul import (
     CatalogName,
@@ -41,7 +40,7 @@ from azul.drs import (
     DRSClient,
 )
 from azul.http import (
-    http_client,
+    HTTPClient,
 )
 from azul.indexer import (
     BUNDLE,
@@ -597,8 +596,8 @@ class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, 
         return DRSClient(http_client=self._http_client)
 
     @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        return http_client()
+    def _http_client(self) -> HTTPClient:
+        return HTTPClient()
 
     @abstractmethod
     def file_download_class(self) -> Type['RepositoryFileDownload']:
