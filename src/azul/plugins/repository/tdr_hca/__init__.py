@@ -303,7 +303,6 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
     def list_partitions(self,
                         source: TDRSourceRef
                         ) -> Mapping[str, int]:
-        self._assert_source(source)
         prefix = source.spec.prefix
         prefixes = [
             prefix.common + partition_prefix

@@ -565,6 +565,10 @@ class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, 
 
         Subclasses may optionally implement this method to facilitate
         integration test coverage of the partition sizes of their sources.
+
+        :param source: The source to be listed. Note that the given source may
+                       not necessarily be a member of the :py:meth:`sources`
+                       configured for this plugin.
         """
         return None
 
