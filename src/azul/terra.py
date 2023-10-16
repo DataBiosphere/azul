@@ -338,7 +338,7 @@ class TerraClient(OAuth2Client):
                  ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
         retries = config.terra_client_retries
-        log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
+        log.info('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
         start = time()
         try:
@@ -362,9 +362,8 @@ class TerraClient(OAuth2Client):
             raise TerraTimeoutException(url, timeout)
 
         assert isinstance(response, urllib3.HTTPResponse)
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug('_request(…) -> %.3fs %r %r',
-                      time() - start, response.status, trunc_ellipses(response.data, 256))
+        log.info('_request(…) -> %.3fs %r %r',
+                  time() - start, response.status, trunc_ellipses(response.data, 256))
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]
