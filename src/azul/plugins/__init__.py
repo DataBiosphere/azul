@@ -324,7 +324,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def exposed_indices(self) -> Mapping[EntityType, Sorting]:
+    def exposed_indices(self) -> dict[EntityType, Sorting]:
         """
         The indices for which the service provides an `/index/…` endpoint.
         The return value maps the outer entity type of each exposed index to the

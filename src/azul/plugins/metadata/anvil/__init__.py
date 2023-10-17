@@ -1,6 +1,5 @@
 from typing import (
     Iterable,
-    Mapping,
     Optional,
     Sequence,
     Type,
@@ -48,7 +47,7 @@ from azul.types import (
 class Plugin(MetadataPlugin[AnvilBundle]):
 
     @property
-    def exposed_indices(self) -> Mapping[EntityType, Sorting]:
+    def exposed_indices(self) -> dict[EntityType, Sorting]:
         return dict(
             activities=Sorting(field_name='activities.activity_id'),
             biosamples=Sorting(field_name='biosamples.biosample_id'),
