@@ -92,7 +92,7 @@ class Latch:
                     else:
                         raise TimeoutError
             else:
-                self.condition.notifyAll()
+                self.condition.notify_all()
         finally:
             self.condition.release()
 
