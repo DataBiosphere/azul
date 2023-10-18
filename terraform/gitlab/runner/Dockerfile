@@ -1,5 +1,5 @@
 ARG registry
-FROM ${registry}docker.io/library/docker:24.0.2
+FROM ${registry}docker.io/library/docker:24.0.6
 
 # Increment the value of this variable to ensure that all installed OS packages
 # are upgraded.

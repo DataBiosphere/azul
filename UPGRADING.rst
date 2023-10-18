@@ -20,6 +20,18 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#108 Resolve vulnerabilities in docker image
+======================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` & ``gitlab`` components (in that order) of any
+main deployment, and with the ``gitlab`` component selected, run ``make -C
+terraform/gitlab/runner`` just before pushing the merge commit to the GitLab
+instance in that deployment.
+
+
 DataBiosphere/azul-private#103 Resolve vulnerabilities in azul-pycharm
 ======================================================================
 
