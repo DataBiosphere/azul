@@ -2221,7 +2221,7 @@
                                 "workflow"
                             ]
                         },
-                        "description": "The field to sort the hits by. The default value depends on the entity type."
+                        "description": "\nThe field to sort the hits by. The default value depends on the\nentity type.\n"
                     },
                     {
                         "name": "order",
@@ -2234,7 +2234,7 @@
                                 "desc"
                             ]
                         },
-                        "description": "The ordering of the sorted hits, either ascending or descending. The default value depends on the entity type."
+                        "description": "\nThe ordering of the sorted hits, either ascending or descending.\nThe default value depends on the entity type.\n"
                     },
                     {
                         "name": "search_before",
@@ -3615,7 +3615,7 @@
                                 "workflow"
                             ]
                         },
-                        "description": "The field to sort the hits by. The default value depends on the entity type."
+                        "description": "\nThe field to sort the hits by. The default value depends on the\nentity type.\n"
                     },
                     {
                         "name": "order",
@@ -3628,7 +3628,7 @@
                                 "desc"
                             ]
                         },
-                        "description": "The ordering of the sorted hits, either ascending or descending. The default value depends on the entity type."
+                        "description": "\nThe ordering of the sorted hits, either ascending or descending.\nThe default value depends on the entity type.\n"
                     },
                     {
                         "name": "search_before",

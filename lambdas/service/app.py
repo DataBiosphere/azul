@@ -980,15 +980,18 @@ def repository_search_params_spec():
         params.query(
             'sort',
             schema.optional(schema.enum(*app.fields)),
-            description='The field to sort the hits by. '
-                        'The default value depends on the entity type.'
+            description=fd('''
+                The field to sort the hits by. The default value depends on the
+                entity type.
+            ''')
         ),
         params.query(
             'order',
             schema.optional(schema.enum('asc', 'desc')),
-            description='The ordering of the sorted hits, either ascending '
-                        'or descending. The default value depends on the entity '
-                        'type.'
+            description=fd('''
+                The ordering of the sorted hits, either ascending or descending.
+                The default value depends on the entity type.
+            ''')
         ),
         *[
             params.query(
