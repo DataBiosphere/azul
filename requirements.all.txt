@@ -11,7 +11,7 @@ blinker==1.6.3
 boto3==1.28.12
 boto3-stubs==1.28.12
 botocore==1.31.12
-botocore-stubs==1.31.62
+botocore-stubs==1.31.65
 brotli==1.1.0
 cachetools==5.3.1
 certifi==2023.7.22
@@ -50,7 +50,7 @@ google-cloud-core==2.3.3
 google-cloud-storage==2.5.0
 google-crc32c==1.5.0
 google-resumable-media==2.6.0
-googleapis-common-protos==1.60.0
+googleapis-common-protos==1.61.0
 greenlet==3.0.0
 grpcio==1.59.0
 grpcio-status==1.59.0
@@ -78,7 +78,7 @@ msgpack==1.0.7
 mypy-boto3-dynamodb==1.28.55
 mypy-boto3-ecr==1.28.45
 mypy-boto3-iam==1.28.37
-mypy-boto3-lambda==1.28.36
+mypy-boto3-lambda==1.28.63
 mypy-boto3-s3==1.28.55
 mypy-boto3-sqs==1.28.36
 mypy-boto3-stepfunctions==1.28.36
@@ -93,7 +93,7 @@ ply==3.11
 posix-ipc==1.1.1
 proto-plus==1.22.3
 protobuf==4.24.4
-psutil==5.9.5
+psutil==5.9.6
 py-partiql-parser==0.3.3
 pyasn1==0.5.0
 pyasn1-modules==0.3.0
@@ -127,7 +127,7 @@ smmap==5.0.1
 strict-rfc3339==0.7
 tinyquery==1.2+2
 toml==0.10.2
-types-awscrt==0.19.2
+types-awscrt==0.19.3
 types-python-dateutil==2.8.19.14
 types-s3transfer==0.7.0
 types-toml==0.10.8.7
