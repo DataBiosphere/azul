@@ -1414,11 +1414,18 @@ class TestManifestCache(ManifestTestCase):
                                                               catalog=manifest_key.catalog,
                                                               filters=filters)
         self.assertTrue(cached_manifest_1.was_cached)
-        # The was_cached property should be the only difference
-        manifest = attrs.evolve(manifest, was_cached=True)
+        # The `was_cached` and `location` properties should be the only
+        # differences. The `location` is a signed S3 URL that depends on
+        # the current time. If both manifest where created in different
+        # seconds, the signed URL is going to have a different expiration.
+        manifest = attrs.evolve(manifest,
+                                was_cached=True,
+                                location=cached_manifest_1.location)
         self.assertEqual(manifest, cached_manifest_1)
 
         cached_manifest_2 = self._service.get_cached_manifest_with_key(manifest_key)
+        cached_manifest_1 = attrs.evolve(cached_manifest_1,
+                                         location=cached_manifest_2.location)
         self.assertEqual(cached_manifest_1, cached_manifest_2)
 
         # Ensure manifest is considered stale
