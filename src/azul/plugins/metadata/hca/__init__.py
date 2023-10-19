@@ -11,6 +11,7 @@ from typing import (
 from azul.indexer.document import (
     Aggregate,
     EntityType,
+    IndexName,
 )
 from azul.plugins import (
     DocumentSlice,
@@ -86,8 +87,8 @@ class Plugin(MetadataPlugin[HCABundle]):
     def aggregate_class(self) -> Type[Aggregate]:
         return HCAAggregate
 
-    def mapping(self) -> MutableJSON:
-        mapping = super().mapping()
+    def mapping(self, index_name: IndexName) -> MutableJSON:
+        mapping = super().mapping(index_name)
         mapping['properties']['contents'] = {
             'properties': {
                 'projects': {

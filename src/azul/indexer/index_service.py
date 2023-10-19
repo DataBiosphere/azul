@@ -116,9 +116,7 @@ class IndexService(DocumentService):
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def settings(self, index_name) -> JSON:
-
-        index_name = IndexName.parse(index_name)
+    def settings(self, index_name: IndexName) -> JSON:
         index_name.validate()
         aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
@@ -165,11 +163,11 @@ class IndexService(DocumentService):
             }
         }
 
-    def index_names(self, catalog: CatalogName) -> list[str]:
+    def index_names(self, catalog: CatalogName) -> list[IndexName]:
         return [
-            str(IndexName.create(catalog=catalog,
-                                 entity_type=entity_type,
-                                 doc_type=doc_type))
+            IndexName.create(catalog=catalog,
+                             entity_type=entity_type,
+                             doc_type=doc_type)
             for entity_type in self.entity_types(catalog)
             for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ]
@@ -288,24 +286,25 @@ class IndexService(DocumentService):
         for index_name in self.index_names(catalog):
             while True:
                 settings = self.settings(index_name)
-                mappings = self.metadata_plugin(catalog).mapping()
+                mappings = self.metadata_plugin(catalog).mapping(index_name)
                 try:
                     with silenced_es_logger():
-                        index = es_client.indices.get(index=index_name)
+                        index = es_client.indices.get(index=str(index_name))
                 except NotFoundError:
                     try:
-                        es_client.indices.create(index=index_name,
+                        es_client.indices.create(index=str(index_name),
                                                  body=dict(settings=settings,
                                                            mappings=mappings))
                     except RequestError as e:
                         if e.error == 'resource_already_exists_exception':
-                            log.info('Another party concurrently created index %r, retrying.', index_name)
+                            log.info('Another party concurrently created index %s (%r), retrying.',
+                                     index_name, index_name)
                         else:
                             raise
                 else:
                     self._check_index(settings=settings,
                                       mappings=mappings,
-                                      index=index[index_name])
+                                      index=index[str(index_name)])
                     break
 
     def _check_index(self, *, settings: JSON, mappings: JSON, index: JSON):

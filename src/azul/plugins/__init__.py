@@ -54,6 +54,7 @@ from azul.indexer import (
 from azul.indexer.document import (
     Aggregate,
     EntityType,
+    IndexName,
 )
 from azul.indexer.transform import (
     Transformer,
@@ -276,7 +277,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         'type': 'double_range'
     }
 
-    def mapping(self) -> MutableJSON:
+    def mapping(self, index_name: IndexName) -> MutableJSON:
         return {
             'numeric_detection': False,
             'properties': {

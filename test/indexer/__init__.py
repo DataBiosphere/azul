@@ -139,7 +139,7 @@ class IndexerTestCase(CatalogTestCase,
         # unrelated code changes. This makes asserting test results verbatim
         # impossible. Thus we set `preserve_order` to True.
         hits = list(scan(client=self.es_client,
-                         index=','.join(self.index_service.index_names(self.catalog)),
+                         index=','.join(map(str, self.index_service.index_names(self.catalog))),
                          preserve_order=True))
 
         def is_duos_contribution(entity_type, doc_type):
