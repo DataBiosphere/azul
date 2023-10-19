@@ -69,7 +69,7 @@ from azul.logging import (
 )
 from azul.openapi import (
     application_json,
-    format_description,
+    format_description as fd,
     params,
     responses,
     schema,
@@ -88,6 +88,9 @@ from azul.plugins.metadata.hca.indexer.transform import (
 from azul.portal_service import (
     PortalService,
 )
+from azul.service import (
+    FileUrlFunc,
+)
 from azul.service.catalog_controller import (
     CatalogController,
 )
@@ -102,6 +105,7 @@ from azul.service.manifest_controller import (
 )
 from azul.service.manifest_service import (
     CurlManifestGenerator,
+    ManifestUrlFunc,
 )
 from azul.service.repository_controller import (
     RepositoryController,
@@ -124,8 +128,7 @@ spec = {
     'openapi': '3.0.1',
     'info': {
         'title': config.service_name,
-        'description': format_description(f'''
-
+        'description': fd(f'''
             # Overview
 
             Azul is a REST web service for querying metadata associated with
@@ -143,8 +146,8 @@ spec = {
             indices for selected entity types. Metadata entities can be queried
             using the [Index](#operations-tag-Index) endpoints.
 
-            A set of indices forms a catalog. There is a default catalog
-            called `{config.default_catalog}` which will be used unless a
+            A set of indices forms a catalog. There is a default catalog called
+            `{config.default_catalog}` which will be used unless a
             different catalog name is specified using the `catalog` query
             parameter. Metadata from different catalogs is completely
             independent: a response obtained by querying one catalog does not
@@ -162,9 +165,8 @@ spec = {
             filters. These filters are interchangeable with the filters used by
             the [Index](#operations-tag-Index) endpoints.
 
-            Azul also provides a
-            [summary](#operations-Index-get_index_summary) view of
-            indexed data.
+            Azul also provides a [summary](#operations-Index-get_index_summary)
+            view of indexed data.
 
             ## Data model
 
@@ -175,8 +177,8 @@ spec = {
             or indirectly as a series of edges. The nested properties are
             grouped by the type of the associated entity. The properties of all
             data files associated with a particular sample, for example, are
-            listed under `hits[*].files` in a `/index/samples` response. It
-            is important to note that while each _hit_ represents a discrete
+            listed under `hits[*].files` in a `/index/samples` response. It is
+            important to note that while each _hit_ represents a discrete
             entity, the properties nested within that hit are the result of an
             aggregation over potentially many associated entities.
 
@@ -209,11 +211,11 @@ spec = {
             }}
             ```
 
-            This example hit contains two kinds of nested entities (a hit in
-            an actual Azul response will contain more): There are the two
-            projects entities, and the file itself. These nested entities
-            contain selected metadata properties extracted in a consistent way.
-            This makes filtering and sorting simple.
+            This example hit contains two kinds of nested entities (a hit in an
+            actual Azul response will contain more): There are the two projects
+            entities, and the file itself. These nested entities contain
+            selected metadata properties extracted in a consistent way. This
+            makes filtering and sorting simple.
 
             Also notice that there is only one file. When querying a particular
             index, the corresponding entity will always be a singleton like
@@ -224,32 +226,45 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '1.0'
+        'version': '2.0'
     },
     'tags': [
         {
             'name': 'Index',
-            'description': 'Query the indices for entities of interest'
+            'description': fd('''
+                Query the indices for entities of interest
+            ''')
         },
         {
             'name': 'Manifests',
-            'description': 'Complete listing of files matching a given filter in TSV and other formats'
+            'description': fd('''
+                Complete listing of files matching a given filter in TSV and
+                other formats
+            ''')
         },
         {
             'name': 'Repository',
-            'description': 'Access to data files in the underlying repository'
+            'description': fd('''
+                Access to data files in the underlying repository
+            ''')
         },
         {
             'name': 'DSS',
-            'description': 'Access to files maintained in the Data Store'
+            'description': fd('''
+                Access to files maintained in the Data Store
+            ''')
         },
         {
             'name': 'DRS',
-            'description': 'DRS-compliant proxy of the underlying repository'
+            'description': fd('''
+                DRS-compliant proxy of the underlying repository
+            ''')
         },
         {
             'name': 'Auxiliary',
-            'description': 'Describes various aspects of the Azul service'
+            'description': fd('''
+                Describes various aspects of the Azul service
+            ''')
         }
     ]
 }
@@ -273,7 +288,7 @@ class ServiceApp(AzulChaliceApp):
                         'flows': {
                             'implicit': {
                                 'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
-                                'scopes': {scope: scope for scope in scopes},
+                                'scopes': {scope: scope for scope in scopes}
                             }
                         }
                     }
@@ -282,7 +297,7 @@ class ServiceApp(AzulChaliceApp):
             'security': [
                 {},
                 {self.app_name: scopes}
-            ],
+            ]
         }
 
     @property
@@ -303,12 +318,16 @@ class ServiceApp(AzulChaliceApp):
 
     @cached_property
     def manifest_controller(self) -> ManifestController:
+        manifest_url_func: ManifestUrlFunc = self.manifest_url
         return self._service_controller(ManifestController,
                                         step_function_lambda_name=generate_manifest.name,
-                                        manifest_url_func=self.manifest_url)
+                                        manifest_url_func=manifest_url_func)
 
     def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
-        return self._controller(controller_cls, file_url_func=self.file_url, **kwargs)
+        file_url_func: FileUrlFunc = self.file_url
+        return self._controller(controller_cls,
+                                file_url_func=file_url_func,
+                                **kwargs)
 
     @property
     def metadata_plugin(self) -> MetadataPlugin:
@@ -410,33 +429,44 @@ class ServiceApp(AzulChaliceApp):
     def manifest_url(self,
                      *,
                      fetch: bool,
-                     catalog: CatalogName,
-                     format_: ManifestFormat,
+                     token_or_key: Optional[str] = None,
                      **params: str
                      ) -> mutable_furl:
-        view_function = fetch_file_manifest if fetch else file_manifest
-        path = one(view_function.path)
+        if token_or_key is None:
+            handler = fetch_file_manifest if fetch else file_manifest
+            path = one(handler.path)
+        else:
+            handler = fetch_file_manifest_with_token if fetch else file_manifest_with_token
+            path: str = one(handler.path)
+            path = path.format(token=token_or_key)
         url = self.base_url.add(path=path)
-        return url.set(args=dict(catalog=catalog,
-                                 format=format_.value,
-                                 **params))
+        return url.set(args=params)
 
 
 app = ServiceApp()
 configure_app_logging(app, log)
 
 
-@app.route('/', cors=True)
+@app.route(
+    '/',
+    cors=True
+)
 def swagger_ui():
     return app.swagger_ui()
 
 
-@app.route('/static/{file}', cors=True)
+@app.route(
+    '/static/{file}',
+    cors=True
+)
 def static_resource(file):
     return app.swagger_resource(file)
 
 
-@app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)
+@app.route(
+    '/oauth2_redirect',
+    enabled=config.google_oauth2_client_id is not None
+)
 def oauth2_redirect():
     oauth2_redirect_html = app.load_static_resource('swagger', 'oauth2-redirect.html')
     return Response(status_code=200,
@@ -447,58 +477,84 @@ def oauth2_redirect():
 common_specs = CommonEndpointSpecs(app_name='service')
 
 
-@app.route('/openapi', methods=['GET'], cors=True, **common_specs.openapi)
+@app.route(
+    '/openapi',
+    methods=['GET'],
+    cors=True,
+    **common_specs.openapi
+)
 def openapi():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
                     body=app.spec())
 
 
-@app.route('/health', methods=['GET'], cors=True, **common_specs.full_health)
+@app.route(
+    '/health',
+    methods=['GET'],
+    cors=True,
+    **common_specs.full_health
+)
 def health():
     return app.health_controller.health()
 
 
-@app.route('/health/basic',
-           methods=['GET'],
-           cors=True,
-           **common_specs.basic_health)
+@app.route(
+    '/health/basic',
+    methods=['GET'],
+    cors=True,
+    **common_specs.basic_health
+)
 def basic_health():
     return app.health_controller.basic_health()
 
 
-@app.route('/health/cached',
-           methods=['GET'],
-           cors=True,
-           **common_specs.cached_health)
+@app.route(
+    '/health/cached',
+    methods=['GET'],
+    cors=True,
+    **common_specs.cached_health
+)
 def cached_health():
     return app.health_controller.cached_health()
 
 
-@app.route('/health/fast',
-           methods=['GET'],
-           cors=True,
-           **common_specs.fast_health)
+@app.route(
+    '/health/fast',
+    methods=['GET'],
+    cors=True,
+    **common_specs.fast_health
+)
 def fast_health():
     return app.health_controller.fast_health()
 
 
-@app.route('/health/{keys}',
-           methods=['GET'],
-           cors=True,
-           **common_specs.custom_health)
+@app.route(
+    '/health/{keys}',
+    methods=['GET'],
+    cors=True,
+    **common_specs.custom_health
+)
 def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
-@app.schedule('rate(1 minute)', name='servicecachehealth')
+@app.schedule(
+    'rate(1 minute)',
+    name='servicecachehealth'
+)
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
 
-@app.route('/version', methods=['GET'], cors=True, **common_specs.version)
+@app.route(
+    '/version',
+    methods=['GET'],
+    cors=True,
+    **common_specs.version
+)
 def version():
     from azul.changelog import (
         compact_changes,
@@ -622,16 +678,16 @@ def validate_field(field: str):
         raise BRE(f'Unknown field `{field}`')
 
 
-def validate_manifest_format(format_: str):
+def validate_manifest_format(format: str):
     supported_formats = {f.value for f in app.metadata_plugin.manifest_formats}
     try:
-        ManifestFormat(format_)
+        ManifestFormat(format)
     except ValueError:
-        raise BRE(f'Unknown manifest format `{format_}`. '
+        raise BRE(f'Unknown manifest format `{format}`. '
                   f'Must be one of {supported_formats}')
     else:
-        if format_ not in supported_formats:
-            raise BRE(f'Manifest format `{format_}` is not supported for '
+        if format not in supported_formats:
+            raise BRE(f'Manifest format `{format}` is not supported for '
                       f'catalog {app.catalog}. Must be one of {supported_formats}')
 
 
@@ -671,22 +727,20 @@ def validate_params(query_params: Mapping[str, str],
 
     :param allow_extra_params:
 
-        When False, only parameters specified via '**validators' are
-        accepted, and validation fails if additional parameters are present.
-        When True, additional parameters are allowed but their value is not
-        validated.
+        When False, only parameters specified via '**validators' are accepted,
+        and validation fails if additional parameters are present. When True,
+        additional parameters are allowed but their value is not validated.
 
     :param validators:
 
-        A dictionary mapping the name of a parameter to a function that will
-        be used to validate the parameter if it is provided. The callable
-        will be called with a single argument, the parameter value to be
-        validated, and is expected to raise ValueError, TypeError or
-        azul.RequirementError if the value is invalid. Only these exceptions
-        will yield a 4xx status response, all other exceptions will yield a
-        500 status response. If the validator is an instance of `Mandatory`,
-        then validation will fail if its corresponding parameter is not
-        provided.
+        A dictionary mapping the name of a parameter to a function that will be
+        used to validate the parameter if it is provided. The callable will be
+        called with a single argument, the parameter value to be validated, and
+        is expected to raise ValueError, TypeError or azul.RequirementError if
+        the value is invalid. Only these exceptions will yield a 4xx status
+        response, all other exceptions will yield a 500 status response. If the
+        validator is an instance of `Mandatory`, then validation will fail if
+        its corresponding parameter is not provided.
 
     >>> validate_params({'order': 'asc'}, order=str)
 
@@ -718,7 +772,11 @@ def validate_params(query_params: Mapping[str, str],
 
     provided_params = query_params.keys()
     validation_params = validators.keys()
-    mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
+    mandatory_params = {
+        param_name
+        for param_name, validator in validators.items()
+        if isinstance(validator, Mandatory)
+    }
 
     if not allow_extra_params:
         extra_params = provided_params - validation_params
@@ -730,9 +788,9 @@ def validate_params(query_params: Mapping[str, str],
         if missing_params:
             raise BRE(fmt_error('Missing required', missing_params))
 
-    for param_name, param_value in query_params.items():
+    for param_name, validator in validators.items():
         try:
-            validator = validators[param_name]
+            param_value = query_params[param_name]
         except KeyError:
             pass
         else:
@@ -742,7 +800,11 @@ def validate_params(query_params: Mapping[str, str],
                 raise BRE(f'Invalid value for `{param_name}`')
 
 
-@app.route('/integrations', methods=['GET'], cors=True)
+@app.route(
+    '/integrations',
+    methods=['GET'],
+    cors=True
+)
 def get_integrations():
     query_params = app.current_request.query_params or {}
     validate_params(query_params,
@@ -782,7 +844,7 @@ def get_integrations():
         'tags': ['Index'],
         'responses': {
             '200': {
-                'description': format_description('''
+                'description': fd('''
                     The name of the default catalog and a list of all available
                     catalogs. For each catalog, the response includes the name
                     of the atlas the catalog belongs to, a flag indicating
@@ -791,7 +853,9 @@ def get_integrations():
                     For some plugins, the response includes additional
                     configuration properties, such as the sources used by the
                     repository plugin to populate the catalog or the set of
-                    available [indices](#operations-Index-get_index__entity_type_).
+                    available [indices][1].
+
+                    [1]: #operations-Index-get_index__entity_type_
                 '''),
                 **responses.json_content(
                     # The custom return type annotation is an experiment. Please
@@ -818,7 +882,7 @@ hit_spec = schema.object(
     cellLines=array_of_object_spec,
     donorOrganisms=array_of_object_spec,
     organoids=schema.array(str),
-    cellSuspensions=array_of_object_spec,
+    cellSuspensions=array_of_object_spec
 )
 
 page_spec = schema.object(
@@ -856,7 +920,7 @@ filters_param_spec = params.query(
             for field in app.fields
         }
     ))),
-    description=format_description('''
+    description=fd('''
         Criteria to filter entities from the search results.
 
         Each filter consists of a field name, a relation (relational operator),
@@ -866,15 +930,14 @@ filters_param_spec = params.query(
         the response. How multiple field values within a single filter are
         combined depends on the relation.
 
-        For the "is" relation, multiple values are combined using "or"
-        logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
-        selects entities where the file format is either "fastq" or
-        "fastq.gz". For the "within", "intersects", and "contains"
-        relations, the field values must come in nested pairs specifying
-        upper and lower bounds, and multiple pairs are combined using "and"
-        logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
-        selects entities whose donor organism count falls within both
-        ranges, i.e., is exactly 5.
+        For the "is" relation, multiple values are combined using "or" logic.
+        For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}` selects
+        entities where the file format is either "fastq" or "fastq.gz". For the
+        "within", "intersects", and "contains" relations, the field values must
+        come in nested pairs specifying upper and lower bounds, and multiple
+        pairs are combined using "and" logic. For example, `{"donorCount":
+        {"within": [[1,5], [5,10]]}}` selects entities whose donor organism
+        count falls within both ranges, i.e., is exactly 5.
 
         The accessions field supports filtering for a specific accession and/or
         namespace within a project. For example, `{"accessions": {"is": [
@@ -931,7 +994,7 @@ def repository_search_params_spec():
             params.query(
                 param,
                 schema.optional(str),
-                description=format_description('''
+                description=fd('''
                     Use the `next` and `previous` properties of the
                     `pagination` response element to navigate between pages.
                 '''),
@@ -954,10 +1017,11 @@ def repository_search_spec():
         'parameters': repository_search_params_spec(),
         'responses': {
             '200': {
-                'description': format_description(f'''
-                    Paginated list of entities that meet the search
-                    criteria ("hits"). The structure of these hits is documented
-                    under the [corresponding endpoint for a specific entity]({id_spec_link}).
+                'description': fd(f'''
+                    Paginated list of entities that meet the search criteria
+                    ("hits"). The structure of these hits is documented under
+                    the [corresponding endpoint for a specific
+                    entity]({id_spec_link}).
 
                     The `pagination` section describes the total number of hits
                     and total number of pages, as well as user-supplied search
@@ -991,10 +1055,10 @@ def repository_id_spec():
         ],
         'responses': {
             '200': {
-                'description': format_description(f'''
-                    This response describes a single entity. To
-                    search the index for multiple entities, see the
-                    [corresponding search endpoint]({search_spec_link}).
+                'description': fd(f'''
+                    This response describes a single entity. To search the index
+                    for multiple entities, see the [corresponding search
+                    endpoint]({search_spec_link}).
 
                     The properties that are common to all entity types are
                     listed in the schema below; however, additional properties
@@ -1009,9 +1073,9 @@ def repository_id_spec():
                     For example, any biomaterial that yields a cell suspension
                     which yields a sequence file will be considered a "sample".
                     Therefore, the `samples` field is polymorphic, and each
-                    sample may be either a specimen, an organoid, or a cell
-                    line (the field `sampleEntityType` can be used to
-                    discriminate between these cases).
+                    sample may be either a specimen, an organoid, or a cell line
+                    (the field `sampleEntityType` can be used to discriminate
+                    between these cases).
                 '''),
                 **responses.json_content(hit_spec)
             }
@@ -1026,7 +1090,7 @@ def repository_head_spec(for_summary: bool = False):
         'tags': ['Index'],
         'responses': {
             '200': {
-                'description': format_description(f'''
+                'description': fd(f'''
                     The HEAD method can be used to test whether an index is
                     operational, or to check the validity of query parameters
                     for the [GET method]({search_spec_link}).
@@ -1049,9 +1113,24 @@ repository_summary_spec = {
 }
 
 
-@app.route('/index/{entity_type}', methods=['GET'], method_spec=repository_search_spec(), cors=True)
-@app.route('/index/{entity_type}', methods=['HEAD'], method_spec=repository_head_search_spec(), cors=True)
-@app.route('/index/{entity_type}/{entity_id}', methods=['GET'], method_spec=repository_id_spec(), cors=True)
+@app.route(
+    '/index/{entity_type}',
+    methods=['GET'],
+    method_spec=repository_search_spec(),
+    cors=True
+)
+@app.route(
+    '/index/{entity_type}',
+    methods=['HEAD'],
+    method_spec=repository_head_search_spec(),
+    cors=True
+)
+@app.route(
+    '/index/{entity_type}/{entity_id}',
+    methods=['GET'],
+    method_spec=repository_id_spec(),
+    cors=True
+)
 def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON:
     request = app.current_request
     query_params = request.query_params or {}
@@ -1065,50 +1144,60 @@ def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON
                                             authentication=request.authentication)
 
 
-@app.route('/index/summary', methods=['GET'], method_spec={
-    'summary': 'Statistics on the data present across all entities.',
-    'responses': {
-        '200': {
-            # FIXME: Add 'projects' to API documentation & schema
-            #        https://github.com/DataBiosphere/azul/issues/3917
-            'description': format_description('''
-                Counts the total number and total size in bytes of assorted
-                entities, subject to the provided filters.
+@app.route(
+    '/index/summary',
+    methods=['GET'],
+    cors=True,
+    method_spec={
+        'summary': 'Statistics on the data present across all entities.',
+        'responses': {
+            '200': {
+                # FIXME: Add 'projects' to API documentation & schema
+                #        https://github.com/DataBiosphere/azul/issues/3917
+                'description': fd('''
+                    Counts the total number and total size in bytes of assorted
+                    entities, subject to the provided filters.
 
-                `fileTypeSummaries` provides the count and total size in bytes
-                of files grouped by their format, e.g. "fastq" or "matrix."
-                `fileCount` and `totalFileSize` compile these figures across all
-                file formats. Likewise, `cellCountSummaries` counts cells and
-                their associated documents grouped by organ type, with
-                `organTypes` listing all referenced organs.
+                    `fileTypeSummaries` provides the count and total size in
+                    bytes of files grouped by their format, e.g. "fastq" or
+                    "matrix." `fileCount` and `totalFileSize` compile these
+                    figures across all file formats. Likewise,
+                    `cellCountSummaries` counts cells and their associated
+                    documents grouped by organ type, with `organTypes` listing
+                    all referenced organs.
 
-                Total counts of unique entities are also provided for other
-                entity types such as projects and tissue donors. These values
-                are not grouped/aggregated.
-            '''),
-            **responses.json_content(
-                schema.object(
-                    additional_properties=True,
-                    organTypes=schema.array(str),
-                    totalFileSize=float,
-                    fileTypeSummaries=array_of_object_spec,
-                    cellCountSummaries=array_of_object_spec,
-                    donorCount=int,
-                    fileCount=int,
-                    labCount=int,
-                    projectCount=int,
-                    speciesCount=int,
-                    specimenCount=int,
+                    Total counts of unique entities are also provided for other
+                    entity types such as projects and tissue donors. These
+                    values are not grouped/aggregated.
+                '''),
+                **responses.json_content(
+                    schema.object(
+                        additional_properties=True,
+                        organTypes=schema.array(str),
+                        totalFileSize=float,
+                        fileTypeSummaries=array_of_object_spec,
+                        cellCountSummaries=array_of_object_spec,
+                        donorCount=int,
+                        fileCount=int,
+                        labCount=int,
+                        projectCount=int,
+                        speciesCount=int,
+                        specimenCount=int
+                    )
                 )
-            )
-        }
-    },
-    **repository_summary_spec
-}, cors=True)
-@app.route('/index/summary', methods=['HEAD'], method_spec={
-    **repository_head_spec(for_summary=True),
-    **repository_summary_spec
-})
+            }
+        },
+        **repository_summary_spec
+    }
+)
+@app.route(
+    '/index/summary',
+    methods=['HEAD'],
+    method_spec={
+        **repository_head_spec(for_summary=True),
+        **repository_summary_spec
+    }
+)
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
@@ -1127,212 +1216,311 @@ def get_summary():
                                              authentication=request.authentication)
 
 
-token_param_spec = params.query('token',
-                                schema.optional(str),
-                                description='Reserved. Do not pass explicitly.')
-
-
-def manifest_path_spec(*, fetch: bool):
-    return {
-        'parameters': [
-            catalog_param_spec,
-            filters_param_spec,
-            params.query(
-                'format',
-                schema.optional(
-                    schema.enum(
-                        *[
-                            format_.value
-                            for format_ in app.metadata_plugin.manifest_formats
-                        ],
-                        type_=str
-                    )
-                ),
-                description=f'''
-                The desired format of the output.
-
-                - `{ManifestFormat.compact.value}` (the default) for a compact, tab-separated
-                  manifest
-
-                - `{ManifestFormat.terra_bdbag.value}` for a manifest in the
-                  [BDBag format][1]. This provides a ZIP file containing two manifests: one for
-                  Participants (aka Donors) and one for Samples (aka Specimens). For more on the
-                  format of the manifests see [documentation here][2].
-
-                - `{ManifestFormat.terra_pfb.value}` for a manifest in the [PFB format][3]. This
-                  format is mainly used for exporting data to Terra.
-
-                - `{ManifestFormat.curl.value}` for a [curl configuration file][4] manifest.
-                This manifest can be used with the curl program to download all the files listed
-                in the manifest.
-
-                [1]: https://bd2k.ini.usc.edu/tools/bdbag/
-
-                [2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954
-
-                [3]: https://github.com/uc-cdis/pypfb
-
-                [4]: https://curl.haxx.se/docs/manpage.html#-K
-            ''',
-            ),
-            *(
-                [] if fetch else [
-                    params.query('objectKey',
-                                 schema.optional(str),
-                                 description='Reserved. Do not pass explicitly.')
-                ]
-            ),
-            token_param_spec
-        ],
-    }
-
-
-@app.route(
-    '/manifest/files',
-    methods=['GET'],
-    interactive=False,
-    cors=True,
-    path_spec=manifest_path_spec(fetch=False),
-    method_spec={
-        'tags': ['Manifests'],
-        'summary': 'Request a download link to a manifest file and redirect',
-        'description': format_description('''
-            Initiate and check status of a manifest generation job, returning
-            either a 301 response redirecting to a URL to re-check the status of
-            the manifest generation or a 302 response redirecting to the location
-            of the completed manifest.
-
-            This endpoint is not suitable for interactive use via the Swagger UI.
-            Please use the [/fetch endpoint](#operations-Manifests-get_fetch_manifest_files)
-            instead.
-        '''),
-        'responses': {
-            '301': {
-                'description': format_description('''
-                    The manifest generation has been started or is ongoing.
-                    The response is a redirect back to this endpoint, so the client
-                    should expect a subsequent response of the same kind.
-                '''),
-                'headers': {
-                    'Location': {
-                        'description': 'URL to recheck the status of the '
-                                       'manifest generation.',
-                        'schema': {'type': 'string', 'format': 'url'},
-                    },
-                    'Retry-After': {
-                        'description': 'Recommended number of seconds to wait '
-                                       'before requesting the URL specified in '
-                                       'the Location header.',
-                        'schema': {'type': 'string'},
-                    },
-                },
-            },
-            '302': {
-                'description': format_description('''
-                    The manifest generation is complete and ready for download.
-                '''),
-                'headers': {
-                    'Location': {
-                        'description': 'URL that will yield the actual '
-                                       'manifest file.',
-                        'schema': {'type': 'string', 'format': 'url'},
-                    },
-                    'Retry-After': {
-                        'description': 'Recommended number of seconds to wait '
-                                       'before requesting the URL specified in '
-                                       'the Location header.',
-                        'schema': {'type': 'string'},
-                    },
-                },
-            },
-            '410': {
-                'description': format_description('''
-                    The manifest associated with the `objectKey` in this request has
-                    expired. Request a new manifest.
-                ''')
-            }
+def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
+    return app.route(
+        # The path parameter could be a token *or* an object key, but we don't
+        # want to complicate the API with this detail
+        ('/fetch' if fetch else '')
+        + ('/manifest/files' if initiate else '/manifest/files/{token}'),
+        # FIXME: Remove `put` argument and derive method from `initiate`
+        #        https://github.com/DataBiosphere/azul/issues/5533
+        # FIXME: Modify comment to reflect the actual idempotence of the request
+        #        https://github.com/DataBiosphere/azul/issues/3271
+        # The initial request is currently not idempotent, and POST would be a
+        # more appropriate HTTP method to use. However, once a fix for #3271
+        # lands, the initial request *will* be idempotent. We already use PUT,
+        # in order to avoid having changing the REST API yet again.
+        methods=['PUT' if put else 'GET'],
+        interactive=fetch,
+        cors=True,
+        path_spec=None if initiate else {
+            'parameters': [
+                params.path('token', str, description=fd('''
+                    An opaque string representing the manifest preparation job
+                '''))
+            ]
         },
-    }
-)
+        method_spec={
+            # FIXME: Remove deprecation
+            #        https://github.com/DataBiosphere/azul/issues/5533
+            'deprecated': initiate and not put,
+            'tags': ['Manifests'],
+            'summary':
+                (
+                    'Initiate the preparation of a manifest'
+                    if initiate else
+                    'Determine status of a manifest preparation job'
+                ) + (
+                    'via XHR' if fetch else ''
+                ),
+            'description': fd('''
+                Create a manifest preparation job, returning either
+
+                - a 301 redirect to the URL of the status of that job or
+
+                - a 302 redirect to the URL of an already prepared manifest.
+
+                This endpoint is not suitable for interactive use via the
+                Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
+
+                [1]: #operations-Manifests-put_fetch_manifest_files
+                ''') if initiate and not fetch else fd('''
+                Check on the status of an ongoing manifest preparation job,
+                returning either
+
+                - a 301 redirect to this endpoint if the manifest job is still
+                  running
+
+                - a 302 redirect to the URL of the completed manifest.
+
+                This endpoint is not suitable for interactive use via the
+                Swagger UI. Please use [GET /fetch/manifest/files/{token}][1]
+                instead.
+
+                [1]: #operations-Manifests-get_fetch_manifest_files
+                ''') if not initiate and not fetch else fd('''
+                Create a manifest preparation job, returning a 200 status
+                response whose JSON body emulates the HTTP headers that would be
+                found in a response to an equivalent request to the [PUT
+                /manifest/files][1] endpoint.
+
+                Whenever client-side JavaScript code is used in a web
+                application to request the preparation of a manifest from Azul,
+                this endpoint should be used instead of [PUT
+                /manifest/files][1]. This way, the client can use XHR to make
+                the request, retaining full control over the handling of
+                redirects and enabling the client to bypass certain limitations
+                on the native handling of redirects in web browsers. For
+                example, most browsers ignore the `Retry-After` header in
+                redirect responses, causing them to prematurely exhaust the
+                upper limit on the number of consecutive redirects, before the
+                manifest generation job is done.
+
+                [1]: #operations-Manifests-put_manifest_files
+                ''') if initiate and fetch else fd('''
+                Check on the status of an ongoing manifest preparation job,
+                returning a 200 status response whose JSON body emulates the
+                HTTP headers that would be found in a response to an equivalent
+                request to the [GET /manifest/files/{token}][1] endpoint.
+
+                Whenever client-side JavaScript code is used in a web
+                application to request the preparation of a manifest from Azul,
+                this endpoint should be used instead of [GET
+                /manifest/files/{token}][1]. This way, the client can use XHR to
+                make the request, retaining full control over the handling of
+                redirects and enabling the client to bypass certain limitations
+                on the native handling of redirects in web browsers. For
+                example, most browsers ignore the `Retry-After` header in
+                redirect responses, causing them to prematurely exhaust the
+                upper limit on the number of consecutive redirects, before the
+                manifest generation job is done.
+
+                [1]: #operations-Manifests-get_manifest_files
+            '''),
+            'parameters': [
+                catalog_param_spec,
+                filters_param_spec,
+                params.query(
+                    'format',
+                    schema.optional(
+                        schema.enum(
+                            *[
+                                format.value
+                                for format in app.metadata_plugin.manifest_formats
+                            ],
+                            type_=str
+                        )
+                    ),
+                    description=f'''
+                        The desired format of the output.
+
+                        - `{ManifestFormat.compact.value}` (the default) for a compact,
+                          tab-separated manifest
+
+                        - `{ManifestFormat.terra_bdbag.value}` for a manifest in the
+                          [BDBag format][1]. This provides a ZIP file containing two
+                          manifests: one for Participants (aka Donors) and one for
+                          Samples (aka Specimens). For more on the format of the
+                          manifests see [documentation here][2].
+
+                        - `{ManifestFormat.terra_pfb.value}` for a manifest in the [PFB
+                          format][3]. This format is mainly used for exporting data to
+                          Terra.
+
+                        - `{ManifestFormat.curl.value}` for a [curl configuration
+                          file][4] manifest. This manifest can be used with the curl
+                          program to download all the files listed in the manifest.
+
+                        [1]: https://bd2k.ini.usc.edu/tools/bdbag/
+
+                        [2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954
+
+                        [3]: https://github.com/uc-cdis/pypfb
+
+                        [4]: https://curl.haxx.se/docs/manpage.html#-K
+                    '''
+                )
+            ] if initiate else [],
+            'responses': {
+                '301': {
+                    'description': fd(f'''
+                        A redirect indicating that the manifest preparation job
+                        {'has started' if initiate else 'is running'}. Wait for
+                        the recommended number of seconds (see `Retry-After`
+                        header) and then follow the redirect to check the status
+                        of {'that job' if initiate else 'the job again'}.
+                    '''),
+                    'headers': {
+                        'Location': {
+                            'description': fd('''
+                                The URL of the manifest preparation job at
+                            ''') + fd('''the [`GET
+                                /manifest/files/{token}`][2] endpoint.
+
+                                [2]: #operations-Manifests-get_fetch_manifest_files_token
+                                ''') if initiate else fd('''
+                                The URL of this endpoint
+                                '''),
+                            'schema': {'type': 'string', 'format': 'url'}
+                        },
+                        'Retry-After': {
+                            'description': fd('''
+                                The recommended number of seconds to wait before
+                                requesting the URL specified in the `Location`
+                                header
+                            '''),
+                            'schema': {'type': 'string'}
+                        }
+                    }
+                },
+                '302': {
+                    'description': fd(f'''
+                        A redirect indicating that the manifest preparation job
+                        is {'already' if initiate else 'now'} done. Immediately
+                        follow the redirect to obtain the manifest contents.
+                    '''),
+                    'headers': {
+                        'Location': {
+                            'description': fd(''' The URL of the manifest.
+                                Clients should not make any assumptions about
+                                any parts of the returned domain, except that
+                                the scheme will be `https`.
+                            '''),
+                            'schema': {'type': 'string', 'format': 'url'}
+                        }
+                    }
+                },
+                **({} if initiate else {
+                    '410': {
+                        'description': fd('''
+                            The manifest preparation job has expired. Request a
+                            new preparation using the `PUT /manifest/files`
+                            endpoint.
+                        ''')
+                    }
+                })
+            } if not fetch else {
+                '200': {
+                    'description': fd('''
+                        When handling this response, clients should wait the
+                        number of seconds given in the `Retry-After` property of
+                        the response body and then make another XHR request to
+                        the URL specified in the `Location` property.
+
+                        For a detailed description of these properties see the
+                        documentation for the respective response headers
+                        documented under ''') + (fd('''
+                        [PUT /manifest/files][1].
+
+                        [1]: #operations-Manifests-put_manifest_files
+                        ''') if initiate else fd('''
+                        [GET /manifest/files/{token}][1].
+
+                        [1]: #operations-Manifests-get_manifest_files
+                        ''')) + fd('''
+
+                        Note: For a 200 status code response whose body has the
+                        `Status` property set to 302, the `Location` property
+                        may reference the [GET /manifest/files/{token}][2]
+                        endpoint and that endpoint may return yet another
+                        redirect, this time a genuine (not emulated) 302 status
+                        redirect to the actual location of the manifest.
+
+                        [2]: #operations-Manifests-get_manifest_files
+                    '''),
+                    **responses.json_content(
+                        schema.object(
+                            Status=int,
+                            Location={'type': 'string', 'format': 'url'},
+                            **{'Retry-After': schema.optional(int)},
+                            CommandLine=schema.object(**{
+                                key: str
+                                for key in CurlManifestGenerator.command_lines(url=furl(''),
+                                                                               file_name='',
+                                                                               authentication=None)
+                            })
+                        )
+                    ),
+                }
+            }
+
+        }
+    )
+
+
+@manifest_route(fetch=False, initiate=True, put=True)
 def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.command_lines(url=furl(''),
-                                           file_name='',
-                                           authentication=None).keys()
-command_line_spec = schema.object(**{key: str for key in keys})
+@manifest_route(fetch=False, initiate=False)
+def file_manifest_with_token(token: str):
+    return _file_manifest(fetch=False, token_or_key=token)
 
 
-@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec(fetch=True), method_spec={
-    'tags': ['Manifests'],
-    'summary': 'Request a download link to a manifest file and check status',
-    'description': format_description('''
-        Initiate a manifest generation or check the status of an already ongoing
-        generation, returning a 200 response with simulated HTTP headers in the
-        body.
-    '''),
-    'responses': {
-        '200': {
-            **responses.json_content(
-                schema.object(
-                    Status=int,
-                    Location={'type': 'string', 'format': 'url'},
-                    **{'Retry-After': schema.optional(int)},
-                    CommandLine=command_line_spec
-                )
-            ),
-            'description': format_description('''
-                Manifest generation with status report, emulating the response
-                code and headers of the `/manifest/files` endpoint. Note that
-                the actual HTTP response will have status 200 while the `Status`
-                field of the body will be 301 or 302. The intent is to emulate
-                HTTP while bypassing the default client behavior, which (in most
-                web browsers) is to ignore `Retry-After`. The response described
-                here is intended to be processed by client-side Javascript such
-                that the recommended delay in `Retry-After` can be handled in
-                Javascript rather than relying on the native implementation by
-                the web browser.
-
-                For a detailed description of the fields in the response see
-                the documentation for the headers they emulate in the
-                [`/manifest/files`](#operations-Manifests-get_manifest_files)
-                endpoint response.
-            '''),
-        },
-    },
-})
+@manifest_route(fetch=True, initiate=True, put=True)
 def fetch_file_manifest():
     return _file_manifest(fetch=True)
 
 
-def _file_manifest(fetch: bool):
-    catalog = app.catalog
+# FIXME: Remove this route
+#        https://github.com/DataBiosphere/azul/issues/5533
+@manifest_route(fetch=True, initiate=True)
+def fetch_file_manifest_get():
+    return _file_manifest(fetch=True)
+
+
+@manifest_route(fetch=True, initiate=False)
+def fetch_file_manifest_with_token(token: str):
+    return _file_manifest(fetch=True, token_or_key=token)
+
+
+def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
     request = app.current_request
     query_params = request.query_params or {}
-    query_params.setdefault('filters', '{}')
-    # FIXME: Remove `object_key` when Swagger validation lands
-    #        https://github.com/DataBiosphere/azul/issues/1465
-    # The objectKey query parameter is not allowed in /fetch/manifest/files
-    object_key = {} if fetch else {'objectKey': str}
-    validate_params(query_params,
-                    format=validate_manifest_format,
-                    catalog=validate_catalog,
-                    filters=str,
-                    token=str,
-                    **object_key)
-    # Wait to load metadata plugin until we've validated the catalog
-    default_format = app.metadata_plugin.manifest_formats[0].value
-    query_params.setdefault('format', default_format)
-    validate_filters(query_params['filters'])
-    return app.manifest_controller.get_manifest_async(self_url=app.self_url,
-                                                      catalog=catalog,
-                                                      query_params=query_params,
+    if token_or_key is None:
+        query_params.setdefault('filters', '{}')
+        # We list the `catalog` validator first so that the catalog is validated
+        # before any other potentially catalog-dependent validators are invoked
+        validate_params(query_params,
+                        catalog=validate_catalog,
+                        format=validate_manifest_format,
+                        filters=validate_filters)
+        # Now that the catalog is valid, we can provide the default format that
+        # depends on it
+        default_format = app.metadata_plugin.manifest_formats[0].value
+        query_params.setdefault('format', default_format)
+    else:
+        validate_params(query_params)
+    return app.manifest_controller.get_manifest_async(query_params=query_params,
+                                                      token_or_key=token_or_key,
                                                       fetch=fetch,
                                                       authentication=request.authentication)
 
 
-@app.lambda_function(name='manifest')
+@app.lambda_function(
+    name='manifest'
+)
 def generate_manifest(event: AnyJSON, _context: LambdaContext):
     assert isinstance(event, Mapping)
     assert all(isinstance(k, str) for k in event.keys())
@@ -1347,7 +1535,7 @@ file_fqid_parameters_spec = [
     params.query(
         'version',
         schema.optional(str),
-        description=format_description('''
+        description=fd('''
             The version of the file to be returned. File versions are opaque
             strings with only one documented property: they can be
             lexicographically compared with each other in order to determine
@@ -1365,7 +1553,7 @@ repository_files_spec = {
         params.query(
             'fileName',
             schema.optional(str),
-            description=format_description('''
+            description=fd('''
                 The desired name of the file. The given value will be included
                 in the Content-Disposition header of the response. If absent, a
                 best effort to determine the file name from metadata will be
@@ -1375,28 +1563,28 @@ repository_files_spec = {
         params.query(
             'wait',
             schema.optional(int),
-            description=format_description('''
-                If 0, the client is responsible for honoring the waiting
-                period specified in the Retry-After response header. If 1, the
-                server will delay the response in order to consume as much of
-                that waiting period as possible. This parameter should only be
-                set to 1 by clients who can't honor the `Retry-After` header,
+            description=fd('''
+                If 0, the client is responsible for honoring the waiting period
+                specified in the Retry-After response header. If 1, the server
+                will delay the response in order to consume as much of that
+                waiting period as possible. This parameter should only be set to
+                1 by clients who can't honor the `Retry-After` header,
                 preventing them from quickly exhausting the maximum number of
-                redirects. If the server cannot wait the full amount, any
-                amount of wait time left will still be returned in the
-                Retry-After header of the response.
+                redirects. If the server cannot wait the full amount, any amount
+                of wait time left will still be returned in the Retry-After
+                header of the response.
             ''')
         ),
         params.query(
             'replica',
             schema.optional(str),
-            description=format_description('''
+            description=fd('''
                 If the underlying repository offers multiple replicas of the
                 requested file, use the specified replica. Otherwise, this
                 parameter is ignored. If absent, the only replica — for
                 repositories that don't support replication — or the default
                 replica — for those that do — will be used.
-            '''),
+            ''')
         ),
         params.query(
             'requestIndex',
@@ -1408,64 +1596,73 @@ repository_files_spec = {
             schema.optional(str),
             description='Do not use. Reserved for internal purposes.'
         ),
-        token_param_spec
+        params.query('token',
+                     schema.optional(str),
+                     description='Reserved. Do not pass explicitly.')
     ]
 }
 
 
-@app.route('/repository/files/{file_uuid}', methods=['GET'], interactive=False, cors=True, method_spec={
-    **repository_files_spec,
-    'summary': 'Redirect to a URL for downloading a given data file from the '
-               'underlying repository',
-    'description': format_description('''
-        This endpoint is not suitable for interactive use via the Swagger UI.
-        Please use the [/fetch endpoint](#operations-Repository-get_fetch_repository_files__file_uuid_)
-        instead.
-    '''),
-    'responses': {
-        '301': {
-            'description': format_description('''
-                A URL to the given file is still being prepared. Retry by
-                waiting the number of seconds specified in the `Retry-After`
-                header of the response and the requesting the URL specified in
-                the `Location` header.
-            '''),
-            'headers': {
-                'Location': responses.header(str, description=format_description('''
-                    A URL pointing back at this endpoint, potentially with
-                    different or additional request parameters.
-                ''')),
-                'Retry-After': responses.header(int, description=format_description('''
-                    Recommended number of seconds to wait before requesting the
-                    URL specified in the `Location` header. The response may
-                    carry this header even if server-side waiting was requested
-                    via `wait=1`.
-                '''))
-            }
-        },
-        '302': {
-            'description': format_description('''
-                The file can be downloaded from the URL returned in the
-                `Location` header.
-            '''),
-            'headers': {
-                'Location': responses.header(str, description=format_description('''
-                        A URL that will yield the actual content of the file.
-                ''')),
-                'Content-Disposition': responses.header(str, description=format_description('''
+@app.route(
+    '/repository/files/{file_uuid}',
+    methods=['GET'],
+    interactive=False,
+    cors=True,
+    method_spec={
+        **repository_files_spec,
+        'summary': 'Redirect to a URL for downloading a given data file from the '
+                   'underlying repository',
+        'description': fd('''
+            This endpoint is not suitable for interactive use via the Swagger
+            UI. Please use the [/fetch endpoint][1] instead.
+
+            [1]: #operations-Repository-get_fetch_repository_files__file_uuid_
+        '''),
+        'responses': {
+            '301': {
+                'description': fd('''
+                    A URL to the given file is still being prepared. Retry by
+                    waiting the number of seconds specified in the `Retry-After`
+                    header of the response and the requesting the URL specified
+                    in the `Location` header.
+                '''),
+                'headers': {
+                    'Location': responses.header(str, description=fd('''
+                        A URL pointing back at this endpoint, potentially with
+                        different or additional request parameters.
+                    ''')),
+                    'Retry-After': responses.header(int, description=fd('''
+                        Recommended number of seconds to wait before requesting
+                        the URL specified in the `Location` header. The response
+                        may carry this header even if server-side waiting was
+                        requested via `wait=1`.
+                    '''))
+                }
+            },
+            '302': {
+                'description': fd('''
+                    The file can be downloaded from the URL returned in the
+                    `Location` header.
+                '''),
+                'headers': {
+                    'Location': responses.header(str, description=fd('''
+                            A URL that will yield the actual content of the file.
+                    ''')),
+                    'Content-Disposition': responses.header(str, description=fd('''
                         Set to a value that makes user agents download the file
                         instead of rendering it, suggesting a meaningful name
                         for the downloaded file stored on the user's file
                         system. The suggested file name is taken  from the
                         `fileName` request parameter or, if absent, from
                         metadata describing the file. It generally does not
-                        correlate with the path component of the URL returned
-                        in the `Location` header.
-                '''))
+                        correlate with the path component of the URL returned in
+                        the `Location` header.
+                    '''))
+                }
             }
-        },
+        }
     }
-})
+)
 def repository_files(file_uuid: str) -> Response:
     result = _repository_files(file_uuid, fetch=False)
     status_code = result.pop('Status')
@@ -1474,31 +1671,37 @@ def repository_files(file_uuid: str) -> Response:
                     status_code=status_code)
 
 
-@app.route('/fetch/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
-    **repository_files_spec,
-    'summary': 'Request a URL for downloading a given data file',
-    'responses': {
-        '200': {
-            'description': format_description(f'''
-                Emulates the response code and headers of {one(repository_files.path)}
-                while bypassing the default user agent behavior. Note that the
-                status code of a successful response will be 200 while the
-                `Status` field of its body will be 302.
+@app.route(
+    '/fetch/repository/files/{file_uuid}',
+    methods=['GET'],
+    cors=True,
+    method_spec={
+        **repository_files_spec,
+        'summary': 'Request a URL for downloading a given data file',
+        'responses': {
+            '200': {
+                'description': fd(f'''
+                    Emulates the response code and headers of
+                    {one(repository_files.path)} while bypassing the default
+                    user agent behavior. Note that the status code of a
+                    successful response will be 200 while the `Status` field of
+                    its body will be 302.
 
-                The response described here is intended to be processed by
-                client-side Javascript such that the emulated headers can
-                be handled in Javascript rather than relying on the native
-                implementation by the web browser.
-            '''),
-            **responses.json_content(
-                schema.object(
-                    Status=int,
-                    Location=str,
+                    The response described here is intended to be processed by
+                    client-side Javascript such that the emulated headers can be
+                    handled in Javascript rather than relying on the native
+                    implementation by the web browser.
+                '''),
+                **responses.json_content(
+                    schema.object(
+                        Status=int,
+                        Location=str
+                    )
                 )
-            )
+            }
         }
     }
-})
+)
 def fetch_repository_files(file_uuid: str) -> Response:
     body = _repository_files(file_uuid, fetch=True)
     return Response(body=json.dumps(body), status_code=200)
@@ -1554,27 +1757,32 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                                                    authentication=request.authentication)
 
 
-@app.route('/repository/sources', methods=['GET'], cors=True, method_spec={
-    'summary': 'List available data sources',
-    'tags': ['Repository'],
-    'parameters': [catalog_param_spec],
-    'responses': {
-        '200': {
-            'description': format_description('''
-                List the sources the currently authenticated user is authorized
-                to access in the underlying data repository.
-            '''),
-            **responses.json_content(
-                schema.object(sources=schema.array(
-                    schema.object(
-                        sourceId=str,
-                        sourceSpec=str,
-                    )
-                ))
-            )
-        },
+@app.route(
+    '/repository/sources',
+    methods=['GET'],
+    cors=True,
+    method_spec={
+        'summary': 'List available data sources',
+        'tags': ['Repository'],
+        'parameters': [catalog_param_spec],
+        'responses': {
+            '200': {
+                'description': fd('''
+                    List the sources the currently authenticated user is
+                    authorized to access in the underlying data repository.
+                '''),
+                **responses.json_content(
+                    schema.object(sources=schema.array(
+                        schema.object(
+                            sourceId=str,
+                            sourceSpec=str
+                        )
+                    ))
+                )
+            }
+        }
     }
-})
+)
 def list_sources() -> Response:
     validate_params(app.current_request.query_params or {},
                     catalog=validate_catalog)
@@ -1588,11 +1796,12 @@ def hash_url(url):
     return base64.urlsafe_b64encode(url_hash).decode()
 
 
-drs_spec_description = format_description('''
-    This is a partial implementation of the
-    [DRS 1.0.0 spec](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/).
-    Not all features are implemented. This endpoint acts as a DRS-compliant
-    proxy for accessing files in the underlying repository.
+drs_spec_description = fd('''
+    This is a partial implementation of the [DRS 1.0.0 spec][1]. Not all
+    features are implemented. This endpoint acts as a DRS-compliant proxy for
+    accessing files in the underlying repository.
+
+    [1]: https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/
 
     Any errors encountered from the underlying repository are forwarded on as
     errors from this endpoint.
@@ -1607,26 +1816,31 @@ drs_spec_description = format_description('''
     method_spec={
         'summary': 'Get file DRS object',
         'tags': ['DRS'],
-        'description': format_description('''
-            This endpoint returns object metadata, and a list of access methods that can
-            be used to fetch object bytes.
+        'description': fd('''
+            This endpoint returns object metadata, and a list of access methods
+            that can be used to fetch object bytes.
         ''') + drs_spec_description,
         'parameters': file_fqid_parameters_spec,
         'responses': {
             '200': {
-                'description': format_description('''
-                    A DRS object is returned. Two
-                    [`AccessMethod`s](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.1.0/docs/#_accessmethod)
-                    are included:
+                'description': fd(
+                    '''
+                    A DRS object is returned. Two [`AccessMethod`s][1] are
+                    included:
+
+                    [1]: {link}
 
                     {access_methods}
 
-                    If the object is not immediately ready, an `access_id` will be
-                    returned instead of an `access_url`.
-                ''', access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
+                    If the object is not immediately ready, an `access_id` will
+                    be returned instead of an `access_url`.
+                    ''',
+                    access_methods='\n'.join(f'- {am!s}' for am in AccessMethod),
+                    link='https://ga4gh.github.io/data-repository-service-schemas'
+                         '/preview/release/drs-1.1.0/docs/#_accessmethod'),
                 **app.drs_controller.get_object_response_schema()
             }
-        },
+        }
     }
 )
 def get_data_object(file_uuid):
@@ -1649,16 +1863,16 @@ def get_data_object(file_uuid):
     cors=True,
     method_spec={
         'summary': 'Get a file with an access ID',
-        'description': format_description('''
-            This endpoint returns a URL that can be used to fetch the bytes of a DRS
-            object.
+        'description': fd('''
+            This endpoint returns a URL that can be used to fetch the bytes of a
+            DRS object.
 
-            This method only needs to be called when using an `AccessMethod` that
-            contains an `access_id`.
+            This method only needs to be called when using an `AccessMethod`
+            that contains an `access_id`.
 
-            An `access_id` is returned when the underlying file is not ready. When
-            the underlying repository is the DSS, the 202 response allowed time for
-            the DSS to do a checkout.
+            An `access_id` is returned when the underlying file is not ready.
+            When the underlying repository is the DSS, the 202 response allowed
+            time for the DSS to do a checkout.
         ''') + drs_spec_description,
         'parameters': [
             *file_fqid_parameters_spec,
@@ -1666,19 +1880,19 @@ def get_data_object(file_uuid):
         ],
         'responses': {
             '202': {
-                'description': format_description('''
-                    This response is issued if the object is not yet ready. Respect
-                    the `Retry-After` header, then try again.
+                'description': fd('''
+                    This response is issued if the object is not yet ready.
+                    Respect the `Retry-After` header, then try again.
                 '''),
                 'headers': {
-                    'Retry-After': responses.header(str, description=format_description('''
-                        Recommended number of seconds to wait before requesting the
-                        URL specified in the Location header.
+                    'Retry-After': responses.header(str, description=fd('''
+                        Recommended number of seconds to wait before requesting
+                        the URL specified in the Location header.
                     '''))
                 }
             },
             '200': {
-                'description': format_description('''
+                'description': fd('''
                     The object is ready. The URL is in the response object.
                 '''),
                 **responses.json_content(schema.object(url=str))

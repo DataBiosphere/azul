@@ -36,7 +36,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        es_endpoint = cls._create_container('docker.io/ucscgi/azul-elasticsearch:7.17.10-2',
+        es_endpoint = cls._create_container('docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
                                             container_port=9200,
                                             environment=['xpack.security.enabled=false',
                                                          'discovery.type=single-node',

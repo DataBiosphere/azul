@@ -1,15 +1,14 @@
 import datetime
-import json
-from typing import (
-    Optional,
+from itertools import (
+    product,
 )
+import json
 from unittest import (
     mock,
 )
 from unittest.mock import (
     patch,
 )
-import unittest.result
 
 from botocore.exceptions import (
     ClientError,
@@ -47,9 +46,13 @@ from azul.service.async_manifest_service import (
     StateMachineError,
     Token,
 )
+from azul.service.manifest_controller import (
+    ManifestGenerationState,
+)
 from azul.service.manifest_service import (
     CachedManifestNotFound,
     Manifest,
+    ManifestKey,
     ManifestPartition,
     ManifestService,
 )
@@ -153,16 +156,6 @@ class TestAsyncManifestService(AzulUnitTestCase):
 
 
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
-    object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
-
-    def run(self,
-            result: Optional[unittest.result.TestResult] = None
-            ) -> Optional[unittest.result.TestResult]:
-        manifest = None
-        with mock.patch.object(ManifestService,
-                               'get_cached_manifest',
-                               return_value=(self.object_key, manifest)):
-            return super().run(result)
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -181,32 +174,37 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
             mock_start_execution.reset_mock()
             mock_describe_execution.reset_mock()
 
-        with responses.RequestsMock() as helper:
+        with (responses.RequestsMock() as helper):
             helper.add_passthru(str(self.base_url))
-            for fetch in (True, False):
-                with self.subTest(fetch=fetch):
+            # FIXME: Remove put=False and therefore `put`
+            #        https://github.com/DataBiosphere/azul/issues/5533
+            for put, fetch in product((True, False), repeat=2):
+                if not fetch and not put:
+                    continue  # we provide the backwards-compatible GET only for fetch
+                with self.subTest(put=put, fetch=fetch):
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_id
-                    format_ = ManifestFormat.compact
+                    format = ManifestFormat.compact
                     filters = Filters(explicit={'organ': {'is': ['lymph node']}},
                                       source_ids={self.source.id})
                     params = {
                         'catalog': self.catalog,
-                        'format': format_.value,
+                        'format': format.value,
                         'filters': json.dumps(filters.explicit)
                     }
                     path = '/manifest/files'
                     object_url = 'https://url.to.manifest?foo=bar'
                     file_name = 'some_file_name'
-                    object_key = f'manifests/{file_name}'
-                    manifest_url = self.base_url.set(path=path,
-                                                     args=dict(params, objectKey=object_key))
+                    manifest_key = ManifestKey(catalog=self.catalog,
+                                               format=format,
+                                               manifest_hash='',
+                                               source_hash='')
+                    manifest_url = self.base_url.set(path=path)
+                    manifest_url.path.segments.append(manifest_key.encode())
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
-                                        format_=format_,
-                                        catalog=self.catalog,
-                                        filters=filters,
-                                        object_key=object_key,
+                                        format=format,
+                                        manifest_key=manifest_key,
                                         file_name=file_name)
                     url = self.base_url.set(path=path, args=params)
                     if fetch:
@@ -233,9 +231,15 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                           search_after=('foo', 'doc#bar'))
                     )
 
-                    with mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest:
+                    with (
+                        mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest,
+                        mock.patch.object(ManifestService, 'get_cached_manifest',
+                                          side_effect=CachedManifestNotFound(manifest_key))
+                    ):
                         for i, expected_status in enumerate(3 * [301] + [302]):
-                            response = requests.get(str(url), allow_redirects=False)
+                            response = requests.request(method='PUT' if put and i == 0 else 'GET',
+                                                        url=str(url),
+                                                        allow_redirects=False)
                             if fetch:
                                 self.assertEqual(200, response.status_code)
                                 response = response.json()
@@ -248,11 +252,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 self.assertGreaterEqual(int(headers['Retry-After']), 0)
                             url = furl(headers['Location'])
                             if i == 0:
-                                state = dict(format_=format_.value,
-                                             catalog=self.catalog,
-                                             filters=filters.to_json(),
-                                             object_key=self.object_key,
-                                             partition=partitions[0].to_json())
+                                state: ManifestGenerationState = dict(filters=filters.to_json(),
+                                                                      manifest_key=manifest_key.to_json(),
+                                                                      partition=partitions[0].to_json())
                                 mock_start_execution.assert_called_once_with(
                                     state_machine_name,
                                     execution_id,
@@ -267,11 +269,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 self.assertEqual(partitions[1],
                                                  ManifestPartition.from_json(state['partition']))
                                 mock_get_manifest.assert_called_once_with(
-                                    format_=ManifestFormat(state['format_']),
-                                    catalog=state['catalog'],
+                                    format=format,
+                                    catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
-                                    object_key=state['object_key']
+                                    manifest_key=ManifestKey.from_json(state['manifest_key'])
                                 )
                                 mock_get_manifest.reset_mock()
                                 mock_start_execution.assert_not_called()
@@ -292,36 +294,35 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 }
                             elif i == 3:
                                 mock_get_manifest.assert_called_once_with(
-                                    format_=ManifestFormat(state['format_']),
-                                    catalog=state['catalog'],
+                                    format=format,
+                                    catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
-                                    object_key=state['object_key']
+                                    manifest_key=ManifestKey.from_json(state['manifest_key'])
                                 )
                                 mock_get_manifest.reset_mock()
                     mock_start_execution.assert_not_called()
                     mock_describe_execution.assert_called_once()
-                    expect_redirect = fetch and format_ is ManifestFormat.curl
+                    expect_redirect = fetch and format is ManifestFormat.curl
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
                     reset()
-
-            manifest_states = [
+            mock_effects = [
                 manifest,
-                CachedManifestNotFound
+                CachedManifestNotFound(manifest_key)
             ]
             with mock.patch.object(ManifestService,
-                                   'get_cached_manifest_with_object_key',
-                                   side_effect=manifest_states):
-                for manifest in manifest_states:
-                    with self.subTest(manifest=manifest):
-                        self.assertEqual(object_key, manifest_url.args['objectKey'])
+                                   'get_cached_manifest_with_key',
+                                   side_effect=mock_effects):
+                for mock_effect in mock_effects:
+                    with self.subTest(mock_effect=mock_effect):
+                        assert manifest_key.encode() == manifest_url.path.segments[-1]
                         response = requests.get(str(manifest_url), allow_redirects=False)
-                        if isinstance(manifest, Manifest):
+                        if isinstance(mock_effect, Manifest):
                             self.assertEqual(302, response.status_code)
                             self.assertEqual(object_url, response.headers['Location'])
                         else:
-                            if manifest is CachedManifestNotFound:
+                            if isinstance(mock_effect, CachedManifestNotFound):
                                 cause = 'expired'
                             else:
                                 assert False
@@ -332,11 +333,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                             self.assertEqual(410, response.status_code)
                             self.assertEqual(expected_response, response.json())
 
-    params = {
-        'token': Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
-                       request_index=0,
-                       wait_time=0).encode()
-    }
+    token = Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
+                  request_index=0,
+                  wait_time=0).encode()
+
+    def _test(self, *, expected_status, token=token):
+        url = self.base_url.set(path=['fetch', 'manifest', 'files', token])
+        response = requests.get(str(url))
+        self.assertEqual(expected_status, response.status_code)
 
     def test_execution_not_found(self):
         """
@@ -348,10 +352,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 'Error': {
                     'Code': 'ExecutionDoesNotExist'
                 }
-            }, '')
-            url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
-            response = requests.get(str(url))
-        self.assertEqual(400, response.status_code)
+            }, 'DescribeExecution')
+            self._test(expected_status=400)
 
     def test_boto_error(self):
         """
@@ -364,9 +366,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     'Code': 'OtherError'
                 }
             }, '')
-            url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
-            response = requests.get(str(url))
-        self.assertEqual(500, response.status_code)
+            self._test(expected_status=500)
 
     def test_execution_error(self):
         """
@@ -375,16 +375,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         """
         with patch.object(AsyncManifestService, 'inspect_generation') as mock:
             mock.side_effect = StateMachineError
-            url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
-            response = requests.get(str(url))
-        self.assertEqual(500, response.status_code)
+            self._test(expected_status=500)
 
     def test_invalid_token(self):
         """
         Manifest endpoint should raise a BadRequestError when given a token that
         cannot be decoded
         """
-        params = {'token': 'Invalid base64'}
-        url = self.base_url.set(path='/fetch/manifest/files', args=params)
-        response = requests.get(str(url))
-        self.assertEqual(400, response.status_code)
+        self._test(token='Invalid base64', expected_status=400)
