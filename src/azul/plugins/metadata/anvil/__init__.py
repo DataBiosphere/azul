@@ -8,6 +8,7 @@ from typing import (
 
 from azul.indexer.document import (
     EntityType,
+    IndexName,
 )
 from azul.plugins import (
     DocumentSlice,
@@ -80,8 +81,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             for transformer_cls in self.transformer_types()
         ]
 
-    def mapping(self) -> MutableJSON:
-        mapping = super().mapping()
+    def mapping(self, index_name: IndexName) -> MutableJSON:
+        mapping = super().mapping(index_name)
 
         def range_mapping(name: str, path: str) -> MutableJSON:
             return {
