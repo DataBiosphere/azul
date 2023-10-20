@@ -57,6 +57,7 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     Aggregate,
+    EntityType,
 )
 from azul.indexer.transform import (
     Transformer,
@@ -122,6 +123,7 @@ class DocumentSlice(TypedDict, total=False):
 class Sorting:
     field_name: FieldName
     descending: bool = attr.ib(default=False)
+    max_page_size: int = 1000
 
     @property
     def order(self) -> str:
@@ -322,12 +324,12 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def exposed_indices(self) -> Mapping[str, Sorting]:
+    def exposed_indices(self) -> Mapping[EntityType, Sorting]:
         """
         The indices for which the service provides an `/index/…` endpoint.
         The return value maps the outer entity type of each exposed index to the
-        default values of the request parameters that control the ordering of
-        hits returned by the corresponding endpoint.
+        default values of the request parameters that control the paging and
+        ordering of hits returned by the corresponding endpoint.
         """
         raise NotImplementedError
 
