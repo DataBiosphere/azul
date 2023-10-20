@@ -6,7 +6,7 @@ from typing import (
 )
 import uuid
 
-import attr
+import attrs
 from botocore.exceptions import (
     ClientError,
 )
@@ -27,7 +27,7 @@ class InvalidTokenError(Exception):
         super().__init__('Invalid token given')
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class Token:
     """
     Represents an ongoing manifest generation
@@ -37,7 +37,7 @@ class Token:
     wait_time: int
 
     def encode(self) -> str:
-        token = attr.asdict(self)
+        token = attrs.asdict(self)
         return base64.urlsafe_b64encode(json.dumps(token).encode()).decode()
 
     @classmethod
@@ -48,9 +48,9 @@ class Token:
             raise InvalidTokenError from e
 
     def advance(self, wait_time: int) -> 'Token':
-        return attr.evolve(self,
-                           wait_time=wait_time,
-                           request_index=self.request_index + 1)
+        return attrs.evolve(self,
+                            wait_time=wait_time,
+                            request_index=self.request_index + 1)
 
 
 class StateMachineError(RuntimeError):

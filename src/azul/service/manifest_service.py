@@ -56,7 +56,7 @@ from typing import (
 import unicodedata
 import uuid
 
-import attr
+import attrs
 from bdbag import (
     bdbag_api,
 )
@@ -145,12 +145,12 @@ class ManifestUrlFunc(Protocol):
                  ) -> mutable_furl: ...
 
 
-@attr.s(auto_attribs=True, kw_only=False, frozen=True)
+@attrs.frozen
 class InvalidManifestKey(Exception):
     value: str
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class ManifestKey:
     catalog: CatalogName
     format: ManifestFormat
@@ -183,7 +183,7 @@ class ManifestKey:
             raise InvalidManifestKey(value) from e
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class Manifest:
     """
     Contains the details of a prepared manifest.
@@ -227,7 +227,7 @@ def tuple_or_none(v):
     return v if v is None else tuple(v)
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class ManifestPartition:
     """
     A partial manifest. An instance of this class encapsulates the state that
@@ -266,8 +266,8 @@ class ManifestPartition:
     multipart_upload_id: Optional[str] = None
 
     #: The S3 ETag of each partition; the current one and all the ones before it
-    part_etags: Optional[tuple[str, ...]] = attr.ib(converter=tuple_or_none,
-                                                    default=None)
+    part_etags: Optional[tuple[str, ...]] = attrs.field(converter=tuple_or_none,
+                                                        default=None)
 
     #: The index of the current page. The index is zero-based and global. For
     #: example, if the first partition contains five pages, the index of the
@@ -291,7 +291,7 @@ class ManifestPartition:
         })
 
     def to_json(self) -> MutableJSON:
-        return attr.asdict(self)
+        return attrs.asdict(self)
 
     @classmethod
     def first(cls) -> 'ManifestPartition':
@@ -299,18 +299,18 @@ class ManifestPartition:
                    is_last=False)
 
     def with_config(self, config: AnyJSON):
-        return attr.evolve(self, config=config)
+        return attrs.evolve(self, config=config)
 
     def with_upload(self, multipart_upload_id) -> 'ManifestPartition':
-        return attr.evolve(self,
-                           multipart_upload_id=multipart_upload_id,
-                           part_etags=())
+        return attrs.evolve(self,
+                            multipart_upload_id=multipart_upload_id,
+                            part_etags=())
 
     def first_page(self) -> 'ManifestPartition':
         assert self.index == 0, self
-        return attr.evolve(self,
-                           page_index=0,
-                           is_last_page=False)
+        return attrs.evolve(self,
+                            page_index=0,
+                            is_last_page=False)
 
     def next_page(self,
                   file_name: Optional[str],
@@ -321,26 +321,26 @@ class ManifestPartition:
         if self.page_index > 0:
             if file_name != self.file_name:
                 file_name = None
-        return attr.evolve(self,
-                           page_index=self.page_index + 1,
-                           file_name=file_name,
-                           search_after=search_after)
+        return attrs.evolve(self,
+                            page_index=self.page_index + 1,
+                            file_name=file_name,
+                            search_after=search_after)
 
     def last_page(self):
-        return attr.evolve(self, is_last_page=True)
+        return attrs.evolve(self, is_last_page=True)
 
     def next(self, part_etag: str) -> 'ManifestPartition':
-        return attr.evolve(self,
-                           index=self.index + 1,
-                           part_etags=(*self.part_etags, part_etag))
+        return attrs.evolve(self,
+                            index=self.index + 1,
+                            part_etags=(*self.part_etags, part_etag))
 
     def last(self, file_name: str) -> 'ManifestPartition':
-        return attr.evolve(self,
-                           file_name=file_name,
-                           is_last=True)
+        return attrs.evolve(self,
+                            file_name=file_name,
+                            is_last=True)
 
 
-@attr.s(auto_attribs=True, kw_only=False, frozen=True)
+@attrs.frozen
 class CachedManifestNotFound(Exception):
     manifest_key: ManifestKey
 
