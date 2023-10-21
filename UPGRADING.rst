@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5518 GitLab updates cause false positive insufficient_data alarms
+==================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 DataBiosphere/azul-private#108 Resolve vulnerabilities in docker image
 ======================================================================
 

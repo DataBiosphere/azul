@@ -1646,6 +1646,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'metrics': {
                                     'metrics_collected': {
                                         'cpu': {
+                                            'append_dimensions': {
+                                                'InstanceName': 'azul-gitlab'
+                                            },
                                             'resources': [
                                                 "*"
                                             ],
@@ -1654,11 +1657,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                             ]
                                         },
                                         'mem': {
+                                            'append_dimensions': {
+                                                'InstanceName': 'azul-gitlab'
+                                            },
                                             'measurement': [
                                                 'used_percent'
                                             ],
                                         },
                                         'disk': {
+                                            'append_dimensions': {
+                                                'InstanceName': 'azul-gitlab'
+                                            },
                                             'measurement': [
                                                 'used_percent'
                                             ],
@@ -1679,8 +1688,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                             'drop_device': True
                                         }
                                     },
+                                    # The dimensions appended to the specific
+                                    # metrics are only appended if we specify
+                                    # a global append_dimensions field as well.
                                     'append_dimensions': {
-                                        'InstanceId': '$${aws:InstanceId}'
                                     },
                                 },
                                 'logs': {
@@ -1819,7 +1830,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'metric_name': metric,
                     'namespace': 'CWAgent',
                     'dimensions': dimensions | {
-                        'InstanceId': '${aws_instance.gitlab.id}',
+                        # Instead of using 'InstanceId' here, we use a custom
+                        # dimension that has been appended to each metric. This
+                        # removes the need to recreate the alarm every time the
+                        # EC2 instance is recreated, which avoids the alarm from
+                        # entering an insufficient_data state every time the new
+                        # EC2 instance is launched for a first time.
+                        'InstanceName': 'azul-gitlab'
                     },
                     'statistic': stat,
                     'threshold': threshold,
