@@ -83,6 +83,9 @@ from azul import (
     config,
     mutable_furl,
 )
+from azul.attrs import (
+    strict_auto,
+)
 from azul.auth import (
     Authentication,
 )
@@ -152,10 +155,10 @@ class InvalidManifestKey(Exception):
 
 @attrs.frozen(kw_only=True)
 class ManifestKey:
-    catalog: CatalogName
-    format: ManifestFormat
-    manifest_hash: str
-    source_hash: str
+    catalog: CatalogName = strict_auto()
+    format: ManifestFormat = strict_auto()
+    manifest_hash: str = strict_auto()
+    source_hash: str = strict_auto()
 
     def to_json(self):
         return {

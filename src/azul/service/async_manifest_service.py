@@ -11,6 +11,9 @@ from botocore.exceptions import (
     ClientError,
 )
 
+from azul.attrs import (
+    strict_auto,
+)
 from azul.deployment import (
     aws,
 )
@@ -32,9 +35,9 @@ class Token:
     """
     Represents an ongoing manifest generation
     """
-    execution_id: str
-    request_index: int
-    wait_time: int
+    execution_id: str = strict_auto()
+    request_index: int = strict_auto()
+    wait_time: int = strict_auto()
 
     def encode(self) -> str:
         token = attrs.asdict(self)
