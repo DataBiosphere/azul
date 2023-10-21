@@ -1,6 +1,3 @@
-from collections.abc import (
-    Mapping,
-)
 import unittest
 
 from moto import (
@@ -31,7 +28,7 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
         return 'indexer'
 
     def _expected_health(self,
-                         endpoint_states: Mapping[str, bool],
+                         endpoints_up: bool = True,
                          es_up: bool = True
                          ):
         return {
@@ -44,10 +41,9 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
     @mock_sts
     @mock_sqs
     def test_queues_down(self):
-        endpoint_states = self._endpoint_states()
-        response = self._test(endpoint_states, lambdas_up=True)
+        response = self._test()
         self.assertEqual(503, response.status_code)
-        self.assertEqual(self._expected_health(endpoint_states), response.json())
+        self.assertEqual(self._expected_health(), response.json())
 
 
 del HealthCheckTestCase

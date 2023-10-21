@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Mapping,
-)
 import os
 import random
 import time
@@ -73,12 +70,6 @@ class HealthCheckTestCase(LocalAppTestCase,
                           StorageServiceTestMixin,
                           SqsTestCase,
                           metaclass=ABCMeta):
-    endpoints = (
-        '/index/files?size=1',
-        '/index/projects?size=1',
-        '/index/samples?size=1',
-        '/index/bundles?size=1'
-    )
 
     def test_basic(self):
         response = requests.get(str(self.base_url.set(path='/health/basic')))
@@ -94,8 +85,7 @@ class HealthCheckTestCase(LocalAppTestCase,
     @mock_sqs
     def test_health_all_ok(self):
         self._create_mock_queues()
-        endpoint_states = self._endpoint_states()
-        response = self._test(endpoint_states, lambdas_up=True, path='/health/')
+        response = self._test(path='/health/')
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'up': True,
@@ -109,7 +99,6 @@ class HealthCheckTestCase(LocalAppTestCase,
     @mock_sts
     @mock_sqs
     def test_health_endpoint_keys(self):
-        endpoint_states = self._endpoint_states()
         expected = {
             keys: {
                 'up': True,
@@ -126,12 +115,9 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         for keys, expected_response in expected.items():
             with self.subTest(keys=keys):
-                with self.helper() as helper:
-                    self._mock_other_lambdas(helper, up=True)
-                    with self._mock_service_endpoints(helper, endpoint_states):
-                        response = requests.get(str(self.base_url.set(path=('health', keys))))
-                    self.assertEqual(200, response.status_code)
-                    self.assertEqual(expected_response, response.json())
+                response = self._test(path=f'health/{keys}')
+                self.assertEqual(200, response.status_code)
+                self.assertEqual(expected_response, response.json())
 
     @mock_s3
     @mock_sts
@@ -139,54 +125,47 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_cached_health(self):
         self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
-        with self.helper():
-            response = requests.get(str(self.base_url.set(path='/health/cached')))
-            self.assertEqual(404, response.status_code)
-            expected_response = {
-                'Code': 'NotFoundError',
-                'Message': 'Cached health object does not exist'
-            }
-            self.assertEqual(expected_response, response.json())
+        response = self._test(path='/health/cached')
+        self.assertEqual(404, response.status_code)
+        expected_response = {
+            'Code': 'NotFoundError',
+            'Message': 'Cached health object does not exist'
+        }
+        self.assertEqual(expected_response, response.json())
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
-        endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name(), unit_test=True)
-        with self.helper() as helper:
-            with self._mock_service_endpoints(helper, endpoint_states):
-                app.update_health_cache(MagicMock(), MagicMock())
-            response = requests.get(str(self.base_url.set(path='/health/cached')))
-            self.assertEqual(200, response.status_code)
+        app.update_health_cache(MagicMock(), MagicMock())
+        response = self._test(path='/health/cached')
+        self.assertEqual(200, response.status_code)
 
         # Another failure is observed when the cache health object is older than
         # 2 minutes
         future_time = time.time() + 3 * 60
-        with self.helper():
-            with patch('time.time', new=lambda: future_time):
-                response = requests.get(str(self.base_url.set(path='/health/cached')))
-                self.assertEqual(500, response.status_code)
-                expected_response = {
-                    'Code': 'ChaliceViewError',
-                    'Message': 'Cached health object is stale'
-                }
-                self.assertEqual(expected_response, response.json())
+        with patch('time.time', new=lambda: future_time):
+            response = self._test(path='/health/cached')
+            self.assertEqual(500, response.status_code)
+            expected_response = {
+                'Code': 'ChaliceViewError',
+                'Message': 'Cached health object is stale'
+            }
+            self.assertEqual(expected_response, response.json())
 
     def test_laziness(self):
         # Note the absence of moto decorators on this test.
-        with self.helper() as helper:
-            self._mock_other_lambdas(helper, up=True)
-            # If Health weren't lazy, it would fail due the lack of mocks for SQS.
-            response = requests.get(str(self.base_url.set(path='/health/other_lambdas')))
-            # The use of subTests ensures that we see the result of both
-            # assertions. In the case of the health endpoint, the body of a 503
-            # may carry a body with additional information.
-            self.assertEqual(200, response.status_code)
-            expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
-            self.assertEqual(expected_response, response.json())
+        # If Health weren't lazy, it would fail due the lack of mocks for SQS.
+        response = self._test(path='/health/other_lambdas')
+        # The use of subTests ensures that we see the result of both
+        # assertions. In the case of the health endpoint, the body of a 503
+        # may carry a body with additional information.
+        self.assertEqual(200, response.status_code)
+        expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
+        self.assertEqual(expected_response, response.json())
 
     @abstractmethod
     def _expected_health(self,
-                         endpoint_states: Mapping[str, bool],
+                         endpoints_up: bool = True,
                          es_up: bool = True
                          ):
         raise NotImplementedError
@@ -196,12 +175,11 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_elasticsearch_down(self):
         self._create_mock_queues()
         mock_endpoint = ('7c9f2ddb-74ca-46a3-9438-24ce1fe7050e.com', 80)
-        endpoint_states = self._endpoint_states()
         with patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
                                                              es_instance_count=1)):
-            response = self._test(endpoint_states, lambdas_up=True)
+            response = self._test()
             self.assertEqual(503, response.status_code)
-            self.assertEqual(self._expected_health(endpoint_states, es_up=False), response.json())
+            self.assertEqual(self._expected_health(es_up=False), response.json())
 
     def _expected_queues(self, up: bool) -> JSON:
         return {
@@ -276,13 +254,13 @@ class HealthCheckTestCase(LocalAppTestCase,
         }
 
     def _test(self,
-              endpoint_states: Mapping[str, bool],
-              lambdas_up: bool,
+              endpoints_up: bool = True,
+              lambdas_up: bool = True,
               path: str = '/health/fast'
               ):
         with self.helper() as helper:
             self._mock_other_lambdas(helper, lambdas_up)
-            with self._mock_service_endpoints(helper, endpoint_states):
+            with self._mock_service_endpoints(helper, endpoints_up):
                 return requests.get(str(self.base_url.set(path=path)))
 
     def helper(self):
@@ -298,8 +276,7 @@ class HealthCheckTestCase(LocalAppTestCase,
 
     def _mock_service_endpoints(self,
                                 helper: responses.RequestsMock,
-                                endpoint_states: Mapping[str, bool]):
-        endpoints_up = any(endpoint_states.values())
+                                endpoints_up: bool):
         helper.add(responses.Response(method='HEAD',
                                       url=self._endpoint('/index/bundles?size=1'),
                                       status=200 if endpoints_up else 503,
@@ -316,12 +293,3 @@ class HealthCheckTestCase(LocalAppTestCase,
                                           url=str(url),
                                           status=200 if up else 500,
                                           json={'up': up}))
-
-    def _endpoint_states(self,
-                         up_endpoints: tuple[str, ...] = endpoints,
-                         down_endpoints: tuple[str, ...] = ()
-                         ) -> Mapping[str, bool]:
-        return {
-            **{endpoint: True for endpoint in up_endpoints},
-            **{endpoint: False for endpoint in down_endpoints}
-        }
