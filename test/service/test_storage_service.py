@@ -1,12 +1,29 @@
+from datetime import (
+    datetime,
+    timedelta,
+)
 import json
+import logging
 import tempfile
+from unittest import (
+    mock,
+)
 
+from dateutil.tz import (
+    tzutc,
+)
+from more_itertools import (
+    one,
+)
 from moto import (
     mock_s3,
     mock_sts,
 )
 import requests
 
+from azul.deployment import (
+    aws,
+)
 from azul.logging import (
     configure_test_logging,
 )
@@ -82,6 +99,18 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
 
         self.storage_service.create_bucket()
         self.storage_service.put(sample_key, sample_content.encode())
+
+        for expiry_minutes, expect_warning in [(30, True), (90, False)]:
+            with self.subTest(expiry_minutes=expiry_minutes, expect_warning=expect_warning):
+                with mock.patch.object(aws.s3._request_signer._credentials, '_expiry_time',
+                                       new=datetime.now(tz=tzutc()) + timedelta(minutes=expiry_minutes)):
+                    assertion_method = self.assertLogs if expect_warning else self.assertNoLogs
+                    with assertion_method(level=logging.WARNING) as logs:
+                        self.storage_service.get_presigned_url(sample_key, file_name='foo.json')
+                    if expect_warning:
+                        self.assertRegex(one(logs.output),
+                                         r'^WARNING:azul\.service\.storage_service:'
+                                         r'Current credentials expire .* before the signed URL would .*')
 
         for file_name in None, 'foo.json':
             with self.subTest(file_name=file_name):

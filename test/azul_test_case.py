@@ -8,6 +8,10 @@ from collections.abc import (
 from contextlib import (
     AbstractContextManager,
 )
+from datetime import (
+    datetime,
+    timedelta,
+)
 import os
 from re import (
     escape,
@@ -30,6 +34,9 @@ from botocore.credentials import (
     Credentials,
 )
 import botocore.session
+from dateutil.tz import (
+    tzutc,
+)
 import moto.backends
 import moto.core.models
 
@@ -316,9 +323,14 @@ class AzulUnitTestCase(AzulTestCase):
             # These must match what `moto` uses to mock the instance metadata
             # response (see InstanceMetadataResponse.metadata_response() in
             # moto.instance_metadata.responses).
-            return Credentials(access_key='test-key',
-                               secret_key='test-secret-key',
-                               token='test-session-token')
+            credentials = Credentials(access_key='test-key',
+                                      secret_key='test-secret-key',
+                                      token='test-session-token')
+            # Unlike DeferredRefreshableCredentials, these dummy credentials
+            # lack an expiration date, so we add one in here to facilitate our
+            # verification of the expiration date when creating presigned URLs.
+            credentials._expiry_time = datetime.now(tzutc()) + timedelta(hours=6)
+            return credentials
 
         botocore.session.Session.get_credentials = dummy_get_credentials
         boto3.session.Session.get_credentials = dummy_get_credentials

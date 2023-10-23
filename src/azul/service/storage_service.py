@@ -9,6 +9,10 @@ from collections.abc import (
 from dataclasses import (
     dataclass,
 )
+from datetime import (
+    datetime,
+    timedelta,
+)
 from logging import (
     getLogger,
 )
@@ -20,6 +24,10 @@ from typing import (
 )
 from urllib.parse import (
     urlencode,
+)
+
+from dateutil.tz import (
+    tzutc,
 )
 
 from azul import (
@@ -153,13 +161,22 @@ class StorageService:
                           request to the signed URL. If None, no such header will be present in the response.
         """
         assert file_name is None or '"' not in file_name
+        url_expires_in = timedelta(hours=1)
+        url_expires_at = datetime.now(tz=tzutc()) + url_expires_in
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        creds_expire_at = self.client._request_signer._credentials._expiry_time
+        if creds_expire_at < url_expires_at:
+            log.warning('Current credentials expire (%s) before the signed URL would (%s)',
+                        creds_expire_at, url_expires_at)
         return self.client.generate_presigned_url(
             ClientMethod=self.client.get_object.__name__,
             Params={
                 'Bucket': self.bucket_name,
                 'Key': key,
                 **({} if file_name is None else {'ResponseContentDisposition': f'attachment;filename="{file_name}"'})
-            })
+            },
+            ExpiresIn=int(url_expires_in.total_seconds())
+        )
 
     def create_bucket(self, bucket_name: Optional[str] = None):
         self.client.create_bucket(Bucket=(bucket_name or self.bucket_name),
