@@ -28,9 +28,6 @@ from typing import (
     Optional,
     cast,
 )
-from unittest import (
-    mock,
-)
 from unittest.mock import (
     patch,
 )
@@ -187,7 +184,7 @@ def manifest_test(test):
     @mock_s3
     def wrapper(self, *args, **kwargs):
         self.storage_service.create_bucket()
-        with mock.patch.object(PagedManifestGenerator, 'page_size', 1):
+        with patch.object(PagedManifestGenerator, 'page_size', 1):
             return test(self, *args, **kwargs)
 
     return wrapper
@@ -199,9 +196,9 @@ class TestManifestEndpoints(ManifestTestCase):
             result: Optional[unittest.result.TestResult] = None
             ) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
-        with mock.patch.object(ManifestService,
-                               '_get_cached_manifest_file_name',
-                               return_value=None):
+        with patch.object(ManifestService,
+                          '_get_cached_manifest_file_name',
+                          return_value=None):
             return super().run(result)
 
     _drs_domain_name = 'drs-test.lan'  # see canned PFB results
@@ -233,7 +230,7 @@ class TestManifestEndpoints(ManifestTestCase):
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
-                with mock.patch.object(type(config), 'debug', debug):
+                with patch.object(type(config), 'debug', debug):
                     response = self._get_manifest(ManifestFormat.terra_pfb, {})
                     self.assertEqual(200, response.status_code)
                     pfb_file = BytesIO(response.content)
@@ -1240,8 +1237,8 @@ class TestManifestEndpoints(ManifestTestCase):
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
-        with mock.patch.object(manifest_service, 'datetime') as mock_response:
-            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
+        with patch.object(manifest_service, 'datetime') as mock_datetime:
+            mock_datetime.now.return_value = datetime(1985, 10, 25, 1, 21)
             for format in [ManifestFormat.compact]:
                 for filters, expected_name in [
                     # For a single project, the content disposition file name should
@@ -1275,7 +1272,7 @@ class TestManifestEndpoints(ManifestTestCase):
 class TestManifestCache(ManifestTestCase):
 
     @manifest_test
-    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    @patch.object(ManifestService, '_get_seconds_until_expire')
     def test_metadata_cache_expiration(self, _get_seconds_until_expire):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
@@ -1311,7 +1308,7 @@ class TestManifestCache(ManifestTestCase):
                             for message in logs))
 
     @manifest_test
-    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    @patch.object(ManifestService, '_get_seconds_until_expire')
     def test_compact_metadata_cache(self, _get_seconds_until_expire):
         self.maxDiff = None
         _get_seconds_until_expire.return_value = 3600
@@ -1398,7 +1395,7 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(latest_bundle_key, new_keys[format])
 
     @manifest_test
-    @mock.patch.object(ManifestService, '_get_seconds_until_expire')
+    @patch.object(ManifestService, '_get_seconds_until_expire')
     def test_get_cached_manifest(self, _get_seconds_until_expire):
         format = ManifestFormat.curl
         filters = {}
@@ -1444,8 +1441,8 @@ class TestManifestCache(ManifestTestCase):
 
 class TestManifestResponse(ManifestTestCase):
 
-    @mock.patch.dict(os.environ, AZUL_PRIVATE_API='0')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
+    @patch.dict(os.environ, AZUL_PRIVATE_API='0')
+    @patch.object(ManifestService, 'get_cached_manifest')
     def test_manifest(self, get_cached_manifest):
         """
         Verify the response from manifest endpoints for all manifest formats
@@ -1524,7 +1521,7 @@ class TestManifestExpiration(AzulUnitTestCase):
         test_data = [(1, False), (0, False), (-1, True)]
         for object_age, expect_error in test_data:
             with self.subTest(object_age=object_age, expect_error=expect_error):
-                with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
+                with patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
                     mock_datetime.now.return_value = now
                     with self.assertLogs(logger=manifest_service.log, level='DEBUG') as logs:
