@@ -203,11 +203,6 @@ class AWS:
     def dynamodb(self):
         return self.client('dynamodb')
 
-    def dynamodb_resource(self, endpoint_url, region_name):
-        return aws.resource('dynamodb',
-                            endpoint_url=endpoint_url,
-                            region_name=region_name)
-
     @property
     def es_endpoint(self) -> Optional[Netloc]:
         if config.es_endpoint:
