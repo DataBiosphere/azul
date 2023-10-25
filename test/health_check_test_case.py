@@ -233,11 +233,12 @@ class HealthCheckTestCase(LocalAppTestCase,
         return {
             'other_lambdas': {
                 'up': up,
-                **({
+                **{
                     lambda_name: {
                         'up': up
-                    } for lambda_name in self._other_lambda_names()
-                })
+                    }
+                    for lambda_name in self._other_lambda_names()
+                }
             }
         }
 

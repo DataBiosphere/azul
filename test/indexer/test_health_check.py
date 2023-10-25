@@ -1,5 +1,3 @@
-import unittest
-
 from moto import (
     mock_sqs,
     mock_sts,
@@ -50,6 +48,3 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
 
 
 del HealthCheckTestCase
-
-if __name__ == '__main__':
-    unittest.main()
