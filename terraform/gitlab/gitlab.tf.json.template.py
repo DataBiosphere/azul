@@ -1,28 +1,18 @@
 from collections.abc import (
     Iterable,
 )
-import gzip
 from itertools import (
     chain,
 )
 import json
-import os
-from typing import (
-    Union,
-)
 
 import yaml
 
 from azul import (
     config,
-    lru_cache,
-)
-from azul.aws_service_model import (
-    ServiceActionType,
 )
 from azul.collections import (
     dict_merge,
-    explode_dict,
 )
 from azul.deployment import (
     aws,
@@ -34,9 +24,6 @@ from azul.terraform import (
     chalice,
     emit_tf,
     vpc,
-)
-from azul.types import (
-    JSON,
 )
 
 # This Terraform config creates a single EC2 instance with a bunch of Docker
@@ -261,77 +248,8 @@ ami_id = {
 gitlab_mount = '/mnt/gitlab'
 
 
-@lru_cache(maxsize=1)
-def iam() -> JSON:
-    with gzip.open(os.path.join(os.path.dirname(__file__), 'aws_service_model.json.gz'), 'rt') as f:
-        return json.load(f)
-
-
-def aws_service_actions(service: str, types: set[ServiceActionType] = None, is_global: bool = None) -> list[str]:
-    if types is None and is_global is None:
-        return [iam()['services'][service]['serviceName'] + ':*']
-    else:
-        actions = iam()['actions'][service]
-        return [
-            name
-            for name, action in actions.items()
-            if (
-                (types is None or ServiceActionType[action['type']] in types)
-                and (is_global is None or bool(action['resources']) == (not is_global))
-            )
-        ]
-
-
-def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> list[str]:
-    resources = iam()['resources'].get(service, {})
-    resource_names = set(resource_names)
-    all_names = resources.keys()
-    invalid_names = resource_names.difference(all_names)
-    assert not invalid_names, f'No such resource in {service}: {invalid_names}'
-    arn_fields = {
-        'Account': aws.account,
-        'Region': aws.region_name,
-        **arn_fields
-    }
-    arns = []
-    for arn_fields in explode_dict(arn_fields):
-        for name, arn in resources.items():
-            if not resource_names or name in resource_names:
-                arn = arn.replace('${', '{')
-                arn = arn.format_map(arn_fields)
-                arns.append(arn)
-    return arns
-
-
 def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
     return sorted(set(chain(*sets)))
-
-
-def allow_global_actions(service, types: set[ServiceActionType] = None) -> JSON:
-    return {
-        'actions': aws_service_actions(service, types=types, is_global=True),
-        'resources': ['*']
-    }
-
-
-def allow_service(service: str,
-                  *resource_names: str,
-                  action_types: set[ServiceActionType] = None,
-                  global_action_types: set[ServiceActionType] = None,
-                  **arn_fields: Union[str, list[str], set[str], tuple[str, ...]]) -> list[JSON]:
-    if global_action_types is None:
-        global_action_types = action_types
-    return remove_inconsequential_statements([
-        allow_global_actions(service, types=global_action_types),
-        {
-            'actions': aws_service_actions(service, types=action_types),
-            'resources': aws_service_arns(service, *resource_names, **arn_fields)
-        }
-    ])
-
-
-def remove_inconsequential_statements(statements: list[JSON]) -> list[JSON]:
-    return [s for s in statements if s['actions'] and s['resources']]
 
 
 def jw(*words):
@@ -397,12 +315,25 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             # of the template output.
             'gitlab_boundary': {
                 'statement': [
-                    allow_global_actions('S3', types={ServiceActionType.read, ServiceActionType.list}),
                     {
-                        'actions': aws_service_actions('S3'),
+                        'actions': [
+                            's3:ListAllMyBuckets',
+                            's3:GetAccountPublicAccessBlock',
+                            's3:HeadBucket'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            's3:*'
+                        ],
                         'resources': merge(
-                            aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
-                            for bucket_name in (
+                            [
+                                f'arn:aws:s3:::{bucket_name}',
+                                f'arn:aws:s3:::{bucket_name}/*'
+                            ] for bucket_name in (
                                 [
                                     'edu-ucsc-gi-platform-hca-dev-*',
                                     'edu-ucsc-gi-singlecell-azul-*',
@@ -418,13 +349,50 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         )
                     },
 
-                    *allow_service('KMS',
-                                   action_types={ServiceActionType.read, ServiceActionType.list},
-                                   KeyId='*',
-                                   Alias='*'),
+                    {
+                        'actions': [
+                            'kms:ListAliases',
+                            'kms:ListKeys'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'kms:GetKeyRotationStatus',
+                            'kms:ListRetirableGrants',
+                            'kms:ListResourceTags',
+                            'kms:ListAliases',
+                            'kms:GetKeyPolicy',
+                            'kms:ListKeys',
+                            'kms:ListGrants',
+                            'kms:ListKeyPolicies',
+                            'kms:GetParametersForImport',
+                            'kms:DescribeKey'
+                        ],
+                        'resources': [
+                            f'arn:aws:kms:{aws.region_name}:{aws.account}:key/*',
+                            f'arn:aws:kms:{aws.region_name}:{aws.account}:alias/*'
+                        ]
+                    },
 
-                    *allow_service('SQS',
-                                   QueueName='azul-*'),
+                    {
+                        'actions': [
+                            'sqs:ListQueues'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'sqs:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:sqs:{aws.region_name}:{aws.account}:azul-*'
+                        ]
+                    },
 
                     # API Gateway ARNs refer to APIs by ID so we cannot restrict
                     # to name or prefix. Even though all API Gateway ARNs start
@@ -434,92 +402,225 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # reasons. Other API Gateway actions succeed with that ARN
                     # pattern in the policy.
                     {
-                        'actions': ['apigateway:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'apigateway:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
 
-                    *allow_service('Elasticsearch Service',
-                                   global_action_types={ServiceActionType.read, ServiceActionType.list},
-                                   DomainName='azul-*'),
                     {
-                        'actions': ['es:ListTags'],
-                        'resources': aws_service_arns('Elasticsearch Service', DomainName='*')
+                        'actions': [
+                            'es:DescribeElasticsearchInstanceTypeLimits',
+                            'es:ListElasticsearchInstanceTypes',
+                            'es:ListElasticsearchVersions',
+                            'es:DescribeReservedElasticsearchInstances',
+                            'es:ListDomainNames',
+                            'es:DescribeReservedElasticsearchInstanceOfferings'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
 
-                    *allow_service('STS',
-                                   action_types={ServiceActionType.read, ServiceActionType.list},
-                                   RelativeId='*',
-                                   RoleNameWithPath='*',
-                                   UserNameWithPath='*'),
+                    {
+                        'actions': [
+                            'es:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:es:{aws.region_name}:{aws.account}:domain/azul-*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'es:ListTags'
+                        ],
+                        'resources': [
+                            f'arn:aws:es:{aws.region_name}:{aws.account}:domain/*'
+                        ]
+                    },
 
-                    *allow_service('Certificate Manager',
-                                   # ACM ARNs refer to certificates by ID so we
-                                   # cannot restrict to name or prefix
-                                   CertificateId='*',
-                                   # API Gateway certs must reside in us-east-1,
-                                   # so we'll always add that region
-                                   Region={aws.region_name, 'us-east-1'}),
+                    {
+                        'actions': [
+                            'sts:GetCallerIdentity'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'sts:GetFederationToken',
+                            'sts:GetCallerIdentity'
+                        ],
+                        'resources': [
+                            f'arn:aws:sts::{aws.account}:*',
+                            f'arn:aws:iam::{aws.account}:*',
+                            f'arn:aws:iam::{aws.account}:role/*',
+                            f'arn:aws:iam::{aws.account}:user/*'
+                        ]
+                    },
 
-                    *allow_service('DynamoDB',
-                                   'table',
-                                   'index',
-                                   global_action_types={ServiceActionType.list, ServiceActionType.read},
-                                   TableName='azul-*',
-                                   IndexName='*'),
+                    {
+                        # ACM ARNs refer to certificates by ID so we
+                        # cannot restrict to name or prefix
+                        'actions': [
+                            'acm:RequestCertificate',
+                            'acm:ListTagsForCertificate',
+                            'acm:ListCertificates'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+
+                    # API Gateway certs must reside in us-east-1,
+                    # so we'll always add that region
+                    {
+                        'actions': [
+                            'acm:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:acm:us-east-1:{aws.account}:certificate/*'
+                        ]
+                    },
+
+                    {
+                        'actions': [
+                            'dynamodb:ListTables',
+                            'dynamodb:DescribeTimeToLive',
+                            'dynamodb:DescribeReservedCapacityOfferings',
+                            'dynamodb:ListBackups',
+                            'dynamodb:ListStreams',
+                            'dynamodb:ListTagsOfResource',
+                            'dynamodb:DescribeLimits',
+                            'dynamodb:ListGlobalTables',
+                            'dynamodb:DescribeReservedCapacity'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'dynamodb:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/azul-*',
+                            f'arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/azul-*/index/*'
+                        ]
+                    },
 
                     # Lambda ARNs refer to event source mappings by UUID so we
                     # cannot restrict to name or prefix
-                    *allow_service('Lambda',
-                                   LayerName='azul-*',
-                                   FunctionName='azul-*',
-                                   UUID='*',
-                                   LayerVersion='*'),
+                    {
+                        'actions': [
+                            'lambda:CreateEventSourceMapping',
+                            'lambda:ListFunctions',
+                            'lambda:ListLayers',
+                            'lambda:GetAccountSettings',
+                            'lambda:ListEventSourceMappings',
+                            'lambda:GetEventSourceMapping',
+                            'lambda:ListLayerVersions',
+                            'lambda:UpdateEventSourceMapping'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'lambda:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:lambda:{aws.region_name}:{aws.account}:event-source-mapping:*',
+                            f'arn:aws:lambda:{aws.region_name}:{aws.account}:layer:azul-*',
+                            f'arn:aws:lambda:{aws.region_name}:{aws.account}:function:azul-*',
+                            f'arn:aws:lambda:{aws.region_name}:{aws.account}:layer:azul-*:*'
+                        ]
+                    },
 
                     *chalice.vpc_lambda_iam_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level
                     # permissions
                     {
-                        'actions': ['cloudwatch:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'cloudwatch:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
-
-                    *allow_service('CloudWatch Events',
-                                   global_action_types={ServiceActionType.list, ServiceActionType.read},
-                                   RuleName='azul-*'),
-
+                    {
+                        'actions': [
+                            'events:DescribeEventBus',
+                            'events:TestEventPattern'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'events:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:events:{aws.region_name}:{aws.account}:rule/azul-*'
+                        ]
+                    },
                     # Route 53 ARNs refer to resources by ID so we cannot
                     # restrict to name or prefix
                     #
                     # FIXME: this is obviously problematic
                     {
-                        'actions': ['route53:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'route53:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
-
                     # Secret Manager ARNs refer to secrets by UUID so we cannot
                     # restrict to name or prefix
                     #
                     # FIXME: this is obviously problematic
                     #
-                    *allow_service('Secrets Manager', SecretId='*'),
-
                     {
-                        'actions': ['ssm:GetParameter'],
-                        'resources': aws_service_arns('Systems Manager',
-                                                      'parameter',
-                                                      FullyQualifiedParameterName='dcp/dss/*')
+                        'actions': [
+                            'secretsmanager:CreateSecret',
+                            'secretsmanager:ListSecrets',
+                            'secretsmanager:GetRandomPassword'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
-
+                    {
+                        'actions': [
+                            'secretsmanager:*'
+                        ],
+                        'resources': [
+                            f'arn:aws:secretsmanager:{aws.region_name}:{aws.account}:secret:*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'ssm:GetParameter'
+                        ],
+                        'resources': [
+                            f'arn:aws:ssm:{aws.region_name}:{aws.account}:parameter/dcp/dss/*'
+                        ]
+                    },
                     {
                         'actions': [
                             'states:*'
                         ],
-                        'resources': aws_service_arns('Step Functions',
-                                                      'execution',
-                                                      'statemachine',
-                                                      StateMachineName='azul-*',
-                                                      ExecutionId='*')
+                        'resources': [
+                            f'arn:aws:states:{aws.region_name}:{aws.account}:execution:azul-*:*',
+                            f'arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:azul-*'
+                        ]
                     },
                     {
                         'actions': [
@@ -538,8 +639,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # FIXME: Tighten GitLab security boundary
                     #        https://github.com/DataBiosphere/azul/issues/4207
                     {
-                        'actions': ['cloudfront:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'cloudfront:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
 
                     # CloudWatch Logs
@@ -547,14 +652,22 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # FIXME: Tighten GitLab security boundary
                     #        https://github.com/DataBiosphere/azul/issues/4207
                     {
-                        'actions': ['logs:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'logs:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
 
                     # WAFv2
                     {
-                        'actions': ['wafv2:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'wafv2:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     }
                 ]
             },
@@ -573,11 +686,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'iam:DetachRolePolicy',
                             'iam:PutRolePermissionsBoundary'
                         ],
-                        'resources': aws_service_arns('IAM', 'role', RoleNameWithPath='azul-*'),
+                        'resources': [
+                            f'arn:aws:iam::{aws.account}:role/azul-*'
+                        ],
                         'condition': {
                             'test': 'StringEquals',
                             'variable': 'iam:PermissionsBoundary',
-                            'values': [aws.permissions_boundary_arn]
+                            'values': [
+                                f'arn:aws:iam::{aws.account}:policy/azul-boundary'
+                            ]
                         }
                     },
                     {
@@ -599,11 +716,72 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'iam:DeleteRole',
                             'iam:PassRole'  # FIXME: consider iam:PassedToService condition
                         ],
-                        'resources': aws_service_arns('IAM', 'role', RoleNameWithPath='azul-*')
+                        'resources': [
+                            f'arn:aws:iam::{aws.account}:role/azul-*'
+                        ]
                     },
                     {
-                        'actions': aws_service_actions('IAM', types={ServiceActionType.read, ServiceActionType.list}),
-                        'resources': ['*']
+                        'actions': [
+                            'iam:GetServiceLinkedRoleDeletionStatus',
+                            'iam:ListAttachedGroupPolicies',
+                            'iam:ListSigningCertificates',
+                            'iam:ListUsers',
+                            'iam:GetPolicyVersion',
+                            'iam:GetLoginProfile',
+                            'iam:ListPolicies',
+                            'iam:GetUser',
+                            'iam:GetSSHPublicKey',
+                            'iam:GetPolicy',
+                            'iam:ListInstanceProfiles',
+                            'iam:GenerateCredentialReport',
+                            'iam:ListMFADevices',
+                            'iam:ListRoles',
+                            'iam:SimulateCustomPolicy',
+                            'iam:ListUserPolicies',
+                            'iam:GetContextKeysForCustomPolicy',
+                            'iam:GetServiceLastAccessedDetails',
+                            'iam:GetCredentialReport',
+                            'iam:ListServerCertificates',
+                            'iam:GetOpenIDConnectProvider',
+                            'iam:ListVirtualMFADevices',
+                            'iam:ListPolicyVersions',
+                            'iam:GetInstanceProfile',
+                            'iam:ListRolePolicies',
+                            'iam:ListAttachedRolePolicies',
+                            'iam:GetAccountAuthorizationDetails',
+                            'iam:GetGroupPolicy',
+                            'iam:GetRole',
+                            'iam:SimulatePrincipalPolicy',
+                            'iam:GetContextKeysForPrincipalPolicy',
+                            'iam:GetServiceLastAccessedDetailsWithEntities',
+                            'iam:GetAccessKeyLastUsed',
+                            'iam:ListGroupPolicies',
+                            'iam:GetGroup',
+                            'iam:ListPoliciesGrantingServiceAccess',
+                            'iam:GetUserPolicy',
+                            'iam:ListAttachedUserPolicies',
+                            'iam:ListRoleTags',
+                            'iam:GenerateServiceLastAccessedDetails',
+                            'iam:GetSAMLProvider',
+                            'iam:ListGroups',
+                            'iam:ListOpenIDConnectProviders',
+                            'iam:ListServiceSpecificCredentials',
+                            'iam:ListSSHPublicKeys',
+                            'iam:ListGroupsForUser',
+                            'iam:GetServerCertificate',
+                            'iam:ListEntitiesForPolicy',
+                            'iam:ListAccessKeys',
+                            'iam:ListAccountAliases',
+                            'iam:GetAccountPasswordPolicy',
+                            'iam:ListUserTags',
+                            'iam:ListInstanceProfilesForRole',
+                            'iam:ListSAMLProviders',
+                            'iam:GetAccountSummary',
+                            'iam:GetRolePolicy'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
                     *(
                         # Permissions required to deploy Data Browser and
@@ -664,29 +842,40 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # FIXME: Tighten GitLab security boundary
                     #        https://github.com/DataBiosphere/azul/issues/4207
                     {
-                        'actions': ['ec2:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'ec2:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
                     {
-                        'actions': ['elasticloadbalancing:*'],
-                        'resources': ['*']
+                        'actions': [
+                            'elasticloadbalancing:*'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
                     },
 
                     # SNS
                     {
-                        "actions": [
+                        'actions': [
                             'sns:*'
                         ],
-                        "resources": aws_service_arns('SNS',
-                                                      TopicName='azul-*')
-
+                        'resources': [
+                            f'arn:aws:sns:{aws.region_name}:{aws.account}:azul-*'
+                        ]
                     },
                     # Restricting the topic name prevents the SNS topic from
                     # being used in data blocks.
                     {
-                        'actions': ['sns:ListTopics'],
-                        'resources': aws_service_arns('SNS',
-                                                      TopicName='*'),
+                        'actions': [
+                            'sns:ListTopics'
+                        ],
+                        'resources': [
+                            f'arn:aws:sns:{aws.region_name}:{aws.account}:*'
+                        ]
                     },
 
                     # FedRAMP inventory
@@ -695,18 +884,21 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'config:ListDiscoveredResources',
                             'config:BatchGetResourceConfig'
                         ],
-                        'resources': ['*']
+                        'resources': [
+                            '*'
+                        ]
                     },
-
                     {
                         'actions': [
                             'ecr:BatchCheckLayerAvailability',
                             'ecr:BatchGet*',
                             'ecr:Describe*',
                             'ecr:Get*',
-                            'ecr:List*',
+                            'ecr:List*'
                         ],
-                        'resources': ['*']
+                        'resources': [
+                            '*'
+                        ]
                     },
                     {
                         'actions': [
@@ -714,8 +906,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'logs:CreateLogStream',
                             'logs:PutLogEvents'
                         ],
-                        'resources': ['arn:aws:logs:*:*:*']
-                    },
+                        'resources': [
+                            'arn:aws:logs:*:*:*'
+                        ]
+                    }
                 ]
             }
         },
