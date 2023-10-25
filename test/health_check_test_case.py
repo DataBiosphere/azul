@@ -5,6 +5,9 @@ from abc import (
 import os
 import random
 import time
+from typing import (
+    ContextManager,
+)
 from unittest import (
     TestSuite,
 )
@@ -40,7 +43,7 @@ from azul.modules import (
     load_app_module,
 )
 from azul.types import (
-    JSON,
+    MutableJSON,
 )
 from es_test_case import (
     ElasticsearchTestCase,
@@ -89,10 +92,10 @@ class HealthCheckTestCase(LocalAppTestCase,
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'up': True,
-            **self._expected_elasticsearch(True),
-            **self._expected_queues(True),
-            **self._expected_other_lambdas(True),
-            **self._expected_api_endpoints(True),
+            **self._expected_elasticsearch(up=True),
+            **self._expected_queues(up=True),
+            **self._expected_other_lambdas(up=True),
+            **self._expected_api_endpoints(up=True),
             **self._expected_progress()
         }, response.json())
 
@@ -104,12 +107,12 @@ class HealthCheckTestCase(LocalAppTestCase,
                 'up': True,
                 **expected_response
             } for keys, expected_response in [
-                ('elasticsearch', self._expected_elasticsearch(True)),
-                ('queues', self._expected_queues(True)),
-                ('other_lambdas', self._expected_other_lambdas(True)),
-                ('api_endpoints', self._expected_api_endpoints(True)),
+                ('elasticsearch', self._expected_elasticsearch(up=True)),
+                ('queues', self._expected_queues(up=True)),
+                ('other_lambdas', self._expected_other_lambdas(up=True)),
+                ('api_endpoints', self._expected_api_endpoints(up=True)),
                 ('progress', self._expected_progress()),
-                ('progress,queues', {**self._expected_progress(), **self._expected_queues(True)}),
+                ('progress,queues', self._expected_progress() | self._expected_queues(up=True)),
             ]
         }
         self._create_mock_queues()
@@ -165,9 +168,10 @@ class HealthCheckTestCase(LocalAppTestCase,
 
     @abstractmethod
     def _expected_health(self,
+                         *,
                          endpoints_up: bool = True,
                          es_up: bool = True
-                         ):
+                         ) -> MutableJSON:
         raise NotImplementedError
 
     @mock_sts
@@ -181,7 +185,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             self.assertEqual(503, response.status_code)
             self.assertEqual(self._expected_health(es_up=False), response.json())
 
-    def _expected_queues(self, up: bool) -> JSON:
+    def _expected_queues(self, *, up: bool) -> MutableJSON:
         return {
             'queues': {
                 'up': up,
@@ -201,7 +205,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             }
         }
 
-    def _expected_api_endpoints(self, up: bool) -> JSON:
+    def _expected_api_endpoints(self, *, up: bool) -> MutableJSON:
         return {
             'api_endpoints': {
                 'up': up
@@ -225,7 +229,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             if lambda_name != self.lambda_name()
         ]
 
-    def _expected_other_lambdas(self, up: bool) -> JSON:
+    def _expected_other_lambdas(self, *, up: bool) -> MutableJSON:
         return {
             'other_lambdas': {
                 'up': up,
@@ -237,7 +241,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             }
         }
 
-    def _expected_progress(self) -> JSON:
+    def _expected_progress(self) -> MutableJSON:
         return {
             'progress': {
                 'up': True,
@@ -246,7 +250,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             }
         }
 
-    def _expected_elasticsearch(self, up: bool) -> JSON:
+    def _expected_elasticsearch(self, *, up: bool) -> MutableJSON:
         return {
             'elasticsearch': {
                 'up': up
@@ -254,13 +258,14 @@ class HealthCheckTestCase(LocalAppTestCase,
         }
 
     def _test(self,
+              *,
+              path: str = '/health/fast',
               endpoints_up: bool = True,
-              lambdas_up: bool = True,
-              path: str = '/health/fast'
+              lambdas_up: bool = True
               ):
         with self.helper() as helper:
-            self._mock_other_lambdas(helper, lambdas_up)
-            with self._mock_service_endpoints(helper, endpoints_up):
+            self._mock_other_lambdas(helper, up=lambdas_up)
+            with self._mock_service_endpoints(helper, up=endpoints_up):
                 return requests.get(str(self.base_url.set(path=path)))
 
     def helper(self):
@@ -276,17 +281,19 @@ class HealthCheckTestCase(LocalAppTestCase,
 
     def _mock_service_endpoints(self,
                                 helper: responses.RequestsMock,
-                                endpoints_up: bool):
+                                *,
+                                up: bool
+                                ) -> ContextManager:
         helper.add(responses.Response(method='HEAD',
                                       url=self._endpoint('/index/bundles?size=1'),
-                                      status=200 if endpoints_up else 503,
+                                      status=200 if up else 503,
                                       json={}))
         # Patching the Health class to use a random generator with a pinned
         # seed allows us to predict the service endpoint that will be picked
         # to check the health of the service REST API.
         return patch.object(Health, '_random', random.Random(x=42))
 
-    def _mock_other_lambdas(self, helper: responses.RequestsMock, up: bool):
+    def _mock_other_lambdas(self, helper: responses.RequestsMock, *, up: bool):
         for lambda_name in self._other_lambda_names():
             url = config.lambda_endpoint(lambda_name).set(path='/health/basic')
             helper.add(responses.Response(method='GET',

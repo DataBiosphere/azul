@@ -8,6 +8,9 @@ from moto import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.types import (
+    MutableJSON,
+)
 from azul_test_case import (
     DCP1TestCase,
 )
@@ -30,11 +33,11 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
     def _expected_health(self,
                          endpoints_up: bool = True,
                          es_up: bool = True
-                         ):
+                         ) -> MutableJSON:
         return {
             'up': False,
-            **self._expected_elasticsearch(es_up),
-            **self._expected_queues(not es_up),
+            **self._expected_elasticsearch(up=es_up),
+            **self._expected_queues(up=not es_up),
             **self._expected_progress()
         }
 

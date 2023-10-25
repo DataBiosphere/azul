@@ -8,6 +8,9 @@ from moto import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.types import (
+    MutableJSON,
+)
 from azul_test_case import (
     DCP1TestCase,
 )
@@ -30,11 +33,11 @@ class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
     def _expected_health(self,
                          endpoints_up: bool = True,
                          es_up: bool = True
-                         ):
+                         ) -> MutableJSON:
         return {
-            'up': False,
-            **self._expected_elasticsearch(es_up),
-            **self._expected_api_endpoints(endpoints_up),
+            'up': es_up and endpoints_up,
+            **self._expected_elasticsearch(up=es_up),
+            **self._expected_api_endpoints(up=endpoints_up),
         }
 
     @mock_sts
