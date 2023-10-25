@@ -872,46 +872,6 @@ tf_config = {
                 'name': aws.monitoring_topic_name
             }
         },
-        'aws_sns_topic_policy': {
-            'monitoring': {
-                'arn': '${aws_sns_topic.monitoring.arn}',
-                'policy': json.dumps({
-                    'Version': '2012-10-17',
-                    'Statement': [
-                        {
-                            'Effect': 'Allow',
-                            'Principal': {
-                                'AWS': '*'
-                            },
-                            'Action': [
-                                'sns:GetTopicAttributes',
-                                'sns:SetTopicAttributes',
-                                'sns:AddPermission',
-                                'sns:RemovePermission',
-                                'sns:DeleteTopic',
-                                'sns:Subscribe',
-                                'sns:ListSubscriptionsByTopic',
-                                'sns:Publish'
-                            ],
-                            'Resource': '${aws_sns_topic.monitoring.arn}',
-                            'Condition': {
-                                'StringEquals': {
-                                    'aws:SourceOwner': aws.account
-                                }
-                            }
-                        },
-                        {
-                            'Effect': 'Allow',
-                            'Principal': {
-                                'Service': 'events.amazonaws.com'
-                            },
-                            'Action': 'sns:Publish',
-                            'Resource': '${aws_sns_topic.monitoring.arn}'
-                        }
-                    ]
-                })
-            }
-        },
         'aws_sns_topic_subscription': {
             'monitoring': {
                 'topic_arn': '${aws_sns_topic.monitoring.arn}',
