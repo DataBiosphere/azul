@@ -369,7 +369,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'kms:ListGrants',
                             'kms:ListKeyPolicies',
                             'kms:GetParametersForImport',
-                            'kms:DescribeKey'
+                            'kms:DescribeKey',
+                            'kms:GenerateMac',
+                            'kms:VerifyMac'
                         ],
                         'resources': [
                             f'arn:aws:kms:{aws.region_name}:{aws.account}:key/*',
@@ -908,6 +910,31 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ],
                         'resources': [
                             'arn:aws:logs:*:*:*'
+                        ]
+                    },
+
+                    # KMS writes (reads are granted by boundary policy)
+                    {
+                        'actions': [
+                            'kms:CreateKey'
+                        ],
+                        'resources': [
+                            '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'kms:CreateAlias',
+                            'kms:UpdateAlias',
+                            'kms:UpdateKeyDescription',
+                            'kms:ScheduleKeyDeletion',
+                            'kms:DeleteAlias',
+                            'kms:TagResource',
+                            'kms:UntagResource'
+                        ],
+                        'resources': [
+                            f'arn:aws:kms:{aws.region_name}:{aws.account}:key/*',
+                            f'arn:aws:kms:{aws.region_name}:{aws.account}:alias/*'
                         ]
                     }
                 ]

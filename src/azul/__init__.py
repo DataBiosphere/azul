@@ -257,6 +257,16 @@ class Config:
         """
         return 60 * 15
 
+    manifest_kms_key_tf_name = 'manifest'
+
+    @property
+    def manifest_kms_alias(self) -> str:
+        """
+        The name of the KMS key that is used to sign manifest keys.
+        """
+        # KMS requires that aliases start with '/alias'
+        return 'alias/' + self.qualified_resource_name(self.manifest_kms_key_tf_name)
+
     audit_log_retention_days = 180  # FedRAMP mandates 90 days
 
     @property

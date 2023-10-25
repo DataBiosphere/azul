@@ -32,7 +32,10 @@ from unittest.mock import (
     patch,
 )
 import unittest.result
-import uuid
+from uuid import (
+    UUID,
+    uuid4,
+)
 from zipfile import (
     ZipFile,
 )
@@ -90,6 +93,7 @@ from azul.service.manifest_service import (
     ManifestPartition,
     ManifestService,
     PagedManifestGenerator,
+    SignedManifestKey,
 )
 from azul.types import (
     JSON,
@@ -1059,7 +1063,7 @@ class TestManifestEndpoints(ManifestTestCase):
             return (now + timedelta(seconds=i)).strftime('%Y-%m-%dT%H%M%S.000000Z')
 
         def u():
-            return str(uuid.uuid4())
+            return str(uuid4())
 
         bundles: Bundles = {}
         # Create sample data that can be passed to
@@ -1443,72 +1447,94 @@ class TestManifestResponse(ManifestTestCase):
 
     @patch.dict(os.environ, AZUL_PRIVATE_API='0')
     @patch.object(ManifestService, 'get_cached_manifest')
-    def test_manifest(self, get_cached_manifest):
+    @patch.object(ManifestService, 'get_cached_manifest_with_key')
+    @patch.object(ManifestService, 'sign_manifest_key')
+    @patch.object(ManifestService, 'verify_manifest_key')
+    def test_manifest(self,
+                      verify_manifest_key,
+                      sign_manifest_key,
+                      get_cached_manifest_with_key,
+                      get_cached_manifest):
         """
         Verify the response from manifest endpoints for all manifest formats
         """
+
+        def test(*, format: ManifestFormat, fetch: bool, url: Optional[furl] = None):
+            object_url = furl('https://url.to.manifest?foo=bar')
+            default_file_name = 'some_object_key.csv'
+            manifest_key = ManifestKey(catalog=self.catalog,
+                                       format=format,
+                                       manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                       source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+            signed_manifest_key = SignedManifestKey(value=manifest_key, signature=b'123')
+            sign_manifest_key.return_value = signed_manifest_key
+            verify_manifest_key.return_value = manifest_key
+            manifest = Manifest(location=str(object_url),
+                                was_cached=False,
+                                format=format,
+                                manifest_key=manifest_key,
+                                file_name=default_file_name)
+            get_cached_manifest.return_value = manifest
+            get_cached_manifest_with_key.return_value = manifest
+            args = dict(catalog=self.catalog,
+                        format=format.value,
+                        filters='{}')
+            path = ['manifest', 'files']
+            if fetch and format is ManifestFormat.curl:
+                expected_url = self.base_url.set(path=[*path, signed_manifest_key.encode()])
+                expected_url_for_bash = expected_url
+            else:
+                expected_url = object_url
+                expected_url_for_bash = f"'{expected_url}'"
+            if format is ManifestFormat.curl:
+                options = "--location --fail"
+                expected = {
+                    'cmd.exe': f'curl.exe {options} "{expected_url}" | curl.exe --config -',
+                    'bash': f'curl {options} {expected_url_for_bash} | curl --config -'
+                }
+            else:
+                if format is ManifestFormat.terra_bdbag:
+                    file_name = default_file_name
+                else:
+                    file_name = manifest.file_name
+                options = '--location --fail --output'
+                expected = {
+                    'cmd.exe': f'curl.exe {options} "{file_name}" "{expected_url}"',
+                    'bash': f'curl {options} {file_name} {expected_url_for_bash}'
+                }
+            if url is None:
+                method, request_url = 'PUT', self.base_url.set(path=path, args=args)
+            else:
+                assert not fetch
+                method, request_url = 'GET', url
+            if fetch:
+                request_url.path.segments.insert(0, 'fetch')
+                expected = {
+                    'Status': 302,
+                    'Location': str(expected_url),
+                    'CommandLine': expected
+                }
+                for method in ['PUT', 'GET']:
+                    with self.subTest(method=method):
+                        response = requests.request(method, str(request_url))
+                        self.assertEqual(200, response.status_code)
+                        self.assertEqual(expected, response.json())
+                        if format is ManifestFormat.curl:
+                            test(format=format, fetch=False, url=expected_url)
+            else:
+                response = requests.request(method, str(request_url), allow_redirects=False)
+                expected = ''.join(
+                    f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
+                    for shell, cmd in expected.items()
+                )
+                self.assertEqual(302, response.status_code)
+                self.assertEqual(expected, response.text)
+                self.assertEqual(object_url, furl(response.headers['location']))
+
         for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
-                with (self.subTest(format=format, fetch=fetch)):
-                    object_url = 'https://url.to.manifest?foo=bar'
-                    default_file_name = 'some_object_key.csv'
-                    manifest_key = ManifestKey(catalog=self.catalog,
-                                               format=format,
-                                               manifest_hash='',
-                                               source_hash='')
-                    manifest = Manifest(location=object_url,
-                                        was_cached=False,
-                                        format=format,
-                                        manifest_key=manifest_key,
-                                        file_name=default_file_name)
-                    get_cached_manifest.return_value = manifest
-                    args = dict(catalog=self.catalog,
-                                format=format.value,
-                                filters='{}')
-                    path = ['manifest', 'files']
-                    request_url = self.base_url.set(path=path, args=args)
-                    if fetch and format is ManifestFormat.curl:
-                        expected_url = str(self.base_url.set(path=[*path, manifest_key.encode()]))
-                        expected_url_for_bash = expected_url
-                    else:
-                        expected_url = object_url
-                        expected_url_for_bash = f"'{expected_url}'"
-                    if format is ManifestFormat.curl:
-                        options = "--location --fail"
-                        expected = {
-                            'cmd.exe': f'curl.exe {options} "{expected_url}" | curl.exe --config -',
-                            'bash': f'curl {options} {expected_url_for_bash} | curl --config -'
-                        }
-                    else:
-                        if format is ManifestFormat.terra_bdbag:
-                            file_name = default_file_name
-                        else:
-                            file_name = manifest.file_name
-                        options = '--location --fail --output'
-                        expected = {
-                            'cmd.exe': f'curl.exe {options} "{file_name}" "{expected_url}"',
-                            'bash': f'curl {options} {file_name} {expected_url_for_bash}'
-                        }
-                    if fetch:
-                        request_url.path.segments.insert(0, 'fetch')
-                        expected = {
-                            'Status': 302,
-                            'Location': expected_url,
-                            'CommandLine': expected
-                        }
-                        for method in ['PUT', 'GET']:
-                            with self.subTest(method=method):
-                                response = requests.request(method, str(request_url)).json()
-                                self.assertEqual(expected, response)
-                    else:
-                        response = requests.put(str(request_url), allow_redirects=False)
-                        expected = ''.join(
-                            f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
-                            for shell, cmd in expected.items()
-                        )
-                        self.assertEqual(expected, response.text)
-                        self.assertEqual(302, response.status_code)
-                        self.assertEqual(object_url, response.headers['location'])
+                with self.subTest(format=format, fetch=fetch):
+                    test(format=format, fetch=fetch)
 
 
 class TestManifestExpiration(AzulUnitTestCase):

@@ -567,17 +567,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.curl: self._check_curl_manifest
         }
         for format in [None, *supported_formats]:
-            with self.subTest('manifest', catalog=catalog, format=format):
-                args = dict(catalog=catalog)
-                if format is None:
-                    validator = validators[first(supported_formats)]
-                else:
-                    validator = validators[format]
-                    args['format'] = format.value
-                start = time.time()
-                response = self._check_endpoint(PUT, '/manifest/files', args=args)
-                log.info('Request took %.3fs to execute.', time.time() - start)
-                validator(catalog, response)
+            fetch = bool(self.random.getrandbits(1))
+            for fetch in [fetch, not fetch]:
+                with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
+                    args = dict(catalog=catalog)
+                    if format is None:
+                        validator = validators[first(supported_formats)]
+                    else:
+                        validator = validators[format]
+                        args['format'] = format.value
+                    response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
+                    validator(catalog, response)
 
     def _get_one_inner_file(self, catalog: CatalogName) -> JSON:
         outer_file = self._get_one_outer_file(catalog)
@@ -666,12 +666,28 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         path: str,
                         *,
                         args: Optional[Mapping[str, Any]] = None,
-                        endpoint: Optional[furl] = None
+                        endpoint: Optional[furl] = None,
+                        fetch: bool = False
                         ) -> bytes:
         if endpoint is None:
             endpoint = config.service_endpoint
         args = {} if args is None else {k: str(v) for k, v in args.items()}
         url = furl(url=endpoint, path=path, args=args)
+        if fetch:
+            url.path.segments.insert(0, 'fetch')
+            while True:
+                response = self._get_url(method, url)
+                self.assertEqual(200, response.status)
+                response = json.loads(response.data)
+                status = response['Status']
+                self.assertIn(status, {301, 302})
+                method, url = GET, furl(response['Location'])
+                retry_after = response.get('Retry-After')
+                if retry_after is not None:
+                    log.info('Sleeping %.3fs to honor Retry-After property', retry_after)
+                    time.sleep(retry_after)
+                if status == 302:
+                    break
         return self._get_url_content(method, url)
 
     def _get_url_json(self, method: str, url: furl) -> JSON:

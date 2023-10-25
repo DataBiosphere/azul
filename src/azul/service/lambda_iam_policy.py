@@ -167,6 +167,16 @@ policy = {
         {
             "Effect": "Allow",
             "Action": [
+                "kms:GenerateMac",
+                "kms:VerifyMac"
+            ],
+            "Resource": [
+                "${aws_kms_key.%s.arn}" % config.manifest_kms_key_tf_name
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "ssm:GetParameter"
             ],
             "Resource": [

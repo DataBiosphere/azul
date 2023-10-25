@@ -52,6 +52,9 @@ if TYPE_CHECKING:
     from mypy_boto3_iam import (
         IAMClient,
     )
+    from mypy_boto3_kms import (
+        KMSClient,
+    )
     from mypy_boto3_s3 import (
         S3Client,
     )
@@ -182,6 +185,10 @@ class AWS:
     @property
     def iam(self) -> 'IAMClient':
         return self.client('iam')
+
+    @property
+    def kms(self) -> 'KMSClient':
+        return self.client('kms')
 
     @property
     def secretsmanager(self):

@@ -20,6 +20,23 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#110 Reduce predictability of manifest keys
+=====================================================================
+
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to the ``sandbox``, ``anvilbox``, or ``hammerbox``
+deployments, manually deploy the ``gitlab`` component of the corresponding main
+deployment. You will likely need assistance from the system administrator
+because this particular change modifies the boundary policy. If the PR fails
+during testing and is not merged, roll back the changes made to the main
+deployments by deploying the ``gitlab`` component from the ``develop`` branch.
+
+When deploying to ``prod``, manually deploy ``prod.gitlab`` just before
+pushing the merge commit to the GitLab instance.
+
+
 #4982 Update to Python 3.11.x
 =============================
 
