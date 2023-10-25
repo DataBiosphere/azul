@@ -1139,7 +1139,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              catalog: CatalogName,
                              bundle_fqids: Set[SourcedBundleFQID]
                              ) -> None:
-        with self.subTest('managed_access'):
+        with self.subTest('managed_access', catalog=catalog):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
             managed_access_sources = self.managed_access_sources_by_catalog[catalog]
             managed_access_source_ids = {source.id for source in managed_access_sources}
@@ -1152,17 +1152,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
                 self.skipTest(f'No managed access sources found in catalog {catalog!r}')
 
-            with self.subTest('managed_access_indices'):
+            with self.subTest('managed_access_indices', catalog=catalog):
                 self._test_managed_access_indices(catalog, managed_access_source_ids)
-            with self.subTest('managed_access_repository_files'):
+            with self.subTest('managed_access_repository_files', catalog=catalog):
                 files = self._test_managed_access_repository_files(catalog, managed_access_source_ids)
-                with self.subTest('managed_access_summary'):
+                with self.subTest('managed_access_summary', catalog=catalog):
                     self._test_managed_access_summary(catalog, files)
-                with self.subTest('managed_access_repository_sources'):
+                with self.subTest('managed_access_repository_sources', catalog=catalog):
                     public_source_ids = self._test_managed_access_repository_sources(catalog,
                                                                                      indexed_source_ids,
                                                                                      managed_access_source_ids)
-                    with self.subTest('managed_access_manifest'):
+                    with self.subTest('managed_access_manifest', catalog=catalog):
                         self._test_managed_access_manifest(catalog,
                                                            files,
                                                            first(public_source_ids & indexed_source_ids))
