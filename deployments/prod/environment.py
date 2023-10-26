@@ -910,7 +910,7 @@ dcp31_sources = mkdict(dcp30_sources, 399, mkdelta([
     mksrc('datarepo-2abbf49d', 'hca_prod_e456c042f6b64ceca3381a8ef80bd779__20230905_dcp2_20230905_dcp31', 291),
 ]))
 
-dcp32_sources = mkdict(dcp31_sources, 407, mkdelta([
+dcp32_sources = mkdict(dcp31_sources, 406, mkdelta([
     mksrc('datarepo-6885133e', 'hca_prod_0792db3480474e62802c9177c9cd8e28__20220107_dcp2_20231002_dcp32', 1451),
     mksrc('datarepo-03b554f8', 'hca_prod_0911cc0406d64ffc8318b90b0039e8ad__20230905_dcp2_20231002_dcp32', 42),
     mksrc('datarepo-a5249352', 'hca_prod_279f176633194e3c9f996fb59ba9b3e5__20230815_dcp2_20231002_dcp32', 3),
@@ -930,6 +930,7 @@ dcp32_sources = mkdict(dcp31_sources, 407, mkdelta([
     mksrc('datarepo-d13e36e7', 'hca_prod_53c53cd481274e12bc7f8fe1610a715c__20220117_dcp2_20231002_dcp32', 35),
     mksrc('datarepo-0287a0ba', 'hca_prod_577c946d6de54b55a854cd3fde40bff2__20220117_dcp2_20231002_dcp32', 21),
     mksrc('datarepo-4d2eebce', 'hca_prod_5a54c6170eed486e8c1a8a8041fc1729__20230616_dcp2_20231002_dcp32', 53),
+    mksrc('datarepo-2917ceb6', 'hca_prod_5b3285614a9740acb7ad6a90fc59d374__20220117_dcp2_20230314_dcp25', 409, pop),
     mksrc('datarepo-069ac8d2', 'hca_prod_67a3de0945b949c3a068ff4665daa50e__20220117_dcp2_20231002_dcp32', 735),
     mksrc('datarepo-7be1db07', 'hca_prod_6936da41369246bbbca1cd0f507991e9__20230905_dcp2_20231003_dcp32', 1081),
     mksrc('datarepo-b59acd40', 'hca_prod_72ff481856924bbc8886e47763531023__20230929_dcp2_20231002_dcp32', 32),
