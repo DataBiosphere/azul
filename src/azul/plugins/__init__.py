@@ -57,9 +57,7 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     Aggregate,
-    DocumentType,
     EntityType,
-    IndexName,
 )
 from azul.indexer.transform import (
     Transformer,
@@ -282,7 +280,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         'type': 'double_range'
     }
 
-    def mapping(self, index_name: IndexName) -> MutableJSON:
+    def mapping(self) -> MutableJSON:
         return {
             'numeric_detection': False,
             'properties': {
@@ -299,22 +297,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
                 # > is required, it is advised to duplicate the content of the _id
                 # > field into another field that has doc_values enabled.
                 #
-                'entity_id': self.string_mapping,
-                **(
-                    {
-                        'contents': {
-                            # All replicas are stored in a single index per catalog,
-                            # regardless of entity type, resulting in heterogeneous
-                            # documents. Additionally, we don't want ES re-ordering
-                            # arrays or dictionary items within replica documents.
-                            # Therefore, we disable the mapping for their contents.
-                            'type': 'object',
-                            'enabled': False
-                        }
-                    }
-                    if index_name.doc_type is DocumentType.replica else
-                    {}
-                )
+                'entity_id': self.string_mapping
             },
             'dynamic_templates': [
                 {

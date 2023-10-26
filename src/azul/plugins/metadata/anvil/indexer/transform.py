@@ -50,7 +50,6 @@ from azul.indexer.document import (
     pass_thru_json,
 )
 from azul.indexer.transform import (
-    Transform,
     Transformer,
 )
 from azul.plugins.metadata.anvil.bundle import (
@@ -121,9 +120,6 @@ class LinkedEntities:
 class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: AnvilBundle
 
-    def replica_type(self, entity: EntityReference) -> str:
-        return f'anvil_{entity.entity_type}'
-
     @classmethod
     def field_types(cls) -> FieldTypes:
         return {
@@ -155,7 +151,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def estimate(self, partition: BundlePartition) -> int:
         return sum(map(partial(self._contains, partition), self.bundle.entities))
 
-    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
+    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
         return (
             self._transform(entity)
             for entity in self.bundle.entities
@@ -163,17 +159,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         )
 
     @abstractmethod
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Contribution:
         raise NotImplementedError
-
-    def _add_replica(self,
-                     contribution: Optional[MutableJSON],
-                     entity: EntityReference,
-                     ) -> Transform:
-        return (
-            None if contribution is None else self._contribution(contribution, entity),
-            self._replica(self.bundle.entities[entity], entity)
-        )
 
     def _pluralize(self, entity_type: str) -> str:
         if entity_type == 'diagnosis':
@@ -417,7 +404,7 @@ class ActivityTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'activities'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Contribution:
         linked = self._linked_entities(entity)
         contents = dict(
             activities=[self._activity(entity)],
@@ -427,7 +414,7 @@ class ActivityTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
-        return self._add_replica(contents, entity)
+        return self._contribution(contents, entity)
 
 
 class BiosampleTransformer(BaseTransformer):
@@ -436,7 +423,7 @@ class BiosampleTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'biosamples'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Contribution:
         linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
@@ -449,17 +436,7 @@ class BiosampleTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
         )
-        return self._add_replica(contents, entity)
-
-
-class DiagnosisTransformer(BaseTransformer):
-
-    def _transform(self, entity: EntityReference) -> Transform:
-        return self._add_replica(None, entity)
-
-    @classmethod
-    def entity_type(cls) -> EntityType:
-        return 'diagnoses'
+        return self._contribution(contents, entity)
 
 
 class DatasetTransformer(BaseTransformer):
@@ -468,7 +445,7 @@ class DatasetTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'datasets'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Contribution:
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 self._entities_by_type[activity_type]
@@ -480,7 +457,7 @@ class DatasetTransformer(BaseTransformer):
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file']),
         )
-        return self._add_replica(contents, entity)
+        return self._contribution(contents, entity)
 
 
 class DonorTransformer(BaseTransformer):
@@ -489,7 +466,7 @@ class DonorTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'donors'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Contribution:
         linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
@@ -502,7 +479,7 @@ class DonorTransformer(BaseTransformer):
             donors=[self._donor(entity)],
             files=self._entities(self._file, linked['file']),
         )
-        return self._add_replica(contents, entity)
+        return self._contribution(contents, entity)
 
 
 class FileTransformer(BaseTransformer):
@@ -511,7 +488,7 @@ class FileTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'files'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Contribution:
         linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
@@ -524,4 +501,4 @@ class FileTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=[self._file(entity)],
         )
-        return self._add_replica(contents, entity)
+        return self._contribution(contents, entity)

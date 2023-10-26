@@ -99,7 +99,6 @@ E = TypeVar('E', bound=EntityReference)
 class DocumentType(Enum):
     contribution = 'contribution'
     aggregate = 'aggregate'
-    replica = 'replica'
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}.{self._name_}>'
@@ -130,8 +129,7 @@ class IndexName:
     #: The type of entities this index contains metadata about
     entity_type: str
 
-    #: Whether the documents in the index are contributions, aggregates, or
-    #: replicas
+    #: Whether the documents in the index are contributions or aggregates
     doc_type: DocumentType = DocumentType.contribution
 
     index_name_version_re: ClassVar[re.Pattern] = re.compile(r'v(\d+)')
@@ -219,8 +217,6 @@ class IndexName:
                     f'Version {self.version} requires a catalog name ({self.catalog!r}).')
             config.Catalog.validate_name(self.catalog)
         config.validate_entity_type(self.entity_type)
-        if self.doc_type is DocumentType.replica:
-            assert self.entity_type == 'replica', self.entity_type
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
@@ -340,14 +336,6 @@ class IndexName:
                   entity_type='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_dev_main_replica') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
-                  deployment='dev',
-                  catalog='main',
-                  entity_type='replica',
-                  doc_type=<DocumentType.replica>)
-
         >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate') # doctest: +ELLIPSIS
         Traceback (most recent call last):
             ...
@@ -375,8 +363,6 @@ class IndexName:
         if index_name[-1] == 'aggregate':
             *index_name, _ = index_name
             doc_type = DocumentType.aggregate
-        elif index_name == ['replica']:
-            doc_type = DocumentType.replica
         else:
             doc_type = DocumentType.contribution
         entity_type = '_'.join(index_name)
@@ -495,8 +481,6 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
             subcls = ContributionCoordinates
         elif index_name.doc_type is DocumentType.aggregate:
             subcls = AggregateCoordinates
-        elif index_name.doc_type is DocumentType.replica:
-            subcls = ReplicaCoordinates
         else:
             assert False, index_name.doc_type
         assert issubclass(subcls, cls)
@@ -616,31 +600,6 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
 
     def __str__(self) -> str:
         return f'aggregate for {self.entity}'
-
-
-@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
-class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
-    content_hash: str
-    doc_type: DocumentType = attr.ib(default=DocumentType.replica, init=False)
-
-    @property
-    def document_id(self) -> str:
-        return f'{self.entity.entity_id}_{self.content_hash}'
-
-    @classmethod
-    def _from_index(cls,
-                    index_name: IndexName,
-                    document_id: str
-                    ) -> 'ReplicaCoordinates[CataloguedEntityReference]':
-        assert index_name.doc_type is DocumentType.replica, index_name
-        entity_id, content_hash = document_id.split('_')
-        return cls(content_hash=content_hash,
-                   entity=CataloguedEntityReference(catalog=index_name.catalog,
-                                                    entity_type='replica',
-                                                    entity_id=entity_id))
-
-    def __str__(self) -> str:
-        return f'replica of {self.entity.entity_id}'
 
 
 # The native type of the field in documents as they are being created by a
@@ -1090,7 +1049,6 @@ document_class = attr.s(frozen=False, kw_only=True, auto_attribs=True)
 @document_class
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
-    needs_translation: ClassVar[bool] = True
 
     coordinates: C
     version_type: VersionType = VersionType.none
@@ -1238,11 +1196,9 @@ class Document(Generic[C]):
                    ) -> 'Document':
         if coordinates is None:
             coordinates = DocumentCoordinates.from_hit(hit)
-        document = hit['_source']
-        if cls.needs_translation:
-            document = cls.translate_fields(document,
-                                            field_types[coordinates.entity.catalog],
-                                            forward=False)
+        document = cls.translate_fields(hit['_source'],
+                                        field_types[coordinates.entity.catalog],
+                                        forward=False)
         if cls.needs_seq_no_primary_term:
             try:
                 version = (hit['_seq_no'], hit['_primary_term'])
@@ -1284,8 +1240,6 @@ class Document(Generic[C]):
                         self.translate_fields(doc=self.to_json(),
                                               field_types=field_types[coordinates.entity.catalog],
                                               forward=True)
-                        if self.needs_translation else
-                        self.to_json()
                 }
             ),
             '_id' if bulk else 'id': self.coordinates.document_id
@@ -1477,53 +1431,6 @@ class Aggregate(Document[AggregateCoordinates]):
     def delete(self):
         # Aggregates are deleted when their contents goes blank
         return super().delete or not self.contents
-
-
-@document_class
-class Replica(Document[ReplicaCoordinates[E]]):
-    """
-    A verbatim copy of a metadata document
-    """
-
-    #: The type of replica. Typically, all replicas of the same type have
-    #: similar shapes, just like contributions for entities of the same type.
-    #: We can't model replica types as entity types because we want to hold all
-    #: replicas  in a single index per catalog to facilitate quick retrieval.
-    #: Mixing replicas of different types results in an index containing
-    #: documents of heterogeneous shapes. Document heterogeneity is typically a
-    #: problem for ES, but we deal with it by disabling the ES index mapping,
-    #: essentially disabling the reverse index that ES normally builds from
-    #: these documents and using the index only to store and retrieve the
-    #: documents by their coordinates.
-    replica_type: str
-
-    contents: JSON
-
-    hub_ids: list[EntityID]
-
-    #: The version_type attribute will change to VersionType.none if writing
-    #: to Elasticsearch fails with 409
-    version_type: VersionType = VersionType.create_only
-
-    needs_translation: ClassVar[bool] = False
-
-    def __attrs_post_init__(self):
-        assert isinstance(self.coordinates, ReplicaCoordinates)
-        assert self.coordinates.doc_type is DocumentType.replica
-        assert self.entity.entity_type == 'replica', self.entity
-
-    @classmethod
-    def field_types(cls, field_types: FieldTypes) -> FieldTypes:
-        return {
-            **super().field_types(pass_thru_json),
-            'replica_type': pass_thru_str,
-            'hub_ids': pass_thru_str
-        }
-
-    def to_json(self) -> JSON:
-        return dict(super().to_json(),
-                    replica_type=self.replica_type,
-                    hub_ids=self.hub_ids)
 
 
 CataloguedContribution = Contribution[CataloguedEntityReference]

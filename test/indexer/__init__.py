@@ -30,7 +30,6 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
-    DocumentType,
     IndexName,
 )
 from azul.indexer.index_service import (
@@ -40,9 +39,6 @@ from azul.indexer.index_service import (
 )
 from azul.plugins import (
     FieldPath,
-)
-from azul.plugins.metadata.hca import (
-    HCABundle,
 )
 from azul.types import (
     AnyJSON,
@@ -131,11 +127,6 @@ class IndexerTestCase(CatalogTestCase,
                                  uuid=uuid,
                                  version=version)
 
-    def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
-        index_name = IndexName.parse(hit['_index'])
-        index_name.validate()
-        return index_name.entity_type, index_name.doc_type
-
     def _get_all_hits(self):
         # Without `preserve_order`, hits are sorted by `_doc`, which is fastest
         # but causes the `sort` field in hits to vary unpredictably, based on
@@ -143,12 +134,10 @@ class IndexerTestCase(CatalogTestCase,
         # unrelated code changes. This makes asserting test results verbatim
         # impossible. Thus we set `preserve_order` to True.
         hits = list(scan(client=self.es_client,
-                         index=','.join(map(str, self.index_service.index_names(self.catalog))),
+                         index=','.join(self.index_service.index_names(self.catalog)),
                          preserve_order=True))
         for hit in hits:
-            _, doc_type = self._parse_index_name(hit)
-            if doc_type is not DocumentType.replica:
-                self._verify_sorted_lists(hit['_source'])
+            self._verify_sorted_lists(hit['_source'])
         return hits
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
@@ -184,13 +173,11 @@ class IndexerTestCase(CatalogTestCase,
             cls.index_service.index(cls.catalog, bundle)
 
     @classmethod
-    def _write_transforms(cls, bundle: HCABundle) -> Tallies:
+    def _write_contributions(cls, bundle: Bundle) -> Tallies:
         bundle = attr.evolve(bundle,
                              manifest=deepcopy(bundle.manifest),
                              metadata_files=deepcopy(bundle.metadata_files))
-        transforms = cls.index_service.transform(cls.catalog, bundle, delete=False)
-        contributions, replicas = transforms
-        cls.index_service.replicate(cls.catalog, replicas)
+        contributions = cls.index_service.transform(cls.catalog, bundle, delete=False)
         return cls.index_service.contribute(cls.catalog, contributions)
 
     def _verify_sorted_lists(self, data: AnyJSON):

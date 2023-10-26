@@ -215,9 +215,7 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
         # intended to cover the service, only the controller.
         expected_digest = defaultdict(list)
         for fqid, bundle in bundles.items():
-            contributions, replicas = self.index_service.transform(self.catalog,
-                                                                   bundle,
-                                                                   delete=False)
+            contributions = self.index_service.transform(self.catalog, bundle, delete=False)
             for contribution in contributions:
                 assert isinstance(contribution, Contribution)
                 # Initially, each entity gets a tally of 1
