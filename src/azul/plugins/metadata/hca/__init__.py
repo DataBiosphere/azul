@@ -3,7 +3,6 @@ from collections.abc import (
     Sequence,
 )
 from typing import (
-    Mapping,
     Optional,
     Type,
 )
@@ -138,7 +137,7 @@ class Plugin(MetadataPlugin[HCABundle]):
         return mapping
 
     @property
-    def exposed_indices(self) -> Mapping[EntityType, Sorting]:
+    def exposed_indices(self) -> dict[EntityType, Sorting]:
         return dict(
             bundles=Sorting(field_name='bundleVersion', descending=True, max_page_size=100),
             files=Sorting(field_name='fileName'),
