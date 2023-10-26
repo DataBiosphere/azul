@@ -79,6 +79,7 @@ from azul.indexer.document import (
     pass_thru_json,
 )
 from azul.indexer.transform import (
+    Transform,
     Transformer,
 )
 from azul.iterators import (
@@ -469,6 +470,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                  deleted: bool):
         ...
 
+    def replica_type(self, entity: EntityReference) -> str:
+        assert entity.entity_type == self.entity_type(), entity
+        return entity.entity_type.removesuffix('s')
+
     @classmethod
     def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
@@ -504,6 +509,22 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return DateAggregator()
         else:
             return SimpleAggregator()
+
+    def _add_replica(self,
+                     contribution: MutableJSON,
+                     entity: Union[api.Entity, DatedEntity]
+                     ) -> Transform:
+        entity_ref = EntityReference(entity_id=str(entity.document_id),
+                                     entity_type=self.entity_type())
+        if self.entity_type() == 'bundles':
+            replica = None
+        else:
+            assert isinstance(entity, api.Entity), entity
+            replica = self._replica(entity.json, entity_ref)
+        return (
+            self._contribution(contribution, entity_ref),
+            replica
+        )
 
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,
@@ -1204,9 +1225,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
-    def _entity_ref(self, entity_id: api.UUID4) -> EntityReference:
-        return EntityReference(entity_id=str(entity_id), entity_type=self.entity_type())
-
     @classmethod
     def field_types(cls) -> FieldTypes:
         """
@@ -1352,7 +1370,7 @@ ENTITY = TypeVar('ENTITY', bound=api.Entity)
 class PartitionedTransformer(BaseTransformer, Generic[ENTITY]):
 
     @abstractmethod
-    def _transform(self, entities: Iterable[ENTITY]) -> Iterable[Contribution]:
+    def _transform(self, entities: Iterable[ENTITY]) -> Iterable[Transform]:
         """
         Transform the given outer entities into contributions.
         """
@@ -1371,7 +1389,7 @@ class PartitionedTransformer(BaseTransformer, Generic[ENTITY]):
     def estimate(self, partition: BundlePartition) -> int:
         return ilen(self._entities_in(partition))
 
-    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
+    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
         return self._transform(generable(self._entities_in, partition))
 
 
@@ -1423,7 +1441,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         additional_contents = self.matrix_stratification_values(file)
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
-                yield self._contribution(contents, self._entity_ref(file.document_id))
+                yield self._add_replica(contents, file)
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
@@ -1518,7 +1536,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
-            yield self._contribution(contents, self._entity_ref(cell_suspension.document_id))
+            yield self._add_replica(contents, cell_suspension)
 
 
 class SampleTransformer(PartitionedTransformer):
@@ -1565,7 +1583,7 @@ class SampleTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
-            yield self._contribution(contents, self._entity_ref(sample.document_id))
+            yield self._add_replica(contents, sample)
 
 
 class BundleAsEntity(DatedEntity):
@@ -1601,13 +1619,13 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
     def estimate(self, partition: BundlePartition) -> int:
         return int(partition.contains(self._singleton_id))
 
-    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
+    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
         if partition.contains(self._singleton_id):
             yield self._transform()
         else:
             return ()
 
-    def _transform(self) -> Contribution:
+    def _transform(self) -> Transform:
         # Project entities are not explicitly linked in the graph. The mere
         # presence of project metadata in a bundle indicates that all other
         # entities in that bundle belong to that project. Because of that we
@@ -1665,7 +1683,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],
                         projects=[self._project(self._api_project)])
-        return self._contribution(contents, self._entity_ref(self._singleton_id))
+        return self._add_replica(contents, self._singleton_entity())
 
 
 class ProjectTransformer(SingletonTransformer):

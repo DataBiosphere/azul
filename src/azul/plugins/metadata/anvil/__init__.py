@@ -7,7 +7,9 @@ from typing import (
 )
 
 from azul.indexer.document import (
+    DocumentType,
     EntityType,
+    IndexName,
 )
 from azul.plugins import (
     DocumentSlice,
@@ -23,6 +25,7 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     BaseTransformer,
     BiosampleTransformer,
     DatasetTransformer,
+    DiagnosisTransformer,
     DonorTransformer,
     FileTransformer,
 )
@@ -66,6 +69,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             ActivityTransformer,
             BiosampleTransformer,
             DatasetTransformer,
+            DiagnosisTransformer,
             DonorTransformer,
             FileTransformer,
         )
@@ -80,22 +84,22 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             for transformer_cls in self.transformer_types()
         ]
 
-    def mapping(self) -> MutableJSON:
-        mapping = super().mapping()
-
-        def range_mapping(name: str, path: str) -> MutableJSON:
-            return {
-                name: {
-                    'path_match': path,
-                    'mapping': self.range_mapping
+    def mapping(self, index_name: IndexName) -> MutableJSON:
+        mapping = super().mapping(index_name)
+        if index_name.doc_type in (DocumentType.contribution, DocumentType.aggregate):
+            def range_mapping(name: str, path: str) -> MutableJSON:
+                return {
+                    name: {
+                        'path_match': path,
+                        'mapping': self.range_mapping
+                    }
                 }
-            }
 
-        mapping['dynamic_templates'].extend([
-            range_mapping('biosample_age_range', 'contents.biosamples.donor_age_at_collection'),
-            range_mapping('diagnosis_age_range', 'contents.diagnoses.diagnosis_age'),
-            range_mapping('diagnosis_onset_age_range', 'contents.diagnoses.diagnosis_onset_age')
-        ])
+            mapping['dynamic_templates'].extend([
+                range_mapping('biosample_age_range', 'contents.biosamples.donor_age_at_collection'),
+                range_mapping('diagnosis_age_range', 'contents.diagnoses.diagnosis_age'),
+                range_mapping('diagnosis_onset_age_range', 'contents.diagnoses.diagnosis_onset_age')
+            ])
         return mapping
 
     @property

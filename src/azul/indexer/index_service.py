@@ -20,6 +20,7 @@ from typing import (
     Optional,
     Type,
     Union,
+    cast,
 )
 
 from elasticsearch import (
@@ -36,6 +37,7 @@ from elasticsearch.helpers import (
 from more_itertools import (
     first,
     one,
+    unzip,
 )
 
 from azul import (
@@ -75,6 +77,7 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     IndexName,
+    Replica,
     VersionType,
 )
 from azul.indexer.document_service import (
@@ -118,9 +121,7 @@ class IndexService(DocumentService):
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def settings(self, index_name) -> JSON:
-
-        index_name = IndexName.parse(index_name)
+    def settings(self, index_name: IndexName) -> JSON:
         index_name.validate()
         aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
@@ -167,14 +168,22 @@ class IndexService(DocumentService):
             }
         }
 
-    def index_names(self, catalog: CatalogName) -> list[str]:
+    def index_names(self, catalog: CatalogName) -> list[IndexName]:
         return [
-            str(IndexName.create(catalog=catalog,
-                                 entity_type=entity_type,
-                                 doc_type=doc_type))
+            IndexName.create(catalog=catalog,
+                             entity_type=entity_type,
+                             doc_type=doc_type)
             for entity_type in self.entity_types(catalog)
             for doc_type in (DocumentType.contribution, DocumentType.aggregate)
-        ]
+        ] + (
+            [
+                IndexName.create(catalog=catalog,
+                                 entity_type='replica',
+                                 doc_type=DocumentType.replica)
+            ]
+            if config.enable_replicas else
+            []
+        )
 
     def fetch_bundle(self,
                      catalog: CatalogName,
@@ -191,9 +200,12 @@ class IndexService(DocumentService):
         implementation would transform many bundles, collect their contributions
         and aggregate all affected entities at the end.
         """
+        transforms = self.deep_transform(catalog, bundle, delete=False)
         tallies = {}
-        for contributions in self.deep_transform(catalog, bundle, delete=False):
+        for contributions, replicas in transforms:
             tallies.update(self.contribute(catalog, contributions))
+            if config.enable_replicas:
+                self.replicate(catalog, replicas)
         self.aggregate(tallies)
 
     def delete(self, catalog: CatalogName, bundle: Bundle) -> None:
@@ -206,8 +218,9 @@ class IndexService(DocumentService):
         # FIXME: this only works if the bundle version is not being indexed
         #        concurrently. The fix could be to optimistically lock on the
         #        aggregate version (https://github.com/DataBiosphere/azul/issues/611)
+        transforms = self.deep_transform(catalog, bundle, delete=True)
         tallies = {}
-        for contributions in self.deep_transform(catalog, bundle, delete=True):
+        for contributions, replicas in transforms:
             # FIXME: these are all modified contributions, not new ones. This also
             #        happens when we reindex without deleting the indices first. The
             #        tallies refer to number of updated or added contributions but
@@ -215,6 +228,8 @@ class IndexService(DocumentService):
             #        number of contributions per bundle.
             # https://github.com/DataBiosphere/azul/issues/610
             tallies.update(self.contribute(catalog, contributions))
+            if config.enable_replicas:
+                self.replicate(catalog, replicas)
         self.aggregate(tallies)
 
     def deep_transform(self,
@@ -223,7 +238,7 @@ class IndexService(DocumentService):
                        partition: BundlePartition = BundlePartition.root,
                        *,
                        delete: bool
-                       ) -> Iterator[list[Contribution]]:
+                       ) -> Iterator[tuple[list[Contribution], list[Replica]]]:
         """
         Recursively transform the given partition of the specified bundle and
         any divisions of that partition. This should be used by synchronous
@@ -236,10 +251,10 @@ class IndexService(DocumentService):
         if isinstance(result, BundlePartition):
             for sub_partition in results:
                 yield from self.deep_transform(catalog, bundle, sub_partition, delete=delete)
-        elif isinstance(result, Contribution):
+        elif isinstance(results, tuple):
             yield results
         elif result is None:
-            yield []
+            yield [], []
         else:
             assert False, type(result)
 
@@ -249,11 +264,11 @@ class IndexService(DocumentService):
                   partition: BundlePartition = BundlePartition.root,
                   *,
                   delete: bool,
-                  ) -> Union[list[BundlePartition], list[Contribution]]:
+                  ) -> Union[list[BundlePartition], tuple[list[Contribution], list[Replica]]]:
         """
-        Return a list of contributions for the entities in the given partition
-        of the specified bundle or a set of divisions of the given partition if
-        it contains too many entities.
+        Return a list of contributions and a list of replicas for the entities
+        in the given partition of the specified bundle, or a set of divisions of
+        the given partition if it contains too many entities.
 
         :param catalog: the name of the catalog to contribute to
 
@@ -281,33 +296,44 @@ class IndexService(DocumentService):
             log.info('Transforming %i entities in partition %s of bundle %s, version %s.',
                      num_entities, partition, bundle.uuid, bundle.version)
             contributions = []
+            replicas = []
             for transformer in transformers:
-                contributions.extend(transformer.transform(partition))
-            return contributions
+                # The cast is necessary because unzip()'s type stub doesn't
+                # support heterogeneous tuples.
+                transforms = cast(
+                    tuple[Iterable[Optional[Contribution]], Iterable[Optional[Replica]]],
+                    unzip(transformer.transform(partition))
+                )
+                if transforms:
+                    contributions_part, replicas_part = transforms
+                    contributions.extend(filter(None, contributions_part))
+                    replicas.extend(filter(None, replicas_part))
+            return contributions, replicas
 
     def create_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
         for index_name in self.index_names(catalog):
             while True:
                 settings = self.settings(index_name)
-                mappings = self.metadata_plugin(catalog).mapping()
+                mappings = self.metadata_plugin(catalog).mapping(index_name)
                 try:
                     with silenced_es_logger():
-                        index = es_client.indices.get(index=index_name)
+                        index = es_client.indices.get(index=str(index_name))
                 except NotFoundError:
                     try:
-                        es_client.indices.create(index=index_name,
+                        es_client.indices.create(index=str(index_name),
                                                  body=dict(settings=settings,
                                                            mappings=mappings))
                     except RequestError as e:
                         if e.error == 'resource_already_exists_exception':
-                            log.info('Another party concurrently created index %r, retrying.', index_name)
+                            log.info('Another party concurrently created index %s (%r), retrying.',
+                                     index_name, index_name)
                         else:
                             raise
                 else:
                     self._check_index(settings=settings,
                                       mappings=mappings,
-                                      index=index[index_name])
+                                      index=index[str(index_name)])
                     break
 
     def _check_index(self, *, settings: JSON, mappings: JSON, index: JSON):
@@ -476,6 +502,35 @@ class IndexService(DocumentService):
             else:
                 break
         writer.raise_on_errors()
+
+    def replicate(self,
+                  catalog: CatalogName,
+                  replicas: list[Replica]
+                  ) -> tuple[int, int]:
+        writer = self._create_writer(catalog)
+        num_added = 0
+        num_present = 0
+        while replicas:
+            writer.write(replicas)
+            retry_replicas = []
+            for r in replicas:
+                if r.coordinates in writer.retries:
+                    conflicts = writer.conflicts[r.coordinates]
+                    if conflicts == 0:
+                        retry_replicas.append(r)
+                    elif conflicts == 1:
+                        # FIXME: Track replica hub IDs
+                        #        https://github.com/DataBiosphere/azul/issues/5360
+                        writer.conflicts.pop(r.coordinates)
+                        num_present += 1
+                    else:
+                        assert False, (conflicts, r.coordinates)
+                else:
+                    num_added += 1
+            replicas = retry_replicas
+
+        writer.raise_on_errors()
+        return num_added, num_present
 
     def _read_aggregates(self,
                          entities: CataloguedTallies
@@ -801,6 +856,8 @@ class IndexWriter:
     def _write_individually(self, documents: Iterable[Document]):
         log.info('Writing documents individually')
         for doc in documents:
+            if isinstance(doc, Replica):
+                assert doc.version_type is VersionType.create_only, doc
             try:
                 method = self.es_client.delete if doc.delete else self.es_client.index
                 method(refresh=self.refresh, **doc.to_index(self.catalog, self.field_types))

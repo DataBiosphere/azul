@@ -57,6 +57,7 @@ from azul.indexer import (
 from azul.indexer.document import (
     Contribution,
     EntityReference,
+    Replica,
 )
 from azul.indexer.index_service import (
     CataloguedEntityReference,
@@ -176,11 +177,21 @@ class IndexController(AppController):
                     catalog = message['catalog']
                     assert catalog is not None
                     delete = action.is_delete()
-                    contributions = self.transform(catalog, notification, delete)
+                    contributions, replicas = self.transform(catalog, notification, delete)
+
                     log.info('Writing %i contributions to index.', len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
+
+                    if config.enable_replicas:
+                        log.info('Writing %i replicas to index.', len(replicas))
+                        num_added, num_present = self.index_service.replicate(catalog, replicas)
+                        log.info('Successfully added %i replicas; %i were already present',
+                                 num_added, num_present)
+                        assert num_added + num_present == len(replicas)
+                    else:
+                        log.info('Replicas are disabled; would write %i', len(replicas))
 
                     log.info('Queueing %i entities for aggregating a total of %i contributions.',
                              len(tallies), sum(tally.num_contributions for tally in tallies))
@@ -198,11 +209,12 @@ class IndexController(AppController):
                   catalog: CatalogName,
                   notification: JSON,
                   delete: bool
-                  ) -> list[Contribution]:
+                  ) -> tuple[list[Contribution], list[Replica]]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document
-        representing one metadata entity in the index.
+        representing one metadata entity in the index. Replicas of the original,
+        untransformed metadata are returned as well.
         """
         # FIXME: Adopt `trycast` for casting JSON to TypeDict
         #        https://github.com/DataBiosphere/azul/issues/5171
@@ -224,7 +236,7 @@ class IndexController(AppController):
                 # There's a good chance that the partition will also fail in
                 # the non-retry Lambda function so we'll go straight to retry.
                 self._queue_notification(action, notification, catalog, retry=True)
-            return []
+            return [], []
         else:
             return results
 

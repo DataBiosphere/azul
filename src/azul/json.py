@@ -2,6 +2,7 @@ from copy import (
     copy,
     deepcopy,
 )
+import hashlib
 from io import (
     StringIO,
 )
@@ -195,3 +196,28 @@ def json_head(n: int, o: AnyJSON) -> str:
         if buf.tell() > n:
             break
     return buf.getvalue()[:n]
+
+
+def json_hash(o: AnyJSON, hash=None):
+    """
+    Efficiently compute a hash of a JSON object.
+
+    >>> o = {'foo': 1, 'bar': 2.0, 'baz': 'baz'}
+    >>> json_hash(o).hexdigest()
+    '08335acd02f77fdd32775f51a1766796e91bc0e1'
+
+    >>> json_hash(o, hashlib.sha1()).hexdigest()
+    '08335acd02f77fdd32775f51a1766796e91bc0e1'
+
+    >>> json_hash(o, hashlib.md5()).hexdigest()
+    'd28a433c1e34de7c7da3ea59fd9e48f9'
+
+    >>> json_hash(o).digest() == json_hash(dict(reversed(o.items()))).digest()
+    True
+    """
+    if hash is None:
+        hash = hashlib.sha1()
+    encoder = json.JSONEncoder(sort_keys=True, separators=(',', ':'))
+    for chunk in encoder.iterencode(o):
+        hash.update(chunk.encode())
+    return hash

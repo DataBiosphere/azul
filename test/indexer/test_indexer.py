@@ -58,6 +58,7 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     IndexName,
+    ReplicaCoordinates,
     null_bool,
     null_int,
     null_str,
@@ -68,6 +69,9 @@ from azul.indexer.index_service import (
     IndexWriter,
     log as index_service_log,
 )
+from azul.json import (
+    json_hash,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -77,6 +81,7 @@ from azul.plugins import (
 )
 from azul.plugins.metadata.hca import (
     CellSuspensionTransformer,
+    HCABundle,
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
@@ -139,15 +144,43 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         Index a bundle and assert the index contents verbatim
         """
         self.maxDiff = None
+        bundle = self._load_canned_bundle(self.old_bundle)
+        expected_hits = self._load_canned_result(self.old_bundle)
         for max_partition_size in [BundlePartition.max_partition_size, 1]:
             for page_size in (config.contribution_page_size, 1):
                 with self.subTest(page_size=page_size, max_partition_size=max_partition_size):
                     with patch.object(BundlePartition, 'max_partition_size', new=max_partition_size):
                         with patch.object(type(config), 'contribution_page_size', new=page_size):
-                            self._index_canned_bundle(self.old_bundle)
-                            expected_hits = self._load_canned_result(self.old_bundle)
+                            self._index_bundle(bundle, delete=False)
                             hits = self._get_all_hits()
                             self.assertElasticEqual(expected_hits, hits)
+                            contributions = []
+                            replicas = []
+                            for hit in hits:
+                                entity_type, doc_type = self._parse_index_name(hit)
+                                if doc_type is DocumentType.replica:
+                                    entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
+                                    replicas.append(entity_id)
+                                    expected = one(
+                                        m
+                                        for m in bundle.metadata_files.values()
+                                        if (
+                                            m['schema_type'] != 'link_bundle'
+                                            and m['provenance']['document_id'] == entity_id
+                                        )
+                                    )
+                                    # Replica contents should match the entity
+                                    # metadata as supplied by the repository
+                                    # plugin, verbatim
+                                    actual = hit['_source']['contents']
+                                    self.assertEqual(expected, actual)
+                                elif doc_type is DocumentType.contribution and entity_type != 'bundles':
+                                    entity_id = ContributionCoordinates.from_hit(hit).entity.entity_id
+                                    contributions.append(entity_id)
+                            contributions.sort()
+                            replicas.sort()
+                            # One replica per entity, except for bundles
+                            self.assertEqual(contributions, replicas)
 
     def test_deletion(self):
         """
@@ -173,8 +206,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                                        metadata_files=bundle.metadata_files)
                     self._index_bundle(bundle)
                     hits = self._get_all_hits()
-                    self.assertEqual(len(hits), size * 2)
-                    num_aggregates, num_contribs = 0, 0
+                    # -1 because there is no replica for the bundle entity
+                    self.assertEqual(len(hits), size * 3 - 1)
+                    num_aggregates, num_contribs, num_replicas = 0, 0, 0
                     for hit in hits:
                         entity_type, doc_type = self._parse_index_name(hit)
                         if doc_type is DocumentType.aggregate:
@@ -186,36 +220,38 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                             self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
                             self.assertFalse(doc.coordinates.deleted)
                             num_contribs += 1
+                        elif doc_type is DocumentType.replica:
+                            num_replicas += 1
                         else:
                             assert False, doc_type
                     self.assertEqual(num_aggregates, size)
                     self.assertEqual(num_contribs, size)
+                    self.assertEqual(num_replicas, size - 1)
 
                     self._index_bundle(bundle, delete=True)
 
                     hits = self._get_all_hits()
-                    # Twice the size because deletions create new contribution
-                    self.assertEqual(len(hits), 2 * size)
+                    # Thrice the size because deletions create new contribution
+                    # and replicas do not yet support deletion. -1 because the
+                    # bundle is not replicated.
+                    self.assertEqual(len(hits), 3 * size - 1)
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         entity_type, doc_type = self._parse_index_name(hit)
-                        # Since there is only one bundle and it was deleted,
-                        # nothing should be aggregated
-                        self.assertEqual(doc_type, DocumentType.contribution)
-                        doc = Contribution.from_index(field_types, hit)
-                        docs_by_entity[doc.entity].append(doc)
-                        self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
+                        if doc_type is DocumentType.contribution:
+                            doc = Contribution.from_index(field_types, hit)
+                            docs_by_entity[doc.entity].append(doc)
+                            self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
+                        else:
+                            # Since there is only one bundle and it was deleted,
+                            # nothing should be aggregated
+                            self.assertIs(doc_type, DocumentType.replica)
 
                     for pair in docs_by_entity.values():
                         self.assertEqual(list(sorted(doc.coordinates.deleted for doc in pair)), [False, True])
                 finally:
                     self.index_service.delete_indices(self.catalog)
                     self.index_service.create_indices(self.catalog)
-
-    def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
-        index_name = IndexName.parse(hit['_index'])
-        index_name.validate()
-        return index_name.entity_type, index_name.doc_type
 
     def _filter_hits(self,
                      hits: JSONs,
@@ -230,7 +266,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
     def test_duplicate_notification(self):
         # Contribute the bundle once
         bundle = self._load_canned_bundle(self.new_bundle)
-        tallies_1 = self._write_contributions(bundle)
+        assert isinstance(bundle, HCABundle)
+        tallies_1 = self._write_transforms(bundle)
 
         # There should be one contribution per entity
         num_contributions = 6
@@ -240,17 +277,31 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         # of the writes is NOT an overwrite. Since we pretend not having written
         # that contribution, we also need to remove its tally.
         tallies_1 = dict(tallies_1)
-        entity, tally = tallies_1.popitem()
-        coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=bundle.fqid.upcast(),
-                                              deleted=False).with_catalog(self.catalog)
-        self.es_client.delete(index=coordinates.index_name,
-                              id=coordinates.document_id)
+        # Exclude bundles because they lack replicas
+        entity = next(e for e in tallies_1.keys() if e.entity_type != 'bundles')
+        tallies_1.pop(entity)
+
+        entity_contents = bundle.metadata_files[
+            one(m for m in bundle.manifest if m['uuid'] == entity.entity_id)['name']
+        ]
+        coordinates = [
+            ContributionCoordinates(
+                entity=entity,
+                bundle=bundle.fqid.upcast(),
+                deleted=False
+            ).with_catalog(self.catalog),
+            ReplicaCoordinates(
+                entity=attr.evolve(entity, entity_type='replica'),
+                content_hash=json_hash(entity_contents).hexdigest()
+            ).with_catalog(self.catalog)
+        ]
+        for c in coordinates:
+            self.es_client.delete(index=c.index_name, id=c.document_id)
 
         # Contribute the bundle again, simulating a duplicate notification or
         # a retry of the original notification.
         with self.assertLogs(logger=index_service_log, level='WARNING') as logs:
-            tallies_2 = self._write_contributions(bundle)
+            tallies_2 = self._write_transforms(bundle)
 
         # All entities except the one whose contribution we deleted should have
         # been overwrites and therefore have a tally of 0.
@@ -258,8 +309,10 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         expected_tallies_2[entity] = 1
         self.assertEqual(expected_tallies_2, tallies_2)
 
-        # All writes were logged as overwrites, except one.
-        self.assertEqual(num_contributions - 1, len(logs.output))
+        # All writes were logged as overwrites, except one. There are 1 fewer
+        # replicas than contributions.
+        self.assertEqual(num_contributions - 1 + num_contributions - 2,
+                         len(logs.output))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
                                 r'Document .* exists. '
                                 r'Retrying with overwrite\.$')
@@ -284,7 +337,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         tally with count 0 still triggers aggregation.
         """
         bundle = self._load_canned_bundle(self.new_bundle)
-        tallies = dict(self._write_contributions(bundle))
+        assert isinstance(bundle, HCABundle)
+        tallies = dict(self._write_transforms(bundle))
         for tally in tallies:
             tallies[tally] = 0
         # Aggregating should not be a non-op even though tallies are all zero
@@ -314,9 +368,20 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         num_expected_addition_contributions = 0 if just_deletion else 6
         num_expected_deletion_contributions = 6
         num_expected_aggregates = 0
+        # Currently, replicas do not distinguish between additions and deletions.
+        # Bundle entities are not replicated.
+        num_expected_replicas = max(0, num_expected_deletion_contributions - 1)
         hits = self._get_all_hits()
-        actual_addition_contributions = [h for h in hits if not h['_source']['bundle_deleted']]
-        actual_deletion_contributions = [h for h in hits if h['_source']['bundle_deleted']]
+        actual_addition_contributions = [
+            h
+            for h in hits
+            if h['_source'].get('bundle_deleted') is False
+        ]
+        actual_deletion_contributions = [
+            h
+            for h in hits
+            if h['_source'].get('bundle_deleted') is True
+        ]
 
         actual_aggregates = list(self._filter_hits(hits, DocumentType.aggregate))
 
@@ -325,7 +390,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         self.assertEqual(len(actual_aggregates), num_expected_aggregates)
         self.assertEqual(num_expected_addition_contributions
                          + num_expected_deletion_contributions
-                         + num_expected_aggregates,
+                         + num_expected_aggregates
+                         + num_expected_replicas,
                          len(hits))
 
     def test_bundle_delete_downgrade(self):
@@ -382,6 +448,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                     self.assertEqual(entity_type, 'files')
                     self.assertEqual(num_docs_by_index_after[entity_type, doc_type],
                                      num_docs_by_index_before[entity_type, doc_type] + 2)
+            elif doc_type is DocumentType.replica:
+                continue
             else:
                 assert False, doc_type
 
@@ -867,7 +935,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
             contents = hit['_source']['contents']
-            for file in contents['files']:
+            for file in contents.get('files', ()):
                 if file['file_format'] == 'Rds':
                     expected_source = 'Contributor'
                     expected_cell_count = 54140
@@ -953,7 +1021,14 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         self._index_canned_bundle(analysis_bundle)
         hits = self._get_all_hits()
         num_files = 33
-        self.assertEqual(len(hits), (num_files + 1 + 1 + 1 + 1) * 2)
+        num_expected = dict(files=num_files,
+                            samples=1,
+                            cell_suspensions=1,
+                            projects=1,
+                            bundles=1)
+        # One contribution, aggregate, and replica per entity, except no replica
+        # for the bundle.
+        self.assertEqual(len(hits), sum(num_expected.values()) * 3 - 1)
         num_contribs, num_aggregates = Counter(), Counter()
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
@@ -977,11 +1052,12 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                                                version=source['bundle_version'])
                 self.assertEqual(analysis_bundle, actual_fqid)
                 self.assertEqual(1 if entity_type == 'files' else num_files, len(contents['files']))
+            elif doc_type is DocumentType.replica:
+                continue
             else:
                 assert False, doc_type
             self.assertEqual(1, len(contents['specimens']))
             self.assertEqual(1, len(contents['projects']))
-        num_expected = dict(files=num_files, samples=1, cell_suspensions=1, projects=1, bundles=1)
         self.assertEqual(num_contribs, num_expected)
         self.assertEqual(num_aggregates, num_expected)
 
@@ -1023,14 +1099,21 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         num_actual_new_deleted_contributions = 0
         hits = self._get_all_hits()
         # Six entities (two files, one project, one cell suspension, one sample,
-        # and one bundle) One contribution and one aggregate per entity. Two
-        # times number of deleted contributions since deletes don't remove a
-        # contribution, but add a new one
-        self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions * 2, len(hits))
+        # and one bundle) One contribution and one aggregate per entity, and one
+        # replica per entity except for the bundle. Two times number of deleted
+        # contributions since deletes don't remove a contribution/replica, but
+        # add a new one.
+        self.assertEqual(6 * 3 - 1
+                         + max(0, num_expected_new_contributions * 2 - 1)
+                         + max(0, num_expected_new_deleted_contributions * 3 - 1),
+                         len(hits))
         hits_by_id = {}
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
-            if doc_type is DocumentType.aggregate and ignore_aggregates:
+            if (
+                doc_type is DocumentType.replica
+                or (doc_type is DocumentType.aggregate and ignore_aggregates)
+            ):
                 continue
             source = hit['_source']
             hits_by_id[source['entity_id'], doc_type] = hit
@@ -1079,8 +1162,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
         # Six entities (two files, one project, one cell suspension, one sample
-        # and one bundle). One contribution and one aggregate per entity
-        self.assertEqual(6 + 6 + num_expected_old_contributions, len(hits))
+        # and one bundle). One contribution and aggregate per entity, and one
+        # replica per entity except for the bundle.
+        self.assertEqual(6 * 3 - 1 + max(0, num_expected_old_contributions * 2 - 1), len(hits))
 
         def get_version(source, doc_type):
             if doc_type is DocumentType.aggregate:
@@ -1092,6 +1176,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             source = hit['_source']
             version = get_version(source, doc_type)
             contents = source['contents']
@@ -1173,10 +1259,13 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         # Two bundles each with 1 sample, 1 cell suspension, 1 project, 1 bundle and 2 files
         # Both bundles share the same sample and the project, so they get aggregated only once:
         # 2 samples + 2 projects + 2 cell suspension + 2 bundles + 4 files +
-        # 1 samples agg + 1 projects agg + 2 cell suspension agg + 2 bundle agg + 4 file agg = 22 hits
-        self.assertEqual(22, len(hits))
+        # 1 samples rep + 2 projects rep + 2 cell suspension rep + 4 file rep +
+        # 1 samples agg + 1 projects agg + 2 cell suspension agg + 2 bundle agg + 4 file agg = 31 hits
+        self.assertEqual(31, len(hits))
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             contents = hit['_source']['contents']
             if doc_type is DocumentType.aggregate:
                 self.assertEqual(hit['_id'], hit['_source']['entity_id'])
@@ -1260,6 +1349,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         entities_with_matrix_files = set()
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             files = hit['_source']['contents']['files']
             if doc_type is DocumentType.aggregate:
                 if entity_type == 'files':
@@ -1302,6 +1393,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
             contents = hit['_source']['contents']
+            if doc_type is DocumentType.replica:
+                continue
             cell_suspensions = contents['cell_suspensions']
             if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
                 # The PDF files in that bundle aren't linked to a specimen
@@ -1368,6 +1461,10 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 self.assertEqual(one(contents['analysis_protocols'])['workflow'], ['smartseq2_v2.1.0'])
             elif doc_type is DocumentType.contribution:
                 self.assertEqual({p['workflow'] for p in contents['analysis_protocols']}, {'smartseq2_v2.1.0'})
+            elif doc_type is DocumentType.replica:
+                pass
+                # FIXME: would assert something for the proper entity types here,
+                #  but `replica_type` is missing from the hits. Needs mapping?
             else:
                 assert False, doc_type
 
@@ -1415,6 +1512,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             source = hit['_source']
             contents = source['contents']
+            entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             specimen_diseases = contents['specimens'][0]['disease']
             donor_diseases = contents['donors'][0]['diseases']
             self.assertEqual(1, len(specimen_diseases))
@@ -1437,6 +1537,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
 
             contents = hit['_source']['contents']
             entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             aggregate = doc_type is DocumentType.aggregate
 
             if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
@@ -1476,6 +1578,9 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
+            entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             contents = hit['_source']['contents']
             project = one(contents['projects'])
             accessions_by_namespace = {
@@ -1484,7 +1589,6 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 'array_express': ['E-AAAA-00'],
                 'insdc_study': ['PRJNA000000']
             }
-            entity_type, doc_type = self._parse_index_name(hit)
             if entity_type == 'projects':
                 expected_accessions = [
                     {'namespace': namespace, 'accession': accession}
@@ -1515,6 +1619,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         actual = NestedDict(2, list)
         for hit in sorted(hits, key=lambda d: d['_id']):
             entity_type, doc_type = self._parse_index_name(hit)
+            if doc_type is DocumentType.replica:
+                continue
             contents = hit['_source']['contents']
             for inner_entity_type, field_name in field_paths:
                 for inner_entity in contents[inner_entity_type]:
@@ -1603,6 +1709,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 assay_type = ['in situ sequencing']
             elif doc_type is DocumentType.contribution:
                 assay_type = {'in situ sequencing': 240}
+            elif doc_type is DocumentType.replica:
+                continue
             else:
                 assert False, doc_type
             self.assertEqual(one(hit['_source']['contents']['imaging_protocols'])['assay_type'], assay_type)
@@ -1683,14 +1791,17 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
         for hit in hits:
             contents = hit['_source']['contents']
             entity_type, doc_type = self._parse_index_name(hit)
-            cell_suspension = one(contents['cell_suspensions'])
-            self.assertEqual(cell_suspension['organ'], ['embryo', 'immune system'])
-            self.assertEqual(cell_suspension['organ_part'], ['skin epidermis', self.translated_str_null])
+            if doc_type in [DocumentType.contribution, DocumentType.aggregate]:
+                cell_suspension = one(contents['cell_suspensions'])
+                self.assertEqual(cell_suspension['organ'], ['embryo', 'immune system'])
+                self.assertEqual(cell_suspension['organ_part'], ['skin epidermis', self.translated_str_null])
             if doc_type is DocumentType.aggregate and entity_type != 'samples':
                 self.assertEqual(one(contents['samples'])['entity_type'], sample_entity_types)
             elif doc_type in (DocumentType.aggregate, DocumentType.contribution):
                 for sample in contents['samples']:
                     self.assertIn(sample['entity_type'], sample_entity_types)
+            elif doc_type is DocumentType.replica:
+                pass
             else:
                 assert False, doc_type
 
@@ -1778,6 +1889,8 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
             elif doc_type is DocumentType.contribution:
                 # one inner file per file contribution
                 num_inner_files = 1 if entity_type == 'files' else 2
+            elif doc_type is DocumentType.replica:
+                continue
             else:
                 assert False, doc_type
             self.assertEqual(len(contents['files']), num_inner_files)
@@ -1892,7 +2005,7 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                     self._index_canned_bundle(bundle_fqid)
 
                 hits = self._get_all_hits()
-                self.assertEqual(len(hits), 42)
+                self.assertEqual(len(hits), 61)
 
     def test_disallow_manifest_column_joiner(self):
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
