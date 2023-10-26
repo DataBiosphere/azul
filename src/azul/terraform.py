@@ -5,6 +5,7 @@ from collections.abc import (
     Iterable,
     Sequence,
 )
+import gzip
 from itertools import (
     chain,
 )
@@ -55,16 +56,16 @@ class TerraformSchema:
 
     @classmethod
     def load(cls, path: Path):
-        with path.open() as f:
+        with gzip.open(path, 'rt') as f:
             doc = json.load(f)
         return cls(versions=doc['versions'],
                    document=doc['schema'],
                    path=path)
 
     def store(self):
-        with self.path.open('w') as f:
-            json.dump(dict(versions=self.versions,
-                           schema=self.document), f, indent=4)
+        with gzip.open(self.path, 'wt') as f:
+            doc = dict(versions=self.versions, schema=self.document)
+            json.dump(doc, f)
 
 
 class Terraform:
@@ -105,7 +106,7 @@ class Terraform:
             else:
                 raise
 
-    schema_path = Path(config.project_root) / 'terraform' / '_schema.json'
+    schema_path = Path(config.project_root) / 'terraform' / '_schema.json.gz'
 
     @cached_property
     def schema(self):
