@@ -1614,7 +1614,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         url = str(self.url.copy().set(path='index/files',
                                       query=dict(catalog=self.catalog)))
         response = requests.get(url)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.content)
 
     def test_local_filtered_index_endpoints(self):
         if config.is_hca_enabled(self.catalog):
@@ -1628,7 +1628,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
                                       query=dict(filters=json.dumps(filters),
                                                  catalog=self.catalog)))
         response = requests.get(url)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.content)
 
 
 class CanBundleScriptIntegrationTest(IntegrationTestCase):
