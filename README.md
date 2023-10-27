@@ -37,7 +37,7 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python 3.9.17
+- Python 3.11.5
 
 - The `bash` shell
 
@@ -182,9 +182,9 @@ end.
    make requirements
    ```
 
-   Linux users whose distribution does not offer Python 3.9 should consider
-   installing [pyenv] and then Python 3.9 using `pyenv install 3.9.17` and
-   setting `PYENV_VERSION` to `3.9.17`. You may need to update pyenv itself
+   Linux users whose distribution does not offer Python 3.11 should consider
+   installing [pyenv] and then Python 3.11 using `pyenv install 3.11.5` and
+   setting `PYENV_VERSION` to `3.11.5`. You may need to update pyenv itself
    before it recognizes the given Python version. Even if a distribution
    provides the  required minor version of Python natively, using pyenv is
    generally preferred because it offers every patch-level release of Python,
@@ -1043,10 +1043,10 @@ brew install zlib pyenv
 Install python
 
 ```
-pyenv install 3.9.17
+pyenv install 3.11.5
 ```
 
-Set `PYENV_VERSION` to `3.9.17` in `environment.local.py` at the project root.
+Set `PYENV_VERSION` to `3.11.5` in `environment.local.py` at the project root.
 Do not set `SYSTEM_VERSION_COMPAT`.
 
 Install Docker Desktop. Google it.
@@ -2319,10 +2319,10 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.9.17-bullseye bash
+(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.11.5-bullseye bash
 
 root@97804cb60d95:/# pip --version
-pip 22.0.4 from /usr/local/lib/python3.9/site-packages/pip (python 3.9)
+pip 22.0.4 from /usr/local/lib/python3.11/site-packages/pip (python 3.11)
 
 root@97804cb60d95:/# cd /root/azul/lambdas/.wheels
 
