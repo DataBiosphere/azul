@@ -948,7 +948,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'depends_on': [
                     'aws_internet_gateway.gitlab'
                 ],
-                'vpc': True
+                'domain': 'vpc'
             }
             for zone in range(num_zones)
         },
