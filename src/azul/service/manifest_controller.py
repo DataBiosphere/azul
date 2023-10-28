@@ -36,16 +36,19 @@ from azul.service import (
 from azul.service.async_manifest_service import (
     AsyncManifestService,
     InvalidTokenError,
+    NoSuchGeneration,
     Token,
 )
 from azul.service.manifest_service import (
     CachedManifestNotFound,
     InvalidManifestKey,
+    InvalidManifestKeySignature,
     Manifest,
     ManifestKey,
     ManifestPartition,
     ManifestService,
     ManifestUrlFunc,
+    SignedManifestKey,
 )
 from azul.service.source_controller import (
     SourceController,
@@ -122,7 +125,7 @@ class ManifestController(SourceController):
                 token, manifest_key = Token.decode(token_or_key), None
             except InvalidTokenError:
                 try:
-                    token, manifest_key = None, ManifestKey.decode(token_or_key)
+                    token, manifest_key = None, SignedManifestKey.decode(token_or_key)
                 except InvalidManifestKey:
                     # The OpenAPI spec doesn't distinguish key and token
                     raise BadRequestError('Invalid token')
@@ -155,13 +158,17 @@ class ManifestController(SourceController):
                 if authentication is not None:
                     raise BadRequestError('Must omit authentication when passing a manifest key')
                 try:
+                    manifest_key = self.service.verify_manifest_key(manifest_key)
                     manifest = self.service.get_cached_manifest_with_key(manifest_key)
                 except CachedManifestNotFound:
                     raise GoneError('The requested manifest has expired, please request a new one')
+                except InvalidManifestKeySignature:
+                    raise BadRequestError('Invalid token')
+
         else:
             try:
                 token_or_state = self.async_service.inspect_generation(token)
-            except InvalidTokenError:
+            except NoSuchGeneration:
                 raise BadRequestError('Invalid token')
             if isinstance(token_or_state, Token):
                 token, manifest, manifest_key = token_or_state, None, None
@@ -202,6 +209,7 @@ class ManifestController(SourceController):
                 # remains valid for longer than 1 hour. Currently, the AnVIL
                 # plugin does not support cURL-format manifests.
                 assert not config.is_anvil_enabled(manifest_key.catalog)
+                manifest_key = self.service.sign_manifest_key(manifest_key)
                 url = self.manifest_url_func(fetch=False, token_or_key=manifest_key.encode())
             else:
                 url = furl(manifest.location)

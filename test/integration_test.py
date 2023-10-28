@@ -567,17 +567,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.curl: self._check_curl_manifest
         }
         for format in [None, *supported_formats]:
-            with self.subTest('manifest', catalog=catalog, format=format):
-                args = dict(catalog=catalog)
-                if format is None:
-                    validator = validators[first(supported_formats)]
-                else:
-                    validator = validators[format]
-                    args['format'] = format.value
-                start = time.time()
-                response = self._check_endpoint(PUT, '/manifest/files', args=args)
-                log.info('Request took %.3fs to execute.', time.time() - start)
-                validator(catalog, response)
+            fetch = bool(self.random.getrandbits(1))
+            for fetch in [fetch, not fetch]:
+                with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
+                    args = dict(catalog=catalog)
+                    if format is None:
+                        validator = validators[first(supported_formats)]
+                    else:
+                        validator = validators[format]
+                        args['format'] = format.value
+                    response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
+                    validator(catalog, response)
 
     def _get_one_inner_file(self, catalog: CatalogName) -> JSON:
         outer_file = self._get_one_outer_file(catalog)
@@ -666,12 +666,28 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         path: str,
                         *,
                         args: Optional[Mapping[str, Any]] = None,
-                        endpoint: Optional[furl] = None
+                        endpoint: Optional[furl] = None,
+                        fetch: bool = False
                         ) -> bytes:
         if endpoint is None:
             endpoint = config.service_endpoint
         args = {} if args is None else {k: str(v) for k, v in args.items()}
         url = furl(url=endpoint, path=path, args=args)
+        if fetch:
+            url.path.segments.insert(0, 'fetch')
+            while True:
+                response = self._get_url(method, url)
+                self.assertEqual(200, response.status)
+                response = json.loads(response.data)
+                status = response['Status']
+                self.assertIn(status, {301, 302})
+                method, url = GET, furl(response['Location'])
+                retry_after = response.get('Retry-After')
+                if retry_after is not None:
+                    log.info('Sleeping %.3fs to honor Retry-After property', retry_after)
+                    time.sleep(retry_after)
+                if status == 302:
+                    break
         return self._get_url_content(method, url)
 
     def _get_url_json(self, method: str, url: furl) -> JSON:
@@ -1139,7 +1155,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              catalog: CatalogName,
                              bundle_fqids: Set[SourcedBundleFQID]
                              ) -> None:
-        with self.subTest('managed_access'):
+        with self.subTest('managed_access', catalog=catalog):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
             managed_access_sources = self.managed_access_sources_by_catalog[catalog]
             managed_access_source_ids = {source.id for source in managed_access_sources}
@@ -1152,17 +1168,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
                 self.skipTest(f'No managed access sources found in catalog {catalog!r}')
 
-            with self.subTest('managed_access_indices'):
+            with self.subTest('managed_access_indices', catalog=catalog):
                 self._test_managed_access_indices(catalog, managed_access_source_ids)
-            with self.subTest('managed_access_repository_files'):
+            with self.subTest('managed_access_repository_files', catalog=catalog):
                 files = self._test_managed_access_repository_files(catalog, managed_access_source_ids)
-                with self.subTest('managed_access_summary'):
+                with self.subTest('managed_access_summary', catalog=catalog):
                     self._test_managed_access_summary(catalog, files)
-                with self.subTest('managed_access_repository_sources'):
+                with self.subTest('managed_access_repository_sources', catalog=catalog):
                     public_source_ids = self._test_managed_access_repository_sources(catalog,
                                                                                      indexed_source_ids,
                                                                                      managed_access_source_ids)
-                    with self.subTest('managed_access_manifest'):
+                    with self.subTest('managed_access_manifest', catalog=catalog):
                         self._test_managed_access_manifest(catalog,
                                                            files,
                                                            first(public_source_ids & indexed_source_ids))

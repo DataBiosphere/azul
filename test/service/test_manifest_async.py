@@ -9,6 +9,9 @@ from unittest import (
 from unittest.mock import (
     patch,
 )
+from uuid import (
+    UUID,
+)
 
 from botocore.exceptions import (
     ClientError,
@@ -55,6 +58,7 @@ from azul.service.manifest_service import (
     ManifestKey,
     ManifestPartition,
     ManifestService,
+    SignedManifestKey,
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -165,14 +169,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     @mock.patch('uuid.uuid4')
     @mock.patch.object(AsyncManifestService, '_start_execution')
     @mock.patch.object(AsyncManifestService, '_describe_execution')
-    def test(self, mock_describe_execution, mock_start_execution, mock_uuid):
+    def test(self, _describe_execution, _start_execution, mock_uuid):
         service = load_app_module('service', unit_test=True)
         # In a LocalAppTestCase we need the actual state machine name
         state_machine_name = config.state_machine_name(service.generate_manifest.name)
 
         def reset():
-            mock_start_execution.reset_mock()
-            mock_describe_execution.reset_mock()
+            _start_execution.reset_mock()
+            _describe_execution.reset_mock()
 
         with (responses.RequestsMock() as helper):
             helper.add_passthru(str(self.base_url))
@@ -197,10 +201,13 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     file_name = 'some_file_name'
                     manifest_key = ManifestKey(catalog=self.catalog,
                                                format=format,
-                                               manifest_hash='',
-                                               source_hash='')
+                                               manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                               source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+                    signed_manifest_key = SignedManifestKey(value=manifest_key,
+                                                            signature=b'123')
+
                     manifest_url = self.base_url.set(path=path)
-                    manifest_url.path.segments.append(manifest_key.encode())
+                    manifest_url.path.segments.append(signed_manifest_key.encode())
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format=format,
@@ -232,8 +239,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     )
 
                     with (
-                        mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest,
-                        mock.patch.object(ManifestService, 'get_cached_manifest',
+                        mock.patch.object(ManifestService,
+                                          'get_manifest'
+                                          ) as get_manifest,
+                        mock.patch.object(ManifestService,
+                                          'get_cached_manifest',
                                           side_effect=CachedManifestNotFound(manifest_key))
                     ):
                         for i, expected_status in enumerate(3 * [301] + [302]):
@@ -255,54 +265,54 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                 state: ManifestGenerationState = dict(filters=filters.to_json(),
                                                                       manifest_key=manifest_key.to_json(),
                                                                       partition=partitions[0].to_json())
-                                mock_start_execution.assert_called_once_with(
+                                _start_execution.assert_called_once_with(
                                     state_machine_name,
                                     execution_id,
                                     execution_input=state
                                 )
-                                mock_describe_execution.assert_not_called()
+                                _describe_execution.assert_not_called()
                                 reset()
-                                mock_describe_execution.return_value = {'status': 'RUNNING'}
+                                _describe_execution.return_value = {'status': 'RUNNING'}
                             elif i == 1:
-                                mock_get_manifest.return_value = partitions[1]
+                                get_manifest.return_value = partitions[1]
                                 state = self.app_module.generate_manifest(state, None)
                                 self.assertEqual(partitions[1],
                                                  ManifestPartition.from_json(state['partition']))
-                                mock_get_manifest.assert_called_once_with(
+                                get_manifest.assert_called_once_with(
                                     format=format,
                                     catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
                                     manifest_key=ManifestKey.from_json(state['manifest_key'])
                                 )
-                                mock_get_manifest.reset_mock()
-                                mock_start_execution.assert_not_called()
-                                mock_describe_execution.assert_called_once()
+                                get_manifest.reset_mock()
+                                _start_execution.assert_not_called()
+                                _describe_execution.assert_called_once()
                                 reset()
                                 # simulate absence of output due eventual consistency
-                                mock_describe_execution.return_value = {'status': 'SUCCEEDED'}
+                                _describe_execution.return_value = {'status': 'SUCCEEDED'}
                             elif i == 2:
-                                mock_get_manifest.return_value = manifest
-                                mock_start_execution.assert_not_called()
-                                mock_describe_execution.assert_called_once()
+                                get_manifest.return_value = manifest
+                                _start_execution.assert_not_called()
+                                _describe_execution.assert_called_once()
                                 reset()
-                                mock_describe_execution.return_value = {
+                                _describe_execution.return_value = {
                                     'status': 'SUCCEEDED',
                                     'output': json.dumps(
                                         self.app_module.generate_manifest(state, None)
                                     )
                                 }
                             elif i == 3:
-                                mock_get_manifest.assert_called_once_with(
+                                get_manifest.assert_called_once_with(
                                     format=format,
                                     catalog=self.catalog,
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
                                     manifest_key=ManifestKey.from_json(state['manifest_key'])
                                 )
-                                mock_get_manifest.reset_mock()
-                    mock_start_execution.assert_not_called()
-                    mock_describe_execution.assert_called_once()
+                                get_manifest.reset_mock()
+                    _start_execution.assert_not_called()
+                    _describe_execution.assert_called_once()
                     expect_redirect = fetch and format is ManifestFormat.curl
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
@@ -311,27 +321,30 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 manifest,
                 CachedManifestNotFound(manifest_key)
             ]
-            with mock.patch.object(ManifestService,
-                                   'get_cached_manifest_with_key',
-                                   side_effect=mock_effects):
+            with (
+                mock.patch.object(ManifestService,
+                                  'get_cached_manifest_with_key',
+                                  side_effect=mock_effects),
+                mock.patch.object(ManifestService,
+                                  'verify_manifest_key',
+                                  return_value=manifest_key)
+            ):
                 for mock_effect in mock_effects:
                     with self.subTest(mock_effect=mock_effect):
-                        assert manifest_key.encode() == manifest_url.path.segments[-1]
+                        assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
                         response = requests.get(str(manifest_url), allow_redirects=False)
                         if isinstance(mock_effect, Manifest):
                             self.assertEqual(302, response.status_code)
                             self.assertEqual(object_url, response.headers['Location'])
-                        else:
-                            if isinstance(mock_effect, CachedManifestNotFound):
-                                cause = 'expired'
-                            else:
-                                assert False
+                        elif isinstance(mock_effect, CachedManifestNotFound):
+                            self.assertEqual(410, response.status_code)
                             expected_response = {
                                 'Code': 'GoneError',
-                                'Message': f'The requested manifest has {cause}, please request a new one'
+                                'Message': 'The requested manifest has expired, please request a new one'
                             }
-                            self.assertEqual(410, response.status_code)
                             self.assertEqual(expected_response, response.json())
+                        else:
+                            assert False, mock_effect
 
     token = Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
                   request_index=0,
