@@ -179,6 +179,61 @@ anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     # @formatter:on
 ]))
 
+anvil3_sources = mkdict(anvil2_sources, 162, mkdelta([
+    # @formatter:off
+    mksrc('datarepo-9a74aed3', 'ANVIL_CCDG_Baylor_CVD_ARIC_20231008_ANV5_202310091900', 10012),
+    mksrc('datarepo-a749913a', 'ANVIL_CCDG_Baylor_CVD_EOCAD_SoL_WGS_20230418_ANV5_202310101651', 9225),
+    mksrc('datarepo-0768a322', 'ANVIL_CCDG_Broad_CVD_AF_Ellinor_MGH_Arrays_20221024_ANV5_202304211831', 387),
+    mksrc('datarepo-2b135baf', 'ANVIL_CCDG_Broad_CVD_AFib_MGH_WGS_20221024_ANV5_202304211829', 105),
+    mksrc('datarepo-96b594f9', 'ANVIL_CCDG_Broad_CVD_EOCAD_TaiChi_WGS_20221026_ANV5_202310101655', 912),
+    mksrc('datarepo-828e5175', 'ANVIL_CCDG_Broad_CVD_EOCAD_VIRGO_WGS_20221024_ANV5_202310101242', 8659),
+    mksrc('datarepo-318ae48e', 'ANVIL_CCDG_Broad_CVD_Stroke_BRAVE_WGS_20221107_ANV5_202304241543', 500),
+    mksrc('datarepo-7ea7a6e9', 'ANVIL_CCDG_Broad_MI_BRAVE_GRU_WES_20221107_ANV5_202304241545', 1500),
+    mksrc('datarepo-2339e241', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPIL_BA_MDS_WES_20221101_ANV5_202304241613', 47),
+    mksrc('datarepo-cd6cee03', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPI_BA_ID_MDS_WES_20221101_ANV5_202304241612', 136),
+    mksrc('datarepo-da88c3ce', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EP_BA_CN_ID_MDS_WES_20221101_ANV5_202304241657', 5399),  # noqa E501
+    mksrc('datarepo-2b361bda', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSRMB_DS_EAED_MDS_WES_20221026_ANV5_202304241549', 393),
+    mksrc('datarepo-6eeff3fc', 'ANVIL_CCDG_Broad_NP_Epilepsy_BELATW_GRU_WES_20221108_ANV5_202304241701', 113),
+    mksrc('datarepo-21923ed0', 'ANVIL_CCDG_Broad_NP_Epilepsy_BELULB_DS_EP_NPU_WES_20221027_ANV5_202304241556', 419),
+    mksrc('datarepo-5b10132b', 'ANVIL_CCDG_Broad_NP_Epilepsy_CANUTN_DS_EP_WES_20230328_ANV5_202304241552', 149),
+    mksrc('datarepo-d2d5ba15', 'ANVIL_CCDG_Broad_NP_Epilepsy_CZEMTH_GRU_WES_20221108_ANV5_202304241702', 18),
+    mksrc('datarepo-fc0a35a8', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUULG_GRU_WES_20221108_ANV5_202304241704', 94),
+    mksrc('datarepo-f14cd6d7', 'ANVIL_CCDG_Broad_NP_Epilepsy_FINKPH_EPIL_CO_MORBIDI_MDS_WES_20230328_ANV5_202304241659', 914),  # noqa E501
+    mksrc('datarepo-3832cf81', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRSWU_CARDI_NEURO_WES_20221026_ANV5_202304241548', 319),
+    mksrc('datarepo-098aadb0', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUCL_DS_EARET_MDS_WES_20221026_ANV5_202304241551', 686),
+    mksrc('datarepo-d9ea4f23', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUNL_EP_ETIOLOGY_MDS_WES_20221027_ANV5_202304241554', 460),  # noqa E501
+    mksrc('datarepo-0c9ab563', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUNL_GRU_WES_20221108_ANV5_202304241705', 57),
+    mksrc('datarepo-a383d752', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAIGI_GRU_WES_20221108_ANV5_202304241707', 1163),
+    mksrc('datarepo-03b52641', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAUBG_DS_EPI_NPU_MDS_WES_20221027_ANV5_202304241601', 619),  # noqa E501
+    mksrc('datarepo-2e9ab296', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAUMC_DS_NEURO_MDS_WES_20221108_ANV5_202304241605', 418),
+    mksrc('datarepo-89162c54', 'ANVIL_CCDG_Broad_NP_Epilepsy_JPNRKI_DS_NPD_IRB_NPU_WES_20221027_ANV5_202304241609', 100),  # noqa E501
+    mksrc('datarepo-fd5cd738', 'ANVIL_CCDG_Broad_NP_Epilepsy_NZLUTO_EPIL_BC_ID_MDS_WES_20230328_ANV5_202304241602', 275),  # noqa E501
+    mksrc('datarepo-d987821a', 'ANVIL_CCDG_Broad_NP_Epilepsy_TURBZU_GRU_WES_20221108_ANV5_202304241709', 214),
+    mksrc('datarepo-b93e1cfa', 'ANVIL_CCDG_Broad_NP_Epilepsy_TURIBU_DS_NEURO_AD_NPU_WES_20221027_ANV5_202304241604', 169),  # noqa E501
+    mksrc('datarepo-2e9630dd', 'ANVIL_CCDG_Broad_NP_Epilepsy_USABCH_EPI_MUL_CON_MDS_WES_20221027_ANV5_202304241559', 330),  # noqa E501
+    mksrc('datarepo-ee58a7a9', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACHP_GRU_WES_20230612_ANV5_202306131343', 3754),
+    mksrc('datarepo-ff5356bb', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACRW_DS_EP_MDS_WES_20221027_ANV5_202304241555', 328),
+    mksrc('datarepo-2262daa7', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACRW_DS_SEIZD_WES_20221027_ANV5_202304241610', 154),
+    mksrc('datarepo-2a947c33', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACRW_EPI_ASZ_MED_MDS_WES_20221027_ANV5_202304241558', 39),  # noqa E501
+    mksrc('datarepo-5b3c42e1', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAEGP_GRU_WES_20221110_ANV5_202304241713', 129),
+    mksrc('datarepo-91b4b33c', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAHEP_GRU_WES_20230328_ANV5_202306211900', 328),
+    mksrc('datarepo-e4fe111a', 'ANVIL_CCDG_Broad_NP_Epilepsy_USANCH_DS_NEURO_MDS_WES_20221108_ANV5_202304241607', 313),
+    mksrc('datarepo-8b120833', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAUPN_Marsh_GRU_WES_20230328_ANV5_202304241716', 355),
+    mksrc('datarepo-f051499d', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAUPN_Rader_GRU_WES_20230328_ANV5_202304241720', 832),
+    mksrc('datarepo-fd49a493', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_DS_WGS_20230525_ANV5_202306211841', 80),
+    mksrc('datarepo-076da44b', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_GRU_IRB_WGS_20230525_ANV5_202306211847', 265),
+    mksrc('datarepo-7e03b5fd', 'ANVIL_CMG_Broad_Brain_Walsh_WES_20230605_ANV5_202310101734', 2778),
+    mksrc('datarepo-c43e7400', 'ANVIL_CMG_Broad_Muscle_Kang_WES_20230525_ANV5_202310101649', 121),
+    mksrc('datarepo-1525d226', 'ANVIL_HPRC_20230721_ANV5_202310101603', 139862),
+    mksrc('datarepo-14f5afa3', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Braff_DS_10XLRGenomes_20221115_ANV5_202310101713', 561),  # noqa E501
+    mksrc('datarepo-94091a22', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Pato_GRU_10XLRGenomes_20230331_ANV5_202310101715', 368),  # noqa E501
+    mksrc('datarepo-55b75002', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202310061302', 234),
+    mksrc('datarepo-02ad84ea', 'ANVIL_T2T_20230714_ANV5_202310101616', 261317),
+    mksrc('datarepo-08cd15a2', 'ANVIL_ccdg_washu_ai_t1d_t1dgc_wgs_20221031_ANV5_202304211552', 3397),
+    mksrc('datarepo-e3065356', 'ANVIL_ccdg_washu_cvd_eocad_biome_wgs_20221024_ANV5_202304211601', 648),
+    # @formatter:on
+]))
+
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -222,8 +277,8 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_anvil')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('anvil', 'anvil1', anvil1_sources),
                 ('anvil', 'anvil2', anvil2_sources),
+                ('anvil', 'anvil3', anvil3_sources),
             ]
             for suffix, internal in [
                 ('', False),
