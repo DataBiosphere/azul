@@ -94,6 +94,10 @@ from azul.attrs import (
 from azul.auth import (
     Authentication,
 )
+from azul.bytes import (
+    azul_urlsafe_b64decode,
+    azul_urlsafe_b64encode,
+)
 from azul.deployment import (
     aws,
 )
@@ -175,7 +179,7 @@ class AbstractManifestKey(metaclass=ABCMeta):
         raise NotImplementedError
 
     def encode(self) -> str:
-        return base64.urlsafe_b64encode(self.pack()).decode()
+        return azul_urlsafe_b64encode(self.pack())
 
     @classmethod
     @abstractmethod
@@ -185,7 +189,7 @@ class AbstractManifestKey(metaclass=ABCMeta):
     @classmethod
     def decode(cls, value: str) -> Self:
         try:
-            return cls.unpack(base64.urlsafe_b64decode(value))
+            return cls.unpack(azul_urlsafe_b64decode(value))
         except Exception as e:
             raise InvalidManifestKey(value) from e
 
@@ -209,7 +213,7 @@ class BareManifestKey(AbstractManifestKey):
     ...                                source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
 
     >>> manifest_key.encode()
-    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A'
 
     The encode() method is the inverse of decode():
 
@@ -223,7 +227,7 @@ class BareManifestKey(AbstractManifestKey):
     Traceback (most recent call last):
     ...
     azul.service.manifest_service.InvalidManifestKey:
-    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=
+    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4
 
     Valid base64 encoding and msgpack format, but value of wrong type for
     `catalog` atrribute
@@ -232,14 +236,14 @@ class BareManifestKey(AbstractManifestKey):
     ...     # noinspection PyTypeChecker
     ...     bad_key = attrs.evolve(manifest_key, catalog=123).encode()
     >>> bad_key
-    'lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+    'lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A'
 
     >>> BareManifestKey.decode(bad_key)
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
     azul.service.manifest_service.InvalidManifestKey:
-    lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A==
+    lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A
 
     >>> bad_key = base64.b64encode(manifest_key.pack() + b'123').decode()
     >>> BareManifestKey.decode(bad_key)
@@ -328,7 +332,7 @@ class ManifestKey(BareManifestKey):
     Encoded representation is short:
 
     >>> manifest_key.encode()
-    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A'
 
     It shouldn't be possible to deserialize a ManifestKey instance.
 
@@ -336,7 +340,7 @@ class ManifestKey(BareManifestKey):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     azul.service.manifest_service.InvalidManifestKey:
-    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A==
+    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A
 
     The from_json() method is the inverse of to_json():
 
