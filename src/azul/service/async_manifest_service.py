@@ -90,17 +90,20 @@ class AsyncManifestService:
 
     def start_generation(self, input: JSON) -> Token:
         execution_id = str(uuid.uuid4())
-        self._start_execution(self.state_machine_name,
-                              execution_id,
-                              execution_input=input)
+        machine_arn = self.state_machine_arn(self.state_machine_name)
+        response = self._sfn.start_execution(stateMachineArn=machine_arn,
+                                             name=execution_id,
+                                             input=json.dumps(input))
+        execution_arn = self.execution_arn(self.state_machine_name, execution_id)
+        assert execution_arn == response['executionArn']
         return Token(execution_id=execution_id,
                      request_index=0,
                      wait_time=self._get_next_wait_time(0))
 
     def inspect_generation(self, token: Token) -> Union[Token, JSON]:
         try:
-            execution = self._describe_execution(state_machine_name=self.state_machine_name,
-                                                 execution_name=token.execution_id)
+            execution_arn = self.execution_arn(self.state_machine_name, token.execution_id)
+            execution = self._sfn.describe_execution(executionArn=execution_arn)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
                 raise NoSuchGeneration(token)
@@ -127,25 +130,18 @@ class AsyncManifestService:
         except IndexError:
             return wait_times[-1]
 
-    def state_machine_arn(self, state_machine_name):
-        return f'arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{state_machine_name}'
+    @classmethod
+    def arn(cls, suffix):
+        return f'arn:aws:states:{aws.region_name}:{aws.account}:{suffix}'
 
-    def execution_arn(self, state_machine_name, execution_name):
-        return f'arn:aws:states:{aws.region_name}:{aws.account}:execution:{state_machine_name}:{execution_name}'
+    @classmethod
+    def state_machine_arn(cls, state_machine_name):
+        return cls.arn(f'stateMachine:{state_machine_name}')
+
+    @classmethod
+    def execution_arn(cls, state_machine_name, execution_name):
+        return cls.arn(f'execution:{state_machine_name}:{execution_name}')
 
     @property
     def _sfn(self):
         return aws.stepfunctions
-
-    def _start_execution(self, state_machine_name, execution_name, execution_input):
-        execution_params = {
-            'stateMachineArn': self.state_machine_arn(state_machine_name),
-            'name': execution_name,
-            'input': json.dumps(execution_input)
-        }
-        execution_response = self._sfn.start_execution(**execution_params)
-        assert self.execution_arn(state_machine_name, execution_name) == execution_response['executionArn']
-
-    def _describe_execution(self, state_machine_name, execution_name):
-        return self._sfn.describe_execution(
-            executionArn=self.execution_arn(state_machine_name, execution_name))
