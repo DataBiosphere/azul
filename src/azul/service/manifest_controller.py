@@ -11,6 +11,7 @@ from typing import (
 import attr
 from chalice import (
     BadRequestError,
+    ChaliceViewError,
     Response,
 )
 from furl import (
@@ -35,6 +36,7 @@ from azul.service import (
 )
 from azul.service.async_manifest_service import (
     AsyncManifestService,
+    GenerationFailed,
     InvalidTokenError,
     NoSuchGeneration,
     Token,
@@ -164,12 +166,13 @@ class ManifestController(SourceController):
                     raise GoneError('The requested manifest has expired, please request a new one')
                 except InvalidManifestKeySignature:
                     raise BadRequestError('Invalid token')
-
         else:
             try:
                 token_or_state = self.async_service.inspect_generation(token)
             except NoSuchGeneration:
                 raise BadRequestError('Invalid token')
+            except GenerationFailed as e:
+                raise ChaliceViewError('Failed to generate manifest', e.status, e.output)
             if isinstance(token_or_state, Token):
                 token, manifest, manifest_key = token_or_state, None, None
             elif isinstance(token_or_state, dict):

@@ -1,8 +1,14 @@
+from contextlib import (
+    contextmanager,
+)
 import datetime
 from itertools import (
     product,
 )
 import json
+from typing import (
+    ContextManager,
+)
 from unittest import (
     mock,
 )
@@ -45,8 +51,8 @@ from azul.service import (
 )
 from azul.service.async_manifest_service import (
     AsyncManifestService,
+    GenerationFailed,
     InvalidTokenError,
-    StateMachineError,
     Token,
 )
 from azul.service.manifest_controller import (
@@ -135,7 +141,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
 
     def test_status_failed(self, _sfn):
         """
-        A failed manifest job should raise a StateMachineError
+        A failed manifest job should raise a GenerationFailed
         """
         execution_id = '068579b6-9d7b-4e19-ac4e-77626851be1c'
         service = AsyncManifestService(self.state_machine_name)
@@ -150,7 +156,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         }
         _sfn.describe_execution.return_value = execution_failed_output
         token = Token(execution_id=execution_id, request_index=0, wait_time=0)
-        self.assertRaises(StateMachineError,
+        self.assertRaises(GenerationFailed,
                           service.inspect_generation,
                           token)
 
@@ -346,17 +352,27 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         response = requests.get(str(url))
         self.assertEqual(expected_status, response.status_code)
 
+    @contextmanager
+    def _mock_error(self, error_code: str) -> ContextManager:
+        exception_cls = type(error_code, (ClientError,), {})
+        with patch.object(AsyncManifestService, '_sfn') as _sfn:
+            setattr(_sfn.exceptions, error_code, exception_cls)
+            error_response = {
+                'Error': {
+                    'Code': error_code
+                }
+            }
+            exception = exception_cls(operation_name='DescribeExecution',
+                                      error_response=error_response)
+            _sfn.describe_execution.side_effect = exception
+            yield
+
     def test_execution_not_found(self):
         """
         Manifest status check should raise a BadRequestError (400 status code)
         if execution cannot be found.
         """
-        with patch.object(AsyncManifestService, '_sfn') as _sfn:
-            _sfn.describe_execution.side_effect = ClientError({
-                'Error': {
-                    'Code': 'ExecutionDoesNotExist'
-                }
-            }, 'DescribeExecution')
+        with self._mock_error('ExecutionDoesNotExist'):
             self._test(expected_status=400)
 
     def test_boto_error(self):
@@ -364,12 +380,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         Manifest status check should reraise any ClientError that is not caused
         by ExecutionDoesNotExist
         """
-        with patch.object(AsyncManifestService, '_sfn') as _sfn:
-            _sfn.describe_execution.side_effect = ClientError({
-                'Error': {
-                    'Code': 'OtherError'
-                }
-            }, '')
+        with self._mock_error('ServiceQuotaExceededException'):
             self._test(expected_status=500)
 
     def test_execution_error(self):
@@ -379,7 +390,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         """
         with patch.object(AsyncManifestService,
                           'inspect_generation',
-                          side_effect=StateMachineError):
+                          side_effect=GenerationFailed):
             self._test(expected_status=500)
 
     def test_invalid_token(self):

@@ -2,14 +2,12 @@ import base64
 import json
 import logging
 from typing import (
+    Optional,
     Union,
 )
 import uuid
 
 import attrs
-from botocore.exceptions import (
-    ClientError,
-)
 import msgpack
 
 from azul.attrs import (
@@ -27,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @attrs.frozen
 class InvalidTokenError(Exception):
-    value: str
+    value: str = strict_auto()
 
 
 @attrs.frozen(kw_only=True)
@@ -71,13 +69,13 @@ class Token:
 
 @attrs.frozen
 class NoSuchGeneration(Exception):
-    token: Token
+    token: Token = strict_auto()
 
 
-class StateMachineError(RuntimeError):
-
-    def __init__(self, *args) -> None:
-        super().__init__('Failed to generate manifest', *args)
+@attrs.frozen(kw_only=True)
+class GenerationFailed(Exception):
+    status: str = strict_auto()
+    output: Optional[str] = strict_auto()
 
 
 class AsyncManifestService:
@@ -104,12 +102,9 @@ class AsyncManifestService:
         try:
             execution_arn = self.execution_arn(self.state_machine_name, token.execution_id)
             execution = self._sfn.describe_execution(executionArn=execution_arn)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-                raise NoSuchGeneration(token)
-            else:
-                raise
-        output = execution.get('output', None)
+        except self._sfn.exceptions.ExecutionDoesNotExist:
+            raise NoSuchGeneration(token)
+        output = execution.get('output')
         status = execution['status']
         if status == 'SUCCEEDED':
             # Because describe_execution is eventually consistent, output may
@@ -121,7 +116,7 @@ class AsyncManifestService:
         elif status == 'RUNNING':
             return token.advance(wait_time=self._get_next_wait_time(token.request_index))
         else:
-            raise StateMachineError(status, output)
+            raise GenerationFailed(status=status, output=output)
 
     def _get_next_wait_time(self, request_index: int) -> int:
         wait_times = [1, 1, 4, 6, 10]
