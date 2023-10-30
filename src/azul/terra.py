@@ -72,7 +72,7 @@ from azul.drs import (
     DRSClient,
 )
 from azul.indexer import (
-    SourceRef as BaseSourceRef,
+    SourceRef,
     SourceSpec,
 )
 from azul.oauth2 import (
@@ -219,8 +219,9 @@ class TDRSourceSpec(SourceSpec):
         )
 
 
-class SourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
-    pass
+class TDRSourceRef(SourceRef[TDRSourceSpec, 'TDRSourceRef']):
+    project: str
+    location: str
 
 
 class TerraCredentialsProvider(CredentialsProvider, metaclass=ABCMeta):
@@ -431,16 +432,8 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
-    # FIXME: Eliminate azul.terra.TDRClient.TDRSource
-    #        https://github.com/DataBiosphere/azul/issues/5524
-    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-    class TDRSource:
-        project: str
-        id: str
-        location: str
-
     @cache
-    def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
+    def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSourceRef:
         source = self._lookup_source(source_spec)
         storage = one(
             storage
@@ -448,11 +441,12 @@ class TDRClient(SAMClient):
             for storage in dataset['storage']
             if storage['cloudResource'] == 'bigquery'
         )
-        return self.TDRSource(project=source['dataProject'],
-                              id=source['id'],
-                              location=storage['region'])
+        return TDRSourceRef(spec=source_spec,
+                            id=source['id'],
+                            project=source['dataProject'],
+                            location=storage['region'])
 
-    def _retrieve_source(self, source: SourceRef) -> MutableJSON:
+    def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint(source.spec.type_name + 's', source.id)
         response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
@@ -470,7 +464,7 @@ class TDRClient(SAMClient):
             raise self._insufficient_access(str(endpoint))
         elif total == 1:
             source_id = one(response['items'])['id']
-            return self._retrieve_source(SourceRef(id=source_id, spec=source))
+            return self._retrieve_source(TDRSourceRef(id=source_id, spec=source))
         else:
             raise TerraNameConflictException(endpoint, source.bq_name, response)
 

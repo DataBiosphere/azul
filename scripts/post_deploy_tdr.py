@@ -16,7 +16,6 @@ from azul.logging import (
     configure_script_logging,
 )
 from azul.terra import (
-    SourceRef as TDRSourceRef,
     TDRClient,
     TDRSourceSpec,
 )
@@ -72,11 +71,8 @@ def verify_source(catalog: CatalogName, source_spec: TDRSourceSpec):
     require(source.location.lower() == config.tdr_source_location.lower(),
             'Actual storage location of TDR source differs from configured one',
             source.location, config.tdr_source_location)
-    # FIXME: Eliminate azul.terra.TDRClient.TDRSource
-    #        https://github.com/DataBiosphere/azul/issues/5524
-    ref = TDRSourceRef(id=source.id, spec=source_spec)
     plugin = client.repository_plugin(catalog)
-    subgraph_count = sum(plugin.list_partitions(ref).values())
+    subgraph_count = sum(plugin.list_partitions(source).values())
     require(subgraph_count > 0,
             'Source spec is empty (bad prefix?)', source_spec)
 

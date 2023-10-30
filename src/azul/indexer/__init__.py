@@ -310,7 +310,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     _lookup: ClassVar[dict[tuple[Type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
-    def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
+    def __new__(cls: Type[SOURCE_REF], *args, id: str, spec: SOURCE_SPEC, **kwargs) -> SOURCE_REF:
         """
         Interns instances by their ID and ensures that names are unambiguous
         for any given ID. Two different sources may still use the same name.
@@ -351,8 +351,11 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
                 self.__init__(id=id, spec=spec)
                 lookup[cls, id, spec] = self
             else:
-                assert self.id == id
+                assert self.id == id, (self.id, id)
                 assert self.spec == spec, (self.spec, spec)
+                for kwarg, value in kwargs.items():
+                    self_value = getattr(self, kwarg)
+                    assert self_value == value, (self_value, value)
             return self
 
     def to_json(self) -> SourceJSON:

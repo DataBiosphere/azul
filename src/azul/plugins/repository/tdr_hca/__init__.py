@@ -62,7 +62,7 @@ from azul.plugins.repository.tdr import (
     TDRPlugin,
 )
 from azul.terra import (
-    SourceRef as TDRSourceRef,
+    TDRSourceRef,
     TDRSourceSpec,
 )
 from azul.types import (
