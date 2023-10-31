@@ -10,6 +10,9 @@ import uuid
 import attrs
 import msgpack
 
+from azul import (
+    config,
+)
 from azul.attrs import (
     strict_auto,
 )
@@ -83,16 +86,16 @@ class AsyncManifestService:
     Starting and checking the status of manifest generation jobs.
     """
 
-    def __init__(self, state_machine_name):
-        self.state_machine_name = state_machine_name
+    @property
+    def machine_name(self):
+        return config.qualified_resource_name(config.manifest_sfn)
 
     def start_generation(self, input: JSON) -> Token:
         execution_id = str(uuid.uuid4())
-        machine_arn = self.state_machine_arn(self.state_machine_name)
-        response = self._sfn.start_execution(stateMachineArn=machine_arn,
+        response = self._sfn.start_execution(stateMachineArn=self.machine_arn,
                                              name=execution_id,
                                              input=json.dumps(input))
-        execution_arn = self.execution_arn(self.state_machine_name, execution_id)
+        execution_arn = self.execution_arn(execution_id)
         assert execution_arn == response['executionArn']
         return Token(execution_id=execution_id,
                      request_index=0,
@@ -100,7 +103,7 @@ class AsyncManifestService:
 
     def inspect_generation(self, token: Token) -> Union[Token, JSON]:
         try:
-            execution_arn = self.execution_arn(self.state_machine_name, token.execution_id)
+            execution_arn = self.execution_arn(token.execution_id)
             execution = self._sfn.describe_execution(executionArn=execution_arn)
         except self._sfn.exceptions.ExecutionDoesNotExist:
             raise NoSuchGeneration(token)
@@ -125,17 +128,15 @@ class AsyncManifestService:
         except IndexError:
             return wait_times[-1]
 
-    @classmethod
-    def arn(cls, suffix):
+    def arn(self, suffix):
         return f'arn:aws:states:{aws.region_name}:{aws.account}:{suffix}'
 
-    @classmethod
-    def state_machine_arn(cls, state_machine_name):
-        return cls.arn(f'stateMachine:{state_machine_name}')
+    @property
+    def machine_arn(self):
+        return self.arn(f'stateMachine:{self.machine_name}')
 
-    @classmethod
-    def execution_arn(cls, state_machine_name, execution_name):
-        return cls.arn(f'execution:{state_machine_name}:{execution_name}')
+    def execution_arn(self, execution_name):
+        return self.arn(f'execution:{self.machine_name}:{execution_name}')
 
     @property
     def _sfn(self):

@@ -1220,8 +1220,7 @@ class Config:
         def secret_name(self) -> str:
             return 'google_service_account' + self.value
 
-    def state_machine_name(self, lambda_name):
-        return self.qualified_resource_name(lambda_name)
+    manifest_sfn = 'manifest'
 
     def _concurrency(self, value: str, retry: bool) -> int:
         """

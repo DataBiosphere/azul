@@ -34,14 +34,8 @@ import responses
 from app_test_case import (
     LocalAppTestCase,
 )
-from azul import (
-    config,
-)
 from azul.logging import (
     configure_test_logging,
-)
-from azul.modules import (
-    load_app_module,
 )
 from azul.plugins import (
     ManifestFormat,
@@ -79,7 +73,6 @@ def setUpModule():
 
 @patch.object(AsyncManifestService, '_sfn')
 class TestAsyncManifestService(AzulUnitTestCase):
-    state_machine_name = 'foo'
 
     def test_token_encoding(self, _sfn):
         token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
@@ -101,10 +94,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
         output = {
             'foo': 'bar'
         }
-        service = AsyncManifestService(self.state_machine_name)
+        service = AsyncManifestService()
         execution_success_output = {
-            'executionArn': service.execution_arn(self.state_machine_name, execution_id),
-            'stateMachineArn': service.state_machine_arn(self.state_machine_name),
+            'executionArn': service.execution_arn(execution_id),
+            'stateMachineArn': service.machine_arn,
             'name': execution_id,
             'status': 'SUCCEEDED',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
@@ -123,10 +116,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
         checking the job status
         """
         execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
-        service = AsyncManifestService(self.state_machine_name)
+        service = AsyncManifestService()
         execution_running_output = {
-            'executionArn': service.execution_arn(self.state_machine_name, execution_id),
-            'stateMachineArn': service.state_machine_arn(self.state_machine_name),
+            'executionArn': service.execution_arn(execution_id),
+            'stateMachineArn': service.machine_arn,
             'name': execution_id,
             'status': 'RUNNING',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
@@ -144,10 +137,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
         A failed manifest job should raise a GenerationFailed
         """
         execution_id = '068579b6-9d7b-4e19-ac4e-77626851be1c'
-        service = AsyncManifestService(self.state_machine_name)
+        service = AsyncManifestService()
         execution_failed_output = {
-            'executionArn': service.execution_arn(self.state_machine_name, execution_id),
-            'stateMachineArn': service.state_machine_arn(self.state_machine_name),
+            'executionArn': service.execution_arn(execution_id),
+            'stateMachineArn': service.machine_arn,
             'name': execution_id,
             'status': 'FAILED',
             'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
@@ -173,9 +166,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     @mock.patch.object(ManifestService, 'get_manifest')
     @mock.patch.object(ManifestService, 'get_cached_manifest')
     def test(self, get_cached_manifest, get_manifest, _sfn, mock_uuid):
-        service = load_app_module('service', unit_test=True)
-        # In a LocalAppTestCase we need the actual state machine name
-        state_machine_name = config.state_machine_name(service.generate_manifest.name)
 
         with responses.RequestsMock() as helper:
             helper.add_passthru(str(self.base_url))
@@ -237,8 +227,10 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                           is_last_page=False,
                                           search_after=('foo', 'doc#bar'))
                     )
-                    machine_arn = AsyncManifestService.state_machine_arn(config.state_machine_name('manifest'))
-                    execution_arn = AsyncManifestService.execution_arn(state_machine_name, execution_id)
+                    service: AsyncManifestService
+                    service = self.app_module.app.manifest_controller.async_service
+                    machine_arn = service.machine_arn
+                    execution_arn = service.execution_arn(execution_id)
                     _sfn.start_execution.return_value = {
                         'executionArn': execution_arn,
                         'startDate': 123

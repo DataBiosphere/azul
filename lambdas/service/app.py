@@ -321,7 +321,6 @@ class ServiceApp(AzulChaliceApp):
     def manifest_controller(self) -> ManifestController:
         manifest_url_func: ManifestUrlFunc = self.manifest_url
         return self._service_controller(ManifestController,
-                                        step_function_lambda_name=generate_manifest.name,
                                         manifest_url_func=manifest_url_func)
 
     def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
@@ -1529,9 +1528,7 @@ def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
                                                       authentication=request.authentication)
 
 
-@app.lambda_function(
-    name='manifest'
-)
+@app.lambda_function(name=config.manifest_sfn)
 def generate_manifest(event: AnyJSON, _context: LambdaContext):
     assert isinstance(event, Mapping)
     assert all(isinstance(k, str) for k in event.keys())

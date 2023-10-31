@@ -77,14 +77,11 @@ assert manifest_state_key in get_type_hints(ManifestGenerationState)
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class ManifestController(SourceController):
-    step_function_lambda_name: str
     manifest_url_func: ManifestUrlFunc
 
     @cached_property
     def async_service(self) -> AsyncManifestService:
-        name = config.state_machine_name(self.step_function_lambda_name)
-        async_service = AsyncManifestService(name)
-        return async_service
+        return AsyncManifestService()
 
     @cached_property
     def service(self) -> ManifestService:
