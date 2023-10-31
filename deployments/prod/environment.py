@@ -910,12 +910,11 @@ dcp31_sources = mkdict(dcp30_sources, 399, mkdelta([
     mksrc('datarepo-2abbf49d', 'hca_prod_e456c042f6b64ceca3381a8ef80bd779__20230905_dcp2_20230905_dcp31', 291),
 ]))
 
-dcp32_sources = mkdict(dcp31_sources, 406, mkdelta([
+dcp32_sources = mkdict(dcp31_sources, 405, mkdelta([
     mksrc('datarepo-6885133e', 'hca_prod_0792db3480474e62802c9177c9cd8e28__20220107_dcp2_20231002_dcp32', 1451),
     mksrc('datarepo-03b554f8', 'hca_prod_0911cc0406d64ffc8318b90b0039e8ad__20230905_dcp2_20231002_dcp32', 42),
     mksrc('datarepo-a5249352', 'hca_prod_279f176633194e3c9f996fb59ba9b3e5__20230815_dcp2_20231002_dcp32', 3),
     mksrc('datarepo-e676a270', 'hca_prod_2a72a4e566b2405abb7c1e463e8febb0__20220111_dcp2_20231002_dcp32', 2292),
-    mksrc('datarepo-803e3a81', 'hca_prod_2a8117e29d6344f0ab5009f98de80970__20231002_dcp2_20231002_dcp32', 6),
     mksrc('datarepo-720eb4d9', 'hca_prod_31887183a72c43089eacc6140313f39c__20220111_dcp2_20231002_dcp32', 7),
     mksrc('datarepo-8c4f04c0', 'hca_prod_326b36bd0975475f983b56ddb8f73a4d__20230905_dcp2_20231002_dcp32', 5),
     mksrc('datarepo-9f296da3', 'hca_prod_376a7f55b8764f609cf3ed7bc83d5415__20220111_dcp2_20231002_dcp32', 46),
@@ -1001,7 +1000,6 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_hca')),
                                        sources=mklist(sources))
             for atlas, catalog, sources in [
-                ('hca', 'dcp31', dcp31_sources),
                 ('hca', 'dcp32', dcp32_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
