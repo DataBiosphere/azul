@@ -39,13 +39,13 @@ class Token:
     """
     execution_id: str = strict_auto()
     request_index: int = strict_auto()
-    wait_time: int = strict_auto()
+    retry_after: int = strict_auto()
 
     def pack(self) -> bytes:
         return msgpack.packb([
             self.execution_id,
             self.request_index,
-            self.wait_time
+            self.retry_after
         ])
 
     @classmethod
@@ -53,7 +53,7 @@ class Token:
         i = iter(msgpack.unpackb(pack))
         return cls(execution_id=next(i),
                    request_index=next(i),
-                   wait_time=next(i))
+                   retry_after=next(i))
 
     def encode(self) -> str:
         return base64.urlsafe_b64encode(self.pack()).decode()
@@ -69,22 +69,22 @@ class Token:
     def first(cls, execution_id: str) -> Self:
         return cls(execution_id=execution_id,
                    request_index=0,
-                   wait_time=cls._next_wait_time(0))
+                   retry_after=cls._next_retry_after(0))
 
-    def next(self, *, wait_time: Optional[int] = None) -> Self:
-        if wait_time is None:
-            wait_time = self._next_wait_time(self.request_index)
+    def next(self, *, retry_after: Optional[int] = None) -> Self:
+        if retry_after is None:
+            retry_after = self._next_retry_after(self.request_index)
         return attrs.evolve(self,
-                            wait_time=wait_time,
+                            retry_after=retry_after,
                             request_index=self.request_index + 1)
 
     @classmethod
-    def _next_wait_time(cls, request_index: int) -> int:
-        wait_times = [1, 1, 4, 6, 10]
+    def _next_retry_after(cls, request_index: int) -> int:
+        delays = [1, 1, 4, 6, 10]
         try:
-            return wait_times[request_index]
+            return delays[request_index]
         except IndexError:
-            return wait_times[-1]
+            return delays[-1]
 
 
 @attrs.frozen
@@ -128,7 +128,7 @@ class AsyncManifestService:
             # Because describe_execution is eventually consistent, output may
             # not yet be present
             if output is None:
-                return token.next(wait_time=1)
+                return token.next(retry_after=1)
             else:
                 return json.loads(output)
         elif status == 'RUNNING':

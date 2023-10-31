@@ -77,13 +77,13 @@ class TestAsyncManifestService(AzulUnitTestCase):
     def test_token_encoding(self, _sfn):
         token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
                       request_index=42,
-                      wait_time=123)
+                      retry_after=123)
         self.assertEqual(token, Token.decode(token.encode()))
 
     def test_token_validation(self, _sfn):
         token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
                       request_index=42,
-                      wait_time=123)
+                      retry_after=123)
         self.assertRaises(InvalidTokenError, token.decode, token.encode()[:-1])
 
     def test_status_success(self, _sfn):
@@ -106,7 +106,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
             'output': json.dumps(output)
         }
         _sfn.describe_execution.return_value = execution_success_output
-        token = Token(execution_id=execution_id, request_index=0, wait_time=0)
+        token = Token(execution_id=execution_id, request_index=0, retry_after=0)
         actual_output = service.inspect_generation(token)
         self.assertEqual(output, actual_output)
 
@@ -126,9 +126,9 @@ class TestAsyncManifestService(AzulUnitTestCase):
             'input': '{"filters": {}}'
         }
         _sfn.describe_execution.return_value = execution_running_output
-        token = Token(execution_id=execution_id, request_index=0, wait_time=0)
+        token = Token(execution_id=execution_id, request_index=0, retry_after=0)
         new_token = service.inspect_generation(token)
-        expected = Token(execution_id=execution_id, request_index=1, wait_time=1)
+        expected = Token(execution_id=execution_id, request_index=1, retry_after=1)
         self.assertNotEqual(new_token, token)
         self.assertEqual(expected, new_token)
 
@@ -148,7 +148,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
             'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
         }
         _sfn.describe_execution.return_value = execution_failed_output
-        token = Token(execution_id=execution_id, request_index=0, wait_time=0)
+        token = Token(execution_id=execution_id, request_index=0, retry_after=0)
         self.assertRaises(GenerationFailed,
                           service.inspect_generation,
                           token)

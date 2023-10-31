@@ -184,7 +184,7 @@ class ManifestController(SourceController):
             body = {
                 'Status': 301,
                 'Location': str(url),
-                'Retry-After': token.wait_time,
+                'Retry-After': token.retry_after,
                 'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
         else:
