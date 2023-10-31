@@ -3,6 +3,7 @@ import json
 import logging
 from typing import (
     Optional,
+    Self,
     Union,
 )
 import uuid
@@ -48,7 +49,7 @@ class Token:
         ])
 
     @classmethod
-    def unpack(cls, pack: bytes) -> 'Token':
+    def unpack(cls, pack: bytes) -> Self:
         i = iter(msgpack.unpackb(pack))
         return cls(execution_id=next(i),
                    request_index=next(i),
@@ -58,16 +59,32 @@ class Token:
         return base64.urlsafe_b64encode(self.pack()).decode()
 
     @classmethod
-    def decode(cls, token: str) -> 'Token':
+    def decode(cls, token: str) -> Self:
         try:
             return cls.unpack(base64.urlsafe_b64decode(token))
         except Exception as e:
             raise InvalidTokenError(token) from e
 
-    def advance(self, wait_time: int) -> 'Token':
+    @classmethod
+    def first(cls, execution_id: str) -> Self:
+        return cls(execution_id=execution_id,
+                   request_index=0,
+                   wait_time=cls._next_wait_time(0))
+
+    def next(self, *, wait_time: Optional[int] = None) -> Self:
+        if wait_time is None:
+            wait_time = self._next_wait_time(self.request_index)
         return attrs.evolve(self,
                             wait_time=wait_time,
                             request_index=self.request_index + 1)
+
+    @classmethod
+    def _next_wait_time(cls, request_index: int) -> int:
+        wait_times = [1, 1, 4, 6, 10]
+        try:
+            return wait_times[request_index]
+        except IndexError:
+            return wait_times[-1]
 
 
 @attrs.frozen
@@ -97,9 +114,7 @@ class AsyncManifestService:
                                              input=json.dumps(input))
         execution_arn = self.execution_arn(execution_id)
         assert execution_arn == response['executionArn']
-        return Token(execution_id=execution_id,
-                     request_index=0,
-                     wait_time=self._get_next_wait_time(0))
+        return Token.first(execution_id)
 
     def inspect_generation(self, token: Token) -> Union[Token, JSON]:
         try:
@@ -113,20 +128,13 @@ class AsyncManifestService:
             # Because describe_execution is eventually consistent, output may
             # not yet be present
             if output is None:
-                return token.advance(wait_time=1)
+                return token.next(wait_time=1)
             else:
                 return json.loads(output)
         elif status == 'RUNNING':
-            return token.advance(wait_time=self._get_next_wait_time(token.request_index))
+            return token.next()
         else:
             raise GenerationFailed(status=status, output=output)
-
-    def _get_next_wait_time(self, request_index: int) -> int:
-        wait_times = [1, 1, 4, 6, 10]
-        try:
-            return wait_times[request_index]
-        except IndexError:
-            return wait_times[-1]
 
     def arn(self, suffix):
         return f'arn:aws:states:{aws.region_name}:{aws.account}:{suffix}'

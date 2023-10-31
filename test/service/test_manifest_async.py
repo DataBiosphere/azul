@@ -335,9 +335,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         else:
                             assert False, mock_effect
 
-    token = Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
-                  request_index=0,
-                  wait_time=0).encode()
+    token = Token.first('7c88cc29-91c6-4712-880f-e4783e2a4d9e').encode()
 
     def _test(self, *, expected_status, token=token):
         url = self.base_url.set(path=['fetch', 'manifest', 'files', token])
