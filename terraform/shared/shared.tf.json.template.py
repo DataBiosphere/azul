@@ -872,6 +872,32 @@ tf_config = {
                 'name': aws.monitoring_topic_name
             }
         },
+        'aws_sns_topic_policy': {
+            'monitoring': {
+                'arn': '${aws_sns_topic.monitoring.arn}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': [
+                                    'events.amazonaws.com',
+                                    'cloudwatch.amazonaws.com'
+                                ]
+                            },
+                            'Action': 'sns:Publish',
+                            'Resource': '${aws_sns_topic.monitoring.arn}',
+                            'Condition': {
+                                'StringEquals': {
+                                    'aws:SourceAccount': config.aws_account_id
+                                }
+                            }
+                        }
+                    ]
+                })
+            }
+        },
         'aws_sns_topic_subscription': {
             'monitoring': {
                 'topic_arn': '${aws_sns_topic.monitoring.arn}',
