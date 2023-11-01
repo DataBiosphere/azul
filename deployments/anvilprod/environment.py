@@ -179,14 +179,13 @@ anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     # @formatter:on
 ]))
 
-anvil3_sources = mkdict(anvil2_sources, 162, mkdelta([
+anvil3_sources = mkdict(anvil2_sources, 161, mkdelta([
     # @formatter:off
     mksrc('datarepo-9a74aed3', 'ANVIL_CCDG_Baylor_CVD_ARIC_20231008_ANV5_202310091900', 10012),
     mksrc('datarepo-a749913a', 'ANVIL_CCDG_Baylor_CVD_EOCAD_SoL_WGS_20230418_ANV5_202310101651', 9225),
     mksrc('datarepo-0768a322', 'ANVIL_CCDG_Broad_CVD_AF_Ellinor_MGH_Arrays_20221024_ANV5_202304211831', 387),
     mksrc('datarepo-2b135baf', 'ANVIL_CCDG_Broad_CVD_AFib_MGH_WGS_20221024_ANV5_202304211829', 105),
     mksrc('datarepo-96b594f9', 'ANVIL_CCDG_Broad_CVD_EOCAD_TaiChi_WGS_20221026_ANV5_202310101655', 912),
-    mksrc('datarepo-828e5175', 'ANVIL_CCDG_Broad_CVD_EOCAD_VIRGO_WGS_20221024_ANV5_202310101242', 8659),
     mksrc('datarepo-318ae48e', 'ANVIL_CCDG_Broad_CVD_Stroke_BRAVE_WGS_20221107_ANV5_202304241543', 500),
     mksrc('datarepo-7ea7a6e9', 'ANVIL_CCDG_Broad_MI_BRAVE_GRU_WES_20221107_ANV5_202304241545', 1500),
     mksrc('datarepo-2339e241', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPIL_BA_MDS_WES_20221101_ANV5_202304241613', 47),
