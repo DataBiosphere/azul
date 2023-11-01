@@ -629,7 +629,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                 responses: list[urllib3.HTTPResponse],
                                 *,
                                 fetch: bool
-                                ) -> set[str]:
+                                ) -> set[bytes]:
         urls: list[furl]
         if fetch:
             responses = [

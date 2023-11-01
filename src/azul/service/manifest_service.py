@@ -20,6 +20,9 @@ from datetime import (
     timezone,
 )
 import email.utils
+from hashlib import (
+    sha256,
+)
 from inspect import (
     isabstract,
 )
@@ -259,6 +262,17 @@ class BareManifestKey(AbstractManifestKey):
     ...
     azul.service.manifest_service.InvalidManifestKey:
     lKNmb2+kY3VybMQQ0rDOPEbwV/651C442JNP1MQQd5NnR1loWI6An6+ELWvp
+
+    Manifest keys contain the catalog name which can be quite long, extending
+    the length of the encoded manifest key proportionally by 4 characters for
+    every 3 catalog name characters.
+
+    >>> manifest_key = BareManifestKey(catalog='a' * 64,
+    ...                                format=ManifestFormat.terra_bdbag,
+    ...                                manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+    ...                                source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+    >>> len(manifest_key.encode())
+    154
     """
     catalog: CatalogName = strict_auto()
     format: ManifestFormat = strict_auto()
@@ -370,6 +384,10 @@ class ManifestKey(BareManifestKey):
                    format=ManifestFormat(json['format']),
                    manifest_hash=UUID(json['manifest_hash']),
                    source_hash=UUID(json['source_hash']))
+
+    @property
+    def hash(self) -> bytes:
+        return sha256(self.pack()).digest()
 
 
 @attrs.frozen

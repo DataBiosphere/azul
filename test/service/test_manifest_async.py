@@ -73,85 +73,76 @@ def setUpModule():
 
 @patch.object(AsyncManifestService, '_sfn')
 class TestAsyncManifestService(AzulUnitTestCase):
+    execution_id = b'42'
 
     def test_token_encoding(self, _sfn):
-        token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
-                      request_index=42,
-                      retry_after=123)
+        token = Token(execution_id=self.execution_id, request_index=42, retry_after=123)
         self.assertEqual(token, Token.decode(token.encode()))
 
     def test_token_validation(self, _sfn):
-        token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
-                      request_index=42,
-                      retry_after=123)
+        token = Token(execution_id=self.execution_id, request_index=42, retry_after=123)
         self.assertRaises(InvalidTokenError, token.decode, token.encode()[:-1])
 
     def test_status_success(self, _sfn):
         """
-        A successful manifest job should return a 302 status and a url to the manifest
+        A successful manifest job should return a 302 status and a URL to the
+        manifest
         """
-        execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
-        output = {
-            'foo': 'bar'
-        }
         service = AsyncManifestService()
-        execution_success_output = {
-            'executionArn': service.execution_arn(execution_id),
+        execution_name = service.execution_name(self.execution_id)
+        output = {'foo': 'bar'}
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
             'stateMachineArn': service.machine_arn,
-            'name': execution_id,
+            'name': execution_name,
             'status': 'SUCCEEDED',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'stopDate': datetime.datetime(2018, 11, 15, 18, 30, 59, 295000),
             'input': '{"filters": {}}',
             'output': json.dumps(output)
         }
-        _sfn.describe_execution.return_value = execution_success_output
-        token = Token(execution_id=execution_id, request_index=0, retry_after=0)
+        token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
         actual_output = service.inspect_generation(token)
         self.assertEqual(output, actual_output)
 
     def test_status_running(self, _sfn):
         """
-        A running manifest job should return a 301 status and a url to retry
+        A running manifest job should return a 301 status and a URL to retry
         checking the job status
         """
-        execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
         service = AsyncManifestService()
-        execution_running_output = {
-            'executionArn': service.execution_arn(execution_id),
+        execution_name = service.execution_name(self.execution_id)
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
             'stateMachineArn': service.machine_arn,
-            'name': execution_id,
+            'name': execution_name,
             'status': 'RUNNING',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'input': '{"filters": {}}'
         }
-        _sfn.describe_execution.return_value = execution_running_output
-        token = Token(execution_id=execution_id, request_index=0, retry_after=0)
-        new_token = service.inspect_generation(token)
-        expected = Token(execution_id=execution_id, request_index=1, retry_after=1)
-        self.assertNotEqual(new_token, token)
-        self.assertEqual(expected, new_token)
+        token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
+        token = service.inspect_generation(token)
+        expected = Token(execution_id=self.execution_id, request_index=1, retry_after=1)
+        self.assertEqual(expected, token)
 
     def test_status_failed(self, _sfn):
         """
         A failed manifest job should raise a GenerationFailed
         """
-        execution_id = '068579b6-9d7b-4e19-ac4e-77626851be1c'
         service = AsyncManifestService()
-        execution_failed_output = {
-            'executionArn': service.execution_arn(execution_id),
+        execution_name = service.execution_name(self.execution_id)
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
             'stateMachineArn': service.machine_arn,
-            'name': execution_id,
+            'name': execution_name,
             'status': 'FAILED',
             'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
             'stopDate': datetime.datetime(2018, 11, 14, 16, 6, 55, 860000),
             'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
         }
-        _sfn.describe_execution.return_value = execution_failed_output
-        token = Token(execution_id=execution_id, request_index=0, retry_after=0)
-        self.assertRaises(GenerationFailed,
-                          service.inspect_generation,
-                          token)
+        token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
+        with self.assertRaises(GenerationFailed):
+            service.inspect_generation(token)
 
 
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
@@ -160,13 +151,13 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     def lambda_name(cls) -> str:
         return 'service'
 
+    execution_id = b'42'
+
     @mock_sts
-    @mock.patch('uuid.uuid4')
     @mock.patch.object(AsyncManifestService, '_sfn')
     @mock.patch.object(ManifestService, 'get_manifest')
     @mock.patch.object(ManifestService, 'get_cached_manifest')
-    def test(self, get_cached_manifest, get_manifest, _sfn, mock_uuid):
-
+    def test(self, get_cached_manifest, get_manifest, _sfn):
         with responses.RequestsMock() as helper:
             helper.add_passthru(str(self.base_url))
             # FIXME: Remove put=False and therefore `put`
@@ -175,8 +166,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 if not fetch and not put:
                     continue  # we provide the backwards-compatible GET only for fetch
                 with self.subTest(put=put, fetch=fetch):
-                    execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
-                    mock_uuid.return_value = execution_id
                     format = ManifestFormat.compact
                     filters = Filters(explicit={'organ': {'is': ['lymph node']}},
                                       source_ids={self.source.id})
@@ -229,8 +218,10 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     )
                     service: AsyncManifestService
                     service = self.app_module.app.manifest_controller.async_service
+                    execution_id = manifest_key.hash
+                    execution_name = service.execution_name(execution_id)
                     machine_arn = service.machine_arn
-                    execution_arn = service.execution_arn(execution_id)
+                    execution_arn = service.execution_arn(execution_name)
                     _sfn.start_execution.return_value = {
                         'executionArn': execution_arn,
                         'startDate': 123
@@ -256,7 +247,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                                   partition=partitions[0].to_json())
                             _sfn.start_execution.assert_called_once_with(
                                 stateMachineArn=machine_arn,
-                                name=execution_id,
+                                name=execution_name,
                                 input=json.dumps(state)
                             )
                             _sfn.describe_execution.assert_not_called()
@@ -335,7 +326,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         else:
                             assert False, mock_effect
 
-    token = Token.first('7c88cc29-91c6-4712-880f-e4783e2a4d9e').encode()
+    token = Token.first(execution_id).encode()
 
     def _test(self, *, expected_status, token=token):
         url = self.base_url.set(path=['fetch', 'manifest', 'files', token])
