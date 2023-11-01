@@ -19,6 +19,9 @@ import attr
 from elasticsearch.helpers import (
     scan,
 )
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
@@ -30,6 +33,7 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
+    DocumentType,
     IndexName,
 )
 from azul.indexer.index_service import (
@@ -137,8 +141,21 @@ class IndexerTestCase(CatalogTestCase,
                          index=','.join(self.index_service.index_names(self.catalog)),
                          preserve_order=True))
         for hit in hits:
+            entity_type, doc_type = self._parse_index_name(hit)
+            if (
+                entity_type == 'datasets'
+                and doc_type is DocumentType.contribution
+                and 'description' in one(hit['_source']['contents']['datasets'])
+            ):
+                # DUOS contributions contain no lists
+                continue
             self._verify_sorted_lists(hit['_source'])
         return hits
+
+    def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
+        index_name = IndexName.parse(hit['_index'])
+        index_name.validate()
+        return index_name.entity_type, index_name.doc_type
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """

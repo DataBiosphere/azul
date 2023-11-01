@@ -18,6 +18,7 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    AbstractSet,
     Callable,
     Collection,
     Iterable,
@@ -34,6 +35,10 @@ from more_itertools import (
 
 from azul import (
     JSON,
+    cache,
+)
+from azul.collections import (
+    deep_dict_merge,
 )
 from azul.indexer import (
     BundleFQID,
@@ -133,7 +138,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'activities': cls._activity_types(),
             'biosamples': cls._biosample_types(),
-            'datasets': cls._dataset_types(),
+            'datasets': {**cls._dataset_types(), **cls._duos_types()},
             'diagnoses': cls._diagnosis_types(),
             'donors': cls._donor_types(),
             'files': cls._aggregate_file_types(),
@@ -227,6 +232,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'disease': null_str,
             'donor_age_at_collection_unit': null_str,
             'donor_age_at_collection': pass_thru_json,
+        }
+
+    @classmethod
+    def _duos_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'description': null_str,
         }
 
     @classmethod
@@ -378,6 +390,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _dataset(self, dataset: EntityReference) -> MutableJSON:
         return self._entity(dataset, self._dataset_types())
 
+    def _duos(self, dataset: EntityReference) -> MutableJSON:
+        return self._entity(dataset, self._duos_types())
+
     def _diagnosis(self, diagnosis: EntityReference) -> MutableJSON:
         return self._entity(diagnosis,
                             self._diagnosis_types(),
@@ -418,7 +433,35 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                                  ) -> tuple[JSON, BundleFQID]:
         this_entity, this_bundle = this
         that_entity, that_bundle = that
-        return that if that_bundle.version > this_bundle.version else this
+        # All AnVIL bundles use a fixed known version
+        assert this_bundle.version == that_bundle.version, (this, that)
+        if this_entity.keys() == that_entity.keys():
+            return this
+        else:
+            assert entity_type == 'datasets', (entity_type, this, that)
+            expected_keys = cls._complete_dataset_keys()
+            # There will be one contribution for a DUOS stub, and many redundant
+            # contributions (one per non-DUOS bundle) for the dataset metadata
+            # from BigQuery. Once the stub has been merged with a single main
+            # contribution to consolidate all expected fields, we can disregard
+            # the other contributions as usual.
+            if this_entity.keys() == expected_keys:
+                return this
+            elif that_entity.keys() == expected_keys:
+                return that
+            else:
+                assert this_entity.keys() < expected_keys, this
+                assert that_entity.keys() < expected_keys, that
+                merged = deep_dict_merge((this_entity, that_entity))
+                assert merged.keys() == expected_keys, (this, that)
+                # We can safely discard that_bundle because only the version is
+                # used by the caller, and we know the versions are equal.
+                return merged, this_bundle
+
+    @classmethod
+    @cache
+    def _complete_dataset_keys(cls) -> AbstractSet[str]:
+        return cls.field_types()['datasets'].keys()
 
 
 class ActivityTransformer(BaseTransformer):
@@ -469,17 +512,22 @@ class DatasetTransformer(BaseTransformer):
         return 'datasets'
 
     def _transform(self, entity: EntityReference) -> Contribution:
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                self._entities_by_type[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, self._entities_by_type['biosample']),
-            datasets=[self._dataset(entity)],
-            diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
-            donors=self._entities(self._donor, self._entities_by_type['donor']),
-            files=self._entities(self._file, self._entities_by_type['file']),
-        )
+        try:
+            dataset = self._dataset(entity)
+        except KeyError:
+            contents = dict(datasets=[self._duos(entity)])
+        else:
+            contents = dict(
+                activities=self._entities(self._activity, chain.from_iterable(
+                    self._entities_by_type[activity_type]
+                    for activity_type in self._activity_polymorphic_types
+                )),
+                biosamples=self._entities(self._biosample, self._entities_by_type['biosample']),
+                datasets=[dataset],
+                diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
+                donors=self._entities(self._donor, self._entities_by_type['donor']),
+                files=self._entities(self._file, self._entities_by_type['file']),
+            )
         return self._contribution(contents, entity)
 
 

@@ -1,5 +1,11 @@
+from collections import (
+    defaultdict,
+)
 from operator import (
     itemgetter,
+)
+from typing import (
+    cast,
 )
 import unittest
 
@@ -11,14 +17,17 @@ from azul import (
     CatalogName,
     config,
 )
-from azul.indexer import (
-    SourcedBundleFQID,
+from azul.indexer.document import (
+    DocumentType,
+    EntityReference,
 )
 from azul.logging import (
     configure_test_logging,
 )
 from azul.plugins.repository.tdr_anvil import (
+    BundleEntityType,
     TDRAnvilBundle,
+    TDRAnvilBundleFQID,
 )
 from indexer import (
     IndexerTestCase,
@@ -36,14 +45,26 @@ def setUpModule():
 class AnvilIndexerTestCase(IndexerTestCase, TDRAnvilPluginTestCase):
 
     @classmethod
-    def bundles(cls) -> list[SourcedBundleFQID]:
+    def bundle_fqid(cls,
+                    *,
+                    uuid,
+                    version,
+                    entity_type=BundleEntityType.primary
+                    ) -> TDRAnvilBundleFQID:
+        return TDRAnvilBundleFQID(source=cls.source,
+                                  uuid=uuid,
+                                  version=version,
+                                  entity_type=entity_type)
+
+    @classmethod
+    def bundles(cls) -> list[TDRAnvilBundleFQID]:
         return [
             cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
                             version='')
         ]
 
     @property
-    def bundle(self) -> SourcedBundleFQID:
+    def bundle(self) -> TDRAnvilBundleFQID:
         return one(self.bundles())
 
     @classmethod
@@ -75,6 +96,39 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
         hits.sort(key=itemgetter('_id'))
         expected_hits = self._load_canned_result(self.bundle)
         self.assertEqual(expected_hits, hits)
+
+    def test_dataset_description(self):
+        dataset_ref = EntityReference(entity_type='dataset',
+                                      entity_id='2370f948-2783-4eb6-afea-e022897f4dcf')
+        dataset_bundle = self.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
+                                          version=self.bundle.version,
+                                          entity_type=BundleEntityType.duos)
+
+        bundles = [self.bundle, dataset_bundle]
+        for bundle_fqid in bundles:
+            bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
+            bundle.links.clear()
+            bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
+            self._index_bundle(bundle, delete=False)
+
+        hits = self._get_all_hits()
+        doc_counts: dict[DocumentType, int] = defaultdict(int)
+        for hit in hits:
+            entity_type, doc_type = self._parse_index_name(hit)
+            doc_counts[doc_type] += 1
+            self.assertEqual('datasets', entity_type)
+            if doc_type is DocumentType.aggregate:
+                self.assertEqual(2, hit['_source']['num_contributions'])
+                self.assertEqual(sorted(b.uuid for b in bundles),
+                                 sorted(b['uuid'] for b in hit['_source']['bundles']))
+                contents = one(hit['_source']['contents']['datasets'])
+                # These fields are populated only in the primary bundle
+                self.assertEqual(dataset_ref.entity_id, contents['document_id'])
+                self.assertEqual(['phs000693'], contents['registered_identifier'])
+                # This field is populated only in the DUOS bundle
+                self.assertEqual('Study description from DUOS', contents['description'])
+        self.assertEqual(1, doc_counts[DocumentType.aggregate])
+        self.assertEqual(2, doc_counts[DocumentType.contribution])
 
     # FIXME: Enable test after the issue with TinyQuery `WITH` has been resolved
     #        https://github.com/DataBiosphere/azul/issues/5046

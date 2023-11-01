@@ -322,6 +322,11 @@ class Config:
         return furl(self.environ['AZUL_SAM_SERVICE_URL'])
 
     @property
+    def duos_service_url(self) -> Optional[mutable_furl]:
+        url = self.environ.get('AZUL_DUOS_SERVICE_URL')
+        return None if url is None else furl(url)
+
+    @property
     def dss_query_prefix(self) -> str:
         return self.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 

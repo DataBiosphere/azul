@@ -1668,11 +1668,14 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 self.assertIsInstance(entities, dict)
                 self.assertIsInstance(links, list)
                 entities = set(map(EntityReference.parse, entities.keys()))
-                linked_entities = frozenset.union(*(
-                    Link.from_json(link).all_entities
-                    for link in links
-                ))
-                self.assertEqual(entities, linked_entities)
+                if len(entities) > 1:
+                    linked_entities = frozenset().union(*(
+                        Link.from_json(link).all_entities
+                        for link in links
+                    ))
+                    self.assertEqual(entities, linked_entities)
+                else:
+                    self.assertEqual([], links)
             else:
                 assert False, metadata_plugin_name
 

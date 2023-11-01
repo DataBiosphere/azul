@@ -60,6 +60,7 @@ from azul.types import (
     MutableJSONs,
 )
 from azul.uuids import (
+    change_version,
     validate_uuid_prefix,
 )
 
@@ -98,9 +99,21 @@ class BundleEntityType(Enum):
     specifically tailored traversal implementation. Supplementary bundles always
     consist of exactly two entities: one file (the bundle entity) and one
     dataset.
+
+    The `dataset.description` field is unusual in that it is not stored in
+    BigQuery and must be retrieved via Terra's DUOS API. There is only one
+    dataset per snapshot, which is referenced in all primary and supplementary
+    bundles. Therefore, only one request to DUOS per *snapshot* is necessary,
+    but if `description` is retrieved at the same time as the other dataset
+    fields, we will make one request per *bundle* instead, potentially
+    overloading the DUOS service. Our solution is to retrieve `description` only
+    in a dedicated bundle format, once per snapshot, and merge it with the other
+    dataset fields during aggregation. This bundle contains only a single
+    dataset entity with only the `description` field populated.
     """
     primary: EntityType = 'biosample'
     supplementary: EntityType = 'file'
+    duos: EntityType = 'dataset'
 
 
 class TDRAnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
@@ -178,7 +191,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         validate_uuid_prefix(partition_prefix)
         primary = BundleEntityType.primary.value
         supplementary = BundleEntityType.supplementary.value
-        rows = self._run_sql(f'''
+        duos = BundleEntityType.duos.value
+        rows = list(self._run_sql(f'''
             SELECT datarepo_row_id, {primary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, primary))}
             WHERE STARTS_WITH(datarepo_row_id, '{partition_prefix}')
@@ -186,18 +200,39 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             SELECT datarepo_row_id, {supplementary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
             WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{partition_prefix}')
-        ''')
-        return [
-            TDRAnvilBundleFQID(source=source,
-                               # Reversibly tweak the entity UUID to prevent
-                               # collisions between entity IDs and bundle IDs
-                               uuid=uuids.change_version(row['datarepo_row_id'],
-                                                         self.datarepo_row_uuid_version,
-                                                         self.bundle_uuid_version),
-                               version=self._version,
-                               entity_type=BundleEntityType(row['entity_type']))
-            for row in rows
-        ]
+        ''' + (
+            ''
+            if config.duos_service_url is None else
+            f'''
+            UNION ALL
+            SELECT datarepo_row_id, {duos!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, duos))}
+            '''
+        )))
+        bundles = []
+        dataset_count = 0
+        for row in rows:
+            # We intentionally omit the WHERE clause for datasets so that we can
+            # verify our assumption that each snapshot only contains rows for a
+            # single dataset. This verification is performed independently and
+            # concurrently for every partition, but only one partition actually
+            # emits the bundle.
+            if row['entity_type'] == duos:
+                require(0 == dataset_count)
+                dataset_count += 1
+                if not row['datarepo_row_id'].startswith(partition_prefix):
+                    continue
+            bundles.append(TDRAnvilBundleFQID(
+                source=source,
+                # Reversibly tweak the entity UUID to prevent
+                # collisions between entity IDs and bundle IDs
+                uuid=uuids.change_version(row['datarepo_row_id'],
+                                          self.datarepo_row_uuid_version,
+                                          self.bundle_uuid_version),
+                version=self._version,
+                entity_type=BundleEntityType(row['entity_type'])
+            ))
+        return bundles
 
     def list_partitions(self,
                         source: TDRSourceRef
@@ -250,6 +285,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         elif bundle_fqid.entity_type is BundleEntityType.supplementary:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
             return self._supplementary_bundle(bundle_fqid)
+        elif bundle_fqid.entity_type is BundleEntityType.duos:
+            assert config.duos_service_url is not None, bundle_fqid
+            log.info('Bundle %r is a dataset description', bundle_fqid.uuid)
+            return self._dataset_description(bundle_fqid)
         else:
             assert False, bundle_fqid.entity_type
 
@@ -333,6 +372,19 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             link_args[arg] = {key_ref}
         result.add_links({Link(**link_args)}, entities_by_key)
         return result
+
+    def _dataset_description(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
+        description = self.tdr.get_duos(bundle_fqid.source)['studyDescription']
+        entity_id = change_version(bundle_fqid.uuid,
+                                   self.bundle_uuid_version,
+                                   self.datarepo_row_uuid_version)
+        entity = EntityReference(entity_type=bundle_fqid.entity_type.value,
+                                 entity_id=entity_id)
+        bundle = TDRAnvilBundle(fqid=bundle_fqid)
+        bundle.add_entity(entity=entity,
+                          version=self._version,
+                          row={'description': description})
+        return bundle
 
     def _bundle_entity(self, bundle_fqid: TDRAnvilBundleFQID) -> KeyReference:
         source = bundle_fqid.source
