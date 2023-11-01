@@ -50,7 +50,6 @@ from typing import (
     Protocol,
     Self,
     Type,
-    Union,
     cast,
 )
 import unicodedata
@@ -493,6 +492,10 @@ class ManifestPartition:
         return cls(index=0,
                    is_last=False)
 
+    @property
+    def is_first(self):
+        return not (self.index or self.page_index)
+
     def with_config(self, config: AnyJSON):
         return attrs.evolve(self, config=config)
 
@@ -554,7 +557,7 @@ class ManifestService(ElasticsearchService):
                      filters: Filters,
                      partition: ManifestPartition,
                      manifest_key: Optional[ManifestKey] = None
-                     ) -> Union[Manifest, ManifestPartition]:
+                     ) -> Manifest | ManifestPartition:
         """
         Return a fully populated manifest that ends with the given partition or
         the next partition if the given partition isn't the last.
@@ -596,17 +599,27 @@ class ManifestService(ElasticsearchService):
         generator = generator_cls(self, catalog, filters)
         if manifest_key is None:
             manifest_key = generator.manifest_key()
-        try:
-            return self._get_cached_manifest(generator_cls, manifest_key)
-        except CachedManifestNotFound:
-            partition = generator.write(manifest_key, partition)
-            if partition.is_last:
-                return self._presign_manifest(generator_cls=generator_cls,
-                                              manifest_key=manifest_key,
-                                              file_name=partition.file_name,
-                                              was_cached=False)
-            else:
-                return partition
+        if partition.is_first:
+            try:
+                return self._get_cached_manifest(generator_cls, manifest_key)
+            except CachedManifestNotFound:
+                return self._generate_manifest(generator, manifest_key, partition)
+        else:
+            return self._generate_manifest(generator, manifest_key, partition)
+
+    def _generate_manifest(self,
+                           generator: 'ManifestGenerator',
+                           manifest_key: ManifestKey,
+                           partition: ManifestPartition
+                           ) -> Manifest | ManifestPartition:
+        partition = generator.write(manifest_key, partition)
+        if partition.is_last:
+            return self._presign_manifest(generator_cls=type(generator),
+                                          manifest_key=manifest_key,
+                                          file_name=partition.file_name,
+                                          was_cached=False)
+        else:
+            return partition
 
     def get_cached_manifest(self,
                             format: ManifestFormat,
