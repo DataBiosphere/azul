@@ -636,14 +636,16 @@ class ManifestService(ElasticsearchService):
         Verify a manifest key against its signature. If either the key or the
         signature have been tampered with, an exception will be raised.
         """
-        response = aws.kms.verify_mac(KeyId=config.manifest_kms_alias,
-                                      MacAlgorithm='HMAC_SHA_256',
-                                      Message=manifest_key.value.pack(),
-                                      Mac=manifest_key.signature)
-        if response['MacValid']:
-            return ManifestKey(**attrs.asdict(manifest_key.value))
-        else:
+        try:
+            response = aws.kms.verify_mac(KeyId=config.manifest_kms_alias,
+                                          MacAlgorithm='HMAC_SHA_256',
+                                          Message=manifest_key.value.pack(),
+                                          Mac=manifest_key.signature)
+        except aws.kms.exceptions.KMSInvalidMacException:
             raise InvalidManifestKeySignature(manifest_key)
+        else:
+            assert response['MacValid']
+            return ManifestKey(**attrs.asdict(manifest_key.value))
 
     def get_cached_manifest_with_key(self, manifest_key: ManifestKey) -> Manifest:
         generator_cls = ManifestGenerator.cls_for_format(manifest_key.format)
