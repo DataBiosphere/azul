@@ -15,7 +15,7 @@ def env() -> Mapping[str, Optional[str]]:
     other environment variables in the form `{FOO}` where FOO is the name of an
     environment variable. See
 
-    https://docs.python.org/3.9/library/string.html#format-string-syntax
+    https://docs.python.org/3.11/library/string.html#format-string-syntax
 
     for the concrete syntax. These references will be resolved *after* the
     overall environment has been compiled by merging all relevant
@@ -200,6 +200,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
+
+        # The tag of the PyCharm image that we use to format the source code in
+        # continuous integration. We specify it here instead of directly in the
+        # Makefile so that a change to the version does not require updating
+        # requirements.
+        #
+        'azul_docker_pycharm_version': '2022.3.3-4',
 
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET

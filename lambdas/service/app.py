@@ -61,6 +61,7 @@ from azul.health import (
     HealthController,
 )
 from azul.indexer.document import (
+    EntityType,
     FieldType,
     Nested,
 )
@@ -565,7 +566,9 @@ def version():
     }
 
 
-def validate_repository_search(params, **validators):
+def validate_repository_search(entity_type: EntityType,
+                               params: Mapping[str, str],
+                               **validators):
     validate_params(params, **{
         'catalog': validate_catalog,
         'filters': validate_filters,
@@ -574,7 +577,7 @@ def validate_repository_search(params, **validators):
         'search_after_uid': str,
         'search_before': partial(validate_json_param, 'search_before'),
         'search_before_uid': str,
-        'size': validate_size,
+        'size': partial(validate_size, entity_type),
         'sort': validate_field,
         **validators
     })
@@ -588,7 +591,6 @@ def validate_entity_type(entity_type: str):
 
 
 min_page_size = 1
-max_page_size = 1000
 
 
 def validate_catalog(catalog):
@@ -602,14 +604,16 @@ def validate_catalog(catalog):
                                 f'Must be one of {set(config.catalogs)}.')
 
 
-def validate_size(size):
+def validate_size(entity_type: EntityType, size: str):
+    sorting = app.metadata_plugin.exposed_indices[entity_type]
     try:
         size = int(size)
     except BaseException:
         raise BRE('Invalid value for parameter `size`')
     else:
-        if size > max_page_size:
-            raise BRE(f'Invalid value for parameter `size`, must not be greater than {max_page_size}')
+        if size > sorting.max_page_size:
+            raise BRE(f'Invalid value for parameter `size`, '
+                      f'must not be greater than {sorting.max_page_size}')
         elif size < min_page_size:
             raise BRE('Invalid value for parameter `size`, must be greater than 0')
 
@@ -975,20 +979,27 @@ def repository_search_params_spec():
         ),
         params.query(
             'size',
-            schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, max_page_size))),
-            description='The number of hits included per page.'),
+            schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, None))),
+            description=fd('''
+                The number of hits included per page. The maximum size allowed
+                depends on the catalog and entity type.
+            ''')
+        ),
         params.query(
             'sort',
             schema.optional(schema.enum(*app.fields)),
-            description='The field to sort the hits by. '
-                        'The default value depends on the entity type.'
+            description=fd('''
+                The field to sort the hits by. The default value depends on the
+                entity type.
+            ''')
         ),
         params.query(
             'order',
             schema.optional(schema.enum('asc', 'desc')),
-            description='The ordering of the sorted hits, either ascending '
-                        'or descending. The default value depends on the entity '
-                        'type.'
+            description=fd('''
+                The ordering of the sorted hits, either ascending or descending.
+                The default value depends on the entity type.
+            ''')
         ),
         *[
             params.query(
@@ -1134,7 +1145,7 @@ repository_summary_spec = {
 def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON:
     request = app.current_request
     query_params = request.query_params or {}
-    validate_repository_search(query_params)
+    validate_repository_search(entity_type, query_params)
     validate_entity_type(entity_type)
     return app.repository_controller.search(catalog=app.catalog,
                                             entity_type=entity_type,

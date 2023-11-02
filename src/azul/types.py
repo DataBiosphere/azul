@@ -19,6 +19,10 @@ from more_itertools import (
     one,
 )
 
+from azul.collections import (
+    OrderedSet,
+)
+
 PrimitiveJSON = Union[str, int, float, bool, None]
 
 # Not every instance of Mapping or Sequence can be fed to json.dump() but those
@@ -149,20 +153,25 @@ def reify(t):
     Traceback (most recent call last):
         ...
     ValueError: ('Not a reifiable generic type', typing.Union)
+
+    >>> reify(int)
+    <class 'int'>
     """
-    if get_origin(t) != Union:
+    if get_origin(t) == Union:
+        def f(t):
+            for a in get_args(t):
+                if get_origin(a) == Union:
+                    # handle Union of Union
+                    yield from f(a)
+                else:
+                    o = get_origin(a)
+                    yield a if o is None else o
+
+        return tuple(OrderedSet(f(t)))
+    elif t.__module__ != 'typing':
+        return t
+    else:
         raise ValueError('Not a reifiable generic type', t)
-
-    def f(t):
-        for a in get_args(t):
-            if get_origin(a) == Union:
-                # handle Union of Union
-                yield from f(a)
-            else:
-                o = get_origin(a)
-                yield a if o is None else o
-
-    return tuple(set(f(t)))
 
 
 def get_generic_type_params(cls: type[Generic],
@@ -222,9 +231,7 @@ def get_generic_type_params(cls: type[Generic],
 # FIXME: Remove hacky import of SupportsLessThan
 #        https://github.com/DataBiosphere/azul/issues/2783
 if TYPE_CHECKING:
-    from _typeshed import (
-        SupportsLessThan,
-    )
+    pass
 else:
     class SupportsLessThan(Protocol):
 

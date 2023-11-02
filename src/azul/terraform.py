@@ -5,6 +5,7 @@ from collections.abc import (
     Iterable,
     Sequence,
 )
+import gzip
 from itertools import (
     chain,
 )
@@ -55,16 +56,16 @@ class TerraformSchema:
 
     @classmethod
     def load(cls, path: Path):
-        with path.open() as f:
+        with gzip.open(path, 'rt') as f:
             doc = json.load(f)
         return cls(versions=doc['versions'],
                    document=doc['schema'],
                    path=path)
 
     def store(self):
-        with self.path.open('w') as f:
-            json.dump(dict(versions=self.versions,
-                           schema=self.document), f, indent=4)
+        with gzip.open(self.path, 'wt') as f:
+            doc = dict(versions=self.versions, schema=self.document)
+            json.dump(doc, f)
 
 
 class Terraform:
@@ -105,7 +106,7 @@ class Terraform:
             else:
                 raise
 
-    schema_path = Path(config.project_root) / 'terraform' / '_schema.json'
+    schema_path = Path(config.project_root) / 'terraform' / '_schema.json.gz'
 
     @cached_property
     def schema(self):
@@ -696,6 +697,13 @@ class Chalice:
             package_zip = str(self.package_zip_path(app_name))
             resource['source_code_hash'] = '${filebase64sha256("%s")}' % package_zip
             resource['filename'] = package_zip
+
+            # FIXME: Remove this hack after upgrading Chalice to a version that
+            #        supports Python 3.11
+            #        https://github.com/DataBiosphere/azul/issues/5639
+            #
+            assert resource['runtime'] == 'python3.10', resource['runtime']
+            resource['runtime'] = 'python3.11'
 
         for resource_type, argument in [
             ('aws_cloudwatch_event_rule', 'name'),

@@ -31,7 +31,6 @@ import itertools
 from itertools import (
     chain,
 )
-import json
 import logging
 from operator import (
     itemgetter,
@@ -49,14 +48,18 @@ from typing import (
     IO,
     Optional,
     Protocol,
+    Self,
     Type,
     Union,
     cast,
 )
 import unicodedata
-import uuid
+from uuid import (
+    UUID,
+    uuid5,
+)
 
-import attr
+import attrs
 from bdbag import (
     bdbag_api,
 )
@@ -72,6 +75,7 @@ from furl import (
 from more_itertools import (
     one,
 )
+import msgpack
 from werkzeug.http import (
     parse_dict_header,
 )
@@ -83,8 +87,15 @@ from azul import (
     config,
     mutable_furl,
 )
+from azul.attrs import (
+    is_uuid,
+    strict_auto,
+)
 from azul.auth import (
     Authentication,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.indexer.document import (
     FieldTypes,
@@ -145,45 +156,225 @@ class ManifestUrlFunc(Protocol):
                  ) -> mutable_furl: ...
 
 
-@attr.s(auto_attribs=True, kw_only=False, frozen=True)
+@attrs.frozen
 class InvalidManifestKey(Exception):
     value: str
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class ManifestKey:
-    catalog: CatalogName
-    format: ManifestFormat
-    manifest_hash: str
-    source_hash: str
+class AbstractManifestKey(metaclass=ABCMeta):
+    """
+    The root of the manifest key class hierarchy. The hierarchy expresses the
+    basic security constraints on manifest keys as they are sent through
+    potentially insecure channels. This class defines the methods for
+    (de)serializing a manifest key using a somewhat space-efficient
+    binary "packed" representation.
+    """
 
-    def to_json(self):
+    @abstractmethod
+    def pack(self) -> bytes:
+        raise NotImplementedError
+
+    def encode(self) -> str:
+        return base64.urlsafe_b64encode(self.pack()).decode()
+
+    @classmethod
+    @abstractmethod
+    def unpack(cls, pack: bytes) -> Self:
+        raise NotImplementedError
+
+    @classmethod
+    def decode(cls, value: str) -> Self:
+        try:
+            return cls.unpack(base64.urlsafe_b64decode(value))
+        except Exception as e:
+            raise InvalidManifestKey(value) from e
+
+
+@attrs.frozen(kw_only=True)
+class BareManifestKey(AbstractManifestKey):
+    """
+    An untrusted manifest key. Instances can be freely serialized and
+    deserialized but the service won't accept them. To obtain a key the service
+    trusts, use an instance of :class:`ManifestKey` that was returned by the
+    service.
+
+    To send a manifest key through an an untrusted channel, it must first be
+    signed using :meth:`ManifestService.verify_manifest_key_signature`. After
+    reading it from the untrusted channel the signature must be verified using
+    :meth:`ManifestService.verify_manifest_key_signature`.
+
+    >>> manifest_key = BareManifestKey(catalog='foo',
+    ...                                format=ManifestFormat.curl,
+    ...                                manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+    ...                                source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+
+    >>> manifest_key.encode()
+    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+
+    The encode() method is the inverse of decode():
+
+    >>> BareManifestKey.decode(manifest_key.encode()) == manifest_key
+    True
+
+    Invalid base64:
+
+    >>> BareManifestKey.decode(manifest_key.encode()[:-1])
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    azul.service.manifest_service.InvalidManifestKey:
+    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=
+
+    Valid base64 encoding and msgpack format, but value of wrong type for
+    `catalog` atrribute
+
+    >>> with attrs.validators.disabled():
+    ...     # noinspection PyTypeChecker
+    ...     bad_key = attrs.evolve(manifest_key, catalog=123).encode()
+    >>> bad_key
+    'lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+
+    >>> BareManifestKey.decode(bad_key)
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    azul.service.manifest_service.InvalidManifestKey:
+    lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A==
+
+    >>> bad_key = base64.b64encode(manifest_key.pack() + b'123').decode()
+    >>> BareManifestKey.decode(bad_key)
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    azul.service.manifest_service.InvalidManifestKey:
+    lKNmb2+kY3VybMQQ0rDOPEbwV/651C442JNP1MQQd5NnR1loWI6An6+ELWvp4DEyMw==
+
+    >>> bad_key = base64.b64encode(manifest_key.pack()[:-1]).decode()
+    >>> BareManifestKey.decode(bad_key)
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    azul.service.manifest_service.InvalidManifestKey:
+    lKNmb2+kY3VybMQQ0rDOPEbwV/651C442JNP1MQQd5NnR1loWI6An6+ELWvp
+    """
+    catalog: CatalogName = strict_auto()
+    format: ManifestFormat = strict_auto()
+    manifest_hash: UUID = attrs.field(validator=is_uuid(5))
+    source_hash: UUID = attrs.field(validator=is_uuid(5))
+
+    def pack(self) -> bytes:
+        return msgpack.packb([
+            self.catalog,
+            self.format.value,
+            self.manifest_hash.bytes,
+            self.source_hash.bytes,
+        ])
+
+    @classmethod
+    def unpack(cls, pack: bytes) -> Self:
+        i = iter(msgpack.unpackb(pack))
+        return cls(catalog=next(i),
+                   format=ManifestFormat(next(i)),
+                   manifest_hash=UUID(bytes=next(i)),
+                   source_hash=UUID(bytes=next(i)))
+
+
+@attrs.frozen(kw_only=True)
+class SignedManifestKey(AbstractManifestKey):
+    """
+    A bare manifest key and its signature.
+
+    >>> bare_manifest_key = BareManifestKey(catalog='foo',
+    ...                                     format=ManifestFormat.curl,
+    ...                                     manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+    ...                                     source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+    >>> manifest_key = SignedManifestKey(value=bare_manifest_key,
+    ...                                  signature=b'123')
+
+    >>> manifest_key.encode()
+    'ksQulKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4MQDMTIz'
+
+    >>> SignedManifestKey.decode(manifest_key.encode()) == manifest_key
+    True
+    """
+    value: BareManifestKey = strict_auto()
+    signature: bytes = strict_auto()
+
+    def pack(self) -> bytes:
+        return msgpack.packb([
+            self.value.pack(),
+            self.signature
+        ])
+
+    @classmethod
+    def unpack(cls, pack: bytes) -> Self:
+        i = iter(msgpack.unpackb(pack))
+        return cls(value=BareManifestKey.unpack(next(i)),
+                   signature=next(i))
+
+
+class ManifestKey(BareManifestKey):
+    """
+    A manifest key that the service trusts implicitly. It is assumed to have
+    either been instantiated by the service itself and transmitted exclusively
+    over secure channels, or to have been extracted from a signed manifest key
+    after signature verification.
+
+    >>> manifest_key = ManifestKey(catalog='foo',
+    ...                            format=ManifestFormat.curl,
+    ...                            manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+    ...                            source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+
+    Encoded representation is short:
+
+    >>> manifest_key.encode()
+    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+
+    It shouldn't be possible to deserialize a ManifestKey instance.
+
+    >>> ManifestKey.decode(manifest_key.encode())
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    azul.service.manifest_service.InvalidManifestKey:
+    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A==
+
+    The from_json() method is the inverse of to_json():
+
+    >>> ManifestKey.from_json(manifest_key.to_json()) == manifest_key
+    True
+    """
+
+    @classmethod
+    def unpack(cls, pack: bytes) -> None:
+        """
+        Do not call this method. It is unsafe to deserialize an instance of
+        this class. Instead, deserialize a :class:`SignedManifestKey` and use
+        :meth:`ManifestService.verify_manifest_key_signature`.
+        """
+        assert False
+
+    def to_json(self) -> JSON:
         return {
             'catalog': self.catalog,
             'format': self.format.value,
-            'manifest_hash': self.manifest_hash,
-            'source_hash': self.source_hash
+            'manifest_hash': str(self.manifest_hash),
+            'source_hash': str(self.source_hash)
         }
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ManifestKey':
         return cls(catalog=json['catalog'],
                    format=ManifestFormat(json['format']),
-                   manifest_hash=json['manifest_hash'],
-                   source_hash=json['source_hash'])
-
-    def encode(self) -> str:
-        return base64.urlsafe_b64encode(json.dumps(self.to_json()).encode()).decode()
-
-    @classmethod
-    def decode(cls, value: str) -> 'ManifestKey':
-        try:
-            return cls.from_json(json.loads(base64.urlsafe_b64decode(value).decode()))
-        except Exception as e:
-            raise InvalidManifestKey(value) from e
+                   manifest_hash=UUID(json['manifest_hash']),
+                   source_hash=UUID(json['source_hash']))
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen
+class InvalidManifestKeySignature(Exception):
+    value: SignedManifestKey
+
+
+@attrs.frozen(kw_only=True)
 class Manifest:
     """
     Contains the details of a prepared manifest.
@@ -227,7 +418,7 @@ def tuple_or_none(v):
     return v if v is None else tuple(v)
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class ManifestPartition:
     """
     A partial manifest. An instance of this class encapsulates the state that
@@ -266,8 +457,8 @@ class ManifestPartition:
     multipart_upload_id: Optional[str] = None
 
     #: The S3 ETag of each partition; the current one and all the ones before it
-    part_etags: Optional[tuple[str, ...]] = attr.ib(converter=tuple_or_none,
-                                                    default=None)
+    part_etags: Optional[tuple[str, ...]] = attrs.field(converter=tuple_or_none,
+                                                        default=None)
 
     #: The index of the current page. The index is zero-based and global. For
     #: example, if the first partition contains five pages, the index of the
@@ -291,7 +482,7 @@ class ManifestPartition:
         })
 
     def to_json(self) -> MutableJSON:
-        return attr.asdict(self)
+        return attrs.asdict(self)
 
     @classmethod
     def first(cls) -> 'ManifestPartition':
@@ -299,18 +490,18 @@ class ManifestPartition:
                    is_last=False)
 
     def with_config(self, config: AnyJSON):
-        return attr.evolve(self, config=config)
+        return attrs.evolve(self, config=config)
 
     def with_upload(self, multipart_upload_id) -> 'ManifestPartition':
-        return attr.evolve(self,
-                           multipart_upload_id=multipart_upload_id,
-                           part_etags=())
+        return attrs.evolve(self,
+                            multipart_upload_id=multipart_upload_id,
+                            part_etags=())
 
     def first_page(self) -> 'ManifestPartition':
         assert self.index == 0, self
-        return attr.evolve(self,
-                           page_index=0,
-                           is_last_page=False)
+        return attrs.evolve(self,
+                            page_index=0,
+                            is_last_page=False)
 
     def next_page(self,
                   file_name: Optional[str],
@@ -321,26 +512,26 @@ class ManifestPartition:
         if self.page_index > 0:
             if file_name != self.file_name:
                 file_name = None
-        return attr.evolve(self,
-                           page_index=self.page_index + 1,
-                           file_name=file_name,
-                           search_after=search_after)
+        return attrs.evolve(self,
+                            page_index=self.page_index + 1,
+                            file_name=file_name,
+                            search_after=search_after)
 
     def last_page(self):
-        return attr.evolve(self, is_last_page=True)
+        return attrs.evolve(self, is_last_page=True)
 
     def next(self, part_etag: str) -> 'ManifestPartition':
-        return attr.evolve(self,
-                           index=self.index + 1,
-                           part_etags=(*self.part_etags, part_etag))
+        return attrs.evolve(self,
+                            index=self.index + 1,
+                            part_etags=(*self.part_etags, part_etag))
 
     def last(self, file_name: str) -> 'ManifestPartition':
-        return attr.evolve(self,
-                           file_name=file_name,
-                           is_last=True)
+        return attrs.evolve(self,
+                            file_name=file_name,
+                            is_last=True)
 
 
-@attr.s(auto_attribs=True, kw_only=False, frozen=True)
+@attrs.frozen
 class CachedManifestNotFound(Exception):
     manifest_key: ManifestKey
 
@@ -390,12 +581,12 @@ class ManifestService(ElasticsearchService):
                           instance will be returned. Otherwise, the next
                           ManifestPartition instance will be returned.
 
-        :param manifest_key: An optional key identifying the cached manifest.
-                             If None, the key will be computed dynamically. This
+        :param manifest_key: An optional key identifying the cached manifest. If
+                             None, the key will be computed dynamically. This
                              may take a few seconds. If a valid cached manifest
-                             exists with the given key, it will be used.
+                             exists under the given key, it will be used.
                              Otherwise, a new manifest will be created and
-                             stored at the given key.
+                             stored under the given key.
         """
         generator_cls = ManifestGenerator.cls_for_format(format)
         generator = generator_cls(self, catalog, filters)
@@ -422,6 +613,33 @@ class ManifestService(ElasticsearchService):
         generator = generator_cls(self, catalog, filters)
         manifest_key = generator.manifest_key()
         return self._get_cached_manifest(generator_cls, manifest_key)
+
+    @classmethod
+    def sign_manifest_key(cls, manifest_key: ManifestKey) -> SignedManifestKey:
+        """
+        Sign the given manifest key with a secret so that it can later be
+        verified to have not been tamplered with.
+        """
+        response = aws.kms.generate_mac(Message=manifest_key.pack(),
+                                        KeyId=config.manifest_kms_alias,
+                                        MacAlgorithm='HMAC_SHA_256')
+        return SignedManifestKey(value=manifest_key,
+                                 signature=response['Mac'])
+
+    @classmethod
+    def verify_manifest_key(cls, manifest_key: SignedManifestKey) -> ManifestKey:
+        """
+        Verify a manifest key against its signature. If either the key or the
+        signature have been tampered with, an exception will be raised.
+        """
+        response = aws.kms.verify_mac(KeyId=config.manifest_kms_alias,
+                                      MacAlgorithm='HMAC_SHA_256',
+                                      Message=manifest_key.value.pack(),
+                                      Mac=manifest_key.signature)
+        if response['MacValid']:
+            return ManifestKey(**attrs.asdict(manifest_key.value))
+        else:
+            raise InvalidManifestKeySignature(manifest_key)
 
     def get_cached_manifest_with_key(self, manifest_key: ManifestKey) -> Manifest:
         generator_cls = ManifestGenerator.cls_for_format(manifest_key.format)
@@ -723,9 +941,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         self.filters = filters
         self.file_url_func = service.file_url_func
 
-    manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
+    manifest_namespace = UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
 
-    source_namespace = uuid.UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
+    source_namespace = UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
 
     def manifest_key(self) -> ManifestKey:
         """
@@ -750,15 +968,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         ]
         joiner = ','
         assert not any(joiner in param for param in manifest_hash_input[:-1])
-        manifest_hash = str(uuid.uuid5(self.manifest_namespace, joiner.join(manifest_hash_input)))
+        manifest_hash = uuid5(self.manifest_namespace, joiner.join(manifest_hash_input))
 
         source_ids = sorted(self.filters.source_ids)
         assert not any(joiner in source_id for source_id in source_ids), source_ids
-        source_hash = str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
-
-        for part in manifest_hash, source_hash:
-            for joiner in '.', '/':
-                assert joiner not in part, (joiner, part)
+        source_hash = uuid5(self.source_namespace, joiner.join(source_ids))
 
         return ManifestKey(catalog=catalog,
                            format=format,
@@ -771,11 +985,12 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @classmethod
     def s3_object_key_base(cls, manifest_key: ManifestKey) -> str:
-        return '.'.join([
-            manifest_key.manifest_hash,
-            manifest_key.source_hash,
-            cls.file_name_extension()
-        ])
+        manifest_hash = str(manifest_key.manifest_hash)
+        source_hash = str(manifest_key.source_hash)
+        for part in manifest_hash, source_hash:
+            for joiner in '.', '/':
+                assert joiner not in part, (joiner, part)
+        return '.'.join([manifest_hash, source_hash, cls.file_name_extension()])
 
     @classmethod
     def file_name(cls,

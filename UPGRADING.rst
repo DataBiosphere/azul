@@ -20,6 +20,82 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#110 Reduce predictability of manifest keys
+=====================================================================
+
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to the ``sandbox``, ``anvilbox``, or ``hammerbox``
+deployments, manually deploy the ``gitlab`` component of the corresponding main
+deployment. You will likely need assistance from the system administrator
+because this particular change modifies the boundary policy. If the PR fails
+during testing and is not merged, roll back the changes made to the main
+deployments by deploying the ``gitlab`` component from the ``develop`` branch.
+
+When deploying to ``prod``, manually deploy ``prod.gitlab`` just before
+pushing the merge commit to the GitLab instance.
+
+
+#4982 Update to Python 3.11.x
+=============================
+
+Everyone
+~~~~~~~~
+
+Update Python on your developer machines to version 3.11.5. In your working
+copy, run ``make virtualenv`` and ``make requirements envhook``.
+
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to the ``sandbox``, ``anvilbox``, or ``hammerbox``
+deployments, manually deploy the ``shared`` component of the corresponding main
+deployment. If the PR fails during testing and is not merged, roll back the
+changes made to the main deployments by deploying the ``shared`` component from
+the ``develop`` branch.
+
+When deploying to ``prod``, manually deploy ``prod.gitlab`` just before
+pushing the merge commit to the GitLab instance.
+
+#5518 GitLab updates cause false positive insufficient_data alarms
+==================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment, just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+DataBiosphere/azul-private#108 Resolve vulnerabilities in docker image
+======================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` & ``gitlab`` components (in that order) of any
+main deployment, and with the ``gitlab`` component selected, run ``make -C
+terraform/gitlab/runner`` just before pushing the merge commit to the GitLab
+instance in that deployment.
+
+
+DataBiosphere/azul-private#103 Resolve vulnerabilities in azul-pycharm
+======================================================================
+
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to the ``sandbox``, ``anvilbox``, or ``hammerbox``
+deployments, manually deploy the ``shared`` component of the corresponding main
+deployment. If the PR fails during testing and is not merged, roll back the
+changes made to the main deployments by deploying the ``shared`` component from
+the ``develop`` branch.
+
+When deploying to ``prod``, manually deploy ``prod.gitlab`` just before
+pushing the merge commit to the GitLab instance.
+
+
 DataBiosphere/azul-private#93 Resolve vulnerabilities in azul-elasticsearch
 ===========================================================================
 

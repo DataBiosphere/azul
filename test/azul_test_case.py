@@ -140,7 +140,8 @@ class AzulTestCase(TestCase):
                 #        https://github.com/DataBiosphere/azul/issues/5592
                 (
                     'HTTPResponse.getheaders() is deprecated and will be removed in urllib3 v2.1.0.'
-                    ' Instead access HTTPResponse.headers directly.'
+                    ' Instead access HTTPResponse.headers directly.',
+                    'elasticsearch.connection.http_urllib3'
                 ),
             },
             UserWarning: {
@@ -149,9 +150,18 @@ class AzulTestCase(TestCase):
         }
         for warning_class, message_patterns in permitted_warnings_.items():
             for message_pattern in message_patterns:
+                if isinstance(message_pattern, tuple):
+                    message_pattern, module_name = message_pattern
+                else:
+                    module_name = ''
                 if not isinstance(message_pattern, RE):
                     message_pattern = escape(message_pattern)
-                warnings.filterwarnings('ignore', message_pattern, warning_class)
+                if not isinstance(module_name, RE):
+                    module_name = escape(module_name)
+                warnings.filterwarnings('ignore',
+                                        message=message_pattern,
+                                        category=warning_class,
+                                        module=module_name)
 
     @classmethod
     def tearDownClass(cls) -> None:

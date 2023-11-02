@@ -6,11 +6,15 @@ from typing import (
 )
 import uuid
 
-import attr
+import attrs
 from botocore.exceptions import (
     ClientError,
 )
+import msgpack
 
+from azul.attrs import (
+    strict_auto,
+)
 from azul.deployment import (
     aws,
 )
@@ -21,36 +25,53 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
+@attrs.frozen
 class InvalidTokenError(Exception):
-
-    def __init__(self) -> None:
-        super().__init__('Invalid token given')
+    value: str
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class Token:
     """
     Represents an ongoing manifest generation
     """
-    execution_id: str
-    request_index: int
-    wait_time: int
+    execution_id: str = strict_auto()
+    request_index: int = strict_auto()
+    wait_time: int = strict_auto()
+
+    def pack(self) -> bytes:
+        return msgpack.packb([
+            self.execution_id,
+            self.request_index,
+            self.wait_time
+        ])
+
+    @classmethod
+    def unpack(cls, pack: bytes) -> 'Token':
+        i = iter(msgpack.unpackb(pack))
+        return cls(execution_id=next(i),
+                   request_index=next(i),
+                   wait_time=next(i))
 
     def encode(self) -> str:
-        token = attr.asdict(self)
-        return base64.urlsafe_b64encode(json.dumps(token).encode()).decode()
+        return base64.urlsafe_b64encode(self.pack()).decode()
 
     @classmethod
     def decode(cls, token: str) -> 'Token':
         try:
-            return cls(**json.loads(base64.urlsafe_b64decode(token).decode()))
+            return cls.unpack(base64.urlsafe_b64decode(token))
         except Exception as e:
-            raise InvalidTokenError from e
+            raise InvalidTokenError(token) from e
 
     def advance(self, wait_time: int) -> 'Token':
-        return attr.evolve(self,
-                           wait_time=wait_time,
-                           request_index=self.request_index + 1)
+        return attrs.evolve(self,
+                            wait_time=wait_time,
+                            request_index=self.request_index + 1)
+
+
+@attrs.frozen
+class NoSuchGeneration(Exception):
+    token: Token
 
 
 class StateMachineError(RuntimeError):
@@ -76,13 +97,13 @@ class AsyncManifestService:
                      request_index=0,
                      wait_time=self._get_next_wait_time(0))
 
-    def inspect_generation(self, token) -> Union[Token, JSON]:
+    def inspect_generation(self, token: Token) -> Union[Token, JSON]:
         try:
             execution = self._describe_execution(state_machine_name=self.state_machine_name,
                                                  execution_name=token.execution_id)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-                raise InvalidTokenError from e
+                raise NoSuchGeneration(token)
             else:
                 raise
         output = execution.get('output', None)

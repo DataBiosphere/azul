@@ -32,20 +32,20 @@ class RemoteDebugSession(ContextDecorator):
 
        Add the following **Path mappings**:
 
-       +---------------------------------------+-----------------------------+
-       | local path                            | remote path                 |
-       +=======================================+=============================+
-       | ``<absolute project root>/src/azul``  | ``/var/task/azul``          |
-       +---------------------------------------+-----------------------------+
-       | ``<absolute project root>/.venv/      | ``/var/task/chalice``       |
-       | lib/python3.9/site-packages/chalice`` |                             |
-       +---------------------------------------+-----------------------------+
-       | ``<absolute project root              | ``/opt/python``             |
-       | >/.venv/lib/python3.9/site-packages`` |                             |
-       +---------------------------------------+-----------------------------+
-       | ``<home directory>/                   | ``/var/lang/lib/python3.9`` |
-       | .pyenv/versions/3.8.3/lib/python3.9`` |                             |
-       +---------------------------------------+-----------------------------+
+       +-----------------------------------------+------------------------------+
+       | local path                              | remote path                  |
+       +=========================================+==============================+
+       | ``<absolute project root>/src/azul``    | ``/var/task/azul``           |
+       +-----------------------------------------+------------------------------+
+       | ``<absolute project root>/.venv/        | ``/var/task/chalice``        |
+       | lib/python3.11/site-packages/chalice``  |                              |
+       +-----------------------------------------+------------------------------+
+       | ``<absolute project root                | ``/opt/python``              |
+       | >/.venv/lib/python3.11/site-packages``  |                              |
+       +-----------------------------------------+------------------------------+
+       | ``<home directory>/                     | ``/var/lang/lib/python3.11`` |
+       | .pyenv/versions/3.11.5/lib/python3.11`` |                              |
+       +-----------------------------------------+------------------------------+
 
        Depending on which lambda you're debugging, add **one** of the
        following:
