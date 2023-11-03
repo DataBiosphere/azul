@@ -53,10 +53,10 @@ from azul.es import (
 )
 from azul.indexer import (
     Bundle,
+    BundleFQID,
     BundleFQIDJSON,
     BundlePartition,
     BundleUUID,
-    BundleVersion,
     SourcedBundleFQIDJSON,
 )
 from azul.indexer.aggregate import (
@@ -705,33 +705,28 @@ class IndexService(DocumentService):
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            result: dict[EntityType, dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]]
+            result: dict[EntityType, dict[EntityID, tuple[BundleFQID, JSON]]]
             result = defaultdict(dict)
             for contribution in contributions:
+                other_bundle_fqid = contribution.coordinates.bundle
                 for entity_type, other_entities in contribution.contents.items():
                     entities = result[entity_type]
                     for other_entity in other_entities:
                         # FIXME: the key 'document_id' is HCA specific
                         entity_id = other_entity['document_id']
-                        bundle_uuid, bundle_version, entity = \
-                            entities.get(entity_id, (None, '', None))
+                        bundle_fqid, entity = entities.get(entity_id, (None, None))
                         if entity is not None and other_entity.keys() != entity.keys():
                             symmetric_difference = set(other_entity.keys()).symmetric_difference(entity)
-                            log.warning('Document shape of `%s` entity `%s` does not match between bundles '
-                                        '%s, version %s and %s, version %s: %s',
+                            log.warning('Document shape of `%s` entity `%s` '
+                                        'does not match between bundles %r and %r, '
+                                        'the mismatched properties being: %s',
                                         entity_type, entity_id,
-                                        bundle_uuid, bundle_version,
-                                        contribution.coordinates.bundle.uuid,
-                                        contribution.coordinates.bundle.version,
+                                        bundle_fqid, other_bundle_fqid,
                                         symmetric_difference)
-                        if bundle_version < contribution.coordinates.bundle.version:
-                            entities[entity_id] = (
-                                contribution.coordinates.bundle.uuid,
-                                contribution.coordinates.bundle.version,
-                                other_entity
-                            )
+                        if bundle_fqid is None or bundle_fqid.version < other_bundle_fqid.version:
+                            entities[entity_id] = (other_bundle_fqid, other_entity)
             return {
-                entity_type: [entity for _, _, entity in entities.values()]
+                entity_type: [entity for _, entity in entities.values()]
                 for entity_type, entities in result.items()
             }
 
