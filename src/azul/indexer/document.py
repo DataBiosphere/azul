@@ -18,6 +18,7 @@ from typing import (
     ClassVar,
     Generic,
     Optional,
+    Self,
     Sequence,
     Type,
     TypeVar,
@@ -74,7 +75,7 @@ class EntityReference:
         return f'{self.entity_type}/{self.entity_id}'
 
     @classmethod
-    def parse(cls, s: str) -> 'EntityReference':
+    def parse(cls, s: str) -> Self:
         entity_type, entity_id = s.split('/')
         return cls(entity_type=entity_type, entity_id=entity_id)
 
@@ -233,7 +234,7 @@ class IndexName:
                catalog: CatalogName,
                entity_type: str,
                doc_type: 'DocumentType'
-               ) -> 'IndexName':
+               ) -> Self:
         return cls(prefix=config.index_prefix,
                    version=2,
                    deployment=config.deployment_stage,
@@ -242,7 +243,7 @@ class IndexName:
                    doc_type=doc_type)
 
     @classmethod
-    def parse(cls, index_name: str) -> 'IndexName':
+    def parse(cls, index_name: str) -> Self:
         """
         Parse the name of an index from any deployment and any version of Azul.
 
@@ -584,7 +585,7 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     def _from_index(cls,
                     index_name: IndexName,
                     document_id: str
-                    ) -> 'AggregateCoordinates':
+                    ) -> Self:
         entity_type = index_name.entity_type
         assert index_name.doc_type is DocumentType.aggregate
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
@@ -1174,7 +1175,7 @@ class Document(Generic[C]):
                   document: JSON,
                   version: Optional[InternalVersion],
                   **kwargs,
-                  ) -> 'Document':
+                  ) -> Self:
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(coordinates=coordinates,
@@ -1199,7 +1200,7 @@ class Document(Generic[C]):
                    hit: JSON,
                    *,
                    coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None
-                   ) -> 'Document':
+                   ) -> Self:
         if coordinates is None:
             coordinates = DocumentCoordinates.from_hit(hit)
         document = cls.translate_fields(hit['_source'],
@@ -1330,7 +1331,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
                   document: JSON,
                   version: Optional[InternalVersion],
                   **kwargs
-                  ) -> 'Contribution':
+                  ) -> Self:
         self = super().from_json(coordinates=coordinates,
                                  document=document,
                                  version=version,
@@ -1412,7 +1413,7 @@ class Aggregate(Document[AggregateCoordinates]):
                   document: JSON,
                   version: Optional[InternalVersion],
                   **kwargs
-                  ) -> 'Aggregate':
+                  ) -> Self:
         self = super().from_json(coordinates=coordinates,
                                  document=document,
                                  version=version,
