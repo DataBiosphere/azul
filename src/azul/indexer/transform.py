@@ -21,11 +21,13 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     Contribution,
     ContributionCoordinates,
+    EntityID,
     EntityReference,
     EntityType,
     FieldTypes,
 )
 from azul.types import (
+    JSON,
     MutableJSON,
 )
 
@@ -98,3 +100,12 @@ class Transformer(metaclass=ABCMeta):
                             version=None,
                             source=self.bundle.fqid.source,
                             contents=contents)
+
+    @classmethod
+    @abstractmethod
+    def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
+        """
+        Return the identifier of the given inner entity. Typically, the
+        identifier is the value of a particular property of the entity.
+        """
+        raise NotImplementedError

@@ -31,6 +31,9 @@ from more_itertools import (
     one,
 )
 
+from azul import (
+    JSON,
+)
 from azul.indexer import (
     BundlePartition,
 )
@@ -39,6 +42,7 @@ from azul.indexer.aggregate import (
 )
 from azul.indexer.document import (
     Contribution,
+    EntityID,
     EntityReference,
     EntityType,
     FieldTypes,
@@ -396,6 +400,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         'sequencingactivity',
         'variantcallingactivity'
     }
+
+    @classmethod
+    def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
+        return entity['document_id']
 
 
 class ActivityTransformer(BaseTransformer):

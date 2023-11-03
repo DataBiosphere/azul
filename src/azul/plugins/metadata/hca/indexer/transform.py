@@ -63,6 +63,7 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     ClosedRange,
     Contribution,
+    EntityID,
     EntityReference,
     EntityType,
     FieldType,
@@ -1246,6 +1247,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @cached_property
     def _api_project(self) -> api.Project:
         return one(self.api_bundle.projects.values())
+
+    @classmethod
+    def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
+        return entity['document_id']
 
 
 BaseTransformer.validate_class()

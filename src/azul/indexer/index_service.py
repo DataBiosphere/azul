@@ -676,7 +676,7 @@ class IndexService(DocumentService):
                           transformer: Type[Transformer],
                           contributions: list[Contribution]
                           ) -> JSON:
-        contents = self._reconcile(contributions)
+        contents = self._reconcile(transformer, contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
         inner_entity_counts = []
@@ -695,7 +695,8 @@ class IndexService(DocumentService):
         return aggregate_contents
 
     def _reconcile(self,
-                   contributions: Sequence[Contribution]
+                   transformer: Type[Transformer],
+                   contributions: Sequence[Contribution],
                    ) -> Mapping[EntityType, Entities]:
         """
         Given all the contributions to a certain outer entity, reconcile
@@ -712,8 +713,7 @@ class IndexService(DocumentService):
                 for entity_type, other_entities in contribution.contents.items():
                     entities = result[entity_type]
                     for other_entity in other_entities:
-                        # FIXME: the key 'document_id' is HCA specific
-                        entity_id = other_entity['document_id']
+                        entity_id = transformer.inner_entity_id(entity_type, other_entity)
                         bundle_fqid, entity = entities.get(entity_id, (None, None))
                         if entity is not None and other_entity.keys() != entity.keys():
                             symmetric_difference = set(other_entity.keys()).symmetric_difference(entity)
