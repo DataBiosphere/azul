@@ -25,12 +25,12 @@ from azul.json_freeze import (
 )
 from azul.types import (
     JSON,
-    MutableJSONs,
+    JSONs,
 )
 
 logger = logging.getLogger(__name__)
 
-Entities = MutableJSONs
+Entities = JSONs
 
 
 class Accumulator(metaclass=ABCMeta):

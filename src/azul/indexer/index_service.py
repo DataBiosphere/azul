@@ -94,7 +94,6 @@ from azul.types import (
     CompositeJSON,
     JSON,
     JSONs,
-    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -675,7 +674,7 @@ class IndexService(DocumentService):
     def _aggregate_entity(self,
                           transformer: Type[Transformer],
                           contributions: list[Contribution]
-                          ) -> MutableJSON:
+                          ) -> JSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
@@ -696,7 +695,7 @@ class IndexService(DocumentService):
 
     def _select_latest(self,
                        contributions: Sequence[Contribution]
-                       ) -> dict[EntityType, Entities]:
+                       ) -> Mapping[EntityType, Entities]:
         """
         Collect the latest version of each inner entity from multiple given documents.
 
