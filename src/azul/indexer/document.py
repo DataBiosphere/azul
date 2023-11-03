@@ -1058,6 +1058,13 @@ class Document(Generic[C]):
     # None.
     # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
     version: Optional[InternalVersion]
+
+    # In the index, the `contents` property is always present and never null in
+    # documents. In instances of the Aggregate subclass, this attribute is None
+    # when they were created from documents that were retrieved from the
+    # index while intentionally excluding that property for efficiency. In
+    # instances of the Contribution subclass, this attribute is never None.
+    #
     contents: Optional[JSON]
 
     @property
@@ -1158,6 +1165,7 @@ class Document(Generic[C]):
                     return field_type.from_index(doc)
 
     def to_json(self) -> JSON:
+        assert self.contents is not None, self
         return dict(entity_id=self.coordinates.entity.entity_id,
                     contents=self.contents)
 
@@ -1292,6 +1300,8 @@ class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
 
 @document_class
 class Contribution(Document[ContributionCoordinates[E]]):
+    # This narrows the type declared in the superclass. See comment there.
+    contents: JSON
     source: DocumentSource
 
     #: The version_type attribute will change to VersionType.none if writing
@@ -1299,6 +1309,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
     version_type: VersionType = VersionType.create_only
 
     def __attrs_post_init__(self):
+        assert self.contents is not None
         assert isinstance(self.coordinates, ContributionCoordinates)
         assert self.coordinates.doc_type is DocumentType.contribution
 
@@ -1337,6 +1348,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
     @classmethod
     def mandatory_source_fields(cls) -> list[str]:
         return super().mandatory_source_fields() + [
+            'contents',
             'document_id',
             'source',
             'bundle_uuid',
