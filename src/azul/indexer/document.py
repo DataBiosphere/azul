@@ -1043,10 +1043,8 @@ InternalVersion = tuple[int, int]
 
 C = TypeVar('C', bound=DocumentCoordinates)
 
-document_class = attr.s(frozen=False, kw_only=True, auto_attribs=True)
 
-
-@document_class
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
 
@@ -1298,7 +1296,7 @@ class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
     pass
 
 
-@document_class
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Contribution(Document[ContributionCoordinates[E]]):
     # This narrows the type declared in the superclass. See comment there.
     contents: JSON
@@ -1365,7 +1363,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_deleted=self.coordinates.deleted)
 
 
-@document_class
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
     sources: set[DocumentSource]
