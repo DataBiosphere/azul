@@ -18,6 +18,7 @@ from operator import (
 from typing import (
     MutableSet,
     Optional,
+    TYPE_CHECKING,
     Type,
     Union,
 )
@@ -661,6 +662,8 @@ class IndexService(DocumentService):
             bundles = bundles[:max_bundles]
             sources = set(c.source for c in contributions)
             aggregate_cls = self.aggregate_class(entity.catalog)
+            if TYPE_CHECKING:  # work around https://youtrack.jetbrains.com/issue/PY-44728
+                aggregate_cls = Aggregate
             aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
                                       version=None,
                                       sources=sources,

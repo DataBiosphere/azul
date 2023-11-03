@@ -7,6 +7,7 @@ import logging
 import time
 from typing import (
     Optional,
+    TYPE_CHECKING,
     cast,
 )
 
@@ -29,6 +30,7 @@ from azul.indexer.document import (
     FieldType,
 )
 from azul.plugins import (
+    RepositoryFileDownload,
     RepositoryPlugin,
 )
 from azul.service import (
@@ -185,6 +187,8 @@ class RepositoryController(SourceController):
 
         plugin = self.repository_plugin(catalog)
         download_cls = plugin.file_download_class()
+        if TYPE_CHECKING:  # work around https://youtrack.jetbrains.com/issue/PY-44728
+            download_cls = RepositoryFileDownload
 
         if request_index == 0:
             file = self.service.get_data_file(catalog=catalog,

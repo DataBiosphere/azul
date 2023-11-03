@@ -455,20 +455,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: HCABundle
     api_bundle: api.Bundle
 
-    # This stub is only needed to aid PyCharm's type inference. Without this,
-    # a constructor invocation that doesn't refer to the class explicitly, but
-    # through a variable will cause a warning. I suspect a bug in PyCharm:
-    #
-    # https://youtrack.jetbrains.com/issue/PY-44728
-    #
-    # noinspection PyDataclass,PyUnusedLocal
-    def __init__(self,
-                 *,
-                 bundle: HCABundle,
-                 api_bundle: api.Bundle,
-                 deleted: bool):
-        ...
-
     @classmethod
     def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':

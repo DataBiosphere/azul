@@ -645,26 +645,6 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     #: is first requested.
     token: Optional[str]
 
-    # This stub is only needed to aid PyCharm's type inference. Without this,
-    # the following constructor invocation
-    #
-    # cls : Type[RepositoryFileDownload] = ...
-    # cls(file_uuid=..., file_name=...)
-    #
-    # will cause a warning. I suspect this is a bug in PyCharm:
-    #
-    # https://youtrack.jetbrains.com/issue/PY-44728
-    #
-    # noinspection PyDataclass
-    # noinspection PyUnusedLocal
-    def __init__(self,
-                 file_uuid: str,
-                 file_name: str,
-                 file_version: Optional[str],
-                 drs_uri: Optional[str],
-                 replica: Optional[str],
-                 token: Optional[str]) -> None: ...
-
     @abstractmethod
     def update(self,
                plugin: RepositoryPlugin,

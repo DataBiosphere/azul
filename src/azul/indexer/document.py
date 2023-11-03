@@ -1372,21 +1372,6 @@ class Aggregate(Document[AggregateCoordinates]):
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
 
-    # This stub is only needed to aid PyCharm's type inference. Without this,
-    # a constructor invocation that doesn't refer to the class explicitly, but
-    # through a variable will cause a warning. I suspect a bug in PyCharm:
-    #
-    # https://youtrack.jetbrains.com/issue/PY-44728
-    #
-    # noinspection PyDataclass,PyUnusedLocal
-    def __init__(self,
-                 coordinates: AggregateCoordinates,
-                 version: Optional[int],
-                 sources: set[SourceRef[SimpleSourceSpec, SourceRef]],
-                 contents: Optional[JSON],
-                 bundles: Optional[list[BundleFQIDJSON]],
-                 num_contributions: int) -> None: ...
-
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
         assert self.coordinates.doc_type is DocumentType.aggregate
