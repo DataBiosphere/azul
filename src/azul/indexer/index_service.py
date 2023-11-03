@@ -705,35 +705,34 @@ class IndexService(DocumentService):
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            contents: dict[EntityType, dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]]
-            contents = defaultdict(dict)
+            result: dict[EntityType, dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]]
+            result = defaultdict(dict)
             for contribution in contributions:
-                for entity_type, entities in contribution.contents.items():
-                    collated_entities = contents[entity_type]
-                    entity: JSON
-                    for entity in entities:
+                for entity_type, other_entities in contribution.contents.items():
+                    entities = result[entity_type]
+                    for other_entity in other_entities:
                         # FIXME: the key 'document_id' is HCA specific
-                        entity_id = entity['document_id']
-                        cur_bundle_uuid, cur_bundle_version, cur_entity = \
-                            collated_entities.get(entity_id, (None, '', None))
-                        if cur_entity is not None and entity.keys() != cur_entity.keys():
-                            symmetric_difference = set(entity.keys()).symmetric_difference(cur_entity)
+                        entity_id = other_entity['document_id']
+                        bundle_uuid, bundle_version, entity = \
+                            entities.get(entity_id, (None, '', None))
+                        if entity is not None and other_entity.keys() != entity.keys():
+                            symmetric_difference = set(other_entity.keys()).symmetric_difference(entity)
                             log.warning('Document shape of `%s` entity `%s` does not match between bundles '
                                         '%s, version %s and %s, version %s: %s',
                                         entity_type, entity_id,
-                                        cur_bundle_uuid, cur_bundle_version,
+                                        bundle_uuid, bundle_version,
                                         contribution.coordinates.bundle.uuid,
                                         contribution.coordinates.bundle.version,
                                         symmetric_difference)
-                        if cur_bundle_version < contribution.coordinates.bundle.version:
-                            collated_entities[entity_id] = (
+                        if bundle_version < contribution.coordinates.bundle.version:
+                            entities[entity_id] = (
                                 contribution.coordinates.bundle.uuid,
                                 contribution.coordinates.bundle.version,
-                                entity
+                                other_entity
                             )
             return {
                 entity_type: [entity for _, _, entity in entities.values()]
-                for entity_type, entities in contents.items()
+                for entity_type, entities in result.items()
             }
 
     def _create_writer(self, catalog: Optional[CatalogName]) -> 'IndexWriter':
