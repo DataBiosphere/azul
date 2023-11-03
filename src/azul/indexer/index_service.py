@@ -105,8 +105,6 @@ CataloguedTallies = Mapping[CataloguedEntityReference, int]
 
 MutableCataloguedTallies = dict[CataloguedEntityReference, int]
 
-CollatedEntities = dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]
-
 
 class IndexExistsAndDiffersException(Exception):
     pass
@@ -707,7 +705,8 @@ class IndexService(DocumentService):
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            contents: dict[EntityType, CollatedEntities] = defaultdict(dict)
+            contents: dict[EntityType, dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]]
+            contents = defaultdict(dict)
             for contribution in contributions:
                 for entity_type, entities in contribution.contents.items():
                     collated_entities = contents[entity_type]
