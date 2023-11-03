@@ -678,7 +678,7 @@ class IndexService(DocumentService):
                           transformer: Type[Transformer],
                           contributions: list[Contribution]
                           ) -> JSON:
-        contents = self._select_latest(contributions)
+        contents = self._reconcile(contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
         inner_entity_counts = []
@@ -696,15 +696,13 @@ class IndexService(DocumentService):
             assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
-    def _select_latest(self,
-                       contributions: Sequence[Contribution]
-                       ) -> Mapping[EntityType, Entities]:
+    def _reconcile(self,
+                   contributions: Sequence[Contribution]
+                   ) -> Mapping[EntityType, Entities]:
         """
-        Collect the latest version of each inner entity from multiple given documents.
-
-        If two or more contributions contain copies of the same inner entity,
-        potentially with different contents, the copy from the contribution with
-        the latest bundle version will be selected.
+        Given all the contributions to a certain outer entity, reconcile
+        potentially different copies of the same inner entity in those
+        contributions.
         """
         if len(contributions) == 1:
             return one(contributions).contents
