@@ -120,6 +120,31 @@ class HCAIndexerTestCase(DCP1TestCase, IndexerTestCase):
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load(self.catalog).create()
 
+    def _assert_hit_counts(self,
+                           hits: list[JSON],
+                           num_contribs: int,
+                           *,
+                           num_aggs: Optional[int] = None,
+                           ):
+        """
+        Verify that the indices contain the correct number of hits of each
+        document type
+        :param hits: Hits from ElasticSearch
+        :param num_contribs: Expected number of contributions
+        :param num_aggs: Expected number of aggregates. If unspecified, `num_contribs`
+                         becomes the default.
+        """
+        if num_aggs is None:
+            # By default, assume 1 aggregate per contribution.
+            num_aggs = num_contribs
+        expected = {
+            DocumentType.contribution: num_contribs,
+            DocumentType.aggregate: num_aggs,
+        }
+        actual = dict.fromkeys(expected.keys(), 0)
+        actual |= Counter(self._parse_index_name(h)[1] for h in hits)
+        self.assertDictEqual(expected, actual)
+
 
 class TestHCAIndexer(HCAIndexerTestCase):
 
@@ -167,29 +192,27 @@ class TestHCAIndexer(HCAIndexerTestCase):
                 try:
                     self._index_bundle(bundle)
                     hits = self._get_all_hits()
-                    self.assertEqual(len(hits), size * 2)
-                    num_aggregates, num_contribs = 0, 0
+                    self._assert_hit_counts(hits, size)
                     for hit in hits:
                         entity_type, doc_type = self._parse_index_name(hit)
                         if doc_type is DocumentType.aggregate:
                             doc = aggregate_cls.from_index(field_types, hit)
                             self.assertNotEqual(doc.contents, {})
-                            num_aggregates += 1
                         elif doc_type is DocumentType.contribution:
                             doc = Contribution.from_index(field_types, hit)
                             self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
                             self.assertFalse(doc.coordinates.deleted)
-                            num_contribs += 1
                         else:
                             assert False, doc_type
-                    self.assertEqual(num_aggregates, size)
-                    self.assertEqual(num_contribs, size)
 
                     self._index_bundle(bundle, delete=True)
 
                     hits = self._get_all_hits()
-                    # Twice the size because deletions create new contribution
-                    self.assertEqual(len(hits), 2 * size)
+                    # Twice the number of contributions because deletions create
+                    # new documents instead of removing them. The aggregates are
+                    # removed when the deletions cause their contents to become
+                    # emtpy.
+                    self._assert_hit_counts(hits, num_contribs=size * 2, num_aggs=0)
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         entity_type, doc_type = self._parse_index_name(hit)
@@ -317,7 +340,7 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
         self._index_canned_bundle(self.new_bundle)
         self._assert_index_counts(just_deletion=False)
 
-    def _assert_index_counts(self, just_deletion):
+    def _assert_index_counts(self, *, just_deletion: bool):
         # Five entities (two files, one project, one sample and one bundle)
         num_expected_addition_contributions = 0 if just_deletion else 6
         num_expected_deletion_contributions = 6
@@ -326,15 +349,11 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
         actual_addition_contributions = [h for h in hits if not h['_source']['bundle_deleted']]
         actual_deletion_contributions = [h for h in hits if h['_source']['bundle_deleted']]
 
-        actual_aggregates = list(self._filter_hits(hits, DocumentType.aggregate))
-
         self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
         self.assertEqual(len(actual_deletion_contributions), num_expected_deletion_contributions)
-        self.assertEqual(len(actual_aggregates), num_expected_aggregates)
-        self.assertEqual(num_expected_addition_contributions
-                         + num_expected_deletion_contributions
-                         + num_expected_aggregates,
-                         len(hits))
+        self._assert_hit_counts(hits,
+                                num_contribs=num_expected_addition_contributions + num_expected_deletion_contributions,
+                                num_aggs=num_expected_aggregates)
 
     def test_bundle_delete_downgrade(self):
         """
@@ -961,7 +980,8 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
         self._index_canned_bundle(analysis_bundle)
         hits = self._get_all_hits()
         num_files = 33
-        self.assertEqual(len(hits), (num_files + 1 + 1 + 1 + 1) * 2)
+        num_expected = dict(files=num_files, samples=1, cell_suspensions=1, projects=1, bundles=1)
+        self._assert_hit_counts(hits, sum(num_expected.values()))
         num_contribs, num_aggregates = Counter(), Counter()
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
@@ -989,7 +1009,6 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
                 assert False, doc_type
             self.assertEqual(1, len(contents['specimens']))
             self.assertEqual(1, len(contents['projects']))
-        num_expected = dict(files=num_files, samples=1, cell_suspensions=1, projects=1, bundles=1)
         self.assertEqual(num_contribs, num_expected)
         self.assertEqual(num_aggregates, num_expected)
 
@@ -1030,11 +1049,14 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
         hits = self._get_all_hits()
-        # Six entities (two files, one project, one cell suspension, one sample,
-        # and one bundle) One contribution and one aggregate per entity. Two
-        # times number of deleted contributions since deletes don't remove a
-        # contribution, but add a new one
-        self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions * 2, len(hits))
+        # Two files, one project, one cell suspension, one sample, and one bundle
+        num_old_contribs = 6
+        # Deletions add new contributions to the index instead of removing the old ones,
+        # so they're included in the total
+        num_new_contribs = num_expected_new_contributions + num_expected_new_deleted_contributions * 2
+        self._assert_hit_counts(hits,
+                                num_contribs=num_old_contribs + num_new_contribs,
+                                num_aggs=num_old_contribs)
         hits_by_id = {}
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
@@ -1086,9 +1108,11 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
                            ) -> None:
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
-        # Six entities (two files, one project, one cell suspension, one sample
-        # and one bundle). One contribution and one aggregate per entity
-        self.assertEqual(6 + 6 + num_expected_old_contributions, len(hits))
+        # Two files, one project, one cell suspension, one sample, and one bundle.
+        num_new_contribs = 6
+        self._assert_hit_counts(hits,
+                                num_contribs=num_new_contribs + num_expected_old_contributions,
+                                num_aggs=num_new_contribs)
 
         def get_version(source, doc_type):
             if doc_type is DocumentType.aggregate:
@@ -1178,11 +1202,12 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
 
         hits = self._get_all_hits()
         file_uuids = set()
-        # Two bundles each with 1 sample, 1 cell suspension, 1 project, 1 bundle and 2 files
-        # Both bundles share the same sample and the project, so they get aggregated only once:
-        # 2 samples + 2 projects + 2 cell suspension + 2 bundles + 4 files +
-        # 1 samples agg + 1 projects agg + 2 cell suspension agg + 2 bundle agg + 4 file agg = 22 hits
-        self.assertEqual(22, len(hits))
+        # Two bundles, each with 1 sample, 1 cell suspension, 1 project, 1 bundle and 2 files.
+        num_contribs = (1 + 1 + 1 + 1 + 2) * 2
+        self._assert_hit_counts(hits,
+                                num_contribs=num_contribs,
+                                # Both bundles share the same sample and the project, so they get aggregated only once
+                                num_aggs=num_contribs - 2)
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
             contents = hit['_source']['contents']
@@ -1900,7 +1925,7 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
                     self._index_canned_bundle(bundle_fqid)
 
                 hits = self._get_all_hits()
-                self.assertEqual(len(hits), 42)
+                self._assert_hit_counts(hits, 21)
 
     def test_disallow_manifest_column_joiner(self):
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
