@@ -674,7 +674,8 @@ class IndexService(DocumentService):
 
     def _aggregate_entity(self,
                           transformer: Type[Transformer],
-                          contributions: list[Contribution]) -> MutableJSON:
+                          contributions: list[Contribution]
+                          ) -> MutableJSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
