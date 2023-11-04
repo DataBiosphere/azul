@@ -41,14 +41,14 @@ from azul import (
 from azul.chalice import (
     AppController,
 )
-from azul.deployment import (
-    aws,
-)
 from azul.es import (
     ESClientFactory,
 )
 from azul.plugins import (
     MetadataPlugin,
+)
+from azul.service.queue_service import (
+    QueueService,
 )
 from azul.service.storage_service import (
     StorageService,
@@ -200,24 +200,25 @@ class Health:
         """
         Returns information about the SQS queues used by the indexer.
         """
-        sqs = aws.resource('sqs')
+        sqs = QueueService()
         response = {'up': True}
-        for queue in config.all_queue_names:
+        for queue_name in config.all_queue_names:
             try:
-                queue_instance = sqs.get_queue_by_name(QueueName=queue).attributes
+                queue = sqs.get_queues([queue_name])
             except ClientError as ex:
-                response[queue] = {
+                response[queue_name] = {
                     'up': False,
                     'error': ex.response['Error']['Message']
                 }
                 response['up'] = False
             else:
-                response[queue] = {
+                queue = queue[queue_name].attributes
+                response[queue_name] = {
                     'up': True,
                     'messages': {
-                        'delayed': int(queue_instance['ApproximateNumberOfMessagesDelayed']),
-                        'invisible': int(queue_instance['ApproximateNumberOfMessagesNotVisible']),
-                        'queued': int(queue_instance['ApproximateNumberOfMessages'])
+                        'delayed': int(queue['ApproximateNumberOfMessagesDelayed']),
+                        'invisible': int(queue['ApproximateNumberOfMessagesNotVisible']),
+                        'queued': int(queue['ApproximateNumberOfMessages'])
                     }
                 }
         return response

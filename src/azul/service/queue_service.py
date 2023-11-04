@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 Queue = Any  # place-holder for boto3's SQS queue resource
 
 
-class Queues:
+class QueueService:
 
     def __init__(self, delete=False, json_body=True):
         self._delete = delete

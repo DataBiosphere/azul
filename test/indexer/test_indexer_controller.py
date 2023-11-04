@@ -31,7 +31,6 @@ from moto import (
 
 from azul import (
     config,
-    queues,
 )
 from azul.azulclient import (
     AzulClient,
@@ -57,6 +56,9 @@ from azul.plugins.repository.dss import (
     DSSBundleFQID,
     DSSSourceRef,
     Plugin,
+)
+from azul.service.queue_service import (
+    QueueService,
 )
 from azul.types import (
     JSONs,
@@ -92,7 +94,7 @@ class TestIndexController(DCP1TestCase, IndexerTestCase, SqsTestCase):
         self.controller = IndexController(app=app)
         app.catalog = self.catalog
         IndexController.index_service.fset(self.controller, self.index_service)
-        self.queue_manager = queues.Queues(delete=True)
+        self.queue_manager = QueueService(delete=True)
 
     def tearDown(self):
         self.index_service.delete_indices(self.catalog)
