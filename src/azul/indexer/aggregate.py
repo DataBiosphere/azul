@@ -391,14 +391,14 @@ class EntityAggregator(metaclass=ABCMeta):
     def _transform_entity(self, entity: JSON) -> JSON:
         return entity
 
-    def _get_accumulator(self, field: str) -> Optional[Accumulator]:
+    def _accumulator(self, field: str) -> Optional[Accumulator]:
         """
         Return the Accumulator instance to be used for the given field or None
         if the field should not be accumulated.
         """
-        return self._get_default_accumulator()
+        return self._default_accumulator()
 
-    def _get_default_accumulator(self) -> Optional[Accumulator]:
+    def _default_accumulator(self) -> Optional[Accumulator]:
         return SetAccumulator(max_size=100)
 
     @abstractmethod
@@ -429,7 +429,7 @@ class SimpleAggregator(EntityAggregator):
             try:
                 accumulator = aggregate[field_]
             except Exception:
-                accumulator = self._get_accumulator(field_)
+                accumulator = self._accumulator(field_)
                 aggregate[field_] = accumulator
             if accumulator is not None:
                 accumulator.accumulate(value)

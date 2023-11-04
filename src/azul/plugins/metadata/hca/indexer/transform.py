@@ -457,7 +457,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     api_bundle: api.Bundle
 
     @classmethod
-    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return FileAggregator()
         elif entity_type in SampleTransformer.inner_entity_types():
@@ -1673,11 +1673,11 @@ class BundleTransformer(SingletonTransformer):
         return BundleAsEntity(self.api_bundle)
 
     @classmethod
-    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return None
         else:
-            return super().get_aggregator(entity_type)
+            return super().aggregator(entity_type)
 
     @classmethod
     def entity_type(cls) -> str:

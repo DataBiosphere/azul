@@ -686,7 +686,7 @@ class IndexService(DocumentService):
                 assert num_entities <= 1
                 inner_entity_counts.append(num_entities)
             else:
-                aggregator = transformer.get_aggregator(entity_type)
+                aggregator = transformer.aggregator(entity_type)
                 if aggregator is not None:
                     entities = aggregator.aggregate(entities)
             aggregate_contents[entity_type] = entities

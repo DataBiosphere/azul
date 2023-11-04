@@ -136,7 +136,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def get_aggregator(cls, entity_type) -> EntityAggregator:
+    def aggregator(cls, entity_type) -> EntityAggregator:
         if entity_type == 'activities':
             return ActivityAggregator()
         elif entity_type == 'biosamples':

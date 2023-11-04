@@ -87,7 +87,7 @@ class Transformer(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         """
         Returns the aggregator to be used for inner entities of the given type
         that occur in contributions to an entity of this transformer's (outer)
