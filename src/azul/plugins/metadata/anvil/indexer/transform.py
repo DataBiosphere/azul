@@ -13,6 +13,7 @@ from functools import (
 from itertools import (
     chain,
 )
+import logging
 from operator import (
     attrgetter,
 )
@@ -35,6 +36,7 @@ from azul import (
     JSON,
 )
 from azul.indexer import (
+    BundleFQID,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -75,6 +77,8 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+
+log = logging.getLogger(__name__)
 
 EntityRefsByType = dict[EntityType, set[EntityReference]]
 
@@ -404,6 +408,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
         return entity['document_id']
+
+    @classmethod
+    def reconcile_inner_entities(cls,
+                                 entity_type: EntityType,
+                                 *,
+                                 this: tuple[JSON, BundleFQID],
+                                 that: tuple[JSON, BundleFQID]
+                                 ) -> tuple[JSON, BundleFQID]:
+        this_entity, this_bundle = this
+        that_entity, that_bundle = that
+        return that if that_bundle.version > this_bundle.version else this
 
 
 class ActivityTransformer(BaseTransformer):

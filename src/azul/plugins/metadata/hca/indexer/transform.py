@@ -54,6 +54,7 @@ from azul.enums import (
     auto,
 )
 from azul.indexer import (
+    BundleFQID,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -1251,6 +1252,25 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
         return entity['document_id']
+
+    @classmethod
+    def reconcile_inner_entities(cls,
+                                 entity_type: EntityType,
+                                 *,
+                                 this: tuple[JSON, BundleFQID],
+                                 that: tuple[JSON, BundleFQID]
+                                 ) -> tuple[JSON, BundleFQID]:
+        this_entity, this_bundle = this
+        that_entity, that_bundle = that
+        if that_entity.keys() != this_entity.keys():
+            mismatch = set(that_entity.keys()).symmetric_difference(this_entity)
+            log.warning('Document shape of `%s` this_entity `%s` '
+                        'does not match between bundles %r and %r, '
+                        'the mismatched properties being: %s',
+                        entity_type, cls.inner_entity_id(entity_type, this_entity),
+                        this_bundle, that_bundle,
+                        mismatch)
+        return that if that_bundle.version > this_bundle.version else this
 
 
 BaseTransformer.validate_class()

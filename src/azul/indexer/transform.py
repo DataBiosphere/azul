@@ -13,6 +13,7 @@ import attr
 
 from azul.indexer import (
     Bundle,
+    BundleFQID,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -113,5 +114,34 @@ class Transformer(metaclass=ABCMeta):
         """
         Return the identifier of the given inner entity. Typically, the
         identifier is the value of a particular property of the entity.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def reconcile_inner_entities(cls,
+                                 entity_type: EntityType,
+                                 *,
+                                 this: tuple[JSON, BundleFQID],
+                                 that: tuple[JSON, BundleFQID],
+                                 ) -> tuple[JSON, BundleFQID]:
+        """
+        Given two potentially different copies of an inner entity, return the
+        copy that should be incorporated into the aggregate for an outer entity
+        of this transformer's entity type. Each copy is accompanied by the FQID
+        of the bundle that contributed it. Typically, the copy from the more
+        recently updated bundle is returned, but other implementations, such as
+        merging the two copies are plausible, too.
+
+        :param entity_type: The type of the entity to reconcile
+
+        :param this: One copy of the entity and the bundle it came from
+
+        :param that: Another copy of the entity and the bundle it came from
+
+        :return: The copy to use and the bundle it came from. The return value
+                 may be passed to this method again in case there is yet another
+                 copy to reconcile. In that case, the return value will be
+                 passed as the ``this`` argument.
         """
         raise NotImplementedError

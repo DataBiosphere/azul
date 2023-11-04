@@ -706,27 +706,25 @@ class IndexService(DocumentService):
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            result: dict[EntityType, dict[EntityID, tuple[BundleFQID, JSON]]]
+            result: dict[EntityType, dict[EntityID, tuple[JSON, BundleFQID]]]
             result = defaultdict(dict)
             for contribution in contributions:
-                other_bundle_fqid = contribution.coordinates.bundle
-                for entity_type, other_entities in contribution.contents.items():
-                    entities = result[entity_type]
-                    for other_entity in other_entities:
-                        entity_id = transformer.inner_entity_id(entity_type, other_entity)
-                        bundle_fqid, entity = entities.get(entity_id, (None, None))
-                        if entity is not None and other_entity.keys() != entity.keys():
-                            symmetric_difference = set(other_entity.keys()).symmetric_difference(entity)
-                            log.warning('Document shape of `%s` entity `%s` '
-                                        'does not match between bundles %r and %r, '
-                                        'the mismatched properties being: %s',
-                                        entity_type, entity_id,
-                                        bundle_fqid, other_bundle_fqid,
-                                        symmetric_difference)
-                        if bundle_fqid is None or bundle_fqid.version < other_bundle_fqid.version:
-                            entities[entity_id] = (other_bundle_fqid, other_entity)
+                that_bundle = contribution.coordinates.bundle
+                for entity_type, those_entities in contribution.contents.items():
+                    these_entities = result[entity_type]
+                    for that_entity in those_entities:
+                        entity_id = transformer.inner_entity_id(entity_type, that_entity)
+                        this = these_entities.get(entity_id, (None, None))
+                        this_entity, this_bundle = this
+                        that = (that_entity, that_bundle)
+                        if this_entity is None:
+                            these_entities[entity_id] = that
+                        else:
+                            that = transformer.reconcile_inner_entities(entity_type, this=this, that=that)
+                            if this != that:
+                                these_entities[entity_id] = that
             return {
-                entity_type: [entity for _, entity in entities.values()]
+                entity_type: [entity for entity, _ in entities.values()]
                 for entity_type, entities in result.items()
             }
 
