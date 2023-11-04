@@ -41,13 +41,20 @@ class Transformer(metaclass=ABCMeta):
     @abstractmethod
     def entity_type(cls) -> EntityType:
         """
-        The type of entity this transformer creates and aggregates
+        The type of outer entity this transformer creates and aggregates
         contributions for.
         """
         raise NotImplementedError
 
     @classmethod
     def inner_entity_types(cls) -> frozenset[str]:
+        """
+        The set of types of inner entities that *do not* require aggregation in
+        an aggregate for an entity of this transformer's outer entity type. For
+        any *outer* entity of a certain type there is usually just one *inner*
+        entity of that same type, eliminating the need to aggregate multiple
+        inner entities.
+        """
         return frozenset((cls.entity_type(),))
 
     @classmethod
@@ -82,10 +89,9 @@ class Transformer(metaclass=ABCMeta):
     @abstractmethod
     def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         """
-        Returns the aggregator to be used for entities of the given type that
-        occur in the document to be aggregated. A document for an entity of
-        type X typically contains exactly one entity of type X and multiple
-        entities of types other than X.
+        Returns the aggregator to be used for inner entities of the given type
+        that occur in contributions to an entity of this transformer's (outer)
+        entity type.
         """
         raise NotImplementedError
 

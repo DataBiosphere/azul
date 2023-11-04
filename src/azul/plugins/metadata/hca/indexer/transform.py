@@ -1520,14 +1520,12 @@ class SampleTransformer(PartitionedTransformer):
 
     @classmethod
     def inner_entity_types(cls) -> frozenset[str]:
-        return frozenset(
-            [
-                cls.entity_type(),
-                'sample_cell_lines',
-                'sample_organoids',
-                'sample_specimens'
-            ]
-        )
+        return frozenset([
+            cls.entity_type(),
+            'sample_cell_lines',
+            'sample_organoids',
+            'sample_specimens'
+        ])
 
     def _entities(self) -> Iterable[Sample]:
         samples: dict[str, Sample] = dict()
