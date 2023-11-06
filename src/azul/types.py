@@ -8,7 +8,6 @@ from typing import (
     Generic,
     Optional,
     Protocol,
-    TYPE_CHECKING,
     TypeVar,
     Union,
     get_args,
@@ -227,11 +226,8 @@ def get_generic_type_params(cls: type[Generic],
     return types
 
 
-# FIXME: Remove hacky import of SupportsLessThan
-#        https://github.com/DataBiosphere/azul/issues/2783
-if TYPE_CHECKING:
-    pass
-else:
-    class SupportsLessThan(Protocol):
+class SupportsLessAndGreaterThan(Protocol):
 
-        def __lt__(self, __other: Any) -> bool: ...
+    def __lt__(self, __other: Any) -> bool: ...
+
+    def __gt__(self, __other: Any) -> bool: ...

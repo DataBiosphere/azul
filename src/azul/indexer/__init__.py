@@ -34,7 +34,7 @@ from azul.types import (
     AnyJSON,
     JSON,
     MutableJSON,
-    SupportsLessThan,
+    SupportsLessAndGreaterThan,
     get_generic_type_params,
 )
 from azul.uuids import (
@@ -49,9 +49,20 @@ BundleVersion = str
 
 
 @attrs.frozen(kw_only=True, order=True)
-class BundleFQID(SupportsLessThan):
-    uuid: BundleUUID
-    version: BundleVersion
+class BundleFQID(SupportsLessAndGreaterThan):
+    """
+    >>> list(sorted([
+    ...     BundleFQID(uuid='d', version='e'),
+    ...     BundleFQID(uuid='a', version='c'),
+    ...     BundleFQID(uuid='a', version='b'),
+    ... ]))
+    ... # doctest: +NORMALIZE_WHITESPACE
+    [BundleFQID(uuid='a', version='b'),
+    BundleFQID(uuid='a', version='c'),
+    BundleFQID(uuid='d', version='e')]
+    """
+    uuid: BundleUUID = attrs.field(order=str.lower)
+    version: BundleVersion = attrs.field(order=str.lower)
 
     def to_json(self) -> MutableJSON:
         return attrs.asdict(self, recurse=False)
@@ -287,8 +298,8 @@ class SourceJSON(TypedDict):
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
 
 
-@attrs.frozen(kw_only=True)
-class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
+@attrs.frozen(kw_only=True, order=True)
+class SourceRef(SupportsLessAndGreaterThan, Generic[SOURCE_SPEC, SOURCE_REF]):
     """
     A reference to a repository source containing bundles to index. A repository
     has at least one source. A source is primarily referenced by its ID but we
@@ -303,9 +314,19 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     Note to plugin implementers: Since the source ID can't be assumed to be
     globally unique, plugins should subclass this class, even if the subclass
     body is empty.
+
+    >>> spec = SimpleSourceSpec(name='', prefix=(Prefix(partition=0)))
+    >>> list(sorted([
+    ...     SourceRef(id='d', spec=spec),
+    ...     SourceRef(id='a', spec=spec),
+    ... ]))
+    ... # doctest: +NORMALIZE_WHITESPACE
+    [SourceRef(id='a', spec=SimpleSourceSpec(prefix=Prefix(common='', partition=0), name='')),
+    SourceRef(id='d', spec=SimpleSourceSpec(prefix=Prefix(common='', partition=0), name=''))]
+
     """
-    id: str
-    spec: SOURCE_SPEC
+    id: str = attrs.field(order=str.lower)
+    spec: SOURCE_SPEC = attrs.field(order=False)
 
     _lookup: ClassVar[dict[tuple[Type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
     _lookup_lock = RLock()
@@ -375,8 +396,24 @@ class SourcedBundleFQIDJSON(BundleFQIDJSON):
 BUNDLE_FQID = TypeVar('BUNDLE_FQID', bound='SourcedBundleFQID')
 
 
-@attrs.frozen(kw_only=True)
+@attrs.frozen(kw_only=True, order=True)
 class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
+    """
+    >>> spec = SimpleSourceSpec(name='', prefix=(Prefix(partition=0)))
+    >>> list(sorted([
+    ...     SourcedBundleFQID(uuid='d', version='e', source=SourceRef(id='1', spec=spec)),
+    ...     SourcedBundleFQID(uuid='a', version='c', source=SourceRef(id='2', spec=spec)),
+    ...     SourcedBundleFQID(uuid='a', version='b', source=SourceRef(id='3', spec=spec)),
+    ... ]))
+    ... # doctest: +NORMALIZE_WHITESPACE
+    [SourcedBundleFQID(uuid='a', version='b',
+        source=SourceRef(id='3', spec=SimpleSourceSpec(prefix=Prefix(common='', partition=0), name=''))),
+    SourcedBundleFQID(uuid='a', version='c',
+        source=SourceRef(id='2', spec=SimpleSourceSpec(prefix=Prefix(common='', partition=0), name=''))),
+    SourcedBundleFQID(uuid='d', version='e',
+        source=SourceRef(id='1', spec=SimpleSourceSpec(prefix=Prefix(common='', partition=0), name='')))]
+    """
+
     source: SOURCE_REF
 
     @classmethod
