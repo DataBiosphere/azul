@@ -143,7 +143,6 @@ def reify(t):
     >>> set(reify(Optional[int])) == {type(None), int}
     True
 
-    >>> from typing import TypeVar
     >>> reify(TypeVar)
     Traceback (most recent call last):
         ...
@@ -185,7 +184,7 @@ def get_generic_type_params(cls: type[Generic],
     inspected class's definition. `*required_types` can be used to assert the
     superclasses of parameters that are types.
 
-    >>> from typing import Generic, TypeVar
+    >>> from typing import Generic
     >>> T = TypeVar(name='T')
     >>> class A(Generic[T]):
     ...     pass
