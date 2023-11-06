@@ -39,6 +39,7 @@ AnyJSON = Sequence[AnyJSON1] | Mapping[str, AnyJSON1] | PrimitiveJSON
 JSON = Mapping[str, AnyJSON]
 JSONs = Sequence[JSON]
 CompositeJSON = JSON | Sequence[AnyJSON]
+FlatJSON = Mapping[str, PrimitiveJSON]
 
 # For mutable JSON we can be more specific and use dict and list:
 
@@ -50,6 +51,7 @@ AnyMutableJSON = list[AnyMutableJSON1] | dict[str, AnyMutableJSON1] | PrimitiveJ
 MutableJSON = dict[str, AnyMutableJSON]
 MutableJSONs = list[MutableJSON]
 MutableCompositeJSON = MutableJSON | list[AnyJSON]
+MutableFlatJSON = dict[str, PrimitiveJSON]
 
 
 class LambdaContext(object):
