@@ -231,18 +231,18 @@ other_public_keys = {
 # azul.config.docker_images and redeploying the `shared` TF component prior to
 # deploying the `gitlab` component.
 
-clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.2.0-7'
+clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.2.1-14'
 dind_image = config.docker_registry + 'docker.io/library/docker:24.0.6-dind'
-gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.4.1-ce.0'
-runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.4.1'
+gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.5.1-ce.0'
+runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0'
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.24 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.25 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
-    'us-east-1': 'ami-0fac124aa9383b3bf'
+    'us-east-1': 'ami-08c4b5feb158beff4'
 }
 
 gitlab_mount = '/mnt/gitlab'

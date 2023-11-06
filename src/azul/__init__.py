@@ -1449,10 +1449,10 @@ class Config:
         return [
             'docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
             'docker.elastic.co/kibana/kibana-oss:7.10.2',
-            'docker.io/clamav/clamav:1.2.0-7',
+            'docker.io/clamav/clamav:1.2.1-14',
             'docker.io/cllunsford/aws-signing-proxy:0.2.2',
-            'docker.io/gitlab/gitlab-ce:16.4.1-ce.0',
-            'docker.io/gitlab/gitlab-runner:ubuntu-v16.4.1',
+            'docker.io/gitlab/gitlab-ce:16.5.1-ce.0',
+            'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
             'docker.io/library/docker:24.0.6',
             'docker.io/library/docker:24.0.6-dind',
             'docker.io/library/python:3.11.5-bullseye',
