@@ -10,7 +10,7 @@ from typing import (
     Union,
 )
 
-import attr
+import attrs
 from more_itertools import (
     one,
 )
@@ -39,7 +39,7 @@ from azul.types import (
 Key = str
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
+@attrs.frozen(kw_only=True)
 class KeyReference:
     key: Key
     entity_type: EntityType
@@ -48,11 +48,15 @@ class KeyReference:
 ENTITY_REF = TypeVar('ENTITY_REF', bound=Union[EntityReference, KeyReference])
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True, order=False)
+@attrs.frozen(kw_only=True, order=False)
 class Link(Generic[ENTITY_REF]):
-    inputs: AbstractSet[ENTITY_REF] = attr.ib(factory=frozenset, converter=frozenset)
-    activity: Optional[ENTITY_REF] = attr.ib(default=None)
-    outputs: AbstractSet[ENTITY_REF] = attr.ib(factory=frozenset, converter=frozenset)
+    inputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
+                                                  converter=frozenset)
+
+    activity: Optional[ENTITY_REF] = attrs.field(default=None)
+
+    outputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
+                                                   converter=frozenset)
 
     @property
     def all_entities(self) -> AbstractSet[ENTITY_REF]:
@@ -81,10 +85,10 @@ class Link(Generic[ENTITY_REF]):
         return min(self.inputs) < min(other.inputs)
 
 
-@attr.s(auto_attribs=True, kw_only=True)
+@attrs.define(kw_only=True)
 class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
-    entities: dict[EntityReference, MutableJSON] = attr.ib(factory=dict)
-    links: set[Link[EntityReference]] = attr.ib(factory=set)
+    entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
+    links: set[Link[EntityReference]] = attrs.field(factory=set)
 
     def reject_joiner(self, catalog: CatalogName):
         # FIXME: Optimize joiner rejection and re-enable it for AnVIL

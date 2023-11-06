@@ -22,7 +22,7 @@ from typing import (
     TypedDict,
 )
 
-import attr
+import attrs
 
 from azul import (
     CatalogName,
@@ -48,13 +48,13 @@ BundleUUID = str
 BundleVersion = str
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
+@attrs.frozen(kw_only=True, order=True)
 class BundleFQID(SupportsLessThan):
     uuid: BundleUUID
     version: BundleVersion
 
     def to_json(self) -> MutableJSON:
-        return attr.asdict(self, recurse=False)
+        return attrs.asdict(self, recurse=False)
 
 
 class BundleFQIDJSON(TypedDict):
@@ -62,7 +62,7 @@ class BundleFQIDJSON(TypedDict):
     version: BundleVersion
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class Prefix:
     common: str = ''
     partition: int
@@ -161,7 +161,7 @@ Prefix.of_everything = Prefix.parse('/0')
 SOURCE_SPEC = TypeVar('SOURCE_SPEC', bound='SourceSpec')
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
     """
     The name of a repository source containing bundles to index. A repository
@@ -211,7 +211,7 @@ class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
         return other.prefix.common.startswith(self.prefix.common)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
     """
     Default implementation for unstructured source names.
@@ -287,7 +287,7 @@ class SourceJSON(TypedDict):
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     """
     A reference to a repository source containing bundles to index. A repository
@@ -375,7 +375,7 @@ class SourcedBundleFQIDJSON(BundleFQIDJSON):
 BUNDLE_FQID = TypeVar('BUNDLE_FQID', bound='SourcedBundleFQID')
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
+@attrs.frozen(kw_only=True)
 class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     source: SOURCE_REF
 
@@ -399,7 +399,7 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
                     source=self.source.to_json())
 
 
-@attr.s(auto_attribs=True, kw_only=True)
+@attrs.define(kw_only=True)
 class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
     fqid: BUNDLE_FQID
 

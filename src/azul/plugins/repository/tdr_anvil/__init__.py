@@ -16,7 +16,7 @@ from typing import (
     Optional,
 )
 
-import attr
+import attrs
 from more_itertools import (
     one,
 )
@@ -107,9 +107,9 @@ class AnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
     entity_type: str
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class AnvilBundleFQID(TDRBundleFQID):
-    entity_type: BundleEntityType = attr.ib(converter=BundleEntityType)
+    entity_type: BundleEntityType = attrs.field(converter=BundleEntityType)
 
     def to_json(self) -> SourcedBundleFQIDJSON:
         return dict(super().to_json(),
