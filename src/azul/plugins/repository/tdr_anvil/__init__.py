@@ -103,20 +103,20 @@ class BundleEntityType(Enum):
     supplementary: EntityType = 'file'
 
 
-class AnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
+class TDRAnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
     entity_type: str
 
 
 @attrs.frozen(kw_only=True)
-class AnvilBundleFQID(TDRBundleFQID):
+class TDRAnvilBundleFQID(TDRBundleFQID):
     entity_type: BundleEntityType = attrs.field(converter=BundleEntityType)
 
-    def to_json(self) -> AnvilBundleFQIDJSON:
+    def to_json(self) -> TDRAnvilBundleFQIDJSON:
         return dict(super().to_json(),
                     entity_type=self.entity_type.value)
 
 
-class TDRAnvilBundle(AnvilBundle[AnvilBundleFQID], TDRBundle):
+class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
 
     @classmethod
     def canning_qualifier(cls) -> str:
@@ -156,7 +156,7 @@ class TDRAnvilBundle(AnvilBundle[AnvilBundleFQID], TDRBundle):
         )
 
 
-class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleFQID]):
+class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBundleFQID]):
 
     @cached_property
     def _version(self):
@@ -172,7 +172,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
-                      ) -> list[AnvilBundleFQID]:
+                      ) -> list[TDRAnvilBundleFQID]:
         spec = source.spec
         partition_prefix = spec.prefix.common + prefix
         validate_uuid_prefix(partition_prefix)
@@ -188,14 +188,14 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
             WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{partition_prefix}')
         ''')
         return [
-            AnvilBundleFQID(source=source,
-                            # Reversibly tweak the entity UUID to prevent
-                            # collisions between entity IDs and bundle IDs
-                            uuid=uuids.change_version(row['datarepo_row_id'],
-                                                      self.datarepo_row_uuid_version,
-                                                      self.bundle_uuid_version),
-                            version=self._version,
-                            entity_type=BundleEntityType(row['entity_type']))
+            TDRAnvilBundleFQID(source=source,
+                               # Reversibly tweak the entity UUID to prevent
+                               # collisions between entity IDs and bundle IDs
+                               uuid=uuids.change_version(row['datarepo_row_id'],
+                                                         self.datarepo_row_uuid_version,
+                                                         self.bundle_uuid_version),
+                               version=self._version,
+                               entity_type=BundleEntityType(row['entity_type']))
             for row in rows
         ]
 
@@ -223,7 +223,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
         ''')
         return {row['prefix']: row['subgraph_count'] for row in rows}
 
-    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> AnvilBundleFQID:
+    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
         if 'entity_type' not in fqid:
             # Resolution of bundles without entity type is expensive, so we only
             # support it during canning.
@@ -243,7 +243,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
             fqid = {**fqid, **one(rows)}
         return super().resolve_bundle(fqid)
 
-    def _emulate_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+    def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         if bundle_fqid.entity_type is BundleEntityType.primary:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
             return self._primary_bundle(bundle_fqid)
@@ -253,7 +253,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
         else:
             assert False, bundle_fqid.entity_type
 
-    def _primary_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+    def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
         bundle_entity = self._bundle_entity(bundle_fqid)
 
@@ -301,7 +301,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
         result.add_links(links, entities_by_key)
         return result
 
-    def _supplementary_bundle(self, bundle_fqid: AnvilBundleFQID) -> TDRAnvilBundle:
+    def _supplementary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         entity_id = uuids.change_version(bundle_fqid.uuid,
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
@@ -334,7 +334,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, AnvilBundleF
         result.add_links({Link(**link_args)}, entities_by_key)
         return result
 
-    def _bundle_entity(self, bundle_fqid: AnvilBundleFQID) -> KeyReference:
+    def _bundle_entity(self, bundle_fqid: TDRAnvilBundleFQID) -> KeyReference:
         source = bundle_fqid.source
         bundle_uuid = bundle_fqid.uuid
         entity_id = uuids.change_version(bundle_uuid,

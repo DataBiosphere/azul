@@ -144,8 +144,8 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.plugins.repository.tdr_anvil import (
-    AnvilBundleFQIDJSON,
     BundleEntityType,
+    TDRAnvilBundleFQIDJSON,
 )
 from azul.portal_service import (
     PortalService,
@@ -1123,7 +1123,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         always_iterable(file['is_supplementary'])
                         for file in hit['files']
                     )), default=False)
-                    bundle_fqid = cast(AnvilBundleFQIDJSON, bundle_fqid)
+                    bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
                     bundle_fqid['entity_type'] = (
                         BundleEntityType.supplementary
                         if is_supplementary else
