@@ -111,7 +111,7 @@ class AnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
 class AnvilBundleFQID(TDRBundleFQID):
     entity_type: BundleEntityType = attrs.field(converter=BundleEntityType)
 
-    def to_json(self) -> SourcedBundleFQIDJSON:
+    def to_json(self) -> AnvilBundleFQIDJSON:
         return dict(super().to_json(),
                     entity_type=self.entity_type.value)
 
