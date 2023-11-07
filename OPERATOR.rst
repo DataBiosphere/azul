@@ -116,6 +116,9 @@ operator performs the following steps daily.
       - [ ] Update `azul-index-anvilbox`
       - [ ] Update `azul-index-hammerbox`
       - [ ] Update `azul-index-prod`
+      - [ ] Confirm snapshots are disabled on all domains
+        - `aws opensearch describe-domains --domain-name <NAME> | jq '.DomainStatusList[].SnapshotOptions'`
+        - Value of `AutomatedSnapshotStartHour` should be `-1`
 
    Note that, somewhat counterintuitively, main deployments are updated before
    their respective ``sandbox``. If, during step 3, updates or domains were
