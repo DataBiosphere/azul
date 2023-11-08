@@ -13,6 +13,7 @@ import json
 import logging
 from typing import (
     Optional,
+    TYPE_CHECKING,
 )
 
 import elasticsearch
@@ -235,11 +236,12 @@ class RepositoryService(ElasticsearchService):
                                 peek_ahead=True,
                                 filters=filters).wrap(chain)
 
-        # https://youtrack.jetbrains.com/issue/PY-44728
-        # noinspection PyArgumentList
-        chain = plugin.search_response_stage(service=self,
-                                             catalog=catalog,
-                                             entity_type=entity_type).wrap(chain)
+        response_stage_cls = plugin.search_response_stage
+        if TYPE_CHECKING:  # work around https://youtrack.jetbrains.com/issue/PY-44728
+            response_stage_cls = SearchResponseStage
+        chain = response_stage_cls(service=self,
+                                   catalog=catalog,
+                                   entity_type=entity_type).wrap(chain)
 
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)

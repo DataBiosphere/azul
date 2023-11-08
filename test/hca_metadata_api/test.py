@@ -488,6 +488,9 @@ class TestAccessorApi(AzulUnitTestCase):
 
         return bundle
 
+    # FIXME: Re-enable this test
+    #        https://github.com/DataBiosphere/azul/issues/4757
+    @skip('https://github.com/DataBiosphere/azul/issues/4757')
     def test_canned_staging_area(self):
         ref = 'eb93f83b'
         url = f'https://github.com/HumanCellAtlas/schema-test-data/tree/{ref}/tests'

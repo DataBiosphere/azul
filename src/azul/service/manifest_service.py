@@ -1104,7 +1104,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                        file: JSON,
                        args: Mapping = frozendict()
                        ) -> Optional[str]:
-        if self.repository_plugin.file_download_class().needs_drs_uri and file['drs_uri'] is None:
+        download_cls = self.repository_plugin.file_download_class()
+        if download_cls.needs_drs_uri and file['drs_uri'] is None:
             return None
         else:
             return str(self.file_url_func(catalog=self.catalog,

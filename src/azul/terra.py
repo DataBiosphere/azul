@@ -16,7 +16,7 @@ from typing import (
     Optional,
 )
 
-import attr
+import attrs
 from chalice import (
     UnauthorizedError,
 )
@@ -92,7 +92,7 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class TDRSourceSpec(SourceSpec):
     project: str
     name: str
@@ -230,7 +230,7 @@ class TerraCredentialsProvider(CredentialsProvider, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
     service_account: config.ServiceAccount
 
@@ -322,7 +322,7 @@ class TerraConcurrentModificationException(TerraClientException):
         super().__init__('Snapshot listing changed while we were paging through it')
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class TerraClient(OAuth2Client):
     """
     A client to a service in the Broad Institute's Terra ecosystem.
@@ -344,18 +344,17 @@ class TerraClient(OAuth2Client):
         try:
             # Limited retries on I/O errors such as refused or dropped
             # connections. The latter are actually very likely if connections
-            # from the pool are reused after a long period of idleness.
+            # from the pool are reused after a long period of idleness. That's
+            # why we need at least one retry on read.
             retry = urllib3.Retry(total=None,
                                   connect=retries,
-                                  read=0,
+                                  read=retries + 1,
                                   redirect=0,
                                   status=0,
                                   other=retries)
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
-                                                 # FIXME: Service should return 503 response when Terra client times out
-                                                 #        https://github.com/DataBiosphere/azul/issues/3968
                                                  timeout=timeout,
                                                  retries=retry,
                                                  body=body)
@@ -433,7 +432,7 @@ class TDRClient(SAMClient):
 
     # FIXME: Eliminate azul.terra.TDRClient.TDRSource
     #        https://github.com/DataBiosphere/azul/issues/5524
-    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+    @attrs.frozen(kw_only=True)
     class TDRSource:
         project: str
         id: str

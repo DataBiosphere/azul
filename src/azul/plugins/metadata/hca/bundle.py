@@ -3,7 +3,7 @@ from abc import (
 )
 import logging
 
-import attr
+import attrs
 
 from azul import (
     CatalogName,
@@ -21,7 +21,7 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(auto_attribs=True, kw_only=True)
+@attrs.define(kw_only=True)
 class HCABundle(Bundle[BUNDLE_FQID], ABC):
     manifest: MutableJSONs
     """

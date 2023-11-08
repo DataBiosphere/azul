@@ -18,6 +18,7 @@ from operator import (
 from typing import (
     MutableSet,
     Optional,
+    TYPE_CHECKING,
     Type,
     Union,
 )
@@ -52,10 +53,10 @@ from azul.es import (
 )
 from azul.indexer import (
     Bundle,
+    BundleFQID,
     BundleFQIDJSON,
     BundlePartition,
     BundleUUID,
-    BundleVersion,
     SourcedBundleFQIDJSON,
 )
 from azul.indexer.aggregate import (
@@ -94,7 +95,6 @@ from azul.types import (
     CompositeJSON,
     JSON,
     JSONs,
-    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -104,8 +104,6 @@ Tallies = Mapping[EntityReference, int]
 CataloguedTallies = Mapping[CataloguedEntityReference, int]
 
 MutableCataloguedTallies = dict[CataloguedEntityReference, int]
-
-CollatedEntities = dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]
 
 
 class IndexExistsAndDiffersException(Exception):
@@ -662,6 +660,8 @@ class IndexService(DocumentService):
             bundles = bundles[:max_bundles]
             sources = set(c.source for c in contributions)
             aggregate_cls = self.aggregate_class(entity.catalog)
+            if TYPE_CHECKING:  # work around https://youtrack.jetbrains.com/issue/PY-44728
+                aggregate_cls = Aggregate
             aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
                                       version=None,
                                       sources=sources,
@@ -674,8 +674,9 @@ class IndexService(DocumentService):
 
     def _aggregate_entity(self,
                           transformer: Type[Transformer],
-                          contributions: list[Contribution]) -> MutableJSON:
-        contents = self._select_latest(contributions)
+                          contributions: list[Contribution]
+                          ) -> JSON:
+        contents = self._reconcile(transformer, contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
         inner_entity_counts = []
@@ -685,7 +686,7 @@ class IndexService(DocumentService):
                 assert num_entities <= 1
                 inner_entity_counts.append(num_entities)
             else:
-                aggregator = transformer.get_aggregator(entity_type)
+                aggregator = transformer.aggregator(entity_type)
                 if aggregator is not None:
                     entities = aggregator.aggregate(entities)
             aggregate_contents[entity_type] = entities
@@ -693,47 +694,38 @@ class IndexService(DocumentService):
             assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
-    def _select_latest(self,
-                       contributions: Sequence[Contribution]
-                       ) -> dict[EntityType, Entities]:
+    def _reconcile(self,
+                   transformer: Type[Transformer],
+                   contributions: Sequence[Contribution],
+                   ) -> Mapping[EntityType, Entities]:
         """
-        Collect the latest version of each inner entity from multiple given documents.
-
-        If two or more contributions contain copies of the same inner entity,
-        potentially with different contents, the copy from the contribution with
-        the latest bundle version will be selected.
+        Given all the contributions to a certain outer entity, reconcile
+        potentially different copies of the same inner entity in those
+        contributions.
         """
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            contents: dict[EntityType, CollatedEntities] = defaultdict(dict)
+            result: dict[EntityType, dict[EntityID, tuple[JSON, BundleFQID]]]
+            result = defaultdict(dict)
             for contribution in contributions:
-                for entity_type, entities in contribution.contents.items():
-                    collated_entities = contents[entity_type]
-                    entity: JSON
-                    for entity in entities:
-                        # FIXME: the key 'document_id' is HCA specific
-                        entity_id = entity['document_id']
-                        cur_bundle_uuid, cur_bundle_version, cur_entity = \
-                            collated_entities.get(entity_id, (None, '', None))
-                        if cur_entity is not None and entity.keys() != cur_entity.keys():
-                            symmetric_difference = set(entity.keys()).symmetric_difference(cur_entity)
-                            log.warning('Document shape of `%s` entity `%s` does not match between bundles '
-                                        '%s, version %s and %s, version %s: %s',
-                                        entity_type, entity_id,
-                                        cur_bundle_uuid, cur_bundle_version,
-                                        contribution.coordinates.bundle.uuid,
-                                        contribution.coordinates.bundle.version,
-                                        symmetric_difference)
-                        if cur_bundle_version < contribution.coordinates.bundle.version:
-                            collated_entities[entity_id] = (
-                                contribution.coordinates.bundle.uuid,
-                                contribution.coordinates.bundle.version,
-                                entity
-                            )
+                that_bundle = contribution.coordinates.bundle
+                for entity_type, those_entities in contribution.contents.items():
+                    these_entities = result[entity_type]
+                    for that_entity in those_entities:
+                        entity_id = transformer.inner_entity_id(entity_type, that_entity)
+                        this = these_entities.get(entity_id, (None, None))
+                        this_entity, this_bundle = this
+                        that = (that_entity, that_bundle)
+                        if this_entity is None:
+                            these_entities[entity_id] = that
+                        else:
+                            that = transformer.reconcile_inner_entities(entity_type, this=this, that=that)
+                            if this != that:
+                                these_entities[entity_id] = that
             return {
-                entity_type: [entity for _, _, entity in entities.values()]
-                for entity_type, entities in contents.items()
+                entity_type: [entity for entity, _ in entities.values()]
+                for entity_type, entities in result.items()
             }
 
     def _create_writer(self, catalog: Optional[CatalogName]) -> 'IndexWriter':

@@ -54,6 +54,7 @@ from azul.enums import (
     auto,
 )
 from azul.indexer import (
+    BundleFQID,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -63,6 +64,7 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     ClosedRange,
     Contribution,
+    EntityID,
     EntityReference,
     EntityType,
     FieldType,
@@ -455,22 +457,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: HCABundle
     api_bundle: api.Bundle
 
-    # This stub is only needed to aid PyCharm's type inference. Without this,
-    # a constructor invocation that doesn't refer to the class explicitly, but
-    # through a variable will cause a warning. I suspect a bug in PyCharm:
-    #
-    # https://youtrack.jetbrains.com/issue/PY-44728
-    #
-    # noinspection PyDataclass,PyUnusedLocal
-    def __init__(self,
-                 *,
-                 bundle: HCABundle,
-                 api_bundle: api.Bundle,
-                 deleted: bool):
-        ...
-
     @classmethod
-    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return FileAggregator()
         elif entity_type in SampleTransformer.inner_entity_types():
@@ -1261,6 +1249,29 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _api_project(self) -> api.Project:
         return one(self.api_bundle.projects.values())
 
+    @classmethod
+    def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
+        return entity['document_id']
+
+    @classmethod
+    def reconcile_inner_entities(cls,
+                                 entity_type: EntityType,
+                                 *,
+                                 this: tuple[JSON, BundleFQID],
+                                 that: tuple[JSON, BundleFQID]
+                                 ) -> tuple[JSON, BundleFQID]:
+        this_entity, this_bundle = this
+        that_entity, that_bundle = that
+        if that_entity.keys() != this_entity.keys():
+            mismatch = set(that_entity.keys()).symmetric_difference(this_entity)
+            log.warning('Document shape of `%s` this_entity `%s` '
+                        'does not match between bundles %r and %r, '
+                        'the mismatched properties being: %s',
+                        entity_type, cls.inner_entity_id(entity_type, this_entity),
+                        this_bundle, that_bundle,
+                        mismatch)
+        return that if that_bundle.version > this_bundle.version else this
+
 
 BaseTransformer.validate_class()
 
@@ -1529,14 +1540,12 @@ class SampleTransformer(PartitionedTransformer):
 
     @classmethod
     def inner_entity_types(cls) -> frozenset[str]:
-        return frozenset(
-            [
-                cls.entity_type(),
-                'sample_cell_lines',
-                'sample_organoids',
-                'sample_specimens'
-            ]
-        )
+        return frozenset([
+            cls.entity_type(),
+            'sample_cell_lines',
+            'sample_organoids',
+            'sample_specimens'
+        ])
 
     def _entities(self) -> Iterable[Sample]:
         samples: dict[str, Sample] = dict()
@@ -1684,11 +1693,11 @@ class BundleTransformer(SingletonTransformer):
         return BundleAsEntity(self.api_bundle)
 
     @classmethod
-    def get_aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
         if entity_type == 'files':
             return None
         else:
-            return super().get_aggregator(entity_type)
+            return super().aggregator(entity_type)
 
     @classmethod
     def entity_type(cls) -> str:

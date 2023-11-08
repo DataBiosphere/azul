@@ -144,10 +144,14 @@ class TestHCAIndexer(DCP1TestCase, IndexerTestCase):
                 with self.subTest(page_size=page_size, max_partition_size=max_partition_size):
                     with patch.object(BundlePartition, 'max_partition_size', new=max_partition_size):
                         with patch.object(type(config), 'contribution_page_size', new=page_size):
-                            self._index_canned_bundle(self.old_bundle)
-                            expected_hits = self._load_canned_result(self.old_bundle)
-                            hits = self._get_all_hits()
-                            self.assertElasticEqual(expected_hits, hits)
+                            try:
+                                self._index_canned_bundle(self.old_bundle)
+                                expected_hits = self._load_canned_result(self.old_bundle)
+                                hits = self._get_all_hits()
+                                self.assertElasticEqual(expected_hits, hits)
+                            finally:
+                                self.index_service.delete_indices(self.catalog)
+                                self.index_service.create_indices(self.catalog)
 
     def test_deletion(self):
         """
