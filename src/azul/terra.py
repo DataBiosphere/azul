@@ -344,18 +344,17 @@ class TerraClient(OAuth2Client):
         try:
             # Limited retries on I/O errors such as refused or dropped
             # connections. The latter are actually very likely if connections
-            # from the pool are reused after a long period of idleness.
+            # from the pool are reused after a long period of idleness. That's
+            # why we need at least one retry on read.
             retry = urllib3.Retry(total=None,
                                   connect=retries,
-                                  read=0,
+                                  read=retries + 1,
                                   redirect=0,
                                   status=0,
                                   other=retries)
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
-                                                 # FIXME: Service should return 503 response when Terra client times out
-                                                 #        https://github.com/DataBiosphere/azul/issues/3968
                                                  timeout=timeout,
                                                  retries=retry,
                                                  body=body)
