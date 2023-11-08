@@ -2,13 +2,15 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
+from types import (
+    UnionType,
+)
 from typing import (
     Any,
     ForwardRef,
     Generic,
     Optional,
     Protocol,
-    TYPE_CHECKING,
     TypeVar,
     Union,
     get_args,
@@ -23,31 +25,33 @@ from azul.collections import (
     OrderedSet,
 )
 
-PrimitiveJSON = Union[str, int, float, bool, None]
+PrimitiveJSON = str | int | float | bool | None
 
 # Not every instance of Mapping or Sequence can be fed to json.dump() but those
 # two generic types are the most specific *immutable* super-types of `list`,
 # `tuple` and `dict`:
 
-AnyJSON4 = Union[Sequence[Any], Mapping[str, Any], PrimitiveJSON]
-AnyJSON3 = Union[Sequence[AnyJSON4], Mapping[str, AnyJSON4], PrimitiveJSON]
-AnyJSON2 = Union[Sequence[AnyJSON3], Mapping[str, AnyJSON3], PrimitiveJSON]
-AnyJSON1 = Union[Sequence[AnyJSON2], Mapping[str, AnyJSON2], PrimitiveJSON]
-AnyJSON = Union[Sequence[AnyJSON1], Mapping[str, AnyJSON1], PrimitiveJSON]
+AnyJSON4 = Sequence[Any] | Mapping[str | Any] | PrimitiveJSON
+AnyJSON3 = Sequence[AnyJSON4] | Mapping[str, AnyJSON4] | PrimitiveJSON
+AnyJSON2 = Sequence[AnyJSON3] | Mapping[str, AnyJSON3] | PrimitiveJSON
+AnyJSON1 = Sequence[AnyJSON2] | Mapping[str, AnyJSON2] | PrimitiveJSON
+AnyJSON = Sequence[AnyJSON1] | Mapping[str, AnyJSON1] | PrimitiveJSON
 JSON = Mapping[str, AnyJSON]
 JSONs = Sequence[JSON]
-CompositeJSON = Union[JSON, Sequence[AnyJSON]]
+CompositeJSON = JSON | Sequence[AnyJSON]
+FlatJSON = Mapping[str, PrimitiveJSON]
 
 # For mutable JSON we can be more specific and use dict and list:
 
-AnyMutableJSON4 = Union[list[Any], dict[str, Any], PrimitiveJSON]
-AnyMutableJSON3 = Union[list[AnyMutableJSON4], dict[str, AnyMutableJSON4], PrimitiveJSON]
-AnyMutableJSON2 = Union[list[AnyMutableJSON3], dict[str, AnyMutableJSON3], PrimitiveJSON]
-AnyMutableJSON1 = Union[list[AnyMutableJSON2], dict[str, AnyMutableJSON2], PrimitiveJSON]
-AnyMutableJSON = Union[list[AnyMutableJSON1], dict[str, AnyMutableJSON1], PrimitiveJSON]
+AnyMutableJSON4 = list[Any] | dict[str, Any] | PrimitiveJSON
+AnyMutableJSON3 = list[AnyMutableJSON4] | dict[str, AnyMutableJSON4] | PrimitiveJSON
+AnyMutableJSON2 = list[AnyMutableJSON3] | dict[str, AnyMutableJSON3] | PrimitiveJSON
+AnyMutableJSON1 = list[AnyMutableJSON2] | dict[str, AnyMutableJSON2] | PrimitiveJSON
+AnyMutableJSON = list[AnyMutableJSON1] | dict[str, AnyMutableJSON1] | PrimitiveJSON
 MutableJSON = dict[str, AnyMutableJSON]
 MutableJSONs = list[MutableJSON]
-MutableCompositeJSON = Union[MutableJSON, list[AnyJSON]]
+MutableCompositeJSON = MutableJSON | list[AnyJSON]
+MutableFlatJSON = dict[str, PrimitiveJSON]
 
 
 class LambdaContext(object):
@@ -100,8 +104,10 @@ def is_optional(t) -> bool:
 
     >>> is_optional(str)
     False
+
     >>> is_optional(Optional[str])
     True
+
     >>> is_optional(Union[str, None])
     True
     >>> is_optional(Union[None, str])
@@ -109,6 +115,15 @@ def is_optional(t) -> bool:
     >>> is_optional(Union[str, None, int])
     True
     >>> is_optional(Union[str, int])
+    False
+
+    >>> is_optional(str | None)
+    True
+    >>> is_optional(None | str)
+    True
+    >>> is_optional(str | None | int)
+    True
+    >>> is_optional(str | int)
     False
     """
     return t == Optional[t]
@@ -120,6 +135,24 @@ def reify(t):
     subclasses of ``type`` representing all possible alternatives that can pass
     for that construct at runtime. The return value is meant to be used as the
     second argument to the ``isinstance`` or ``issubclass`` built-ins.
+
+    >>> reify(int)
+    <class 'int'>
+
+    >>> reify(Union[int])
+    <class 'int'>
+
+    >>> reify(str | int)
+    (<class 'str'>, <class 'int'>)
+
+    >>> reify(Union[str, int])
+    (<class 'str'>, <class 'int'>)
+
+    >>> reify(str | Union[int, set])
+    (<class 'str'>, <class 'int'>, <class 'set'>)
+
+    >>> reify(Union[str | int, set])
+    (<class 'str'>, <class 'int'>, <class 'set'>)
 
     >>> isinstance({}, reify(AnyJSON))
     True
@@ -143,7 +176,6 @@ def reify(t):
     >>> set(reify(Optional[int])) == {type(None), int}
     True
 
-    >>> from typing import TypeVar
     >>> reify(TypeVar)
     Traceback (most recent call last):
         ...
@@ -153,14 +185,13 @@ def reify(t):
     Traceback (most recent call last):
         ...
     ValueError: ('Not a reifiable generic type', typing.Union)
-
-    >>> reify(int)
-    <class 'int'>
     """
-    if get_origin(t) == Union:
+    # While `int | str` constructs a `UnionType` instance, `Union[str, int]`
+    # constructs an instance of `Union`, so we need to handle both.
+    if get_origin(t) in (UnionType, Union):
         def f(t):
             for a in get_args(t):
-                if get_origin(a) == Union:
+                if get_origin(a) in (UnionType, Union):
                     # handle Union of Union
                     yield from f(a)
                 else:
@@ -176,7 +207,7 @@ def reify(t):
 
 def get_generic_type_params(cls: type[Generic],
                             *required_types: type
-                            ) -> Sequence[Union[type, TypeVar, ForwardRef]]:
+                            ) -> Sequence[type | TypeVar | ForwardRef]:
     """
     Inspect and validate the type parameters of a subclass of `typing.Generic`.
 
@@ -185,7 +216,7 @@ def get_generic_type_params(cls: type[Generic],
     inspected class's definition. `*required_types` can be used to assert the
     superclasses of parameters that are types.
 
-    >>> from typing import Generic, TypeVar
+    >>> from typing import Generic
     >>> T = TypeVar(name='T')
     >>> class A(Generic[T]):
     ...     pass
@@ -228,11 +259,8 @@ def get_generic_type_params(cls: type[Generic],
     return types
 
 
-# FIXME: Remove hacky import of SupportsLessThan
-#        https://github.com/DataBiosphere/azul/issues/2783
-if TYPE_CHECKING:
-    pass
-else:
-    class SupportsLessThan(Protocol):
+class SupportsLessAndGreaterThan(Protocol):
 
-        def __lt__(self, __other: Any) -> bool: ...
+    def __lt__(self, __other: Any) -> bool: ...
+
+    def __gt__(self, __other: Any) -> bool: ...

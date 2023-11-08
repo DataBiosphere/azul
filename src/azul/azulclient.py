@@ -361,7 +361,7 @@ class AzulClient(SignatureHelper):
         # Group by source and bundle UUID
         def group_key(fqid: SourcedBundleFQID):
             return (
-                fqid.source,
+                fqid.source.id.lower(),
                 fqid.uuid.lower()
             )
 

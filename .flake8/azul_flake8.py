@@ -211,9 +211,6 @@ class ErrorInfo:
 class ImportVisitor(ast.NodeVisitor):
     expected_resolution_failures = {
         'pydevd',
-        # FIXME: Remove hacky import of SupportsLessThan
-        #        https://github.com/DataBiosphere/azul/issues/2783
-        '_typeshed'
     }
 
     def __init__(self, file_name: str, file_tokens: Iterable[TokenInfo]):

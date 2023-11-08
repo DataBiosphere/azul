@@ -18,6 +18,7 @@ from typing import (
     ClassVar,
     Generic,
     Optional,
+    Self,
     Sequence,
     Type,
     TypeVar,
@@ -74,7 +75,7 @@ class EntityReference:
         return f'{self.entity_type}/{self.entity_id}'
 
     @classmethod
-    def parse(cls, s: str) -> 'EntityReference':
+    def parse(cls, s: str) -> Self:
         entity_type, entity_id = s.split('/')
         return cls(entity_type=entity_type, entity_id=entity_id)
 
@@ -233,7 +234,7 @@ class IndexName:
                catalog: CatalogName,
                entity_type: str,
                doc_type: 'DocumentType'
-               ) -> 'IndexName':
+               ) -> Self:
         return cls(prefix=config.index_prefix,
                    version=2,
                    deployment=config.deployment_stage,
@@ -242,7 +243,7 @@ class IndexName:
                    doc_type=doc_type)
 
     @classmethod
-    def parse(cls, index_name: str) -> 'IndexName':
+    def parse(cls, index_name: str) -> Self:
         """
         Parse the name of an index from any deployment and any version of Azul.
 
@@ -584,7 +585,7 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     def _from_index(cls,
                     index_name: IndexName,
                     document_id: str
-                    ) -> 'AggregateCoordinates':
+                    ) -> Self:
         entity_type = index_name.entity_type
         assert index_name.doc_type is DocumentType.aggregate
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
@@ -1043,10 +1044,8 @@ InternalVersion = tuple[int, int]
 
 C = TypeVar('C', bound=DocumentCoordinates)
 
-document_class = attr.s(frozen=False, kw_only=True, auto_attribs=True)
 
-
-@document_class
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
 
@@ -1058,6 +1057,13 @@ class Document(Generic[C]):
     # None.
     # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
     version: Optional[InternalVersion]
+
+    # In the index, the `contents` property is always present and never null in
+    # documents. In instances of the Aggregate subclass, this attribute is None
+    # when they were created from documents that were retrieved from the
+    # index while intentionally excluding that property for efficiency. In
+    # instances of the Contribution subclass, this attribute is never None.
+    #
     contents: Optional[JSON]
 
     @property
@@ -1158,6 +1164,7 @@ class Document(Generic[C]):
                     return field_type.from_index(doc)
 
     def to_json(self) -> JSON:
+        assert self.contents is not None, self
         return dict(entity_id=self.coordinates.entity.entity_id,
                     contents=self.contents)
 
@@ -1168,7 +1175,7 @@ class Document(Generic[C]):
                   document: JSON,
                   version: Optional[InternalVersion],
                   **kwargs,
-                  ) -> 'Document':
+                  ) -> Self:
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(coordinates=coordinates,
@@ -1193,7 +1200,7 @@ class Document(Generic[C]):
                    hit: JSON,
                    *,
                    coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None
-                   ) -> 'Document':
+                   ) -> Self:
         if coordinates is None:
             coordinates = DocumentCoordinates.from_hit(hit)
         document = cls.translate_fields(hit['_source'],
@@ -1290,8 +1297,10 @@ class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
     pass
 
 
-@document_class
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Contribution(Document[ContributionCoordinates[E]]):
+    # This narrows the type declared in the superclass. See comment there.
+    contents: JSON
     source: DocumentSource
 
     #: The version_type attribute will change to VersionType.none if writing
@@ -1299,6 +1308,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
     version_type: VersionType = VersionType.create_only
 
     def __attrs_post_init__(self):
+        assert self.contents is not None
         assert isinstance(self.coordinates, ContributionCoordinates)
         assert self.coordinates.doc_type is DocumentType.contribution
 
@@ -1321,7 +1331,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
                   document: JSON,
                   version: Optional[InternalVersion],
                   **kwargs
-                  ) -> 'Contribution':
+                  ) -> Self:
         self = super().from_json(coordinates=coordinates,
                                  document=document,
                                  version=version,
@@ -1337,6 +1347,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
     @classmethod
     def mandatory_source_fields(cls) -> list[str]:
         return super().mandatory_source_fields() + [
+            'contents',
             'document_id',
             'source',
             'bundle_uuid',
@@ -1353,28 +1364,13 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_deleted=self.coordinates.deleted)
 
 
-@document_class
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
     sources: set[DocumentSource]
     bundles: Optional[list[BundleFQIDJSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
-
-    # This stub is only needed to aid PyCharm's type inference. Without this,
-    # a constructor invocation that doesn't refer to the class explicitly, but
-    # through a variable will cause a warning. I suspect a bug in PyCharm:
-    #
-    # https://youtrack.jetbrains.com/issue/PY-44728
-    #
-    # noinspection PyDataclass,PyUnusedLocal
-    def __init__(self,
-                 coordinates: AggregateCoordinates,
-                 version: Optional[int],
-                 sources: set[SourceRef[SimpleSourceSpec, SourceRef]],
-                 contents: Optional[JSON],
-                 bundles: Optional[list[BundleFQIDJSON]],
-                 num_contributions: int) -> None: ...
 
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
@@ -1402,7 +1398,7 @@ class Aggregate(Document[AggregateCoordinates]):
                   document: JSON,
                   version: Optional[InternalVersion],
                   **kwargs
-                  ) -> 'Aggregate':
+                  ) -> Self:
         self = super().from_json(coordinates=coordinates,
                                  document=document,
                                  version=version,

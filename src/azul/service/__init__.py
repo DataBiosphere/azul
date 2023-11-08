@@ -7,6 +7,7 @@ import logging
 from typing import (
     Optional,
     Protocol,
+    TypedDict,
 )
 
 import attr
@@ -28,11 +29,33 @@ from azul.plugins import (
     MetadataPlugin,
 )
 from azul.types import (
+    FlatJSON,
     JSON,
     PrimitiveJSON,
 )
 
-FiltersJSON = Mapping[str, Mapping[str, Sequence[PrimitiveJSON]]]
+# We can't express that these are actually pairs. We could, using tuples, but
+# those are not JSON, generally speaking, even though the `json` module supports
+# serializing them by default.
+FilterRange = Sequence[int] | Sequence[float] | Sequence[str]
+
+# `is` is a reserved keyword so we can't use the class-based syntax for
+# TypedDict, but have to use the constructor-based one instead. We don't
+# currently represent the mutual exclusivity of the operators. We could, as a
+# union of singleton TypeDict subclasses, but PyCharm doesn't support that.
+#
+FilterOperator = TypedDict(
+    'FilterOperator',
+    {
+        'is': list[PrimitiveJSON | FlatJSON],
+        'intersects': Sequence[FilterRange],
+        'contains': Sequence[FilterRange | int | float | str],
+        'within': Sequence[FilterRange],
+    },
+    total=False
+)
+
+FiltersJSON = Mapping[str, FilterOperator]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)

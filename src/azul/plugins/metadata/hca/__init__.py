@@ -4,6 +4,7 @@ from collections.abc import (
 )
 from typing import (
     Optional,
+    TYPE_CHECKING,
     Type,
 )
 
@@ -73,10 +74,14 @@ class Plugin(MetadataPlugin[HCABundle]):
                                 version=bundle.version,
                                 manifest=bundle.manifest,
                                 metadata_files=bundle.metadata_files)
-        return [
-            transformer_cls(bundle=bundle, api_bundle=api_bundle, deleted=delete)
-            for transformer_cls in self.transformer_types()
-        ]
+
+        def transformers():
+            for transformer_cls in self.transformer_types():
+                if TYPE_CHECKING:  # work around https://youtrack.jetbrains.com/issue/PY-44728
+                    transformer_cls = BaseTransformer
+                yield transformer_cls(bundle=bundle, api_bundle=api_bundle, deleted=delete)
+
+        return list(transformers())
 
     def aggregate_class(self) -> Type[Aggregate]:
         return HCAAggregate

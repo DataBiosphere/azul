@@ -986,7 +986,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _prepare_notifications(self,
                                catalog: CatalogName
                                ) -> tuple[JSONs, set[SourcedBundleFQID]]:
-        bundle_fqids = set()
+        bundle_fqids: set[SourcedBundleFQID] = set()
         notifications = []
 
         def update(source: SourceRef,

@@ -16,7 +16,7 @@ from typing import (
     Optional,
 )
 
-import attr
+import attrs
 from chalice import (
     UnauthorizedError,
 )
@@ -92,7 +92,7 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class TDRSourceSpec(SourceSpec):
     project: str
     name: str
@@ -230,7 +230,7 @@ class TerraCredentialsProvider(CredentialsProvider, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
     service_account: config.ServiceAccount
 
@@ -322,7 +322,7 @@ class TerraConcurrentModificationException(TerraClientException):
         super().__init__('Snapshot listing changed while we were paging through it')
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class TerraClient(OAuth2Client):
     """
     A client to a service in the Broad Institute's Terra ecosystem.
@@ -433,7 +433,7 @@ class TDRClient(SAMClient):
 
     # FIXME: Eliminate azul.terra.TDRClient.TDRSource
     #        https://github.com/DataBiosphere/azul/issues/5524
-    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+    @attrs.frozen(kw_only=True)
     class TDRSource:
         project: str
         id: str

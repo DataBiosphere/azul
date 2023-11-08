@@ -13,6 +13,7 @@ from functools import (
 from itertools import (
     chain,
 )
+import logging
 from operator import (
     attrgetter,
 )
@@ -31,7 +32,11 @@ from more_itertools import (
     one,
 )
 
+from azul import (
+    JSON,
+)
 from azul.indexer import (
+    BundleFQID,
     BundlePartition,
 )
 from azul.indexer.aggregate import (
@@ -39,6 +44,7 @@ from azul.indexer.aggregate import (
 )
 from azul.indexer.document import (
     Contribution,
+    EntityID,
     EntityReference,
     EntityType,
     FieldTypes,
@@ -71,6 +77,8 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+
+log = logging.getLogger(__name__)
 
 EntityRefsByType = dict[EntityType, set[EntityReference]]
 
@@ -132,7 +140,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def get_aggregator(cls, entity_type) -> EntityAggregator:
+    def aggregator(cls, entity_type) -> EntityAggregator:
         if entity_type == 'activities':
             return ActivityAggregator()
         elif entity_type == 'biosamples':
@@ -396,6 +404,21 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         'sequencingactivity',
         'variantcallingactivity'
     }
+
+    @classmethod
+    def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
+        return entity['document_id']
+
+    @classmethod
+    def reconcile_inner_entities(cls,
+                                 entity_type: EntityType,
+                                 *,
+                                 this: tuple[JSON, BundleFQID],
+                                 that: tuple[JSON, BundleFQID]
+                                 ) -> tuple[JSON, BundleFQID]:
+        this_entity, this_bundle = this
+        that_entity, that_bundle = that
+        return that if that_bundle.version > this_bundle.version else this
 
 
 class ActivityTransformer(BaseTransformer):
