@@ -7618,7 +7618,7 @@
                 ],
                 "responses": {
                     "301": {
-                        "description": "\nA redirect indicating that the manifest preparation job\nhas started. Wait for\nthe recommended number of seconds (see `Retry-After`\nheader) and then follow the redirect to check the status\nof that job.\n",
+                        "description": "\nA redirect indicating that the manifest preparation job\nhas started. Wait for\nthe recommended number of seconds (see `Retry-After`\nheader) and then follow the redirect to check the status\nof that job.\n\nThe response body contains, for a number of commonly\nused shells, a command line suitable for downloading the\nmanifest.\n",
                         "headers": {
                             "Location": {
                                 "description": "\nThe URL of the manifest preparation job at\nthe [`GET\n                                /manifest/files/{token}`][2] endpoint.\n\n                                [2]: #operations-Manifests-get_fetch_manifest_files_token\n",
@@ -7636,7 +7636,7 @@
                         }
                     },
                     "302": {
-                        "description": "\nA redirect indicating that the manifest preparation job\nis already done. Immediately\nfollow the redirect to obtain the manifest contents.\n",
+                        "description": "\nA redirect indicating that the manifest preparation job\nis already done. Immediately\nfollow the redirect to obtain the manifest contents.\n\nThe response body contains, for a number of commonly\nused shells, a command line suitable for downloading the\nmanifest.\n",
                         "headers": {
                             "Location": {
                                 "description": "The URL of the manifest.\n                               Clients should not make any assumptions about\n                               any parts of the returned domain, except that\n                               the scheme will be `https`.\n",
@@ -7672,7 +7672,7 @@
                 "parameters": [],
                 "responses": {
                     "301": {
-                        "description": "\nA redirect indicating that the manifest preparation job\nis running. Wait for\nthe recommended number of seconds (see `Retry-After`\nheader) and then follow the redirect to check the status\nof the job again.\n",
+                        "description": "\nA redirect indicating that the manifest preparation job\nis running. Wait for\nthe recommended number of seconds (see `Retry-After`\nheader) and then follow the redirect to check the status\nof the job again.\n\nThe response body contains, for a number of commonly\nused shells, a command line suitable for downloading the\nmanifest.\n",
                         "headers": {
                             "Location": {
                                 "description": "\nThe URL of this endpoint\n",
@@ -7690,7 +7690,7 @@
                         }
                     },
                     "302": {
-                        "description": "\nA redirect indicating that the manifest preparation job\nis now done. Immediately\nfollow the redirect to obtain the manifest contents.\n",
+                        "description": "\nA redirect indicating that the manifest preparation job\nis now done. Immediately\nfollow the redirect to obtain the manifest contents.\n\nThe response body contains, for a number of commonly\nused shells, a command line suitable for downloading the\nmanifest.\n",
                         "headers": {
                             "Location": {
                                 "description": "The URL of the manifest.\n                               Clients should not make any assumptions about\n                               any parts of the returned domain, except that\n                               the scheme will be `https`.\n",
@@ -8969,7 +8969,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n",
+                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n\nNote: A 200 status response with a `Status` property of\n301 or 302 in its body additionally contains a\n`CommandLine` property that lists, for a number of\ncommonly used shells, a command line suitable for\ndownloading the manifest.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10277,7 +10277,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n",
+                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n\nNote: A 200 status response with a `Status` property of\n301 or 302 in its body additionally contains a\n`CommandLine` property that lists, for a number of\ncommonly used shells, a command line suitable for\ndownloading the manifest.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10347,7 +10347,7 @@
                 "parameters": [],
                 "responses": {
                     "200": {
-                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[GET /manifest/files/{token}][1].\n\n[1]: #operations-Manifests-get_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n",
+                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[GET /manifest/files/{token}][1].\n\n[1]: #operations-Manifests-get_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n\nNote: A 200 status response with a `Status` property of\n301 or 302 in its body additionally contains a\n`CommandLine` property that lists, for a number of\ncommonly used shells, a command line suitable for\ndownloading the manifest.\n",
                         "content": {
                             "application/json": {
                                 "schema": {

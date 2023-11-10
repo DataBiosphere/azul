@@ -1379,6 +1379,10 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                         the recommended number of seconds (see `Retry-After`
                         header) and then follow the redirect to check the status
                         of {'that job' if initiate else 'the job again'}.
+
+                        The response body contains, for a number of commonly
+                        used shells, a command line suitable for downloading the
+                        manifest.
                     '''),
                     'headers': {
                         'Location': {
@@ -1408,6 +1412,10 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                         A redirect indicating that the manifest preparation job
                         is {'already' if initiate else 'now'} done. Immediately
                         follow the redirect to obtain the manifest contents.
+
+                        The response body contains, for a number of commonly
+                        used shells, a command line suitable for downloading the
+                        manifest.
                     '''),
                     'headers': {
                         'Location': {
@@ -1457,6 +1465,12 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                         redirect to the actual location of the manifest.
 
                         [2]: #operations-Manifests-get_manifest_files
+
+                        Note: A 200 status response with a `Status` property of
+                        301 or 302 in its body additionally contains a
+                        `CommandLine` property that lists, for a number of
+                        commonly used shells, a command line suitable for
+                        downloading the manifest.
                     '''),
                     **responses.json_content(
                         schema.object(
