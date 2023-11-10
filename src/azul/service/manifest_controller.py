@@ -191,8 +191,7 @@ class ManifestController(SourceController):
             body = {
                 'Status': 301,
                 'Location': str(url),
-                'Retry-After': token.retry_after,
-                'CommandLine': self.service.command_lines(manifest, url, authentication)
+                'Retry-After': token.retry_after
             }
         else:
             assert manifest.manifest_key == manifest_key
@@ -230,9 +229,9 @@ class ManifestController(SourceController):
             return Response(body=body)
         else:
             status = body.pop('Status')
-            command_line: FlatJSON = body.pop('CommandLine')
+            command_line: FlatJSON = body.pop('CommandLine', None)
             headers = {k: str(v) for k, v in body.items()}
-            new_body = ''.join(
+            new_body = None if command_line is None else ''.join(
                 f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
                 for shell, cmd in command_line.items()
             )
