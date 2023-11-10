@@ -229,9 +229,11 @@ class ManifestController(SourceController):
         if fetch:
             return Response(body=body)
         else:
-            headers = {k: str(body[k]) for k in body.keys() & {'Location', 'Retry-After'}}
-            msg = ''.join(
+            status = body.pop('Status')
+            command_line: FlatJSON = body.pop('CommandLine')
+            headers = {k: str(v) for k, v in body.items()}
+            new_body = ''.join(
                 f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
-                for shell, cmd in body['CommandLine'].items()
+                for shell, cmd in command_line.items()
             )
-            return Response(body=msg, status_code=body['Status'], headers=headers)
+            return Response(body=new_body, status_code=status, headers=headers)
