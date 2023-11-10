@@ -141,6 +141,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     AnyJSON,
+    FlatJSON,
     JSON,
     JSONs,
     MutableJSON,
@@ -791,7 +792,7 @@ class ManifestService(ElasticsearchService):
                       manifest: Optional[Manifest],
                       url: furl,
                       authentication: Optional[Authentication]
-                      ) -> Optional[JSON]:
+                      ) -> FlatJSON:
         format = None if manifest is None else manifest.format
         generator_cls = ManifestGenerator.cls_for_format(format)
         file_name = None if manifest is None else manifest.file_name
@@ -923,7 +924,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                       url: furl,
                       file_name: Optional[str],
                       authentication: Optional[Authentication]
-                      ) -> JSON:
+                      ) -> FlatJSON:
         # Normally we would have used --remote-name and --remote-header-name
         # which gets the file name from the content-disposition header. However,
         # URLs longer than 255 characters trigger a bug in curl.exe's
@@ -1384,7 +1385,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
                       url: furl,
                       file_name: Optional[str],
                       authentication: Optional[Authentication]
-                      ) -> JSON:
+                      ) -> FlatJSON:
         authentication_option = [] if authentication is None else [
             '--header',
             cls._option(authentication.as_http_header())

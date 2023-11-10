@@ -59,6 +59,7 @@ from azul.service.storage_service import (
     StorageService,
 )
 from azul.types import (
+    FlatJSON,
     JSON,
 )
 
@@ -182,6 +183,8 @@ class ManifestController(SourceController):
                 manifest_key = manifest.manifest_key
             else:
                 assert False, token_or_state
+
+        body: dict[str, int | str | FlatJSON]
 
         if manifest is None:
             url = self.manifest_url_func(fetch=fetch, token_or_key=token.encode())
