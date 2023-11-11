@@ -150,6 +150,9 @@ from azul.plugins.repository.tdr_anvil import (
 from azul.portal_service import (
     PortalService,
 )
+from azul.service.async_manifest_service import (
+    Token,
+)
 from azul.service.manifest_service import (
     ManifestFormat,
     ManifestGenerator,
@@ -567,17 +570,79 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.curl: self._check_curl_manifest
         }
         for format in [None, *supported_formats]:
-            fetch = bool(self.random.getrandbits(1))
-            for fetch in [fetch, not fetch]:
+            # IT catalogs with just one public source are always indexed
+            # completely if that source contains less than the minimum number of
+            # bundles required. So regardless of any randomness employed by this
+            # test, manifests derived from these catalogs will always be based
+            # on the same content hash. Since the resulting reuse of cached
+            # manifests interferes with this test, we need another means of
+            # randomizing the manifest key: a random but all-inclusive filter.
+            tibi_byte = 1024 ** 4
+            filters = {
+                self._file_size_facet(catalog): {
+                    'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
+                }
+            }
+            first_fetch = bool(self.random.getrandbits(1))
+            for fetch in [first_fetch, not first_fetch]:
                 with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
-                    args = dict(catalog=catalog)
+                    args = dict(catalog=catalog, filters=json.dumps(filters))
                     if format is None:
                         validator = validators[first(supported_formats)]
                     else:
                         validator = validators[format]
                         args['format'] = format.value
-                    response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
-                    validator(catalog, response)
+
+                    # Wrap self._get_url to collect all HTTP responses
+                    _get_url = self._get_url
+                    responses = list()
+
+                    def get_url(*args, **kwargs):
+                        response = _get_url(*args, **kwargs)
+                        responses.append(response)
+                        return response
+
+                    with mock.patch.object(self, '_get_url', new=get_url):
+
+                        # Make multiple identical concurrent requests to test
+                        # the idempotence of manifest generation, and its
+                        # resilience against DOS attacks.
+
+                        def worker(_):
+                            response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
+                            validator(catalog, response)
+
+                        num_workers = 3
+                        with ThreadPoolExecutor(max_workers=num_workers) as tpe:
+                            results = list(tpe.map(worker, range(num_workers)))
+
+                    self.assertEqual([None] * num_workers, results)
+                    execution_ids = self._manifest_execution_ids(responses, fetch=fetch)
+                    # The second iteration of the inner-most loop re-requests
+                    # the manifest with only `fetch` being different. In that
+                    # case, the manifest will already be cached and no step
+                    # function execution is expected to have been started.
+                    expect_execution = fetch == first_fetch
+                    self.assertEqual(1 if expect_execution else 0, len(execution_ids))
+
+    def _manifest_execution_ids(self,
+                                responses: list[urllib3.HTTPResponse],
+                                *,
+                                fetch: bool
+                                ) -> set[str]:
+        urls: list[furl]
+        if fetch:
+            responses = [
+                json.loads(r.data)
+                for r in responses
+                if r.status == 200 and r.headers['Content-Type'] == 'application/json'
+            ]
+            urls = [furl(r['Location']) for r in responses if r['Status'] == 301]
+        else:
+            urls = [furl(r.headers['Location']) for r in responses if r.status == 301]
+        tokens = {Token.decode(url.path.segments[-1]) for url in urls}
+        execution_ids = {token.execution_id for token in tokens}
+        return execution_ids
 
     def _get_one_inner_file(self, catalog: CatalogName) -> JSON:
         outer_file = self._get_one_outer_file(catalog)
@@ -587,12 +652,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     @cache
     def _get_one_outer_file(self, catalog: CatalogName) -> JSON:
         # Try to filter for an easy-to-parse format to verify its contents
-        if config.is_hca_enabled(catalog):
-            file_size_facet = 'fileSize'
-        elif config.is_anvil_enabled(catalog):
-            file_size_facet = 'files.file_size'
-        else:
-            assert False, catalog
+        file_size_facet = self._file_size_facet(catalog)
         for filters in [self._fastq_filter(catalog), {}]:
             response = self._check_endpoint(method=GET,
                                             path='/index/files',
@@ -608,13 +668,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.fail('No files found')
         return one(hits)
 
-    def _fastq_filter(self, catalog: CatalogName) -> JSON:
+    def _file_size_facet(self, catalog: CatalogName) -> str:
         if config.is_hca_enabled(catalog):
-            facet = 'fileFormat'
+            return 'fileSize'
         elif config.is_anvil_enabled(catalog):
-            facet = 'files.file_format'
+            return 'files.file_size'
         else:
             assert False, catalog
+
+    def _file_format_facet(self, catalog: CatalogName) -> str:
+        if config.is_hca_enabled(catalog):
+            return 'fileFormat'
+        elif config.is_anvil_enabled(catalog):
+            return 'files.file_format'
+        else:
+            assert False, catalog
+
+    def _fastq_filter(self, catalog: CatalogName) -> JSON:
+        facet = self._file_format_facet(catalog)
         return {facet: {'is': ['fastq', 'fastq.gz']}}
 
     def _bundle_type(self, catalog: CatalogName) -> EntityType:
