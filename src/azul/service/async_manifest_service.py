@@ -2,18 +2,23 @@ import base64
 import json
 import logging
 from typing import (
+    Optional,
+    Self,
     Union,
 )
-import uuid
 
 import attrs
-from botocore.exceptions import (
-    ClientError,
-)
 import msgpack
 
+from azul import (
+    config,
+    require,
+)
 from azul.attrs import (
     strict_auto,
+)
+from azul.bytes import (
+    azul_urlsafe_b64encode,
 )
 from azul.deployment import (
     aws,
@@ -22,12 +27,12 @@ from azul.types import (
     JSON,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @attrs.frozen
 class InvalidTokenError(Exception):
-    value: str
+    value: str = strict_auto()
 
 
 @attrs.frozen(kw_only=True)
@@ -35,49 +40,70 @@ class Token:
     """
     Represents an ongoing manifest generation
     """
-    execution_id: str = strict_auto()
+    execution_id: bytes = strict_auto()
     request_index: int = strict_auto()
-    wait_time: int = strict_auto()
+    retry_after: int = strict_auto()
 
     def pack(self) -> bytes:
         return msgpack.packb([
             self.execution_id,
             self.request_index,
-            self.wait_time
+            self.retry_after
         ])
 
     @classmethod
-    def unpack(cls, pack: bytes) -> 'Token':
+    def unpack(cls, pack: bytes) -> Self:
         i = iter(msgpack.unpackb(pack))
         return cls(execution_id=next(i),
                    request_index=next(i),
-                   wait_time=next(i))
+                   retry_after=next(i))
 
     def encode(self) -> str:
         return base64.urlsafe_b64encode(self.pack()).decode()
 
     @classmethod
-    def decode(cls, token: str) -> 'Token':
+    def decode(cls, token: str) -> Self:
         try:
             return cls.unpack(base64.urlsafe_b64decode(token))
         except Exception as e:
             raise InvalidTokenError(token) from e
 
-    def advance(self, wait_time: int) -> 'Token':
+    @classmethod
+    def first(cls, execution_id: bytes) -> Self:
+        return cls(execution_id=execution_id,
+                   request_index=0,
+                   retry_after=cls._next_retry_after(0))
+
+    def next(self, *, retry_after: Optional[int] = None) -> Self:
+        if retry_after is None:
+            retry_after = self._next_retry_after(self.request_index)
         return attrs.evolve(self,
-                            wait_time=wait_time,
+                            retry_after=retry_after,
                             request_index=self.request_index + 1)
+
+    @classmethod
+    def _next_retry_after(cls, request_index: int) -> int:
+        delays = [1, 1, 4, 6, 10]
+        try:
+            return delays[request_index]
+        except IndexError:
+            return delays[-1]
 
 
 @attrs.frozen
 class NoSuchGeneration(Exception):
-    token: Token
+    token: Token = strict_auto()
 
 
-class StateMachineError(RuntimeError):
+@attrs.frozen(kw_only=True)
+class GenerationFailed(Exception):
+    status: str = strict_auto()
+    output: Optional[str] = strict_auto()
 
-    def __init__(self, *args) -> None:
-        super().__init__('Failed to generate manifest', *args)
+
+@attrs.frozen
+class InvalidGeneration(Exception):
+    token: Token = strict_auto()
 
 
 class AsyncManifestService:
@@ -85,67 +111,86 @@ class AsyncManifestService:
     Starting and checking the status of manifest generation jobs.
     """
 
-    def __init__(self, state_machine_name):
-        self.state_machine_name = state_machine_name
+    @property
+    def machine_name(self):
+        return config.qualified_resource_name(config.manifest_sfn)
 
-    def start_generation(self, input: JSON) -> Token:
-        execution_id = str(uuid.uuid4())
-        self._start_execution(self.state_machine_name,
-                              execution_id,
-                              execution_input=input)
-        return Token(execution_id=execution_id,
-                     request_index=0,
-                     wait_time=self._get_next_wait_time(0))
+    def start_generation(self, execution_id: bytes, input: JSON) -> Token:
+        execution_name = self.execution_name(execution_id)
+        execution_arn = self.execution_arn(execution_name)
+        # The input contains the verbatim manifest key as JSON while the ARN
+        # contains the encoded hash of the key so this log line is useful for
+        # associating the hash with the key for diagnostic purposes
+        log.info('Starting execution %r for input %r', execution_arn, input)
+        token = Token.first(execution_id)
+        input = json.dumps(input)
+        try:
+            # If there already is an exception of the given name, and if that
+            # execution is still ongoing and was given the same input as what we
+            # pass here, `start_execution` will succeed idempotently
+            execution = self._sfn.start_execution(stateMachineArn=self.machine_arn,
+                                                  name=execution_name,
+                                                  input=input)
+        except self._sfn.exceptions.ExecutionAlreadyExists:
+            # This exception indicates that there is already an execution with
+            # the given name but that it is has ended, or that its input differs
+            # from what we were passing now. The latter case is unexpected and
+            # therefore constitues an error. In the former case we return the
+            # token so that the client has to make another request to actually
+            # obtain the resulting manifest. Strictly speaking, we could return
+            # the manifest here but it keeps the control flow simpler. This is
+            # benevolent race is rare enough to not worry about optimizing.
+            execution = self._sfn.describe_execution(executionArn=execution_arn)
+            if execution['input'] != input:
+                raise InvalidGeneration(token)
+            else:
+                log.info('A completed execution %r already exists', execution_arn)
+                return token
+        else:
+            assert execution_arn == execution['executionArn'], execution
+            log.info('Started execution %r or it was already running', execution_arn)
+            return token
 
     def inspect_generation(self, token: Token) -> Union[Token, JSON]:
+        execution_name = self.execution_name(token.execution_id)
+        execution_arn = self.execution_arn(execution_name)
         try:
-            execution = self._describe_execution(state_machine_name=self.state_machine_name,
-                                                 execution_name=token.execution_id)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-                raise NoSuchGeneration(token)
-            else:
-                raise
-        output = execution.get('output', None)
-        status = execution['status']
-        if status == 'SUCCEEDED':
-            # Because describe_execution is eventually consistent, output may
-            # not yet be present
-            if output is None:
-                return token.advance(wait_time=1)
-            else:
-                return json.loads(output)
-        elif status == 'RUNNING':
-            return token.advance(wait_time=self._get_next_wait_time(token.request_index))
+            execution = self._sfn.describe_execution(executionArn=execution_arn)
+        except self._sfn.exceptions.ExecutionDoesNotExist:
+            raise NoSuchGeneration(token)
         else:
-            raise StateMachineError(status, output)
+            output = execution.get('output')
+            status = execution['status']
+            if status == 'SUCCEEDED':
+                if output is None:
+                    log.info('Execution %r succeeded, no output yet', execution_arn)
+                    return token.next(retry_after=1)
+                else:
+                    log.info('Execution %r succeeded with output %r', execution_arn, output)
+                    return json.loads(output)
+            elif status == 'RUNNING':
+                log.info('Execution %r is still running', execution_arn)
+                return token.next()
+            else:
+                raise GenerationFailed(status=status, output=output)
 
-    def _get_next_wait_time(self, request_index: int) -> int:
-        wait_times = [1, 1, 4, 6, 10]
-        try:
-            return wait_times[request_index]
-        except IndexError:
-            return wait_times[-1]
+    def arn(self, suffix):
+        return f'arn:aws:states:{aws.region_name}:{aws.account}:{suffix}'
 
-    def state_machine_arn(self, state_machine_name):
-        return f'arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{state_machine_name}'
+    @property
+    def machine_arn(self):
+        return self.arn(f'stateMachine:{self.machine_name}')
 
-    def execution_arn(self, state_machine_name, execution_name):
-        return f'arn:aws:states:{aws.region_name}:{aws.account}:execution:{state_machine_name}:{execution_name}'
+    def execution_arn(self, execution_name):
+        return self.arn(f'execution:{self.machine_name}:{execution_name}')
+
+    def execution_name(self, execution_id: bytes) -> str:
+        require(0 < len(execution_id) <= 60,
+                'Execution ID is too short or too long', execution_id)
+        execution_name = azul_urlsafe_b64encode(execution_id)
+        assert 0 < len(execution_name) <= 80, (execution_id, execution_name)
+        return execution_name
 
     @property
     def _sfn(self):
         return aws.stepfunctions
-
-    def _start_execution(self, state_machine_name, execution_name, execution_input):
-        execution_params = {
-            'stateMachineArn': self.state_machine_arn(state_machine_name),
-            'name': execution_name,
-            'input': json.dumps(execution_input)
-        }
-        execution_response = self._sfn.start_execution(**execution_params)
-        assert self.execution_arn(state_machine_name, execution_name) == execution_response['executionArn']
-
-    def _describe_execution(self, state_machine_name, execution_name):
-        return self._sfn.describe_execution(
-            executionArn=self.execution_arn(state_machine_name, execution_name))

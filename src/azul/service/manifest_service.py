@@ -20,6 +20,9 @@ from datetime import (
     timezone,
 )
 import email.utils
+from hashlib import (
+    sha256,
+)
 from inspect import (
     isabstract,
 )
@@ -50,7 +53,6 @@ from typing import (
     Protocol,
     Self,
     Type,
-    Union,
     cast,
 )
 import unicodedata
@@ -94,6 +96,10 @@ from azul.attrs import (
 from azul.auth import (
     Authentication,
 )
+from azul.bytes import (
+    azul_urlsafe_b64decode,
+    azul_urlsafe_b64encode,
+)
 from azul.deployment import (
     aws,
 )
@@ -135,6 +141,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     AnyJSON,
+    FlatJSON,
     JSON,
     JSONs,
     MutableJSON,
@@ -175,7 +182,7 @@ class AbstractManifestKey(metaclass=ABCMeta):
         raise NotImplementedError
 
     def encode(self) -> str:
-        return base64.urlsafe_b64encode(self.pack()).decode()
+        return azul_urlsafe_b64encode(self.pack())
 
     @classmethod
     @abstractmethod
@@ -185,7 +192,7 @@ class AbstractManifestKey(metaclass=ABCMeta):
     @classmethod
     def decode(cls, value: str) -> Self:
         try:
-            return cls.unpack(base64.urlsafe_b64decode(value))
+            return cls.unpack(azul_urlsafe_b64decode(value))
         except Exception as e:
             raise InvalidManifestKey(value) from e
 
@@ -209,7 +216,7 @@ class BareManifestKey(AbstractManifestKey):
     ...                                source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
 
     >>> manifest_key.encode()
-    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A'
 
     The encode() method is the inverse of decode():
 
@@ -223,7 +230,7 @@ class BareManifestKey(AbstractManifestKey):
     Traceback (most recent call last):
     ...
     azul.service.manifest_service.InvalidManifestKey:
-    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=
+    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4
 
     Valid base64 encoding and msgpack format, but value of wrong type for
     `catalog` atrribute
@@ -232,14 +239,14 @@ class BareManifestKey(AbstractManifestKey):
     ...     # noinspection PyTypeChecker
     ...     bad_key = attrs.evolve(manifest_key, catalog=123).encode()
     >>> bad_key
-    'lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+    'lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A'
 
     >>> BareManifestKey.decode(bad_key)
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
     azul.service.manifest_service.InvalidManifestKey:
-    lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A==
+    lHukY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A
 
     >>> bad_key = base64.b64encode(manifest_key.pack() + b'123').decode()
     >>> BareManifestKey.decode(bad_key)
@@ -256,6 +263,17 @@ class BareManifestKey(AbstractManifestKey):
     ...
     azul.service.manifest_service.InvalidManifestKey:
     lKNmb2+kY3VybMQQ0rDOPEbwV/651C442JNP1MQQd5NnR1loWI6An6+ELWvp
+
+    Manifest keys contain the catalog name which can be quite long, extending
+    the length of the encoded manifest key proportionally by 4 characters for
+    every 3 catalog name characters.
+
+    >>> manifest_key = BareManifestKey(catalog='a' * 64,
+    ...                                format=ManifestFormat.terra_bdbag,
+    ...                                manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+    ...                                source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+    >>> len(manifest_key.encode())
+    154
     """
     catalog: CatalogName = strict_auto()
     format: ManifestFormat = strict_auto()
@@ -328,7 +346,7 @@ class ManifestKey(BareManifestKey):
     Encoded representation is short:
 
     >>> manifest_key.encode()
-    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A=='
+    'lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A'
 
     It shouldn't be possible to deserialize a ManifestKey instance.
 
@@ -336,7 +354,7 @@ class ManifestKey(BareManifestKey):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     azul.service.manifest_service.InvalidManifestKey:
-    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A==
+    lKNmb2-kY3VybMQQ0rDOPEbwV_651C442JNP1MQQd5NnR1loWI6An6-ELWvp4A
 
     The from_json() method is the inverse of to_json():
 
@@ -367,6 +385,10 @@ class ManifestKey(BareManifestKey):
                    format=ManifestFormat(json['format']),
                    manifest_hash=UUID(json['manifest_hash']),
                    source_hash=UUID(json['source_hash']))
+
+    @property
+    def hash(self) -> bytes:
+        return sha256(self.pack()).digest()
 
 
 @attrs.frozen
@@ -489,6 +511,10 @@ class ManifestPartition:
         return cls(index=0,
                    is_last=False)
 
+    @property
+    def is_first(self):
+        return not (self.index or self.page_index)
+
     def with_config(self, config: AnyJSON):
         return attrs.evolve(self, config=config)
 
@@ -550,7 +576,7 @@ class ManifestService(ElasticsearchService):
                      filters: Filters,
                      partition: ManifestPartition,
                      manifest_key: Optional[ManifestKey] = None
-                     ) -> Union[Manifest, ManifestPartition]:
+                     ) -> Manifest | ManifestPartition:
         """
         Return a fully populated manifest that ends with the given partition or
         the next partition if the given partition isn't the last.
@@ -592,17 +618,27 @@ class ManifestService(ElasticsearchService):
         generator = generator_cls(self, catalog, filters)
         if manifest_key is None:
             manifest_key = generator.manifest_key()
-        try:
-            return self._get_cached_manifest(generator_cls, manifest_key)
-        except CachedManifestNotFound:
-            partition = generator.write(manifest_key, partition)
-            if partition.is_last:
-                return self._presign_manifest(generator_cls=generator_cls,
-                                              manifest_key=manifest_key,
-                                              file_name=partition.file_name,
-                                              was_cached=False)
-            else:
-                return partition
+        if partition.is_first:
+            try:
+                return self._get_cached_manifest(generator_cls, manifest_key)
+            except CachedManifestNotFound:
+                return self._generate_manifest(generator, manifest_key, partition)
+        else:
+            return self._generate_manifest(generator, manifest_key, partition)
+
+    def _generate_manifest(self,
+                           generator: 'ManifestGenerator',
+                           manifest_key: ManifestKey,
+                           partition: ManifestPartition
+                           ) -> Manifest | ManifestPartition:
+        partition = generator.write(manifest_key, partition)
+        if partition.is_last:
+            return self._presign_manifest(generator_cls=type(generator),
+                                          manifest_key=manifest_key,
+                                          file_name=partition.file_name,
+                                          was_cached=False)
+        else:
+            return partition
 
     def get_cached_manifest(self,
                             format: ManifestFormat,
@@ -632,14 +668,16 @@ class ManifestService(ElasticsearchService):
         Verify a manifest key against its signature. If either the key or the
         signature have been tampered with, an exception will be raised.
         """
-        response = aws.kms.verify_mac(KeyId=config.manifest_kms_alias,
-                                      MacAlgorithm='HMAC_SHA_256',
-                                      Message=manifest_key.value.pack(),
-                                      Mac=manifest_key.signature)
-        if response['MacValid']:
-            return ManifestKey(**attrs.asdict(manifest_key.value))
-        else:
+        try:
+            response = aws.kms.verify_mac(KeyId=config.manifest_kms_alias,
+                                          MacAlgorithm='HMAC_SHA_256',
+                                          Message=manifest_key.value.pack(),
+                                          Mac=manifest_key.signature)
+        except aws.kms.exceptions.KMSInvalidMacException:
             raise InvalidManifestKeySignature(manifest_key)
+        else:
+            assert response['MacValid']
+            return ManifestKey(**attrs.asdict(manifest_key.value))
 
     def get_cached_manifest_with_key(self, manifest_key: ManifestKey) -> Manifest:
         generator_cls = ManifestGenerator.cls_for_format(manifest_key.format)
@@ -754,7 +792,7 @@ class ManifestService(ElasticsearchService):
                       manifest: Optional[Manifest],
                       url: furl,
                       authentication: Optional[Authentication]
-                      ) -> Optional[JSON]:
+                      ) -> FlatJSON:
         format = None if manifest is None else manifest.format
         generator_cls = ManifestGenerator.cls_for_format(format)
         file_name = None if manifest is None else manifest.file_name
@@ -886,7 +924,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                       url: furl,
                       file_name: Optional[str],
                       authentication: Optional[Authentication]
-                      ) -> JSON:
+                      ) -> FlatJSON:
         # Normally we would have used --remote-name and --remote-header-name
         # which gets the file name from the content-disposition header. However,
         # URLs longer than 255 characters trigger a bug in curl.exe's
@@ -1347,7 +1385,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
                       url: furl,
                       file_name: Optional[str],
                       authentication: Optional[Authentication]
-                      ) -> JSON:
+                      ) -> FlatJSON:
         authentication_option = [] if authentication is None else [
             '--header',
             cls._option(authentication.as_http_header())

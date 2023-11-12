@@ -6,6 +6,7 @@ import azul.attrs
 import azul.auth
 import azul.azulclient
 import azul.bigquery
+import azul.bytes
 import azul.caching
 import azul.collections
 import azul.doctests
@@ -62,6 +63,7 @@ def load_tests(_loader, tests, _ignore):
         azul.auth,
         azul.azulclient,
         azul.bigquery,
+        azul.bytes,
         azul.caching,
         azul.collections,
         azul.doctests,

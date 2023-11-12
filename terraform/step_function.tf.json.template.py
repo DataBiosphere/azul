@@ -61,7 +61,7 @@ emit_tf({
         },
         "aws_sfn_state_machine": {
             "manifest": {
-                "name": config.state_machine_name(service.generate_manifest.name),
+                "name": config.qualified_resource_name(config.manifest_sfn),
                 "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "Loop",

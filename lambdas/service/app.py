@@ -227,7 +227,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '2.0'
+        'version': '3.0'
     },
     'tags': [
         {
@@ -321,7 +321,6 @@ class ServiceApp(AzulChaliceApp):
     def manifest_controller(self) -> ManifestController:
         manifest_url_func: ManifestUrlFunc = self.manifest_url
         return self._service_controller(ManifestController,
-                                        step_function_lambda_name=generate_manifest.name,
                                         manifest_url_func=manifest_url_func)
 
     def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
@@ -1409,6 +1408,10 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                         A redirect indicating that the manifest preparation job
                         is {'already' if initiate else 'now'} done. Immediately
                         follow the redirect to obtain the manifest contents.
+
+                        The response body contains, for a number of commonly
+                        used shells, a command line suitable for downloading the
+                        manifest.
                     '''),
                     'headers': {
                         'Location': {
@@ -1458,18 +1461,24 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                         redirect to the actual location of the manifest.
 
                         [2]: #operations-Manifests-get_manifest_files
+
+                        Note: A 200 status response with a `Status` property of
+                        302 in its body additionally contains a `CommandLine`
+                        property that lists, for a number of commonly used
+                        shells, a command line suitable for downloading the
+                        manifest.
                     '''),
                     **responses.json_content(
                         schema.object(
                             Status=int,
                             Location={'type': 'string', 'format': 'url'},
                             **{'Retry-After': schema.optional(int)},
-                            CommandLine=schema.object(**{
+                            CommandLine=schema.optional(schema.object(**{
                                 key: str
                                 for key in CurlManifestGenerator.command_lines(url=furl(''),
                                                                                file_name='',
                                                                                authentication=None)
-                            })
+                            }))
                         )
                     ),
                 }
@@ -1529,9 +1538,7 @@ def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
                                                       authentication=request.authentication)
 
 
-@app.lambda_function(
-    name='manifest'
-)
+@app.lambda_function(name=config.manifest_sfn)
 def generate_manifest(event: AnyJSON, _context: LambdaContext):
     assert isinstance(event, Mapping)
     assert all(isinstance(k, str) for k in event.keys())
