@@ -34,6 +34,7 @@ import azul.openapi.responses
 import azul.openapi.schema
 import azul.plugins.metadata.hca.indexer.transform
 import azul.plugins.metadata.hca.service.contributor_matrices
+import azul.plugins.repository.canned
 import azul.plugins.repository.tdr_hca
 import azul.service.drs_controller
 import azul.service.manifest_service
@@ -83,6 +84,7 @@ def load_tests(_loader, tests, _ignore):
         azul.openapi.responses,
         azul.openapi.schema,
         azul.plugins.metadata.hca.service.contributor_matrices,
+        azul.plugins.repository.canned,
         azul.plugins.repository.tdr_hca,
         azul.plugins.metadata.hca.indexer.transform,
         azul.service.drs_controller,
