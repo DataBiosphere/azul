@@ -651,22 +651,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     @cache
     def _get_one_outer_file(self, catalog: CatalogName) -> JSON:
-        # Try to filter for an easy-to-parse format to verify its contents
+        # Try to filter for a nonempty file with easy-to-parse format to verify
+        # its contents
         file_size_facet = self._file_size_facet(catalog)
-        for filters in [self._fastq_filter(catalog), {}]:
-            response = self._check_endpoint(method=GET,
-                                            path='/index/files',
-                                            args=dict(catalog=catalog,
-                                                      filters=json.dumps(filters),
-                                                      size=1,
-                                                      order='asc',
-                                                      sort=file_size_facet))
-            hits = json.loads(response)['hits']
-            if hits:
-                break
-        else:
-            self.fail('No files found')
-        return one(hits)
+        for min_size in 1, 0:
+            for format_filter in self._fastq_filter(catalog), {}:
+                filters = format_filter | {file_size_facet: {'within': [[min_size, sys.maxsize]]}}
+                response = self._check_endpoint(method=GET,
+                                                path='/index/files',
+                                                args=dict(catalog=catalog,
+                                                          filters=json.dumps(filters),
+                                                          size=1,
+                                                          order='asc',
+                                                          sort=file_size_facet))
+                hits = json.loads(response)['hits']
+                if hits:
+                    log.info('Found a file using filters %r', filters)
+                    return one(hits)
+        self.fail('No files found')
 
     def _file_size_facet(self, catalog: CatalogName) -> str:
         if config.is_hca_enabled(catalog):
@@ -708,8 +710,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
             file = self._get_one_inner_file(catalog)
             file_uuid, file_ext = file['uuid'], self._file_ext(file)
-            self._test_dos(catalog, file_uuid, file_ext)
-            self._test_drs(catalog, file_uuid, file_ext)
+            self._test_dos(catalog, file_uuid, file_ext, file['size'])
+            self._test_drs(catalog, file_uuid, file_ext, file['size'])
 
     @property
     def _service_account_credentials(self) -> AbstractContextManager:
@@ -957,7 +959,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_json(GET, furl(response['Location']))
 
                 response = self._get_url(GET, furl(response['Location']), stream=True)
-                self._validate_file_response(response, self._file_ext(file))
+                self._validate_file_response(response, self._file_ext(file), file['size'])
 
     def _file_ext(self, file: JSON) -> str:
         # We believe that the file extension is a more reliable indicator than
@@ -967,30 +969,30 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         suffixes = PurePath(file['name']).suffixes
         return ''.join(suffixes).lower()
 
-    def _validate_file_content(self, content: ReadableFileObject, file_ext: str):
+    def _validate_file_content(self, content: ReadableFileObject, file_ext: str, file_size: int):
         if file_ext == '.fastq':
             self._validate_fastq_content(content)
         elif file_ext == '.fastq.gz':
             with gzip.open(content) as buf:
                 self._validate_fastq_content(buf)
+        elif file_size > 0:
+            self.assertEqual(1, len(content.read(1)))
         else:
-            # FIXME: Re-enable assertion
-            #        https://github.com/DataBiosphere/azul/issues/5537
-            if False:
-                self.assertEqual(1, len(content.read(1)))
+            log.info('File is emtpy; skipping content validation')
 
     def _validate_file_response(self,
                                 response: urllib3.HTTPResponse,
-                                file_ext: str):
+                                file_ext: str,
+                                file_size: int):
         """
         Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_file_content(response, file_ext)
+            self._validate_file_content(response, file_ext, file_size)
         finally:
             response.close()
 
-    def _test_drs(self, catalog: CatalogName, file_uuid: str, file_ext: str):
+    def _test_drs(self, catalog: CatalogName, file_uuid: str, file_ext: str, file_size: int):
         repository_plugin = self.azul_client.repository_plugin(catalog)
         drs = repository_plugin.drs_client()
         for access_method in AccessMethod:
@@ -1001,14 +1003,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.assertIsNone(access.headers)
                 if access.method is AccessMethod.https:
                     response = self._get_url(GET, furl(access.url), stream=True)
-                    self._validate_file_response(response, file_ext)
+                    self._validate_file_response(response, file_ext, file_size)
                 elif access.method is AccessMethod.gs:
                     content = self._get_gs_url_content(furl(access.url), size=self.num_fastq_bytes)
-                    self._validate_file_content(content, file_ext)
+                    self._validate_file_content(content, file_ext, file_size)
                 else:
                     self.fail(access_method)
 
-    def _test_dos(self, catalog: CatalogName, file_uuid: str, file_ext: str):
+    def _test_dos(self, catalog: CatalogName, file_uuid: str, file_ext: str, file_size: int):
         with self.subTest('dos', catalog=catalog):
             log.info('Resolving file %s with DOS', file_uuid)
             response = self._check_endpoint(method=GET,
@@ -1032,7 +1034,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     else:
                         break
             self._assertResponseStatus(response, 200)
-            self._validate_file_content(response, file_ext)
+            self._validate_file_content(response, file_ext, file_size)
 
     def _get_gs_url_content(self,
                             url: furl,
