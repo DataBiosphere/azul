@@ -15,6 +15,7 @@ import re
 import tempfile
 import threading
 from typing import (
+    Any,
     Callable,
     Optional,
     TYPE_CHECKING,
@@ -27,6 +28,10 @@ from unittest.mock import (
 )
 
 import boto3
+from botocore.awsrequest import (
+    AWSPreparedRequest,
+    AWSResponse,
+)
 import botocore.credentials
 import botocore.session
 import botocore.utils
@@ -40,6 +45,10 @@ from azul import (
     cached_property,
     config,
     reject,
+)
+from azul.logging import (
+    azul_boto3_log as boto3_log,
+    http_body_log_message,
 )
 from azul.types import (
     JSON,
@@ -201,7 +210,7 @@ class AWS:
 
     @property
     def dynamodb(self):
-        return self.client('dynamodb')
+        return self.client('dynamodb', azul_logging=True)
 
     @property
     def es_endpoint(self) -> Optional[Netloc]:
@@ -416,7 +425,7 @@ class AWS:
         return boto3.session.Session(botocore_session=session)
 
     @_cache
-    def client(self, *args, **kwargs):
+    def client(self, *args, azul_logging: bool = False, **kwargs):
         """
         Outside of a context established by `.assumed_role_credentials()` this
         method returns a Boto3 client object of the same type as that of
@@ -435,8 +444,52 @@ class AWS:
         Caching the result of this function is not necessary and will be harmful
         if the cached value is used by a thread other than the one that called
         this function.
+
+        :param azul_logging: Whether to log the client's requests and
+                             responses. Note that using DEBUG level will
+                             enable logging of request bodies, which could
+                             contain sensitive or secret information.
         """
-        return self.boto3_session.client(*args, **kwargs)
+        client = self.boto3_session.client(*args, **kwargs)
+        if azul_logging:
+            events = client.meta.events
+            events.register_last(self._request_event_name, self._log_client_request)
+            events.register_first(self._response_event_name, self._log_client_response)
+        return client
+
+    _request_event_name = 'before-send'
+    _response_event_name = 'response-received'
+
+    def _log_client_request(self,
+                            event_name: str,
+                            request: AWSPreparedRequest,
+                            **_kwargs: Any
+                            ) -> Optional[AWSResponse]:
+        event_name = self._shorten_event_name(event_name, self._request_event_name)
+        boto3_log.info('%s:\tMaking %s request to %s',
+                       event_name,
+                       request.method,
+                       request.url)
+        message = http_body_log_message(boto3_log, 'request', request.body)
+        boto3_log.info('%s:\t%s', event_name, message)
+        return None
+
+    def _log_client_response(self,
+                             *,
+                             event_name: str,
+                             **kwargs: Any
+                             ) -> Optional[AWSResponse]:
+        event_name = self._shorten_event_name(event_name, self._response_event_name)
+        response = kwargs['response_dict']
+        boto3_log.info('%s:\tGot %s response', event_name, response['status_code'])
+        message = http_body_log_message(boto3_log, 'response', response.get('body'))
+        boto3_log.info('%s:\t%s', event_name, message)
+        return None
+
+    def _shorten_event_name(self, event_name: str, rm_prefix: str) -> str:
+        prefix, _, suffix = event_name.partition('.')
+        assert prefix == rm_prefix, event_name
+        return suffix
 
     @_cache
     def resource(self, *args, **kwargs):

@@ -18,6 +18,9 @@ from azul import (
 from azul.chalice import (
     AzulChaliceApp,
 )
+from azul.strings import (
+    trunc_ellipses,
+)
 
 
 @attr.s(frozen=False, kw_only=False, auto_attribs=True)
@@ -111,6 +114,8 @@ def _configure_log_levels(*loggers):
     azul_level_ = azul_log_level()
     root_level = root_log_level()
     logging.getLogger().setLevel(root_level)
+    # Only log AWS request & response bodies when AZUL_DEBUG is 2
+    azul_boto3_log.setLevel(root_level)
     es_log.setLevel(es_log_level())
     for logger in {*loggers, azul.log}:
         logger.setLevel(azul_level_)
@@ -133,6 +138,7 @@ def silent_es_log_level():
 
 
 es_log = logging.getLogger('elasticsearch')
+azul_boto3_log = logging.getLogger('azul.boto3')
 
 
 @contextmanager
@@ -157,3 +163,18 @@ def silenced_es_logger():
         finally:
             es_log.setLevel(original_log_level)
             assert es_log.level == original_log_level
+
+
+def http_body_log_message(log: logging.Logger,
+                          body_type: str,
+                          body: bytes | bytearray | str | None
+                          ) -> str:
+    if body is None:
+        return f'… without {body_type} body'
+    else:
+        if log.isEnabledFor(logging.DEBUG):
+            if isinstance(body, (bytes, bytearray)):
+                body = body.decode(errors='ignore')
+        else:
+            body = trunc_ellipses(body, max_len=128)
+        return f'… with {body_type} body {body!r}'
