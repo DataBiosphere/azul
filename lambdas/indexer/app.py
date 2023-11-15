@@ -285,7 +285,7 @@ def post_notification(catalog: CatalogName, action: str):
 
 @app.threshold(
     errors=int(config.contribution_concurrency(retry=False) * 2 / 3),
-    throttles=int(45000 / config.contribution_concurrency(retry=False))
+    throttles=int(96000 / config.contribution_concurrency(retry=False))
 )
 @app.on_sqs_message(
     queue=config.notifications_queue_name(),
@@ -297,7 +297,7 @@ def contribute(event: chalice.app.SQSEvent):
 
 @app.threshold(
     errors=int(config.aggregation_concurrency(retry=False) * 3),
-    throttles=int(9000 / config.aggregation_concurrency(retry=False))
+    throttles=int(12800 / config.aggregation_concurrency(retry=False))
 )
 @app.on_sqs_message(
     queue=config.tallies_queue_name(),
