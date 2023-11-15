@@ -618,6 +618,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_SAM_SERVICE_URL': None,
 
+        # The URL of Terra's DUOS service from which to index descriptions of
+        # AnVIL datasets. If left unset, this step is skipped during indexing.
+        #
+        'AZUL_DUOS_SERVICE_URL': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         #
