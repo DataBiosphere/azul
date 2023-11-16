@@ -378,7 +378,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         return result
 
     def _dataset_description(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
-        description = self.tdr.get_duos(bundle_fqid.source)['studyDescription']
+        duos_info = self.tdr.get_duos(bundle_fqid.source)
+        description = None if duos_info is None else duos_info.get('studyDescription')
         entity_id = change_version(bundle_fqid.uuid,
                                    self.bundle_uuid_version,
                                    self.datarepo_row_uuid_version)

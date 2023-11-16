@@ -634,9 +634,19 @@ class TDRClient(SAMClient):
     def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
 
-    def get_duos(self, source: SourceRef) -> MutableJSON:
+    def get_duos(self, source: SourceRef) -> Optional[MutableJSON]:
         response = self._retrieve_source(source)
-        duos_id = response['duosFirecloudGroup']['duosId']
-        url = self._duos_endpoint('dataset', 'registration', duos_id)
-        response = self._request('GET', url)
-        return self._check_response(url, response)
+        try:
+            duos_id = response['duosFirecloudGroup']['duosId']
+        except (KeyError, TypeError):
+            log.warning('No DUOS ID available for %r', source.spec)
+            return None
+        else:
+            url = self._duos_endpoint('dataset', 'registration', duos_id)
+            response = self._request('GET', url)
+            if response.status == 404:
+                log.warning('No DUOS dataset registration with ID %r from %r',
+                            duos_id, source.spec)
+                return None
+            else:
+                return self._check_response(url, response)
