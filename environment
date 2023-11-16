@@ -154,12 +154,12 @@ _login_aws() {
 			# Get the AssumeRole credential provider and make it the only one
 			session = botocore.session.get_session()
 			resolver = session.get_component('credential_provider')
-			assume_role_provider = resolver.get_provider('assume-role')
-			resolver.providers = [assume_role_provider]
+			provider = resolver.get_provider('assume-role')
+			resolver.providers = [provider]
 
 			# Make the provider use the same cache as the AWS CLI
 			cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
-			assume_role_provider.cache = botocore.utils.JSONFileCache(cli_cache)
+			provider.cache = botocore.utils.JSONFileCache(cli_cache)
 
 			# Request the credentials. If the CLI has cached credentials, this step
 			# would use those. If not, fresh ones will be requested from STS. If that

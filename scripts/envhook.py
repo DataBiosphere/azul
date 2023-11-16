@@ -197,22 +197,34 @@ class EnvHook:
             # Get the AssumeRole credential provider
             session = botocore.session.get_session()
             resolver = session.get_component('credential_provider')
-            assume_role_provider = resolver.get_provider('assume-role')
+            provider = resolver.get_provider('assume-role')
 
             # Make the provider use the same cache as the AWS CLI
             cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
-            assume_role_provider.cache = botocore.utils.JSONFileCache(cli_cache)
+            provider.cache = botocore.utils.JSONFileCache(cli_cache)
 
-            # Calls to boto3.client() and .resource() use the default session and
-            # therefore hit the cached credentials
+            # Set up the default Boto3 session with the modified Botocore
+            # session so that calls to boto3.client() and .resource(), which use
+            # the default session, also get access to cached CLI credentials.
             boto3.setup_default_session(botocore_session=session)
 
             if self.pycharm_hosted:
-                # The equivalent of the _login_aws function in `environment`
+                # This is the equivalent of the _login_aws function in
+                # `environment` and ensures that child processes also get access
+                # to AWS credentials, albeit temporary, unrefreshable ones.
                 credentials = session.get_credentials()
                 self.setenv(dict(AWS_ACCESS_KEY_ID=credentials.access_key,
                                  AWS_SECRET_ACCESS_KEY=credentials.secret_key,
                                  AWS_SESSION_TOKEN=credentials.token))
+                # We remove the `env` provider to ensure that these variables
+                # won't affect botocore/boto3, so that it can continue to use
+                # refreshable credentials from the CLI. Note that we already
+                # called get_credentials on the default session object above.
+                # This caused refreshable credentials to be stored in that
+                # session. Removing the `env` provider from the default session
+                # may therefore not strictly be necessary. We do it anyways, so
+                # as to not rely on an undocumented side effect.
+                resolver.remove('env')
 
 
 K = TypeVar('K')
