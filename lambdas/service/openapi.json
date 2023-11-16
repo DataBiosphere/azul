@@ -3,7 +3,7 @@
     "info": {
         "title": "azul_service",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n",
-        "version": "2.0"
+        "version": "3.0"
     },
     "tags": [
         {
@@ -7636,7 +7636,7 @@
                         }
                     },
                     "302": {
-                        "description": "\nA redirect indicating that the manifest preparation job\nis already done. Immediately\nfollow the redirect to obtain the manifest contents.\n",
+                        "description": "\nA redirect indicating that the manifest preparation job\nis already done. Immediately\nfollow the redirect to obtain the manifest contents.\n\nThe response body contains, for a number of commonly\nused shells, a command line suitable for downloading the\nmanifest.\n",
                         "headers": {
                             "Location": {
                                 "description": "The URL of the manifest.\n                               Clients should not make any assumptions about\n                               any parts of the returned domain, except that\n                               the scheme will be `https`.\n",
@@ -7690,7 +7690,7 @@
                         }
                     },
                     "302": {
-                        "description": "\nA redirect indicating that the manifest preparation job\nis now done. Immediately\nfollow the redirect to obtain the manifest contents.\n",
+                        "description": "\nA redirect indicating that the manifest preparation job\nis now done. Immediately\nfollow the redirect to obtain the manifest contents.\n\nThe response body contains, for a number of commonly\nused shells, a command line suitable for downloading the\nmanifest.\n",
                         "headers": {
                             "Location": {
                                 "description": "The URL of the manifest.\n                               Clients should not make any assumptions about\n                               any parts of the returned domain, except that\n                               the scheme will be `https`.\n",
@@ -8969,7 +8969,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n",
+                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n\nNote: A 200 status response with a `Status` property of\n302 in its body additionally contains a `CommandLine`\nproperty that lists, for a number of commonly used\nshells, a command line suitable for downloading the\nmanifest.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -9006,8 +9006,7 @@
                                     },
                                     "required": [
                                         "Status",
-                                        "Location",
-                                        "CommandLine"
+                                        "Location"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -10277,7 +10276,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n",
+                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[PUT /manifest/files][1].\n\n[1]: #operations-Manifests-put_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n\nNote: A 200 status response with a `Status` property of\n302 in its body additionally contains a `CommandLine`\nproperty that lists, for a number of commonly used\nshells, a command line suitable for downloading the\nmanifest.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10314,8 +10313,7 @@
                                     },
                                     "required": [
                                         "Status",
-                                        "Location",
-                                        "CommandLine"
+                                        "Location"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -10347,7 +10345,7 @@
                 "parameters": [],
                 "responses": {
                     "200": {
-                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[GET /manifest/files/{token}][1].\n\n[1]: #operations-Manifests-get_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n",
+                        "description": "\nWhen handling this response, clients should wait the\nnumber of seconds given in the `Retry-After` property of\nthe response body and then make another XHR request to\nthe URL specified in the `Location` property.\n\nFor a detailed description of these properties see the\ndocumentation for the respective response headers\ndocumented under \n[GET /manifest/files/{token}][1].\n\n[1]: #operations-Manifests-get_manifest_files\n\n\nNote: For a 200 status code response whose body has the\n`Status` property set to 302, the `Location` property\nmay reference the [GET /manifest/files/{token}][2]\nendpoint and that endpoint may return yet another\nredirect, this time a genuine (not emulated) 302 status\nredirect to the actual location of the manifest.\n\n[2]: #operations-Manifests-get_manifest_files\n\nNote: A 200 status response with a `Status` property of\n302 in its body additionally contains a `CommandLine`\nproperty that lists, for a number of commonly used\nshells, a command line suitable for downloading the\nmanifest.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10384,8 +10382,7 @@
                                     },
                                     "required": [
                                         "Status",
-                                        "Location",
-                                        "CommandLine"
+                                        "Location"
                                     ],
                                     "additionalProperties": false
                                 }

@@ -151,7 +151,7 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:"
-                f"{config.state_machine_name(service.generate_manifest.name)}"
+                f"{config.qualified_resource_name(config.manifest_sfn)}"
             ]
         },
         {
@@ -161,7 +161,7 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:"
-                f"{config.state_machine_name(service.generate_manifest.name)}*"
+                f"{config.qualified_resource_name(config.manifest_sfn)}*"
             ]
         },
         {

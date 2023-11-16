@@ -1565,6 +1565,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'dracut-fips'
                     ],
                     'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
+                    'bootcmd': [
+                        [
+                            'cloud-init-per',
+                            'once',
+                            'disable-ssm',
+                            'systemctl',
+                            'disable',
+                            '--now',
+                            'amazon-ssm-agent.service'
+                        ]
+                    ],
                     'write_files': [
                         {
                             'path': '/root/.docker/config.json',
@@ -2028,7 +2039,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             '-c', 'file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
                             '-s'  # restart agent afterwards
                         ],
-                        ['yum', '-y', 'update']
+                        ['yum', '-y', 'update'],
+                        ['systemctl', 'enable', '--now', 'amazon-ssm-agent.service']
                     ],
                     # Reboot to realize the added kernel parameter the changed sshd configuration
                     'power_state': {

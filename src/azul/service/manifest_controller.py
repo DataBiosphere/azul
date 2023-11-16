@@ -11,6 +11,7 @@ from typing import (
 import attr
 from chalice import (
     BadRequestError,
+    ChaliceViewError,
     Response,
 )
 from furl import (
@@ -35,6 +36,7 @@ from azul.service import (
 )
 from azul.service.async_manifest_service import (
     AsyncManifestService,
+    GenerationFailed,
     InvalidTokenError,
     NoSuchGeneration,
     Token,
@@ -57,6 +59,7 @@ from azul.service.storage_service import (
     StorageService,
 )
 from azul.types import (
+    FlatJSON,
     JSON,
 )
 
@@ -75,14 +78,11 @@ assert manifest_state_key in get_type_hints(ManifestGenerationState)
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class ManifestController(SourceController):
-    step_function_lambda_name: str
     manifest_url_func: ManifestUrlFunc
 
     @cached_property
     def async_service(self) -> AsyncManifestService:
-        name = config.state_machine_name(self.step_function_lambda_name)
-        async_service = AsyncManifestService(name)
-        return async_service
+        return AsyncManifestService()
 
     @cached_property
     def service(self) -> ManifestService:
@@ -147,9 +147,13 @@ class ManifestController(SourceController):
                         'manifest_key': manifest_key.to_json(),
                         'partition': partition.to_json()
                     }
+                    # Manifest keys for catalogs with long names would be too
+                    # long to be used directly as state machine execution names.
+                    execution_key = manifest_key.hash
                     # ManifestGenerationState is also JSON but there is no way
                     # to express that since TypedDict rejects a co-parent class.
-                    token = self.async_service.start_generation(cast(JSON, state))
+                    input: JSON = cast(JSON, state)
+                    token = self.async_service.start_generation(execution_key, input)
                 else:
                     manifest_key = manifest.manifest_key
             else:
@@ -164,12 +168,13 @@ class ManifestController(SourceController):
                     raise GoneError('The requested manifest has expired, please request a new one')
                 except InvalidManifestKeySignature:
                     raise BadRequestError('Invalid token')
-
         else:
             try:
                 token_or_state = self.async_service.inspect_generation(token)
             except NoSuchGeneration:
                 raise BadRequestError('Invalid token')
+            except GenerationFailed as e:
+                raise ChaliceViewError('Failed to generate manifest', e.status, e.output)
             if isinstance(token_or_state, Token):
                 token, manifest, manifest_key = token_or_state, None, None
             elif isinstance(token_or_state, dict):
@@ -179,13 +184,14 @@ class ManifestController(SourceController):
             else:
                 assert False, token_or_state
 
+        body: dict[str, int | str | FlatJSON]
+
         if manifest is None:
             url = self.manifest_url_func(fetch=fetch, token_or_key=token.encode())
             body = {
                 'Status': 301,
                 'Location': str(url),
-                'Retry-After': token.wait_time,
-                'CommandLine': self.service.command_lines(manifest, url, authentication)
+                'Retry-After': token.retry_after
             }
         else:
             assert manifest.manifest_key == manifest_key
@@ -222,9 +228,11 @@ class ManifestController(SourceController):
         if fetch:
             return Response(body=body)
         else:
-            headers = {k: str(body[k]) for k in body.keys() & {'Location', 'Retry-After'}}
-            msg = ''.join(
+            status = body.pop('Status')
+            command_line: FlatJSON = body.pop('CommandLine', None)
+            headers = {k: str(v) for k, v in body.items()}
+            new_body = None if command_line is None else ''.join(
                 f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
-                for shell, cmd in body['CommandLine'].items()
+                for shell, cmd in command_line.items()
             )
-            return Response(body=msg, status_code=body['Status'], headers=headers)
+            return Response(body=new_body, status_code=status, headers=headers)

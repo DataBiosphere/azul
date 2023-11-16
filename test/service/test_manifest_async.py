@@ -1,8 +1,14 @@
+from contextlib import (
+    contextmanager,
+)
 import datetime
 from itertools import (
     product,
 )
 import json
+from typing import (
+    ContextManager,
+)
 from unittest import (
     mock,
 )
@@ -28,14 +34,8 @@ import responses
 from app_test_case import (
     LocalAppTestCase,
 )
-from azul import (
-    config,
-)
 from azul.logging import (
     configure_test_logging,
-)
-from azul.modules import (
-    load_app_module,
 )
 from azul.plugins import (
     ManifestFormat,
@@ -45,8 +45,8 @@ from azul.service import (
 )
 from azul.service.async_manifest_service import (
     AsyncManifestService,
+    GenerationFailed,
     InvalidTokenError,
-    StateMachineError,
     Token,
 )
 from azul.service.manifest_controller import (
@@ -71,92 +71,78 @@ def setUpModule():
     configure_test_logging()
 
 
-state_machine_name = 'foo'
-
-
+@patch.object(AsyncManifestService, '_sfn')
 class TestAsyncManifestService(AzulUnitTestCase):
+    execution_id = b'42'
 
-    def test_token_encoding(self):
-        token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
-                      request_index=42,
-                      wait_time=123)
+    def test_token_encoding(self, _sfn):
+        token = Token(execution_id=self.execution_id, request_index=42, retry_after=123)
         self.assertEqual(token, Token.decode(token.encode()))
 
-    def test_token_validation(self):
-        token = Token(execution_id='6c9dfa3f-e92e-11e8-9764-ada973595c11',
-                      request_index=42,
-                      wait_time=123)
+    def test_token_validation(self, _sfn):
+        token = Token(execution_id=self.execution_id, request_index=42, retry_after=123)
         self.assertRaises(InvalidTokenError, token.decode, token.encode()[:-1])
 
-    def test_status_success(self):
+    def test_status_success(self, _sfn):
         """
-        A successful manifest job should return a 302 status and a url to the manifest
+        A successful manifest job should return a 302 status and a URL to the
+        manifest
         """
-        execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
-        output = {
-            'foo': 'bar'
-        }
-        service = AsyncManifestService(state_machine_name)
-        execution_success_output = {
-            'executionArn': service.execution_arn(state_machine_name, execution_id),
-            'stateMachineArn': service.state_machine_arn(state_machine_name),
-            'name': execution_id,
+        service = AsyncManifestService()
+        execution_name = service.execution_name(self.execution_id)
+        output = {'foo': 'bar'}
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
+            'stateMachineArn': service.machine_arn,
+            'name': execution_name,
             'status': 'SUCCEEDED',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'stopDate': datetime.datetime(2018, 11, 15, 18, 30, 59, 295000),
             'input': '{"filters": {}}',
             'output': json.dumps(output)
         }
-        with patch.object(type(service), '_describe_execution') as mock:
-            mock.return_value = execution_success_output
-            token = Token(execution_id=execution_id, request_index=0, wait_time=0)
-            actual_output = service.inspect_generation(token)
+        token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
+        actual_output = service.inspect_generation(token)
         self.assertEqual(output, actual_output)
 
-    def test_status_running(self):
+    def test_status_running(self, _sfn):
         """
-        A running manifest job should return a 301 status and a url to retry
+        A running manifest job should return a 301 status and a URL to retry
         checking the job status
         """
-        execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
-        service = AsyncManifestService(state_machine_name)
-        execution_running_output = {
-            'executionArn': service.execution_arn(state_machine_name, execution_id),
-            'stateMachineArn': service.state_machine_arn(state_machine_name),
-            'name': execution_id,
+        service = AsyncManifestService()
+        execution_name = service.execution_name(self.execution_id)
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
+            'stateMachineArn': service.machine_arn,
+            'name': execution_name,
             'status': 'RUNNING',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'input': '{"filters": {}}'
         }
-        with patch.object(type(service), '_describe_execution') as mock:
-            mock.return_value = execution_running_output
-            token = Token(execution_id=execution_id, request_index=0, wait_time=0)
-            new_token = service.inspect_generation(token)
-        expected = Token(execution_id=execution_id, request_index=1, wait_time=1)
-        self.assertNotEqual(new_token, token)
-        self.assertEqual(expected, new_token)
+        token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
+        token = service.inspect_generation(token)
+        expected = Token(execution_id=self.execution_id, request_index=1, retry_after=1)
+        self.assertEqual(expected, token)
 
-    def test_status_failed(self):
+    def test_status_failed(self, _sfn):
         """
-        A failed manifest job should raise a StateMachineError
+        A failed manifest job should raise a GenerationFailed
         """
-        execution_id = '068579b6-9d7b-4e19-ac4e-77626851be1c'
-        service = AsyncManifestService(state_machine_name)
-        execution_failed_output = {
-            'executionArn': service.execution_arn(state_machine_name, execution_id),
-            'stateMachineArn': service.state_machine_arn(state_machine_name),
-            'name': execution_id,
+        service = AsyncManifestService()
+        execution_name = service.execution_name(self.execution_id)
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
+            'stateMachineArn': service.machine_arn,
+            'name': execution_name,
             'status': 'FAILED',
             'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
             'stopDate': datetime.datetime(2018, 11, 14, 16, 6, 55, 860000),
             'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
         }
-        with patch.object(type(service), '_describe_execution') as mock:
-            mock.return_value = execution_failed_output
-            token = Token(execution_id=execution_id, request_index=0, wait_time=0)
-            self.assertRaises(StateMachineError,
-                              service.inspect_generation,
-                              token)
+        token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
+        with self.assertRaises(GenerationFailed):
+            service.inspect_generation(token)
 
 
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
@@ -165,20 +151,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     def lambda_name(cls) -> str:
         return 'service'
 
+    execution_id = b'42'
+
     @mock_sts
-    @mock.patch('uuid.uuid4')
-    @mock.patch.object(AsyncManifestService, '_start_execution')
-    @mock.patch.object(AsyncManifestService, '_describe_execution')
-    def test(self, _describe_execution, _start_execution, mock_uuid):
-        service = load_app_module('service', unit_test=True)
-        # In a LocalAppTestCase we need the actual state machine name
-        state_machine_name = config.state_machine_name(service.generate_manifest.name)
-
-        def reset():
-            _start_execution.reset_mock()
-            _describe_execution.reset_mock()
-
-        with (responses.RequestsMock() as helper):
+    @mock.patch.object(AsyncManifestService, '_sfn')
+    @mock.patch.object(ManifestService, 'get_manifest')
+    @mock.patch.object(ManifestService, 'get_cached_manifest')
+    def test(self, get_cached_manifest, get_manifest, _sfn):
+        with responses.RequestsMock() as helper:
             helper.add_passthru(str(self.base_url))
             # FIXME: Remove put=False and therefore `put`
             #        https://github.com/DataBiosphere/azul/issues/5533
@@ -186,8 +166,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 if not fetch and not put:
                     continue  # we provide the backwards-compatible GET only for fetch
                 with self.subTest(put=put, fetch=fetch):
-                    execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
-                    mock_uuid.return_value = execution_id
                     format = ManifestFormat.compact
                     filters = Filters(explicit={'organ': {'is': ['lymph node']}},
                                       source_ids={self.source.id})
@@ -203,6 +181,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                format=format,
                                                manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
                                                source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+                    get_cached_manifest.side_effect = CachedManifestNotFound(manifest_key)
                     signed_manifest_key = SignedManifestKey(value=manifest_key,
                                                             signature=b'123')
 
@@ -237,86 +216,87 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                           is_last_page=False,
                                           search_after=('foo', 'doc#bar'))
                     )
-
-                    with (
-                        mock.patch.object(ManifestService,
-                                          'get_manifest'
-                                          ) as get_manifest,
-                        mock.patch.object(ManifestService,
-                                          'get_cached_manifest',
-                                          side_effect=CachedManifestNotFound(manifest_key))
-                    ):
-                        for i, expected_status in enumerate(3 * [301] + [302]):
-                            response = requests.request(method='PUT' if put and i == 0 else 'GET',
-                                                        url=str(url),
-                                                        allow_redirects=False)
-                            if fetch:
-                                self.assertEqual(200, response.status_code)
-                                response = response.json()
-                                self.assertEqual(expected_status, response.pop('Status'))
-                                headers = response
-                            else:
-                                self.assertEqual(expected_status, response.status_code)
-                                headers = response.headers
-                            if expected_status == 301:
-                                self.assertGreaterEqual(int(headers['Retry-After']), 0)
-                            url = furl(headers['Location'])
-                            if i == 0:
-                                state: ManifestGenerationState = dict(filters=filters.to_json(),
-                                                                      manifest_key=manifest_key.to_json(),
-                                                                      partition=partitions[0].to_json())
-                                _start_execution.assert_called_once_with(
-                                    state_machine_name,
-                                    execution_id,
-                                    execution_input=state
+                    service: AsyncManifestService
+                    service = self.app_module.app.manifest_controller.async_service
+                    execution_id = manifest_key.hash
+                    execution_name = service.execution_name(execution_id)
+                    machine_arn = service.machine_arn
+                    execution_arn = service.execution_arn(execution_name)
+                    _sfn.start_execution.return_value = {
+                        'executionArn': execution_arn,
+                        'startDate': 123
+                    }
+                    for i, expected_status in enumerate(3 * [301] + [302]):
+                        response = requests.request(method='PUT' if put and i == 0 else 'GET',
+                                                    url=str(url),
+                                                    allow_redirects=False)
+                        if fetch:
+                            self.assertEqual(200, response.status_code)
+                            response = response.json()
+                            self.assertEqual(expected_status, response.pop('Status'))
+                            headers = response
+                        else:
+                            self.assertEqual(expected_status, response.status_code)
+                            headers = response.headers
+                        if expected_status == 301:
+                            self.assertGreaterEqual(int(headers['Retry-After']), 0)
+                        url = furl(headers['Location'])
+                        if i == 0:
+                            state: ManifestGenerationState = dict(filters=filters.to_json(),
+                                                                  manifest_key=manifest_key.to_json(),
+                                                                  partition=partitions[0].to_json())
+                            _sfn.start_execution.assert_called_once_with(
+                                stateMachineArn=machine_arn,
+                                name=execution_name,
+                                input=json.dumps(state)
+                            )
+                            _sfn.describe_execution.assert_not_called()
+                            _sfn.reset_mock()
+                            _sfn.describe_execution.return_value = {'status': 'RUNNING'}
+                        elif i == 1:
+                            get_manifest.return_value = partitions[1]
+                            state = self.app_module.generate_manifest(state, None)
+                            self.assertEqual(partitions[1],
+                                             ManifestPartition.from_json(state['partition']))
+                            get_manifest.assert_called_once_with(
+                                format=format,
+                                catalog=self.catalog,
+                                filters=Filters.from_json(state['filters']),
+                                partition=partitions[0],
+                                manifest_key=ManifestKey.from_json(state['manifest_key'])
+                            )
+                            get_manifest.reset_mock()
+                            _sfn.start_execution.assert_not_called()
+                            _sfn.describe_execution.assert_called_once()
+                            _sfn.reset_mock()
+                            # simulate absence of output due eventual consistency
+                            _sfn.describe_execution.return_value = {'status': 'SUCCEEDED'}
+                        elif i == 2:
+                            get_manifest.return_value = manifest
+                            _sfn.start_execution.assert_not_called()
+                            _sfn.describe_execution.assert_called_once()
+                            _sfn.reset_mock()
+                            _sfn.describe_execution.return_value = {
+                                'status': 'SUCCEEDED',
+                                'output': json.dumps(
+                                    self.app_module.generate_manifest(state, None)
                                 )
-                                _describe_execution.assert_not_called()
-                                reset()
-                                _describe_execution.return_value = {'status': 'RUNNING'}
-                            elif i == 1:
-                                get_manifest.return_value = partitions[1]
-                                state = self.app_module.generate_manifest(state, None)
-                                self.assertEqual(partitions[1],
-                                                 ManifestPartition.from_json(state['partition']))
-                                get_manifest.assert_called_once_with(
-                                    format=format,
-                                    catalog=self.catalog,
-                                    filters=Filters.from_json(state['filters']),
-                                    partition=partitions[0],
-                                    manifest_key=ManifestKey.from_json(state['manifest_key'])
-                                )
-                                get_manifest.reset_mock()
-                                _start_execution.assert_not_called()
-                                _describe_execution.assert_called_once()
-                                reset()
-                                # simulate absence of output due eventual consistency
-                                _describe_execution.return_value = {'status': 'SUCCEEDED'}
-                            elif i == 2:
-                                get_manifest.return_value = manifest
-                                _start_execution.assert_not_called()
-                                _describe_execution.assert_called_once()
-                                reset()
-                                _describe_execution.return_value = {
-                                    'status': 'SUCCEEDED',
-                                    'output': json.dumps(
-                                        self.app_module.generate_manifest(state, None)
-                                    )
-                                }
-                            elif i == 3:
-                                get_manifest.assert_called_once_with(
-                                    format=format,
-                                    catalog=self.catalog,
-                                    filters=Filters.from_json(state['filters']),
-                                    partition=partitions[1],
-                                    manifest_key=ManifestKey.from_json(state['manifest_key'])
-                                )
-                                get_manifest.reset_mock()
-                    _start_execution.assert_not_called()
-                    _describe_execution.assert_called_once()
+                            }
+                        elif i == 3:
+                            get_manifest.assert_called_once_with(
+                                format=format,
+                                catalog=self.catalog,
+                                filters=Filters.from_json(state['filters']),
+                                partition=partitions[1],
+                                manifest_key=ManifestKey.from_json(state['manifest_key'])
+                            )
+                            get_manifest.reset_mock()
+                    _sfn.start_execution.assert_not_called()
+                    _sfn.describe_execution.assert_called_once()
                     expect_redirect = fetch and format is ManifestFormat.curl
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
-                    reset()
+                    _sfn.reset_mock()
             mock_effects = [
                 manifest,
                 CachedManifestNotFound(manifest_key)
@@ -346,26 +326,34 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         else:
                             assert False, mock_effect
 
-    token = Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
-                  request_index=0,
-                  wait_time=0).encode()
+    token = Token.first(execution_id).encode()
 
     def _test(self, *, expected_status, token=token):
         url = self.base_url.set(path=['fetch', 'manifest', 'files', token])
         response = requests.get(str(url))
         self.assertEqual(expected_status, response.status_code)
 
+    @contextmanager
+    def _mock_error(self, error_code: str) -> ContextManager:
+        exception_cls = type(error_code, (ClientError,), {})
+        with patch.object(AsyncManifestService, '_sfn') as _sfn:
+            setattr(_sfn.exceptions, error_code, exception_cls)
+            error_response = {
+                'Error': {
+                    'Code': error_code
+                }
+            }
+            exception = exception_cls(operation_name='DescribeExecution',
+                                      error_response=error_response)
+            _sfn.describe_execution.side_effect = exception
+            yield
+
     def test_execution_not_found(self):
         """
         Manifest status check should raise a BadRequestError (400 status code)
         if execution cannot be found.
         """
-        with patch.object(AsyncManifestService, '_describe_execution') as mock:
-            mock.side_effect = ClientError({
-                'Error': {
-                    'Code': 'ExecutionDoesNotExist'
-                }
-            }, 'DescribeExecution')
+        with self._mock_error('ExecutionDoesNotExist'):
             self._test(expected_status=400)
 
     def test_boto_error(self):
@@ -373,12 +361,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         Manifest status check should reraise any ClientError that is not caused
         by ExecutionDoesNotExist
         """
-        with patch.object(AsyncManifestService, '_describe_execution') as mock:
-            mock.side_effect = ClientError({
-                'Error': {
-                    'Code': 'OtherError'
-                }
-            }, '')
+        with self._mock_error('ServiceQuotaExceededException'):
             self._test(expected_status=500)
 
     def test_execution_error(self):
@@ -386,8 +369,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         Manifest status check should return a generic error (500 status code)
         if the execution errored.
         """
-        with patch.object(AsyncManifestService, 'inspect_generation') as mock:
-            mock.side_effect = StateMachineError
+        with patch.object(AsyncManifestService,
+                          'inspect_generation',
+                          side_effect=GenerationFailed):
             self._test(expected_status=500)
 
     def test_invalid_token(self):

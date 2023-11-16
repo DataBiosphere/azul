@@ -811,12 +811,12 @@ class Config:
         plugins: Mapping[str, Plugin]
         sources: Set[str]
 
+        _it_catalog_suffix: ClassVar[str] = '-it'
+
         _catalog_re: str = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
         _catalog_re = r'(?=.{1,64}$)' + _catalog_re
-        _it_catalog_suffix: ClassVar[str] = '-it'
-        _it_catalog_re: ClassVar[re.Pattern] = re.compile(
-            _catalog_re + rf'(?<={re.escape(_it_catalog_suffix)})'
-        )
+        _it_catalog_re: str = _catalog_re + rf'(?<={re.escape(_it_catalog_suffix)})'
+        _it_catalog_re: ClassVar[re.Pattern] = re.compile(_it_catalog_re)
         _catalog_re: ClassVar[re.Pattern] = re.compile(_catalog_re)
 
         def __attrs_post_init__(self):
@@ -1220,8 +1220,7 @@ class Config:
         def secret_name(self) -> str:
             return 'google_service_account' + self.value
 
-    def state_machine_name(self, lambda_name):
-        return self.qualified_resource_name(lambda_name)
+    manifest_sfn = 'manifest'
 
     def _concurrency(self, value: str, retry: bool) -> int:
         """
