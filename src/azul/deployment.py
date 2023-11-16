@@ -29,6 +29,7 @@ from unittest.mock import (
 import boto3
 import botocore.credentials
 import botocore.session
+import botocore.utils
 from more_itertools import (
     one,
 )
@@ -410,7 +411,7 @@ class AWS:
 
         # Make the provider use the same cache as the AWS CLI
         cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
-        assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+        assume_role_provider.cache = botocore.utils.JSONFileCache(cli_cache)
 
         return boto3.session.Session(botocore_session=session)
 

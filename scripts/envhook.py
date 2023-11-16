@@ -190,6 +190,7 @@ class EnvHook:
             import boto3
             import botocore.credentials
             import botocore.session
+            import botocore.utils
         except ImportError:
             self._print('Looks like boto3 is not installed. Skipping credential sharing with AWS CLI.')
         else:
@@ -200,7 +201,7 @@ class EnvHook:
 
             # Make the provider use the same cache as the AWS CLI
             cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
-            assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+            assume_role_provider.cache = botocore.utils.JSONFileCache(cli_cache)
 
             # Calls to boto3.client() and .resource() use the default session and
             # therefore hit the cached credentials
