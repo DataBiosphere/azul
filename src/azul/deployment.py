@@ -29,6 +29,7 @@ from unittest.mock import (
 import boto3
 import botocore.credentials
 import botocore.session
+import botocore.utils
 from more_itertools import (
     one,
 )
@@ -403,15 +404,20 @@ class AWS:
         return session
 
     def _create_boto3_session(self) -> boto3.session.Session:
-        # Get the AssumeRole credential provider
         session = botocore.session.get_session()
-        resolver = session.get_component('credential_provider')
-        assume_role_provider = resolver.get_provider('assume-role')
-
-        # Make the provider use the same cache as the AWS CLI
         cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
-        assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
-
+        if cli_cache.exists():
+            # Get the AssumeRole credential provider
+            resolver = session.get_component('credential_provider')
+            provider = resolver.get_provider('assume-role')
+            # Make the provider use the same cache as the AWS CLI
+            provider.cache = botocore.utils.JSONFileCache(cli_cache)
+            # Remove the provider that reads from environment variables. It
+            # typically precedes the assume-role provider so its presence would
+            # defeat the CLI cache sharing if credentials are present in the
+            # environment, which is typically the case on developer machines
+            # (see envhook.py and _login_aws in `environment`).
+            resolver.remove('env')
         return boto3.session.Session(botocore_session=session)
 
     @_cache
