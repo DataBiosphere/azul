@@ -179,7 +179,7 @@ anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     # @formatter:on
 ]))
 
-anvil3_sources = mkdict(anvil2_sources, 161, mkdelta([
+anvil3_sources = mkdict(anvil2_sources, 160, mkdelta([
     # @formatter:off
     mksrc('datarepo-9a74aed3', 'ANVIL_CCDG_Baylor_CVD_ARIC_20231008_ANV5_202310091900', 10012),
     mksrc('datarepo-a749913a', 'ANVIL_CCDG_Baylor_CVD_EOCAD_SoL_WGS_20230418_ANV5_202310101651', 9225),
@@ -223,7 +223,6 @@ anvil3_sources = mkdict(anvil2_sources, 161, mkdelta([
     mksrc('datarepo-076da44b', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_GRU_IRB_WGS_20230525_ANV5_202306211847', 265),
     mksrc('datarepo-7e03b5fd', 'ANVIL_CMG_Broad_Brain_Walsh_WES_20230605_ANV5_202310101734', 2778),
     mksrc('datarepo-c43e7400', 'ANVIL_CMG_Broad_Muscle_Kang_WES_20230525_ANV5_202310101649', 121),
-    mksrc('datarepo-1525d226', 'ANVIL_HPRC_20230721_ANV5_202310101603', 139862),
     mksrc('datarepo-14f5afa3', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Braff_DS_10XLRGenomes_20221115_ANV5_202310101713', 561),  # noqa E501
     mksrc('datarepo-94091a22', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Pato_GRU_10XLRGenomes_20230331_ANV5_202310101715', 368),  # noqa E501
     mksrc('datarepo-55b75002', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202310061302', 234),
