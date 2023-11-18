@@ -1,5 +1,5 @@
-ARG registry
-FROM ${registry}docker.io/library/python:3.11.5-bullseye
+ARG azul_docker_registry
+FROM ${azul_docker_registry}docker.io/library/python:3.11.5-bullseye
 
 # Increment the value of this variable to ensure that all installed OS packages
 # are updated.
@@ -13,10 +13,10 @@ RUN curl -o /usr/bin/docker-credential-ecr-login \
     && printf 'c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db /usr/bin/docker-credential-ecr-login\n' | sha256sum -c \
     && chmod +x /usr/bin/docker-credential-ecr-login
 
-ARG registry
-ENV azul_docker_registry=${registry}
+ARG azul_docker_registry
+ENV azul_docker_registry=${azul_docker_registry}
 RUN mkdir -p ${HOME}/.docker \
-    && printf '{"credHelpers": {"%s": "ecr-login"}}\n' "${registry%/}" \
+    && printf '{"credHelpers": {"%s": "ecr-login"}}\n' "${azul_docker_registry%/}" \
     > "${HOME}/.docker/config.json"
 
 SHELL ["/bin/bash", "-c"]

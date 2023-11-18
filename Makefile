@@ -33,7 +33,7 @@ define docker
 .PHONY: docker$1
 docker$1: check_docker
 	docker build \
-	       --build-arg registry=$$(azul_docker_registry) \
+	       --build-arg azul_docker_registry=$$(azul_docker_registry) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
 	       --tag $$(azul_docker_image)$3:$$(azul_docker_image_tag) \

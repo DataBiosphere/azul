@@ -1,5 +1,5 @@
-ARG registry
-FROM ${registry}docker.io/library/docker:24.0.6
+ARG azul_docker_registry
+FROM ${azul_docker_registry}docker.io/library/docker:24.0.6
 
 # Increment the value of this variable to ensure that all installed OS packages
 # are upgraded.
@@ -8,10 +8,10 @@ ENV azul_docker_executor_image_version=1
 RUN apk -U upgrade \
     && apk add make bash docker-credential-ecr-login
 
-ARG registry
-ENV azul_docker_registry=${registry}
+ARG azul_docker_registry
+ENV azul_docker_registry=${azul_docker_registry}
 RUN mkdir -p ${HOME}/.docker \
-    && printf '{"credHelpers": {"%s": "ecr-login"}}\n' "${registry%/}" \
+    && printf '{"credHelpers": {"%s": "ecr-login"}}\n' "${azul_docker_registry%/}" \
     > "${HOME}/.docker/config.json"
 
 # This is the image for the Gitlab runner for Azul builds. It needs to be

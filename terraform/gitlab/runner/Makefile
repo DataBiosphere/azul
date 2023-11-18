@@ -9,7 +9,7 @@ image := docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul/runner
 docker: check_docker
 	docker build \
 	       --platform linux/amd64 \
-	       --build-arg registry=$(azul_docker_registry) \
+	       --build-arg azul_docker_registry=$(azul_docker_registry) \
 	       --tag $(image) .
 
 .PHONY:

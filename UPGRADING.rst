@@ -20,6 +20,19 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5703 Consolidate dependency updates into single bi-weekly issue
+================================================================
+
+Operator
+~~~~~~~~
+
+Run ``make -C terraform/gitlab/runner`` with the ``gitlab`` component of every
+main deployment selected just before pushing the PR branch to the GitLab
+instance in that deployment. If the PR has to be sent back, checkout ``develop``
+and run that command again in all deployments where it was run with the PR
+branch checked out.
+
+
 #5617 False positive AWS Inspector findings after GitLab deploy
 ===============================================================
 
