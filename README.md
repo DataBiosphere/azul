@@ -1670,13 +1670,6 @@ Here is a complete example for copying bundles from `prod` to `integration`.
    The `--map-version` option adds a specific duration to the version of each
    copied file and bundle. Run `python scripts/copy_bundles --help` for details.
 
-## 7.4 Debugging running lambdas via Pycharm
-
-It's possible to connect a remote debugger to a running lambda function.
-
-Instructions in [`remote_debug.py`](https://github.com/DataBiosphere/azul/blob/develop/src/azul/remote_debug.py#L25)
-explain how to do this.
-
 # 8. Scale testing
 
 [Locust]: https://locust.io/
