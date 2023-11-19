@@ -3,8 +3,8 @@ all: hello
 
 include common.mk
 
-azul_docker_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
-azul_docker_image_tag ?= latest
+azul_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
+azul_image_tag ?= latest
 
 .PHONY: virtualenv
 virtualenv: check_env
@@ -37,12 +37,12 @@ docker$1: check_docker
 	       --build-arg azul_python_image=$$(azul_python_image) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
-	       --tag $$(azul_docker_image)$3:$$(azul_docker_image_tag) \
+	       --tag $$(azul_image)$3:$$(azul_image_tag) \
 	       .
 
 .PHONY: docker$1_push
 docker$1_push: docker$1
-	docker push $$(azul_docker_image)$3:$$(azul_docker_image_tag)
+	docker push $$(azul_image)$3:$$(azul_image_tag)
 endef
 
 $(eval $(call docker,,_runtime,))  # runtime image w/o dependency resolution
@@ -63,8 +63,8 @@ requirements_update: check_venv check_docker
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
 	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
-	       --image=$(azul_docker_image)/deps:$(azul_docker_image_tag) \
-	       --build-image=$(azul_docker_image)/dev-deps:$(azul_docker_image_tag)
+	       --image=$(azul_image)/deps:$(azul_image_tag) \
+	       --build-image=$(azul_image)/dev-deps:$(azul_image_tag)
 	# Download wheels (source and binary) for the Lambda runtime
 	rm ${azul_chalice_bin}/*
 	pip download \

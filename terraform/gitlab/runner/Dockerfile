@@ -4,7 +4,7 @@ FROM ${azul_docker_registry}docker.io/library/docker:24.0.6
 # Increment the value of this variable to ensure that all installed OS packages
 # are upgraded.
 #
-ENV azul_docker_executor_image_version=1
+ENV azul_executor_image_version=1
 RUN apk -U upgrade \
     && apk add make bash docker-credential-ecr-login
 

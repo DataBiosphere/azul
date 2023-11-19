@@ -974,7 +974,7 @@ requirements_update` locally doesn't.
 
 This is a side effect of the Docker build cache on two different machines
 diverging to reflect different states on PyPI. This can be fixed by incrementing
-`azul_docker_image_version` in the Dockerfile.
+`azul_image_version` in the Dockerfile.
 
 
 ##  Unable to re-register service account with SAM

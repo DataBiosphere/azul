@@ -7,7 +7,7 @@ ARG TARGETARCH
 # Increment the value of this variable to ensure that all installed OS packages
 # are updated.
 #
-ENV azul_docker_image_version=1
+ENV azul_image_version=1
 RUN apt-get update \
     && apt-get upgrade -y
 
