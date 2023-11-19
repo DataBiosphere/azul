@@ -2,6 +2,8 @@ ARG azul_docker_registry
 ARG azul_python_image
 FROM ${azul_docker_registry}${azul_python_image}
 
+ARG TARGETARCH
+
 # Increment the value of this variable to ensure that all installed OS packages
 # are updated.
 #
@@ -27,9 +29,11 @@ RUN mkdir /build
 WORKDIR /build
 
 RUN mkdir terraform \
-    && (cd terraform \
-        && wget --quiet https://releases.hashicorp.com/terraform/1.3.4/terraform_1.3.4_linux_amd64.zip \
-        && unzip terraform_1.3.4_linux_amd64.zip \
+    && (set -o pipefail \
+        && cd terraform \
+        && curl -s -o terraform.zip \
+           https://releases.hashicorp.com/terraform/1.3.4/terraform_1.3.4_linux_${TARGETARCH}.zip \
+        && unzip terraform.zip \
         && mv terraform /usr/local/bin) \
     && rm -rf terraform
 
@@ -37,7 +41,9 @@ RUN mkdir terraform \
 # is too much of a hassle. The version should match that of the docker version
 # installed on the Gitlab instance.
 #
-RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz \
+RUN set -o pipefail \
+    && export docker_arch=$(python3 -c "print(dict(amd64='x86_64',arm64='aarch64')['${TARGETARCH}'])") \
+    && curl -s https://download.docker.com/linux/static/stable/${docker_arch}/docker-24.0.6.tgz \
         | tar -xvzf - --strip-components=1 docker/docker \
     && install -g root -o root -m 755 docker /usr/bin \
     && rm docker
