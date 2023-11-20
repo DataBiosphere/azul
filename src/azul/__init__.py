@@ -1442,6 +1442,14 @@ class Config:
         return self.environ['azul_docker_pycharm_version']
 
     @property
+    def python_version(self) -> str:
+        return self.environ['azul_python_version']
+
+    @property
+    def python_image(self) -> str:
+        return self.environ['azul_python_image']
+
+    @property
     def docker_images(self) -> list[str]:
         # Note that a change to the image references here also requires
         # redeploying the `shared` TF component.
@@ -1454,7 +1462,7 @@ class Config:
             'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
             'docker.io/library/docker:24.0.6',
             'docker.io/library/docker:24.0.6-dind',
-            'docker.io/library/python:3.11.5-bullseye',
+            self.python_image,
             'docker.io/lmenezes/cerebro:0.9.4',
             f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
         ]

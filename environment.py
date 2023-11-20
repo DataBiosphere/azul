@@ -201,6 +201,15 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
+        # The version of Python used throughout the system. This variable is
+        # defined in the bootstrap environment (environment.boot) because it is
+        # required to be available during the early stages of the GitLab and
+        # GitHub Actions build. This variable is not intended to be overridden
+        # per deployment or locally. Modifying the value requires redeploying
+        # the `shared` component.
+        #
+        'azul_python_version': None,
+
         # The tag of the PyCharm image that we use to format the source code in
         # continuous integration. We specify it here instead of directly in the
         # Makefile so that a change to the version does not require updating

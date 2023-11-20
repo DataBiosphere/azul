@@ -41,6 +41,7 @@ build_image:
     - >
       printenv CI_REGISTRY_PASSWORD 
       | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY_IMAGE
+    - set -o allexport ; source environment.boot ; set +o allexport
     - make docker_dev_push
 
 .base:

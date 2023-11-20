@@ -1,5 +1,6 @@
 ARG azul_docker_registry
-FROM ${azul_docker_registry}docker.io/library/python:3.11.5-bullseye
+ARG azul_python_image
+FROM ${azul_docker_registry}${azul_python_image}
 
 # Increment the value of this variable to ensure that all installed OS packages
 # are updated.

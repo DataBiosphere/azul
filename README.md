@@ -37,7 +37,7 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python 3.11.5
+- Python, see [environment.boot](environment.boot) for exact version
 
 - The `bash` shell
 
@@ -182,16 +182,17 @@ end.
    make requirements
    ```
 
-   Linux users whose distribution does not offer Python 3.11 should consider
-   installing [pyenv] and then Python 3.11 using `pyenv install 3.11.5` and
-   setting `PYENV_VERSION` to `3.11.5`. You may need to update pyenv itself
-   before it recognizes the given Python version. Even if a distribution
-   provides the  required minor version of Python natively, using pyenv is
-   generally preferred because it offers every patch-level release of Python,
-   supports an arbitrary number of different Python versions to be installed
-   concurrently and allows for easily switching between them.
+   Linux users whose distribution does not offer the required Python version
+   should consider installing [pyenv] first, then Python using `pyenv install
+   x.y.z` and setting `PYENV_VERSION` to `x.y.z`, where `x.y.z` is the value of
+   `azul_python_version` in [environment.boot](environment.boot). You may need
+   to update [pyenv] itself before it recognizes the given Python version. Even
+   if a distribution provides the required minor version of Python natively,
+   using [pyenv] is generally preferred because it offers every patch-level
+   release of Python, supports an arbitrary number of different Python versions
+   to be installed concurrently and allows for easily switching between them.
 
-   Ubuntu users using their system's default Python 3.9 installation must
+   Ubuntu users using their system's default Python installation must
    install `python3-dev` before any wheel requirements can be built.
 
    ```
@@ -1030,6 +1031,9 @@ found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications.
 
 ## Setting up the Azul build prerequisites on macOS 12 (Monterey)
 
+The steps below are examplary for Python 3.11.5. Replace `3.5.11` with the 
+version listed in [environment.boot](environment.boot).   
+
 Make `bash` the default shell. Google it.
 
 Install Homebrew. Google it. 
@@ -1047,7 +1051,8 @@ pyenv install 3.11.5
 ```
 
 Set `PYENV_VERSION` to `3.11.5` in `environment.local.py` at the project root.
-Do not set `SYSTEM_VERSION_COMPAT`.
+Do not set `SYSTEM_VERSION_COMPAT`. For a more maintainable configuration use 
+`os.environ['azul_python_version']` as the value and `import os` at the top.
 
 Install Docker Desktop. Google it.
 
