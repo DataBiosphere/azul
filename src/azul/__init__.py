@@ -1455,21 +1455,26 @@ class Config:
         A dictionary mapping the short name of each Docker image used in Azul to
         its fully qualified name.
         """
-        # Note that a change to the image references here also requires
+        # Note that a change to any of the image references below requires
         # redeploying the `shared` TF component.
-        return {
-            'elasticsearch': 'docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
-            'kibana': 'docker.elastic.co/kibana/kibana-oss:7.10.2',
-            'clamav': 'docker.io/clamav/clamav:1.2.1-14',
-            'signing_proxy': 'docker.io/cllunsford/aws-signing-proxy:0.2.2',
-            'gitlab': 'docker.io/gitlab/gitlab-ce:16.5.1-ce.0',
-            'gitlab_runner': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
-            'docker': f'docker.io/library/docker:{self.docker_version}',
-            'dind': f'docker.io/library/docker:{self.docker_version}-dind',
-            'python': self.python_image,
-            'cerebro': 'docker.io/lmenezes/cerebro:0.9.4',
-            'pycharm': 'docker.io/ucscgi/azul-pycharm:2022.3.3-4',
-        }
+        return dict(
+            # Updating the Docker image also requires building and pushing the
+            # executor image (see terraform/gitlab/runner/Dockerfile for how).
+            docker=f'docker.io/library/docker:{self.docker_version}',
+            python=self.python_image,
+            pycharm='docker.io/ucscgi/azul-pycharm:2022.3.3-4',
+            elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
+            # Updating any of the four images below additionally requires
+            # redeploying the `gitlab` TF component.
+            clamav='docker.io/clamav/clamav:1.2.1-14',
+            gitlab='docker.io/gitlab/gitlab-ce:16.5.1-ce.0',
+            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
+            dind=f'docker.io/library/docker:{self.docker_version}-dind',
+            # The images below are not used within the security boundary:
+            signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
+            cerebro='docker.io/lmenezes/cerebro:0.9.4',
+            kibana='docker.elastic.co/kibana/kibana-oss:7.10.2'
+        )
 
     docker_platforms = [
         'linux/arm64',
