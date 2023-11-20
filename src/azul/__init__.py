@@ -1446,6 +1446,10 @@ class Config:
         return self.environ['azul_python_image']
 
     @property
+    def docker_version(self) -> str:
+        return self.environ['azul_docker_version']
+
+    @property
     def docker_images(self) -> dict[str, str]:
         """
         A dictionary mapping the short name of each Docker image used in Azul to
@@ -1460,8 +1464,8 @@ class Config:
             'signing_proxy': 'docker.io/cllunsford/aws-signing-proxy:0.2.2',
             'gitlab': 'docker.io/gitlab/gitlab-ce:16.5.1-ce.0',
             'gitlab_runner': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
-            'docker': 'docker.io/library/docker:24.0.6',
-            'dind': 'docker.io/library/docker:24.0.6-dind',
+            'docker': f'docker.io/library/docker:{self.docker_version}',
+            'dind': f'docker.io/library/docker:{self.docker_version}-dind',
             'python': self.python_image,
             'cerebro': 'docker.io/lmenezes/cerebro:0.9.4',
             'pycharm': 'docker.io/ucscgi/azul-pycharm:2022.3.3-4',

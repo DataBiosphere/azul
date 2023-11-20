@@ -38,12 +38,12 @@ RUN mkdir terraform \
     && rm -rf terraform
 
 # Install `docker` client binary. Installing from distribution packages (.deb)
-# is too much of a hassle. The version should match that of the docker version
-# installed on the Gitlab instance.
+# is too much of a hassle.
 #
+ARG azul_docker_version
 RUN set -o pipefail \
     && export docker_arch=$(python3 -c "print(dict(amd64='x86_64',arm64='aarch64')['${TARGETARCH}'])") \
-    && curl -s https://download.docker.com/linux/static/stable/${docker_arch}/docker-24.0.6.tgz \
+    && curl -s https://download.docker.com/linux/static/stable/${docker_arch}/docker-${azul_docker_version}.tgz \
         | tar -xvzf - --strip-components=1 docker/docker \
     && install -g root -o root -m 755 docker /usr/bin \
     && rm docker

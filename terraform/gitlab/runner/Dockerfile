@@ -1,5 +1,6 @@
 ARG azul_docker_registry
-FROM ${azul_docker_registry}docker.io/library/docker:24.0.6
+ARG azul_docker_image
+FROM ${azul_docker_registry}${azul_docker_image}
 
 # Increment the value of this variable to ensure that all installed OS packages
 # are upgraded.

@@ -201,6 +201,16 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
+        # The version of Docker used throughout the system. This variable is
+        # defined in the bootstrap environment (environment.boot) because it is
+        # required to be available during the early stages of the GitLab build.
+        # This variable is not intended to be overridden per deployment or
+        # locally. Modifying the value requires redeploying the `shared` and
+        # `gitlab` components, as well as building and pushing the executor
+        # image (see terraform/gitlab /runner/Dockerfile for how).
+        #
+        'azul_docker_version': None,
+
         # The version of Python used throughout the system. This variable is
         # defined in the bootstrap environment (environment.boot) because it is
         # required to be available during the early stages of the GitLab and
