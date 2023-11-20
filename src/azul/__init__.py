@@ -1438,10 +1438,6 @@ class Config:
         return self.environ['azul_docker_registry']
 
     @property
-    def docker_pycharm_version(self) -> str:
-        return self.environ['azul_docker_pycharm_version']
-
-    @property
     def python_version(self) -> str:
         return self.environ['azul_python_version']
 
@@ -1468,7 +1464,7 @@ class Config:
             'dind': 'docker.io/library/docker:24.0.6-dind',
             'python': self.python_image,
             'cerebro': 'docker.io/lmenezes/cerebro:0.9.4',
-            'pycharm': f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
+            'pycharm': 'docker.io/ucscgi/azul-pycharm:2022.3.3-4',
         }
 
     docker_platforms = [
