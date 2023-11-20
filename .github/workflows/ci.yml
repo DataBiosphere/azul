@@ -14,17 +14,17 @@ jobs:
     timeout-minutes: 45
     steps:
 
-      - name: 'checkout'
-        uses: 'actions/checkout@v3'
+      - uses: 'actions/checkout@v3'
 
-      - name: 'setup_python'
-        uses: 'actions/setup-python@v4.3.0'
+      - run: 'cat environment.boot >> "$GITHUB_ENV"'
+
+      - uses: 'actions/setup-python@v4.3.0'
         with:
           python-version: '${{ env.python_version }}'
           cache: 'pip'
           cache-dependency-path: 'requirements.dev.txt'
 
-      - name: 'test'
+      - name: 'Run unit tests and other checks'
         run: |
           source environment
           _link dev
@@ -61,8 +61,7 @@ jobs:
           make check_clean
           coverage xml
 
-      - name: 'upload_artifacts'
-        uses: 'actions/upload-artifact@v3'
+      - uses: 'actions/upload-artifact@v3'
         with:
           name: 'coverage-file'
           path: 'coverage.xml'
@@ -72,23 +71,21 @@ jobs:
     runs-on: 'ubuntu-22.04'
     steps:
 
-      - name: 'checkout'
-        uses: 'actions/checkout@v3'
+      - uses: 'actions/checkout@v3'
 
-      - name: 'setup_python'
-        uses: 'actions/setup-python@v4.3.0'
+      - run: 'cat environment.boot >> "$GITHUB_ENV"'
+
+      - uses: 'actions/setup-python@v4.3.0'
         with:
           python-version: '${{ env.python_version }}'
           cache: 'pip'
           cache-dependency-path: 'requirements.dev.txt'
 
-      - name: 'download_artifacts'
-        uses: 'actions/download-artifact@v3'
+      - uses: 'actions/download-artifact@v3'
         with:
           name: 'coverage-file'
 
-      - name: 'upload_coverage'
-        uses: 'codecov/codecov-action@v3'
+      - uses: 'codecov/codecov-action@v3'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: 'coverage.xml'
@@ -98,23 +95,21 @@ jobs:
     needs: 'test'
     runs-on: 'ubuntu-22.04'
     steps:
-      - name: 'checkout'
-        uses: 'actions/checkout@v3'
+      - uses: 'actions/checkout@v3'
 
-      - name: 'setup_python'
-        uses: 'actions/setup-python@v4.3.0'
+      - run: 'cat environment.boot >> "$GITHUB_ENV"'
+
+      - uses: 'actions/setup-python@v4.3.0'
         with:
           python-version: '${{ env.python_version }}'
           cache: 'pip'
           cache-dependency-path: 'requirements.dev.txt'
 
-      - name: 'download_artifacts'
-        uses: 'actions/download-artifact@v3'
+      - uses: 'actions/download-artifact@v3'
         with:
           name: 'coverage-file'
 
-      - name: 'upload_coverage'
-        uses: 'coverallsapp/github-action@v2'
+      - uses: 'coverallsapp/github-action@v2'
         with:
           github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
@@ -130,25 +125,23 @@ jobs:
         language: [ 'python', 'javascript' ]
     steps:
 
-      - name: 'checkout'
-        uses: 'actions/checkout@v3'
+      - uses: 'actions/checkout@v3'
 
-      - name: 'setup_python'
-        uses: 'actions/setup-python@v4.3.0'
+      - run: 'cat environment.boot >> "$GITHUB_ENV"'
+
+      - uses: 'actions/setup-python@v4.3.0'
         with:
           python-version: '${{ env.python_version }}'
           cache: 'pip'
           cache-dependency-path: 'requirements.dev.txt'
 
-      - name: 'codeql_init'
-        uses: 'github/codeql-action/init@v2'
+      - uses: 'github/codeql-action/init@v2'
         with:
           languages: '${{ matrix.language }}'
           setup-python-dependencies: false
           config-file: './.github/codeql/codeql-config.yml'
           queries: 'security-and-quality'
 
-      - name: 'codeql_analyze'
-        uses: 'github/codeql-action/analyze@v2'
+      - uses: 'github/codeql-action/analyze@v2'
         with:
           category: '/language:${{matrix.language}}'
