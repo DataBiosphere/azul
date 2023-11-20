@@ -56,6 +56,13 @@ check_terraform: check_env
 		echo -e "\nLooks like Terraform is not installed.\n"; \
 		false; \
 	fi
+	@if test "$$(terraform --version --json \
+	             | python -c 'import json; print(json.load(open(0))["terraform_version"])')" \
+	         != \
+	         "$$azul_terraform_version"; then \
+		echo -e "\nLooks like the wrong version of Terraform is installed.\n"; \
+		false; \
+	fi
 
 .PHONY: check_docker
 check_docker:

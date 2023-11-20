@@ -1450,6 +1450,10 @@ class Config:
         return self.environ['azul_docker_version']
 
     @property
+    def terraform_version(self) -> str:
+        return self.environ['azul_terraform_version']
+
+    @property
     def docker_images(self) -> dict[str, str]:
         """
         A dictionary mapping the short name of each Docker image used in Azul to

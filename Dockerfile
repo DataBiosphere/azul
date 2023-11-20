@@ -28,11 +28,12 @@ RUN mkdir /build
 
 WORKDIR /build
 
+ARG azul_terraform_version
 RUN mkdir terraform \
     && (set -o pipefail \
         && cd terraform \
         && curl -s -o terraform.zip \
-           https://releases.hashicorp.com/terraform/1.3.4/terraform_1.3.4_linux_${TARGETARCH}.zip \
+           https://releases.hashicorp.com/terraform/${azul_terraform_version}/terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
         && unzip terraform.zip \
         && mv terraform /usr/local/bin) \
     && rm -rf terraform

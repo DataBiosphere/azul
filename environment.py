@@ -220,6 +220,14 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_python_version': None,
 
+        # The version of Terraform used throughout the system. This variable is
+        # defined in the bootstrap environment (environment.boot) because it is
+        # required to be available during the early stages of the GitHub Actions
+        # build. This variable is not intended to be overridden per deployment
+        # or locally.
+        #
+        'azul_terraform_version': None,
+
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET
         # /bundles/{uuid} and GET /files/{UUID} endpoints. If 1, S3 GetObject

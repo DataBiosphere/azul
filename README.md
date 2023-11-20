@@ -45,15 +45,18 @@ generic with minimal need for project-specific behavior.
 
 - git 2.36.0 or newer
 
-- [Docker] for running the tests (the community edition is sufficient).
+- [Docker], for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
 
-- Terraform 1.3.4 (optional, to manage deployments). Refer the official
-  documentation on how to [install terraform]. Terraform is written in Go which 
-  produces single, statically linked binaries, so the easiest way to install 
-  Terraform is to download the binary and put it in a directory that mentioned 
-  in the `PATH` environment variable. 
+- Terraform, to manage deployments. Azul requires a specific version of
+  Terraform, which is defined in a variable called `azul_terraform_version` in
+  [environment.py](environment.py). If you have a working Azul checkout, you can
+  run `python -m azul config.terraform_version` to print the value of that
+  variable. Refer to the official documentation on how to [install terraform].
+  Terraform comes as a single, statically linked binary, so the easiest method
+  of installation is to download the binary and put it in a directory mentioned
+  in the `PATH` environment variable.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
