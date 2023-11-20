@@ -1450,22 +1450,26 @@ class Config:
         return self.environ['azul_python_image']
 
     @property
-    def docker_images(self) -> list[str]:
+    def docker_images(self) -> dict[str, str]:
+        """
+        A dictionary mapping the short name of each Docker image used in Azul to
+        its fully qualified name.
+        """
         # Note that a change to the image references here also requires
         # redeploying the `shared` TF component.
-        return [
-            'docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
-            'docker.elastic.co/kibana/kibana-oss:7.10.2',
-            'docker.io/clamav/clamav:1.2.1-14',
-            'docker.io/cllunsford/aws-signing-proxy:0.2.2',
-            'docker.io/gitlab/gitlab-ce:16.5.1-ce.0',
-            'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
-            'docker.io/library/docker:24.0.6',
-            'docker.io/library/docker:24.0.6-dind',
-            self.python_image,
-            'docker.io/lmenezes/cerebro:0.9.4',
-            f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
-        ]
+        return {
+            'elasticsearch': 'docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
+            'kibana': 'docker.elastic.co/kibana/kibana-oss:7.10.2',
+            'clamav': 'docker.io/clamav/clamav:1.2.1-14',
+            'signing_proxy': 'docker.io/cllunsford/aws-signing-proxy:0.2.2',
+            'gitlab': 'docker.io/gitlab/gitlab-ce:16.5.1-ce.0',
+            'gitlab_runner': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0',
+            'docker': 'docker.io/library/docker:24.0.6',
+            'dind': 'docker.io/library/docker:24.0.6-dind',
+            'python': self.python_image,
+            'cerebro': 'docker.io/lmenezes/cerebro:0.9.4',
+            'pycharm': f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
+        }
 
     docker_platforms = [
         'linux/arm64',

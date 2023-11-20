@@ -32,6 +32,9 @@ instance in that deployment. If the PR has to be sent back, checkout ``develop``
 and run that command again in all deployments where it was run with the PR
 branch checked out.
 
+Deploy the ``gitlab`` component of any main deployment just before pushing the
+merge commit to the GitLab instance in that deployment.
+
 
 #5617 False positive AWS Inspector findings after GitLab deploy
 ===============================================================

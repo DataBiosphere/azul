@@ -211,7 +211,7 @@ format: check_venv check_docker
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
 	    --workdir /home/developer/azul \
-	    $(azul_docker_registry)docker.io/ucscgi/azul-pycharm:$(azul_docker_pycharm_version) \
+	    $(azul_docker_registry)$$(python -m azul "config.docker_images['pycharm']") \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test

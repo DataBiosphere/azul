@@ -231,10 +231,10 @@ other_public_keys = {
 # azul.config.docker_images and redeploying the `shared` TF component prior to
 # deploying the `gitlab` component.
 
-clamav_image = config.docker_registry + 'docker.io/clamav/clamav:1.2.1-14'
-dind_image = config.docker_registry + 'docker.io/library/docker:24.0.6-dind'
-gitlab_image = config.docker_registry + 'docker.io/gitlab/gitlab-ce:16.5.1-ce.0'
-runner_image = config.docker_registry + 'docker.io/gitlab/gitlab-runner:ubuntu-v16.5.0'
+clamav_image = config.docker_registry + config.docker_images['clamav']
+dind_image = config.docker_registry + config.docker_images['dind']
+gitlab_image = config.docker_registry + config.docker_images['gitlab']
+runner_image = config.docker_registry + config.docker_images['gitlab_runner']
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami

@@ -2211,7 +2211,8 @@ While the unit test is running (paused at a breakpoint), open a terminal window.
 Download the Kibana container:
 
 ```
-docker pull docker.elastic.co/kibana/kibana-oss:7.10.2
+kibana_image=$azul_docker_registry$(python -m azul "config.docker_images['kibana']")
+docker pull $kibana_image
 ```
 
 Copy the container name for the Elasticsearch instance you want to examine. This
@@ -2224,7 +2225,7 @@ docker ps
 Run
 
 ```
-docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 docker.elastic.co/kibana/kibana-oss:7.10.2
+docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 $kibana_image
 ```
 
 where `ES_CONTAINER_NAME` is what you copied from above.
