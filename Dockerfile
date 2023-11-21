@@ -4,30 +4,28 @@ FROM ${azul_docker_registry}${azul_python_image}
 
 ARG TARGETARCH
 
-# Increment the value of this variable to ensure that all installed OS packages
+SHELL ["/bin/bash", "-c"]
+
+# Increment the value of this argument to ensure that all installed OS packages
 # are updated.
 #
 ARG azul_image_version=1
-RUN apt-get update \
-    && apt-get upgrade -y
+RUN apt-get update && apt-get upgrade -y
 
+# Install helper for access to ECR with credendtials from EC2 metadata service
+#
 RUN curl -o /usr/bin/docker-credential-ecr-login \
     https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-amd64/docker-credential-ecr-login \
     && printf 'c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db /usr/bin/docker-credential-ecr-login\n' | sha256sum -c \
     && chmod +x /usr/bin/docker-credential-ecr-login
-
 ARG azul_docker_registry
 ENV azul_docker_registry=${azul_docker_registry}
 RUN mkdir -p ${HOME}/.docker \
     && printf '{"credHelpers": {"%s": "ecr-login"}}\n' "${azul_docker_registry%/}" \
     > "${HOME}/.docker/config.json"
 
-SHELL ["/bin/bash", "-c"]
-
-RUN mkdir /build
-
-WORKDIR /build
-
+# Install Terraform
+#
 ARG azul_terraform_version
 RUN mkdir terraform \
     && (set -o pipefail \
@@ -56,15 +54,18 @@ RUN set -o pipefail \
     && test -n "$version" \
     && apt-get -y install docker-ce=$version docker-ce-cli=$version docker-buildx-plugin
 
-ENV project_root /build
+# Prepare working directory for builds
+#
+RUN mkdir /build
+WORKDIR /build
+ENV project_root=/build
 
-COPY requirements*.txt common.mk Makefile ./
-
+# Install Azul dependencies
+#
 ARG PIP_DISABLE_PIP_VERSION_CHECK
 ENV PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK}
-
+COPY requirements*.txt common.mk Makefile ./
 ARG make_target
-
 RUN make virtualenv \
     && source .venv/bin/activate \
     && make $make_target \
