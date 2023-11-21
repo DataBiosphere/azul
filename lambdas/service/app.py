@@ -227,7 +227,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '3.1'
+        'version': '3.2'
     },
     'tags': [
         {

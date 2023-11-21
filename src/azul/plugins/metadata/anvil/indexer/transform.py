@@ -538,6 +538,17 @@ class BiosampleTransformer(BaseTransformer):
         return self._contribution(contents, entity)
 
 
+class BundleTransformer(SingletonTransformer):
+
+    @classmethod
+    def entity_type(cls) -> EntityType:
+        return 'bundles'
+
+    def _singleton(self) -> EntityReference:
+        return EntityReference(entity_type='bundle',
+                               entity_id=self.bundle.uuid)
+
+
 class DatasetTransformer(SingletonTransformer):
 
     @classmethod

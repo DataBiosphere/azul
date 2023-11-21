@@ -21,6 +21,7 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     ActivityTransformer,
     BaseTransformer,
     BiosampleTransformer,
+    BundleTransformer,
     DatasetTransformer,
     DonorTransformer,
     FileTransformer,
@@ -51,6 +52,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return dict(
             activities=Sorting(field_name='activities.activity_id'),
             biosamples=Sorting(field_name='biosamples.biosample_id'),
+            bundles=Sorting(field_name='bundleUuid'),
             datasets=Sorting(field_name='datasets.dataset_id'),
             donors=Sorting(field_name='donors.donor_id'),
             files=Sorting(field_name='files.file_id'),
@@ -64,6 +66,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return (
             ActivityTransformer,
             BiosampleTransformer,
+            BundleTransformer,
             DatasetTransformer,
             DonorTransformer,
             FileTransformer,
