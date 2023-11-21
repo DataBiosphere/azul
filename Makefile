@@ -63,7 +63,13 @@ requirements_update: check_venv check_docker
 #	been updated. Not using sed because Darwin's sed does not do -i.
 	git restore requirements.trans.txt requirements.dev.trans.txt
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
-	$(MAKE) docker_deps docker_dev_deps
+#	Since we're building for the x86_64 Lambda runtime, we should do so on an
+#	image for that architecture, hence the default platform override below. The
+#	override slows down this make target considerably on ARM hosts like Apple
+#	Silicon Macs. And for some reason, pip's --platform=…_x86_64 appears to do
+#	the right thing even on an ARM image, without the override, but I'd rather
+#	not play with fire at this time without a deeper understanding as to why.
+	DOCKER_DEFAULT_PLATFORM=linux/amd64 $(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
 	       --image=$(azul_image)/deps:$(azul_image_tag) \
 	       --build-image=$(azul_image)/dev-deps:$(azul_image_tag)

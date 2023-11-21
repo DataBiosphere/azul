@@ -1,6 +1,6 @@
 ARG azul_docker_registry
 ARG azul_python_image
-FROM ${azul_docker_registry}${azul_python_image}
+FROM --platform=${TARGETPLATFORM} ${azul_docker_registry}${azul_python_image}
 
 ARG TARGETARCH
 
