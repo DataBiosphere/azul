@@ -38,16 +38,23 @@ RUN mkdir terraform \
         && mv terraform /usr/local/bin) \
     && rm -rf terraform
 
-# Install `docker` client binary. Installing from distribution packages (.deb)
-# is too much of a hassle.
+# Install Docker from apt repository. The statically linked binaries don't
+# include buildx or buildkit.
 #
+# https://docs.docker.com/engine/install/debian/#install-using-the-repository
+#
+RUN install -m 0755 -d /etc/apt/keyrings
+COPY --chmod=0644 bin/keys/docker-apt-keyring.pgp /etc/apt/keyrings/docker.gpg
 ARG azul_docker_version
 RUN set -o pipefail \
-    && export docker_arch=$(python3 -c "print(dict(amd64='x86_64',arm64='aarch64')['${TARGETARCH}'])") \
-    && curl -s https://download.docker.com/linux/static/stable/${docker_arch}/docker-${azul_docker_version}.tgz \
-        | tar -xvzf - --strip-components=1 docker/docker \
-    && install -g root -o root -m 755 docker /usr/bin \
-    && rm docker
+    && ( \
+      echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" \
+      | tee /etc/apt/sources.list.d/docker.list \
+    ) \
+    && apt-get update \
+    && version=$(apt-cache madison docker-ce | awk '{ print $3 }' | grep -P "^5:\Q${azul_docker_version}\E" | head -1) \
+    && test -n "$version" \
+    && apt-get -y install docker-ce=$version docker-ce-cli=$version docker-buildx-plugin
 
 ENV project_root /build
 
