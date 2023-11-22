@@ -1466,8 +1466,8 @@ class Config:
             # executor image (see terraform/gitlab/runner/Dockerfile for how).
             docker=f'docker.io/library/docker:{self.docker_version}',
             python=self.python_image,
-            pycharm='docker.io/ucscgi/azul-pycharm:2022.3.3-4',
-            elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.10-4',
+            pycharm='docker.io/ucscgi/azul-pycharm:2023.2.3-5',
+            elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.15-5',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             clamav='docker.io/clamav/clamav:1.2.1-14',
