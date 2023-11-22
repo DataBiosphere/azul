@@ -30,9 +30,7 @@ from azul.deployment import (
 )
 from azul.logging import (
     es_log,
-)
-from azul.strings import (
-    trunc_ellipses,
+    http_body_log_message,
 )
 
 log = logging.getLogger(__name__)
@@ -113,7 +111,7 @@ class AzulConnection(Connection):
     def _log_request(self, method, full_url, headers, body):
         es_log.info('Making %s request to %s', method, full_url)
         es_log.debug('… with request headers %r', headers)
-        es_log.info(self._body_log_message('request', body))
+        es_log.info(http_body_log_message(es_log, 'request', body))
 
     def _log_response(self,
                       log_level: int,
@@ -128,18 +126,7 @@ class AzulConnection(Connection):
         # Note that here we log the full URL actually used, see _full_url above
         es_log.log(log_level, 'Got %s response after %.3fs from %s to %s',
                    status_code, duration, method, full_url, exc_info=exception)
-        es_log.log(log_level, self._body_log_message('response', response))
-
-    def _body_log_message(self, body_type: str, body: Union[bytes, str, None]) -> str:
-        if body is None:
-            return f'… without {body_type} body'
-        else:
-            if es_log.isEnabledFor(logging.DEBUG):
-                if isinstance(body, bytes):
-                    body = body.decode(errors='ignore')
-            else:
-                body = trunc_ellipses(body, max_len=128)
-            return f'… with {body_type} body {body!r}'
+        es_log.log(log_level, http_body_log_message(es_log, 'response', response))
 
 
 class AzulRequestsHttpConnection(AzulConnection, RequestsHttpConnection):
