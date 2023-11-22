@@ -618,6 +618,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_SAM_SERVICE_URL': None,
 
+        # The URL of Terra's DUOS service from which to index descriptions of
+        # AnVIL datasets. If left unset, this step is skipped during indexing.
+        #
+        'AZUL_DUOS_SERVICE_URL': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         #
@@ -640,24 +645,24 @@ def env() -> Mapping[str, Optional[str]]:
         # purposes. A lower (aka unstable) deployment is a main deployment that
         # is not stable.
         #
-        # FIXME: Diagram of shared deployments is inaccurate
-        #        https://github.com/DataBiosphere/azul/issues/5391
-        #
-        # ╔════════════╗ ╔═══════════════════════════════════════════════════╗
-        # ║  Personal  ║ ║                      Shared                       ║
-        # ║            ║ ║ ╔════════════╗ ╔════════════════════════════════╗ ║
-        # ║            ║ ║ ║  Sandbox   ║ ║              Main              ║ ║
-        # ║            ║ ║ ║            ║ ║ ╔════════════╗ ╔═════════════╗ ║ ║
-        # ║            ║ ║ ║            ║ ║ ║   Lower    ║ ║   Stable    ║ ║ ║
-        # ║ ┌────────┐ ║ ║ ║ ┌────────┐ ║ ║ ║ ┌────────┐ ║ ║ ┌─────────┐ ║ ║ ║
-        # ║ │ hannes │ ║ ║ ║ │sandbox │ ║ ║ ║ │  dev   │ ║ ║ │  prod   │ ║ ║ ║
-        # ║ └────────┘ ║ ║ ║ └────────┘ ║ ║ ║ └────────┘ ║ ║ └─────────┘ ║ ║ ║
-        # ║            ║ ║ ║ ┌────────┐ ║ ║ ║ ┌────────┐ ║ ║ ┌─────────┐ ║ ║ ║
-        # ║            ║ ║ ║ │anvilbox│ ║ ║ ║ │anvildev│ ║ ║ │anvilprod│ ║ ║ ║
-        # ║            ║ ║ ║ └────────┘ ║ ║ ║ └────────┘ ║ ║ └─────────┘ ║ ║ ║
-        # ║            ║ ║ ║            ║ ║ ╚════════════╝ ╚═════════════╝ ║ ║
-        # ║            ║ ║ ╚════════════╝ ╚════════════════════════════════╝ ║
-        # ╚════════════╝ ╚═══════════════════════════════════════════════════╝
+        # ╔════════════╗ ╔══════════════════════════════════════════════════╗
+        # ║  Personal  ║ ║                      Shared                      ║
+        # ║            ║ ║ ╔═════════════╗ ╔══════════════════════════════╗ ║
+        # ║            ║ ║ ║   Sandbox   ║ ║             Main             ║ ║
+        # ║            ║ ║ ║             ║ ║ ╔═════════════╗ ╔══════════╗ ║ ║
+        # ║            ║ ║ ║             ║ ║ ║    Lower    ║ ║  Stable  ║ ║ ║
+        # ║ ┌────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ┌──────┐ ║ ║ ║
+        # ║ │ hannes │ ║ ║ ║ │ sandbox │ ║ ║ ║ │   dev   │ ║ ║ │ prod │ ║ ║ ║
+        # ║ └────────┘ ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║ └──────┘ ║ ║ ║
+        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║          ║ ║ ║
+        # ║            ║ ║ ║ │anvilbox │ ║ ║ ║ │anvildev │ ║ ║          ║ ║ ║
+        # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║          ║ ║ ║
+        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║          ║ ║ ║
+        # ║            ║ ║ ║ │hammerbox│ ║ ║ ║ │anvilprod│ ║ ║          ║ ║ ║
+        # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║          ║ ║ ║
+        # ║            ║ ║ ║             ║ ║ ╚═════════════╝ ╚══════════╝ ║ ║
+        # ║            ║ ║ ╚═════════════╝ ╚══════════════════════════════╝ ║
+        # ╚════════════╝ ╚══════════════════════════════════════════════════╝
         #
         'azul_shared_deployments': json.dumps({
             'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod', 'hammerbox'],

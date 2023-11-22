@@ -144,8 +144,8 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.plugins.repository.tdr_anvil import (
-    AnvilBundleFQIDJSON,
     BundleEntityType,
+    TDRAnvilBundleFQIDJSON,
 )
 from azul.portal_service import (
     PortalService,
@@ -1123,7 +1123,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         always_iterable(file['is_supplementary'])
                         for file in hit['files']
                     )), default=False)
-                    bundle_fqid = cast(AnvilBundleFQIDJSON, bundle_fqid)
+                    bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
                     bundle_fqid['entity_type'] = (
                         BundleEntityType.supplementary
                         if is_supplementary else
@@ -1614,7 +1614,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         url = str(self.url.copy().set(path='index/files',
                                       query=dict(catalog=self.catalog)))
         response = requests.get(url)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.content)
 
     def test_local_filtered_index_endpoints(self):
         if config.is_hca_enabled(self.catalog):
@@ -1628,7 +1628,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
                                       query=dict(filters=json.dumps(filters),
                                                  catalog=self.catalog)))
         response = requests.get(url)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.content)
 
 
 class CanBundleScriptIntegrationTest(IntegrationTestCase):
@@ -1668,11 +1668,14 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 self.assertIsInstance(entities, dict)
                 self.assertIsInstance(links, list)
                 entities = set(map(EntityReference.parse, entities.keys()))
-                linked_entities = frozenset.union(*(
-                    Link.from_json(link).all_entities
-                    for link in links
-                ))
-                self.assertEqual(entities, linked_entities)
+                if len(entities) > 1:
+                    linked_entities = frozenset().union(*(
+                        Link.from_json(link).all_entities
+                        for link in links
+                    ))
+                    self.assertEqual(entities, linked_entities)
+                else:
+                    self.assertEqual([], links)
             else:
                 assert False, metadata_plugin_name
 

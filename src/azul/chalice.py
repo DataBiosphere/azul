@@ -137,7 +137,7 @@ class AzulChaliceApp(Chalice):
         # Middleware is invoked in order of registration
         self.register_middleware(self._logging_middleware, 'http')
         self.register_middleware(self._hsts_header_middleware, 'http')
-        self.register_middleware(self._lambda_context_middleware, 'all')
+        self.register_middleware(self._api_gateway_context_middleware, 'http')
         self.register_middleware(self._authentication_middleware, 'http')
 
     def __call__(self, event: dict, context: LambdaContext) -> dict[str, Any]:
@@ -185,12 +185,12 @@ class AzulChaliceApp(Chalice):
             response = get_response(event)
         return response
 
-    def _lambda_context_middleware(self, event, get_response):
-        config.lambda_context = self.lambda_context
+    def _api_gateway_context_middleware(self, event, get_response):
+        config.lambda_is_handling_api_gateway_request = True
         try:
             return get_response(event)
         finally:
-            config.lambda_context = None
+            config.lambda_is_handling_api_gateway_request = False
 
     def _hsts_header_middleware(self, event, get_response):
         """

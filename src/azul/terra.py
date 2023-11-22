@@ -554,6 +554,9 @@ class TDRClient(SAMClient):
     def _repository_endpoint(self, *path: str) -> mutable_furl:
         return config.tdr_service_url.set(path=('api', 'repository', 'v1', *path))
 
+    def _duos_endpoint(self, *path: str) -> mutable_furl:
+        return config.duos_service_url.set(path=('api', *path))
+
     def _check_response(self,
                         endpoint: furl,
                         response: urllib3.HTTPResponse
@@ -658,3 +661,10 @@ class TDRClient(SAMClient):
 
     def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
+
+    def get_duos(self, source: SourceRef) -> MutableJSON:
+        response = self._retrieve_source(source)
+        duos_id = response['duosFirecloudGroup']['duosId']
+        url = self._duos_endpoint('dataset', 'registration', duos_id)
+        response = self._request('GET', url)
+        return self._check_response(url, response)
