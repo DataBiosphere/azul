@@ -138,7 +138,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'activities': cls._activity_types(),
             'biosamples': cls._biosample_types(),
-            'datasets': {**cls._dataset_types(), **cls._duos_types()},
+            'datasets': cls._dataset_types(),
             'diagnoses': cls._diagnosis_types(),
             'donors': cls._donor_types(),
             'files': cls._aggregate_file_types(),
@@ -235,13 +235,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'disease': null_str,
             'donor_age_at_collection_unit': null_str,
             'donor_age_at_collection': pass_thru_json,
-        }
-
-    @classmethod
-    def _duos_types(cls) -> FieldTypes:
-        return {
-            'document_id': null_str,
-            'description': null_str,
         }
 
     @classmethod
@@ -479,6 +472,20 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
             files=self._entities(self._file, self._entities_by_type['file'])
         )
         return self._contribution(contents, entity)
+
+    @classmethod
+    def field_types(cls) -> FieldTypes:
+        return deep_dict_merge([
+            super().field_types(),
+            {'datasets': cls._duos_types()}
+        ])
+
+    @classmethod
+    def _duos_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'description': null_str,
+        }
 
     def _duos(self, dataset: EntityReference) -> MutableJSON:
         return self._entity(dataset, self._duos_types())
