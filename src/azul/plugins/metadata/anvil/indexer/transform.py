@@ -393,9 +393,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _dataset(self, dataset: EntityReference) -> MutableJSON:
         return self._entity(dataset, self._dataset_types())
 
-    def _only_dataset(self) -> EntityReference:
-        return one(self._entities_by_type['dataset'])
-
     def _diagnosis(self, diagnosis: EntityReference) -> MutableJSON:
         return self._entity(diagnosis,
                             self._diagnosis_types(),
@@ -411,6 +408,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                             size=metadata['file_size'],
                             name=metadata['file_name'],
                             uuid=file.entity_id)
+
+    def _only_dataset(self) -> EntityReference:
+        return one(self._entities_by_type['dataset'])
 
     _activity_polymorphic_types = {
         'activity',
