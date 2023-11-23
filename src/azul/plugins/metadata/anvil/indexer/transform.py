@@ -491,10 +491,10 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
         return self._entity(dataset, self._duos_types())
 
     def _dataset(self, dataset: EntityReference) -> MutableJSON:
-        try:
-            return super()._dataset(dataset)
-        except KeyError:
+        if 'description' in self.bundle.entities[dataset]:
             return self._duos(dataset)
+        else:
+            return super()._dataset(dataset)
 
     def _list_entities(self) -> Iterable[EntityReference]:
         yield self._singleton()
