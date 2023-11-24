@@ -87,15 +87,15 @@ class DocumentService:
         :return: dict with nested keys matching Elasticsearch fields and values
                  with the field's type
         """
-        field_types = deep_dict_merge((
+        field_types = deep_dict_merge.from_iterable(
             transformer_cls.field_types()
             for transformer_cls in self.transformer_types(catalog)
-        ))
+        )
         aggregate_cls = self.aggregate_class(catalog)
-        return deep_dict_merge((
+        return deep_dict_merge(
             Contribution.field_types(field_types),
             aggregate_cls.field_types(field_types)
-        ))
+        )
 
     def catalogued_field_types(self) -> CataloguedFieldTypes:
         return {

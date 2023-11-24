@@ -445,7 +445,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             else:
                 assert this_entity.keys() < expected_keys, this
                 assert that_entity.keys() < expected_keys, that
-                merged = deep_dict_merge((this_entity, that_entity))
+                merged = deep_dict_merge(this_entity, that_entity)
                 assert merged.keys() == expected_keys, (this, that)
                 # We can safely discard that_bundle because only the version is
                 # used by the caller, and we know the versions are equal.
@@ -475,10 +475,10 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
 
     @classmethod
     def field_types(cls) -> FieldTypes:
-        return deep_dict_merge([
+        return deep_dict_merge(
             super().field_types(),
             {'datasets': cls._duos_types()}
-        ])
+        )
 
     @classmethod
     def _duos_types(cls) -> FieldTypes:
