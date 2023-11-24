@@ -25,7 +25,7 @@ from typing import (
 )
 
 
-def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
+def dict_merge(dicts: Iterable[Mapping]) -> dict:
     """
     Merge all dictionaries yielded by the argument.
 
@@ -33,7 +33,8 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     >>> dict_merge({a: a + 1, a + 1: a} for a in (0, 2))
     {0: 1, 1: 0, 2: 3, 3: 2}
 
-    Entries from later dictionaries take precedence over those from earlier ones:
+    Entries from later dictionaries take precedence over those from earlier
+    ones:
 
     >>> dict_merge([{1: 2}, {1: 3}])
     {1: 3}
@@ -41,11 +42,10 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     >>> dict_merge([])
     {}
     """
-    items = chain.from_iterable(map(lambda d: d.items(), dicts))
-    return dict(items)
+    return dict(chain.from_iterable(d.items() for d in dicts))
 
 
-def deep_dict_merge(dicts: Iterable[Mapping]) -> Mapping:
+def deep_dict_merge(dicts: Iterable[Mapping]) -> dict:
     """
     Merge all dictionaries yielded by the argument. If more than one dictionary
     contains a given key, and all values associated with this key are themselves
@@ -80,11 +80,10 @@ def deep_dict_merge(dicts: Iterable[Mapping]) -> Mapping:
         for k, v2 in m.items():
             v1 = merged.setdefault(k, v2)
             if v1 != v2:
-                if isinstance(v1, dict) and isinstance(v2, dict):
+                if isinstance(v1, Mapping) and isinstance(v2, Mapping):
                     merged[k] = deep_dict_merge((v1, v2))
                 else:
                     raise ValueError(f'{v1!r} != {v2!r}')
-
     return merged
 
 
