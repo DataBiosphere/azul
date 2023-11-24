@@ -25,7 +25,7 @@ from typing import (
 )
 
 
-def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
+def dict_merge(dicts: Iterable[Mapping]) -> dict:
     """
     Merge all dictionaries yielded by the argument.
 
@@ -33,7 +33,8 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     >>> dict_merge({a: a + 1, a + 1: a} for a in (0, 2))
     {0: 1, 1: 0, 2: 3, 3: 2}
 
-    Entries from later dictionaries take precedence over those from earlier ones:
+    Entries from later dictionaries take precedence over those from earlier
+    ones:
 
     >>> dict_merge([{1: 2}, {1: 3}])
     {1: 3}
@@ -41,21 +42,26 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     >>> dict_merge([])
     {}
     """
-    items = chain.from_iterable(map(lambda d: d.items(), dicts))
-    return dict(items)
+    return dict(chain.from_iterable(d.items() for d in dicts))
 
 
-def deep_dict_merge(dicts: Iterable[Mapping]) -> Mapping:
+# noinspection PyPep8Naming
+class deep_dict_merge:
     """
-    Merge all dictionaries yielded by the argument. If more than one dictionary
+    Recursively merge the given dictionaries. If more than one dictionary
     contains a given key, and all values associated with this key are themselves
     dictionaries, then the value present in the result is the recursive merging
     of those nested dictionaries.
 
-    >>> deep_dict_merge(({0: 1}, {1: 0}))
+    >>> deep_dict_merge({0: 1}, {1: 0})
     {0: 1, 1: 0}
 
-    >>> deep_dict_merge(({0: {'a': 1}}, {0: {'b': 2}}))
+    To merge all dictionaries in an iterable, use this form:
+
+    >>> deep_dict_merge.from_iterable([{0: 1}, {1: 0}])
+    {0: 1, 1: 0}
+
+    >>> deep_dict_merge({0: {'a': 1}}, {0: {'b': 2}})
     {0: {'a': 1, 'b': 2}}
 
     Key collisions where either value is not a dictionary raise an exception,
@@ -63,29 +69,37 @@ def deep_dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     from *earlier* dictionaries takes precedence. This behavior is the opposite
     of `dict_merge`, where later entries take precedence.
 
-    >>> deep_dict_merge(({0: 1}, {0: 2}))
+    >>> deep_dict_merge({0: 1}, {0: 2})
     Traceback (most recent call last):
     ...
     ValueError: 1 != 2
 
     >>> l1, l2 = [], []
-    >>> d = deep_dict_merge(({0: l1}, {0: l2}))
+    >>> d = deep_dict_merge({0: l1}, {0: l2})
     >>> d
     {0: []}
     >>> id(d[0]) == id(l1)
     True
-    """
-    merged = {}
-    for m in dicts:
-        for k, v2 in m.items():
-            v1 = merged.setdefault(k, v2)
-            if v1 != v2:
-                if isinstance(v1, dict) and isinstance(v2, dict):
-                    merged[k] = deep_dict_merge((v1, v2))
-                else:
-                    raise ValueError(f'{v1!r} != {v2!r}')
 
-    return merged
+    >>> deep_dict_merge()
+    {}
+    """
+
+    def __new__(cls, *dicts: Mapping) -> dict:
+        return cls.from_iterable(dicts)
+
+    @classmethod
+    def from_iterable(cls, dicts: Iterable[Mapping], /) -> dict:
+        merged = {}
+        for m in dicts:
+            for k, v2 in m.items():
+                v1 = merged.setdefault(k, v2)
+                if v1 != v2:
+                    if isinstance(v1, Mapping) and isinstance(v2, Mapping):
+                        merged[k] = deep_dict_merge(v1, v2)
+                    else:
+                        raise ValueError(f'{v1!r} != {v2!r}')
+        return merged
 
 
 K = TypeVar('K')
