@@ -294,6 +294,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '4',
 
+        'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
+
         'AZUL_DEBUG': '1',
 
         'AZUL_BILLING': 'anvil',
