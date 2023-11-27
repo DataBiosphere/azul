@@ -1,12 +1,19 @@
 from datetime import (
     datetime,
 )
+import json
+import logging
+from operator import (
+    itemgetter,
+)
 import subprocess
 import zoneinfo
 
 tz = zoneinfo.ZoneInfo('America/Los_Angeles')
 
 now = datetime.now(tz)
+
+log = logging.getLogger('azul.github.schedule')
 
 
 def create_upgrade_issue():
@@ -18,12 +25,25 @@ def create_upgrade_issue():
         template = '.github/ISSUE_TEMPLATE/upgrade.md'
         front_matter, body = _load_issue_template(template)
         labels, title = front_matter['labels'], front_matter['title']
-        subprocess.run([
-            'gh', 'issue', 'create',
-            f'--title={title} {now.date()}',
-            f'--label={labels}',
-            f'--body={body}'
-        ], check=True)
+        process = subprocess.run([
+            'gh', 'issue', 'list',
+            f'--search=in:title "{title} {now.date()}"',
+            '--json=number',
+            '--limit=10',
+        ], check=True, stdout=subprocess.PIPE)
+        results = json.loads(process.stdout)
+        issues = set(map(itemgetter('number'), results))
+        if issues:
+            log.info('At least one matching issue already exists: %r', issues)
+        else:
+            subprocess.run([
+                'gh', 'issue', 'create',
+                f'--title={title} {now.date()}',
+                f'--label={labels}',
+                f'--body={body}'
+            ], check=True)
+    else:
+        log.info('Current time is outside of the configured schedule window')
 
 
 def _load_issue_template(path: str) -> tuple[dict[str, str], str]:
@@ -56,4 +76,6 @@ def _load_issue_template(path: str) -> tuple[dict[str, str], str]:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(levelname)+7s %(name)s: %(message)s')
     create_upgrade_issue()
