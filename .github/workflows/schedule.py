@@ -13,7 +13,7 @@ def create_upgrade_issue():
     # Pick any date for `start` and an issue will be created on that date, as
     # well as every two weeks before and after, but only in the future. Note
     # that this doesn't mean that the start date has to lie in the future.
-    start = datetime(2023, 11, 26, tzinfo=tz)  # Monday, …
+    start = datetime(2023, 11, 27, tzinfo=tz)  # Monday, …
     if 0 == (now - start).days % 14 and now.hour == 9:  # … every other week, at 9am
         template = '.github/ISSUE_TEMPLATE/upgrade.md'
         front_matter, body = _load_issue_template(template)
