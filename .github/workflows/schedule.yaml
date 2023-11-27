@@ -6,7 +6,15 @@ on:
     # we'll just run a Python script every hour and implement the schedule in
     # that script. This also allows for things that aren't possible with a
     # `cron` expression, like biweekly intervals.
-    - cron: '0 * * * *'
+    #
+    # Additionally, GitHub documents that scheduled events can be delayed during
+    # periods of high load, or even skipped. To reduce the chances of these
+    # restrictions impacting our schedule, we run the script more than once per
+    # hour.
+    #
+    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+    #
+    - cron: '3,23,43 * * * *'
 
 jobs:
   schedule:
