@@ -1,0 +1,22 @@
+name: 'Scheduled jobs'
+on:
+  schedule:
+    # GitHub Actions' `cron` uses UTC, which, given daylight savings time, is
+    # pretty useless if one wants a consistent local starting time. Instead,
+    # we'll just run a Python script every hour and implement the schedule in
+    # that script. This also allows for things that aren't possible with a
+    # `cron` expression, like biweekly intervals.
+    - cron: '0 0 * * *'
+
+jobs:
+  schedule:
+    runs-on: 'ubuntu-22.04' # has Python 3.10.12, which is fine for our purposes
+    permissions:
+      issues: 'write'
+    env:
+      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+    steps:
+      - uses: 'actions/checkout@v3'
+        with:
+          sparse-checkout: '.github'
+      - run: 'python3 .github/workflows/schedule.py'

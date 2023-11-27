@@ -7,7 +7,7 @@ from azul.terraform import (
 
 emit_tf(tag_resources=False, config={
     'terraform': {
-        'required_version': '1.3.4',
+        'required_version': config.terraform_version,
         'required_providers': {
             'external': {
                 'source': 'hashicorp/external',

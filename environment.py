@@ -201,12 +201,32 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
-        # The tag of the PyCharm image that we use to format the source code in
-        # continuous integration. We specify it here instead of directly in the
-        # Makefile so that a change to the version does not require updating
-        # requirements.
+        # The version of Docker used throughout the system. This variable is
+        # defined in the bootstrap environment (environment.boot) because it is
+        # required to be available during the early stages of the GitLab build.
+        # This variable is not intended to be overridden per deployment or
+        # locally. Modifying the value requires redeploying the `shared` and
+        # `gitlab` components, as well as building and pushing the executor
+        # image (see terraform/gitlab /runner/Dockerfile for how).
         #
-        'azul_docker_pycharm_version': '2022.3.3-4',
+        'azul_docker_version': None,
+
+        # The version of Python used throughout the system. This variable is
+        # defined in the bootstrap environment (environment.boot) because it is
+        # required to be available during the early stages of the GitLab and
+        # GitHub Actions build. This variable is not intended to be overridden
+        # per deployment or locally. Modifying the value requires redeploying
+        # the `shared` component.
+        #
+        'azul_python_version': None,
+
+        # The version of Terraform used throughout the system. This variable is
+        # defined in the bootstrap environment (environment.boot) because it is
+        # required to be available during the early stages of the GitHub Actions
+        # build. This variable is not intended to be overridden per deployment
+        # or locally.
+        #
+        'azul_terraform_version': None,
 
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET
