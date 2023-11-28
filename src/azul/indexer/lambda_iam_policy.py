@@ -83,6 +83,46 @@ policy = {
                 f"arn:aws:secretsmanager:{aws.region_name}:{aws.account}:secret:*"
             ]
         },
+        {
+            "Effect": "Allow",
+            "Action": [
+                'ses:SendEmail',
+                'ses:SendRawEmail'
+            ],
+            "Resource": [
+                # TODO; compose the arn of resource
+                f"arn:aws:ses:{aws.region_name}:{aws.account}:*"
+            ],
+            'aws_ses_identity_policy': {  # TODO: Move pol to lambda_policy
+                            'notify': {
+                                'identity': '${aws_ses_domain_identity.notify.arn}',
+                                'name': config.qualified_resource_name('notify'),
+                                'policy': {
+                                    'Version': '2012-10-17',
+                                    'Statement': [
+                                        {
+                                            'Effect': 'Allow',
+                                            'Principal': {
+                                                'AWS': 'arn:aws:sts::'
+                                                       + aws.account
+                                                       + ':assumed-role/'
+                                                       + '${aws_lambda_function.' + 'app.name' + '.function_name}/'
+                                                       # The following is the role-session-name of the principal
+                                                       # assuming the role via an AWS STS AssumeRole operation.
+                                                       + '${aws_lambda_function.' + '_'.join(['app.name', 'notify'])
+                                                       + '.function_name}'
+                                            },
+                                            'Action': [
+                                                'ses:SendEmail',
+                                                'ses:SendRawEmail'
+                                            ],
+                                            'Resource': '${aws_ses_domain_identity.notify.arn}',
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+        },
         *(
             [
                 {

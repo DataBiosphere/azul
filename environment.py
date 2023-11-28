@@ -154,6 +154,10 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_AWS_ACCOUNT_ID': None,
 
+        # Description
+        #
+        # Not set explicitly, do not modify for test and unittest usage only
+        'azul_aws_account_name': None,
         # The region of the Azul deployment. This variable is primarily used by
         # the AWS CLI, by TerraForm, botocore and boto3 but Azul references it
         # too. This variable is typically set in deployment-specific

@@ -33,6 +33,9 @@ from botocore.awsrequest import (
     AWSResponse,
 )
 import botocore.credentials
+from botocore.exceptions import (
+    NoCredentialsError,
+)
 import botocore.session
 import botocore.utils
 from more_itertools import (
@@ -70,6 +73,9 @@ if TYPE_CHECKING:
     )
     from mypy_boto3_s3 import (
         S3Client,
+    )
+    from mypy_boto3_sesv2 import (
+        SESV2Client,
     )
     from mypy_boto3_stepfunctions import (
         SFNClient,
@@ -157,6 +163,10 @@ class AWS:
     @property
     def sns(self):
         return self.client('sns')
+
+    @property
+    def ses(self) -> 'SESV2Client':
+        return self.client('sesv2')
 
     @property
     def sts(self):
@@ -667,8 +677,15 @@ class AWS:
 
     @property
     def monitoring_topic_name(self):
+        try:
+            stage = config.main_deployment_stage
+        except NoCredentialsError:
+            # Running `make openapi` in GitHub fails since retrieving the main
+            # deployment stage requires making a roundtrip to IAM. The
+            # monitoring topic is used by the monitoring Lambda.
+            stage = config.deployment_stage
         return config.qualified_resource_name('monitoring',
-                                              stage=config.main_deployment_stage)
+                                              stage=stage)
 
 
 aws = AWS()
