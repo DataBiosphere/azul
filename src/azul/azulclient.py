@@ -58,8 +58,8 @@ from azul.indexer.index_service import (
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.queues import (
-    Queues,
+from azul.service.queue_service import (
+    QueueService,
 )
 from azul.types import (
     JSON,
@@ -434,7 +434,7 @@ class AzulClient(SignatureHelper):
 
     @cached_property
     def queues(self):
-        return Queues()
+        return QueueService()
 
     def reset_indexer(self,
                       catalogs: Iterable[CatalogName],

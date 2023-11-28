@@ -5,8 +5,8 @@ import sys
 from azul.logging import (
     configure_script_logging,
 )
-from azul.queues import (
-    Queues,
+from azul.service.queue_service import (
+    QueueService,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def main(argv):
     args = p.parse_args(argv)
 
     if args.command in ('list', 'purge', 'purge_all'):
-        queues = Queues()
+        queues = QueueService()
         if args.command == 'list':
             queues.list()
         elif args.command == 'purge':
@@ -75,7 +75,7 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command in ('dump', 'dump_all'):
-        queues = Queues(delete=args.delete, json_body=args.json_body)
+        queues = QueueService(delete=args.delete, json_body=args.json_body)
         if args.command == 'dump':
             queues.dump(args.queue, args.path)
         elif args.command == 'dump_all':
@@ -83,7 +83,7 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command == 'feed':
-        queues = Queues(delete=args.delete)
+        queues = QueueService(delete=args.delete)
         queues.feed(args.path, args.queue, force=args.force)
     else:
         p.print_usage()

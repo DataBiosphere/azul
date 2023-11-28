@@ -13,8 +13,8 @@ from azul.deployment import (
 from azul.modules import (
     load_app_module,
 )
-from azul.queues import (
-    Queues,
+from azul.service.queue_service import (
+    QueueService,
 )
 from azul.terraform import (
     emit_tf,
@@ -45,7 +45,7 @@ def dashboard_body() -> str:
         resource, _, suffix = config.unqualified_resource_name_and_suffix(name)
         return config.qualified_resource_name(resource, suffix=suffix, stage='prod')
 
-    queues = Queues()
+    queues = QueueService()
     qualified_resource_names = [
         *config.all_queue_names,
         *queues.functions_by_queue().values()
