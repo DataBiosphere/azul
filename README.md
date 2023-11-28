@@ -670,6 +670,23 @@ template files. Changes to either the templates or anything in the `lambdas`
 directory requires running `make deploy` again in order to update cloud
 infrastructure for the selected deployment.
 
+### 3.3.1 Move Amazon SES out of sandbox for deployments with monitoring enabled
+
+Before proceeding, ensure that the SES identity provisioned by Terraform is
+listed in the Verified identities tab, from the AWS SES console. The identity
+listed should be the deployments' domain name.
+
+Once the previous requirement is satisfied, run the following AWS CLI command to
+request for the AWS SES Identity to be granted production access::
+
+    aws sesv2 put-account-details \
+    --contact-language EN \
+    --mail-type TRANSACTIONAL \
+    --production-access-enabled \
+    --website-url $(python -c 'from azul import config; print(api_lambda_domain("notify"))') \
+    --use-case-description \
+        'Use a lambda function invoked by an SNS topic to forward the SNS notification via email to a single recipient.'
+
 
 ## 3.4 Creating the Elasticsearch indices
 
