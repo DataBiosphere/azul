@@ -32,6 +32,8 @@ from typing import (
 
 this_module = Path(__file__)
 
+root_dir = this_module.parent.parent
+
 DraftEnvironment = Mapping[str, Optional[str]]
 
 Environment = Mapping[str, str]
@@ -97,7 +99,6 @@ def load_env() -> Tuple[Environment, Optional[str]]:
     a corresponding environment.py in the same directory. The modules from
     the deployment directory take precedence over ones in the project root.
     """
-    root_dir = this_module.parent.parent
 
     deployments_dir = root_dir / 'deployments'
     active_deployment_dir = deployments_dir / '.active'
