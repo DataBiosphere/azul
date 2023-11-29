@@ -29,6 +29,8 @@ Everyone
 Update Python on your developer machines to version 3.11.6. In your working
 copy, run ``make virtualenv`` and ``make requirements envhook``.
 
+Update Terraform on your developer machines to version 1.3.10.
+
 Operator
 ~~~~~~~~
 
