@@ -3,8 +3,8 @@ all: hello
 
 include common.mk
 
-azul_docker_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
-azul_docker_image_tag ?= latest
+azul_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
+azul_image_tag ?= latest
 
 .PHONY: virtualenv
 virtualenv: check_env
@@ -33,15 +33,18 @@ define docker
 .PHONY: docker$1
 docker$1: check_docker
 	docker build \
-	       --build-arg registry=$$(azul_docker_registry) \
+	       --build-arg azul_docker_registry=$$(azul_docker_registry) \
+	       --build-arg azul_python_image=$$(azul_python_image) \
+	       --build-arg azul_docker_version=$$(azul_docker_version) \
+	       --build-arg azul_terraform_version=$$(azul_terraform_version) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
-	       --tag $$(azul_docker_image)$3:$$(azul_docker_image_tag) \
+	       --tag $$(azul_image)$3:$$(azul_image_tag) \
 	       .
 
 .PHONY: docker$1_push
 docker$1_push: docker$1
-	docker push $$(azul_docker_image)$3:$$(azul_docker_image_tag)
+	docker push $$(azul_image)$3:$$(azul_image_tag)
 endef
 
 $(eval $(call docker,,_runtime,))  # runtime image w/o dependency resolution
@@ -51,20 +54,26 @@ $(eval $(call docker,_dev_deps,_deps,/dev-deps))  # development image with autom
 
 .PHONY: requirements_update
 requirements_update: check_venv check_docker
-#	Pull out transitive dependency pins so they can be recomputed. Instead
-# 	of truncating the `.trans` file, we comment out every line in it such that
-# 	a different .trans file produces a different "pulled out" .trans file and
-# 	therefore a different image layer hash when the file is copied into the
-# 	image. This makes the pin removal injective. If we truncated the file, we
-# 	might inadvertently reuse a stale image layer despite the .trans file
-# 	having been updated. Not using sed because Darwin's sed does not do -i.
+#	Pull out transitive dependency pins so they can be recomputed. Instead of
+#	truncating the `.trans` file, we comment out every line in it such that a
+#	different .trans file produces a different "pulled out" .trans file and
+#	therefore a different image layer hash when the file is copied into the
+#	image. This makes the pin removal injective. If we truncated the file, we
+#	might inadvertently reuse a stale image layer despite the .trans file having
+#	been updated. Not using sed because Darwin's sed does not do -i.
 	git restore requirements.trans.txt requirements.dev.trans.txt
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
-	$(MAKE) docker_deps docker_dev_deps
+#	Since we're building for the x86_64 Lambda runtime, we should do so on an
+#	image for that architecture, hence the default platform override below. The
+#	override slows down this make target considerably on ARM hosts like Apple
+#	Silicon Macs. And for some reason, pip's --platform=…_x86_64 appears to do
+#	the right thing even on an ARM image, without the override, but I'd rather
+#	not play with fire at this time without a deeper understanding as to why.
+	DOCKER_DEFAULT_PLATFORM=linux/amd64 $(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
-	       --image=$(azul_docker_image)/deps:$(azul_docker_image_tag) \
-	       --build-image=$(azul_docker_image)/dev-deps:$(azul_docker_image_tag)
-	# Download wheels (source and binary) for the Lambda runtime
+	       --image=$(azul_image)/deps:$(azul_image_tag) \
+	       --build-image=$(azul_image)/dev-deps:$(azul_image_tag)
+#	Download wheels (source and binary) for the Lambda runtime
 	rm ${azul_chalice_bin}/*
 	pip download \
 	    --platform=manylinux2014_x86_64 \
@@ -187,6 +196,7 @@ absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/.flake8/azul_flake8.py \
                                 $(project_root)/environment.py \
                                 $(project_root)/deployments/*/environment.py \
+                                $(project_root)/.github/workflows/*.py \
                                 $$(find $(project_root)/terraform{,/gitlab,/shared,/browser} \
                                         $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         $(project_root)/.github \
@@ -210,7 +220,7 @@ format: check_venv check_docker
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
 	    --workdir /home/developer/azul \
-	    $(azul_docker_registry)docker.io/ucscgi/azul-pycharm:$(azul_docker_pycharm_version) \
+	    $(azul_docker_registry)$$(python -m azul "config.docker_images['pycharm']") \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test

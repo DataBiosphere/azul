@@ -25,6 +25,7 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    config,
 )
 from azul.indexer import (
     BUNDLE,
@@ -143,7 +144,8 @@ class IndexerTestCase(CatalogTestCase,
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
             if (
-                entity_type == 'datasets'
+                config.is_anvil_enabled(self.catalog)
+                and entity_type in {'bundles', 'datasets'}
                 and doc_type is DocumentType.contribution
                 and 'description' in one(hit['_source']['contents']['datasets'])
             ):

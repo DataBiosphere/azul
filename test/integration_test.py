@@ -22,7 +22,6 @@ from io import (
     TextIOWrapper,
 )
 from itertools import (
-    chain,
     starmap,
 )
 import json
@@ -74,11 +73,9 @@ from google.oauth2 import (
     service_account,
 )
 from more_itertools import (
-    always_iterable,
     first,
     grouper,
     one,
-    only,
 )
 from openapi_spec_validator import (
     validate_spec,
@@ -1099,38 +1096,32 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              filters: Optional[JSON] = None
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
-        # FIXME: Use `bundles` index for `catalog_complete` subtest
-        #        https://github.com/DataBiosphere/azul/issues/5214
-        hits = self._get_entities(catalog, 'files', filters)
-        if config.is_anvil_enabled(catalog):
-            # Primary bundles may not contain any files, and supplementary
-            # bundles contain only a file and a dataset. We can't use
-            # datasets to find all the indexed bundles because the number of
-            # bundles per dataset often exceeds the inner entity aggregation
-            # limit. Hence, we need to collect bundles separately for files
-            # and biosamples to cover supplementary and primary bundles,
-            # respectively.
-            hits.extend(self._get_entities(catalog, 'biosamples', filters))
+        hits = self._get_entities(catalog, 'bundles', filters)
         for hit in hits:
             source = one(hit['sources'])
-            for bundle in hit.get('bundles', ()):
-                bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
-                                                    version=bundle['bundleVersion'],
-                                                    source=SourceJSON(id=source['sourceId'],
-                                                                      spec=source['sourceSpec']))
-                if config.is_anvil_enabled(catalog):
-                    is_supplementary = only(set(chain.from_iterable(
-                        always_iterable(file['is_supplementary'])
-                        for file in hit['files']
-                    )), default=False)
-                    bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
-                    bundle_fqid['entity_type'] = (
-                        BundleEntityType.supplementary
-                        if is_supplementary else
-                        BundleEntityType.primary
-                    ).value
-                bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
-                indexed_fqids.add(bundle_fqid)
+            bundle = one(hit['bundles'])
+            bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
+                                                version=bundle['bundleVersion'],
+                                                source=SourceJSON(id=source['sourceId'],
+                                                                  spec=source['sourceSpec']))
+            if config.is_anvil_enabled(catalog):
+                # Every primary bundle contains 1 or more biosamples, 1 dataset,
+                # and 0 or more other entities. Biosamples only occur in primary
+                # bundles.
+                if len(hit['biosamples']) > 0:
+                    entity_type = BundleEntityType.primary
+                # Supplementary bundles contain only 1 file and 1 dataset.
+                elif len(hit['files']) > 0:
+                    entity_type = BundleEntityType.supplementary
+                # DUOS bundles contain only 1 dataset.
+                elif len(hit['datasets']) > 0:
+                    entity_type = BundleEntityType.duos
+                else:
+                    assert False, hit
+                bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
+                bundle_fqid['entity_type'] = entity_type.value
+            bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
+            indexed_fqids.add(bundle_fqid)
         return indexed_fqids
 
     def _assert_catalog_complete(self,

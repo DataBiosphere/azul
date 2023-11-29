@@ -275,7 +275,6 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_anvil')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('anvil', 'anvil2', anvil2_sources),
                 ('anvil', 'anvil3', anvil3_sources),
             ]
             for suffix, internal in [
@@ -290,9 +289,11 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_ENABLE_MONITORING': '1',
 
-        # $0.382/h × 3 × 24h/d × 30d/mo = $825.12/mo
+        # $0.382/h × 4 × 24h/d × 30d/mo = $1100.16/mo
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '4',
+
+        'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
 
         'AZUL_DEBUG': '1',
 

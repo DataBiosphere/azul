@@ -2,8 +2,10 @@
 # uniformly use tabs for unaligned indent and tabs followed by spaces for
 # aligned indent.
 
+set -o allexport
 project_root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export project_root
+. ${project_root}/environment.boot
+set +o allexport
 
 # A little helper to make re-sourcing this script easier.
 #

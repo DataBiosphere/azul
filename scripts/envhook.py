@@ -40,16 +40,21 @@ class EnvHook:
         except EnvhookError as e:
             self._print(e.args[0])
             sys.exit(1)
+        finally:
+            sys.stderr.flush()
 
     @classmethod
     def sitecustomize(cls):
         self = cls()
-        enabled = int(os.environ.get('ENVHOOK', '1'))
-        if enabled == 0:
-            self._print('Currently disabled because the ENVHOOK environment variable is set to 0.')
-        else:
-            self.setenv()
-            self.share_aws_cli_credential_cache()
+        try:
+            enabled = int(os.environ.get('ENVHOOK', '1'))
+            if enabled == 0:
+                self._print('Currently disabled because the ENVHOOK environment variable is set to 0.')
+            else:
+                self.setenv()
+                self.share_aws_cli_credential_cache()
+        finally:
+            sys.stderr.flush()
 
     def _main(self, argv):
         import argparse

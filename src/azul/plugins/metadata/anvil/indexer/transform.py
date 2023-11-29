@@ -138,7 +138,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'activities': cls._activity_types(),
             'biosamples': cls._biosample_types(),
-            'datasets': {**cls._dataset_types(), **cls._duos_types()},
+            'datasets': cls._dataset_types(),
             'diagnoses': cls._diagnosis_types(),
             'donors': cls._donor_types(),
             'files': cls._aggregate_file_types(),
@@ -167,9 +167,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
         return (
             self._transform(entity)
-            for entity in self.bundle.entities
+            for entity in self._list_entities()
             if self._contains(partition, entity)
         )
+
+    def _list_entities(self) -> Iterable[EntityReference]:
+        return self.bundle.entities
 
     @abstractmethod
     def _transform(self, entity: EntityReference) -> Contribution:
@@ -232,13 +235,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'disease': null_str,
             'donor_age_at_collection_unit': null_str,
             'donor_age_at_collection': pass_thru_json,
-        }
-
-    @classmethod
-    def _duos_types(cls) -> FieldTypes:
-        return {
-            'document_id': null_str,
-            'description': null_str,
         }
 
     @classmethod
@@ -390,9 +386,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _dataset(self, dataset: EntityReference) -> MutableJSON:
         return self._entity(dataset, self._dataset_types())
 
-    def _duos(self, dataset: EntityReference) -> MutableJSON:
-        return self._entity(dataset, self._duos_types())
-
     def _diagnosis(self, diagnosis: EntityReference) -> MutableJSON:
         return self._entity(diagnosis,
                             self._diagnosis_types(),
@@ -409,8 +402,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                             name=metadata['file_name'],
                             uuid=file.entity_id)
 
-    def _only_dataset(self) -> MutableJSON:
-        return self._dataset(one(self._entities_by_type['dataset']))
+    def _only_dataset(self) -> EntityReference:
+        return one(self._entities_by_type['dataset'])
 
     _activity_polymorphic_types = {
         'activity',
@@ -452,7 +445,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             else:
                 assert this_entity.keys() < expected_keys, this
                 assert that_entity.keys() < expected_keys, that
-                merged = deep_dict_merge((this_entity, that_entity))
+                merged = deep_dict_merge(this_entity, that_entity)
                 assert merged.keys() == expected_keys, (this, that)
                 # We can safely discard that_bundle because only the version is
                 # used by the caller, and we know the versions are equal.
@@ -462,6 +455,53 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @cache
     def _complete_dataset_keys(cls) -> AbstractSet[str]:
         return cls.field_types()['datasets'].keys()
+
+
+class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
+
+    def _transform(self, entity: EntityReference) -> Contribution:
+        contents = dict(
+            activities=self._entities(self._activity, chain.from_iterable(
+                self._entities_by_type[activity_type]
+                for activity_type in self._activity_polymorphic_types
+            )),
+            biosamples=self._entities(self._biosample, self._entities_by_type['biosample']),
+            datasets=[self._dataset(self._only_dataset())],
+            diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
+            donors=self._entities(self._donor, self._entities_by_type['donor']),
+            files=self._entities(self._file, self._entities_by_type['file'])
+        )
+        return self._contribution(contents, entity)
+
+    @classmethod
+    def field_types(cls) -> FieldTypes:
+        return deep_dict_merge(
+            super().field_types(),
+            {'datasets': cls._duos_types()}
+        )
+
+    @classmethod
+    def _duos_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'description': null_str,
+        }
+
+    def _duos(self, dataset: EntityReference) -> MutableJSON:
+        return self._entity(dataset, self._duos_types())
+
+    def _dataset(self, dataset: EntityReference) -> MutableJSON:
+        if 'description' in self.bundle.entities[dataset]:
+            return self._duos(dataset)
+        else:
+            return super()._dataset(dataset)
+
+    def _list_entities(self) -> Iterable[EntityReference]:
+        yield self._singleton()
+
+    @abstractmethod
+    def _singleton(self) -> EntityReference:
+        raise NotImplementedError
 
 
 class ActivityTransformer(BaseTransformer):
@@ -475,7 +515,7 @@ class ActivityTransformer(BaseTransformer):
         contents = dict(
             activities=[self._activity(entity)],
             biosamples=self._entities(self._biosample, linked['biosample']),
-            datasets=[self._only_dataset()],
+            datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
@@ -497,7 +537,7 @@ class BiosampleTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=[self._biosample(entity)],
-            datasets=[self._only_dataset()],
+            datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, linked['file']),
@@ -505,30 +545,25 @@ class BiosampleTransformer(BaseTransformer):
         return self._contribution(contents, entity)
 
 
-class DatasetTransformer(BaseTransformer):
+class BundleTransformer(SingletonTransformer):
+
+    @classmethod
+    def entity_type(cls) -> EntityType:
+        return 'bundles'
+
+    def _singleton(self) -> EntityReference:
+        return EntityReference(entity_type='bundle',
+                               entity_id=self.bundle.uuid)
+
+
+class DatasetTransformer(SingletonTransformer):
 
     @classmethod
     def entity_type(cls) -> str:
         return 'datasets'
 
-    def _transform(self, entity: EntityReference) -> Contribution:
-        try:
-            dataset = self._dataset(entity)
-        except KeyError:
-            contents = dict(datasets=[self._duos(entity)])
-        else:
-            contents = dict(
-                activities=self._entities(self._activity, chain.from_iterable(
-                    self._entities_by_type[activity_type]
-                    for activity_type in self._activity_polymorphic_types
-                )),
-                biosamples=self._entities(self._biosample, self._entities_by_type['biosample']),
-                datasets=[dataset],
-                diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
-                donors=self._entities(self._donor, self._entities_by_type['donor']),
-                files=self._entities(self._file, self._entities_by_type['file']),
-            )
-        return self._contribution(contents, entity)
+    def _singleton(self) -> EntityReference:
+        return self._only_dataset()
 
 
 class DonorTransformer(BaseTransformer):
@@ -545,7 +580,7 @@ class DonorTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
-            datasets=[self._only_dataset()],
+            datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=[self._donor(entity)],
             files=self._entities(self._file, linked['file']),
@@ -567,7 +602,7 @@ class FileTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
-            datasets=[self._only_dataset()],
+            datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=[self._file(entity)],

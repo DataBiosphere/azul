@@ -37,7 +37,7 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python 3.11.5
+- Python, see [environment.boot](environment.boot) for exact version
 
 - The `bash` shell
 
@@ -45,15 +45,18 @@ generic with minimal need for project-specific behavior.
 
 - git 2.36.0 or newer
 
-- [Docker] for running the tests (the community edition is sufficient).
+- [Docker], for running the tests (the community edition is sufficient).
   The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
 
-- Terraform 1.3.4 (optional, to manage deployments). Refer the official
-  documentation on how to [install terraform]. Terraform is written in Go which 
-  produces single, statically linked binaries, so the easiest way to install 
-  Terraform is to download the binary and put it in a directory that mentioned 
-  in the `PATH` environment variable. 
+- Terraform, to manage deployments. Azul requires a specific version of
+  Terraform, which is defined in a variable called `azul_terraform_version` in
+  [environment.py](environment.py). If you have a working Azul checkout, you can
+  run `python -m azul config.terraform_version` to print the value of that
+  variable. Refer to the official documentation on how to [install terraform].
+  Terraform comes as a single, statically linked binary, so the easiest method
+  of installation is to download the binary and put it in a directory mentioned
+  in the `PATH` environment variable.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
@@ -182,16 +185,17 @@ end.
    make requirements
    ```
 
-   Linux users whose distribution does not offer Python 3.11 should consider
-   installing [pyenv] and then Python 3.11 using `pyenv install 3.11.5` and
-   setting `PYENV_VERSION` to `3.11.5`. You may need to update pyenv itself
-   before it recognizes the given Python version. Even if a distribution
-   provides the  required minor version of Python natively, using pyenv is
-   generally preferred because it offers every patch-level release of Python,
-   supports an arbitrary number of different Python versions to be installed
-   concurrently and allows for easily switching between them.
+   Linux users whose distribution does not offer the required Python version
+   should consider installing [pyenv] first, then Python using `pyenv install
+   x.y.z` and setting `PYENV_VERSION` to `x.y.z`, where `x.y.z` is the value of
+   `azul_python_version` in [environment.boot](environment.boot). You may need
+   to update [pyenv] itself before it recognizes the given Python version. Even
+   if a distribution provides the required minor version of Python natively,
+   using [pyenv] is generally preferred because it offers every patch-level
+   release of Python, supports an arbitrary number of different Python versions
+   to be installed concurrently and allows for easily switching between them.
 
-   Ubuntu users using their system's default Python 3.9 installation must
+   Ubuntu users using their system's default Python installation must
    install `python3-dev` before any wheel requirements can be built.
 
    ```
@@ -973,7 +977,7 @@ requirements_update` locally doesn't.
 
 This is a side effect of the Docker build cache on two different machines
 diverging to reflect different states on PyPI. This can be fixed by incrementing
-`azul_docker_image_version` in the Dockerfile.
+`azul_image_version` in the Dockerfile.
 
 
 ##  Unable to re-register service account with SAM
@@ -1030,6 +1034,9 @@ found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications.
 
 ## Setting up the Azul build prerequisites on macOS 12 (Monterey)
 
+The steps below are examplary for Python 3.11.5. Replace `3.5.11` with the 
+version listed in [environment.boot](environment.boot).   
+
 Make `bash` the default shell. Google it.
 
 Install Homebrew. Google it. 
@@ -1047,7 +1054,8 @@ pyenv install 3.11.5
 ```
 
 Set `PYENV_VERSION` to `3.11.5` in `environment.local.py` at the project root.
-Do not set `SYSTEM_VERSION_COMPAT`.
+Do not set `SYSTEM_VERSION_COMPAT`. For a more maintainable configuration use 
+`os.environ['azul_python_version']` as the value and `import os` at the top.
 
 Install Docker Desktop. Google it.
 
@@ -1670,13 +1678,6 @@ Here is a complete example for copying bundles from `prod` to `integration`.
    The `--map-version` option adds a specific duration to the version of each
    copied file and bundle. Run `python scripts/copy_bundles --help` for details.
 
-## 7.4 Debugging running lambdas via Pycharm
-
-It's possible to connect a remote debugger to a running lambda function.
-
-Instructions in [`remote_debug.py`](https://github.com/DataBiosphere/azul/blob/develop/src/azul/remote_debug.py#L25)
-explain how to do this.
-
 # 8. Scale testing
 
 [Locust]: https://locust.io/
@@ -2213,7 +2214,8 @@ While the unit test is running (paused at a breakpoint), open a terminal window.
 Download the Kibana container:
 
 ```
-docker pull docker.elastic.co/kibana/kibana-oss:7.10.2
+kibana_image=$azul_docker_registry$(python -m azul "config.docker_images['kibana']")
+docker pull $kibana_image
 ```
 
 Copy the container name for the Elasticsearch instance you want to examine. This
@@ -2226,7 +2228,7 @@ docker ps
 Run
 
 ```
-docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 docker.elastic.co/kibana/kibana-oss:7.10.2
+docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 $kibana_image
 ```
 
 where `ES_CONTAINER_NAME` is what you copied from above.

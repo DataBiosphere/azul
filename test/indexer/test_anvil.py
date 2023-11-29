@@ -115,18 +115,22 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
         doc_counts: dict[DocumentType, int] = defaultdict(int)
         for hit in hits:
             entity_type, doc_type = self._parse_index_name(hit)
-            doc_counts[doc_type] += 1
-            self.assertEqual('datasets', entity_type)
-            if doc_type is DocumentType.aggregate:
-                self.assertEqual(2, hit['_source']['num_contributions'])
-                self.assertEqual(sorted(b.uuid for b in bundles),
-                                 sorted(b['uuid'] for b in hit['_source']['bundles']))
-                contents = one(hit['_source']['contents']['datasets'])
-                # These fields are populated only in the primary bundle
-                self.assertEqual(dataset_ref.entity_id, contents['document_id'])
-                self.assertEqual(['phs000693'], contents['registered_identifier'])
-                # This field is populated only in the DUOS bundle
-                self.assertEqual('Study description from DUOS', contents['description'])
+            if entity_type == 'bundles':
+                continue
+            elif entity_type == 'datasets':
+                doc_counts[doc_type] += 1
+                if doc_type is DocumentType.aggregate:
+                    self.assertEqual(2, hit['_source']['num_contributions'])
+                    self.assertEqual(sorted(b.uuid for b in bundles),
+                                     sorted(b['uuid'] for b in hit['_source']['bundles']))
+                    contents = one(hit['_source']['contents']['datasets'])
+                    # These fields are populated only in the primary bundle
+                    self.assertEqual(dataset_ref.entity_id, contents['document_id'])
+                    self.assertEqual(['phs000693'], contents['registered_identifier'])
+                    # This field is populated only in the DUOS bundle
+                    self.assertEqual('Study description from DUOS', contents['description'])
+            else:
+                self.fail(entity_type)
         self.assertEqual(1, doc_counts[DocumentType.aggregate])
         self.assertEqual(2, doc_counts[DocumentType.contribution])
 

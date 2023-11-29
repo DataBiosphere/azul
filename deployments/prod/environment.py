@@ -1047,6 +1047,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '4',
 
+        'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
+
         'AZUL_DEBUG': '1',
 
         'AZUL_BILLING': 'hca',
@@ -1059,8 +1061,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
 
         'GOOGLE_PROJECT': 'platform-hca-prod',
-
-        'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
 
         'azul_slack_integration': json.dumps({
             'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com

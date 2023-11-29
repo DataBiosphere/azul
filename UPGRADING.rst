@@ -20,6 +20,32 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5703 Consolidate dependency updates into single bi-weekly issue
+================================================================
+
+Operator
+~~~~~~~~
+
+Run ``make -C terraform/gitlab/runner`` with the ``gitlab`` component of every
+main deployment selected just before pushing the PR branch to the GitLab
+instance in that deployment. If the PR has to be sent back, checkout ``develop``
+and run that command again in all deployments where it was run with the PR
+branch checked out.
+
+Deploy the ``shared`` component of any main deployment just before pushing the
+PR branch to the GitLab instance in that deployment. Do so with the PR branch
+checked out. You will need to use the ``CI_COMMIT_REF_NAME=develop`` override
+for that. Notify team members that their local development work will be impacted
+until they rebase their branches to the PR branch or until this PR is merged and
+they rebase their branches onto ``develop``. If the PR has to be sent back,
+checkout ``develop`` and deploy the ``shared`` component again in any deployment
+where it was deployed with the PR branch checked out, and notify the developers
+to rebase their branches on ``develop`` again.
+
+Deploy the ``gitlab`` component of any main deployment just before pushing the
+merge commit to the GitLab instance in that deployment.
+
+
 #5617 False positive AWS Inspector findings after GitLab deploy
 ===============================================================
 
