@@ -1464,7 +1464,7 @@ class Config:
                           f':{self.docker_elasticsearch_version}',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
-            clamav='docker.io/clamav/clamav:1.2.1-14',
+            clamav='docker.io/clamav/clamav:1.2.1-17',
             gitlab='docker.io/gitlab/gitlab-ce:16.6.1-ce.0',
             gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.6.1',
             dind=f'docker.io/library/docker:{self.docker_version}-dind',
