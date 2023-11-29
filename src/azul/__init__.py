@@ -1423,6 +1423,10 @@ class Config:
         return self.environ['azul_docker_registry']
 
     @property
+    def docker_elasticsearch_version(self) -> str:
+        return self.environ['azul_docker_elasticsearch_version']
+
+    @property
     def docker_pycharm_version(self) -> str:
         return self.environ['azul_docker_pycharm_version']
 
@@ -1456,7 +1460,8 @@ class Config:
             docker=f'docker.io/library/docker:{self.docker_version}',
             python=self.python_image,
             pycharm=f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
-            elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.15-5',
+            elasticsearch=f'docker.io/ucscgi/azul-elasticsearch'
+                          f':{self.docker_elasticsearch_version}',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             clamav='docker.io/clamav/clamav:1.2.1-14',

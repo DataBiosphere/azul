@@ -220,6 +220,10 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_python_version': None,
 
+        # The tag of the Elasticsearch image that we use to run test cases.
+        #
+        'azul_docker_elasticsearch_version': '7.17.15-5',
+
         # The tag of the PyCharm image that we use to format the source code in
         # continuous integration. We specify it here instead of directly in the
         # Makefile so that a change to the version does not require updating
