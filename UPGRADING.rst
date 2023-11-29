@@ -43,6 +43,11 @@ the ``develop`` branch.
 When deploying to ``prod``, manually deploy ``prod.shared`` just before
 pushing the merge commit to the GitLab instance.
 
+Deploy the ``gitlab`` component of any main deployment, and run
+``make -C terraform/gitlab/runner``, just before pushing the merge commit to
+the GitLab instance in that deployment.
+
+
 
 #5536 Timebox DRS requests
 ==========================
