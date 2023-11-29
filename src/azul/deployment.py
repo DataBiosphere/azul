@@ -145,7 +145,7 @@ class AWS:
 
     @property
     def s3(self) -> 'S3Client':
-        return self.client('s3')
+        return self.client('s3', azul_logging=True)
 
     @property
     def securityhub(self):
@@ -482,12 +482,21 @@ class AWS:
                              **kwargs: Any
                              ) -> Optional[AWSResponse]:
         event_name = self._shorten_event_name(event_name, self._response_event_name)
-        response = kwargs['response_dict']
-        boto3_log.info('%s:\tGot %s response', event_name, response['status_code'])
-        message = http_body_log_message('response',
-                                        response.get('body'),
-                                        verbatim=self._log_body_verbatim)
-        boto3_log.info('%s:\t%s', event_name, message)
+        response, exception = kwargs['response_dict'], kwargs['exception']
+        if exception is None:
+            if response is None:
+                boto3_log.info('%s:\tGot no response', event_name)
+            else:
+                boto3_log.info('%s:\tGot %s response', event_name, response['status_code'])
+                message = http_body_log_message('response',
+                                                response['body'],
+                                                verbatim=self._log_body_verbatim)
+                boto3_log.info('%s:\t%s', event_name, message)
+        else:
+            if response is None:
+                pass  # assuming that an exception will be raised, with a traceback in the logs
+            else:
+                assert False, (exception, type(response))
         return None
 
     @property
@@ -500,12 +509,17 @@ class AWS:
         return suffix
 
     @_cache
-    def resource(self, *args, **kwargs):
+    def resource(self, *args, azul_logging: bool = False, **kwargs):
         """
         Same as `self.client()` but for `boto3.resource()` instead of
         `boto3.client()`.
         """
-        return self.boto3_session.resource(*args, **kwargs)
+        resource = self.boto3_session.resource(*args, **kwargs)
+        if azul_logging:
+            events = resource.meta.client.meta.events
+            events.register_last(self._request_event_name, self._log_client_request)
+            events.register_first(self._response_event_name, self._log_client_response)
+        return resource
 
     def qualified_bucket_name(self, bucket_name: str) -> str:
         return config.qualified_bucket_name(account_name=config.aws_account_name,

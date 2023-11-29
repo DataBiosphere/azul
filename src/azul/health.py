@@ -200,7 +200,7 @@ class Health:
         """
         Returns information about the SQS queues used by the indexer.
         """
-        sqs = aws.resource('sqs')
+        sqs = aws.resource('sqs', azul_logging=True)
         response = {'up': True}
         for queue in config.all_queue_names:
             try:
