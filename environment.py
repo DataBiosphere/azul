@@ -220,6 +220,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_python_version': None,
 
+        # The tag of the PyCharm image that we use to format the source code in
+        # continuous integration. We specify it here instead of directly in the
+        # Makefile so that a change to the version does not require updating
+        # requirements.
+        #
+        'azul_docker_pycharm_version': '2023.2.3-5',
+
         # The version of Terraform used throughout the system. This variable is
         # defined in the bootstrap environment (environment.boot) because it is
         # required to be available during the early stages of the GitHub Actions

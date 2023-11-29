@@ -1423,6 +1423,10 @@ class Config:
         return self.environ['azul_docker_registry']
 
     @property
+    def docker_pycharm_version(self) -> str:
+        return self.environ['azul_docker_pycharm_version']
+
+    @property
     def python_version(self) -> str:
         return self.environ['azul_python_version']
 
@@ -1451,7 +1455,7 @@ class Config:
             # executor image (see terraform/gitlab/runner/Dockerfile for how).
             docker=f'docker.io/library/docker:{self.docker_version}',
             python=self.python_image,
-            pycharm='docker.io/ucscgi/azul-pycharm:2023.2.3-5',
+            pycharm=f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
             elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.15-5',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
