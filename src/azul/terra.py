@@ -14,6 +14,7 @@ from time import (
 from typing import (
     ClassVar,
     Optional,
+    Self,
 )
 
 import attrs
@@ -322,6 +323,49 @@ class TerraConcurrentModificationException(TerraClientException):
         super().__init__('Snapshot listing changed while we were paging through it')
 
 
+class TerraRetry(urllib3.Retry):
+    start: float
+    timeout: float
+    retries: int
+
+    @classmethod
+    def create(cls, *, start: float, timeout: float, retries: int) -> Self:
+        # No retries on redirects, limited retries on server failures and I/O
+        # errors such as refused or dropped connections. The latter are actually
+        # very likely if connections from the pool are reused after a long
+        # period of being idle. That's why we need at least one retry on read …
+        self = cls(total=None,
+                   connect=retries,
+                   read=retries + 1,
+                   redirect=0,
+                   status=retries,
+                   other=retries,
+                   status_forcelist={500, 502, 503})
+        self.start = start
+        self.timeout = timeout
+        self.retries = retries
+        return self
+
+    def is_exhausted(self):
+        # … but only if the first read attempt failed quickly, in under 10ms.
+        # Otherwise, read errors that don't result from a stale pool connection
+        # could exceed the overall timeout by as much as 100%. The point of zero
+        # retries is to guarantee that the timeout is not exceeded.
+        return (
+            super().is_exhausted()
+            or self.retries == 0 and time() - self.start - self.timeout < .01
+        )
+
+    def new(self, **kwargs) -> Self:
+        # This is a copy constructor that's used to create a new instance with
+        # decremented retry counters. The `is_exhausted` method will be called
+        # on the copy in order to determine if another attempt should be made.
+        return super().new(start=self.start,
+                           timeout=self.timeout,
+                           retries=self.retries,
+                           **kwargs)
+
+
 @attrs.frozen(kw_only=True)
 class TerraClient(OAuth2Client):
     """
@@ -342,18 +386,7 @@ class TerraClient(OAuth2Client):
                   method, url, headers, timeout, body)
         start = time()
         try:
-            # No retries on redirects, limited retries on server failures, I/O
-            # errors such as refused or dropped connections. The latter are
-            # actually very likely if connections from the pool are reused after
-            # a long period of being idle. That's why we need at least one retry
-            # on read.
-            retry = urllib3.Retry(total=None,
-                                  connect=retries,
-                                  read=retries + 1,
-                                  redirect=0,
-                                  status=retries,
-                                  other=retries,
-                                  status_forcelist={500, 502, 503})
+            retry = TerraRetry.create(start=start, timeout=timeout, retries=retries)
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
