@@ -342,16 +342,18 @@ class TerraClient(OAuth2Client):
                   method, url, headers, timeout, body)
         start = time()
         try:
-            # Limited retries on I/O errors such as refused or dropped
-            # connections. The latter are actually very likely if connections
-            # from the pool are reused after a long period of idleness. That's
-            # why we need at least one retry on read.
+            # No retries on redirects, limited retries on server failures, I/O
+            # errors such as refused or dropped connections. The latter are
+            # actually very likely if connections from the pool are reused after
+            # a long period of being idle. That's why we need at least one retry
+            # on read.
             retry = urllib3.Retry(total=None,
                                   connect=retries,
                                   read=retries + 1,
                                   redirect=0,
-                                  status=0,
-                                  other=retries)
+                                  status=retries,
+                                  other=retries,
+                                  status_forcelist={500, 502, 503})
             response = self._http_client.request(method,
                                                  str(url),
                                                  headers=headers,
