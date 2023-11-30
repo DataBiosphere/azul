@@ -335,7 +335,7 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
                                         with mock.patch('time.time', new=lambda: 1547691253.07010):
                                             response = requests.get(url, allow_redirects=False)
                                     if wait and expect_status == 301:
-                                        self.assertLessEqual(retry_after, time.monotonic() - before)
+                                        self.assertTrue(retry_after < time.monotonic() - before)
                                     if fetch:
                                         self.assertEqual(200, response.status_code)
                                         response = response.json()
