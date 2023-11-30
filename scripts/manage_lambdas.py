@@ -8,10 +8,10 @@ from azul.logging import (
     configure_script_logging,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 if __name__ == '__main__':
-    configure_script_logging(logger)
+    configure_script_logging(log)
     parser = argparse.ArgumentParser(description='Enables or disables the lambdas in the current deployment.')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--enable', dest='enabled', action='store_true', default=None)

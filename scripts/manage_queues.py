@@ -9,11 +9,11 @@ from azul.queues import (
     Queues,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def main(argv):
-    configure_script_logging(logger)
+    configure_script_logging(log)
     p = argparse.ArgumentParser(description='Manage the SQS queues in the current deployment')
     sps = p.add_subparsers(help='sub-command help', dest='command')
 

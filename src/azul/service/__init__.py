@@ -95,7 +95,7 @@ class Filters:
         return filters
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class BadArgumentException(Exception):
