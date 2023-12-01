@@ -163,11 +163,13 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
 
     def _construct_file_url(self, source_url: str, file_name: str) -> str:
         """
+        >>> plugin = Plugin(_sources=set())
         >>> source_url = 'https://github.com/USER/REPO/tree/REF/tests'
-        >>> Plugin._construct_file_url(Plugin, source_url, 'foo.zip')
+
+        >>> plugin._construct_file_url(source_url, 'foo.zip')
         'https://github.com/USER/REPO/raw/REF/tests/foo.zip'
 
-        >>> Plugin._construct_file_url(Plugin, source_url, '')
+        >>> plugin._construct_file_url(source_url, '')
         Traceback (most recent call last):
         ...
         azul.RequirementError: file_name cannot be empty
