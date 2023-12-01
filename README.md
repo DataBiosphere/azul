@@ -645,6 +645,25 @@ These steps are performed once per deployment (multiple times per project).
 
 9. `_refresh`
 
+### 3.2.3 Transition Amazon SES resource out of sandbox
+
+Perform these steps once the cloud infrastructure has been provisioned for the
+shared deployment, section #3.3. Before continuing, make sure that the SES
+identity provisioned by Terraform is listed in the Verified identities tab,
+from the AWS SES console. The identity listed should be the deployments' domain
+name.
+
+Run the following AWS CLI command to request for the AWS SES Identity to be
+granted production access::
+
+    aws sesv2 put-account-details \
+    --contact-language EN \
+    --mail-type TRANSACTIONAL \
+    --production-access-enabled \
+    --website-url $(python -c 'from azul import config; print(api_lambda_domain("notify"))') \
+    --use-case-description \
+        'Use a lambda function invoked by an SNS topic to forward the SNS notification via email to a single recipient.'
+
 ## 3.3 Provisioning cloud infrastructure
 
 Once you've configured the project and your personal deployment or a shared

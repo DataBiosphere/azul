@@ -11,7 +11,7 @@ blinker==1.7.0
 boto3==1.28.63
 boto3-stubs==1.28.63
 botocore==1.31.63
-botocore-stubs==1.32.6
+botocore-stubs==1.33.0
 brotli==1.1.0
 cachetools==5.3.2
 certifi==2023.11.17
@@ -23,7 +23,7 @@ click==8.1.7
 colorama==0.4.4
 configargparse==1.7
 coverage==6.5.0
-cryptography==41.0.5
+cryptography==41.0.7
 deprecated==1.2.13
 docker==6.1.2
 docutils==0.16
@@ -80,6 +80,7 @@ mypy-boto3-iam==1.28.79
 mypy-boto3-kms==1.28.37
 mypy-boto3-lambda==1.28.83
 mypy-boto3-s3==1.28.55
+mypy-boto3-sesv2==1.28.64
 mypy-boto3-sqs==1.28.82
 mypy-boto3-stepfunctions==1.28.36
 openapi-schema-validator==0.3.4

@@ -1,5 +1,4 @@
 import json
-import shlex
 from typing import (
     NamedTuple,
 )
@@ -896,25 +895,6 @@ tf_config = {
                         }
                     ]
                 })
-            }
-        },
-        'aws_sns_topic_subscription': {
-            'monitoring': {
-                'topic_arn': '${aws_sns_topic.monitoring.arn}',
-                # The `email` protocol is only partially supported. Since
-                # Terraform cannot confirm or delete pending subscriptions
-                # (see link below), we use a separate script for this purpose.
-                # https://registry.terraform.io/providers/hashicorp/aws/4.3.0/docs/resources/sns_topic_subscription#protocol-support
-                'protocol': 'email',
-                'endpoint': config.monitoring_email,
-                'provisioner': {
-                    'local-exec': {
-                        'command': ' '.join(map(shlex.quote, [
-                            'python',
-                            config.project_root + '/scripts/confirm_sns_subscription.py'
-                        ]))
-                    }
-                }
             }
         },
         'aws_wafv2_ip_set': {
