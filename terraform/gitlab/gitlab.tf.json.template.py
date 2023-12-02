@@ -1859,6 +1859,50 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             )
                         },
                         {
+                            'path': '/etc/systemd/system/registry-garbage-collect.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=GitLab container registry garbage collection',
+                                'After=docker.service gitlab.service',
+                                'Requires=docker.service gitlab.service',
+                                '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
+                                'Type=simple',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'ExecStartPre=-/usr/bin/docker stop registry-garbage-collect',
+                                'ExecStartPre=-/usr/bin/docker rm registry-garbage-collect',
+                                'ExecStartPre=/usr/bin/docker pull ' + gitlab_image,
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'exec',  # Execute (as in `docker exec`) …
+                                    'gitlab',  # … inside the gitlab container …
+                                    '/opt/gitlab/bin/gitlab-ctl',  # … the gitlab-ctl …
+                                    'registry-garbage-collect',  # … garbage collect command
+                                    '-m'  # … and delete untagged images
+                                ),
+                                '[Install]',
+                                'WantedBy='
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/registry-garbage-collect.timer',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=Scheduled GitLab container registry garbage collection',
+                                '[Timer]',
+                                'OnCalendar=Sat *-*-* 14:0:0',
+                                '[Install]',
+                                'WantedBy=timers.target'
+                            )
+                        },
+                        {
                             # AWS recommends placing the amazon-cloudwatch-agent config file at this path.
                             # Note that the parent of etc/ is where the agent is installed.
                             'path': '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
@@ -2025,7 +2069,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'gitlab',
                             'gitlab-runner',
                             'clamscan.timer',
-                            'prune-images.timer'
+                            'prune-images.timer',
+                            'registry-garbage-collect.timer'
                         ],
                         [
                             'amazon-cloudwatch-agent-ctl',
