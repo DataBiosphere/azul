@@ -942,17 +942,22 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                         args=dict(catalog=catalog,
                                                   version=file_version))
             response = self._get_url_unchecked(GET, file_url)
-            response = json.loads(response.data)
-            # Phantom files lack DRS URIs and cannot be downloaded
-            if response.get('Code') == 'NotFoundError':
+            if response.status == 404:
+                response = json.loads(response.data)
+                # Phantom files lack DRS URIs and cannot be downloaded
+                self.assertEqual('NotFoundError', response['Code'])
                 self.assertEqual(response['Message'],
                                  f'File {file_uuid!r} with version {file_version!r} '
-                                 f'was found in catalog {catalog!r}, however no download is currently available')
+                                 f'was found in catalog {catalog!r}, '
+                                 f'however no download is currently available')
             else:
+                self.assertEqual(200, response.status)
+                response = json.loads(response.data)
                 while response['Status'] != 302:
                     self.assertEqual(301, response['Status'])
+                    self.assertNotIn('Retry-After', response)
                     response = self._get_url_json(GET, furl(response['Location']))
-
+                self.assertNotIn('Retry-After', response)
                 response = self._get_url(GET, furl(response['Location']), stream=True)
                 self._validate_file_response(response, self._file_ext(file))
 
