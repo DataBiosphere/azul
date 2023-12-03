@@ -20,6 +20,13 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5536 Timebox DRS requests
+==========================
+
+The AZUL_TERRA_TIMEOUT environment variable should be removed from any
+``environment.py`` files for personal deployments that define it (uncommon).
+
+
 #5703 Consolidate dependency updates into single bi-weekly issue
 ================================================================
 

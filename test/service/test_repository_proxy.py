@@ -125,7 +125,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                                       urllib3.PoolManager(ca_certs=certifi.where())))
     def test_repository_files_proxy(self, mock_get_cached_sources):
         mock_get_cached_sources.return_value = []
-        client = http_client()
+        client = http_client(log)
 
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
         file_version = '2018-09-12T12:11:54.054628Z'
@@ -198,7 +198,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             for i, source_name in enumerate(self.mock_source_names + extra_sources)
         }
         mock_list_snapshots.return_value = mock_source_names_by_id
-        client = http_client()
+        client = http_client(log)
         azul_url = furl(url=self.base_url,
                         path='/repository/sources',
                         query_params=dict(catalog=self.catalog))

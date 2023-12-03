@@ -38,6 +38,12 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.drs import (
+    DRSClient,
+)
+from azul.http import (
+    HasCachedHttpClient,
+)
 from azul.indexer import (
     SimpleSourceSpec,
     SourceRef,
@@ -88,7 +94,8 @@ class CannedBundle(HCABundle[CannedBundleFQID]):
 
 
 @dataclass(frozen=True)
-class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, CannedBundleFQID]):
+class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, CannedBundleFQID],
+             HasCachedHttpClient):
     _sources: Set[SimpleSourceSpec]
 
     @classmethod
@@ -215,6 +222,12 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return CannedFileDownload
+
+    def drs_client(self,
+                   authentication: Optional[Authentication] = None
+                   ) -> DRSClient:
+        assert authentication is None, type(authentication)
+        return DRSClient(http_client=self._http_client)
 
     def validate_version(self, version: str) -> None:
         parse_dcp2_version(version)

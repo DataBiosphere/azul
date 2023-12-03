@@ -18,15 +18,15 @@ from azul.chalice import (
     BadGatewayError,
     ServiceUnavailableError,
 )
+from azul.http import (
+    LimitedTimeoutException,
+)
 from azul.service import (
     Filters,
     ServiceAppController,
 )
 from azul.service.source_service import (
     SourceService,
-)
-from azul.terra import (
-    TerraTimeoutException,
 )
 from azul.types import (
     JSONs,
@@ -49,7 +49,7 @@ class SourceController(ServiceAppController):
             sources = self._source_service.list_sources(catalog, authentication)
         except PermissionError:
             raise UnauthorizedError
-        except TerraTimeoutException as e:
+        except LimitedTimeoutException as e:
             raise ServiceUnavailableError(*e.args)
         else:
             authoritative_source_ids = {source.id for source in sources}
@@ -75,7 +75,7 @@ class SourceController(ServiceAppController):
             source_ids = self._source_service.list_source_ids(catalog, authentication)
         except PermissionError:
             raise UnauthorizedError
-        except TerraTimeoutException as e:
+        except LimitedTimeoutException as e:
             raise ServiceUnavailableError(*e.args)
         else:
             return source_ids

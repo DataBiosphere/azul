@@ -9,6 +9,9 @@ from collections.abc import (
 from datetime import (
     timezone,
 )
+from io import (
+    BytesIO,
+)
 import json
 from operator import (
     attrgetter,
@@ -44,9 +47,6 @@ from tinyquery.context import (
     Column,
 )
 import urllib3
-from urllib3 import (
-    HTTPResponse,
-)
 
 from azul import (
     RequirementError,
@@ -358,7 +358,7 @@ class TestTDRSourceList(AzulUnitTestCase):
 
     def _mock_tdr_enumerate_snapshots(self,
                                       tdr_client: TDRClient
-                                      ) -> Callable[..., HTTPResponse]:
+                                      ) -> Callable[..., urllib3.HTTPResponse]:
         called = False
 
         def _mock_urlopen(_http_client, method, url, *, headers, **_kwargs):
@@ -368,20 +368,20 @@ class TestTDRSourceList(AzulUnitTestCase):
                              tdr_client._repository_endpoint('snapshots'))
             headers = {k.capitalize(): v for k, v in headers.items()}
             token = headers['Authorization'].split('Bearer ').pop()
-            response = HTTPResponse(status=200, body=json.dumps({
+            body = json.dumps({
                 'total': 1,
                 'filteredTotal': 1,
                 'items': [] if called else self._mock_snapshots(token)
-            }))
+            }).encode()
+            response = urllib3.HTTPResponse(status=200, body=BytesIO(body))
             called = True
             return response
 
         return _mock_urlopen
 
     def _mock_google_oauth_tokeninfo(self):
-        response = Mock()
-        response.status = 200
-        response.data = json.dumps({'azp': config.google_oauth2_client_id})
+        body = json.dumps({'azp': config.google_oauth2_client_id}).encode()
+        response = urllib3.HTTPResponse(status=200, body=BytesIO(body))
         mock_urlopen = Mock()
         mock_urlopen.return_value = response
         return mock_urlopen
@@ -435,11 +435,12 @@ class TestTDRSourceList(AzulUnitTestCase):
                                 iterator = iter(snapshots)
                                 while True:
                                     items = take(page_size, iterator)
-                                    yield HTTPResponse(status=200, body=json.dumps({
+                                    body = json.dumps({
                                         'total': len(snapshots) + (0 if filter is None else 42),
                                         'filteredTotal': len(snapshots),
                                         'items': list(items)
-                                    }))
+                                    }).encode()
+                                    yield urllib3.HTTPResponse(status=200, body=BytesIO(body))
                                     if not items:
                                         break
 

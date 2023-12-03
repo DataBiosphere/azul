@@ -165,14 +165,15 @@ def silenced_es_logger():
             assert es_log.level == original_log_level
 
 
-def http_body_log_message(log: logging.Logger,
-                          body_type: str,
-                          body: bytes | bytearray | str | None
+def http_body_log_message(body_type: str,
+                          body: bytes | bytearray | str | None,
+                          *,
+                          verbatim: bool = False,
                           ) -> str:
     if body is None:
         return f'… without {body_type} body'
     else:
-        if log.isEnabledFor(logging.DEBUG):
+        if verbatim:
             if isinstance(body, (bytes, bytearray)):
                 body = body.decode(errors='ignore')
         else:

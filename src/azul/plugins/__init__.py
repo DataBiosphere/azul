@@ -27,7 +27,6 @@ from typing import (
 )
 
 import attr
-import urllib3
 
 from azul import (
     CatalogName,
@@ -39,9 +38,6 @@ from azul.chalice import (
 )
 from azul.drs import (
     DRSClient,
-)
-from azul.http import (
-    http_client,
 )
 from azul.indexer import (
     BUNDLE,
@@ -431,7 +427,8 @@ class MetadataPlugin(Plugin[BUNDLE]):
         raise NotImplementedError
 
 
-class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
+class RepositoryPlugin(Plugin[BUNDLE],
+                       Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
 
     @classmethod
     def type_name(cls) -> str:
@@ -591,14 +588,16 @@ class RepositoryPlugin(Plugin[BUNDLE], Generic[BUNDLE, SOURCE_SPEC, SOURCE_REF, 
         """
         raise NotImplementedError
 
+    @abstractmethod
     def drs_client(self,
                    authentication: Optional[Authentication] = None
                    ) -> DRSClient:
-        return DRSClient(http_client=self._http_client)
-
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        return http_client()
+        """
+        Returns a DRS client that uses the given authentication with requests to
+        the DRS server. If a concrete subclass doesn't support authentication,
+        it should assert that the argument is ``None``.
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def file_download_class(self) -> Type['RepositoryFileDownload']:

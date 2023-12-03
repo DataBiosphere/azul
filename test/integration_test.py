@@ -12,7 +12,6 @@ from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
 from contextlib import (
-    AbstractContextManager,
     contextmanager,
 )
 import csv
@@ -40,6 +39,7 @@ import time
 from typing import (
     Any,
     Callable,
+    ContextManager,
     IO,
     Optional,
     Protocol,
@@ -82,6 +82,7 @@ from openapi_spec_validator import (
 )
 import requests
 import urllib3
+import urllib3.request
 
 from azul import (
     CatalogName,
@@ -129,6 +130,9 @@ from azul.logging import (
 from azul.modules import (
     load_app_module,
     load_script,
+)
+from azul.oauth2 import (
+    OAuth2Client,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -390,12 +394,12 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     num_fastq_bytes = 1024 * 1024
 
-    _http: urllib3.PoolManager
-    _plain_http: urllib3.PoolManager
+    _http: urllib3.request.RequestMethods
+    _plain_http: urllib3.request.RequestMethods
 
     def setUp(self) -> None:
         super().setUp()
-        self._plain_http = http_client()
+        self._plain_http = http_client(log)
         # Note that this attribute is swizzled in self._authorization_context
         self._http = self._plain_http
 
@@ -709,22 +713,40 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._test_drs(catalog, file_uuid, file_ext)
 
     @property
-    def _service_account_credentials(self) -> AbstractContextManager:
-        return self._authorization_context(self._tdr_client)
+    def _service_account_credentials(self) -> ContextManager:
+        client = self._service_account_oauth2_client
+        return self._authorization_context(client)
+
+    @cached_property
+    def _service_account_oauth2_client(self):
+        provider = self._tdr_client.credentials_provider
+        return OAuth2Client(credentials_provider=provider)
 
     @property
-    def _public_service_account_credentials(self) -> AbstractContextManager:
-        return self._authorization_context(self._public_tdr_client)
+    def _public_service_account_credentials(self) -> ContextManager:
+        client = self._public_service_account_oauth2_client
+        return self._authorization_context(client)
+
+    @cached_property
+    def _public_service_account_oauth2_client(self):
+        provider = self._public_tdr_client.credentials_provider
+        return OAuth2Client(credentials_provider=provider)
 
     @property
-    def _unregistered_service_account_credentials(self) -> AbstractContextManager:
-        return self._authorization_context(self._unregistered_tdr_client)
+    def _unregistered_service_account_credentials(self) -> ContextManager:
+        client = self._unregistered_service_account_oauth2_client
+        return self._authorization_context(client)
+
+    @cached_property
+    def _unregistered_service_account_oauth2_client(self):
+        provider = self._unregistered_tdr_client.credentials_provider
+        return OAuth2Client(credentials_provider=provider)
 
     @contextmanager
-    def _authorization_context(self, tdr: TDRClient) -> AbstractContextManager:
+    def _authorization_context(self, oauth2_client: OAuth2Client) -> ContextManager:
         old_http = self._http
         try:
-            self._http = tdr._http_client
+            self._http = oauth2_client._http_client
             yield
         finally:
             self._http = old_http
@@ -799,19 +821,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                            *,
                            stream: bool = False
                            ) -> urllib3.HTTPResponse:
+        # The type of client used will be evident from the logger name in the
+        # log message. Authenticated requests will be logged by the azul.oauth2
+        # module, plain ones will be logged by this module's logger.
         if url.host in self.authenticating_hosts:
-            http, text = self._http, 'contextual'
+            http = self._http
         else:
-            http, text = self._plain_http, 'plain'
+            http = self._plain_http
         url = str(url)
-        log.info('%s %s using %s client...', method, url, text)
         response = http.request(method=method,
                                 url=url,
                                 retries=urllib3.Retry(total=30, redirect=0),
                                 redirect=False,
                                 preload_content=not stream)
         assert isinstance(response, urllib3.HTTPResponse)
-        log.info('... -> %i', response.status)
         return response
 
     def _assertResponseStatus(self,
@@ -1276,7 +1299,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
-        invalid_client = TDRClient(credentials_provider=invalid_provider)
+        invalid_client = OAuth2Client(credentials_provider=invalid_provider)
         with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
@@ -1730,7 +1753,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
 class SwaggerResourceIntegrationTest(AzulTestCase):
 
     def test(self):
-        http = http_client()
+        http = http_client(log)
         for component, base_url in [
             ('service', config.service_endpoint),
             ('indexer', config.indexer_endpoint)
