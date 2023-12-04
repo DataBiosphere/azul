@@ -470,7 +470,9 @@ class AWS:
                        event_name,
                        request.method,
                        request.url)
-        message = http_body_log_message(boto3_log, 'request', request.body)
+        message = http_body_log_message('request',
+                                        request.body,
+                                        verbatim=self._log_body_verbatim)
         boto3_log.info('%s:\t%s', event_name, message)
         return None
 
@@ -482,9 +484,15 @@ class AWS:
         event_name = self._shorten_event_name(event_name, self._response_event_name)
         response = kwargs['response_dict']
         boto3_log.info('%s:\tGot %s response', event_name, response['status_code'])
-        message = http_body_log_message(boto3_log, 'response', response.get('body'))
+        message = http_body_log_message('response',
+                                        response.get('body'),
+                                        verbatim=self._log_body_verbatim)
         boto3_log.info('%s:\t%s', event_name, message)
         return None
+
+    @property
+    def _log_body_verbatim(self):
+        return boto3_log.isEnabledFor(logging.DEBUG)
 
     def _shorten_event_name(self, event_name: str, rm_prefix: str) -> str:
         prefix, _, suffix = event_name.partition('.')

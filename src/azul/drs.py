@@ -26,7 +26,7 @@ from furl import (
 from more_itertools import (
     one,
 )
-import urllib3
+import urllib3.request
 
 from azul import (
     RequirementError,
@@ -37,7 +37,8 @@ from azul import (
     require,
 )
 from azul.http import (
-    http_client,
+    HasCachedHttpClient,
+    LimitedRetryHttpClient,
 )
 from azul.types import (
     MutableJSON,
@@ -105,7 +106,7 @@ class DRSURI(metaclass=ABCMeta):
         return subcls.parse(drs_uri)
 
     @abstractmethod
-    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> str:
+    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> furl:
         """
         Translate the DRS URI into a DRS URL. All query params included in the
         DRS URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
@@ -124,11 +125,11 @@ class RegularDRSURI(DRSURI):
     def parse(cls, drs_uri: str) -> 'RegularDRSURI':
         return cls(uri=furl(drs_uri))
 
-    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> str:
+    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> furl:
         url = self.uri.copy().set(scheme='https')
         url.set(path=drs_object_url_path(object_id=one(self.uri.path.segments),
                                          access_id=access_id))
-        return str(url)
+        return url
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True, slots=True)
@@ -167,7 +168,7 @@ class CompactDRSURI(DRSURI):
         return cls(namespace=prefix,
                    accession=accession)
 
-    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> str:
+    def to_url(self, client: 'DRSClient', access_id: Optional[str] = None) -> furl:
         url = client.id_client.resolve(self.namespace, self.accession)
         # The URL pattern registered at identifiers.org ought to replicate the
         # DRS spec, but we have to re-create the path using the spec because the
@@ -175,10 +176,13 @@ class CompactDRSURI(DRSURI):
         require(str(url.path) == drs_object_url_path(object_id=self.accession),
                 'Unexpected DRS URL format', url)
         url.set(path=drs_object_url_path(object_id=self.accession, access_id=access_id))
-        return str(url)
+        return url
 
 
-class IdentifiersDotOrgClient:
+class IdentifiersDotOrgClient(HasCachedHttpClient):
+
+    def _create_http_client(self) -> urllib3.request.RequestMethods:
+        return LimitedRetryHttpClient(super()._create_http_client())
 
     def resolve(self, prefix: str, accession: str) -> mutable_furl:
         namespace_id = self._prefix_to_namespace(prefix)
@@ -189,10 +193,6 @@ class IdentifiersDotOrgClient:
         require(placeholder in url_pattern, url_pattern)
         url = url_pattern.replace(placeholder, accession)
         return furl(url)
-
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        return http_client()
 
     _api_url = 'https://registry.api.identifiers.org/restApi/'
 
@@ -211,20 +211,16 @@ class IdentifiersDotOrgClient:
 
     def _api_request(self, path: str, **args) -> MutableJSON:
         url = furl(self._api_url).add(path=path, args=args)
-        response = self._request(str(url))
-        require(response.status == 200)
-        return json.loads(response.data)
-
-    def _request(self, url: str) -> urllib3.HTTPResponse:
-        log.info('GET %s …', url)
-        response = self._http_client.request('GET', url)
-        log.info('-> %r %r %r', response.status, response.data, response.headers)
-        return response
+        response = self._http_client.request('GET', str(url))
+        if response.status == 200:
+            return json.loads(response.data)
+        else:
+            raise DRSStatusException(url, response)
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class DRSClient:
-    http_client: urllib3.PoolManager
+    _http_client: urllib3.request.RequestMethods
 
     @cached_property
     def id_client(self) -> IdentifiersDotOrgClient:
@@ -275,7 +271,7 @@ class DRSClient:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
             else:
-                raise DRSError(response)
+                raise DRSStatusException(url, response)
 
     def _get_object_access(self,
                            drs_uri: str,
@@ -295,16 +291,14 @@ class DRSClient:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
             else:
-                raise DRSError(response)
+                raise DRSStatusException(url, response)
 
-    def _request(self, url: str) -> urllib3.HTTPResponse:
-        log.info('GET %s ...', url)
-        response = self.http_client.request('GET', url, redirect=False)
-        log.info('-> %r %r %r', response.status, response.data, response.headers)
-        return response
+    def _request(self, url: furl) -> urllib3.HTTPResponse:
+        return self._http_client.request('GET', str(url), redirect=False)
 
 
-class DRSError(Exception):
+class DRSStatusException(Exception):
 
-    def __init__(self, response: urllib3.HTTPResponse) -> None:
-        super().__init__(response.status, response.data)
+    def __init__(self, url: furl, response: urllib3.HTTPResponse) -> None:
+        super().__init__(f'Unexpected response from {url}',
+                         response.status, response.data)

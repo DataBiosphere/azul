@@ -49,7 +49,7 @@ from azul.modules import (
     load_app_module,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 Queue = Any  # place-holder for boto3's SQS queue resource
 
@@ -61,7 +61,7 @@ class Queues:
         self._json_body = json_body
 
     def list(self):
-        logger.info('Listing queues')
+        log.info('Listing queues')
         print(f'\n{"Queue Name":<35s}'
               f'{"Messages Available":^20s}'
               f'{"Messages In Flight":^20s}'
@@ -86,10 +86,10 @@ class Queues:
             self._dump(queue, queue_name + '.json')
 
     def _dump(self, queue, path):
-        logger.info('Writing messages from queue %r to file %r', queue.url, path)
+        log.info('Writing messages from queue %r to file %r', queue.url, path)
         messages = self._get_messages(queue)
         self._dump_messages(messages, queue.url, path)
-        logger.info(f'Finished writing {path!r}')
+        log.info(f'Finished writing {path!r}')
         self._cleanup_messages(queue, messages)
 
     def _get_messages(self, queue):
@@ -111,10 +111,10 @@ class Queues:
     def _cleanup_messages(self, queue, messages):
         message_batches = list(more_itertools.chunked(messages, 10))
         if self._delete:
-            logger.info('Removing messages from queue %r', queue.url)
+            log.info('Removing messages from queue %r', queue.url)
             self._delete_messages(message_batches, queue)
         else:
-            logger.info('Returning messages to queue %r', queue.url)
+            log.info('Returning messages to queue %r', queue.url)
             self._return_messages(message_batches, queue)
 
     def _dump_messages(self, messages, queue_url, path):
@@ -125,7 +125,7 @@ class Queues:
                 'messages': messages
             }
             json.dump(content, file, indent=4)
-        logger.info('Wrote %i messages', len(messages))
+        log.info('Wrote %i messages', len(messages))
 
     def _return_messages(self, message_batches, queue):
         for message_batch in message_batches:
@@ -211,8 +211,8 @@ class Queues:
             queue.reload()
             message_counts = [int(queue.attributes[attribute]) for attribute in attributes]
             length = sum(message_counts)
-            logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
-                         queue_name, length, *message_counts)
+            log.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
+                      queue_name, length, *message_counts)
             total += length
             lengths[queue_name] = length
         return total, lengths
@@ -240,10 +240,10 @@ class Queues:
             # Determine queue lengths
             total_length, queue_lengths = self._get_queue_lengths(queues)
             total_lengths.append(total_length)
-            logger.info('Counting %i messages in %i queues.',
-                        total_length, len(queue_lengths))
-            logger.info('Message count history (most recent first) is %r.',
-                        list(reversed(total_lengths)))
+            log.info('Counting %i messages in %i queues.',
+                     total_length, len(queue_lengths))
+            log.info('Message count history (most recent first) is %r.',
+                     list(reversed(total_lengths)))
 
             min_num_zeros = 60 // sleep_time
             assert min_num_zeros <= total_lengths.maxlen, min_num_zeros
@@ -251,7 +251,7 @@ class Queues:
             if num_total_lengths >= min_num_zeros:
                 if not any(islice(reversed(total_lengths), min_num_zeros)):
                     final_length = total_lengths[-1]
-                    logger.info('The queues have emptied.')
+                    log.info('The queues have emptied.')
                     break
                 if num_total_lengths == total_lengths.maxlen:
                     cummdiff = sum(
@@ -260,10 +260,10 @@ class Queues:
                     )
                     if cummdiff == 0:
                         final_length = total_lengths[-1]
-                        logger.info('The queues have stabilized.')
+                        log.info('The queues have stabilized.')
                         break
 
-            logger.info('Waiting for %s queue(s) to stabilize ...', len(queues))
+            log.info('Waiting for %s queue(s) to stabilize ...', len(queues))
             time.sleep(sleep_time)
 
         if final_length != 0:
@@ -276,11 +276,11 @@ class Queues:
             orig_queue = content['queue']
             messages = content['messages']
         queue = self.sqs.get_queue_by_name(QueueName=queue_name)
-        logger.info('Writing messages from file %r to queue %r', path, queue.url)
+        log.info('Writing messages from file %r to queue %r', path, queue.url)
         if orig_queue != queue.url:
             if force:
-                logger.warning('Messages originating from queue %r are being fed into queue %r',
-                               orig_queue, queue.url)
+                log.warning('Messages originating from queue %r are being fed into queue %r',
+                            orig_queue, queue.url)
             else:
                 raise RuntimeError(f'Cannot feed messages originating from {orig_queue!r} to {queue.url!r}. '
                                    f'Use --force to override.')
@@ -293,7 +293,7 @@ class Queues:
                     self._dump_messages(messages, orig_queue, path)
                 else:
                     assert len(remaining_messages) == len(messages)
-                    logger.info('No messages were submitted, not touching local file %r', path)
+                    log.info('No messages were submitted, not touching local file %r', path)
 
         while message_batches:
             message_batch = message_batches[0]
@@ -310,7 +310,7 @@ class Queues:
             if message_batches:
                 _cleanup()
             else:
-                logger.info('All messages were submitted, removing local file %r', path)
+                log.info('All messages were submitted, removing local file %r', path)
                 os.unlink(path)
 
     def purge(self, queue_name):
@@ -331,7 +331,7 @@ class Queues:
             self._handle_futures(futures)
 
     def _purge_queue(self, queue: Queue):
-        logger.info('Purging queue %r', queue.url)
+        log.info('Purging queue %r', queue.url)
         queue.purge()
         self._wait_for_queue_empty(queue)
 
@@ -340,7 +340,7 @@ class Queues:
             num_inflight_messages = int(queue.attributes['ApproximateNumberOfMessagesNotVisible'])
             if num_inflight_messages == 0:
                 break
-            logger.info('Queue %r has %i in-flight messages', queue.url, num_inflight_messages)
+            log.info('Queue %r has %i in-flight messages', queue.url, num_inflight_messages)
             time.sleep(3)
             queue.reload()
 
@@ -351,7 +351,7 @@ class Queues:
             num_messages = sum(map(int, map(queue.attributes.get, attribute_names)))
             if num_messages == 0:
                 break
-            logger.info('Queue %r still has %i messages', queue.url, num_messages)
+            log.info('Queue %r still has %i messages', queue.url, num_messages)
             time.sleep(3)
             queue.reload()
 
@@ -362,15 +362,15 @@ class Queues:
         mapping = one(response['EventSourceMappings'])
 
         def update_():
-            logger.info('%s push from %r to lambda function %r',
-                        'Enabling' if enable else 'Disabling', queue.url, function_name)
+            log.info('%s push from %r to lambda function %r',
+                     'Enabling' if enable else 'Disabling', queue.url, function_name)
             lambda_.update_event_source_mapping(UUID=mapping['UUID'],
                                                 Enabled=enable)
 
         while True:
             state = mapping['State']
-            logger.info('Push from %r to lambda function %r is in state %r.',
-                        queue.url, function_name, state)
+            log.info('Push from %r to lambda function %r is in state %r.',
+                     queue.url, function_name, state)
             if state in ('Disabling', 'Enabling', 'Updating'):
                 pass
             elif state == 'Enabled':
@@ -442,6 +442,6 @@ class Queues:
             e = future.exception()
             if e:
                 errors.append(e)
-                logger.error('Exception in worker thread', exc_info=e)
+                log.error('Exception in worker thread', exc_info=e)
         if errors:
             raise RuntimeError(errors)

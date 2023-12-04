@@ -28,7 +28,7 @@ from azul.types import (
     JSONs,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 Entities = JSONs
 

@@ -38,6 +38,12 @@ from azul.collections import (
 from azul.deployment import (
     aws,
 )
+from azul.drs import (
+    DRSClient,
+)
+from azul.http import (
+    HasCachedHttpClient,
+)
 from azul.indexer import (
     SimpleSourceSpec,
     SourceRef,
@@ -98,7 +104,8 @@ class DSSBundle(HCABundle[DSSBundleFQID]):
                         args={'version': file_version}))
 
 
-class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBundleFQID]):
+class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBundleFQID],
+             HasCachedHttpClient):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -401,6 +408,12 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
         url.path.add(['files', file_uuid])
         url.query.add(adict(version=file_version, replica=replica, token=token))
         return str(url)
+
+    def drs_client(self,
+                   authentication: Optional[Authentication] = None
+                   ) -> DRSClient:
+        assert authentication is None, type(authentication)
+        return DRSClient(http_client=self._http_client)
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return DSSFileDownload

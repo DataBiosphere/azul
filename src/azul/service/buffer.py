@@ -8,7 +8,7 @@ from typing import (
     Callable,
 )
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 class FlushableBuffer(BytesIO):

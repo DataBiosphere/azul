@@ -23,7 +23,7 @@ from azul.modules import (
     load_app_module,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -123,17 +123,17 @@ class Lambdas:
                 original_concurrency_limit = ast.literal_eval(lambda_tags[self.tag_name])
 
                 if original_concurrency_limit is not None:
-                    logger.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
+                    log.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
                     self._lambda.put_function_concurrency(FunctionName=lambda_name,
                                                           ReservedConcurrentExecutions=original_concurrency_limit)
                 else:
-                    logger.info(f'Removed concurrency limit for {lambda_name}.')
+                    log.info(f'Removed concurrency limit for {lambda_name}.')
                     self._lambda.delete_function_concurrency(FunctionName=lambda_name)
 
                 lambda_arn = lambda_settings['Configuration']['FunctionArn']
                 self._lambda.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
             else:
-                logger.warning(f'{lambda_name} is already enabled.')
+                log.warning(f'{lambda_name} is already enabled.')
         else:
             if self.tag_name not in lambda_tags.keys():
                 try:
@@ -146,12 +146,12 @@ class Lambdas:
                 else:
                     concurrency_limit = concurrency['ReservedConcurrentExecutions']
 
-                logger.info(f'Setting concurrency limit for {lambda_name} to zero.')
+                log.info(f'Setting concurrency limit for {lambda_name} to zero.')
                 new_tag = {self.tag_name: repr(concurrency_limit)}
                 self._lambda.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
                 self._lambda.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
             else:
-                logger.warning(f'{lambda_name} is already disabled.')
+                log.warning(f'{lambda_name} is already disabled.')
 
     def reset_lambda_roles(self):
         client = self._lambda
@@ -165,16 +165,16 @@ class Lambdas:
                         config.qualified_resource_name(lambda_name),
                         config.qualified_resource_name(other_lambda_name)
                     )
-                    logger.info('Temporarily updating %r to role %r', lambda_.name, temporary_role)
+                    log.info('Temporarily updating %r to role %r', lambda_.name, temporary_role)
                     client.update_function_configuration(FunctionName=lambda_.name,
                                                          Role=temporary_role)
-                    logger.info('Updating %r to role %r', lambda_.name, lambda_.role)
+                    log.info('Updating %r to role %r', lambda_.name, lambda_.role)
                     while True:
                         try:
                             client.update_function_configuration(FunctionName=lambda_.name,
                                                                  Role=lambda_.role)
                         except client.exceptions.ResourceConflictException:
-                            logger.info('Function %r is being updated. Retrying ...', lambda_.name)
+                            log.info('Function %r is being updated. Retrying ...', lambda_.name)
                             time.sleep(1)
                         else:
                             break

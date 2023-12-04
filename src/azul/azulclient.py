@@ -68,7 +68,7 @@ from azul.uuids import (
     validate_uuid_prefix,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -148,17 +148,17 @@ class AzulClient(SignatureHelper):
             def attempt(notification, i):
                 log_args = (indexer_url, notification, i)
                 try:
-                    logger.info('Notifying %s about %s, attempt %i.', *log_args)
+                    log.info('Notifying %s about %s, attempt %i.', *log_args)
                     self.post_bundle(indexer_url, notification)
                 except (requests.HTTPError, requests.ConnectionError) as e:
                     if i < 3:
-                        logger.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
+                        log.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
                         return notification, tpe.submit(partial(attempt, notification, i + 1))
                     else:
-                        logger.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
+                        log.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
                         return notification, e
                 else:
-                    logger.info('Success notifying %s about %s, attempt %i.', *log_args)
+                    log.info('Success notifying %s about %s, attempt %i.', *log_args)
                     return notification, None
 
             def handle_future(future):
@@ -186,14 +186,14 @@ class AzulClient(SignatureHelper):
                 handle_future(future)
 
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
-        logger.info('Sent notifications for %i of %i bundles for catalog %r.',
-                    indexed, total, catalog)
+        log.info('Sent notifications for %i of %i bundles for catalog %r.',
+                 indexed, total, catalog)
         if errors:
-            logger.error('Number of errors by HTTP status code:\n%s',
-                         printer.pformat(dict(errors)))
+            log.error('Number of errors by HTTP status code:\n%s',
+                      printer.pformat(dict(errors)))
         if missing:
-            logger.error('Unsent notifications and their HTTP status code:\n%s',
-                         printer.pformat(missing))
+            log.error('Unsent notifications and their HTTP status code:\n%s',
+                      printer.pformat(missing))
         if errors or missing:
             raise AzulClientNotificationError
 
@@ -233,8 +233,8 @@ class AzulClient(SignatureHelper):
             source = plugin.resolve_source(source)
 
             def message(partition_prefix: str) -> JSON:
-                logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
-                            partition_prefix, str(source.spec), catalog)
+                log.info('Remotely reindexing prefix %r of source %r into catalog %r',
+                         partition_prefix, str(source.spec), catalog)
                 return self.reindex_message(catalog, source, partition_prefix)
 
             messages = map(message, source.spec.prefix.partition_prefixes())
@@ -255,16 +255,16 @@ class AzulClient(SignatureHelper):
         source = self.repository_plugin(catalog).source_from_json(source)
         bundle_fqids = self.list_bundles(catalog, source, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
-        logger.info('After filtering obsolete versions, '
-                    '%i bundles remain in prefix %r of source %r in catalog %r',
-                    len(bundle_fqids), prefix, str(source.spec), catalog)
+        log.info('After filtering obsolete versions, '
+                 '%i bundles remain in prefix %r of source %r in catalog %r',
+                 len(bundle_fqids), prefix, str(source.spec), catalog)
         messages = (
             self.bundle_message(catalog, bundle_fqid)
             for bundle_fqid in bundle_fqids
         )
         num_messages = self.queue_notifications(messages)
-        logger.info('Successfully queued %i notification(s) for prefix %s of '
-                    'source %r', num_messages, prefix, source)
+        log.info('Successfully queued %i notification(s) for prefix %s of '
+                 'source %r', num_messages, prefix, source)
 
     def queue_notifications(self, messages: Iterable[JSON]) -> int:
         num_messages = 0
@@ -383,8 +383,8 @@ class AzulClient(SignatureHelper):
         self.index_service.create_indices(catalog)
 
     def delete_bundle(self, catalog: CatalogName, bundle_uuid, bundle_version):
-        logger.info('Deleting bundle %r, version %r in catalog %r.',
-                    bundle_uuid, bundle_version, catalog)
+        log.info('Deleting bundle %r, version %r in catalog %r.',
+                 bundle_uuid, bundle_version, catalog)
         notifications = [
             {
                 # FIXME: delete_bundle script fails with KeyError: 'source'
@@ -422,14 +422,14 @@ class AzulClient(SignatureHelper):
                 }
             }
         }
-        logger.info('Deindexing sources %r from catalog %r', sources, catalog)
-        logger.debug('Using query: %r', query)
+        log.info('Deindexing sources %r from catalog %r', sources, catalog)
+        log.debug('Using query: %r', query)
         response = es_client.delete_by_query(index=indices, body=query, slices='auto')
         if len(response['failures']) > 0:
             if response['version_conflicts'] > 0:
-                logger.error('Version conflicts encountered. Do not deindex while '
-                             'indexing is occurring. The index may now be in an '
-                             'inconsistent state.')
+                log.error('Version conflicts encountered. Do not deindex while '
+                          'indexing is occurring. The index may now be in an '
+                          'inconsistent state.')
             raise RuntimeError('Failures during deletion', response['failures'])
 
     @cached_property
@@ -458,19 +458,19 @@ class AzulClient(SignatureHelper):
         """
         work_queues = self.queues.get_queues(config.work_queue_names)
         if purge_queues:
-            logger.info('Disabling lambdas ...')
+            log.info('Disabling lambdas ...')
             self.queues.manage_lambdas(work_queues, enable=False)
-            logger.info('Purging queues: %s', ', '.join(work_queues.keys()))
+            log.info('Purging queues: %s', ', '.join(work_queues.keys()))
             self.queues.purge_queues_unsafely(work_queues)
         if delete_indices:
-            logger.info('Deleting indices ...')
+            log.info('Deleting indices ...')
             for catalog in catalogs:
                 self.delete_all_indices(catalog)
         if purge_queues:
-            logger.info('Re-enabling lambdas ...')
+            log.info('Re-enabling lambdas ...')
             self.queues.manage_lambdas(work_queues, enable=True)
         if create_indices:
-            logger.info('Creating indices ...')
+            log.info('Creating indices ...')
             for catalog in catalogs:
                 self.create_all_indices(catalog)
 

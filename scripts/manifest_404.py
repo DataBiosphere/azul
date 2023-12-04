@@ -28,15 +28,15 @@ from azul.logging import (
     configure_script_logging,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def clear_cached_manifests():
     s3 = aws.resource('s3')
     bucket = s3.Bucket(config.s3_bucket)
-    logger.debug(f'deleting bucket contents under {config.s3_bucket}/manifests/')
+    log.debug(f'deleting bucket contents under {config.s3_bucket}/manifests/')
     bucket.objects.filter(Prefix='manifests/').delete()
-    logger.debug('deletion complete')
+    log.debug('deletion complete')
 
 
 organTypes = [
@@ -97,14 +97,14 @@ def request_manifest(filters):
         'format': 'terra.bdbag'
     }
 
-    logger.debug(params)
+    log.debug(params)
     resp = requests.get(url=str(url), params=params)
     body = resp.json()
     assert body['Status'] == 301, body['Status']
 
     while True:
         url = furl(body['Location'])
-        logger.debug(f'location is {url}')
+        log.debug(f'location is {url}')
         time.sleep(0.5)
         resp = requests.get(url=str(url))
         body = resp.json()
@@ -113,7 +113,7 @@ def request_manifest(filters):
 
     assert body['Status'] == 302, body['Status']
     url = body['Location']
-    logger.debug(f'location is {url}')
+    log.debug(f'location is {url}')
     return url
 
 
@@ -130,7 +130,7 @@ def threaded_manifests():
 
 if __name__ == '__main__':
     # prefixes 41, 42, 51 were indexed before running
-    configure_script_logging(logger)
+    configure_script_logging(log)
     clear_cached_manifests()
     manifests = threaded_manifests()
     assert {200} == manifests, manifests

@@ -23,7 +23,7 @@ from azul.logging import (
     configure_script_logging,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def parse_google_key(response):
@@ -82,15 +82,15 @@ class CredentialsProvisioner:
             SecretId=name,
             SecretString=value
         )
-        logger.info("Successfully wrote value to AWS secret '%s'.", name)
+        log.info("Successfully wrote value to AWS secret '%s'.", name)
 
     def _create_secret(self, name):
         try:
             self.secrets_manager.create_secret(Name=name)
         except self.secrets_manager.exceptions.ResourceExistsException:
-            logger.info('AWS secret %s already exists.', name)
+            log.info('AWS secret %s already exists.', name)
         else:
-            logger.info('AWS secret %s created.', name)
+            log.info('AWS secret %s created.', name)
 
     def _secret_is_stored(self, name):
         try:
@@ -104,10 +104,11 @@ class CredentialsProvisioner:
 
     def _create_service_account_creds(self, service_account_email):
         iam = self.google_iam
-        key = iam.projects().serviceAccounts().keys().create(
-            name='projects/-/serviceAccounts/' + service_account_email, body={}
-        ).execute()
-        logger.info("Successfully created service account key for user '%s'", service_account_email)
+        key_name = 'projects/-/serviceAccounts/' + service_account_email
+        key = iam.projects().serviceAccounts().keys().create(name=key_name,
+                                                             body={}).execute()
+        log.info("Successfully created service account key for user '%s'",
+                 service_account_email)
         return parse_google_key(key)
 
     def _destroy_aws_secrets_manager_secret(self, secret_name):
@@ -117,26 +118,29 @@ class CredentialsProvisioner:
                 ForceDeleteWithoutRecovery=True
             )
         except self.secrets_manager.exceptions.ResourceNotFoundException:
-            logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
+            log.info('AWS secret %s does not exist. No changes will be made.',
+                     secret_name)
         else:
             assert response['Name'] == secret_name
-            # AWS docs recommend waiting for ResourceNotFoundException:
-            # "The deletion is an asynchronous process. There might be a short
-            # delay". See https://aws.amazon.com/premiumsupport/knowledge-center/delete-secrets-manager-secret/
+            # AWS docs recommend waiting for ResourceNotFoundException: "The
+            # deletion is an asynchronous process. There might be a short delay"
+            #
+            # https://aws.amazon.com/premiumsupport/knowledge-center/delete-secrets-manager-secret/
+            #
             deadline = time.time() + 60
             while True:
                 try:
                     self.secrets_manager.describe_secret(SecretId=secret_name)
                 except self.secrets_manager.exceptions.ResourceNotFoundException:
-                    logger.info('Successfully deleted AWS secret %r.', secret_name)
+                    log.info('Successfully deleted AWS secret %r.', secret_name)
                     break
                 else:
                     now = time.time()
                     if now >= deadline:
                         raise RuntimeError('Secret could not be destroyed', secret_name)
                     else:
-                        logger.info('Secret %r not yet deleted. Will keep checking for %.3fs.',
-                                    secret_name, deadline - now)
+                        log.info('Secret %r not yet deleted. Will keep checking for %.3fs.',
+                                 secret_name, deadline - now)
                         time.sleep(5)
 
     def _destroy_service_account_creds(self, service_account_email, secret_name):
@@ -145,33 +149,38 @@ class CredentialsProvisioner:
                 SecretId=config.secrets_manager_secret_name(secret_name)
             )
         except self.secrets_manager.exceptions.ResourceNotFoundException:
-            logger.info('Secret already deleted, cannot get key_id for %s', service_account_email)
+            log.info('Secret already deleted, cannot get key_id for %s',
+                     service_account_email)
             return
         else:
             key_id = json.loads(creds['SecretString'])['private_key_id']
             iam = self.google_iam
             try:
-                iam.projects().serviceAccounts().keys().delete(
-                    name='projects/-/serviceAccounts/' + service_account_email + '/keys/' + key_id).execute()
+                key_name = f'projects/-/serviceAccounts/{service_account_email}/keys/{key_id}'
+                iam.projects().serviceAccounts().keys().delete(name=key_name).execute()
             except HttpError as e:
                 if e.resp.reason != 'Not Found':
                     raise
-            logger.info("Successfully deleted service account key with id '%s' for user '%s'",
-                        key_id, service_account_email)
+            log.info("Successfully deleted service account key with id '%s' for user '%s'",
+                     key_id, service_account_email)
 
 
 if __name__ == '__main__':
     # Suppress noisy warning from Google library. See
+    #
     # https://github.com/googleapis/google-api-python-client/issues/299#issuecomment-255793971
+    #
     logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
-    configure_script_logging(logger)
+    configure_script_logging(log)
     provision_parser = argparse.ArgumentParser(add_help=False)
     group = provision_parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--build', '-b', action='store_true', dest='build',
-                       help='Create credentials instead of destroying them. This action is idempotent.')
+                       help='Create credentials instead of destroying them. '
+                            'This action is idempotent.')
     group.add_argument('--destroy', '-d', action='store_false', dest='build',
-                       help='Destroy credentials instead of building them. This action is idempotent.')
+                       help='Destroy credentials instead of building them. '
+                            'This action is idempotent.')
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help='Specify action', dest='action')
     subparsers.required = True

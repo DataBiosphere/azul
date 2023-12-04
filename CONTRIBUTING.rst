@@ -237,9 +237,8 @@ Logging
 
 * Loggers are always instantiated as follows::
 
-    log = logging.getLogger(__name__) # is preferred for new code
-    logger = logging.getLogger(__name__) # this is only OK in legacy code
-  
+    log = logging.getLogger(__name__)
+
 * At program entry points we use the appropriate configuration method from
   ``azul.logging``. Program entry points are
   

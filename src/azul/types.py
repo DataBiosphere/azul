@@ -17,10 +17,6 @@ from typing import (
     get_origin,
 )
 
-from more_itertools import (
-    one,
-)
-
 from azul.collections import (
     OrderedSet,
 )
@@ -247,7 +243,7 @@ def get_generic_type_params(cls: type[Generic],
     >>> get_generic_type_params(C)
     (ForwardRef('foo'),)
     """
-    base_cls = one(getattr(cls, '__orig_bases__'))
+    base_cls = getattr(cls, '__orig_bases__')[0]
     types = get_args(base_cls)
     if required_types:
         assert len(required_types) == len(types), len(types)

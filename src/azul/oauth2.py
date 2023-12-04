@@ -6,7 +6,9 @@ from collections.abc import (
     Sequence,
 )
 import json
+import logging
 from typing import (
+    TYPE_CHECKING,
     TypedDict,
     Union,
 )
@@ -24,7 +26,7 @@ from google.oauth2.credentials import (
 from google.oauth2.service_account import (
     Credentials as ServiceAccountCredentials,
 )
-import urllib3
+import urllib3.request
 
 from azul import (
     cached_property,
@@ -33,8 +35,11 @@ from azul import (
     require,
 )
 from azul.http import (
-    http_client,
+    HasCachedHttpClient,
+    HttpClientDecorator,
 )
+
+log = logging.getLogger(__name__)
 
 ScopedCredentials = Union[ServiceAccountCredentials, TokenCredentials]
 
@@ -63,15 +68,28 @@ class TokenInfo(TypedDict):
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class OAuth2Client:
+class OAuth2Client(HasCachedHttpClient):
     credentials_provider: CredentialsProvider
 
     @property
     def credentials(self) -> ScopedCredentials:
         return self.credentials_provider.scoped_credentials()
 
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
+    # The AuthorizedHttp class declares the second constructor argument to be a
+    # PoolManager instance but, except for __del__, doesn't actually use methods
+    # from the latter, only those from RequestMethods, at least in the scenarios
+    # we use AuthorizedHttp in. The AuthorizedHttp.__del__ method calls `clear`
+    # on the wrapped instance, so this adapter only provides that.
+    #
+    if TYPE_CHECKING:
+        _PoolManagerAdapter = urllib3.PoolManager
+    else:
+        class _PoolManagerAdapter(HttpClientDecorator):
+
+            def clear(self):
+                pass
+
+    def _create_http_client(self) -> urllib3.request.RequestMethods:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials
         """
@@ -82,16 +100,17 @@ class OAuth2Client:
         # tokens can expire, but attempting to refresh them raises
         # `google.auth.exceptions.RefreshError` due to the credentials not being
         # configured with (among other fields) the client secret.
+        #
         return AuthorizedHttp(self.credentials,
-                              self._http_client_without_credentials,
+                              self._PoolManagerAdapter(super()._create_http_client()),
                               refresh_status_codes=())
 
     @cached_property
-    def _http_client_without_credentials(self):
+    def _http_client_without_credentials(self) -> urllib3.request.RequestMethods:
         """
         A urllib3 HTTP client for making unauthenticated requests
         """
-        return http_client()
+        return super()._create_http_client()
 
     def validate(self):
         """
