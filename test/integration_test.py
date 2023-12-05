@@ -527,7 +527,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         service_paths = {
             '/': None,
             '/openapi': None,
-            '/version': None,
+            # the version endpoint is tested separately
             '/index/summary': None,
             f'/index/{bundle_index}': {
                 'filters': json.dumps(self._fastq_filter(catalog))
@@ -1771,3 +1771,18 @@ class SwaggerResourceIntegrationTest(AzulTestCase):
                 with self.subTest(component=component, file=file):
                     response = http.request(GET, str(base_url / 'static' / file))
                     self.assertEqual(expected_status, response.status)
+
+
+class DeployedVersionIntegrationTest(AzulTestCase):
+
+    def test_version(self):
+        local_status = config.git_status
+        for component, endpoint in [
+            ('service', config.service_endpoint),
+            ('indexer', config.indexer_endpoint)
+        ]:
+            endpoint.set(path='/version')
+            response = requests.get(str(endpoint))
+            self.assertEqual(response.status_code, 200)
+            lambda_status = response.json()['git']
+            self.assertEqual(local_status, lambda_status)
