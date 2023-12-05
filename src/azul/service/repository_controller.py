@@ -241,7 +241,7 @@ class RepositoryController(SourceController):
         try:
             download.update(plugin, authentication)
         except LimitedTimeoutException as e:
-            ServiceUnavailableError(*e.args)
+            raise ServiceUnavailableError(*e.args)
         if download.retry_after is not None:
             retry_after = min(download.retry_after, int(1.3 ** request_index))
             query_params = {
