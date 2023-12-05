@@ -92,6 +92,16 @@ Deploy the ``gitlab`` component of any main deployment just before pushing the
 merge commit to the GitLab instance in that deployment.
 
 
+#5561 Explicitly set no lifecycle rule in TF for buckets without one
+====================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5617 False positive AWS Inspector findings after GitLab deploy
 ===============================================================
 

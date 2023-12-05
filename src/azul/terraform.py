@@ -384,6 +384,32 @@ def enable_s3_bucket_inventory(tf_config: JSON,
     return tf_config
 
 
+def set_empty_s3_bucket_lifecycle_config(tf_config: JSON) -> JSON:
+    """
+    Return a shallow copy of the given TerraForm configuration embellished with
+    an `aws_s3_bucket_lifecycle_configuration` resource for each of the
+    `aws_s3_bucket` resources in the argument that lack an explicit lifecycle
+    configuration. The argument is not modified but the return value may share
+    parts of the argument.
+    """
+    key = 'resource'
+    tf_config = copy_json(tf_config, key)
+    explicit = {
+        lifecycle_config['bucket'].split('.')[1]
+        for lifecycle_config in tf_config[key].get('aws_s3_bucket_lifecycle_configuration', {}).values()
+    }
+    for resource_name, bucket in tf_config[key].get('aws_s3_bucket', {}).items():
+        if resource_name not in explicit:
+            # We can't create a completely empty policy, but a disabled policy
+            # achieves the goal of preventing/removing policies that originate
+            # from outside TF.
+            bucket.setdefault('lifecycle_rule', {
+                'enabled': False,
+                'expiration': {'days': 36500}
+            })
+    return tf_config
+
+
 U = TypeVar('U', bound=AnyJSON)
 
 
