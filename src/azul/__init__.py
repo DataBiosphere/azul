@@ -1030,6 +1030,10 @@ class Config:
         import json
         return json.loads(self.environ['azul_browser_sites'])
 
+    class GitStatus(TypedDict):
+        commit: str
+        dirty: bool
+
     @property
     def _git_status(self) -> dict[str, str]:
         import git
@@ -1040,7 +1044,7 @@ class Config:
         }
 
     @property
-    def lambda_git_status(self) -> dict[str, str]:
+    def lambda_git_status(self) -> GitStatus:
         return {
             'commit': self.environ['azul_git_commit'],
             'dirty': str_to_bool(self.environ['azul_git_dirty'])
