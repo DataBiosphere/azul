@@ -1824,11 +1824,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'ExecStartPre=/usr/bin/docker pull ' + dind_image,
                                 jw(
                                     'ExecStart=/usr/bin/docker',
-                                    'run',
-                                    '--name prune-images',
-                                    '--rm',
-                                    '--volume /var/run/docker.sock:/var/run/docker.sock',
-                                    dind_image,
                                     'exec',  # Execute (as in `docker exec`) …
                                     'gitlab-dind',  # … inside the gitlab-dind container …
                                     'docker',  # … the docker …
