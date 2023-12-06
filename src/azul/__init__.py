@@ -1035,12 +1035,16 @@ class Config:
         dirty: bool
 
     @property
-    def _git_status(self) -> dict[str, str]:
+    def _git_status_env(self) -> dict[str, str]:
+        return {'azul_git_' + k: str(v) for k, v in self.git_status.items()}
+
+    @property
+    def git_status(self) -> GitStatus:
         import git
         repo = git.Repo(self.project_root)
         return {
-            'azul_git_commit': repo.head.object.hexsha,
-            'azul_git_dirty': str(repo.is_dirty()),
+            'commit': repo.head.object.hexsha,
+            'dirty': repo.is_dirty()
         }
 
     @property
@@ -1083,7 +1087,7 @@ class Config:
         """
         return (
             self._lambda_env(outsource=False)
-            | self._git_status
+            | self._git_status_env
             | self._aws_account_name
         )
 
