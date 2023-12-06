@@ -178,7 +178,7 @@ class Health:
             require(keys.issubset(self.all_keys))
         else:
             keys = self.all_keys
-        json = {k: getattr(self, k) for k in keys}
+        json = {k: getattr(self, k) for k in sorted(keys)}
         json['up'] = all(v['up'] for v in json.values())
         return json
 
