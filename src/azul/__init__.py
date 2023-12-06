@@ -1491,9 +1491,9 @@ class Config:
             gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.7.0',
             dind=f'docker.io/library/docker:{self.docker_version}-dind',
             # The images below are not used within the security boundary:
-            signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
-            cerebro='docker.io/lmenezes/cerebro:0.9.4',
-            kibana='docker.elastic.co/kibana/kibana-oss:7.10.2'
+            _signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
+            _cerebro='docker.io/lmenezes/cerebro:0.9.4',
+            _kibana='docker.elastic.co/kibana/kibana-oss:7.10.2'
         )
 
     docker_platforms = [
