@@ -283,7 +283,6 @@ def pfb_schema_from_field_types(field_types: FieldTypes) -> JSON:
     entity_schemas = (
         {
             'name': entity_type,
-            'namespace': '',
             'type': 'record',
             'fields': list(_entity_schema_recursive(field_type, entity_type))
         }
@@ -487,7 +486,6 @@ def _entity_schema_recursive(field_types: FieldTypes,
                              *path: str
                              ) -> Iterable[JSON]:
     for field_name, field_type in field_types.items():
-        namespace = '.'.join(path)
         plural = isinstance(field_type, list)
         if plural:
             field_type = one(field_type)
@@ -504,16 +502,22 @@ def _entity_schema_recursive(field_types: FieldTypes,
         if isinstance(field_type, Nested):
             field_type = field_type.properties
 
+        name_fields = {'name': field_name}
+        if path:
+            namespace = '.'.join(path)
+            qualified_name = namespace + '.' + field_name
+            name_fields['namespace'] = namespace
+        else:
+            qualified_name = field_name
+
         if isinstance(field_type, dict):
             yield {
-                'name': field_name,
-                'namespace': namespace,
+                **name_fields,
                 'type': {
                     # This is always an array, even if singleton is passed in
                     'type': 'array',
                     'items': {
-                        'name': field_name,
-                        'namespace': namespace,
+                        'name': qualified_name,
                         'type': 'record',
                         'fields': list(_entity_schema_recursive(field_type, *path, field_name))
                     }
@@ -532,14 +536,12 @@ def _entity_schema_recursive(field_types: FieldTypes,
             #        https://github.com/DataBiosphere/azul/issues/4094
             if path[0] == 'files' and not plural or field_name in exceptions:
                 yield {
-                    'name': field_name,
-                    'namespace': namespace,
+                    **name_fields,
                     'type': _nullable_to_pfb_types[field_type],
                 }
             else:
                 yield {
-                    'name': field_name,
-                    'namespace': namespace,
+                    **name_fields,
                     'type': {
                         'type': 'array',
                         'items': _nullable_to_pfb_types[field_type],
@@ -547,15 +549,13 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 }
         elif field_type is pass_thru_uuid4:
             yield {
-                'name': field_name,
-                'namespace': namespace,
+                **name_fields,
                 'type': ['string'],
                 'logicalType': 'UUID'
             }
         elif isinstance(field_type, ClosedRange):
             yield {
-                'name': field_name,
-                'namespace': namespace,
+                **name_fields,
                 'type': {
                     'type': 'array',
                     'items': {
@@ -572,25 +572,21 @@ def _entity_schema_recursive(field_types: FieldTypes,
         #        https://github.com/DataBiosphere/azul/issues/4094
         elif field_type is value_and_unit:
             yield {
-                'name': field_name,
-                'namespace': namespace,
+                **name_fields,
                 'type': {
-                    'name': field_name,
-                    'namespace': namespace,
                     'type': 'array',
                     'items': [
                         'null',
                         {
                             # FIXME: Why do we need to repeat `name` and `namespace`
-                            #        with the same values at three different depths?
+                            #        with the same values at two different depths?
                             #        https://github.com/DataBiosphere/azul/issues/4094
-                            'name': field_name,
-                            'namespace': namespace,
+                            'name': qualified_name,
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': name,
-                                    'namespace': namespace + '.' + field_name,
+                                    'namespace': qualified_name,
                                     # Although, not technically a null_str, it's effectively the same
                                     'type': _nullable_to_pfb_types[null_str]
                                 }
