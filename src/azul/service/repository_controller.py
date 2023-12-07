@@ -26,6 +26,12 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.chalice import (
+    ServiceUnavailableError,
+)
+from azul.http import (
+    LimitedTimeoutException,
+)
 from azul.indexer.document import (
     FieldType,
 )
@@ -232,8 +238,10 @@ class RepositoryController(SourceController):
                                 drs_uri=drs_uri,
                                 replica=replica,
                                 token=token)
-
-        download.update(plugin, authentication)
+        try:
+            download.update(plugin, authentication)
+        except LimitedTimeoutException as e:
+            raise ServiceUnavailableError(*e.args)
         if download.retry_after is not None:
             retry_after = min(download.retry_after, int(1.3 ** request_index))
             query_params = {

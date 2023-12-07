@@ -264,7 +264,8 @@ class TDRFileDownload(RepositoryFileDownload):
             assert self.retry_after is None, self
         else:
             drs_client = plugin.drs_client(authentication)
-            access = drs_client.get_object(self.drs_uri, access_method=AccessMethod.gs)
+            access = drs_client.get_object(self.drs_uri,
+                                           access_method=AccessMethod.gs)
             require(access.method is AccessMethod.https, access.method)
             require(access.headers is None, access.headers)
             signed_url = access.url

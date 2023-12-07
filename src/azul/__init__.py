@@ -1156,21 +1156,6 @@ class Config:
     # This attribute is set dynamically at runtime
     lambda_is_handling_api_gateway_request: bool = False
 
-    @property
-    def _timing_is_restricted(self) -> bool:
-        return self.lambda_is_handling_api_gateway_request
-
-    @property
-    def terra_client_timeout(self) -> float:
-        value = self.environ['AZUL_TERRA_TIMEOUT']
-        short_timeout, long_timeout = map(float, value.split(':'))
-        require(short_timeout <= long_timeout, short_timeout, long_timeout)
-        return short_timeout if self._timing_is_restricted else long_timeout
-
-    @property
-    def terra_client_retries(self) -> int:
-        return 0 if self._timing_is_restricted else 2
-
     # The length limit is more or less arbitrary. It was determined a few years
     # ago by looking at the resource name length limits for various types of AWS
     # resources. We've since increased the length limit from 30 to 40 and will

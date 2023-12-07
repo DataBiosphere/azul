@@ -14,6 +14,9 @@ boto3.
 from collections.abc import (
     Mapping,
 )
+from functools import (
+    cache,
+)
 from importlib.abc import (
     Loader,
 )
@@ -25,7 +28,6 @@ import os
 import pathlib
 import sys
 from typing import (
-    Optional,
     TypeVar,
 )
 
@@ -51,7 +53,8 @@ class EnvHook:
             if enabled == 0:
                 self._print('Currently disabled because the ENVHOOK environment variable is set to 0.')
             else:
-                self.setenv()
+                self.set_env(self.load_boot_env())
+                self.set_env(self.load_env())
                 self.share_aws_cli_credential_cache()
         finally:
             sys.stderr.flush()
@@ -125,14 +128,24 @@ class EnvHook:
         else:
             assert False
 
-    def setenv(self, new: Optional[Mapping[str, str]] = None):
-        export_environment = self._import_export_environment()
-        redact = getattr(export_environment, 'redact')
-        if new is None:
-            resolve_env = getattr(export_environment, 'resolve_env')
-            load_env = getattr(export_environment, 'load_env')
-            new, _ = load_env()
-            new = resolve_env(new)
+    def load_boot_env(self) -> Mapping[str, str]:
+        project_root: Path = self.export_environment.root_dir
+        boot = {}
+        with open(project_root / 'environment.boot') as f:
+            for line in f:
+                k, _, v = line.partition('=')
+                boot[k.strip()] = v.strip()
+        return boot
+
+    def load_env(self) -> Mapping[str, str]:
+        resolve_env = self.export_environment.resolve_env
+        load_env = self.export_environment.load_env
+        new, _ = load_env()
+        new = resolve_env(new)
+        return new
+
+    def set_env(self, new: Mapping[str, str]):
+        redact = self.export_environment.redact
         old = os.environ
         for k, (o, n) in sorted(zip_dict(old, new).items()):
             if o is None:
@@ -159,19 +172,24 @@ class EnvHook:
     def pycharm_hosted(self):
         return bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
 
-    def _import_export_environment(self):
+    @classmethod
+    @cache
+    def import_sibling_script(cls, module_name: str):
         # When this module is loaded from the `sitecustomize.py` symbolic link, the
         # directory containing the physical file may not be on the sys.path so we
-        # cannot use a normal import to load the `export_environment` module.
-        module_name = 'export_environment'
+        # cannot use a normal import to load any sibling scripts.
         file_name = module_name + '.py'
         parent_dir = Path(__file__).follow().parent
-        spec = importlib.util.spec_from_file_location(name=module_name,
-                                                      location=parent_dir / file_name)
-        export_environment = importlib.util.module_from_spec(spec)
+        path = parent_dir / file_name
+        spec = importlib.util.spec_from_file_location(name=module_name, location=path)
+        module = importlib.util.module_from_spec(spec)
         assert isinstance(spec.loader, Loader)
-        spec.loader.exec_module(export_environment)
-        return export_environment
+        spec.loader.exec_module(module)
+        return module
+
+    @property
+    def export_environment(self):
+        return self.import_sibling_script('export_environment')
 
     @classmethod
     def _print(cls, msg):
@@ -218,9 +236,9 @@ class EnvHook:
                 # `environment` and ensures that child processes also get access
                 # to AWS credentials, albeit temporary, unrefreshable ones.
                 credentials = session.get_credentials()
-                self.setenv(dict(AWS_ACCESS_KEY_ID=credentials.access_key,
-                                 AWS_SECRET_ACCESS_KEY=credentials.secret_key,
-                                 AWS_SESSION_TOKEN=credentials.token))
+                self.set_env(dict(AWS_ACCESS_KEY_ID=credentials.access_key,
+                                  AWS_SECRET_ACCESS_KEY=credentials.secret_key,
+                                  AWS_SESSION_TOKEN=credentials.token))
                 # We remove the `env` provider to ensure that these variables
                 # won't affect botocore/boto3, so that it can continue to use
                 # refreshable credentials from the CLI. Note that we already

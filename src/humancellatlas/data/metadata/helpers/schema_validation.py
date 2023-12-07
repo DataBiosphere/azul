@@ -18,7 +18,7 @@ from humancellatlas.data.metadata.helpers.exception import (
     RequirementError,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class SchemaValidator:

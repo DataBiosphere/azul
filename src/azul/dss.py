@@ -3,7 +3,7 @@ from datetime import (
 )
 import logging
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 version_format = '%Y-%m-%dT%H%M%S.%fZ'
 

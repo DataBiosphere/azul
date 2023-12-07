@@ -9,7 +9,6 @@ import json
 import logging
 from time import (
     sleep,
-    time,
 )
 from typing import (
     ClassVar,
@@ -44,13 +43,9 @@ from more_itertools import (
     one,
 )
 import urllib3
-from urllib3.exceptions import (
-    MaxRetryError,
-    TimeoutError,
-)
-from urllib3.response import (
-    HTTPResponse,
-)
+import urllib3.exceptions
+import urllib3.request
+import urllib3.response
 
 from azul import (
     RequirementError,
@@ -70,6 +65,9 @@ from azul.deployment import (
 )
 from azul.drs import (
     DRSClient,
+)
+from azul.http import (
+    LimitedRetryHttpClient,
 )
 from azul.indexer import (
     SourceRef as BaseSourceRef,
@@ -296,15 +294,9 @@ class TerraClientException(Exception):
     pass
 
 
-class TerraTimeoutException(TerraClientException):
-
-    def __init__(self, url: furl, timeout: float):
-        super().__init__(f'No response from {url} within {timeout} seconds')
-
-
 class TerraStatusException(TerraClientException):
 
-    def __init__(self, url: furl, response: HTTPResponse):
+    def __init__(self, url: furl, response: urllib3.response.HTTPResponse):
         super().__init__(f'Unexpected response from {url}',
                          response.status, response.data)
 
@@ -329,6 +321,9 @@ class TerraClient(OAuth2Client):
     """
     credentials_provider: TerraCredentialsProvider
 
+    def _create_http_client(self) -> urllib3.request.RequestMethods:
+        return LimitedRetryHttpClient(super()._create_http_client())
+
     def _request(self,
                  method: str,
                  url: furl,
@@ -336,35 +331,12 @@ class TerraClient(OAuth2Client):
                  headers=None,
                  body=None
                  ) -> urllib3.HTTPResponse:
-        timeout = config.terra_client_timeout
-        retries = config.terra_client_retries
-        log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
-                  method, url, headers, timeout, body)
-        start = time()
-        try:
-            # Limited retries on I/O errors such as refused or dropped
-            # connections. The latter are actually very likely if connections
-            # from the pool are reused after a long period of idleness. That's
-            # why we need at least one retry on read.
-            retry = urllib3.Retry(total=None,
-                                  connect=retries,
-                                  read=retries + 1,
-                                  redirect=0,
-                                  status=0,
-                                  other=retries)
-            response = self._http_client.request(method,
-                                                 str(url),
-                                                 headers=headers,
-                                                 timeout=timeout,
-                                                 retries=retry,
-                                                 body=body)
-        except (TimeoutError, MaxRetryError):
-            raise TerraTimeoutException(url, timeout)
+        response = self._http_client.request(method,
+                                             str(url),
+                                             headers=headers,
+                                             body=body)
 
         assert isinstance(response, urllib3.HTTPResponse)
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug('_request(…) -> %.3fs %r %r',
-                      time() - start, response.status, trunc_ellipses(response.data, 256))
         header_name = 'WWW-Authenticate'
         try:
             header_value = response.headers[header_name]

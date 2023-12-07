@@ -21,7 +21,7 @@ from azul import (
     require,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Latch:
@@ -209,7 +209,7 @@ class DeferredTaskExecutor(metaclass=ABCMeta):
         def log_exceptions_early(future):
             e = future.exception()
             if e is not None and not isinstance(e, self.UnsatisfiedDependency):
-                logger.warning('Exception in deferred callable', exc_info=True)
+                log.warning('Exception in deferred callable', exc_info=True)
 
         future = self.tpe.submit(run_if_possible)
         future.add_done_callback(log_exceptions_early)

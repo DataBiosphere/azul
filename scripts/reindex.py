@@ -30,7 +30,7 @@ from azul.plugins.repository.tdr import (
     TDRPlugin,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 defaults = AzulClient()
 
@@ -122,7 +122,7 @@ def main(argv: list[str]):
     if args.verbose:
         config.debug = 1
 
-    configure_script_logging(logger)
+    configure_script_logging(log)
 
     azul = AzulClient(num_workers=args.num_workers)
 
@@ -136,12 +136,12 @@ def main(argv: list[str]):
                 matches = fnmatch.filter(sources, source_glob)
                 if matches:
                     globs_matched.add(source_glob)
-                logger.debug('Source glob %r matched sources %r in catalog %r',
-                             source_glob, matches, catalog)
+                log.debug('Source glob %r matched sources %r in catalog %r',
+                          source_glob, matches, catalog)
                 sources_by_catalog[catalog].update(matches)
         unmatched = source_globs - globs_matched
         if unmatched:
-            logger.warning('Source(s) not found in any catalog: %r', unmatched)
+            log.warning('Source(s) not found in any catalog: %r', unmatched)
         require(any(sources_by_catalog.values()),
                 'No valid sources specified for any catalog')
     else:
@@ -170,7 +170,7 @@ def main(argv: list[str]):
                        create_indices=args.create or args.index and args.delete)
 
     if args.index:
-        logger.info('Queuing notifications for reindexing ...')
+        log.info('Queuing notifications for reindexing ...')
         reservation = None
         num_notifications = 0
         for catalog, sources in sources_by_catalog.items():
@@ -188,11 +188,11 @@ def main(argv: list[str]):
                 else:
                     num_notifications += azul.reindex(catalog, args.prefix)
             else:
-                logger.info('Skipping catalog %r (no matching sources)', catalog)
+                log.info('Skipping catalog %r (no matching sources)', catalog)
         if args.wait:
             if num_notifications == 0:
-                logger.warning('No notifications for prefix %r and catalogs %r were sent',
-                               args.prefix, args.catalogs)
+                log.warning('No notifications for prefix %r and catalogs %r were sent',
+                            args.prefix, args.catalogs)
             else:
                 azul.wait_for_indexer()
 

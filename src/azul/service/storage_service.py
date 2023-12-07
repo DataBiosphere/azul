@@ -38,7 +38,7 @@ if TYPE_CHECKING:
         S3ServiceResource,
     )
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 # 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
 AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880
@@ -170,7 +170,7 @@ class StorageService:
     def put_object_tagging(self, object_key: str, tagging: Tagging = None):
         deadline = time.time() + 60
         tagging = {'TagSet': [{'Key': k, 'Value': v} for k, v in tagging.items()]}
-        logger.info('Tagging object %r with %r', object_key, tagging)
+        log.info('Tagging object %r with %r', object_key, tagging)
         while True:
             try:
                 self.client.put_object_tagging(Bucket=self.bucket_name,
@@ -178,10 +178,10 @@ class StorageService:
                                                Tagging=tagging)
             except self.client.exceptions.NoSuchKey:
                 if time.time() > deadline:
-                    logger.error('Unable to tag %s on object.', tagging)
+                    log.error('Unable to tag %s on object.', tagging)
                     raise
                 else:
-                    logger.warning('Object key %s is not found. Retrying in 5 s.', object_key)
+                    log.warning('Object key %s is not found. Retrying in 5 s.', object_key)
                     time.sleep(5)
             else:
                 break

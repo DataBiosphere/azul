@@ -2,7 +2,7 @@
 name: Dependency upgrades
 about: 'Issue template for bi-weekly dependency upgrades'
 title: Upgrade dependencies
-labels: operator,infra,enh,debt 
+labels: orange,operator,infra,enh,debt 
 assignees: ''
 ---
 - [ ] Update [PyCharm image](https://github.com/DataBiosphere/azul-docker-pycharm)
