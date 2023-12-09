@@ -262,16 +262,16 @@ def pfb_metadata_entity(field_types: FieldTypes):
         'object': {
             'nodes': [
                 {
-                    'name': field_type,
+                    'name': entity_type,
                     'ontology_reference': '',
                     'values': {},
-                    'links': [] if field_type == 'files' else [{
+                    'links': [] if entity_type == 'files' else [{
                         'multiplicity': 'MANY_TO_MANY',
                         'dst': 'files',
                         'name': 'files'
                     }],
                     'properties': []
-                } for field_type in field_types
+                } for entity_type in field_types.keys()
             ],
             'misc': {}
         }
