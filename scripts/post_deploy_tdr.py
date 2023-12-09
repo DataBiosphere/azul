@@ -82,8 +82,8 @@ def verify_source(catalog: CatalogName, source_spec: TDRSourceSpec):
 
 
 def verify_source_access():
-    public_snapshots = set(public_tdr.snapshot_names_by_id())
-    all_snapshots = set(tdr.snapshot_names_by_id())
+    public_snapshots = public_tdr.snapshot_ids()
+    all_snapshots = tdr.snapshot_ids()
     diff = public_snapshots - all_snapshots
     require(not diff,
             'The public service account can access snapshots that the indexer '
