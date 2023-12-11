@@ -984,6 +984,16 @@ lm3_sources = mkdict(lm2_sources, 6, mkdelta([
     mksrc('datarepo-0fdfdb69', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20230314_lm3', 1),
 ]))
 
+lm4_sources = mkdict(lm3_sources, 7, mkdelta([
+    mksrc('datarepo-3d684ccd', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20231207_lm4', 1),
+    mksrc('datarepo-a65c8237', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20231207_lm4', 1),
+    mksrc('datarepo-43d1f2cb', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20231207_lm4', 1),
+    mksrc('datarepo-91587240', 'lungmap_prod_2620497955a349b28d2b53e0bdfcb176__20220308_20231207_lm4', 1),
+    mksrc('datarepo-252f2a7d', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20231207_lm4', 1),
+    mksrc('datarepo-e70d4665', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20231207_lm4', 1),
+    mksrc('datarepo-3f332829', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20231207_lm4', 1),
+]))
+
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -1028,7 +1038,8 @@ def env() -> Mapping[str, Optional[str]]:
                 ('hca', 'dcp33', dcp33_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
-                ('lungmap', 'lm3', lm3_sources)
+                ('lungmap', 'lm3', lm3_sources),
+                ('lungmap', 'lm4', lm4_sources)
             ] for suffix, internal in [
                 ('', False),
                 ('-it', True)
