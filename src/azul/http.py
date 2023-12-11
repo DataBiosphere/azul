@@ -94,19 +94,51 @@ class LimitedTimeoutException(Exception):
 
 class LimitedRetry(urllib3.Retry):
     """
-    >>> r = LimitedRetry.create(start=1.23, timeout=2.34, retries=5)
-    >>> r.other
-    5
+    First, set up the fixtures:
 
-    >>> r.increment(error='Foo').other
-    4
+    >>> from urllib3.exceptions import ReadTimeoutError
+    >>> from urllib3.connectionpool import ConnectionPool
+    >>> from typing import cast
+    >>> from time import sleep
+    >>> pool = cast(ConnectionPool, None)
+    >>> error = ReadTimeoutError(pool=pool, url='', message='')
+
+    With zero retries …
+
+    >>> r = LimitedRetry.create(retries=0)
+
+    … there still is one tentative retry on read:
+
+    >>> r.connect, r.read, r.redirect, r.status, r.other
+    (0, 1, 0, 0, 0)
+
+    A fresh instance is not exhausted:
+
+    >>> r.is_exhausted()
+    False
+
+    After a read error, that tentative retry is consumed …
+
+    >>> r = r.increment(method='GET', error=error)
+    >>> r.connect, r.read, r.redirect, r.status, r.other
+    (0, 0, 0, 0, 0)
+
+    … but since less than 10 ms have passed, the instance is not yet exhausted:
+
+    >>> r.is_exhausted()
+    False
+
+    Exhaustion sets in only after a longer delay:
+
+    >>> sleep(.02)
+    >>> r.is_exhausted()
+    True
     """
     start: float
-    timeout: float
     retries: int
 
     @classmethod
-    def create(cls, *, start: float, timeout: float, retries: int) -> Self:
+    def create(cls, *, retries: int) -> Self:
         # No retries on redirects, limited retries on server failures and I/O
         # errors such as refused or dropped connections. The latter are actually
         # very likely if connections from the pool are reused after a long
@@ -118,8 +150,7 @@ class LimitedRetry(urllib3.Retry):
                    status=retries,
                    other=retries,
                    status_forcelist={500, 502, 503})
-        self.start = start
-        self.timeout = timeout
+        self.start = time()
         self.retries = retries
         return self
 
@@ -130,7 +161,7 @@ class LimitedRetry(urllib3.Retry):
         # retries is to guarantee that the timeout is not exceeded.
         return (
             super().is_exhausted()
-            or self.retries == 0 and time() - self.start - self.timeout < .01
+            or self.retries == 0 and time() - self.start > .01
         )
 
     def new(self, **kwargs) -> Self:
@@ -139,7 +170,6 @@ class LimitedRetry(urllib3.Retry):
         # on the copy in order to determine if another attempt should be made.
         other = super().new(**kwargs)
         other.start = self.start
-        other.timeout = self.timeout
         other.retries = self.retries
         return other
 
@@ -160,8 +190,7 @@ class LimitedRetryHttpClient(HttpClientDecorator):
 
     def urlopen(self, method, url, **kwargs):
         timeout, retries = self.timeout, self.retries
-        start = time()
-        retry = LimitedRetry.create(start=start, timeout=timeout, retries=retries)
+        retry = LimitedRetry.create(retries=retries)
         try:
             return super().urlopen(method, url, retries=retry, timeout=timeout, **kwargs)
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.MaxRetryError):
