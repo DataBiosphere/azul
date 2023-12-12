@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5687 Update Terraform to 1.6.x
+===============================
+
+Everyone
+~~~~~~~~
+
+Update Terraform on your developer machines to version 1.6.5.
+
+
 #5046 Replace tinyquery with bigquery-emulator
 ==============================================
 
