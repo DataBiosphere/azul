@@ -1034,7 +1034,7 @@ found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications.
 
 ## Setting up the Azul build prerequisites on macOS 12 (Monterey)
 
-The steps below are examplary for Python 3.11.5. Replace `3.5.11` with the 
+The steps below are examplary for Python 3.11.6. Replace `3.11.6` with the 
 version listed in [environment.boot](environment.boot).   
 
 Make `bash` the default shell. Google it.
@@ -1050,10 +1050,10 @@ brew install zlib pyenv
 Install python
 
 ```
-pyenv install 3.11.5
+pyenv install 3.11.6
 ```
 
-Set `PYENV_VERSION` to `3.11.5` in `environment.local.py` at the project root.
+Set `PYENV_VERSION` to `3.11.6` in `environment.local.py` at the project root.
 Do not set `SYSTEM_VERSION_COMPAT`. For a more maintainable configuration use 
 `os.environ['azul_python_version']` as the value and `import os` at the top.
 
@@ -2321,7 +2321,7 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.11.5-bullseye bash
+(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.11.6-bullseye bash
 
 root@97804cb60d95:/# pip --version
 pip 22.0.4 from /usr/local/lib/python3.11/site-packages/pip (python 3.11)

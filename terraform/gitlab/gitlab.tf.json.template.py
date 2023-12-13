@@ -239,10 +239,10 @@ runner_image = config.docker_registry + config.docker_images['gitlab_runner']
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.25 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.26 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
-    'us-east-1': 'ami-08c4b5feb158beff4'
+    'us-east-1': 'ami-0a001e75ab2e7eae2'
 }
 
 gitlab_mount = '/mnt/gitlab'
@@ -1824,11 +1824,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'ExecStartPre=/usr/bin/docker pull ' + dind_image,
                                 jw(
                                     'ExecStart=/usr/bin/docker',
-                                    'run',
-                                    '--name prune-images',
-                                    '--rm',
-                                    '--volume /var/run/docker.sock:/var/run/docker.sock',
-                                    dind_image,
                                     'exec',  # Execute (as in `docker exec`) …
                                     'gitlab-dind',  # … inside the gitlab-dind container …
                                     'docker',  # … the docker …
@@ -1836,7 +1831,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'prune',  # … to delete, …
                                     '--force',  # … without prompting for confirmation, …
                                     '--all',  # … all images …
-                                    f'--filter "until={30 * 24}"',  # … except those from more recent builds.
+                                    f'--filter "until={90 * 24}h"',  # … except those from more recent builds.
                                     #
                                     # If we deleted more recent images, we
                                     # would risk failing the requirements
@@ -1859,6 +1854,50 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'Description=Scheduled pruning of stale docker images',
                                 '[Timer]',
                                 'OnCalendar=Sat *-*-* 12:0:0',
+                                '[Install]',
+                                'WantedBy=timers.target'
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/registry-garbage-collect.service',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=GitLab container registry garbage collection',
+                                'After=docker.service gitlab.service',
+                                'Requires=docker.service gitlab.service',
+                                '[Service]',
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
+                                'Type=simple',
+                                'TimeoutStartSec=5min',  # `docker pull` may take a long time
+                                'ExecStartPre=-/usr/bin/docker stop registry-garbage-collect',
+                                'ExecStartPre=-/usr/bin/docker rm registry-garbage-collect',
+                                'ExecStartPre=/usr/bin/docker pull ' + gitlab_image,
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'exec',  # Execute (as in `docker exec`) …
+                                    'gitlab',  # … inside the gitlab container …
+                                    '/opt/gitlab/bin/gitlab-ctl',  # … the gitlab-ctl …
+                                    'registry-garbage-collect',  # … garbage collect command
+                                    '-m'  # … and delete untagged images
+                                ),
+                                '[Install]',
+                                'WantedBy='
+                            )
+                        },
+                        {
+                            'path': '/etc/systemd/system/registry-garbage-collect.timer',
+                            'permissions': '0644',
+                            'owner': 'root',
+                            'content': jl(
+                                '[Unit]',
+                                'Description=Scheduled GitLab container registry garbage collection',
+                                '[Timer]',
+                                'OnCalendar=Sat *-*-* 14:0:0',
                                 '[Install]',
                                 'WantedBy=timers.target'
                             )
@@ -2030,7 +2069,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'gitlab',
                             'gitlab-runner',
                             'clamscan.timer',
-                            'prune-images.timer'
+                            'prune-images.timer',
+                            'registry-garbage-collect.timer'
                         ],
                         [
                             'amazon-cloudwatch-agent-ctl',

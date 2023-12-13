@@ -187,19 +187,20 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       prefix: str
                       ) -> list[TDRAnvilBundleFQID]:
         spec = source.spec
-        partition_prefix = spec.prefix.common + prefix
-        validate_uuid_prefix(partition_prefix)
+        common_prefix = spec.prefix.common
+        complete_prefix = common_prefix + prefix
+        validate_uuid_prefix(complete_prefix)
         primary = BundleEntityType.primary.value
         supplementary = BundleEntityType.supplementary.value
         duos = BundleEntityType.duos.value
         rows = list(self._run_sql(f'''
             SELECT datarepo_row_id, {primary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, primary))}
-            WHERE STARTS_WITH(datarepo_row_id, '{partition_prefix}')
+            WHERE STARTS_WITH(datarepo_row_id, '{complete_prefix}')
             UNION ALL
             SELECT datarepo_row_id, {supplementary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
-            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{partition_prefix}')
+            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{complete_prefix}')
         ''' + (
             ''
             if config.duos_service_url is None else
@@ -212,6 +213,11 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         bundles = []
         dataset_count = 0
         for row in rows:
+            # Reversibly tweak the entity UUID to prevent
+            # collisions between entity IDs and bundle IDs
+            bundle_uuid = uuids.change_version(row['datarepo_row_id'],
+                                               self.datarepo_row_uuid_version,
+                                               self.bundle_uuid_version)
             # We intentionally omit the WHERE clause for datasets so that we can
             # verify our assumption that each snapshot only contains rows for a
             # single dataset. This verification is performed independently and
@@ -220,15 +226,13 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             if row['entity_type'] == duos:
                 require(0 == dataset_count)
                 dataset_count += 1
-                if not row['datarepo_row_id'].startswith(partition_prefix):
+                # Ensure that one partition will always contain the DUOS bundle
+                # regardless of the choice of common prefix
+                if not bundle_uuid[len(common_prefix):].startswith(prefix):
                     continue
             bundles.append(TDRAnvilBundleFQID(
                 source=source,
-                # Reversibly tweak the entity UUID to prevent
-                # collisions between entity IDs and bundle IDs
-                uuid=uuids.change_version(row['datarepo_row_id'],
-                                          self.datarepo_row_uuid_version,
-                                          self.bundle_uuid_version),
+                uuid=bundle_uuid,
                 version=self._version,
                 entity_type=BundleEntityType(row['entity_type'])
             ))
@@ -374,7 +378,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         return result
 
     def _dataset_description(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
-        description = self.tdr.get_duos(bundle_fqid.source)['studyDescription']
+        duos_info = self.tdr.get_duos(bundle_fqid.source)
+        description = None if duos_info is None else duos_info.get('studyDescription')
         entity_id = change_version(bundle_fqid.uuid,
                                    self.bundle_uuid_version,
                                    self.datarepo_row_uuid_version)

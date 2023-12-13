@@ -297,7 +297,7 @@ def contribute(event: chalice.app.SQSEvent):
 
 @app.threshold(
     errors=int(config.aggregation_concurrency(retry=False) * 3),
-    throttles=int(12800 / config.aggregation_concurrency(retry=False))
+    throttles=int(19200 / config.aggregation_concurrency(retry=False))
 )
 @app.on_sqs_message(
     queue=config.tallies_queue_name(),
