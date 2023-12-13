@@ -1030,17 +1030,25 @@ class Config:
         import json
         return json.loads(self.environ['azul_browser_sites'])
 
+    class GitStatus(TypedDict):
+        commit: str
+        dirty: bool
+
     @property
-    def _git_status(self) -> dict[str, str]:
+    def _git_status_env(self) -> dict[str, str]:
+        return {'azul_git_' + k: str(v) for k, v in self.git_status.items()}
+
+    @property
+    def git_status(self) -> GitStatus:
         import git
         repo = git.Repo(self.project_root)
         return {
-            'azul_git_commit': repo.head.object.hexsha,
-            'azul_git_dirty': str(repo.is_dirty()),
+            'commit': repo.head.object.hexsha,
+            'dirty': repo.is_dirty()
         }
 
     @property
-    def lambda_git_status(self) -> dict[str, str]:
+    def lambda_git_status(self) -> GitStatus:
         return {
             'commit': self.environ['azul_git_commit'],
             'dirty': str_to_bool(self.environ['azul_git_dirty'])
@@ -1079,7 +1087,7 @@ class Config:
         """
         return (
             self._lambda_env(outsource=False)
-            | self._git_status
+            | self._git_status_env
             | self._aws_account_name
         )
 
