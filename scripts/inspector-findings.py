@@ -11,6 +11,9 @@ import json
 import logging
 import sys
 
+from azul.args import (
+    AzulArgumentHelpFormatter,
+)
 from azul.deployment import (
     aws,
 )
@@ -45,16 +48,18 @@ class ParseInspectorFindings:
     def _parse_args(cls, argv):
         import argparse
         parser = argparse.ArgumentParser(description=__doc__,
-                                         formatter_class=argparse.RawTextHelpFormatter)
+                                         formatter_class=AzulArgumentHelpFormatter)
         parser.add_argument('--severity', '-s',
-                            default=','.join(cls.default_severities),
-                            help='Limit the results to the severities specified, '
-                                 'comma-separated with no spaces.\n'
-                                 f"Default: '{','.join(cls.default_severities)}'\n"
-                                 f"Choices: {', '.join(cls.all_severities)}")
+                            default=cls.default_severities,
+                            help='Only fetch vulnerabilities with the specified'
+                                 ' severity. '
+                                 f'(choices: {cls.all_severities})',
+                            nargs='+',
+                            metavar='S',
+                            choices=cls.all_severities)
         parser.add_argument('--json', '-j',
                             default=False, action='store_true',
-                            help='Dump all findings to a JSON file.')
+                            help='Dump findings to a JSON file.')
         args = parser.parse_args(argv)
         return args
 
@@ -62,35 +67,37 @@ class ParseInspectorFindings:
         super().__init__()
         self.args = self._parse_args(argv)
         self.date = datetime.datetime.now().strftime('%Y-%m-%d')
-        self.severities = self.args.severity.split(',')
-        self.validate_severities()
         self.images = set()
         self.instances = set()
 
-    def validate_severities(self):
-        for severity in self.severities:
-            if severity not in self.all_severities:
-                raise ValueError('Invalid severity', severity)
-
     def main(self):
-        log.info('Fetching all findings from AWS Inspector')
+        log.info('Fetching findings from AWS Inspector')
+        criteria = {
+            'severity': [
+                {
+                    'comparison': 'EQUALS',
+                    'value': severity
+                }
+                for severity in self.args.severity
+            ]
+        }
         client = aws.client('inspector2')
         paginator = client.get_paginator('list_findings')
-        all_findings = [finding
-                        for page in paginator.paginate()
-                        for finding in page['findings']]
+        findings = [
+            finding
+            for page in paginator.paginate(filterCriteria=criteria)
+            for finding in page['findings']
+        ]
+        log.info('Fetched %i findings from AWS Inspector with severity %s',
+                 len(findings), self.args.severity)
         if self.args.json:
-            self.dump_to_json(all_findings)
-        log.info('Fetched %i findings from AWS Inspector with any severity',
-                 len(all_findings))
-        findings = defaultdict(list)
-        for finding in all_findings:
-            if finding['severity'] in self.severities:
-                vulnerability, summary = self.parse_finding(finding)
-                findings[vulnerability].append(summary)
-        log.info('Found %i unique vulnerabilities with severity matching %s',
-                 len(findings), self.severities)
-        self.write_to_csv(findings)
+            self.dump_to_json(findings)
+        parsed_findings = defaultdict(list)
+        for finding in findings:
+            vulnerability, summary = self.parse_finding(finding)
+            parsed_findings[vulnerability].append(summary)
+        log.info('Found %i unique vulnerabilities', len(parsed_findings))
+        self.write_to_csv(parsed_findings)
         log.info('Done.')
 
     def dump_to_json(self, findings: JSONs) -> None:
