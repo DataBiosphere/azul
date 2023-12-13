@@ -999,10 +999,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             with gzip.open(content) as buf:
                 self._validate_fastq_content(buf)
         else:
-            # FIXME: Re-enable assertion
-            #        https://github.com/DataBiosphere/azul/issues/5537
-            if False:
-                self.assertEqual(1, len(content.read(1)))
+            self.assertEqual(1, len(content.read(1)))
 
     def _validate_file_response(self,
                                 response: urllib3.HTTPResponse,
