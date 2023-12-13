@@ -194,7 +194,6 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                          file_uuid: str,
                          *,
                          file_version: Optional[str] = None,
-                         replica: Optional[str] = None,
                          ) -> Optional[str]:
         # Check all sources for the file. If a file_version was specified return
         # when we find a match, otherwise continue checking all sources and
@@ -243,8 +242,7 @@ class CannedFileDownload(RepositoryFileDownload):
                ) -> None:
         assert isinstance(plugin, Plugin)
         url = plugin._direct_file_url(file_uuid=self.file_uuid,
-                                      file_version=self.file_version,
-                                      replica=None)
+                                      file_version=self.file_version)
         self._location = url
 
     @property
