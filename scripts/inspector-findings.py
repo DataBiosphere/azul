@@ -73,6 +73,12 @@ class ParseInspectorFindings:
     def main(self):
         log.info('Fetching findings from AWS Inspector')
         criteria = {
+            'findingStatus': [
+                {
+                    'comparison': 'EQUALS',
+                    'value': 'ACTIVE'
+                }
+            ],
             'severity': [
                 {
                     'comparison': 'EQUALS',
