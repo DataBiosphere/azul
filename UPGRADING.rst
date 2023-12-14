@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5772 Upgrade dependencies 2023-12-11
+=====================================
+
+Everyone
+~~~~~~~~
+
+Update Python on your developer machines to version 3.11.7. In your working
+copy, run ``make virtualenv`` and ``make requirements envhook``.
+
+
 #5728 Many stale images in gitlab-dind and GitLab registry
 ==========================================================
 
