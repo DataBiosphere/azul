@@ -127,11 +127,16 @@ def delete_unused_images(repository):
         batches = map(list, partition(is_platform_image, unused_image_ids))
         for batch in batches:
             if batch:
-                log.info('Deleting images %r from repository %r', batch, repository)
-                response = aws.ecr.batch_delete_image(repositoryName=repository,
-                                                      imageIds=batch)
-                reject(bool(response['failures']),
-                       'Failed to delete images', response['failures'])
+                if config.terraform_keep_unused:
+                    log.info('Would delete images %r from repository %r but '
+                             'deletion of unused resources is disabled',
+                             batch, repository)
+                else:
+                    log.info('Deleting images %r from repository %r', batch, repository)
+                    response = aws.ecr.batch_delete_image(repositoryName=repository,
+                                                          imageIds=batch)
+                    reject(bool(response['failures']),
+                           'Failed to delete images', response['failures'])
     else:
         log.info('No stale images found, nothing to delete')
 
