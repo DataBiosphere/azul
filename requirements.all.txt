@@ -88,7 +88,7 @@ openpyxl==3.0.6
 orderedmultidict==1.0.1
 packaging==23.2
 pathable==0.4.3
-pip==23.1.2
+pip==23.3
 ply==3.11
 posix-ipc==1.1.1
 proto-plus==1.22.3
