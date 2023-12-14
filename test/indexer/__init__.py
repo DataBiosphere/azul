@@ -141,17 +141,20 @@ class IndexerTestCase(CatalogTestCase,
         hits = list(scan(client=self.es_client,
                          index=','.join(self.index_service.index_names(self.catalog)),
                          preserve_order=True))
-        for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
-            if (
+
+        def is_duos_contribution(entity_type, doc_type):
+            return (
                 config.is_anvil_enabled(self.catalog)
                 and entity_type in {'bundles', 'datasets'}
                 and doc_type is DocumentType.contribution
                 and 'description' in one(hit['_source']['contents']['datasets'])
-            ):
-                # DUOS contributions contain no lists
-                continue
-            self._verify_sorted_lists(hit['_source'])
+            )
+
+        for hit in hits:
+            entity_type, doc_type = self._parse_index_name(hit)
+            # DUOS contributions contain no lists
+            if not is_duos_contribution(entity_type, doc_type):
+                self._verify_sorted_lists(hit['_source'])
         return hits
 
     def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
