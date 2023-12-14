@@ -605,6 +605,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
 
+        # Make Terraform's deprecation warnings more compact
+        #
+        **{
+            'TF_CLI_ARGS_' + command: '-compact-warnings'
+            for command in ['validate', 'plan', 'apply']
+        },
+
         # BigQuery dataset location of the TDR snapshots the deployment is
         # configured to index. All configured snapshots must reside in the same
         # location.

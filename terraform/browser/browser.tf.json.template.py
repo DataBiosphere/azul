@@ -33,6 +33,7 @@ from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
     enable_s3_bucket_inventory,
+    set_empty_s3_bucket_lifecycle_config,
 )
 
 buckets = {
@@ -45,7 +46,7 @@ buckets = {
 
 def emit():
     bucket_id_key = '.bucket_id'
-    emit_tf(block_public_s3_bucket_access(enable_s3_bucket_inventory({
+    tf_config = {
         'data': {
             'aws_s3_bucket': {
                 'logs': {
@@ -381,7 +382,11 @@ def emit():
                 }
             }
         }
-    })))
+    }
+    tf_config = enable_s3_bucket_inventory(tf_config)
+    tf_config = block_public_s3_bucket_access(tf_config)
+    tf_config = set_empty_s3_bucket_lifecycle_config(tf_config)
+    emit_tf(tf_config)
 
 
 def bucket_behaviour(origin, *, path_pattern: str = None, **functions: bool) -> JSON:
