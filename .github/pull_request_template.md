@@ -16,11 +16,11 @@ Connected issues: #0000
 - [ ] PR is a draft
 - [ ] Target branch is `develop`
 - [ ] Name of PR branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
+- [ ] PR is connected to all connected issues via ZenHub
+- [ ] PR description links to connected issues
 - [ ] PR title references all connected issues
 - [ ] PR title matches<sup>1</sup> that of a connected issue <sub>or comment in PR explains why they're different</sub>
 - [ ] For each connected issue, there is at least one commit whose title references that issue
-- [ ] PR is connected to all connected issues via ZenHub
-- [ ] PR description links to connected issues
 - [ ] Added `p` tag to titles of partial commits
 - [ ] Added `partial` label to PR <sub>or this PR completely resolves all connected issues</sub>
 - [ ] All connected issues are resolved partially <sub>or this PR does not have the `partial` label</sub>

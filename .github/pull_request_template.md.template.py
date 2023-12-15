@@ -182,6 +182,24 @@ def main():
                     T.backport: 'backports/<7-digit SHA1 of most recent backported commit>'
                 }[t] + '`'
             },
+            iif(t is T.gitlab, {
+                'type': 'cli',
+                'content': 'Disconnected any other PRs currently connected to #4014 via ZenHub'
+            }),
+            iif(t is not t.backport, {
+                'type': 'cli',
+                'content': {
+                    T.default: 'PR is connected to all connected issues via ZenHub',
+                    T.gitlab: 'PR is connected to issue #4014 via ZenHub',
+                    T.hotfix: 'PR is connected to issue via ZenHub',
+                    T.promotion: 'PR is connected to issue via ZenHub',
+                    T.backport: None
+                }[t]
+            }),
+            iif(t not in (T.backport, T.gitlab), {
+                'type': 'cli',
+                'content': f'PR description links to connected {t.issues}'
+            }),
             iif(t is T.promotion, {
                 'type': 'cli',
                 'content': 'Title of connected issue matches `Promotion yyyy-mm-dd`'
@@ -218,24 +236,6 @@ def main():
             iif(t is T.default, {
                 'type': 'cli',
                 'content': 'For each connected issue, there is at least one commit whose title references that issue'
-            }),
-            iif(t is T.gitlab, {
-                'type': 'cli',
-                'content': 'Disconnected any other PRs currently connected to #4014 via ZenHub'
-            }),
-            iif(t is not t.backport, {
-                'type': 'cli',
-                'content': {
-                    T.default: 'PR is connected to all connected issues via ZenHub',
-                    T.gitlab: 'PR is connected to issue #4014 via ZenHub',
-                    T.hotfix: 'PR is connected to issue via ZenHub',
-                    T.promotion: 'PR is connected to issue via ZenHub',
-                    T.backport: None
-                }[t]
-            }),
-            iif(t not in (T.backport, T.gitlab), {
-                'type': 'cli',
-                'content': f'PR description links to connected {t.issues}'
             }),
             *iif(t is T.default, [
                 {
