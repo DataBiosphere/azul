@@ -239,6 +239,10 @@ def main():
             }),
             *iif(t is T.default, [
                 {
+                    'type': 'h2',
+                    'content': 'Author (partiality)'
+                },
+                {
                     'type': 'cli',
                     'content': 'Added `p` tag to titles of partial commits'
                 },
