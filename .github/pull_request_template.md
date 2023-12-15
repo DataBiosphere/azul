@@ -85,16 +85,16 @@ Uncheck the *Author (before every review)* checklists.
 
 - [ ] PR is not a draft
 - [ ] Ticket is in *Review requested* column
-- [ ] Requested review from primary reviewer
-- [ ] PR is assigned to primary reviewer
+- [ ] Requested review from system administrator
+- [ ] PR is assigned to system administrator
 
 
-### Primary reviewer (after requesting changes)
+### System administrator (after requesting changes)
 
 Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 
-### Primary reviewer (after approval)
+### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Labeled connected issues as `demo` or `no demo`

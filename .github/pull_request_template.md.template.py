@@ -442,11 +442,11 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Requested review from primary reviewer'
+                    'content': 'Requested review from system administrator'
                 },
                 {
                     'type': 'cli',
-                    'content': 'PR is assigned to primary reviewer'
+                    'content': 'PR is assigned to system administrator'
                 }
             ]),
             *iif(t is T.gitlab, [
@@ -464,7 +464,7 @@ def main():
             *iif(t in (T.default, T.backport), [
                 {
                     'type': 'h2',
-                    'content': 'Primary reviewer (after requesting changes)'
+                    'content': 'System administrator (after requesting changes)'
                 },
                 {
                     'type': 'p',
@@ -474,7 +474,7 @@ def main():
             ]),
             {
                 'type': 'h2',
-                'content': 'Primary reviewer (after approval)'
+                'content': 'System administrator (after approval)'
             },
             *iif(t is T.gitlab, [
                 {

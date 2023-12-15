@@ -30,7 +30,7 @@ Connected issue: #0000
 - [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading</sub>
 
 
-### Primary reviewer (after approval)
+### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`

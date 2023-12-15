@@ -25,7 +25,7 @@ Connected issue: #4014
 - [ ] Deployed changes to `prod.gitlab`
 
 
-### Primary reviewer (after approval)
+### System administrator (after approval)
 
 - [ ] Verified background migrations for `dev.gitlab` are complete
 - [ ] Verified background migrations for `anvildev.gitlab` are complete
