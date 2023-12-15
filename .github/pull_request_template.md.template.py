@@ -446,7 +446,7 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Assigned PR to primary reviewer'
+                    'content': 'PR is assigned to primary reviewer'
                 }
             ]),
             *iif(t is T.gitlab, [
@@ -521,7 +521,7 @@ def main():
             },
             {
                 'type': 'cli',
-                'content': 'Assigned PR to current operator'
+                'content': 'PR is assigned to current operator'
             },
             {
                 'type': 'h2',
@@ -758,7 +758,7 @@ def main():
             },
             {
                 'type': 'cli',
-                'content': 'Unassigned PR'
+                'content': 'PR is assigned to no one'
             },
             {
                 'type': 'h1',

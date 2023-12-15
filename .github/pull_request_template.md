@@ -86,7 +86,7 @@ Uncheck the *Author (before every review)* checklists.
 - [ ] PR is not a draft
 - [ ] Ticket is in *Review requested* column
 - [ ] Requested review from primary reviewer
-- [ ] Assigned PR to primary reviewer
+- [ ] PR is assigned to primary reviewer
 
 
 ### Primary reviewer (after requesting changes)
@@ -103,7 +103,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] PR title is appropriate as title of merge commit
 - [ ] `N reviews` label is accurate
 - [ ] Moved ticket to *Approved* column
-- [ ] Assigned PR to current operator
+- [ ] PR is assigned to current operator
 
 
 ### Operator (before pushing merge the commit)
@@ -186,7 +186,7 @@ pushed determines this checklist item.
 
 ### Operator
 
-- [ ] Unassigned PR
+- [ ] PR is assigned to no one
 
 
 ## Shorthand for review comments

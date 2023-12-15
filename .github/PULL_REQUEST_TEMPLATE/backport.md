@@ -34,7 +34,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] Assigned PR to current operator
+- [ ] PR is assigned to current operator
 
 
 ### Operator (before pushing merge the commit)
@@ -79,7 +79,7 @@ pushed determines this checklist item.
 
 ### Operator
 
-- [ ] Unassigned PR
+- [ ] PR is assigned to no one
 
 
 ## Shorthand for review comments

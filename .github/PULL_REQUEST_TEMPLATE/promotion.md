@@ -35,7 +35,7 @@ Connected issue: #0000
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
 - [ ] Moved ticket to *Approved* column
-- [ ] Assigned PR to current operator
+- [ ] PR is assigned to current operator
 
 
 ### Operator (before pushing merge the commit)
@@ -69,7 +69,7 @@ Connected issue: #0000
 
 ### Operator
 
-- [ ] Unassigned PR
+- [ ] PR is assigned to no one
 
 
 ## Shorthand for review comments
