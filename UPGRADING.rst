@@ -29,6 +29,18 @@ Everyone
 Update Python on your developer machines to version 3.11.7. In your working
 copy, run ``make virtualenv`` and ``make requirements envhook``.
 
+Operator
+~~~~~~~~
+
+Before pushing the PR branch to the ``sandbox``, ``anvilbox``, or ``hammerbox``
+deployments, manually deploy the ``shared`` component of the corresponding main
+deployment. If the PR fails during testing and is not merged, roll back the
+changes made to the main deployments by deploying the ``shared`` component from
+the ``develop`` branch.
+
+When deploying to ``prod``, manually deploy ``prod.shared`` just before
+pushing the merge commit to the GitLab instance.
+
 
 #5728 Many stale images in gitlab-dind and GitLab registry
 ==========================================================

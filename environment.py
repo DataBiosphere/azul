@@ -229,7 +229,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Makefile so that a change to the version does not require updating
         # requirements.
         #
-        'azul_docker_pycharm_version': '2023.2.5-6',
+        'azul_docker_pycharm_version': '2023.2.5-7',
 
         # The version of Terraform used throughout the system. This variable is
         # defined in the bootstrap environment (environment.boot) because it is
