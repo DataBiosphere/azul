@@ -22,6 +22,7 @@ import posix_ipc
 from azul import (
     config,
     reject,
+    require,
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
@@ -50,13 +51,35 @@ def copy_image(src: str):
     client = docker.client.from_env()
     for platform in src.platforms:
         log.info('Pulling image %r for platform %r …', src, platform)
+        # While we're free to pick the tag for the image at the destination
+        # (ECR), and can therefore make it platform-specific, the source tag is
+        # often ambiguous in that it matches multiple images for different
+        # platforms. The `platform=` argument to `.pull()` disambiguates that
+        # and ensures that the right image is being pulled. However, the pull
+        # also applies the ambiguous tag to the resulting local image. This
+        # means that a pull of an image with a given tag and platform may
+        # clobber the tag from an earlier pull of an another platform of the
+        # same tag. Furthermore, it is difficult to detect a failed pull because
+        # one would have to look for the absence of the output line indicating
+        # success. This is further complicated by the fact that the format of
+        # that line is not documented.
         output = client.api.pull(src.name,
                                  platform=str(platform),
                                  tag=src.tag,
                                  stream=True)
         log_lines(src, 'pull', output)
         log.info('Pulled image %r for platform %r', src, platform)
+        # For ambiguous tags, the following line will get the image for the most
+        # recent *successful* pull. If the most recent pull failed, this will
+        # get the image from the successful pull before that. If no pulls were
+        # successful for this tag, the line will fail.
         image = client.images.get(str(src))
+        # And if there was a previous successful pull for the tag, the
+        # assertions below will detect the platform mismatch.
+        require(image.attrs['Architecture'] == platform.arch,
+                'Pull failed, local image has wrong architecture)', image.attrs)
+        require(image.attrs['Os'] == platform.os,
+                'Pull failed, local image has wrong OS)', image.attrs)
         dst_part = ImageRef.create(name=config.docker_registry + src.name,
                                    tag=make_platform_tag(src.tag, platform))
         image.tag(dst_part.name, tag=dst_part.tag)
@@ -127,11 +150,16 @@ def delete_unused_images(repository):
         batches = map(list, partition(is_platform_image, unused_image_ids))
         for batch in batches:
             if batch:
-                log.info('Deleting images %r from repository %r', batch, repository)
-                response = aws.ecr.batch_delete_image(repositoryName=repository,
-                                                      imageIds=batch)
-                reject(bool(response['failures']),
-                       'Failed to delete images', response['failures'])
+                if config.terraform_keep_unused:
+                    log.info('Would delete images %r from repository %r but '
+                             'deletion of unused resources is disabled',
+                             batch, repository)
+                else:
+                    log.info('Deleting images %r from repository %r', batch, repository)
+                    response = aws.ecr.batch_delete_image(repositoryName=repository,
+                                                          imageIds=batch)
+                    reject(bool(response['failures']),
+                           'Failed to delete images', response['failures'])
     else:
         log.info('No stale images found, nothing to delete')
 

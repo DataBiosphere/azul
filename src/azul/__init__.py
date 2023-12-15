@@ -1343,6 +1343,10 @@ class Config:
     def terraform_component(self):
         return self._term_from_env('azul_terraform_component', optional=True)
 
+    @property
+    def terraform_keep_unused(self):
+        return self._boolean(self.environ['azul_terraform_keep_unused'])
+
     permissions_boundary_name = 'azul-boundary'
 
     @property
