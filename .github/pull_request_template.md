@@ -18,8 +18,8 @@ Connected issues: #0000
 - [ ] Name of PR branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] On ZenHub, PR is connected to all issues it (partially) resolves
 - [ ] PR description links to connected issues
-- [ ] PR title references all connected issues
 - [ ] PR title matches<sup>1</sup> that of a connected issue <sub>or comment in PR explains why they're different</sub>
+- [ ] PR title references all connected issues
 - [ ] For each connected issue, there is at least one commit whose title references that issue
 - [ ] Added `p` tag to titles of partial commits
 - [ ] Added `partial` label to PR <sub>or this PR completely resolves all connected issues</sub>

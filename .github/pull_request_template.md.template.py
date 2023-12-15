@@ -204,10 +204,6 @@ def main():
                 'type': 'cli',
                 'content': 'Title of connected issue matches `Promotion yyyy-mm-dd`'
             }),
-            iif(t not in (T.backport, T.gitlab), {
-                'type': 'cli',
-                'content': f"PR title references {t.issues('all', 'the')} connected {t.issues}"
-            }),
             {
                 'type': 'cli',
                 'content': {
@@ -219,6 +215,10 @@ def main():
                 }[t],
                 'alt': iif(t is t.default, "or comment in PR explains why they're different", None)
             },
+            iif(t not in (T.backport, T.gitlab), {
+                'type': 'cli',
+                'content': f"PR title references {t.issues('all', 'the')} connected {t.issues}"
+            }),
             *(
                 [
                     {

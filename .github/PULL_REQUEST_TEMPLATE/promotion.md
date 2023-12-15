@@ -15,8 +15,8 @@ Connected issue: #0000
 - [ ] On ZenHub, PR is connected to the promotion issue it resolves
 - [ ] PR description links to connected issue
 - [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
-- [ ] PR title references the connected issue
 - [ ] PR title starts with title of connected issue
+- [ ] PR title references the connected issue
 
 
 ### Author (reindex, API changes)
