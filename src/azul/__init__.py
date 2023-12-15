@@ -1141,14 +1141,19 @@ class Config:
     def aggregation_lambda_timeout(self, *, retry: bool) -> int:
         return (10 if retry else 1) * 60
 
-    # For the period from 05/31/2020 to 06/06/2020, the max was 18s and the
-    # average + 3 standard deviations was 1.8s in the `dev` deployment.
-    #
-    health_lambda_timeout = 10
-
     service_lambda_timeout = 15 * 60
 
     api_gateway_timeout = 29
+
+    # The service's health cache lambda makes an HTTP request to the service's
+    # REST API, so the timeout for the health cache lambda must be greater
+    # than or equal to that of the API Gateway fronting the service's REST API
+    # lambda, plus some more time for the other health checks performed by the
+    # service's health cache lambda. Since we apply the same timeout to the
+    # indexer's health cache lambda, we blindly assume that this timeout is
+    # also sufficient for the health checks performed by that lambda.
+    #
+    health_cache_lambda_timeout = api_gateway_timeout + 10
 
     # The number of seconds to extend the timeout of a Lambda fronted by
     # API Gateway so that API Gateway times out before the Lambda. We pad the
