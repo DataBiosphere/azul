@@ -184,15 +184,15 @@ def main():
             },
             iif(t is T.gitlab, {
                 'type': 'cli',
-                'content': 'Disconnected any other PRs currently connected to #4014 via ZenHub'
+                'content': 'On Zenhub, no other PRs are connected to #4014'
             }),
             iif(t is not t.backport, {
                 'type': 'cli',
                 'content': {
-                    T.default: 'PR is connected to all connected issues via ZenHub',
-                    T.gitlab: 'PR is connected to issue #4014 via ZenHub',
-                    T.hotfix: 'PR is connected to issue via ZenHub',
-                    T.promotion: 'PR is connected to issue via ZenHub',
+                    T.default: 'On ZenHub, PR is connected to all issues it (partially) resolves',
+                    T.gitlab: 'On ZenHub, this PR is connected to issue #4014',
+                    T.hotfix: 'On ZenHub, PR is connected to the issue it hotfixes',
+                    T.promotion: 'On ZenHub, PR is connected to the promotion issue it resolves',
                     T.backport: None
                 }[t]
             }),

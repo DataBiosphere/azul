@@ -12,7 +12,7 @@ Connected issue: #0000
 
 - [ ] Target branch is `prod`
 - [ ] Name of PR branch matches `promotions/yyyy-mm-dd`
-- [ ] PR is connected to issue via ZenHub
+- [ ] On ZenHub, PR is connected to the promotion issue it resolves
 - [ ] PR description links to connected issue
 - [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
 - [ ] PR title references the connected issue

@@ -16,7 +16,7 @@ Connected issues: #0000
 - [ ] PR is a draft
 - [ ] Target branch is `develop`
 - [ ] Name of PR branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
-- [ ] PR is connected to all connected issues via ZenHub
+- [ ] On ZenHub, PR is connected to all issues it (partially) resolves
 - [ ] PR description links to connected issues
 - [ ] PR title references all connected issues
 - [ ] PR title matches<sup>1</sup> that of a connected issue <sub>or comment in PR explains why they're different</sub>

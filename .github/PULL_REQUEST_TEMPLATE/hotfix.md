@@ -12,7 +12,7 @@ Connected issue: #0000
 
 - [ ] Target branch is `prod`
 - [ ] Name of PR branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>`
-- [ ] PR is connected to issue via ZenHub
+- [ ] On ZenHub, PR is connected to the issue it hotfixes
 - [ ] PR description links to connected issue
 - [ ] PR title references the connected issue
 - [ ] PR title is `Hotfix: ` followed by title of connected issue

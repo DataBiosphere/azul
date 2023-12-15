@@ -12,8 +12,8 @@ Connected issue: #4014
 
 - [ ] Target branch is `develop`
 - [ ] Name of PR branch matches `gitlab/yyyy-mm-dd/<GitLab version>`
-- [ ] Disconnected any other PRs currently connected to #4014 via ZenHub
-- [ ] PR is connected to issue #4014 via ZenHub
+- [ ] On Zenhub, no other PRs are connected to #4014
+- [ ] On ZenHub, this PR is connected to issue #4014
 - [ ] PR title matches `Update GitLab to <GitLab version> (#4014)`
 
 
