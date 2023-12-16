@@ -113,7 +113,7 @@ that is used within the security boundary. Images not used within the boundary
 are tracked in `azul.docker_images` under a key starting with `_`.
 
 
-### System administrator (vulnerability report)
+### System administrator
 
 - [ ] No currently reported vulnerability requires immediate attention
 - [ ] PR is assigned to no one

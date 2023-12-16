@@ -71,6 +71,11 @@ def emit_checklist(checklist: JSONs):
 
 dir = 'PULL_REQUEST_TEMPLATE'
 
+images_we_build_ourselves = {
+    k: f'https://hub.docker.com/repository/docker/ucscgi/azul-{k.lower()}'
+    for k in ['Elasticsearch', 'PyCharm']
+}
+
 
 class T(Enum):
     default = 'pull_request_template.md'
@@ -820,12 +825,21 @@ def main():
             *iif(t in (T.upgrade, T.promotion), [
                 {
                     'type': 'h2',
-                    'content': 'System administrator (vulnerability report)'
+                    'content': 'System administrator'
                 },
                 iif(t is T.upgrade, {
                     'type': 'cli',
                     'content': 'No currently reported vulnerability requires immediate attention'
                 }),
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'Removed unused image tags from ({name} image on DockerHub)[{url}]',
+                        'alt': f'or this promotion does not include changes to `azul_docker_{name.lower()}_version`'
+                    }
+                    for name, url in images_we_build_ourselves.items()
+                    if t is T.promotion
+                ],
                 {
                     'type': 'cli',
                     'content': 'PR is assigned to no one'

@@ -87,8 +87,10 @@ Connected issue: #0000
 - [ ] PR is assigned to system administrator
 
 
-### System administrator (vulnerability report)
+### System administrator
 
+- [ ] Removed unused image tags from (Elasticsearch image on DockerHub)[https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch] <sub>or this promotion does not include changes to `azul_docker_elasticsearch_version`</sub>
+- [ ] Removed unused image tags from (PyCharm image on DockerHub)[https://hub.docker.com/repository/docker/ucscgi/azul-pycharm] <sub>or this promotion does not include changes to `azul_docker_pycharm_version`</sub>
 - [ ] PR is assigned to no one
 
 
