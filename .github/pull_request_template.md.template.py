@@ -772,6 +772,20 @@ def main():
                         },
                         {
                             'type': 'cli',
+                            'content': f'Considered deindexing individual sources in `{deployment}`',
+                            'alt': (
+                                f'or this PR does not merely remove sources from existing catalogs in `{deployment}`'
+                            )
+                        },
+                        {
+                            'type': 'cli',
+                            'content': f'Considered indexing individual sources in `{deployment}`',
+                            'alt': (
+                                f'or this PR does not merely add sources to existing catalogs in `{deployment}`'
+                            )
+                        },
+                        {
+                            'type': 'cli',
                             'content': f'Started reindex in `{deployment}`',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'

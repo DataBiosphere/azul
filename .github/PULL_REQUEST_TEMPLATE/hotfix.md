@@ -67,6 +67,8 @@ Connected issue: #0000
 ### Operator (reindex)
 
 - [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
+- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not remove individual sources from existing catalogs in `prod`</sub>
+- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add individual sources to existing catalogs in `prod`</sub>
 - [ ] Started reindex in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Checked for and triaged indexing failures in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Emptied fail queues in `prod` deployment <sub>or neither this PR nor a prior failed promotion requires it</sub>
