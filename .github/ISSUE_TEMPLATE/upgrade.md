@@ -39,4 +39,3 @@ assignees: ''
   - [ ] … to next major or minor Python version
   - [ ] … to next major Docker version
   - [ ] … to next major or minor Terraform version
-- [ ] Post vulnerability report for `anvilprod` on this issue

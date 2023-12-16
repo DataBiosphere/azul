@@ -1,8 +1,8 @@
 <!--
-This is the PR template for upgrading the GitLab instance.
+This is the PR template for upgrading Azul dependencies.
 -->
 
-Connected issue: #4014
+Connected issue: #0000
 
 
 ## Checklist
@@ -11,29 +11,32 @@ Connected issue: #4014
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Name of PR branch matches `gitlab/yyyy-mm-dd/<GitLab version>`
-- [ ] On Zenhub, no other PRs are connected to #4014
-- [ ] On ZenHub, this PR is connected to issue #4014
-- [ ] PR title matches `Update GitLab to <GitLab version> (#4014)`
+- [ ] Name of PR branch matches `upgrades/yyyy-mm-dd`
+- [ ] On ZenHub, PR is connected to the upgrade issue it resolves
+- [ ] PR title matches `Upgrade dependencies yyyy-mm-dd`
+- [ ] PR title references the connected issue
 
 
-### Author (deploy)
+### Author (upgrading deployments)
 
-- [ ] Deployed changes to `dev.gitlab`
-- [ ] Deployed changes to `anvildev.gitlab`
-- [ ] Deployed changes to `anvilprod.gitlab`
-- [ ] Deployed changes to `prod.gitlab`
+- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
+
+
+### Author (before every review)
+
+- [ ] Rebased PR branch on `develop`, squashed old fixups
+- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Selected `dev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `anvildev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `anvilprod.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 
 
 ### System administrator (after approval)
 
-- [ ] Verified background migrations for `dev.gitlab` are complete
-- [ ] Verified background migrations for `anvildev.gitlab` are complete
-- [ ] Verified background migrations for `anvilprod.gitlab` are complete
-- [ ] Verified background migrations for `prod.gitlab` are complete
 - [ ] Actually approved the PR
 - [ ] Labeled connected issue as `no demo`
-- [ ] Labeled PR as `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to current operator
@@ -44,6 +47,35 @@ Connected issue: #4014
 - [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
+- [ ] Selected `dev.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
+- [ ] Selected `anvildev.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
+- [ ] Selected `anvilprod.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
+- [ ] Assigned system administrator <sub>or this PR does not change the GitLab version</sub>
+- [ ] Checked the items in the next section <sub>or this PR changes the GitLab version</sub>
+
+
+### System administrator
+
+- [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] PR is assigned to operator
+
+
+### Operator (before pushing merge the commit)
+
+- [ ] Selected `dev.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
+- [ ] Selected `anvildev.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
+- [ ] Selected `anvilprod.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
+- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label
+- [ ] Pushed PR branch to GitLab `anvildev`
+- [ ] Pushed PR branch to GitLab `anvilprod`
+- [ ] Build passes in `sandbox` deployment
+- [ ] Build passes in `anvilbox` deployment
+- [ ] Build passes in `hammerbox` deployment
+- [ ] Reviewed build logs for anomalies in `sandbox` deployment
+- [ ] Reviewed build logs for anomalies in `anvilbox` deployment
+- [ ] Reviewed build logs for anomalies in `hammerbox` deployment
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
@@ -51,21 +83,39 @@ Connected issue: #4014
 - [ ] Pushed merge commit to GitHub
 
 
-### Operator (chain shortening)
-
-- [ ] Changed the target branch of the blocked PR to `develop` <sub>or this PR is not labeled `base`</sub>
-- [ ] Removed the `chained` label from the blocked PR <sub>or this PR is not labeled `base`</sub>
-- [ ] Removed the blocking relationship from the blocked PR <sub>or this PR is not labeled `base`</sub>
-- [ ] Removed the `base` label from this PR <sub>or this PR is not labeled `base`</sub>
-
-
 ### Operator (after pushing the merge commit)
 
+- [ ] Pushed merge commit to GitLab `dev`
+- [ ] Pushed merge commit to GitLab `anvildev`
+- [ ] Pushed merge commit to GitLab `anvilprod`
+- [ ] Build passes on GitLab `dev`
+- [ ] Reviewed build logs for anomalies on GitLab `dev`
+- [ ] Build passes on GitLab `anvildev`
+- [ ] Reviewed build logs for anomalies on GitLab `anvildev`
+- [ ] Build passes on GitLab `anvilprod`
+- [ ] Reviewed build logs for anomalies on GitLab `anvilprod`
+- [ ] Selected `dev.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `anvildev.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `anvilprod.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] Deleted PR branch from GitHub
+- [ ] Deleted PR branch from GitLab `dev`
+- [ ] Deleted PR branch from GitLab `anvildev`
+- [ ] Deleted PR branch from GitLab `anvilprod`
 
 
 ### Operator
 
+- [ ] Ran `script/export_inspector_findings.py` against `anvilprod`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
+- [ ] PR is assigned to system administrator
+
+<sup>1</sup>A relevant finding is a high or critical vulnerability in an image
+that is used within the security boundary. Images not used within the boundary
+are tracked in `azul.docker_images` under a key starting with `_`.
+
+
+### System administrator (vulnerability report)
+
+- [ ] No currently reported vulnerability requires immediate attention
 - [ ] PR is assigned to no one
 
 

@@ -25,9 +25,9 @@ Connected issue: #0000
 - [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
 
 
-### Author (upgrading)
+### Author (upgrading deployments)
 
-- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading</sub>
+- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
 
 
 ### System administrator (after approval)
@@ -41,6 +41,21 @@ Connected issue: #0000
 ### Operator (before pushing merge the commit)
 
 - [ ] Pushed PR branch to GitHub
+- [ ] Selected `prod.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
+- [ ] Assigned system administrator <sub>or this PR does not change the GitLab version</sub>
+- [ ] Checked the items in the next section <sub>or this PR changes the GitLab version</sub>
+
+
+### System administrator
+
+- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] PR is assigned to operator
+
+
+### Operator (before pushing merge the commit)
+
+- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
@@ -68,6 +83,11 @@ Connected issue: #0000
 
 
 ### Operator
+
+- [ ] PR is assigned to system administrator
+
+
+### System administrator (vulnerability report)
 
 - [ ] PR is assigned to no one
 

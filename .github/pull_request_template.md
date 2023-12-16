@@ -1,7 +1,7 @@
 <!--
 This is the PR template for regular PRs against `develop`. Edit the URL in your
 browser's location bar, appending either `&template=promotion.md`,
-`&template=hotfix.md`, `&template=backport.md` or `&template=gitlab.md` to
+`&template=hotfix.md`, `&template=backport.md` or `&template=upgrade.md` to
 switch the template.
 -->
 
@@ -49,11 +49,11 @@ title is `Fix: ` followed by the issue title
 - [ ] Added `chained` label to this PR <sub>or this PR is not chained to another PR</sub>
 
 
-### Author (upgrading)
+### Author (upgrading deployments)
 
-- [ ] Documented upgrading of deployments in UPGRADING.rst <sub>or this PR does not require upgrading</sub>
-- [ ] Added `u` tag to commit title <sub>or this PR does not require upgrading</sub>
-- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading</sub>
+- [ ] Documented upgrading of deployments in UPGRADING.rst <sub>or this PR does not require upgrading deployments</sub>
+- [ ] Added `u` tag to commit title <sub>or this PR does not require upgrading deployments</sub>
+- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
 
 
 ### Author (operator tasks)
