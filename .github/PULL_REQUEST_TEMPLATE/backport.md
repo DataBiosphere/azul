@@ -41,7 +41,8 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>

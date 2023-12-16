@@ -67,7 +67,8 @@ Connected issue: #0000
 - [ ] Selected `dev.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
 - [ ] Selected `anvildev.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
 - [ ] Selected `anvilprod.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
-- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label
+- [ ] Added `sandbox` label
+- [ ] Pushed PR branch to GitLab `dev`
 - [ ] Pushed PR branch to GitLab `anvildev`
 - [ ] Pushed PR branch to GitLab `anvilprod`
 - [ ] Build passes in `sandbox` deployment

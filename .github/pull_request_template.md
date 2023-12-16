@@ -114,7 +114,8 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
@@ -123,15 +124,15 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Deleted unreferenced indices in `sandbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Deleted unreferenced indices in `anvilbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Started reindex in `sandbox` <sub>or this PR does not require reindexing `sandbox`</sub>
-- [ ] Started reindex in `anvilbox` <sub>or this PR does not require reindexing `sandbox`</sub>
-- [ ] Started reindex in `hammerbox` <sub>or this PR does not require reindexing `sandbox`</sub>
-- [ ] Checked for failures in `sandbox` <sub>or this PR does not require reindexing `sandbox`</sub>
-- [ ] Checked for failures in `anvilbox` <sub>or this PR does not require reindexing `sandbox`</sub>
-- [ ] Checked for failures in `hammerbox` <sub>or this PR does not require reindexing `sandbox`</sub>
+- [ ] Deleted unreferenced indices in `sandbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `dev`</sub>
+- [ ] Deleted unreferenced indices in `anvilbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvildev`</sub>
+- [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilprod`</sub>
+- [ ] Started reindex in `sandbox` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Started reindex in `anvilbox` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Started reindex in `hammerbox` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] Checked for failures in `sandbox` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Checked for failures in `anvilbox` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Checked for failures in `hammerbox` <sub>or this PR does not require reindexing `anvilprod`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but only include `p` if the PR is labeled `partial`</sub>
@@ -170,18 +171,18 @@ pushed determines this checklist item.
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `dev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Deleted unreferenced indices in `anvildev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Deleted unreferenced indices in `anvilprod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Started reindex in `dev` <sub>or this PR does not require reindexing</sub>
-- [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing</sub>
-- [ ] Started reindex in `anvilprod` <sub>or this PR does not require reindexing</sub>
-- [ ] Checked for and triaged indexing failures in `dev` <sub>or this PR does not require reindexing</sub>
-- [ ] Checked for and triaged indexing failures in `anvildev` <sub>or this PR does not require reindexing</sub>
-- [ ] Checked for and triaged indexing failures in `anvilprod` <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in `dev` deployment <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in `anvildev` deployment <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in `anvilprod` deployment <sub>or this PR does not require reindexing</sub>
+- [ ] Deleted unreferenced indices in `dev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `dev`</sub>
+- [ ] Deleted unreferenced indices in `anvildev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvildev`</sub>
+- [ ] Deleted unreferenced indices in `anvilprod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilprod`</sub>
+- [ ] Started reindex in `dev` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Started reindex in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] Checked for and triaged indexing failures in `dev` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Checked for and triaged indexing failures in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Checked for and triaged indexing failures in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] Emptied fail queues in `dev` deployment <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Emptied fail queues in `anvildev` deployment <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Emptied fail queues in `anvilprod` deployment <sub>or this PR does not require reindexing `anvilprod`</sub>
 
 
 ### Operator

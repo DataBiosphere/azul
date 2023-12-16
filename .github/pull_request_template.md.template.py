@@ -594,6 +594,11 @@ def main():
                     for deployment in t.deployments
                 ],
             ]),
+            iif(any(sandbox is not None for sandbox in t.deployments.values()), {
+                'type': 'cli',
+                'content': 'Added `sandbox` label',
+                'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
+            }),
             # zip() is used to interleave the steps for each deployment so
             # that first, step 1 is done for all deployments, then step 2
             # for all of them, and so on.
@@ -601,40 +606,40 @@ def main():
                 [
                     {
                         'type': 'cli',
-                        'content': f'Pushed PR branch to GitLab `{d}`'
-                                   + iif(i == 0, ' and added `sandbox` label'),
+                        'content': f'Pushed PR branch to GitLab `{deployment}`',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Build passes in `{s}` deployment',
+                        'content': f'Build passes in `{sandbox}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Reviewed build logs for anomalies in `{s}` deployment',
+                        'content': f'Reviewed build logs for anomalies in `{sandbox}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     *iif(t is T.default, [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{s}`',
-                            'alt': 'or this PR does not remove catalogs or otherwise causes unreferenced indices '
+                            'content': f'Deleted unreferenced indices in `{sandbox}`',
+                            'alt': f'or this PR does not remove catalogs '
+                                   f'or otherwise causes unreferenced indices in `{deployment}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{s}`',
-                            'alt': 'or this PR does not require reindexing `sandbox`'
+                            'content': f'Started reindex in `{sandbox}`',
+                            'alt': f'or this PR does not require reindexing `{deployment}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for failures in `{s}`',
-                            'alt': 'or this PR does not require reindexing `sandbox`'
+                            'content': f'Checked for failures in `{sandbox}`',
+                            'alt': f'or this PR does not require reindexing `{deployment}`'
                         }
                     ])
                 ]
-                for i, (d, s) in enumerate(t.deployments.items())
-                if s is not None
+                for i, (deployment, sandbox) in enumerate(t.deployments.items())
+                if sandbox is not None
             ))),
             {
                 'type': 'cli',
@@ -761,39 +766,40 @@ def main():
                     [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{d}`',
-                            'alt': 'or this PR does not remove catalogs or otherwise causes unreferenced indices '
+                            'content': f'Deleted unreferenced indices in `{deployment}`',
+                            'alt': f'or this PR does not remove catalogs '
+                                   f'or otherwise causes unreferenced indices in `{deployment}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{d}`',
+                            'content': f'Started reindex in `{deployment}`',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                'or this PR does not require reindexing'
+                                f'or this PR does not require reindexing `{deployment}`'
                             )
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for and triaged indexing failures in `{d}`',
+                            'content': f'Checked for and triaged indexing failures in `{deployment}`',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                'or this PR does not require reindexing'
+                                f'or this PR does not require reindexing `{deployment}`'
                             )
 
                         },
                         {
                             'type': 'cli',
-                            'content': f'Emptied fail queues in `{d}` deployment',
+                            'content': f'Emptied fail queues in `{deployment}` deployment',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                'or this PR does not require reindexing'
+                                f'or this PR does not require reindexing `{deployment}`'
                             )
                         }
                     ]
-                    for d, s in t.deployments.items()
+                    for deployment, sandbox in t.deployments.items()
                 ))),
                 iif(t is T.hotfix, {
                     'type': 'cli',

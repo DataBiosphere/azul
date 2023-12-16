@@ -76,10 +76,10 @@ Connected issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Started reindex in `prod` <sub>or this PR does not require reindexing</sub>
-- [ ] Checked for and triaged indexing failures in `prod` <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in `prod` deployment <sub>or this PR does not require reindexing</sub>
+- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
+- [ ] Started reindex in `prod` <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] Checked for and triaged indexing failures in `prod` <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] Emptied fail queues in `prod` deployment <sub>or this PR does not require reindexing `prod`</sub>
 
 
 ### Operator
