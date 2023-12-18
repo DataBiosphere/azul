@@ -743,11 +743,8 @@ class ManifestService(ElasticsearchService):
                 try:
                     encoded_file_name = tagging[self.file_name_tag]
                 except KeyError:
-                    # FIXME: Can't be absent under S3's strong consistency
-                    #        https://github.com/DataBiosphere/azul/issues/3255
-                    log.warning('Manifest object %r does not have the %r tag.',
-                                object_key, self.file_name_tag)
-                    return generator_cls.file_name(manifest_key)
+                    # Can't be absent under S3's strong consistency
+                    assert False, (object_key, self.file_name_tag)
                 else:
                     encoded_file_name = encoded_file_name.encode('ascii')
                     return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
