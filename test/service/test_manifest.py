@@ -1195,14 +1195,6 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
             '',
             '--fail',
             '',
-            '--fail-early',
-            '',
-            '--continue-at -',
-            '',
-            '--retry 2',
-            '',
-            '--retry-delay 10',
-            '',
             '--write-out "Downloading to: %{filename_effective}\\n\\n"',
             '',
         ]
@@ -1496,10 +1488,13 @@ class TestManifestResponse(ManifestTestCase):
                 expected_url = object_url
                 expected_url_for_bash = f"'{expected_url}'"
             if format is ManifestFormat.curl:
-                options = "--location --fail"
+                manifest_options = '--location --fail'
+                file_options = '--fail-early --continue-at - --retry 2 --retry-delay 10'
                 expected = {
-                    'cmd.exe': f'curl.exe {options} "{expected_url}" | curl.exe --config -',
-                    'bash': f'curl {options} {expected_url_for_bash} | curl --config -'
+                    'cmd.exe': f'curl.exe {manifest_options} "{expected_url}"'
+                               f' | curl.exe {file_options} --config -',
+                    'bash': f'curl {manifest_options} {expected_url_for_bash}'
+                            f' | curl {file_options} --config -'
                 }
             else:
                 if format is ManifestFormat.terra_bdbag:
