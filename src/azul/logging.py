@@ -172,10 +172,12 @@ def http_body_log_message(body_type: str,
                           ) -> str:
     if body is None:
         return f'… without {body_type} body'
-    else:
+    elif isinstance(body, (bytes, bytearray, str)):
         if verbatim:
             if isinstance(body, (bytes, bytearray)):
                 body = body.decode(errors='ignore')
         else:
             body = trunc_ellipses(body, max_len=128)
         return f'… with {body_type} body {body!r}'
+    else:
+        return f'… with nonprintable body ({type(body)!r})'
