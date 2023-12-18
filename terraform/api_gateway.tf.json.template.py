@@ -223,7 +223,17 @@ emit_tf({
                             'priority': 1,
                             'name': config.waf_rate_rule_name,
                             'action': {
-                                'block': {}
+                                'block': {
+                                    'custom_response': {
+                                        'response_code': 429,
+                                        'response_header': [
+                                            {
+                                                'name': 'Retry-After',
+                                                'value': '10'
+                                            }
+                                        ]
+                                    }
+                                }
                             },
                             'statement': {
                                 'rate_based_statement': {
