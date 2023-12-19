@@ -12,11 +12,11 @@ Connected issue: #0000
 
 - [ ] Target branch is `prod`
 - [ ] Name of PR branch matches `promotions/yyyy-mm-dd`
-- [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
-- [ ] PR title references the connected issue
-- [ ] PR title starts with title of connected issue
-- [ ] PR is connected to issue via ZenHub
+- [ ] On ZenHub, PR is connected to the promotion issue it resolves
 - [ ] PR description links to connected issue
+- [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
+- [ ] PR title starts with title of connected issue
+- [ ] PR title references the connected issue
 
 
 ### Author (reindex, API changes)
@@ -25,22 +25,37 @@ Connected issue: #0000
 - [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
 
 
-### Author (upgrading)
+### Author (upgrading deployments)
 
-- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading</sub>
+- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
 
 
-### Primary reviewer (after approval)
+### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
 - [ ] Moved ticket to *Approved* column
-- [ ] Assigned PR to current operator
+- [ ] PR is assigned to current operator
 
 
 ### Operator (before pushing merge the commit)
 
 - [ ] Pushed PR branch to GitHub
+- [ ] Selected `prod.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
+- [ ] Assigned system administrator <sub>or this PR does not change the GitLab version</sub>
+- [ ] Checked the items in the next section <sub>or this PR changes the GitLab version</sub>
+
+
+### System administrator
+
+- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] PR is assigned to operator
+
+
+### Operator (before pushing merge the commit)
+
+- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
@@ -61,15 +76,24 @@ Connected issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
-- [ ] Started reindex in `prod` <sub>or this PR does not require reindexing</sub>
-- [ ] Checked for and triaged indexing failures in `prod` <sub>or this PR does not require reindexing</sub>
-- [ ] Emptied fail queues in `prod` deployment <sub>or this PR does not require reindexing</sub>
+- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
+- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not remove individual sources from existing catalogs in `prod`</sub>
+- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add individual sources to existing catalogs in `prod`</sub>
+- [ ] Started reindex in `prod` <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] Checked for and triaged indexing failures in `prod` <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] Emptied fail queues in `prod` deployment <sub>or this PR does not require reindexing `prod`</sub>
 
 
 ### Operator
 
-- [ ] Unassigned PR
+- [ ] PR is assigned to system administrator
+
+
+### System administrator
+
+- [ ] Removed unused image tags from (Elasticsearch image on DockerHub)[https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch] <sub>or this promotion does not include changes to `azul_docker_elasticsearch_version`</sub>
+- [ ] Removed unused image tags from (PyCharm image on DockerHub)[https://hub.docker.com/repository/docker/ucscgi/azul-pycharm] <sub>or this promotion does not include changes to `azul_docker_pycharm_version`</sub>
+- [ ] PR is assigned to no one
 
 
 ## Shorthand for review comments

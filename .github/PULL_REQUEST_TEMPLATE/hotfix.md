@@ -12,10 +12,10 @@ Connected issue: #0000
 
 - [ ] Target branch is `prod`
 - [ ] Name of PR branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>`
-- [ ] PR title references the connected issue
-- [ ] PR title is `Hotfix: ` followed by title of connected issue
-- [ ] PR is connected to issue via ZenHub
+- [ ] On ZenHub, PR is connected to the issue it hotfixes
 - [ ] PR description links to connected issue
+- [ ] PR title is `Hotfix: ` followed by title of connected issue
+- [ ] PR title references the connected issue
 
 
 ### Author (hotfixes)
@@ -34,13 +34,13 @@ Connected issue: #0000
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
 
 
-### Primary reviewer (after approval)
+### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] Assigned PR to current operator
+- [ ] PR is assigned to current operator
 
 
 ### Operator (before pushing merge the commit)
@@ -66,7 +66,9 @@ Connected issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices </sub>
+- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
+- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not remove individual sources from existing catalogs in `prod`</sub>
+- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add individual sources to existing catalogs in `prod`</sub>
 - [ ] Started reindex in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Checked for and triaged indexing failures in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
 - [ ] Emptied fail queues in `prod` deployment <sub>or neither this PR nor a prior failed promotion requires it</sub>
@@ -75,7 +77,7 @@ Connected issue: #0000
 
 ### Operator
 
-- [ ] Unassigned PR
+- [ ] PR is assigned to no one
 
 
 ## Shorthand for review comments

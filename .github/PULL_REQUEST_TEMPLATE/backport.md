@@ -23,25 +23,26 @@ This is the PR template for backport PRs against `develop`.
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
 
 
-### Primary reviewer (after requesting changes)
+### System administrator (after requesting changes)
 
 Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 
-### Primary reviewer (after approval)
+### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] Assigned PR to current operator
+- [ ] PR is assigned to current operator
 
 
 ### Operator (before pushing merge the commit)
 
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Pushed PR branch to GitLab `dev` and added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Pushed PR branch to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
@@ -79,7 +80,7 @@ pushed determines this checklist item.
 
 ### Operator
 
-- [ ] Unassigned PR
+- [ ] PR is assigned to no one
 
 
 ## Shorthand for review comments
