@@ -708,7 +708,9 @@ class ManifestService(ElasticsearchService):
         if not generator_cls.use_content_disposition_file_name:
             file_name = None
         object_key = generator_cls.s3_object_key(manifest_key)
-        presigned_url = self.storage_service.get_presigned_url(object_key, file_name)
+        role_arn = config.lambda_role_arn('service')
+        with aws.assumed_role_credentials(role_arn=role_arn):
+            presigned_url = self.storage_service.get_presigned_url(object_key, file_name)
         return Manifest(location=presigned_url,
                         was_cached=was_cached,
                         format=generator_cls.format(),

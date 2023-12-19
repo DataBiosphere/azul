@@ -672,6 +672,20 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'resources': [
                             '*'
                         ]
+                    },
+
+                    # Extend boundary to allow the service Lambda role to assume
+                    # itself
+                    {
+                        'actions': [
+                            'sts:AssumeRole'
+                        ],
+                        'principals': {
+                            'type': 'AWS',
+                            'identifiers': [
+                                f'arn:aws:iam::{aws.account}:role/azul-service-*'
+                            ]
+                        }
                     }
                 ]
             },

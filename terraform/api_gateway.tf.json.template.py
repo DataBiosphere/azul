@@ -539,6 +539,13 @@ emit_tf({
                                         'Service': 'lambda.amazonaws.com'
                                     }
                                 },
+                                {
+                                    'Effect': 'Allow',
+                                    'Action': 'sts:AssumeRole',
+                                    'Principal': {
+                                        'AWS': config.lambda_role_arn('service')
+                                    }
+                                },
                                 *(
                                     {
                                         'Effect': 'Allow',

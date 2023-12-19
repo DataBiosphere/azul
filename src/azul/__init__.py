@@ -387,6 +387,10 @@ class Config:
                 # and must return the ARN verbatim.
                 return role_arn
 
+    def lambda_role_arn(self, lambda_name: str) -> str:
+        role_name = self.qualified_resource_name(lambda_name)
+        return f'arn:aws:iam::{self.aws_account_id}:role/{role_name}'
+
     @property
     def num_dss_workers(self) -> int:
         return int(self.environ['AZUL_DSS_WORKERS'])
