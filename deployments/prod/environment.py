@@ -1019,6 +1019,11 @@ dcp34_sources = mkdict(dcp33_sources, 428, mkdelta([
     mksrc('datarepo-145a904d', 'hca_prod_ef1e3497515e4bbe8d4c10161854b699__20220118_dcp2_20231213_dcp34', 7)
 ]))
 
+pilot_sources = mkdict({}, 2, mkdelta([
+    mksrc('datarepo-3e19670d', 'hca_prod_520afa10f9d24e93ab7a26c4c863ce18__20220117_dcp2_20220120_dcp12', 649),
+    mksrc('datarepo-c3aea89c', 'hca_prod_8559a8ed5d8c4fb6bde8ab639cebf03c__20220118_dcp2_20220121_dcp12', 379),
+]))
+
 lungmap_sources = mkdict({}, 3, mkdelta([
     mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
     mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
@@ -1089,6 +1094,7 @@ def env() -> Mapping[str, Optional[str]]:
             for atlas, catalog, sources in [
                 ('hca', 'dcp33', dcp33_sources),
                 ('hca', 'dcp34', dcp34_sources),
+                ('hca', 'pilot', pilot_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources),
                 ('lungmap', 'lm3', lm3_sources),
