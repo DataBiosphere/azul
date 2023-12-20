@@ -411,7 +411,7 @@ def main():
                     }
                     for deployment in t.deployments
                 ]),
-                iif(t is T.default, {
+                iif(t in (T.default, T.upgrade), {
                     'type': 'cli',
                     'content': '`make integration_test` passes in personal deployment',
                     'alt': 'or this PR does not touch functionality that could break the IT'

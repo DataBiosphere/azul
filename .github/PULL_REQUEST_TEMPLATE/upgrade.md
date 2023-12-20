@@ -31,6 +31,7 @@ Connected issue: #0000
 - [ ] Selected `dev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] Selected `anvildev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] Selected `anvilprod.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
 
 
 ### System administrator (after approval)
