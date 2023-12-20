@@ -134,7 +134,12 @@ class Platform:
         return '/'.join(result)
 
 
-images = list(map(ImageRef.parse, config.docker_images.values()))
+images_by_alias = {
+    alias: ImageRef.parse(name)
+    for alias, name in config.docker_images.items()
+}
+
+images = images_by_alias.values()
 
 platforms = list(map(Platform.parse, config.docker_platforms))
 
