@@ -1016,7 +1016,7 @@ tf_config = {
                     'triggers': {
                         'script_hash': '${filesha256("%s/scripts/copy_images_to_ecr.py")}' % config.project_root,
                         'images': ','.join(sorted(image.tf_image for image in images)),
-                        'keep_unused': str(config.terraform_keep_unused)
+                        'keep_unused': json.dumps(config.terraform_keep_unused)
                     },
                     'lifecycle': {
                         'replace_triggered_by': [
