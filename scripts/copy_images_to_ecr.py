@@ -1,5 +1,8 @@
 import argparse
 import logging
+from operator import (
+    itemgetter,
+)
 from pathlib import (
     Path,
 )
@@ -15,6 +18,7 @@ from typing import (
 
 import docker
 from more_itertools import (
+    chunked,
     partition,
 )
 import posix_ipc
@@ -135,31 +139,44 @@ def delete_unused_images(repository):
         if image.name == repository
     )
     log.info('Listing images in repository %r', repository)
-    image_ids = aws.ecr.list_images(repositoryName=repository)['imageIds']
-    unused_image_ids = [
-        image_id
-        for image_id in image_ids
-        if image_id.get('imageTag') not in expected_tags
+    paginator = aws.ecr.get_paginator('describe_images')
+    pages = paginator.paginate(repositoryName=repository)
+    unused_images = [
+        {
+            'image_id': {
+                # Typically we only want to remove individual tags and rely on
+                # ECR to remove the image when we remove the last tag. If there
+                # are any untagged images for whatever reason, we remove them by
+                # specifying only their digest.
+                **({} if imageTag is None else {'imageTag': imageTag}),
+                'imageDigest': image['imageDigest'],
+            },
+            'is_index': 'artifactMediaType' not in image
+        }
+        for page in pages
+        for image in page['imageDetails']
+        for imageTag in image.get('imageTags', [None])
+        if imageTag not in expected_tags
     ]
-    if unused_image_ids:
+    if unused_images:
         # ECR enforces referential integrity so we have to delete index
         # images before we delete the platform images they refer to.
-        def is_platform_image(image_id):
-            return is_platform_tag(image_id['imageTag'])
-
-        batches = map(list, partition(is_platform_image, unused_image_ids))
-        for batch in batches:
-            if batch:
-                if config.terraform_keep_unused:
-                    log.info('Would delete images %r from repository %r but '
-                             'deletion of unused resources is disabled',
-                             batch, repository)
-                else:
-                    log.info('Deleting images %r from repository %r', batch, repository)
-                    response = aws.ecr.batch_delete_image(repositoryName=repository,
-                                                          imageIds=batch)
-                    reject(bool(response['failures']),
-                           'Failed to delete images', response['failures'])
+        groups = reversed(partition(itemgetter('is_index'), unused_images))
+        for group in groups:
+            batches = chunked(group, 100)  # we can delete at most 100 images at a time
+            for batch in batches:
+                if batch:
+                    if config.terraform_keep_unused:
+                        log.info('Would delete images %r from repository %r but '
+                                 'deletion of unused resources is disabled',
+                                 batch, repository)
+                    else:
+                        image_ids = list(map(itemgetter('image_id'), batch))
+                        log.info('Deleting images %r from repository %r', image_ids, repository)
+                        response = aws.ecr.batch_delete_image(repositoryName=repository,
+                                                              imageIds=image_ids)
+                        reject(bool(response['failures']),
+                               'Failed to delete images', response['failures'])
     else:
         log.info('No stale images found, nothing to delete')
 
