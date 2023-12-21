@@ -51,12 +51,16 @@ class ParseInspectorFindings:
                                          formatter_class=AzulArgumentHelpFormatter)
         parser.add_argument('--severity', '-s',
                             default=cls.default_severities,
-                            help='Only fetch vulnerabilities with the specified'
+                            help='Only fetch findings with the specified'
                                  ' severity. '
                                  f'(choices: {cls.all_severities})',
                             nargs='+',
                             metavar='S',
                             choices=cls.all_severities)
+        parser.add_argument('--all-images', '-a',
+                            default=False, action='store_true',
+                            help='Fetch findings for all images, including those'
+                                 ' outside the security boundary.')
         parser.add_argument('--json', '-j',
                             default=False, action='store_true',
                             help='Dump findings to a JSON file.')
@@ -70,7 +74,7 @@ class ParseInspectorFindings:
         self.images = set()
         self.instances = set()
 
-    def main(self):
+    def main(self) -> None:
         log.info('Fetching findings from AWS Inspector')
         criteria = {
             'findingStatus': [
@@ -85,7 +89,19 @@ class ParseInspectorFindings:
                     'value': severity
                 }
                 for severity in self.args.severity
-            ]
+            ],
+            **({} if self.args.all_images else {
+                'ecrImageRepositoryName': [
+                    {
+                        'comparison': 'NOT_EQUALS',
+                        'value': 'docker.elastic.co/kibana/kibana-oss'
+                    },
+                    {
+                        'comparison': 'NOT_EQUALS',
+                        'value': 'docker.io/lmenezes/cerebro'
+                    }
+                ]
+            })
         }
         client = aws.client('inspector2')
         paginator = client.get_paginator('list_findings')
@@ -144,30 +160,53 @@ class ParseInspectorFindings:
             assert False, resource
         return vulnerability, summary
 
-    def write_to_csv(self, findings: dict[str, list[SummaryType]]):
+    def column_alpha(self, col: int) -> str:
+        assert col > 0, col
+        chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        cols = list(chars) + [a + b for a in chars for b in chars]
+        return cols[col - 1]
 
-        titles = ['Vulnerability', *sorted(self.images), *sorted(self.instances)]
+    def findings_sort(self, item: tuple[str, list[SummaryType]]) -> tuple[int, str]:
+        score = 0
+        for summary in item[1]:
+            score += 10 if summary['severity'] == 'CRITICAL' else 0
+            score += 1 if summary['severity'] == 'HIGH' else 0
+        return score, item[0]
+
+    def write_to_csv(self, findings: dict[str, list[SummaryType]]) -> None:
+        titles = [
+            'Vulnerability',
+            'Severity',
+            *sorted(self.images),
+            *sorted(self.instances)
+        ]
+        last_col = self.column_alpha(len(titles))
         # A mapping of column titles to column index (0-based)
         lookup = dict(zip(titles, range(len(titles))))
 
-        file_data = [titles]
-        for vulnerability, summaries in sorted(findings.items(), reverse=True):
+        rows = [titles]
+        for vulnerability, summaries in sorted(findings.items(),
+                                               key=self.findings_sort,
+                                               reverse=True):
             # A mapping of column index to abbreviated severity value
             column_values = {
                 lookup[key]: summary['severity'][0:1]
                 for summary in summaries
                 for key in summary['resources']
             }
-            row = [vulnerability]
-            for column_index in range(1, len(titles) + 1):
+            row_num = len(rows) + 1
+            col_range = f'C{row_num}:{last_col}{row_num}'
+            severity_formula = f'=(COUNTIF({col_range},"C")*10)+(COUNTIF({col_range},"H"))'
+            row = [vulnerability, severity_formula]
+            for column_index in range(len(row), len(titles) + 1):
                 row.append(column_values.get(column_index, ''))
-            file_data.append(row)
+            rows.append(row)
 
         output_file_name = f'inspector-findings_{self.date}.csv'
         log.info('Writing file: %s', output_file_name)
         with open(output_file_name, mode='w') as csv_file:
             csv_writer = csv.writer(csv_file)
-            csv_writer.writerows(file_data)
+            csv_writer.writerows(rows)
 
 
 if __name__ == '__main__':
