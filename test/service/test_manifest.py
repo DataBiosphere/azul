@@ -104,6 +104,9 @@ from azul_test_case import (
     AzulUnitTestCase,
     DCP1TestCase,
 )
+from pfb_test_case import (
+    PFBTestCase,
+)
 from service import (
     DocumentCloningTestCase,
     StorageServiceTestMixin,
@@ -194,7 +197,7 @@ def manifest_test(test):
     return wrapper
 
 
-class TestManifestEndpoints(ManifestTestCase):
+class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
 
     def run(self,
             result: Optional[unittest.result.TestResult] = None
@@ -239,6 +242,8 @@ class TestManifestEndpoints(ManifestTestCase):
                     self.assertEqual(200, response.status_code)
                     pfb_file = BytesIO(response.content)
                     reader = fastavro.reader(pfb_file)
+                    schema = reader.writer_schema
+                    self._assert_pfb_schema(schema)
                     records = list(reader)
                     results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
                     if results_file.exists():

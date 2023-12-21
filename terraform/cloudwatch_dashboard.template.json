@@ -956,7 +956,7 @@
             "x": 0,
             "type": "log",
             "properties": {
-                "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter ispresent(stats.totalSlotMs) or ispresent(stats.reservationUsage.0.slotMs)\n| stats sum(stats.reservationUsage.0.slotMs) / 1000 / 3600 * 12 as actual,\n        sum(stats.totalSlotMs - coalesce(stats.reservationUsage.0.slotMs, 0)) / 1000 / 3600 * 12 as presumed         \n  by bin(5min)\n",
+                "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter ispresent(stats.totalSlotMs)\n| stats sum(stats.totalSlotMs) / 1000 / 3600 * 12 as `slot hours` by bin(5min)\n",
                 "region": "us-east-1",
                 "stacked": false,
                 "title": "BQ slot-hours (pro-rated)",

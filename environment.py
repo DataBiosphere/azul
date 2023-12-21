@@ -548,6 +548,19 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_terraform_component': '',
 
+        # Set this to '1' in order to skip deleting certain types of unused
+        # resources during `terraform apply`. The unused resources can be
+        # deleted later by running `terraform apply` again with this variable
+        # reset to its default. The resource types affected by this flag are:
+        #
+        # - Unused Docker images in ECR
+        #
+        # This variable should be not be overridden in other `environment.py*`
+        # files. It should be left at its default, except temporarily, when
+        # running `terraform apply`.
+        #
+        'azul_terraform_keep_unused': '0',
+
         # The slug of the Github repository hosting this fork of Azul
         #
         'azul_github_project': 'DataBiosphere/azul',
@@ -604,6 +617,13 @@ def env() -> Mapping[str, Optional[str]]:
         # the best I could come up with is the profile name.
         #
         'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
+
+        # Make Terraform's deprecation warnings more compact
+        #
+        **{
+            'TF_CLI_ARGS_' + command: '-compact-warnings'
+            for command in ['validate', 'plan', 'apply']
+        },
 
         # BigQuery dataset location of the TDR snapshots the deployment is
         # configured to index. All configured snapshots must reside in the same

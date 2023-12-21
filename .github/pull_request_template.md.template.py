@@ -1,9 +1,6 @@
 from enum import (
     Enum,
 )
-from itertools import (
-    chain,
-)
 from os.path import (
     basename,
     dirname,
@@ -22,9 +19,6 @@ from more_itertools import (
 
 from azul import (
     iif,
-)
-from azul.collections import (
-    OrderedSet,
 )
 from azul.strings import (
     join_grammatically,
@@ -77,13 +71,18 @@ def emit_checklist(checklist: JSONs):
 
 dir = 'PULL_REQUEST_TEMPLATE'
 
+images_we_build_ourselves = {
+    k: f'https://hub.docker.com/repository/docker/ucscgi/azul-{k.lower()}'
+    for k in ['Elasticsearch', 'PyCharm']
+}
+
 
 class T(Enum):
     default = 'pull_request_template.md'
     promotion = dir + '/promotion.md'
     hotfix = dir + '/hotfix.md'
     backport = dir + '/backport.md'
-    gitlab = dir + '/gitlab.md'
+    upgrade = dir + '/upgrade.md'
 
     @property
     def file(self):
@@ -109,10 +108,6 @@ class T(Enum):
         return S('issue' + iif(default, 's'))
 
     @property
-    def gitlab_deployments(self):
-        return OrderedSet(chain.from_iterable(t.deployments for t in type(self)))
-
-    @property
     def deployments(self) -> Mapping[str, str]:
         """
         Maps the name of each deployment to that of the respective sandbox.
@@ -122,8 +117,6 @@ class T(Enum):
                 'prod': None  # There is no sandbox for production
             }
             if self in (T.promotion, T.hotfix) else
-            {}  # the `gitlab` component is deployed manually
-            if self is T.gitlab else
             {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
@@ -146,14 +139,14 @@ def main():
                                                     last_joiner=' or ')
                                + ' to switch the template.',
                     T.backport: 'This is the PR template for backport PRs against `develop`.',
-                    T.gitlab: 'This is the PR template for upgrading the GitLab instance.',
+                    T.upgrade: 'This is the PR template for upgrading Azul dependencies.',
                     T.hotfix: 'This is the PR template for hotfix PRs against `prod`.',
                     T.promotion: 'This is the PR template for promotion PRs against `prod`.'
                 }[t]
             },
             iif(t is not T.backport, {
                 'type': 'p',
-                'content': f'Connected {t.issues}: #' + iif(t is T.gitlab, '4014', '0000')
+                'content': f'Connected {t.issues}: #0000'
 
             }),
             {
@@ -178,17 +171,27 @@ def main():
                     T.default: 'issues/<GitHub handle of author>/<issue#>-<slug>',
                     T.promotion: 'promotions/yyyy-mm-dd',
                     T.hotfix: 'hotfixes/<GitHub handle of author>/<issue#>-<slug>',
-                    T.gitlab: 'gitlab/yyyy-mm-dd/<GitLab version>',
+                    T.upgrade: 'upgrades/yyyy-mm-dd',
                     T.backport: 'backports/<7-digit SHA1 of most recent backported commit>'
                 }[t] + '`'
             },
+            iif(t is not t.backport, {
+                'type': 'cli',
+                'content': {
+                    T.default: 'On ZenHub, PR is connected to all issues it (partially) resolves',
+                    T.upgrade: 'On ZenHub, PR is connected to the upgrade issue it resolves',
+                    T.hotfix: 'On ZenHub, PR is connected to the issue it hotfixes',
+                    T.promotion: 'On ZenHub, PR is connected to the promotion issue it resolves',
+                    T.backport: None
+                }[t]
+            }),
+            iif(t not in (T.backport, T.upgrade), {
+                'type': 'cli',
+                'content': f'PR description links to connected {t.issues}'
+            }),
             iif(t is T.promotion, {
                 'type': 'cli',
                 'content': 'Title of connected issue matches `Promotion yyyy-mm-dd`'
-            }),
-            iif(t not in (T.backport, T.gitlab), {
-                'type': 'cli',
-                'content': f"PR title references {t.issues('all', 'the')} connected {t.issues}"
             }),
             {
                 'type': 'cli',
@@ -196,11 +199,15 @@ def main():
                     t.default: 'PR title matches<sup>1</sup> that of a connected issue',
                     t.promotion: 'PR title starts with title of connected issue',
                     t.hotfix: 'PR title is `Hotfix: ` followed by title of connected issue',
-                    t.gitlab: 'PR title matches `Update GitLab to <GitLab version> (#4014)`',
+                    t.upgrade: 'PR title matches `Upgrade dependencies yyyy-mm-dd`',
                     t.backport: 'PR title contains the 7-digit SHA1 of the backported commits'
                 }[t],
                 'alt': iif(t is t.default, "or comment in PR explains why they're different", None)
             },
+            iif(t is not T.backport, {
+                'type': 'cli',
+                'content': f"PR title references {t.issues('all', 'the')} connected {t.issues}"
+            }),
             *(
                 [
                     {
@@ -219,25 +226,11 @@ def main():
                 'type': 'cli',
                 'content': 'For each connected issue, there is at least one commit whose title references that issue'
             }),
-            iif(t is T.gitlab, {
-                'type': 'cli',
-                'content': 'Disconnected any other PRs currently connected to #4014 via ZenHub'
-            }),
-            iif(t is not t.backport, {
-                'type': 'cli',
-                'content': {
-                    T.default: 'PR is connected to all connected issues via ZenHub',
-                    T.gitlab: 'PR is connected to issue #4014 via ZenHub',
-                    T.hotfix: 'PR is connected to issue via ZenHub',
-                    T.promotion: 'PR is connected to issue via ZenHub',
-                    T.backport: None
-                }[t]
-            }),
-            iif(t not in (T.backport, T.gitlab), {
-                'type': 'cli',
-                'content': f'PR description links to connected {t.issues}'
-            }),
             *iif(t is T.default, [
+                {
+                    'type': 'h2',
+                    'content': 'Author (partiality)'
+                },
                 {
                     'type': 'cli',
                     'content': 'Added `p` tag to titles of partial commits'
@@ -312,25 +305,25 @@ def main():
                     'alt': 'or this PR is not chained to another PR'
                 }
             ]),
-            *iif(t in (T.default, T.promotion), [
+            *iif(t in (T.default, T.promotion, T.upgrade), [
                 {
                     'type': 'h2',
-                    'content': 'Author (upgrading)'
+                    'content': 'Author (upgrading deployments)'
                 },
                 iif(t is T.default, {
                     'type': 'cli',
                     'content': 'Documented upgrading of deployments in UPGRADING.rst',
-                    'alt': 'or this PR does not require upgrading'
+                    'alt': 'or this PR does not require upgrading deployments'
                 }),
                 iif(t is T.default, {
                     'type': 'cli',
                     'content': 'Added `u` tag to commit title',
-                    'alt': 'or this PR does not require upgrading'
+                    'alt': 'or this PR does not require upgrading deployments'
                 }),
                 {
                     'type': 'cli',
                     'content': 'Added `upgrade` label to PR',
-                    'alt': 'or this PR does not require upgrading'
+                    'alt': 'or this PR does not require upgrading deployments'
                 }
             ]),
             *iif(t is T.default, [
@@ -383,7 +376,7 @@ def main():
                     ] if t is T.hotfix else [
                     ]),
             ]),
-            *iif(t not in (T.gitlab, T.promotion), [
+            *iif(t is not T.promotion, [
                 {
                     'type': 'h2',
                     'content': 'Author (before every review)'
@@ -409,6 +402,15 @@ def main():
                     'content': 'Added `reqs` label to PR',
                     'alt': 'or this PR does not touch requirements*.txt'
                 },
+                *iif(t is T.upgrade, [
+                    {
+                        'type': 'cli',
+                        'content': f'Selected `{deployment}.shared` and '
+                                   f'ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused`',
+                        'alt': 'or this PR does not change any Docker image versions'
+                    }
+                    for deployment in t.deployments
+                ]),
                 iif(t is T.default, {
                     'type': 'cli',
                     'content': '`make integration_test` passes in personal deployment',
@@ -438,29 +440,17 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Requested review from primary reviewer'
+                    'content': 'Requested review from system administrator'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Assigned PR to primary reviewer'
+                    'content': 'PR is assigned to system administrator'
                 }
-            ]),
-            *iif(t is T.gitlab, [
-                {
-                    'type': 'h2',
-                    'content': 'Author (deploy)'
-                },
-                *[
-                    {
-                        'type': 'cli',
-                        'content': f'Deployed changes to `{deployment}.gitlab`'
-                    } for deployment in t.gitlab_deployments
-                ]
             ]),
             *iif(t in (T.default, T.backport), [
                 {
                     'type': 'h2',
-                    'content': 'Primary reviewer (after requesting changes)'
+                    'content': 'System administrator (after requesting changes)'
                 },
                 {
                     'type': 'p',
@@ -470,14 +460,8 @@ def main():
             ]),
             {
                 'type': 'h2',
-                'content': 'Primary reviewer (after approval)'
+                'content': 'System administrator (after approval)'
             },
-            *iif(t is T.gitlab, [
-                {
-                    'type': 'cli',
-                    'content': f'Verified background migrations for `{d}.gitlab` are complete'
-                } for d in t.gitlab_deployments
-            ]),
             {
                 'type': 'cli',
                 'content': 'Actually approved the PR'
@@ -486,7 +470,7 @@ def main():
                 'type': 'cli',
                 'content': 'Labeled connected issues as `demo` or `no demo`'
             }),
-            iif(t is T.gitlab, {
+            iif(t is T.upgrade, {
                 'type': 'cli',
                 'content': 'Labeled connected issue as `no demo`'
             }),
@@ -495,14 +479,14 @@ def main():
                 'content': 'Commented on connected issues about demo expectations',
                 'alt': 'or all connected issues are labeled `no demo`'
             }),
-            {
+            iif(t is not T.upgrade, {
                 'type': 'cli',
                 'content': (
                     'Decided if PR can be labeled `no sandbox`'
                     if t in (T.default, T.backport) else
                     'Labeled PR as `no sandbox`'
                 )
-            },
+            }),
             iif(t is not T.promotion, {
                 'type': 'cli',
                 'content': 'PR title is appropriate as title of merge commit'
@@ -517,7 +501,7 @@ def main():
             },
             {
                 'type': 'cli',
-                'content': 'Assigned PR to current operator'
+                'content': 'PR is assigned to current operator'
             },
             {
                 'type': 'h2',
@@ -551,6 +535,70 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed PR branch to GitHub'
             },
+            *iif(t is T.promotion, [
+                {
+                    'type': 'cli',
+                    'content': f'Selected `{deployment}.shared` and '
+                               f'ran `make -C terraform/shared apply`',
+                    'alt': 'or this PR does not change any Docker image versions'
+                }
+                for deployment in t.deployments
+            ]),
+            *iif(t in (T.upgrade, T.promotion), [
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'Selected `{deployment}.gitlab` and '
+                                   f'ran `make -C terraform/gitlab apply`',
+                        'alt': 'or this PR does not change the GitLab version'
+                    }
+                    for deployment in t.deployments
+                ],
+                {
+                    'type': 'cli',
+                    'content': 'Assigned system administrator',
+                    'alt': 'or this PR does not change the GitLab version'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'Checked the items in the next section',
+                    'alt': 'or this PR changes the GitLab version'
+                },
+                {
+                    'type': 'h2',
+                    'content': 'System administrator'
+                },
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'Background migrations for `{d}.gitlab` are complete',
+                        'alt': 'or this PR does not change the GitLab version'
+                    }
+                    for d in t.deployments
+                ],
+                {
+                    'type': 'cli',
+                    'content': 'PR is assigned to operator',
+                },
+                {
+                    'type': 'h2',
+                    'content': 'Operator (before pushing merge the commit)'
+                },
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'Selected `{deployment}.gitlab` and '
+                                   f'ran `make -C terraform/gitlab/runner`',
+                        'alt': 'or this PR does not change `azul_docker_version`'
+                    }
+                    for deployment in t.deployments
+                ],
+            ]),
+            iif(any(sandbox is not None for sandbox in t.deployments.values()), {
+                'type': 'cli',
+                'content': 'Added `sandbox` label',
+                'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
+            }),
             # zip() is used to interleave the steps for each deployment so
             # that first, step 1 is done for all deployments, then step 2
             # for all of them, and so on.
@@ -558,40 +606,40 @@ def main():
                 [
                     {
                         'type': 'cli',
-                        'content': f'Pushed PR branch to GitLab `{d}`'
-                                   + iif(i == 0, ' and added `sandbox` label'),
-                        'alt': 'or PR is labeled `no sandbox`'
+                        'content': f'Pushed PR branch to GitLab `{deployment}`',
+                        'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Build passes in `{s}` deployment',
-                        'alt': 'or PR is labeled `no sandbox`'
+                        'content': f'Build passes in `{sandbox}` deployment',
+                        'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Reviewed build logs for anomalies in `{s}` deployment',
-                        'alt': 'or PR is labeled `no sandbox`'
+                        'content': f'Reviewed build logs for anomalies in `{sandbox}` deployment',
+                        'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     *iif(t is T.default, [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{s}`',
-                            'alt': 'or this PR does not remove catalogs or otherwise causes unreferenced indices '
+                            'content': f'Deleted unreferenced indices in `{sandbox}`',
+                            'alt': f'or this PR does not remove catalogs '
+                                   f'or otherwise causes unreferenced indices in `{deployment}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{s}`',
-                            'alt': 'or this PR does not require reindexing `sandbox`'
+                            'content': f'Started reindex in `{sandbox}`',
+                            'alt': f'or this PR does not require reindexing `{deployment}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for failures in `{s}`',
-                            'alt': 'or this PR does not require reindexing `sandbox`'
+                            'content': f'Checked for failures in `{sandbox}`',
+                            'alt': f'or this PR does not require reindexing `{deployment}`'
                         }
                     ])
                 ]
-                for i, (d, s) in enumerate(t.deployments.items())
-                if s is not None
+                for i, (deployment, sandbox) in enumerate(t.deployments.items())
+                if sandbox is not None
             ))),
             {
                 'type': 'cli',
@@ -608,7 +656,7 @@ def main():
                            'but only include `p` if the PR is labeled `partial`',
                            'but exclude any `p` tags')
             },
-            iif(t in (T.default, T.gitlab, T.hotfix), {
+            iif(t in (T.default, T.upgrade, T.hotfix), {
                 'type': 'cli',
                 'content': (
                     'Moved connected issue to *Merged prod* column in ZenHub'
@@ -620,7 +668,7 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed merge commit to GitHub'
             },
-            *iif(t in (T.default, T.gitlab), [
+            *iif(t is T.default, [
                 {
                     'type': 'h2',
                     'content': 'Operator (chain shortening)'
@@ -647,7 +695,7 @@ def main():
                 {
                     'type': 'cli',
                     'content': f'Pushed merge commit to GitLab `{d}`',
-                    'alt': iif(t in (T.hotfix, T.promotion), None, 'or PR is labeled `no sandbox`')
+                    'alt': iif(t in (T.hotfix, T.promotion, T.upgrade), None, 'or PR is labeled `no sandbox`')
                 }
                 for d in t.deployments
             ],
@@ -666,6 +714,15 @@ def main():
                 ]
                 for d, s in t.deployments.items()
             ),
+            *iif(t is T.upgrade, [
+                {
+                    'type': 'cli',
+                    'content': f'Selected `{deployment}.shared` and '
+                               f'ran `make -C terraform/shared apply`',
+                    'alt': 'or this PR does not change any Docker image versions'
+                }
+                for deployment in t.deployments
+            ]),
             {
                 'type': 'cli',
                 'content': 'Deleted PR branch from GitHub'
@@ -709,39 +766,54 @@ def main():
                     [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{d}`',
-                            'alt': 'or this PR does not remove catalogs or otherwise causes unreferenced indices '
+                            'content': f'Deleted unreferenced indices in `{deployment}`',
+                            'alt': f'or this PR does not remove catalogs '
+                                   f'or otherwise causes unreferenced indices in `{deployment}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{d}`',
+                            'content': f'Considered deindexing individual sources in `{deployment}`',
                             'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                'or this PR does not require reindexing'
+                                f'or this PR does not merely remove sources from existing catalogs in `{deployment}`'
                             )
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for and triaged indexing failures in `{d}`',
+                            'content': f'Considered indexing individual sources in `{deployment}`',
+                            'alt': (
+                                f'or this PR does not merely add sources to existing catalogs in `{deployment}`'
+                            )
+                        },
+                        {
+                            'type': 'cli',
+                            'content': f'Started reindex in `{deployment}`',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                'or this PR does not require reindexing'
+                                f'or this PR does not require reindexing `{deployment}`'
+                            )
+                        },
+                        {
+                            'type': 'cli',
+                            'content': f'Checked for and triaged indexing failures in `{deployment}`',
+                            'alt': (
+                                'or neither this PR nor a prior failed promotion requires it'
+                                if t is T.hotfix else
+                                f'or this PR does not require reindexing `{deployment}`'
                             )
 
                         },
                         {
                             'type': 'cli',
-                            'content': f'Emptied fail queues in `{d}` deployment',
+                            'content': f'Emptied fail queues in `{deployment}` deployment',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                'or this PR does not require reindexing'
+                                f'or this PR does not require reindexing `{deployment}`'
                             )
                         }
                     ]
-                    for d, s in t.deployments.items()
+                    for deployment, sandbox in t.deployments.items()
                 ))),
                 iif(t is T.hotfix, {
                     'type': 'cli',
@@ -752,10 +824,47 @@ def main():
                 'type': 'h2',
                 'content': 'Operator'
             },
+            iif(t is T.upgrade, {
+                'type': 'cli',
+                'content': 'Ran `script/export_inspector_findings.py` against `anvilprod`, imported results '
+                           'to [Google Sheet](https://docs.google.com/spreadsheets/d/'
+                           '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
+                           'relevant<sup>1</sup> findings as a comment on the connected issue.'
+            }),
             {
                 'type': 'cli',
-                'content': 'Unassigned PR'
+                'content': 'PR is assigned to '
+                           + iif(t in (T.upgrade, T.promotion), 'system administrator', 'no one')
             },
+            iif(t is T.upgrade, {
+                'type': 'p',
+                'content': '<sup>1</sup>A relevant finding is a high or critical vulnerability in an image '
+                           'that is used within the security boundary. Images not used within the boundary '
+                           'are tracked in `azul.docker_images` under a key starting with `_`.'
+            }),
+            *iif(t in (T.upgrade, T.promotion), [
+                {
+                    'type': 'h2',
+                    'content': 'System administrator'
+                },
+                iif(t is T.upgrade, {
+                    'type': 'cli',
+                    'content': 'No currently reported vulnerability requires immediate attention'
+                }),
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'Removed unused image tags from ({name} image on DockerHub)[{url}]',
+                        'alt': f'or this promotion does not include changes to `azul_docker_{name.lower()}_version`'
+                    }
+                    for name, url in images_we_build_ourselves.items()
+                    if t is T.promotion
+                ],
+                {
+                    'type': 'cli',
+                    'content': 'PR is assigned to no one'
+                },
+            ]),
             {
                 'type': 'h1',
                 'content': 'Shorthand for review comments'

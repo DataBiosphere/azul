@@ -1030,17 +1030,25 @@ class Config:
         import json
         return json.loads(self.environ['azul_browser_sites'])
 
+    class GitStatus(TypedDict):
+        commit: str
+        dirty: bool
+
     @property
-    def _git_status(self) -> dict[str, str]:
+    def _git_status_env(self) -> dict[str, str]:
+        return {'azul_git_' + k: str(v) for k, v in self.git_status.items()}
+
+    @property
+    def git_status(self) -> GitStatus:
         import git
         repo = git.Repo(self.project_root)
         return {
-            'azul_git_commit': repo.head.object.hexsha,
-            'azul_git_dirty': str(repo.is_dirty()),
+            'commit': repo.head.object.hexsha,
+            'dirty': repo.is_dirty()
         }
 
     @property
-    def lambda_git_status(self) -> dict[str, str]:
+    def lambda_git_status(self) -> GitStatus:
         return {
             'commit': self.environ['azul_git_commit'],
             'dirty': str_to_bool(self.environ['azul_git_dirty'])
@@ -1079,7 +1087,7 @@ class Config:
         """
         return (
             self._lambda_env(outsource=False)
-            | self._git_status
+            | self._git_status_env
             | self._aws_account_name
         )
 
@@ -1133,14 +1141,19 @@ class Config:
     def aggregation_lambda_timeout(self, *, retry: bool) -> int:
         return (10 if retry else 1) * 60
 
-    # For the period from 05/31/2020 to 06/06/2020, the max was 18s and the
-    # average + 3 standard deviations was 1.8s in the `dev` deployment.
-    #
-    health_lambda_timeout = 10
-
     service_lambda_timeout = 15 * 60
 
     api_gateway_timeout = 29
+
+    # The service's health cache lambda makes an HTTP request to the service's
+    # REST API, so the timeout for the health cache lambda must be greater
+    # than or equal to that of the API Gateway fronting the service's REST API
+    # lambda, plus some more time for the other health checks performed by the
+    # service's health cache lambda. Since we apply the same timeout to the
+    # indexer's health cache lambda, we blindly assume that this timeout is
+    # also sufficient for the health checks performed by that lambda.
+    #
+    health_cache_lambda_timeout = api_gateway_timeout + 10
 
     # The number of seconds to extend the timeout of a Lambda fronted by
     # API Gateway so that API Gateway times out before the Lambda. We pad the
@@ -1334,6 +1347,10 @@ class Config:
     @property
     def terraform_component(self):
         return self._term_from_env('azul_terraform_component', optional=True)
+
+    @property
+    def terraform_keep_unused(self):
+        return self._boolean(self.environ['azul_terraform_keep_unused'])
 
     permissions_boundary_name = 'azul-boundary'
 

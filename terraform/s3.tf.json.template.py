@@ -8,6 +8,7 @@ from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
     enable_s3_bucket_inventory,
+    set_empty_s3_bucket_lifecycle_config,
 )
 
 tf_config = {
@@ -56,4 +57,5 @@ tf_config = {
 }
 tf_config = enable_s3_bucket_inventory(tf_config)
 tf_config = block_public_s3_bucket_access(tf_config)
+tf_config = set_empty_s3_bucket_lifecycle_config(tf_config)
 emit_tf(tf_config)

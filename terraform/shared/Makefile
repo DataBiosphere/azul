@@ -36,6 +36,10 @@ import_resources: rename_resources
 apply: validate import_resources
 	terraform apply
 
+.PHONY: apply_keep_unused
+apply_keep_unused: validate import_resources
+	azul_terraform_keep_unused=1 terraform apply
+
 .PHONY: auto_apply
 auto_apply: validate import_resources
 	terraform plan -no-color -out=plan.bin

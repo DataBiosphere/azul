@@ -207,7 +207,6 @@
                         }
                     ],
                     "name": "samples",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -258,7 +257,6 @@
                         }
                     ],
                     "name": "sample_cell_lines",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -309,7 +307,6 @@
                         }
                     ],
                     "name": "sample_organoids",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -426,7 +423,6 @@
                         }
                     ],
                     "name": "sample_specimens",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -466,7 +462,6 @@
                         }
                     ],
                     "name": "sequencing_inputs",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -583,7 +578,6 @@
                         }
                     ],
                     "name": "specimens",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -661,7 +655,6 @@
                         }
                     ],
                     "name": "cell_suspensions",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -712,7 +705,6 @@
                         }
                     ],
                     "name": "cell_lines",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -808,13 +800,10 @@
                                                 ]
                                             }
                                         ],
-                                        "name": "organism_age",
-                                        "namespace": "donors",
+                                        "name": "donors.organism_age",
                                         "type": "record"
                                     }
                                 ],
-                                "name": "organism_age",
-                                "namespace": "donors",
                                 "type": "array"
                             }
                         },
@@ -839,7 +828,6 @@
                         }
                     ],
                     "name": "donors",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -890,7 +878,6 @@
                         }
                     ],
                     "name": "organoids",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1052,7 +1039,6 @@
                         }
                     ],
                     "name": "files",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1081,7 +1067,6 @@
                         }
                     ],
                     "name": "analysis_protocols",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1099,7 +1084,6 @@
                         }
                     ],
                     "name": "imaging_protocols",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1139,7 +1123,6 @@
                         }
                     ],
                     "name": "library_preparation_protocols",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1179,7 +1162,6 @@
                         }
                     ],
                     "name": "sequencing_protocols",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1197,7 +1179,6 @@
                         }
                     ],
                     "name": "sequencing_processes",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1426,8 +1407,7 @@
                                             }
                                         }
                                     ],
-                                    "name": "file",
-                                    "namespace": "matrices",
+                                    "name": "matrices.file",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -1435,7 +1415,6 @@
                         }
                     ],
                     "name": "matrices",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1664,8 +1643,7 @@
                                             }
                                         }
                                     ],
-                                    "name": "file",
-                                    "namespace": "contributed_analyses",
+                                    "name": "contributed_analyses.file",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -1673,7 +1651,6 @@
                         }
                     ],
                     "name": "contributed_analyses",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -1828,8 +1805,7 @@
                                             }
                                         }
                                     ],
-                                    "name": "contributors",
-                                    "namespace": "projects",
+                                    "name": "projects.contributors",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -1897,8 +1873,7 @@
                                             }
                                         }
                                     ],
-                                    "name": "publications",
-                                    "namespace": "projects",
+                                    "name": "projects.publications",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -1955,8 +1930,7 @@
                                             }
                                         }
                                     ],
-                                    "name": "accessions",
-                                    "namespace": "projects",
+                                    "name": "projects.accessions",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -1972,7 +1946,6 @@
                         }
                     ],
                     "name": "projects",
-                    "namespace": "",
                     "type": "record"
                 },
                 {
@@ -2056,7 +2029,6 @@
                         }
                     ],
                     "name": "dates",
-                    "namespace": "",
                     "type": "record"
                 }
             ]
