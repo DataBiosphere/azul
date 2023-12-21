@@ -401,7 +401,7 @@ class AzulClient(SignatureHelper):
         plugin = self.repository_plugin(catalog)
         source_ids = [plugin.resolve_source(s).id for s in sources]
         es_client = ESClientFactory.get()
-        indices = ','.join(self.index_service.index_names(catalog))
+        indices = ','.join(map(str, self.index_service.index_names(catalog)))
         query = {
             'query': {
                 'bool': {

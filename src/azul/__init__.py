@@ -762,6 +762,10 @@ class Config:
     def index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
+    @property
+    def enable_replicas(self) -> bool:
+        return self._boolean(self.environ['AZUL_ENABLE_REPLICAS'])
+
     # Because this property is relatively expensive to produce and frequently
     # used we are applying aggressive caching here, knowing very well that
     # this eliminates the option to reconfigure the running process by

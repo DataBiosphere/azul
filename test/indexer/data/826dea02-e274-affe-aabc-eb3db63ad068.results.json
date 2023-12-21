@@ -431,6 +431,28 @@
         }
     },
     {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_e7a2881e67a92734fcf2f98e7f2c215a5b6c0a6d",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+            "replica_type": "anvil_sequencingactivity",
+            "hub_ids": [],
+            "contents": {
+                "activity_type": "Sequencing",
+                "assay_type": [],
+                "data_modality": [],
+                "datarepo_row_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+                "sequencingactivity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
+                "source_datarepo_row_ids": [
+                    "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+                ],
+                "version": "2022-06-01T00:00:00.000000Z"
+            }
+        }
+    },
+    {
         "_index": "azul_v2_nadove4_test_files_aggregate",
         "_type": "_doc",
         "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
@@ -836,6 +858,68 @@
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
             "bundle_version": "",
             "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_d8653a10b21d8e2ec6e6dc79da6161216d3390db",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+            "replica_type": "anvil_file",
+            "hub_ids": [],
+            "contents": {
+                "data_modality": [],
+                "datarepo_row_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                "file_format": ".vcf.gz",
+                "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
+                "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
+                "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                "file_ref": "drs://data.terra.bio/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+                "file_size": 213021639,
+                "is_supplementary": false,
+                "reference_assembly": [],
+                "source_datarepo_row_ids": [
+                    "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
+                ],
+                "version": "2022-06-01T00:00:00.000000Z",
+                "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+                "sha256": "",
+                "crc32": ""
+            }
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_bb4d58a1aa21adce6af1b09e7e75664afda5890e",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+            "replica_type": "anvil_diagnosis",
+            "hub_ids": [],
+            "contents": {
+                "datarepo_row_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+                "diagnosis_age_lower_bound": null,
+                "diagnosis_age_unit": null,
+                "diagnosis_age_upper_bound": null,
+                "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+                "disease": [
+                    "redacted-A61iJlLx"
+                ],
+                "onset_age_lower_bound": null,
+                "onset_age_unit": null,
+                "onset_age_upper_bound": null,
+                "phenopacket": [],
+                "phenotype": [
+                    "redacted-acSYHZUr"
+                ],
+                "source_datarepo_row_ids": [
+                    "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                ],
+                "version": "redacted-/JIktcFZ"
+            }
         }
     },
     {
@@ -1383,6 +1467,40 @@
         }
     },
     {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "2370f948-2783-4eb6-afea-e022897f4dcf_f10ae38d485330bf8fc7a95f7eb06626b984ad6a",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+            "replica_type": "anvil_dataset",
+            "hub_ids": [],
+            "contents": {
+                "consent_group": [
+                    "DS-BDIS"
+                ],
+                "data_modality": [],
+                "data_use_permission": [
+                    "DS-BDIS"
+                ],
+                "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+                "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+                "owner": [
+                    "Debbie Nickerson"
+                ],
+                "principal_investigator": [],
+                "registered_identifier": [
+                    "phs000693"
+                ],
+                "source_datarepo_row_ids": [
+                    "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+                ],
+                "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                "version": "2022-06-01T00:00:00.000000Z"
+            }
+        }
+    },
+    {
         "_index": "azul_v2_nadove4_test_files_aggregate",
         "_type": "_doc",
         "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -1791,6 +1909,36 @@
         }
     },
     {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_a5be7dffc776407cf4b713001f62f6036b08ecbb",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+            "replica_type": "anvil_file",
+            "hub_ids": [],
+            "contents": {
+                "data_modality": [],
+                "datarepo_row_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                "file_format": ".bam",
+                "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
+                "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                "file_ref": "drs://data.terra.bio/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "file_size": 3306845592,
+                "is_supplementary": false,
+                "reference_assembly": [],
+                "source_datarepo_row_ids": [
+                    "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                ],
+                "version": "2022-06-01T00:00:00.000000Z",
+                "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "sha256": "",
+                "crc32": ""
+            }
+        }
+    },
+    {
         "_index": "azul_v2_nadove4_test_activities_aggregate",
         "_type": "_doc",
         "_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -2031,6 +2179,28 @@
                     "version": ""
                 }
             ]
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "816e364e-1193-4e5b-a91a-14e4b009157c_5eabdcb475879b310467a4d8c31cab38deff5e6f",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
+            "replica_type": "anvil_sequencingactivity",
+            "hub_ids": [],
+            "contents": {
+                "activity_type": "Sequencing",
+                "assay_type": [],
+                "data_modality": [],
+                "datarepo_row_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
+                "sequencingactivity_id": "a60c5138-3749-f7cb-8714-52d389ad5231",
+                "source_datarepo_row_ids": [
+                    "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b"
+                ],
+                "version": "2022-06-01T00:00:00.000000Z"
+            }
         }
     },
     {
@@ -2758,6 +2928,32 @@
         }
     },
     {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_df5c9e8f2fdbbd0f85316396c1119451830f332f",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
+            "replica_type": "anvil_biosample",
+            "hub_ids": [],
+            "contents": {
+                "anatomical_site": null,
+                "apriori_cell_type": [],
+                "biosample_id": "f9d40cf6-37b8-22f3-ce35-0dc614d2452b",
+                "biosample_type": null,
+                "datarepo_row_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
+                "disease": null,
+                "donor_age_at_collection_lower_bound": null,
+                "donor_age_at_collection_unit": null,
+                "donor_age_at_collection_upper_bound": null,
+                "source_datarepo_row_ids": [
+                    "sample:98048c3b-2525-4090-94fd-477de31f2608"
+                ],
+                "version": "redacted-/JIktcFZ"
+            }
+        }
+    },
+    {
         "_index": "azul_v2_nadove4_test_bundles_aggregate",
         "_type": "_doc",
         "_id": "826dea02-e274-affe-aabc-eb3db63ad068",
@@ -3308,6 +3504,38 @@
         }
     },
     {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461_026c212506d50c06d8225c2d5fac1e789eb4d301",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+            "replica_type": "anvil_diagnosis",
+            "hub_ids": [],
+            "contents": {
+                "datarepo_row_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
+                "diagnosis_age_lower_bound": null,
+                "diagnosis_age_unit": null,
+                "diagnosis_age_upper_bound": null,
+                "diagnosis_id": "25ff8d32-18c9-fc3e-020a-5de20d35d906",
+                "disease": [
+                    "redacted-g50ublm/"
+                ],
+                "onset_age_lower_bound": null,
+                "onset_age_unit": null,
+                "onset_age_upper_bound": null,
+                "phenopacket": [],
+                "phenotype": [
+                    "redacted-acSYHZUr"
+                ],
+                "source_datarepo_row_ids": [
+                    "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                ],
+                "version": "redacted-/JIktcFZ"
+            }
+        }
+    },
+    {
         "_index": "azul_v2_nadove4_test_donors_aggregate",
         "_type": "_doc",
         "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
@@ -3613,6 +3841,31 @@
                     "version": ""
                 }
             ]
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_1d8e455a019e942e4d2298f5f019778164640246",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+            "replica_type": "anvil_donor",
+            "hub_ids": [],
+            "contents": {
+                "datarepo_row_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+                "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                "genetic_ancestry": [],
+                "organism_type": "redacted-ACw+6ecI",
+                "phenotypic_sex": "redacted-JfQ0b3xG",
+                "reported_ethnicity": [
+                    "redacted-NSkwDycK"
+                ],
+                "source_datarepo_row_ids": [
+                    "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                ],
+                "version": "redacted-/JIktcFZ"
+            }
         }
     },
     {

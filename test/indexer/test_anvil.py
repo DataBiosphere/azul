@@ -8,6 +8,10 @@ from typing import (
     cast,
 )
 import unittest
+from unittest.mock import (
+    PropertyMock,
+    patch,
+)
 
 from more_itertools import (
     one,
@@ -81,21 +85,45 @@ class AnvilIndexerTestCase(IndexerTestCase, TDRAnvilPluginTestCase):
 
 class TestAnvilIndexer(AnvilIndexerTestCase):
 
+    def test_indexing(self):
+        self.maxDiff = None
+        canned_hits = self._load_canned_result(self.bundle)
+        for enable_replicas in True, False:
+            with patch.object(target=type(config),
+                              attribute='enable_replicas',
+                              new_callable=PropertyMock,
+                              return_value=enable_replicas):
+                with self.subTest(enable_replicas=enable_replicas):
+                    if enable_replicas:
+                        expected_hits = canned_hits
+                    else:
+                        expected_hits = [
+                            h
+                            for h in canned_hits
+                            if self._parse_index_name(h)[1] is not DocumentType.replica
+                        ]
+                    self.index_service.create_indices(self.catalog)
+                    try:
+                        self._index_canned_bundle(self.bundle)
+                        hits = self._get_all_hits()
+                        hits.sort(key=itemgetter('_id'))
+                        self.assertEqual(expected_hits, hits)
+                    finally:
+                        self.index_service.delete_indices(self.catalog)
+
+
+class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
+    """
+    Conveniently sets up (tears down) indices before (after) each test.
+    """
+
     def setUp(self) -> None:
         super().setUp()
         self.index_service.create_indices(self.catalog)
 
     def tearDown(self):
-        self.index_service.delete_indices(self.catalog)
         super().tearDown()
-
-    def test_indexing(self):
-        self.maxDiff = None
-        self._index_canned_bundle(self.bundle)
-        hits = self._get_all_hits()
-        hits.sort(key=itemgetter('_id'))
-        expected_hits = self._load_canned_result(self.bundle)
-        self.assertEqual(expected_hits, hits)
+        self.index_service.delete_indices(self.catalog)
 
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='dataset',
@@ -117,9 +145,9 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
             entity_type, doc_type = self._parse_index_name(hit)
             if entity_type == 'bundles':
                 continue
-            elif entity_type == 'datasets':
+            elif entity_type in {'datasets', 'replica'}:
                 doc_counts[doc_type] += 1
-                if doc_type is DocumentType.aggregate:
+                if entity_type == 'datasets' and doc_type is DocumentType.aggregate:
                     self.assertEqual(2, hit['_source']['num_contributions'])
                     self.assertEqual(sorted(b.uuid for b in bundles),
                                      sorted(b['uuid'] for b in hit['_source']['bundles']))
@@ -131,8 +159,11 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
                     self.assertEqual('Study description from DUOS', contents['description'])
             else:
                 self.fail(entity_type)
-        self.assertEqual(1, doc_counts[DocumentType.aggregate])
-        self.assertEqual(2, doc_counts[DocumentType.contribution])
+        self.assertDictEqual(doc_counts, {
+            DocumentType.aggregate: 1,
+            DocumentType.contribution: 2,
+            **({DocumentType.replica: 2} if config.enable_replicas else {})
+        })
 
     # FIXME: Enable test after the issue with TinyQuery `WITH` has been resolved
     #        https://github.com/DataBiosphere/azul/issues/5046
