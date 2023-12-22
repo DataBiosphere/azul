@@ -174,7 +174,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         >>> source_url = 'https://github.com/USER/REPO/tree/REF/tests'
 
         >>> plugin._construct_file_url(source_url, 'foo.zip')
-        'https://github.com/USER/REPO/raw/REF/tests/foo.zip'
+        'https://github.com/USER/REPO/raw/REF/tests/data/foo.zip'
 
         >>> plugin._construct_file_url(source_url, '')
         Traceback (most recent call last):
@@ -184,6 +184,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         url = furl(source_url)
         require(url.path.segments[2] == 'tree', source_url)
         url.path.segments[2] = 'raw'
+        url.path.segments.append('data')
         require(len(file_name) > 0, 'file_name cannot be empty')
         require(not file_name.endswith('/'), file_name)
         for segment in file_name.split('/'):
