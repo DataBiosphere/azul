@@ -289,8 +289,9 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                 else:
                     # FIXME: Support non-null DRS URIs in file descriptors
                     #        https://github.com/DataBiosphere/azul/issues/3631
-                    require(external_drs_uri is None,
-                            'Non-null `drs_uri` in file descriptor', external_drs_uri)
+                    if external_drs_uri is not None:
+                        log.warning('Non-null `drs_uri` in file descriptor (%s)', external_drs_uri)
+                        external_drs_uri = None
                     return external_drs_uri
             else:
                 return file_id
