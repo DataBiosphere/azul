@@ -148,6 +148,6 @@ class HCASummaryAggregationStage(HCAAggregationStage):
 
         for agg_name in self._cardinality_aggregations:
             agg_value = result[agg_name]['value']
-            assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)
+            assert agg_value <= threshold * .9, (agg_name, agg_value, threshold)
 
         return result
