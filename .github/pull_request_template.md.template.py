@@ -854,7 +854,7 @@ def main():
                 *[
                     {
                         'type': 'cli',
-                        'content': f'Removed unused image tags from ({name} image on DockerHub)[{url}]',
+                        'content': f'Removed unused image tags from [{name} image on DockerHub]({url})',
                         'alt': f'or this promotion does not include changes to `azul_docker_{name.lower()}_version`'
                     }
                     for name, url in images_we_build_ourselves.items()
