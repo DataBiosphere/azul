@@ -733,6 +733,7 @@ def main():
                     'content': f'Deleted PR branch from GitLab `{d}`'
                 }
                 for d, s in t.deployments.items()
+                if t is not t.promotion
             ),
             *iif(t is T.promotion, [
                 {
