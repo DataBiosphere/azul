@@ -48,18 +48,18 @@ Connected issue: #0000
 - [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Selected `dev.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
-- [ ] Selected `anvildev.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
-- [ ] Selected `anvilprod.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
-- [ ] Assigned system administrator <sub>or this PR does not change the GitLab version</sub>
-- [ ] Checked the items in the next section <sub>or this PR changes the GitLab version</sub>
+- [ ] Selected `dev.gitlab` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Selected `anvildev.gitlab` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Selected `anvilprod.gitlab` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Assigned system administrator <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Checked the items in the next section <sub>or this PR includes changes to files in terraform/gitlab</sub>
 
 
 ### System administrator
 
-- [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
-- [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
-- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
 - [ ] PR is assigned to operator
 
 

@@ -406,7 +406,7 @@ def main():
                     {
                         'type': 'cli',
                         'content': f'Selected `{deployment}.shared` and '
-                                   f'ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused`',
+                                   f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/shared apply_keep_unused`',
                         'alt': 'or this PR does not change any Docker image versions'
                     }
                     for deployment in t.deployments
@@ -539,7 +539,7 @@ def main():
                 {
                     'type': 'cli',
                     'content': f'Selected `{deployment}.shared` and '
-                               f'ran `make -C terraform/shared apply`',
+                               f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/shared apply`',
                     'alt': 'or this PR does not change any Docker image versions'
                 }
                 for deployment in t.deployments
@@ -549,20 +549,20 @@ def main():
                     {
                         'type': 'cli',
                         'content': f'Selected `{deployment}.gitlab` and '
-                                   f'ran `make -C terraform/gitlab apply`',
-                        'alt': 'or this PR does not change the GitLab version'
+                                   f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/gitlab apply`',
+                        'alt': 'or this PR does not include any changes to files in terraform/gitlab'
                     }
                     for deployment in t.deployments
                 ],
                 {
                     'type': 'cli',
                     'content': 'Assigned system administrator',
-                    'alt': 'or this PR does not change the GitLab version'
+                    'alt': 'or this PR does not include any changes to files in terraform/gitlab'
                 },
                 {
                     'type': 'cli',
                     'content': 'Checked the items in the next section',
-                    'alt': 'or this PR changes the GitLab version'
+                    'alt': 'or this PR includes changes to files in terraform/gitlab'
                 },
                 {
                     'type': 'h2',
@@ -572,7 +572,7 @@ def main():
                     {
                         'type': 'cli',
                         'content': f'Background migrations for `{d}.gitlab` are complete',
-                        'alt': 'or this PR does not change the GitLab version'
+                        'alt': 'or this PR does not include any changes to files in terraform/gitlab'
                     }
                     for d in t.deployments
                 ],

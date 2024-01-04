@@ -41,15 +41,15 @@ Connected issue: #0000
 ### Operator (before pushing merge the commit)
 
 - [ ] Pushed PR branch to GitHub
-- [ ] Selected `prod.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
-- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
-- [ ] Assigned system administrator <sub>or this PR does not change the GitLab version</sub>
-- [ ] Checked the items in the next section <sub>or this PR changes the GitLab version</sub>
+- [ ] Selected `prod.shared` and ran `CI_COMMIT_REF_NAME=prod make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `prod.gitlab` and ran `CI_COMMIT_REF_NAME=prod make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Assigned system administrator <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Checked the items in the next section <sub>or this PR includes changes to files in terraform/gitlab</sub>
 
 
 ### System administrator
 
-- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
 - [ ] PR is assigned to operator
 
 
