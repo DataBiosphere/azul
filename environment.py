@@ -218,10 +218,26 @@ def env() -> Mapping[str, Optional[str]]:
         # defined in the bootstrap environment (environment.boot) because it is
         # required to be available during the early stages of the GitLab and
         # GitHub Actions build. This variable is not intended to be overridden
-        # per deployment or locally. Modifying the value requires redeploying
-        # the `shared` component.
+        # per deployment or locally.  Note that the value of this variable is
+        # duplicated in the value of the `azul_python_image` variable documented
+        # below. Both variable values must be kept consistent.
         #
         'azul_python_version': None,
+
+        # The fully qualified name of the base image of the Azul image, i.e.,
+        # the image that is built using the Dockerfile at the root of the
+        # project. The base image must have Python installed, so using the
+        # official Docker image for Python is the obvious choice, which explains
+        # the name of this variable. This variable is defined in the bootstrap
+        # environment (environment.boot) because it is required to be available
+        # during the early stages of the GitLab build. This variable is not
+        # intended to be overridden per deployment or locally. Note that the
+        # Docker image tag in value of this variable duplicates the value of
+        # `azul_python_version` above. Both variable values must be kept
+        # consistent. Modifying the value of this variable requires redeploying
+        # the `shared` component.
+        #
+        'azul_python_image': None,
 
         # The tag of the Elasticsearch image that we use to run test cases.
         #
@@ -236,9 +252,9 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The version of Terraform used throughout the system. This variable is
         # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitHub Actions
-        # build. This variable is not intended to be overridden per deployment
-        # or locally.
+        # required to be available during the early stages of the GitLab build.
+        # This variable is not intended to be overridden per deployment or
+        # locally.
         #
         'azul_terraform_version': None,
 
