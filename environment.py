@@ -225,14 +225,14 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The tag of the Elasticsearch image that we use to run test cases.
         #
-        'azul_docker_elasticsearch_version': '7.17.15-7',
+        'azul_docker_elasticsearch_version': '7.17.16-8',
 
         # The tag of the PyCharm image that we use to format the source code in
         # continuous integration. We specify it here instead of directly in the
         # Makefile so that a change to the version does not require updating
         # requirements.
         #
-        'azul_docker_pycharm_version': '2023.2.5-7',
+        'azul_docker_pycharm_version': '2023.3.2-8',
 
         # The version of Terraform used throughout the system. This variable is
         # defined in the bootstrap environment (environment.boot) because it is

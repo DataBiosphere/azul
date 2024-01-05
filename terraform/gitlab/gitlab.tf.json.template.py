@@ -239,10 +239,10 @@ runner_image = config.docker_registry + config.docker_images['gitlab_runner']
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.26 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.27 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
-    'us-east-1': 'ami-0a001e75ab2e7eae2'
+    'us-east-1': 'ami-0e5e481def96f77cd'
 }
 
 gitlab_mount = '/mnt/gitlab'
