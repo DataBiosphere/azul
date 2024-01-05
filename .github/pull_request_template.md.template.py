@@ -406,7 +406,8 @@ def main():
                     {
                         'type': 'cli',
                         'content': f'Selected `{deployment}.shared` and '
-                                   f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/shared apply_keep_unused`',
+                                   f'ran `CI_COMMIT_REF_NAME={t.target_branch} '
+                                   f'make -C terraform/shared apply_keep_unused`',
                         'alt': 'or this PR does not change any Docker image versions'
                     }
                     for deployment in t.deployments
