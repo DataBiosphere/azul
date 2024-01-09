@@ -76,18 +76,11 @@ class ForcedRefreshIndexService(IndexService):
         return writer
 
 
-class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
-
-    @classmethod
-    @abstractmethod
-    def _bundle_cls(cls) -> Type[BUNDLE]:
-        raise NotImplementedError
-
-    @classmethod
-    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
-        bundle_cls = cls._bundle_cls()
-        bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
-        return bundle_cls.from_json(bundle, bundle_json)
+class CannedFileTestCase(AzulUnitTestCase):
+    """
+    A test case that loads JSON cans. A can is a file containing test inputs or
+    expected outputs.
+    """
 
     @classmethod
     def _load_canned_file(cls,
@@ -116,6 +109,25 @@ class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
         file_name = f'{uuid}{suffix}.{extension}.json'
         with open(os.path.join(data_prefix, file_name), 'r') as infile:
             return json.load(infile)
+
+
+class CannedBundleTestCase(CannedFileTestCase, Generic[BUNDLE]):
+    """
+    A test case that loads a canned bundle, i.e. a can containing the input to
+    tests involving a metadata plugin or the expected output of tests involving
+    a repository plugin.
+    """
+
+    @classmethod
+    @abstractmethod
+    def _bundle_cls(cls) -> Type[BUNDLE]:
+        raise NotImplementedError
+
+    @classmethod
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
+        bundle_cls = cls._bundle_cls()
+        bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
+        return bundle_cls.from_json(bundle, bundle_json)
 
 
 class IndexerTestCase(CatalogTestCase,
