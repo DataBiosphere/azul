@@ -2,13 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Iterable,
-    Mapping,
-)
-from datetime import (
-    timezone,
-)
 from io import (
     BytesIO,
 )
@@ -18,7 +11,9 @@ from operator import (
 )
 from typing import (
     Callable,
+    ClassVar,
     Generic,
+    Sequence,
     Type,
     TypeVar,
 )
@@ -35,23 +30,25 @@ import attr
 from furl import (
     furl,
 )
+from google.api_core.client_options import (
+    ClientOptions,
+)
+from google.auth.credentials import (
+    AnonymousCredentials,
+)
+from google.cloud import (
+    bigquery,
+)
 from more_itertools import (
     first,
     one,
     take,
-)
-from tinyquery import (
-    tinyquery,
-)
-from tinyquery.context import (
-    Column,
 )
 import urllib3
 
 from azul import (
     RequirementError,
     cache,
-    cached_property,
     config,
 )
 from azul.auth import (
@@ -59,7 +56,6 @@ from azul.auth import (
 )
 from azul.bigquery import (
     BigQueryRow,
-    BigQueryRows,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -67,6 +63,9 @@ from azul.indexer import (
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.oauth2 import (
+    ScopedCredentials,
 )
 from azul.plugins.repository import (
     tdr_hca,
@@ -82,14 +81,19 @@ from azul.terra import (
     TDRClient,
     TDRSourceSpec,
     TerraClient,
+    TerraCredentialsProvider,
 )
 from azul.types import (
     JSON,
     JSONs,
+    reify,
 )
 from azul_test_case import (
     AzulUnitTestCase,
     TDRTestCase,
+)
+from docker_container_test_case import (
+    DockerContainerTestCase,
 )
 from indexer import (
     CannedFileTestCase,
@@ -104,57 +108,56 @@ def setUpModule():
     configure_test_logging(log)
 
 
-@attr.s(kw_only=True, auto_attribs=True, frozen=True)
+class MockTDRClient(TDRClient):
+    netloc: ClassVar[tuple[str, int] | None] = None
+
+    def _bigquery(self, project: str) -> bigquery.Client:
+        # noinspection PyArgumentList
+        host, port = self.netloc
+        options = ClientOptions(api_endpoint=f'http://{host}:{port}')
+        # noinspection PyTypeChecker
+        return bigquery.Client(project=project,
+                               credentials=AnonymousCredentials(),
+                               client_options=options)
+
+
+@attr.s(frozen=True, auto_attribs=True)
+class MockCredentials(AnonymousCredentials):
+    project_id: str
+
+
+@attr.s(frozen=True, auto_attribs=True)
+class MockCredentialsProvider(TerraCredentialsProvider):
+    project_id: str
+
+    def insufficient_access(self, resource: str) -> Exception:
+        pass
+
+    def scoped_credentials(self) -> ScopedCredentials:
+        # noinspection PyTypeChecker
+        return MockCredentials(self.project_id)
+
+    def oauth2_scopes(self) -> Sequence[str]:
+        pass
+
+
 class MockPlugin(TDRPlugin, metaclass=ABCMeta):
-    tinyquery: tinyquery.TinyQuery
-
-    def _run_sql(self, query: str) -> BigQueryRows:
-        log.debug('Query: %r', query)
-        columns = self.tinyquery.evaluate_query(query).columns
-        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
-        # Tinyquery returns naive datetime objects from a TIMESTAMP type column,
-        # so we manually set the tzinfo back to UTC on these values.
-        # https://github.com/Khan/tinyquery/blob/9382b18b/tinyquery/runtime.py#L215
-        for key, column in columns.items():
-            if column.type == 'TIMESTAMP':
-                values = [
-                    None if d is None else d.replace(tzinfo=timezone.utc)
-                    for d in column.values
-                ]
-                columns[key] = Column(type=column.type,
-                                      mode=column.mode,
-                                      values=values)
-        for i in range(num_rows):
-            yield {k[1]: v.values[i] for k, v in columns.items()}
-
-    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
-        return source.bq_name + '.' + table_name
+    netloc: str
+    project_id: str
 
     @classmethod
-    def _in(cls,
-            columns: tuple[str, ...],
-            values: Iterable[tuple[str, ...]]
-            ) -> str:
-        return ' OR '.join(
-            '(' + ' AND '.join(
-                f'{column} = {inner_value}'
-                for column, inner_value in zip(columns, value)
-            ) + ')'
-            for value in values
-        )
-
-
-class TestMockPlugin(AzulUnitTestCase):
-
-    def test_in(self):
-        self.assertEqual('(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)',
-                         MockPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
+    def _tdr(cls):
+        credentials_provider = MockCredentialsProvider(cls.project_id)
+        tdr = MockTDRClient(credentials_provider=credentials_provider)
+        MockTDRClient.netloc = cls.netloc
+        return tdr
 
 
 TDR_PLUGIN = TypeVar('TDR_PLUGIN', bound=TDRPlugin)
 
 
 class TDRPluginTestCase(TDRTestCase,
+                        DockerContainerTestCase,
                         CannedFileTestCase,
                         Generic[TDR_PLUGIN]):
 
@@ -163,18 +166,29 @@ class TDRPluginTestCase(TDRTestCase,
     def _plugin_cls(cls) -> Type[TDR_PLUGIN]:
         raise NotImplementedError
 
-    @cached_property
-    def tinyquery(self) -> tinyquery.TinyQuery:
-        return tinyquery.TinyQuery()
-
     @cache
     def plugin_for_source_spec(self, source_spec) -> TDR_PLUGIN:
         # noinspection PyAbstractClass
         class Plugin(MockPlugin, self._plugin_cls()):
-            pass
+            netloc = self.netloc
+            project_id = self.source.spec.project
 
-        return Plugin(sources={source_spec},
-                      tinyquery=self.tinyquery)
+        return Plugin(sources={source_spec})
+
+    netloc: tuple[str, int] | None = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.netloc = cls._create_container(image=config.docker_images['bigquery_emulator'],
+                                           platform='linux/amd64',
+                                           container_port=9050,
+                                           command=[
+                                               '--log-level=debug',
+                                               '--port=9050',
+                                               '--project=' + cls.source.spec.project,
+                                               '--dataset=' + cls.source.spec.bq_name
+                                           ])
 
     def _make_mock_tdr_tables(self,
                               bundle_fqid: SourcedBundleFQID) -> None:
@@ -191,32 +205,34 @@ class TDRPluginTestCase(TDRTestCase,
                                 table_name: str,
                                 rows: JSONs) -> None:
         schema = self._bq_schema(rows[0])
-        columns = {column['name'] for column in schema}
+        columns = {column.name for column in schema}
+        json_type = reify(JSON)
 
-        def dump_row(row: JSON) -> str:
+        def dump_row(row: JSON) -> JSON:
             row_columns = row.keys()
-            # TinyQuery's errors are typically not helpful in debugging missing/
-            # extra columns in the row JSON.
             assert row_columns == columns, row_columns
-            row = {
-                column_name: (json.dumps(column_value)
-                              if isinstance(column_value, Mapping) else
-                              column_value)
+            return {
+                column_name: (
+                    json.dumps(column_value)
+                    if isinstance(column_value, json_type) else
+                    column_value
+                )
                 for column_name, column_value in row.items()
             }
-            return json.dumps(row)
 
-        self.tinyquery.load_table_from_newline_delimited_json(
-            table_name=f'{source.bq_name}.{table_name}',
-            schema=json.dumps(schema),
-            table_lines=map(dump_row, rows)
-        )
+        plugin = self.plugin_for_source_spec(source)
+        bq = plugin.tdr._bigquery(source.project)
+        table_name = plugin._full_table_name(source, table_name)
+        # https://youtrack.jetbrains.com/issue/PY-50178
+        # noinspection PyTypeChecker
+        table = bigquery.Table(table_name, schema)
+        bq.create_table(table=table)
+        self.addCleanup(bq.delete_table, table)
+        bq.insert_rows(table=table, selected_fields=schema, rows=map(dump_row, rows))
 
-    def _bq_schema(self, row: BigQueryRow) -> JSONs:
+    def _bq_schema(self, row: BigQueryRow) -> list[bigquery.SchemaField]:
         return [
-            dict(name=k,
-                 type='TIMESTAMP' if k == 'version' else 'STRING',
-                 mode='NULLABLE')
+            bigquery.SchemaField(name=k, field_type='TIMESTAMP' if k == 'version' else 'STRING')
             for k, v in row.items()
         ]
 
@@ -258,6 +274,12 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         # Test valid links
         self._test_fetch_bundle(bundle, load_tables=True)
 
+        # FIXME: Rewrite this part to use BigQuery DML statements
+        #        https://github.com/DataBiosphere/azul/issues/5046
+        if False:
+            self._test_invalid_links(bundle)
+
+    def _test_invalid_links(self, bundle: TDRHCABundle):
         # Directly modify the canned tables to test invalid links not present
         # in the canned bundle.
         dataset = self.source.spec.bq_name
@@ -322,6 +344,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
+        assert isinstance(emulated_bundle, TDRHCABundle)
         # Manifest and metadata should both be sorted by entity UUID
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
         self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
