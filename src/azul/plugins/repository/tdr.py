@@ -46,7 +46,6 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.plugins import (
-    BUNDLE,
     RepositoryFileDownload,
     RepositoryPlugin,
 )
@@ -85,9 +84,11 @@ class TDRBundle(Bundle[TDRBundleFQID], ABC):
 
 T = TypeVar('T')
 
+TDR_BUNDLE = TypeVar('TDR_BUNDLE', bound=TDRBundle)
+
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
+class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
     _sources: Set[TDRSourceSpec]
 
     @classmethod
@@ -205,7 +206,7 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
 
-    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
+    def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> TDR_BUNDLE:
         self._assert_source(bundle_fqid.source)
         now = time.time()
         bundle = self._emulate_bundle(bundle_fqid)
@@ -234,7 +235,7 @@ class TDRPlugin(RepositoryPlugin[BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
         raise NotImplementedError
 
     @abstractmethod
-    def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRBundle:
+    def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDR_BUNDLE:
         raise NotImplementedError
 
     def drs_client(self,
