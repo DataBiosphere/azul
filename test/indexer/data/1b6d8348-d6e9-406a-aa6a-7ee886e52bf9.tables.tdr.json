@@ -418,7 +418,7 @@
                         "sha256": "125e5c181744e2dacf0b156d4c0b82ce771701947b26ca738689edddfc3af97e",
                         "s3_etag": "31985ad7f32b053fa97f05216c6e805e-20",
                         "file_name": "IDC9_L002_R1.fastq.gz",
-                        "file_version": "2019-09-24T09:35:08.057668Z",
+                        "file_version": "2019-09-24T09:35:08.157668Z",
                         "file_id": "292b2faf-0db3-4ba1-a6a5-cb7bdfa9313d",
                         "content_type": "application/gzip",
                         "size": 1297795360
@@ -633,7 +633,7 @@
                         "sha256": "8af97d885b995e7239a409f490e915f4754e7d1902f4a620f464995a422fb61f",
                         "s3_etag": "20497e6cbc5f671fa94cf69bf0febdad-7",
                         "file_name": "IDC9_L004_I1.fastq.gz",
-                        "file_version": "2019-09-24T09:35:09.072703Z",
+                        "file_version": "2019-09-24T09:35:09.172703Z",
                         "file_id": "f0011946-dbea-4f87-9858-5e3fd32a9829",
                         "content_type": "application/gzip",
                         "size": 439983276
@@ -861,7 +861,7 @@
             "rows": [
                 {
                     "library_preparation_protocol_id": "2945bb1f-90de-42a3-afa1-f57a62c853f0",
-                    "version": "2019-09-20T13:43:52.078000Z",
+                    "version": "2019-09-20T13:43:52.178000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
                         "schema_type": "protocol",
@@ -940,7 +940,7 @@
             "rows": [
                 {
                     "dissociation_protocol_id": "eaf15851-97e3-4e4b-b81b-0e625098f4d5",
-                    "version": "2019-09-20T13:43:52.077000Z",
+                    "version": "2019-09-20T13:43:52.177000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
                         "schema_type": "protocol",

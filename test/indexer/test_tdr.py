@@ -234,7 +234,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
 
     def test_list_bundles(self):
         source = self.source
-        current_version = '2001-01-01T00:00:00.000001Z'
+        current_version = '2001-01-01T00:00:00.100001Z'
         links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
         self._make_mock_entity_table(source=source.spec,
                                      table_name='links',
