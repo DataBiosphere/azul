@@ -20,6 +20,7 @@ from typing import (
     Callable,
     Generic,
     Type,
+    TypeVar,
 )
 import unittest
 from unittest import (
@@ -98,8 +99,8 @@ from azul_test_case import (
     TDRTestCase,
 )
 from indexer import (
-    BUNDLE,
     CannedBundleTestCase,
+    CannedFileTestCase,
 )
 
 log = get_test_logger(__name__)
@@ -157,11 +158,16 @@ class TestMockPlugin(AzulUnitTestCase):
                          MockPlugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')]))
 
 
-class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase[BUNDLE], Generic[BUNDLE]):
+TDR_PLUGIN = TypeVar('TDR_PLUGIN', bound=TDRPlugin)
+
+
+class TDRPluginTestCase(TDRTestCase,
+                        CannedFileTestCase,
+                        Generic[TDR_PLUGIN]):
 
     @classmethod
     @abstractmethod
-    def _plugin_cls(cls) -> Type[TDRPlugin]:
+    def _plugin_cls(cls) -> Type[TDR_PLUGIN]:
         raise NotImplementedError
 
     mock_service_url = furl('https://azul_tdr_service_url_testing.org')
@@ -173,7 +179,7 @@ class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase[BUNDLE], Generic[BUNDL
         return tinyquery.TinyQuery()
 
     @cache
-    def plugin_for_source_spec(self, source_spec) -> TDRPlugin:
+    def plugin_for_source_spec(self, source_spec) -> TDR_PLUGIN:
         # noinspection PyAbstractClass
         class Plugin(MockPlugin, self._plugin_cls()):
             pass
@@ -226,7 +232,9 @@ class TDRPluginTestCase(TDRTestCase, CannedBundleTestCase[BUNDLE], Generic[BUNDL
         ]
 
 
-class TDRHCAPluginTestCase(DCP2TestCase, TDRPluginTestCase[TDRHCABundle]):
+class TDRHCAPluginTestCase(DCP2TestCase,
+                           TDRPluginTestCase[tdr_hca.Plugin],
+                           CannedBundleTestCase[TDRHCABundle]):
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRHCABundle]:
@@ -237,7 +245,9 @@ class TDRHCAPluginTestCase(DCP2TestCase, TDRPluginTestCase[TDRHCABundle]):
         return tdr_hca.Plugin
 
 
-class TDRAnvilPluginTestCase(AnvilTestCase, TDRPluginTestCase[TDRAnvilBundle]):
+class TDRAnvilPluginTestCase(AnvilTestCase,
+                             TDRPluginTestCase[tdr_anvil.Plugin],
+                             CannedBundleTestCase[TDRAnvilBundle]):
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
