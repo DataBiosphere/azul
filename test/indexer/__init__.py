@@ -84,6 +84,12 @@ class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
         raise NotImplementedError
 
     @classmethod
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
+        bundle_cls = cls._bundle_cls()
+        bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
+        return bundle_cls.from_json(bundle, bundle_json)
+
+    @classmethod
     def _load_canned_file(cls,
                           bundle: BundleFQID,
                           extension: str
@@ -110,12 +116,6 @@ class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
         file_name = f'{uuid}{suffix}.{extension}.json'
         with open(os.path.join(data_prefix, file_name), 'r') as infile:
             return json.load(infile)
-
-    @classmethod
-    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
-        bundle_cls = cls._bundle_cls()
-        bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
-        return bundle_cls.from_json(bundle, bundle_json)
 
 
 class IndexerTestCase(CatalogTestCase,
