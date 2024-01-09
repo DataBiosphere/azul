@@ -243,7 +243,10 @@ class IndexerTestCase(CatalogTestCase,
                             return 1
                     elif isinstance(data[0], list):
                         # In lieu of tuples, a range in JSON is a list of two values
-                        self.assertEqual(data, list(map(list, sorted(map(tuple, data)))))
+                        def pair(t: tuple) -> list:
+                            return list(t)
+
+                        self.assertEqual(data, list(map(pair, sorted(map(tuple, data)))))
                         return 1
                     else:
                         assert False, str(type(data[0]))
