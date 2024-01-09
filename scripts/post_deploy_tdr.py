@@ -34,39 +34,6 @@ log = logging.getLogger(__name__)
 
 class TerraValidator:
 
-    def register_with_sam(self) -> None:
-        for tdr in self.tdr, self.public_tdr:
-            tdr.register_with_sam()
-            require(tdr.is_registered())
-
-    @cached_property
-    def catalogs(self) -> Collection[CatalogName]:
-        result = [
-            catalog.name
-            for catalog in config.catalogs.values()
-            if config.is_tdr_enabled(catalog.name)
-        ]
-        assert result, config.catalogs
-        return result
-
-    def verify_sources(self) -> None:
-        futures = []
-        all_sources = set()
-        with ThreadPoolExecutor(max_workers=8) as tpe:
-            for catalog in self.catalogs:
-                catalog_sources = config.sources(catalog)
-                for source in catalog_sources - all_sources:
-                    source = TDRSourceSpec.parse(source)
-                    futures.append(tpe.submit(self.verify_source, catalog, source))
-                all_sources |= catalog_sources
-            for completed_future in as_completed(futures):
-                futures.remove(completed_future)
-                e = completed_future.exception()
-                if e is not None:
-                    for running_future in futures:
-                        running_future.cancel()
-                    raise e
-
     @cached_property
     def azul_client(self) -> AzulClient:
         return AzulClient()
@@ -86,6 +53,39 @@ class TerraValidator:
         plugin = self.azul_client.repository_plugin(catalog)
         assert isinstance(plugin, TDRPlugin), plugin
         return plugin
+
+    @cached_property
+    def catalogs(self) -> Collection[CatalogName]:
+        result = [
+            catalog.name
+            for catalog in config.catalogs.values()
+            if config.is_tdr_enabled(catalog.name)
+        ]
+        assert result, config.catalogs
+        return result
+
+    def register_with_sam(self) -> None:
+        for tdr in self.tdr, self.public_tdr:
+            tdr.register_with_sam()
+            require(tdr.is_registered())
+
+    def verify_sources(self) -> None:
+        futures = []
+        all_sources = set()
+        with ThreadPoolExecutor(max_workers=8) as tpe:
+            for catalog in self.catalogs:
+                catalog_sources = config.sources(catalog)
+                for source in catalog_sources - all_sources:
+                    source = TDRSourceSpec.parse(source)
+                    futures.append(tpe.submit(self.verify_source, catalog, source))
+                all_sources |= catalog_sources
+            for completed_future in as_completed(futures):
+                futures.remove(completed_future)
+                e = completed_future.exception()
+                if e is not None:
+                    for running_future in futures:
+                        running_future.cancel()
+                    raise e
 
     def verify_source(self,
                       catalog: CatalogName,
