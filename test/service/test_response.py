@@ -91,6 +91,7 @@ from azul.types import (
 )
 from indexer import (
     DCP1CannedBundleTestCase,
+    DCP2CannedBundleTestCase,
 )
 from indexer.test_tdr import (
     TDRHCAPluginTestCase,
@@ -3808,7 +3809,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
         }, response.json())
 
 
-class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
+class TestTDRIndexer(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
