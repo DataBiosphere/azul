@@ -479,7 +479,7 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     # port. Since many cans hard-code DRS URIs we need a predictable value for
     # the DRS endpoint, so we patch AZUL_DRS_DOMAIN_NAME to achieve that.
 
-    _drs_domain_name = 'azul_testing_fake_drs_domain.lan'
+    _drs_domain_name = 'mock_drs_domain.lan'
     _drs_domain_mock = None
 
     @classmethod
