@@ -107,9 +107,9 @@ class RepositoryFilesTestCase(LocalAppTestCase, metaclass=ABCMeta):
 @mock.patch.object(SourceService, '_put', new=MagicMock())
 @mock.patch.object(SourceService, '_get')
 class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
-    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
 
-    @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
+    @mock.patch.dict(os.environ,
+                     AZUL_TDR_SERVICE_URL=str(DCP2TestCase.mock_tdr_service_url))
     @mock.patch.object(TerraClient,
                        '_http_client',
                        AuthorizedHttp(MagicMock(),

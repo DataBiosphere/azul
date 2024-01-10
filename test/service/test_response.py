@@ -91,7 +91,6 @@ from azul_test_case import (
 )
 from indexer.test_tdr import (
     TDRHCAPluginTestCase,
-    TDRPluginTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -3838,7 +3837,7 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
         return one(response.json()['files'])
 
     @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=TDRPluginTestCase.mock_tdr_service_url))
+           new=PropertyMock(return_value=TDRHCAPluginTestCase.mock_tdr_service_url))
     def test_file_urls(self):
         with self.subTest(phantom=False):
             file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')

@@ -30,6 +30,9 @@ from botocore.credentials import (
     Credentials,
 )
 import botocore.session
+from furl import (
+    furl,
+)
 import moto.backends
 import moto.core.models
 
@@ -495,6 +498,10 @@ class DCP1TestCase(DSSTestCase):
 
 
 class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
+    mock_tdr_service_url = furl('https://azul_tdr_service_url_testing.org')
+
+    _drs_domain_name = str(mock_tdr_service_url.netloc)
+
     source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
                           spec=TDRSourceSpec.parse('tdr:test_project:snapshot/snapshot:/2'))
 
