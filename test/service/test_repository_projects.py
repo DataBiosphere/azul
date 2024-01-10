@@ -19,7 +19,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class RepositoryProjectsEndpointTest(DCP1TestCase, WebServiceTestCase):
+class TestIndexProjectsEndpoint(DCP1TestCase, WebServiceTestCase):
     # Set a seed so that we can test the detail response with a stable project ID
     seed = 123
 

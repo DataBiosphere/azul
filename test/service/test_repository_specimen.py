@@ -16,7 +16,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class RepositorySpecimenEndpointTest(DCP1TestCase, WebServiceTestCase):
+class TestIndexSamplesEndpoint(DCP1TestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
