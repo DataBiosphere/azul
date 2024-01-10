@@ -170,9 +170,9 @@ class TDRPluginTestCase(TDRTestCase,
     def _plugin_cls(cls) -> Type[TDR_PLUGIN]:
         raise NotImplementedError
 
-    mock_service_url = furl('https://azul_tdr_service_url_testing.org')
+    mock_tdr_service_url = furl('https://azul_tdr_service_url_testing.org')
 
-    _drs_domain_name = str(mock_service_url.netloc)
+    _drs_domain_name = str(mock_tdr_service_url.netloc)
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -342,7 +342,7 @@ class TestTDRHCAPlugin(TDRHCAPluginTestCase):
                          len(upstream_uuids))
 
     @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=TDRPluginTestCase.mock_service_url))
+           new=PropertyMock(return_value=TDRPluginTestCase.mock_tdr_service_url))
     def _test_fetch_bundle(self,
                            test_bundle: TDRHCABundle,
                            *,

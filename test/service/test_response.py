@@ -3838,7 +3838,7 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
         return one(response.json()['files'])
 
     @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=TDRPluginTestCase.mock_service_url))
+           new=PropertyMock(return_value=TDRPluginTestCase.mock_tdr_service_url))
     def test_file_urls(self):
         with self.subTest(phantom=False):
             file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')
@@ -3846,7 +3846,7 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
                                                  args=dict(catalog=self.catalog,
                                                            version='2019-09-24T09:35:06.958773Z')))
             expected_drs_uri = str(furl(scheme='drs',
-                                        netloc=furl(self.mock_service_url).netloc,
+                                        netloc=furl(self.mock_tdr_service_url).netloc,
                                         path=f'v1_{self.source.id}_9d6f268f-f484-5381-9095-f0998fa0c961'))
 
             self.assertEqual(expected_url, file['url'])

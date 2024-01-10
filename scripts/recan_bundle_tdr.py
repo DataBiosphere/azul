@@ -127,7 +127,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
     if drs_path is None:
         return None
     else:
-        netloc = TestTDRHCAPlugin.mock_service_url.netloc
+        netloc = TestTDRHCAPlugin.mock_tdr_service_url.netloc
         return f'drs://{netloc}/{drs_path}'
 
 
