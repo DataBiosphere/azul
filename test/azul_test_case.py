@@ -246,11 +246,9 @@ class AzulUnitTestCase(AzulTestCase):
         cls._mock_aws_region()
         cls._mock_dss_query_prefix()
         cls._mock_lambda_env()
-        cls._mock_drs_domain()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls._restore_drs_domain()
         cls._restore_lambda_env()
         cls._restore_dss_query_prefix()
         cls._restore_aws_region()
@@ -378,20 +376,6 @@ class AzulUnitTestCase(AzulTestCase):
     def _restore_lambda_env(cls):
         cls._lambda_env_mock.stop()
 
-    _drs_domain_name = 'azul_testing_fake_drs_domain.lan'
-    _drs_domain_mock = None
-
-    @classmethod
-    def _mock_drs_domain(cls):
-        cls._drs_domain_mock = patch.dict(os.environ,
-                                          AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
-        cls._drs_domain_mock.start()
-
-    @classmethod
-    def _restore_drs_domain(cls):
-        cls._drs_domain_mock.stop()
-        cls._drs_domain_mock = None
-
 
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     catalog: CatalogName = 'test'
@@ -473,14 +457,41 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
         )
         cls._source_cache_patch = patch_source_cache()
         cls._source_cache_patch.start()
+        cls._mock_drs_domain()
 
     @classmethod
     def tearDownClass(cls):
+        cls._restore_drs_domain()
         cls._source_patch.stop()
         cls._source_patch = None
         cls._source_cache_patch.stop()
         cls._source_cache_patch = None
         super().tearDownClass()
+
+    # With DSS as the repository, which doesn't support DRS, Azul acts as a
+    # partial DRS implementation, proxying DSS. The REST endpoints making up
+    # that partial implementaton are exposed by the Azul service. Optionally, a
+    # CNAME alias for the canonical service endpoint can be set up. When the
+    # repository is DSS and if the alias is enabled by configuring
+    # AZUL_DRS_DOMAIN_NAME, all DRS URIs emitted by the service reference that
+    # alias instead of the service's canonical endpoint. In a unit test, the
+    # canonical service endpoint is 'localhost:' followed by some ephemeral
+    # port. Since many cans hard-code DRS URIs we need a predictable value for
+    # the DRS endpoint, so we patch AZUL_DRS_DOMAIN_NAME to achieve that.
+
+    _drs_domain_name = 'azul_testing_fake_drs_domain.lan'
+    _drs_domain_mock = None
+
+    @classmethod
+    def _mock_drs_domain(cls):
+        cls._drs_domain_mock = patch.dict(os.environ,
+                                          AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
+        cls._drs_domain_mock.start()
+
+    @classmethod
+    def _restore_drs_domain(cls):
+        cls._drs_domain_mock.stop()
+        cls._drs_domain_mock = None
 
 
 class DCP1TestCase(DSSTestCase):
