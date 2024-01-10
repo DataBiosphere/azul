@@ -43,6 +43,9 @@ from azul.plugins import (
 from azul.plugins.repository.dss import (
     DSSBundle,
 )
+from azul.plugins.repository.tdr_anvil import (
+    TDRAnvilBundle,
+)
 from azul.types import (
     AnyJSON,
     JSON,
@@ -51,6 +54,7 @@ from azul.types import (
     MutableJSONs,
 )
 from azul_test_case import (
+    AnvilTestCase,
     AzulUnitTestCase,
     CatalogTestCase,
     DCP1TestCase,
@@ -131,6 +135,13 @@ class DCP1CannedBundleTestCase(DCP1TestCase, CannedBundleTestCase[DSSBundle]):
     @classmethod
     def _bundle_cls(cls) -> Type[DSSBundle]:
         return DSSBundle
+
+
+class AnvilCannedBundleTestCase(AnvilTestCase, CannedBundleTestCase[TDRAnvilBundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
+        return TDRAnvilBundle
 
 
 class IndexerTestCase(CatalogTestCase,

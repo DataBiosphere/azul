@@ -34,10 +34,8 @@ from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundleFQID,
 )
 from indexer import (
+    AnvilCannedBundleTestCase,
     IndexerTestCase,
-)
-from indexer.test_tdr import (
-    TDRAnvilPluginTestCase,
 )
 
 
@@ -46,7 +44,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class AnvilIndexerTestCase(IndexerTestCase, TDRAnvilPluginTestCase):
+class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
 
     @classmethod
     def bundle_fqid(cls,

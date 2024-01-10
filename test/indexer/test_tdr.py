@@ -70,14 +70,10 @@ from azul.logging import (
     get_test_logger,
 )
 from azul.plugins.repository import (
-    tdr_anvil,
     tdr_hca,
 )
 from azul.plugins.repository.tdr import (
     TDRPlugin,
-)
-from azul.plugins.repository.tdr_anvil import (
-    TDRAnvilBundle,
 )
 from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
@@ -93,7 +89,6 @@ from azul.types import (
     JSONs,
 )
 from azul_test_case import (
-    AnvilTestCase,
     AzulUnitTestCase,
     DCP2TestCase,
     TDRTestCase,
@@ -239,19 +234,6 @@ class TDRHCAPluginTestCase(DCP2TestCase,
     @classmethod
     def _plugin_cls(cls) -> Type[tdr_hca.Plugin]:
         return tdr_hca.Plugin
-
-
-class TDRAnvilPluginTestCase(AnvilTestCase,
-                             TDRPluginTestCase[tdr_anvil.Plugin],
-                             CannedBundleTestCase[TDRAnvilBundle]):
-
-    @classmethod
-    def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
-        return TDRAnvilBundle
-
-    @classmethod
-    def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
-        return tdr_anvil.Plugin
 
 
 class TestTDRHCAPlugin(TDRHCAPluginTestCase):
