@@ -3,7 +3,6 @@ from collections.abc import (
     Sequence,
 )
 import json
-import unittest
 
 import attr
 
@@ -392,7 +391,3 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
-
-
-if __name__ == '__main__':
-    unittest.main()

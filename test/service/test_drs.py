@@ -1,6 +1,5 @@
 import base64
 import json
-import unittest
 from unittest import (
     mock,
 )
@@ -323,7 +322,3 @@ class TestDRSController(AzulUnitTestCase):
         response = controller.get_object_access(bad_access_id, 'file_uuid', {})
         self.assertEqual(400, response.status_code)
         self.assertEqual('Invalid DRS access ID', response.body)
-
-
-if __name__ == '__main__':
-    unittest.main()

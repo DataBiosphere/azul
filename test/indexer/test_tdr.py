@@ -22,7 +22,6 @@ from typing import (
     Type,
     TypeVar,
 )
-import unittest
 from unittest import (
     mock,
 )
@@ -447,7 +446,3 @@ class TestTDRSourceList(AzulUnitTestCase):
                                     self.assertEqual('snapshot', url.args['filter'])
                                 else:
                                     self.assertNotIn('filter', url.args)
-
-
-if __name__ == '__main__':
-    unittest.main()

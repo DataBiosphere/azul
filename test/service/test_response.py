@@ -18,7 +18,6 @@ from typing import (
     Optional,
     cast,
 )
-import unittest
 from unittest import (
     mock,
 )
@@ -3864,7 +3863,3 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
             file = self.get_file('c343a47d-683f-571d-99c4-1331841b4e63')
             self.assertIsNone(file['url'])
             self.assertIsNone(file['drs_uri'])
-
-
-if __name__ == '__main__':
-    unittest.main()

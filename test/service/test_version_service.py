@@ -1,5 +1,3 @@
-import unittest
-
 from moto import (
     mock_dynamodb,
 )
@@ -46,7 +44,3 @@ class TestVersionService(VersionTableTestCase):
             )
             for args in tests:
                 self.assertRaises(VersionConflict, self.version_service.put, *args)
-
-
-if __name__ == '__main__':
-    unittest.main()

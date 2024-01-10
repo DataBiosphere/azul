@@ -7,7 +7,6 @@ from typing import (
     Optional,
     Union,
 )
-import unittest
 from unittest.mock import (
     MagicMock,
     patch,
@@ -270,7 +269,3 @@ class TestTerraformResourceTags(AzulUnitTestCase):
         }
         tagged = _transform_tf(manually_tagged_resource)
         self.assertDictEqualPermissive(expected, tagged)
-
-
-if __name__ == '__main__':
-    unittest.main()

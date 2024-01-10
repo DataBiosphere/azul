@@ -1,5 +1,3 @@
-import unittest
-
 from more_itertools import (
     one,
 )
@@ -103,7 +101,3 @@ class TestDataExtractorTestCase(DCP1IndexerTestCase):
                     file_ids = [f['uuid'] for f in files]
                     self.assertEqual(num_files, len(file_ids))
                     self.assertEqual(num_files, len(set(file_ids)))
-
-
-if __name__ == '__main__':
-    unittest.main()

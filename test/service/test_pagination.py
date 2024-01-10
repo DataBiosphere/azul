@@ -9,7 +9,6 @@ from typing import (
     Any,
     Optional,
 )
-import unittest
 
 import attr
 from more_itertools import (
@@ -147,7 +146,3 @@ class TestPagination(DCP1CannedBundleTestCase, DocumentCloningTestCase):
         self.assertEqual(index_size, sum(page_lengths))
         values = list(chain.from_iterable(page.values for page in pages))
         self.assertEqual(values, list(sorted(unique(values), reverse=reverse)))
-
-
-if __name__ == '__main__':
-    unittest.main()
