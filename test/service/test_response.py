@@ -3809,7 +3809,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
         }, response.json())
 
 
-class TestTDRIndexer(DCP2CannedBundleTestCase, WebServiceTestCase):
+class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
