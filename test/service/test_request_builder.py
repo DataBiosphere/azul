@@ -182,9 +182,9 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_missing_values(self):
-        '''
+        """
         Tests creation of a request for facets that do not have a value
-        '''
+        """
         expected_output = {
             'post_filter': {
                 'bool': {
