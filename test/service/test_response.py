@@ -92,9 +92,6 @@ from indexer import (
     DCP1CannedBundleTestCase,
     DCP2CannedBundleTestCase,
 )
-from indexer.test_tdr import (
-    TDRHCAPluginTestCase,
-)
 from service import (
     WebServiceTestCase,
 )
@@ -3845,7 +3842,7 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         return one(response.json()['files'])
 
     @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=TDRHCAPluginTestCase.mock_tdr_service_url))
+           new=PropertyMock(return_value=DCP2CannedBundleTestCase.mock_tdr_service_url))
     def test_file_urls(self):
         with self.subTest(phantom=False):
             file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')

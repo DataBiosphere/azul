@@ -89,12 +89,11 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
-    DCP2TestCase,
     TDRTestCase,
 )
 from indexer import (
-    CannedBundleTestCase,
     CannedFileTestCase,
+    DCP2CannedBundleTestCase,
 )
 
 log = get_test_logger(__name__)
@@ -222,20 +221,13 @@ class TDRPluginTestCase(TDRTestCase,
         ]
 
 
-class TDRHCAPluginTestCase(DCP2TestCase,
-                           TDRPluginTestCase[tdr_hca.Plugin],
-                           CannedBundleTestCase[TDRHCABundle]):
-
-    @classmethod
-    def _bundle_cls(cls) -> Type[TDRHCABundle]:
-        return TDRHCABundle
+class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
+                       TDRPluginTestCase[tdr_hca.Plugin]):
 
     @classmethod
     def _plugin_cls(cls) -> Type[tdr_hca.Plugin]:
         return tdr_hca.Plugin
 
-
-class TestTDRHCAPlugin(TDRHCAPluginTestCase):
     bundle_fqid = SourcedBundleFQID(source=TDRPluginTestCase.source,
                                     uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
                                     version='2019-09-24T09:35:06.958773Z')
@@ -319,7 +311,7 @@ class TestTDRHCAPlugin(TDRHCAPluginTestCase):
                          len(upstream_uuids))
 
     @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=TDRHCAPluginTestCase.mock_tdr_service_url))
+           new=PropertyMock(return_value=DCP2CannedBundleTestCase.mock_tdr_service_url))
     def _test_fetch_bundle(self,
                            test_bundle: TDRHCABundle,
                            *,
