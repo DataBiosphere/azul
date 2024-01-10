@@ -437,10 +437,6 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     A mixin for test cases that depend on certain DSS-related environment
     variables.
     """
-    source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
-
-    _source_patch = None
-    _source_cache_patch = None
 
     @classmethod
     def _bundle_cls(cls) -> Type[DSSBundle]:
@@ -449,24 +445,45 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._patch_source()
+        cls._patch_source_cache()
+        cls._patch_drs_domain()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._restore_drs_domain()
+        cls._restore_source()
+        cls._restore_source_cache()
+        super().tearDownClass()
+
+    source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
+    _source_patch = None
+
+    @classmethod
+    def _patch_source(cls):
         cls._source_patch = patch.dict(os.environ,
                                        AZUL_DSS_SOURCE=str(cls.source.spec))
         cls._source_patch.start()
+
+    @classmethod
+    def _restore_source(cls):
+        cls._source_patch.stop()
+        cls._source_patch = None
+
+    _source_cache_patch = None
+
+    @classmethod
+    def _patch_source_cache(cls):
         from service import (
             patch_source_cache,
         )
         cls._source_cache_patch = patch_source_cache()
         cls._source_cache_patch.start()
-        cls._mock_drs_domain()
 
     @classmethod
-    def tearDownClass(cls):
-        cls._restore_drs_domain()
-        cls._source_patch.stop()
-        cls._source_patch = None
+    def _restore_source_cache(cls):
         cls._source_cache_patch.stop()
         cls._source_cache_patch = None
-        super().tearDownClass()
 
     # With DSS as the repository, which doesn't support DRS, Azul acts as a
     # partial DRS implementation, proxying DSS. The REST endpoints making up
@@ -480,18 +497,18 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     # the DRS endpoint, so we patch AZUL_DRS_DOMAIN_NAME to achieve that.
 
     _drs_domain_name = 'mock_drs_domain.lan'
-    _drs_domain_mock = None
+    _drs_domain_patch = None
 
     @classmethod
-    def _mock_drs_domain(cls):
-        cls._drs_domain_mock = patch.dict(os.environ,
-                                          AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
-        cls._drs_domain_mock.start()
+    def _patch_drs_domain(cls):
+        cls._drs_domain_patch = patch.dict(os.environ,
+                                           AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
+        cls._drs_domain_patch.start()
 
     @classmethod
     def _restore_drs_domain(cls):
-        cls._drs_domain_mock.stop()
-        cls._drs_domain_mock = None
+        cls._drs_domain_patch.stop()
+        cls._drs_domain_patch = None
 
 
 class DCP1TestCase(DSSTestCase):
