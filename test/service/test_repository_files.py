@@ -109,13 +109,6 @@ class RepositoryFilesTestCase(LocalAppTestCase, metaclass=ABCMeta):
 class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
     mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
 
-    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
-
-    @classmethod
-    def _sources(cls):
-        return set(map(cls.make_mock_source_spec, cls.mock_source_names))
-
     catalog = 'testtdr'
 
     @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
@@ -183,6 +176,13 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
                                    return_value=file_doc):
                 response = client.request('GET', str(azul_url), redirect=False)
             self.assertEqual(response.status, 404)
+
+    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
+    make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
+
+    @classmethod
+    def _sources(cls):
+        return set(map(cls.make_mock_source_spec, cls.mock_source_names))
 
     @mock.patch.object(TDRClient, 'snapshot_names_by_id')
     @mock.patch.object(TDRClient, 'validate', new=MagicMock())
