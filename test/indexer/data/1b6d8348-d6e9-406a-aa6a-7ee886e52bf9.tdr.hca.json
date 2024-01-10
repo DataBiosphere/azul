@@ -10,7 +10,7 @@
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c"
         },
         {
             "name": "sequencing_protocol_0.json",
@@ -35,7 +35,7 @@
             "sha256": "5a51c7ea8ce08cafb06d279041bd65f0759ab24bb6d2c25f2ca488d017cd2bc6",
             "s3_etag": "4cc2f68ce54b988081c14118adc480c4-7",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_c82292d3-61d1-5785-b8dc-24b9365df5bd"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_c82292d3-61d1-5785-b8dc-24b9365df5bd"
         },
         {
             "name": "project_0.json",
@@ -94,7 +94,7 @@
             "sha256": "439112aa9aebd86f7e6a0c2206e005c8824994105aad3844090d765397931ed2",
             "s3_etag": "c9c70827a7c5d23bb150105a14112af9-20",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_385feda5-d1e3-5a51-8e55-f4f491a4e7bf"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_385feda5-d1e3-5a51-8e55-f4f491a4e7bf"
         },
         {
             "name": "links.json",
@@ -119,7 +119,7 @@
             "sha256": "6d84bb5bcfec87db8480a01e0c65f44f7caf1af8668010cb825ef8114de130e7",
             "s3_etag": "06705170a39d451d000c0143135fc5c3-64",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_83e89c54-4fc6-58b0-800c-3788539c41e7"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_83e89c54-4fc6-58b0-800c-3788539c41e7"
         },
         {
             "name": "supplementary_file_0.json",
@@ -166,7 +166,7 @@
             "sha256": "125e5c181744e2dacf0b156d4c0b82ce771701947b26ca738689edddfc3af97e",
             "s3_etag": "31985ad7f32b053fa97f05216c6e805e-20",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_dba31e1c-1b9c-56ae-af74-16b00b8144d2"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_dba31e1c-1b9c-56ae-af74-16b00b8144d2"
         },
         {
             "name": "library_preparation_protocol_0.json",
@@ -266,7 +266,7 @@
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961"
         },
         {
             "name": "sequence_file_6.json",
@@ -335,7 +335,7 @@
             "sha256": "55bd588c98a7caa2089271d79b6e0838ea8036726a7e56619786d4a23afa53c9",
             "s3_etag": "fc818501a59964e076aff1bc7f7068c6-20",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8"
         },
         {
             "name": "cell_suspension_0.json",
@@ -382,7 +382,7 @@
             "sha256": "4c9b22cfd3eb141a30a43fd52ce576b586279ca021444ff191c460a26cf1e4cc",
             "s3_etag": "c92e5374ac0a53b228d4c1511c2d2842-63",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_065dad63-3e05-5738-8ba5-9925d5d73d5e"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_065dad63-3e05-5738-8ba5-9925d5d73d5e"
         },
         {
             "name": "supplementary_file_2.json",
@@ -407,7 +407,7 @@
             "sha256": "c2910761bfe2eb3ec958d653bc518988a8ecc081628a07d11f3308e25fb8f05d",
             "s3_etag": "046326b00d6cc7485eba093190ee7610-20",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_93ce1f3e-a963-5463-948f-44751a37f48d"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_93ce1f3e-a963-5463-948f-44751a37f48d"
         },
         {
             "name": "IDC9_L003_R2.fastq.gz",
@@ -421,7 +421,7 @@
             "sha256": "3813e23040c8e6a26a43fd1f164b2ec1d118e8f52b9d4510640f990d8e969dd8",
             "s3_etag": "3188a7180ba75349ca223905e3f589c1-64",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_e6c1d2ce-d6ad-500e-8682-626a555992ab"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_e6c1d2ce-d6ad-500e-8682-626a555992ab"
         },
         {
             "name": "process_2.json",
@@ -457,7 +457,7 @@
             "sha256": "17456db03c93cef439a31b1a43f3165db4f27a1dc93dbc76263beb5d002a0530",
             "s3_etag": "d7046367bee15cd004af8f9882874042-7",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb455f5a-a70f-5155-85a0-46f475856e9f"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb455f5a-a70f-5155-85a0-46f475856e9f"
         },
         {
             "name": "process_3.json",
@@ -493,7 +493,7 @@
             "sha256": "e65d5d070584e7b08847fac0be1f89b7760ee9b301df792a66e5698d7d76d7f5",
             "s3_etag": "29da5762d5a55b9ecbd14c8663039f11-62",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_f140bd59-16c2-5082-aaf6-1c929e7063c6"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_f140bd59-16c2-5082-aaf6-1c929e7063c6"
         },
         {
             "name": "dissociation_protocol_0.json",
@@ -518,7 +518,7 @@
             "sha256": "45ada227726e92de0638c50f4c2ac20ff3e2250f1138b436112d91d20fed19a3",
             "s3_etag": "4077676da51c8b6eff706b1ebf43114c-7",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_b644bacb-5e69-5f73-baaf-f32178b0d0fd"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_b644bacb-5e69-5f73-baaf-f32178b0d0fd"
         },
         {
             "name": "IDC9_L004_I1.fastq.gz",
@@ -532,7 +532,7 @@
             "sha256": "8af97d885b995e7239a409f490e915f4754e7d1902f4a620f464995a422fb61f",
             "s3_etag": "20497e6cbc5f671fa94cf69bf0febdad-7",
             "is_stitched": false,
-            "drs_uri": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a694f8a4-424d-56db-9329-d449667416ea"
+            "drs_uri": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a694f8a4-424d-56db-9329-d449667416ea"
         }
     ],
     "metadata": {

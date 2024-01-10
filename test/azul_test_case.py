@@ -509,7 +509,7 @@ class DCP1TestCase(DSSTestCase):
 
 
 class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
-    mock_tdr_service_url = furl('https://azul_tdr_service_url_testing.org')
+    mock_tdr_service_url = furl('https://mock_tdr.lan')
 
     _drs_domain_name = str(mock_tdr_service_url.netloc)
 
