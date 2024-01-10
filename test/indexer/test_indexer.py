@@ -110,7 +110,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class HCAIndexerTestCase(DCP1TestCase, IndexerTestCase):
+class DCP1IndexerTestCase(DCP1TestCase, IndexerTestCase):
 
     @cached_property
     def old_bundle(self):
@@ -179,7 +179,7 @@ class HCAIndexerTestCase(DCP1TestCase, IndexerTestCase):
         self.assertDictEqual(expected, actual)
 
 
-class TestHCAIndexer(HCAIndexerTestCase):
+class TestDCP1Indexer(DCP1IndexerTestCase):
 
     def test_indexing(self):
         """
@@ -312,7 +312,7 @@ class TestHCAIndexer(HCAIndexerTestCase):
                     self.index_service.delete_indices(self.catalog)
 
 
-class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
+class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
     """
     Conveniently sets up (tears down) indices before (after) each test.
     """
