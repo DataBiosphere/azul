@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from copy import (
-    deepcopy,
-)
 import json
 import os
 from typing import (
@@ -15,7 +12,6 @@ from typing import (
     cast,
 )
 
-import attr
 from elasticsearch.helpers import (
     scan,
 )
@@ -40,13 +36,9 @@ from azul.indexer.document import (
 from azul.indexer.index_service import (
     IndexService,
     IndexWriter,
-    Tallies,
 )
 from azul.plugins import (
     FieldPath,
-)
-from azul.plugins.metadata.hca import (
-    HCABundle,
 )
 from azul.types import (
     AnyJSON,
@@ -212,16 +204,6 @@ class IndexerTestCase(CatalogTestCase,
             cls.index_service.delete(cls.catalog, bundle)
         else:
             cls.index_service.index(cls.catalog, bundle)
-
-    @classmethod
-    def _write_transforms(cls, bundle: HCABundle) -> Tallies:
-        bundle = attr.evolve(bundle,
-                             manifest=deepcopy(bundle.manifest),
-                             metadata_files=deepcopy(bundle.metadata_files))
-        transforms = cls.index_service.transform(cls.catalog, bundle, delete=False)
-        contributions, replicas = transforms
-        cls.index_service.replicate(cls.catalog, replicas)
-        return cls.index_service.contribute(cls.catalog, contributions)
 
     def _verify_sorted_lists(self, data: AnyJSON):
         """
