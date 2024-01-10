@@ -112,7 +112,11 @@ def parse_url_qs(url) -> dict[str, str]:
     return cast(dict[str, str], query_dict)
 
 
-class TestResponse(DCP1TestCase, WebServiceTestCase):
+class IndexResponseTestCase(DCP1TestCase, WebServiceTestCase):
+    pass
+
+
+class TestIndexResponse(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2248,7 +2252,7 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                             self.assertEqual(expected_json, response.json()['git'])
 
 
-class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
+class TestFileTypeSummaries(IndexResponseTestCase):
 
     @classmethod
     def bundles(cls) -> list[BundleFQID]:
@@ -2328,7 +2332,7 @@ class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
         self.assertElasticEqual(file_type_summaries, expected)
 
 
-class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
+class TestResponseInnerEntitySamples(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2455,7 +2459,7 @@ class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
-class TestSchemaTestDataCannedBundle(DCP1TestCase, WebServiceTestCase):
+class TestSchemaTestDataCannedBundle(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2601,7 +2605,7 @@ class CellCounts:
                    })
 
 
-class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
+class TestSortAndFilterByCellCount(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2755,7 +2759,7 @@ class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
                     self.assertEqual(actual, expected)
 
 
-class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
+class TestProjectMatrices(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -3286,7 +3290,7 @@ class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
         self.assertEqual(expected_counts, actual_counts)
 
 
-class TestResponseFields(DCP1TestCase, WebServiceTestCase):
+class TestResponseFields(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -3494,7 +3498,7 @@ class TestResponseFields(DCP1TestCase, WebServiceTestCase):
         self.assertEqual(expected_publications, project['publications'])
 
 
-class TestUnpopulatedIndexResponse(DCP1TestCase, WebServiceTestCase):
+class TestUnpopulatedIndexResponse(IndexResponseTestCase):
 
     @classmethod
     def bundles(cls) -> list[BundleFQID]:
