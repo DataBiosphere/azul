@@ -41,7 +41,9 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
-    DCP1TestCase,
+)
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -53,7 +55,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
+class TestDOSEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -131,7 +133,7 @@ class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
             self.fail()
 
 
-class TestDRSEndpoint(DCP1TestCase, LocalAppTestCase):
+class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
     maxDiff = None
 
     dss_headers = {

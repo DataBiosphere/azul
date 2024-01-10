@@ -11,8 +11,8 @@ from requests import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -24,7 +24,8 @@ def setUpModule():
     configure_test_logging()
 
 
-class RequestParameterValidationTest(DCP1TestCase, WebServiceTestCase):
+class RequestParameterValidationTest(DCP1CannedBundleTestCase,
+                                     WebServiceTestCase):
     maxDiff = None
 
     @classmethod

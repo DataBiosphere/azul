@@ -3,8 +3,8 @@ import requests
 from azul.logging import (
     configure_test_logging,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -16,7 +16,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestIndexSamplesEndpoint(DCP1TestCase, WebServiceTestCase):
+class TestIndexSamplesEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):

@@ -17,11 +17,8 @@ from azul.indexer.document import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul_test_case import (
-    DCP1TestCase,
-)
-from indexer import (
-    IndexerTestCase,
+from indexer.test_indexer import (
+    DCP1IndexerTestCase,
 )
 
 
@@ -30,7 +27,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
+class TestDataExtractorTestCase(DCP1IndexerTestCase):
 
     @classmethod
     def setUpClass(cls):

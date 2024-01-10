@@ -31,8 +31,8 @@ from azul.service.elasticsearch_service import (
     ElasticsearchService,
     ToDictStage,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -44,7 +44,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestRequestBuilder(DCP1TestCase, WebServiceTestCase):
+class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
     # Subclass the class under test so we can inject a mock plugin
     @attr.s(frozen=True, auto_attribs=True)
     class Service(ElasticsearchService):

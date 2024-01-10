@@ -21,8 +21,8 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     DocumentCloningTestCase,
@@ -36,7 +36,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class TestPagination(DCP1TestCase, DocumentCloningTestCase):
+class TestPagination(DCP1CannedBundleTestCase, DocumentCloningTestCase):
 
     def setUp(self):
         super().setUp()

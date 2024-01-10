@@ -99,9 +99,9 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
-    DCP1TestCase,
 )
 from indexer import (
+    DCP1CannedBundleTestCase,
     IndexerTestCase,
 )
 
@@ -113,7 +113,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class DCP1IndexerTestCase(DCP1TestCase, IndexerTestCase):
+class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
 
     @cached_property
     def old_bundle(self):

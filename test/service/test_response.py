@@ -89,8 +89,8 @@ from azul.types import (
     JSON,
     JSONs,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from indexer.test_tdr import (
     TDRHCAPluginTestCase,
@@ -112,7 +112,7 @@ def parse_url_qs(url) -> dict[str, str]:
     return cast(dict[str, str], query_dict)
 
 
-class IndexResponseTestCase(DCP1TestCase, WebServiceTestCase):
+class IndexResponseTestCase(DCP1CannedBundleTestCase, WebServiceTestCase):
     pass
 
 
@@ -3582,7 +3582,7 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
                 self.assertEqual(200, response.status_code)
 
 
-class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
+class TestPortalIntegrationResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -3758,7 +3758,7 @@ class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(set(integration_ids), set(found_integration_ids))
 
 
-class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase):
+class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
     maxDiff = None
 
     @classmethod

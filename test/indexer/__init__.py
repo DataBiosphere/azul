@@ -40,6 +40,9 @@ from azul.indexer.index_service import (
 from azul.plugins import (
     FieldPath,
 )
+from azul.plugins.repository.dss import (
+    DSSBundle,
+)
 from azul.types import (
     AnyJSON,
     JSON,
@@ -50,6 +53,7 @@ from azul.types import (
 from azul_test_case import (
     AzulUnitTestCase,
     CatalogTestCase,
+    DCP1TestCase,
 )
 from es_test_case import (
     ElasticsearchTestCase,
@@ -120,6 +124,13 @@ class CannedBundleTestCase(CannedFileTestCase, Generic[BUNDLE]):
         bundle_cls = cls._bundle_cls()
         bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
         return bundle_cls.from_json(bundle, bundle_json)
+
+
+class DCP1CannedBundleTestCase(DCP1TestCase, CannedBundleTestCase[DSSBundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[DSSBundle]:
+        return DSSBundle
 
 
 class IndexerTestCase(CatalogTestCase,
