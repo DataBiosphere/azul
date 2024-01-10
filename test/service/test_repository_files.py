@@ -109,8 +109,6 @@ class RepositoryFilesTestCase(LocalAppTestCase, metaclass=ABCMeta):
 class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
     mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
 
-    catalog = 'testtdr'
-
     @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
     @mock.patch.object(TerraClient,
                        '_http_client',
