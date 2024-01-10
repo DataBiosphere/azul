@@ -452,8 +452,8 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     @classmethod
     def tearDownClass(cls):
         cls._restore_drs_domain()
-        cls._restore_source()
         cls._restore_source_cache()
+        cls._restore_source()
         super().tearDownClass()
 
     source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
