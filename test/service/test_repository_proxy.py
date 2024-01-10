@@ -81,7 +81,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class RepositoryPluginTestCase(LocalAppTestCase, metaclass=ABCMeta):
+class RepositoryFilesTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -106,7 +106,7 @@ class RepositoryPluginTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
 @mock.patch.object(SourceService, '_put', new=MagicMock())
 @mock.patch.object(SourceService, '_get')
-class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
+class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
     mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
 
     mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
@@ -123,7 +123,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
                                       urllib3.PoolManager(ca_certs=certifi.where())))
-    def test_repository_files_proxy(self, mock_get_cached_sources):
+    def test_repository_files(self, mock_get_cached_sources):
         mock_get_cached_sources.return_value = []
         client = http_client(log)
 
@@ -236,7 +236,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             _test(authenticate=False, cache=False)
 
 
-class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
+class TestRepositoryFilesWithDSS(DCP1TestCase, RepositoryFilesTestCase):
     # These are the credentials defined in
     #
     # moto.instance_metadata.responses.InstanceMetadataResponse
@@ -259,7 +259,7 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
-    def test_repository_files_proxy(self, dss_direct_access_role):
+    def test_repository_files(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None
         key = ('blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779'
