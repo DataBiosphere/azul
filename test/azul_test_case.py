@@ -351,17 +351,10 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls._mock_catalogs()
+        cls._patch_catalogs()
 
     @classmethod
-    def tearDownClass(cls) -> None:
-        cls._restore_catalogs()
-        super().tearDownClass()
-
-    _catalog_mock = None
-
-    @classmethod
-    def _mock_catalogs(cls):
+    def _patch_catalogs(cls):
         # Reset the cached properties
         try:
             # noinspection PyPropertyAccess
@@ -379,19 +372,14 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         except AttributeError:
             pass
         # Patch the catalog property to use a single fake test catalog.
-        cls._catalog_mock = patch.object(target=type(config),
-                                         attribute='catalogs',
-                                         new_callable=PropertyMock,
-                                         return_value=cls.catalog_config())
-        cls._catalog_mock.start()
+        cls.addClassPatch(patch.object(target=type(config),
+                                       attribute='catalogs',
+                                       new_callable=PropertyMock,
+                                       return_value=cls.catalog_config()))
         assert cls.catalog_config()[cls.catalog]
         # Ensure that derived cached properties are affected
         assert config.default_catalog == cls.catalog
         assert config.integration_test_catalogs == {}
-
-    @classmethod
-    def _restore_catalogs(cls):
-        cls._catalog_mock.stop()
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
