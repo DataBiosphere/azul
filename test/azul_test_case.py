@@ -244,19 +244,15 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls._mock_aws_account()
+        cls._patch_aws_account()
         cls._mock_aws_credentials()
-        cls._mock_aws_region()
-        cls._mock_dss_query_prefix()
-        cls._mock_lambda_env()
+        cls._patch_aws_region()
+        cls._patch_dss_query_prefix()
+        cls._patch_lambda_env()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls._restore_lambda_env()
-        cls._restore_dss_query_prefix()
-        cls._restore_aws_region()
         cls._restore_aws_credentials()
-        cls._restore_aws_account()
         super().tearDownClass()
 
     def setUp(self) -> None:
@@ -275,21 +271,15 @@ class AzulUnitTestCase(AzulTestCase):
             for region_name, backend in backends.items():
                 backend.reset()
 
-    _aws_account_mock = None
     _aws_account_name = 'test-hca-dev'
 
     @classmethod
-    def _mock_aws_account(cls):
+    def _patch_aws_account(cls):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
-        cls._aws_account_mock = patch.dict(os.environ,
-                                           AZUL_AWS_ACCOUNT_ID=moto.core.models.DEFAULT_ACCOUNT_ID,
-                                           azul_aws_account_name=cls._aws_account_name)
-        cls._aws_account_mock.start()
-
-    @classmethod
-    def _restore_aws_account(cls):
-        cls._aws_account_mock.stop()
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AZUL_AWS_ACCOUNT_ID=moto.core.models.DEFAULT_ACCOUNT_ID,
+                                     azul_aws_account_name=cls._aws_account_name))
 
     get_credentials_botocore = None
     get_credentials_boto3 = None
@@ -338,46 +328,28 @@ class AzulUnitTestCase(AzulTestCase):
 
     # We almost certainly won't have access to this region
     _aws_test_region = 'us-gov-west-1'
-    _aws_region_mock = None
 
     @classmethod
-    def _mock_aws_region(cls):
+    def _patch_aws_region(cls):
         # Ensure that mock leakages fail by targeting a region we don't have
         # access to. Subclasses can override the selected region if moto rejects
         # the default one.
-        cls._aws_region_mock = patch.dict(os.environ, AWS_DEFAULT_REGION=cls._aws_test_region)
-        cls._aws_region_mock.start()
-
-    @classmethod
-    def _restore_aws_region(cls):
-        cls._aws_region_mock.stop()
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AWS_DEFAULT_REGION=cls._aws_test_region))
 
     dss_query_prefix = ''
-    _dss_prefix_mock = None
 
     @classmethod
-    def _mock_dss_query_prefix(cls):
-        cls._dss_prefix_mock = patch.object(target=type(config),
-                                            attribute='dss_query_prefix',
-                                            new_callable=PropertyMock,
-                                            return_value=cls.dss_query_prefix)
-        cls._dss_prefix_mock.start()
+    def _patch_dss_query_prefix(cls):
+        cls.addClassPatch(patch.object(target=type(config),
+                                       attribute='dss_query_prefix',
+                                       new_callable=PropertyMock,
+                                       return_value=cls.dss_query_prefix))
 
     @classmethod
-    def _restore_dss_query_prefix(cls):
-        cls._dss_prefix_mock.stop()
-
-    _lambda_env_mock = None
-
-    @classmethod
-    def _mock_lambda_env(cls):
-        cls._lambda_env_mock = patch.dict(os.environ,
-                                          AWS_LAMBDA_FUNCTION_NAME='unit-tests')
-        cls._lambda_env_mock.start()
-
-    @classmethod
-    def _restore_lambda_env(cls):
-        cls._lambda_env_mock.stop()
+    def _patch_lambda_env(cls):
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AWS_LAMBDA_FUNCTION_NAME='unit-tests'))
 
 
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
