@@ -245,15 +245,10 @@ class AzulUnitTestCase(AzulTestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls._patch_aws_account()
-        cls._mock_aws_credentials()
+        cls._patch_aws_credentials()
         cls._patch_aws_region()
         cls._patch_dss_query_prefix()
         cls._patch_lambda_env()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls._restore_aws_credentials()
-        super().tearDownClass()
 
     def setUp(self) -> None:
         super().setUp()
@@ -281,24 +276,20 @@ class AzulUnitTestCase(AzulTestCase):
                                      AZUL_AWS_ACCOUNT_ID=moto.core.models.DEFAULT_ACCOUNT_ID,
                                      azul_aws_account_name=cls._aws_account_name))
 
-    get_credentials_botocore = None
-    get_credentials_boto3 = None
-    _saved_boto3_default_session = None
-
     @classmethod
-    def _mock_aws_credentials(cls):
+    def _patch_aws_credentials(cls):
         # Discard cached Boto3/botocore clients, resources and sessions
-        aws.clear_caches()
-        aws.discard_all_sessions()
+        def reset():
+            aws.clear_caches()
+            aws.discard_all_sessions()
+
+        reset()
+        cls.addClassCleanup(reset)
 
         # Save and then reset the default boto3session. This overrides any
         # session customizations such as those performed by envhook.py which
         # interfere with moto patchers, rendering them ineffective.
-        cls._saved_boto3_default_session = boto3.DEFAULT_SESSION
-        boto3.DEFAULT_SESSION = None
-
-        cls.get_credentials_botocore = botocore.session.Session.get_credentials
-        cls.get_credentials_boto3 = boto3.session.Session.get_credentials
+        cls.addClassPatch(patch.object(boto3, 'DEFAULT_SESSION', None))
 
         # This ensures that we don't accidentally use actual cloud resources in
         # unit tests. Furthermore, `boto3` and `botocore` cache credentials
@@ -314,17 +305,13 @@ class AzulUnitTestCase(AzulTestCase):
                                secret_key='test-secret-key',
                                token='test-session-token')
 
-        botocore.session.Session.get_credentials = dummy_get_credentials
-        boto3.session.Session.get_credentials = dummy_get_credentials
+        cls.addClassPatch(patch.object(botocore.session.Session,
+                                       'get_credentials',
+                                       dummy_get_credentials))
 
-    @classmethod
-    def _restore_aws_credentials(cls):
-        boto3.session.Session.get_credentials = cls.get_credentials_boto3
-        botocore.session.Session.get_credentials = cls.get_credentials_botocore
-        boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
-        # Discard cached Boto3/botocore clients, resources and sessions
-        aws.clear_caches()
-        aws.discard_all_sessions()
+        cls.addClassPatch(patch.object(boto3.session.Session,
+                                       'get_credentials',
+                                       dummy_get_credentials))
 
     # We almost certainly won't have access to this region
     _aws_test_region = 'us-gov-west-1'
