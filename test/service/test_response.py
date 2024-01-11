@@ -21,10 +21,6 @@ from typing import (
 from unittest import (
     mock,
 )
-from unittest.mock import (
-    PropertyMock,
-    patch,
-)
 from urllib.parse import (
     parse_qs,
     parse_qsl,
@@ -3841,8 +3837,6 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         response.raise_for_status()
         return one(response.json()['files'])
 
-    @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=DCP2CannedBundleTestCase.mock_tdr_service_url))
     def test_file_urls(self):
         with self.subTest(phantom=False):
             file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')

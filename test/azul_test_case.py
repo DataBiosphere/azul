@@ -445,6 +445,12 @@ class DCP1TestCase(DSSTestCase):
 class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
     mock_tdr_service_url = furl('https://mock_tdr.lan')
 
+    @classmethod
+    def _patch_tdr_service_url(cls):
+        cls.addClassPatch(patch.object(type(config),
+                                       'tdr_service_url',
+                                       new=PropertyMock(return_value=cls.mock_tdr_service_url)))
+
     _drs_domain_name = str(mock_tdr_service_url.netloc)
 
     source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
@@ -457,6 +463,7 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._patch_tdr_service_url()
         cls._patch_source_cache()
 
     @classmethod

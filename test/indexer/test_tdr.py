@@ -22,7 +22,6 @@ from unittest import (
 )
 from unittest.mock import (
     Mock,
-    PropertyMock,
     patch,
 )
 
@@ -332,8 +331,6 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         self.assertEqual(_mock_find_upstream_bundles.call_count,
                          len(upstream_uuids))
 
-    @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=DCP2CannedBundleTestCase.mock_tdr_service_url))
     def _test_fetch_bundle(self,
                            test_bundle: TDRHCABundle,
                            *,
