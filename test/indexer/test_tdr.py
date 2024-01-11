@@ -315,8 +315,8 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
             'b0c2c714-45ee-4759-a32b-8ccbbcf911d4',
             'bd4939c1-a078-43bd-8477-99ae59ceb555',
         ]
-        # TinyQuery/legacy SQL has no support for BQ Arrays, so it's difficult
-        # to test the query in this method.
+        # FIXME: Fix the crash in bigquery-emulator and remove the mock
+        #        https://github.com/DataBiosphere/azul/issues/5847
         _mock_find_upstream_bundles.side_effect = [
             {SourcedBundleFQID(source=self.source,
                                uuid=uuid,
