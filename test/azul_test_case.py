@@ -395,41 +395,19 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
         cls._patch_source_cache()
         cls._patch_drs_domain()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._restore_drs_domain()
-        cls._restore_source_cache()
-        cls._restore_source()
-        super().tearDownClass()
-
     source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
-    _source_patch = None
 
     @classmethod
     def _patch_source(cls):
-        cls._source_patch = patch.dict(os.environ,
-                                       AZUL_DSS_SOURCE=str(cls.source.spec))
-        cls._source_patch.start()
-
-    @classmethod
-    def _restore_source(cls):
-        cls._source_patch.stop()
-        cls._source_patch = None
-
-    _source_cache_patch = None
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AZUL_DSS_SOURCE=str(cls.source.spec)))
 
     @classmethod
     def _patch_source_cache(cls):
         from service import (
             patch_source_cache,
         )
-        cls._source_cache_patch = patch_source_cache()
-        cls._source_cache_patch.start()
-
-    @classmethod
-    def _restore_source_cache(cls):
-        cls._source_cache_patch.stop()
-        cls._source_cache_patch = None
+        cls.addClassPatch(patch_source_cache())
 
     # With DSS as the repository, which doesn't support DRS, Azul acts as a
     # partial DRS implementation, proxying DSS. The REST endpoints making up
@@ -443,18 +421,11 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     # the DRS endpoint, so we patch AZUL_DRS_DOMAIN_NAME to achieve that.
 
     _drs_domain_name = 'mock_drs_domain.lan'
-    _drs_domain_patch = None
 
     @classmethod
     def _patch_drs_domain(cls):
-        cls._drs_domain_patch = patch.dict(os.environ,
-                                           AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
-        cls._drs_domain_patch.start()
-
-    @classmethod
-    def _restore_drs_domain(cls):
-        cls._drs_domain_patch.stop()
-        cls._drs_domain_patch = None
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name))
 
 
 class DCP1TestCase(DSSTestCase):
