@@ -443,6 +443,13 @@ class DCP1TestCase(DSSTestCase):
 
 
 class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._patch_tdr_service_url()
+        cls._patch_source_cache()
+
     mock_tdr_service_url = furl('https://mock_tdr.lan')
 
     @classmethod
@@ -459,12 +466,6 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
     @classmethod
     def _sources(cls):
         return {str(cls.source.spec)}
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls._patch_tdr_service_url()
-        cls._patch_source_cache()
 
     @classmethod
     def _patch_source_cache(cls):
