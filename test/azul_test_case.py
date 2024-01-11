@@ -191,6 +191,11 @@ class AzulTestCase(TestCase):
         """
         self.assertEqual(set(), subset - superset)
 
+    @classmethod
+    def addClassPatch(cls, instance: patch) -> None:
+        instance.start()
+        cls.addClassCleanup(instance.stop)
+
 
 class AlwaysTearDownTestCase(TestCase):
     """
@@ -531,22 +536,17 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
     def _sources(cls):
         return {str(cls.source.spec)}
 
-    _source_cache_patch = None
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._patch_source_cache()
+
+    @classmethod
+    def _patch_source_cache(cls):
         from service import (
             patch_source_cache,
         )
-        cls._source_cache_patch = patch_source_cache(hit=[cls.source.id])
-        cls._source_cache_patch.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._source_cache_patch.stop()
-        cls._source_cache_patch = None
-        super().tearDownClass()
+        cls.addClassPatch(patch_source_cache(hit=[cls.source.id]))
 
 
 class DCP2TestCase(TDRTestCase):
