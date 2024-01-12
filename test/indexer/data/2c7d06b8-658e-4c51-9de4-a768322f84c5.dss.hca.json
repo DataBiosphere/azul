@@ -173,7 +173,7 @@
             "size": 33226060,
             "is_stitched": false,
             "indexed": false,
-            "drs_uri": "drs://azul_testing_fake_drs_domain.lan/v1_e2464476-c0b4-4a92-a5fe-96094905825c_8bd7e274-de04-48de-8adc-32ea86d528f8",
+            "drs_uri": "drs://mock_drs_domain.lan/v1_e2464476-c0b4-4a92-a5fe-96094905825c_8bd7e274-de04-48de-8adc-32ea86d528f8",
             "crc32c": "8af9f820",
             "sha1": "d8c21f549e687a39531f083f7ffae5f578345979",
             "sha256": "6e13614e05e829d12a73df4d26f190a68ca2aa3579234c7e254ac21b290305f4",

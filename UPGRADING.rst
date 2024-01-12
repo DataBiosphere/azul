@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5046 Replace tinyquery with bigquery-emulator
+==============================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the PR branch to the GitLab instance in that deployment.
+
+
 #5772 Upgrade dependencies 2023-12-11
 =====================================
 
@@ -44,7 +54,6 @@ pushing the merge commit to the GitLab instance.
 Deploy the ``gitlab`` component of any main deployment, and run
 ``make -C terraform/gitlab/runner``, just before pushing the merge commit to
 the GitLab instance in that deployment.
-
 
 
 #5728 Many stale images in gitlab-dind and GitLab registry

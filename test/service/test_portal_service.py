@@ -1,5 +1,4 @@
 import json
-import unittest
 
 from botocore.exceptions import (
     ClientError,
@@ -170,7 +169,3 @@ class TestPortalService(VersionTableTestCase):
                 downloaded = self.download_db()
                 self.assertEqual(expected, downloaded)
                 self.assertEqual(downloaded, actual)
-
-
-if __name__ == '__main__':
-    unittest.main()

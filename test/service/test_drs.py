@@ -1,6 +1,5 @@
 import base64
 import json
-import unittest
 from unittest import (
     mock,
 )
@@ -41,7 +40,9 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
-    DCP1TestCase,
+)
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -53,7 +54,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
+class TestDOSEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -131,7 +132,7 @@ class TestDOSEndpoint(DCP1TestCase, WebServiceTestCase):
             self.fail()
 
 
-class TestDRSEndpoint(DCP1TestCase, LocalAppTestCase):
+class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
     maxDiff = None
 
     dss_headers = {
@@ -321,7 +322,3 @@ class TestDRSController(AzulUnitTestCase):
         response = controller.get_object_access(bad_access_id, 'file_uuid', {})
         self.assertEqual(400, response.status_code)
         self.assertEqual('Invalid DRS access ID', response.body)
-
-
-if __name__ == '__main__':
-    unittest.main()

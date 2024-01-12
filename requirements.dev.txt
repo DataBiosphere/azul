@@ -23,6 +23,5 @@ git+https://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements
 responses==0.22.0
 strict-rfc3339==0.7
 watchdog==2.1.9
-git+https://github.com/DataBiosphere/azul-tinyquery@1.2+2#egg=tinyquery
 -r requirements.dev.trans.txt
 -r requirements.txt

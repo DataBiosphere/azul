@@ -1,5 +1,3 @@
-import unittest
-
 from more_itertools import (
     one,
 )
@@ -17,11 +15,8 @@ from azul.indexer.document import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul_test_case import (
-    DCP1TestCase,
-)
-from indexer import (
-    IndexerTestCase,
+from indexer.test_indexer import (
+    DCP1IndexerTestCase,
 )
 
 
@@ -30,7 +25,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
+class TestDataExtractorTestCase(DCP1IndexerTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -106,7 +101,3 @@ class TestDataExtractorTestCase(DCP1TestCase, IndexerTestCase):
                     file_ids = [f['uuid'] for f in files]
                     self.assertEqual(num_files, len(file_ids))
                     self.assertEqual(num_files, len(set(file_ids)))
-
-
-if __name__ == '__main__':
-    unittest.main()

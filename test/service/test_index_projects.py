@@ -6,8 +6,8 @@ import requests
 from azul.logging import (
     configure_test_logging,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -19,7 +19,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class RepositoryProjectsEndpointTest(DCP1TestCase, WebServiceTestCase):
+class TestIndexProjectsEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
     # Set a seed so that we can test the detail response with a stable project ID
     seed = 123
 

@@ -1,5 +1,4 @@
 import doctest
-import unittest
 
 import azul
 import azul.attrs
@@ -109,7 +108,3 @@ def load_tests(_loader, tests, _ignore):
         assert suite.countTestCases() > 0, module
         tests.addTests(suite)
     return tests
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -67,6 +67,9 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+from azul_test_case import (
+    TDRTestCase,
+)
 from indexer.test_tdr import (
     TestTDRHCAPlugin,
 )
@@ -127,7 +130,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
     if drs_path is None:
         return None
     else:
-        netloc = TestTDRHCAPlugin.mock_service_url.netloc
+        netloc = TDRTestCase.mock_tdr_service_url.netloc
         return f'drs://{netloc}/{drs_path}'
 
 

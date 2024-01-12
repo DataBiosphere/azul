@@ -18,13 +18,8 @@ from typing import (
     Optional,
     cast,
 )
-import unittest
 from unittest import (
     mock,
-)
-from unittest.mock import (
-    PropertyMock,
-    patch,
 )
 from urllib.parse import (
     parse_qs,
@@ -70,6 +65,9 @@ from azul.logging import (
 from azul.plugins import (
     FieldPath,
 )
+from azul.plugins.metadata.hca import (
+    HCABundle,
+)
 from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
 )
@@ -86,12 +84,9 @@ from azul.types import (
     JSON,
     JSONs,
 )
-from azul_test_case import (
-    DCP1TestCase,
-)
-from indexer.test_tdr import (
-    TDRHCAPluginTestCase,
-    TDRPluginTestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
+    DCP2CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -110,7 +105,11 @@ def parse_url_qs(url) -> dict[str, str]:
     return cast(dict[str, str], query_dict)
 
 
-class TestResponse(DCP1TestCase, WebServiceTestCase):
+class IndexResponseTestCase(DCP1CannedBundleTestCase, WebServiceTestCase):
+    pass
+
+
+class TestIndexResponse(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -1839,6 +1838,7 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
 
         # First assert the order of the contributors in the indexed bundle
         bundle = self.indexed_bundles[bundle_uuid]
+        assert isinstance(bundle, HCABundle)
         project = bundle.metadata_files['project_0.json']
         self.assertEqual(project_id, project['provenance']['document_id'])
         actual = [c['email'] for c in project['contributors']]
@@ -2245,7 +2245,7 @@ class TestResponse(DCP1TestCase, WebServiceTestCase):
                             self.assertEqual(expected_json, response.json()['git'])
 
 
-class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
+class TestFileTypeSummaries(IndexResponseTestCase):
 
     @classmethod
     def bundles(cls) -> list[BundleFQID]:
@@ -2325,7 +2325,7 @@ class TestFileTypeSummaries(DCP1TestCase, WebServiceTestCase):
         self.assertElasticEqual(file_type_summaries, expected)
 
 
-class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
+class TestResponseInnerEntitySamples(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2452,7 +2452,7 @@ class TestResponseInnerEntitySamples(DCP1TestCase, WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
-class TestSchemaTestDataCannedBundle(DCP1TestCase, WebServiceTestCase):
+class TestSchemaTestDataCannedBundle(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2598,7 +2598,7 @@ class CellCounts:
                    })
 
 
-class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
+class TestSortAndFilterByCellCount(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -2752,7 +2752,7 @@ class TestSortAndFilterByCellCount(DCP1TestCase, WebServiceTestCase):
                     self.assertEqual(actual, expected)
 
 
-class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
+class TestProjectMatrices(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -3283,7 +3283,7 @@ class TestProjectMatrices(DCP1TestCase, WebServiceTestCase):
         self.assertEqual(expected_counts, actual_counts)
 
 
-class TestResponseFields(DCP1TestCase, WebServiceTestCase):
+class TestResponseFields(IndexResponseTestCase):
     maxDiff = None
 
     @classmethod
@@ -3491,7 +3491,7 @@ class TestResponseFields(DCP1TestCase, WebServiceTestCase):
         self.assertEqual(expected_publications, project['publications'])
 
 
-class TestUnpopulatedIndexResponse(DCP1TestCase, WebServiceTestCase):
+class TestUnpopulatedIndexResponse(IndexResponseTestCase):
 
     @classmethod
     def bundles(cls) -> list[BundleFQID]:
@@ -3575,7 +3575,7 @@ class TestUnpopulatedIndexResponse(DCP1TestCase, WebServiceTestCase):
                 self.assertEqual(200, response.status_code)
 
 
-class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
+class TestPortalIntegrationResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -3751,7 +3751,7 @@ class TestPortalIntegrationResponse(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(set(integration_ids), set(found_integration_ids))
 
 
-class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase):
+class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
     maxDiff = None
 
     @classmethod
@@ -3801,7 +3801,7 @@ class TestListCatalogsResponse(DCP1TestCase, LocalAppTestCase):
         }, response.json())
 
 
-class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
+class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -3837,8 +3837,6 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
         response.raise_for_status()
         return one(response.json()['files'])
 
-    @patch('azul.Config.tdr_service_url',
-           new=PropertyMock(return_value=TDRPluginTestCase.mock_service_url))
     def test_file_urls(self):
         with self.subTest(phantom=False):
             file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')
@@ -3846,7 +3844,7 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
                                                  args=dict(catalog=self.catalog,
                                                            version='2019-09-24T09:35:06.958773Z')))
             expected_drs_uri = str(furl(scheme='drs',
-                                        netloc=furl(self.mock_service_url).netloc,
+                                        netloc=self.mock_tdr_service_url.netloc,
                                         path=f'v1_{self.source.id}_9d6f268f-f484-5381-9095-f0998fa0c961'))
 
             self.assertEqual(expected_url, file['url'])
@@ -3856,7 +3854,3 @@ class TestTDRIndexer(WebServiceTestCase, TDRHCAPluginTestCase):
             file = self.get_file('c343a47d-683f-571d-99c4-1331841b4e63')
             self.assertIsNone(file['url'])
             self.assertIsNone(file['drs_uri'])
-
-
-if __name__ == '__main__':
-    unittest.main()
