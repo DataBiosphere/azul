@@ -404,6 +404,7 @@ def set_empty_s3_bucket_lifecycle_config(tf_config: JSON) -> JSON:
             # achieves the goal of preventing/removing policies that originate
             # from outside TF.
             bucket.setdefault('lifecycle_rule', {
+                'id': config.qualified_resource_name('dummy'),
                 'enabled': False,
                 'expiration': {'days': 36500}
             })
