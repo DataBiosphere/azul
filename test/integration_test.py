@@ -43,6 +43,7 @@ from typing import (
     IO,
     Optional,
     Protocol,
+    TypedDict,
     cast,
 )
 import unittest
@@ -198,6 +199,13 @@ class ReadableFileObject(Protocol):
     def read(self, amount: int) -> bytes: ...
 
     def seek(self, amount: int) -> Any: ...
+
+
+class FileInnerEntity(TypedDict):
+    uuid: str
+    version: str
+    name: str
+    size: int
 
 
 GET = 'GET'
@@ -645,10 +653,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         execution_ids = {token.execution_id for token in tokens}
         return execution_ids
 
-    def _get_one_inner_file(self, catalog: CatalogName) -> JSON:
+    def _get_one_inner_file(self, catalog: CatalogName) -> FileInnerEntity:
         outer_file = self._get_one_outer_file(catalog)
         inner_files: JSONs = outer_file['files']
-        return one(inner_files)
+        return cast(FileInnerEntity, one(inner_files))
 
     @cache
     def _get_one_outer_file(self, catalog: CatalogName) -> JSON:
@@ -708,9 +716,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
             file = self._get_one_inner_file(catalog)
-            file_uuid, file_ext = file['uuid'], self._file_ext(file)
-            self._test_dos(catalog, file_uuid, file_ext)
-            self._test_drs(catalog, file_uuid, file_ext)
+            self._test_dos(catalog, file)
+            self._test_drs(catalog, file)
 
     @property
     def _service_account_credentials(self) -> ContextManager:
@@ -985,9 +992,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_json(GET, furl(response['Location']))
                 self.assertNotIn('Retry-After', response)
                 response = self._get_url(GET, furl(response['Location']), stream=True)
-                self._validate_file_response(response, self._file_ext(file))
+                self._validate_file_response(response, file)
 
-    def _file_ext(self, file: JSON) -> str:
+    def _file_ext(self, file: FileInnerEntity) -> str:
         # We believe that the file extension is a more reliable indicator than
         # the `format` metadata field. Note that this method preserves multipart
         # extensions and includes the leading '.', so the extension of
@@ -995,49 +1002,50 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         suffixes = PurePath(file['name']).suffixes
         return ''.join(suffixes).lower()
 
-    def _validate_file_content(self, content: ReadableFileObject, file_ext: str):
+    def _validate_file_content(self, content: ReadableFileObject, file: FileInnerEntity):
+        file_ext = self._file_ext(file)
         if file_ext == '.fastq':
             self._validate_fastq_content(content)
         elif file_ext == '.fastq.gz':
             with gzip.open(content) as buf:
                 self._validate_fastq_content(buf)
         else:
-            self.assertEqual(1, len(content.read(1)))
+            self.assertEqual(1 if file['size'] > 0 else 0, len(content.read(1)))
 
     def _validate_file_response(self,
                                 response: urllib3.HTTPResponse,
-                                file_ext: str):
+                                file: FileInnerEntity):
         """
         Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_file_content(response, file_ext)
+            self._validate_file_content(response, file)
         finally:
             response.close()
 
-    def _test_drs(self, catalog: CatalogName, file_uuid: str, file_ext: str):
+    def _test_drs(self, catalog: CatalogName, file: FileInnerEntity):
         repository_plugin = self.azul_client.repository_plugin(catalog)
         drs = repository_plugin.drs_client()
         for access_method in AccessMethod:
             with self.subTest('drs', catalog=catalog, access_method=AccessMethod.https):
-                log.info('Resolving file %r with DRS using %r', file_uuid, access_method)
-                drs_uri = f'drs://{config.api_lambda_domain("service")}/{file_uuid}'
+                log.info('Resolving file %r with DRS using %r', file['uuid'], access_method)
+                drs_uri = f'drs://{config.api_lambda_domain("service")}/{file["uuid"]}'
                 access = drs.get_object(drs_uri, access_method=access_method)
                 self.assertIsNone(access.headers)
                 if access.method is AccessMethod.https:
                     response = self._get_url(GET, furl(access.url), stream=True)
-                    self._validate_file_response(response, file_ext)
+                    self._validate_file_response(response, file)
                 elif access.method is AccessMethod.gs:
                     content = self._get_gs_url_content(furl(access.url), size=self.num_fastq_bytes)
-                    self._validate_file_content(content, file_ext)
+                    self._validate_file_content(content, file)
                 else:
                     self.fail(access_method)
 
-    def _test_dos(self, catalog: CatalogName, file_uuid: str, file_ext: str):
+    def _test_dos(self, catalog: CatalogName, file: FileInnerEntity):
         with self.subTest('dos', catalog=catalog):
-            log.info('Resolving file %s with DOS', file_uuid)
+            log.info('Resolving file %s with DOS', file['uuid'])
             response = self._check_endpoint(method=GET,
-                                            path=drs.dos_object_url_path(file_uuid),
+                                            path=drs.dos_object_url_path(file['uuid']),
                                             args=dict(catalog=catalog))
             json_data = json.loads(response)['data_object']
             file_url = first(json_data['urls'])['url']
@@ -1057,7 +1065,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     else:
                         break
             self._assertResponseStatus(response, 200)
-            self._validate_file_content(response, file_ext)
+            self._validate_file_content(response, file)
 
     def _get_gs_url_content(self,
                             url: furl,

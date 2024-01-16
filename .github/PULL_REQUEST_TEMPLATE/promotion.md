@@ -41,15 +41,15 @@ Connected issue: #0000
 ### Operator (before pushing merge the commit)
 
 - [ ] Pushed PR branch to GitHub
-- [ ] Selected `prod.shared` and ran `make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
-- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab apply` <sub>or this PR does not change the GitLab version</sub>
-- [ ] Assigned system administrator <sub>or this PR does not change the GitLab version</sub>
-- [ ] Checked the items in the next section <sub>or this PR changes the GitLab version</sub>
+- [ ] Selected `prod.shared` and ran `CI_COMMIT_REF_NAME=prod make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
+- [ ] Selected `prod.gitlab` and ran `CI_COMMIT_REF_NAME=prod make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Assigned system administrator <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Checked the items in the next section <sub>or this PR includes changes to files in terraform/gitlab</sub>
 
 
 ### System administrator
 
-- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not change the GitLab version</sub>
+- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
 - [ ] PR is assigned to operator
 
 
@@ -68,7 +68,6 @@ Connected issue: #0000
 - [ ] Build passes on GitLab `prod`
 - [ ] Reviewed build logs for anomalies on GitLab `prod`
 - [ ] Deleted PR branch from GitHub
-- [ ] Deleted PR branch from GitLab `prod`
 - [ ] Moved connected issue to *Merged prod* column on ZenHub
 - [ ] Moved promoted issues from *Merged* to *Merged prod* column on ZenHub
 - [ ] Moved promoted issues from *dev* to *prod* column on ZenHub
@@ -77,8 +76,8 @@ Connected issue: #0000
 ### Operator (reindex)
 
 - [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
-- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not remove individual sources from existing catalogs in `prod`</sub>
-- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add individual sources to existing catalogs in `prod`</sub>
+- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not merely remove sources from existing catalogs in `prod`</sub>
+- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add sources to existing catalogs in `prod`</sub>
 - [ ] Started reindex in `prod` <sub>or this PR does not require reindexing `prod`</sub>
 - [ ] Checked for and triaged indexing failures in `prod` <sub>or this PR does not require reindexing `prod`</sub>
 - [ ] Emptied fail queues in `prod` deployment <sub>or this PR does not require reindexing `prod`</sub>
@@ -91,8 +90,8 @@ Connected issue: #0000
 
 ### System administrator
 
-- [ ] Removed unused image tags from (Elasticsearch image on DockerHub)[https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch] <sub>or this promotion does not include changes to `azul_docker_elasticsearch_version`</sub>
-- [ ] Removed unused image tags from (PyCharm image on DockerHub)[https://hub.docker.com/repository/docker/ucscgi/azul-pycharm] <sub>or this promotion does not include changes to `azul_docker_pycharm_version`</sub>
+- [ ] Removed unused image tags from [Elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not include changes to `azul_docker_elasticsearch_version`</sub>
+- [ ] Removed unused image tags from [PyCharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not include changes to `azul_docker_pycharm_version`</sub>
 - [ ] PR is assigned to no one
 
 

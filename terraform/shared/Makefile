@@ -37,8 +37,9 @@ apply: validate import_resources
 	terraform apply
 
 .PHONY: apply_keep_unused
-apply_keep_unused: validate import_resources
-	azul_terraform_keep_unused=1 terraform apply
+apply_keep_unused:
+	azul_terraform_keep_unused=1 $(MAKE) apply
+	@echo -e "\n" It is safe to ignore any warnings above about azul_terraform_keep_unused. "\n"
 
 .PHONY: auto_apply
 auto_apply: validate import_resources

@@ -762,6 +762,10 @@ class Config:
     def index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
+    @property
+    def enable_replicas(self) -> bool:
+        return self._boolean(self.environ['AZUL_ENABLE_REPLICAS'])
+
     # Because this property is relatively expensive to produce and frequently
     # used we are applying aggressive caching here, knowing very well that
     # this eliminates the option to reconfigure the running process by
@@ -1481,9 +1485,9 @@ class Config:
                           f':{self.docker_elasticsearch_version}',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
-            clamav='docker.io/clamav/clamav:1.2.1-17',
-            gitlab='docker.io/gitlab/gitlab-ce:16.6.1-ce.0',
-            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.6.1',
+            clamav='docker.io/clamav/clamav:1.2.1-24',
+            gitlab='docker.io/gitlab/gitlab-ce:16.6.2-ce.0',
+            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.6.2',
             dind=f'docker.io/library/docker:{self.docker_version}-dind',
             # The images below are not used within the security boundary:
             signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',

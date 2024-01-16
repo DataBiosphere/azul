@@ -174,12 +174,12 @@ pushed determines this checklist item.
 - [ ] Deleted unreferenced indices in `dev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `dev`</sub>
 - [ ] Deleted unreferenced indices in `anvildev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvildev`</sub>
 - [ ] Deleted unreferenced indices in `anvilprod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilprod`</sub>
-- [ ] Considered deindexing individual sources in `dev` <sub>or this PR does not remove individual sources from existing catalogs in `dev`</sub>
-- [ ] Considered deindexing individual sources in `anvildev` <sub>or this PR does not remove individual sources from existing catalogs in `anvildev`</sub>
-- [ ] Considered deindexing individual sources in `anvilprod` <sub>or this PR does not remove individual sources from existing catalogs in `anvilprod`</sub>
-- [ ] Considered indexing individual sources in `dev` <sub>or this PR does not merely add individual sources to existing catalogs in `dev`</sub>
-- [ ] Considered indexing individual sources in `anvildev` <sub>or this PR does not merely add individual sources to existing catalogs in `anvildev`</sub>
-- [ ] Considered indexing individual sources in `anvilprod` <sub>or this PR does not merely add individual sources to existing catalogs in `anvilprod`</sub>
+- [ ] Considered deindexing individual sources in `dev` <sub>or this PR does not merely remove sources from existing catalogs in `dev`</sub>
+- [ ] Considered deindexing individual sources in `anvildev` <sub>or this PR does not merely remove sources from existing catalogs in `anvildev`</sub>
+- [ ] Considered deindexing individual sources in `anvilprod` <sub>or this PR does not merely remove sources from existing catalogs in `anvilprod`</sub>
+- [ ] Considered indexing individual sources in `dev` <sub>or this PR does not merely add sources to existing catalogs in `dev`</sub>
+- [ ] Considered indexing individual sources in `anvildev` <sub>or this PR does not merely add sources to existing catalogs in `anvildev`</sub>
+- [ ] Considered indexing individual sources in `anvilprod` <sub>or this PR does not merely add sources to existing catalogs in `anvilprod`</sub>
 - [ ] Started reindex in `dev` <sub>or this PR does not require reindexing `dev`</sub>
 - [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
 - [ ] Started reindex in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>

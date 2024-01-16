@@ -432,6 +432,30 @@ SSH into the instance, and run ``sudo yum update`` followed by ``sudo reboot``.
 Wait for the GitLab web application to become available again and perform a
 ``git fetch`` from one of the Git repositories hosted on that instance.
 
+Export AWS Inspector findings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+#. ``_select anvilprod``
+
+#. Run ``python scripts/export_inspector_findings.py`` to generate a CSV file
+
+#. Open the `Anvilprod Inspector Findings spreadsheet`_
+
+#. Select ``File`` > ``Import`` to import the generated CSV, and on the ``Import
+   file`` dialog use these options:
+
+    - Import location: Insert new sheet(s)
+
+    - Convert text to numbers, dates, and formulas: Checked
+
+#. Rename the new tab using `YYYY-MM-DD in-boundary` format, and move it to the
+   front of the stack
+
+#. Apply visual formatting (e.g. column width) to the sheet using a previous
+   sheet as a guide
+
+.. _Anvilprod Inspector Findings spreadsheet: https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8/edit#gid=1657352747
+
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

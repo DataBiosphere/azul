@@ -180,6 +180,9 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEBUG': '0',
 
+        # Whether to create and populate an index for replica documents.
+        'AZUL_ENABLE_REPLICAS': '1',
+
         # The name of the current deployment. This variable controls the name of
         # all cloud resources and is the main vehicle for isolating cloud
         # resources between deployments.
@@ -215,27 +218,43 @@ def env() -> Mapping[str, Optional[str]]:
         # defined in the bootstrap environment (environment.boot) because it is
         # required to be available during the early stages of the GitLab and
         # GitHub Actions build. This variable is not intended to be overridden
-        # per deployment or locally. Modifying the value requires redeploying
-        # the `shared` component.
+        # per deployment or locally.  Note that the value of this variable is
+        # duplicated in the value of the `azul_python_image` variable documented
+        # below. Both variable values must be kept consistent.
         #
         'azul_python_version': None,
 
+        # The fully qualified name of the base image of the Azul image, i.e.,
+        # the image that is built using the Dockerfile at the root of the
+        # project. The base image must have Python installed, so using the
+        # official Docker image for Python is the obvious choice, which explains
+        # the name of this variable. This variable is defined in the bootstrap
+        # environment (environment.boot) because it is required to be available
+        # during the early stages of the GitLab build. This variable is not
+        # intended to be overridden per deployment or locally. Note that the
+        # Docker image tag in value of this variable duplicates the value of
+        # `azul_python_version` above. Both variable values must be kept
+        # consistent. Modifying the value of this variable requires redeploying
+        # the `shared` component.
+        #
+        'azul_python_image': None,
+
         # The tag of the Elasticsearch image that we use to run test cases.
         #
-        'azul_docker_elasticsearch_version': '7.17.15-6',
+        'azul_docker_elasticsearch_version': '7.17.16-8',
 
         # The tag of the PyCharm image that we use to format the source code in
         # continuous integration. We specify it here instead of directly in the
         # Makefile so that a change to the version does not require updating
         # requirements.
         #
-        'azul_docker_pycharm_version': '2023.2.5-6',
+        'azul_docker_pycharm_version': '2023.3.2-8',
 
         # The version of Terraform used throughout the system. This variable is
         # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitHub Actions
-        # build. This variable is not intended to be overridden per deployment
-        # or locally.
+        # required to be available during the early stages of the GitLab build.
+        # This variable is not intended to be overridden per deployment or
+        # locally.
         #
         'azul_terraform_version': None,
 
