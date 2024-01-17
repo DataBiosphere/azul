@@ -78,6 +78,7 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     IndexName,
+    OpType,
     Replica,
     VersionType,
 )
@@ -852,7 +853,7 @@ class IndexWriter:
             if isinstance(doc, Replica):
                 assert doc.version_type is VersionType.create_only, doc
             try:
-                method = self.es_client.delete if doc.delete else self.es_client.index
+                method = getattr(self.es_client, doc.op_type.name)
                 method(refresh=self.refresh, **doc.to_index(self.catalog, self.field_types))
             except ConflictError as e:
                 self._on_conflict(doc, e)
@@ -892,7 +893,7 @@ class IndexWriter:
                                   max_chunk_bytes=config.max_chunk_size)
         for success, info in response:
             op_type, info = one(info.items())
-            assert op_type in ('index', 'create', 'delete')
+            assert op_type in OpType.__members__, op_type
             coordinates = DocumentCoordinates.from_hit(info)
             doc = documents[coordinates]
             if success:
