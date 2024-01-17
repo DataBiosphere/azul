@@ -156,7 +156,10 @@ class OAuth2Client(HasCachedHttpClient):
             email = token_info.get('email')
             if authorized_party.endswith('.apps.googleusercontent.com'):
                 # A user's access token originating from an OAuth 2.0 client
-                project_id = self._project_id_from_client_id(config.google_oauth2_client_id)
+                azul_client_id = config.google_oauth2_client_id
+                reject(azul_client_id is None,
+                       'Acceptance of OAuth 2.0 user access tokens is disabled')
+                project_id = self._project_id_from_client_id(azul_client_id)
                 authorized_project_id = self._project_id_from_client_id(authorized_party)
                 require(project_id == authorized_project_id,
                         'OAuth 2.0 client project does not match')
