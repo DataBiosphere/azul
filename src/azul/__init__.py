@@ -1486,9 +1486,9 @@ class Config:
             bigquery_emulator='ghcr.io/goccy/bigquery-emulator:0.4.4',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
-            clamav='docker.io/clamav/clamav:1.2.1-24',
-            gitlab='docker.io/gitlab/gitlab-ce:16.6.2-ce.0',
-            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.6.2',
+            clamav='docker.io/clamav/clamav:1.2.1-26',
+            gitlab='docker.io/gitlab/gitlab-ce:16.7.3-ce.0',
+            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.7.0',
             dind=f'docker.io/library/docker:{self.docker_version}-dind',
             # The images below are not used within the security boundary:
             signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
