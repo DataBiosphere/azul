@@ -232,6 +232,61 @@ anvil3_sources = mkdict(anvil2_sources, 160, mkdelta([
     # @formatter:on
 ]))
 
+anvil4_sources = mkdict(anvil3_sources, 210, mkdelta([
+    # @formatter:off
+    mksrc('datarepo-10613413', 'ANVIL_CCDG_Baylor_CVD_AFib_BioVU_WGS_20221110_ANV5_202304241855', 1638),
+    mksrc('datarepo-1a86e7ca', 'ANVIL_CCDG_Baylor_CVD_AFib_Groningen_WGS_20221122_ANV5_202304242224', 639),
+    mksrc('datarepo-92716a90', 'ANVIL_CCDG_Baylor_CVD_AFib_VAFAR_HMB_IRB_WGS_20221020_ANV5_202304211525', 253),
+    mksrc('datarepo-77445496', 'ANVIL_CCDG_Baylor_CVD_EOCAD_BioMe_WGS_20221122_ANV5_202304242226', 1201),
+    mksrc('datarepo-1b0d6b90', 'ANVIL_CCDG_Baylor_CVD_HHRC_Brownsville_GRU_WGS_20221122_ANV5_202304242228', 276),
+    mksrc('datarepo-373b7918', 'ANVIL_CCDG_Baylor_CVD_HemStroke_BNI_HMB_WGS_20221215_ANV5_202304242306', 160),
+    mksrc('datarepo-efc3e806', 'ANVIL_CCDG_Baylor_CVD_HemStroke_Duke_DS_WGS_20221117_ANV5_202304242122', 60),
+    mksrc('datarepo-1044f96d', 'ANVIL_CCDG_Baylor_CVD_HemStroke_ERICH_WGS_20221207_ANV5_202304271256', 2558),
+    mksrc('datarepo-f23a6ec8', 'ANVIL_CCDG_Baylor_CVD_HemStroke_GERFHS_HMB_WGS_20221215_ANV5_202304242307', 412),
+    mksrc('datarepo-de34ca6e', 'ANVIL_CCDG_Baylor_CVD_HemStroke_Regards_DS_WGS_20221117_ANV5_202304242123', 121),
+    mksrc('datarepo-d9c6f406', 'ANVIL_CCDG_Baylor_CVD_HemStroke_Yale_HMB_WGS_20221215_ANV5_202304242309', 185),
+    mksrc('datarepo-56883e56', 'ANVIL_CCDG_Baylor_CVD_Oregon_SUDS_GRU_WGS_20221215_ANV5_202304242302', 2216),
+    mksrc('datarepo-7f3ba7ec', 'ANVIL_CCDG_Baylor_CVD_TexGen_DS_WGS_20221117_ANV5_202304242125', 6461),
+    mksrc('datarepo-da965e26', 'ANVIL_CCDG_Baylor_CVD_Ventura_Presto_GRU_IRB_WGS_20221117_ANV5_202304242127', 584),
+    mksrc('datarepo-906bf803', 'ANVIL_CCDG_Broad_AI_IBD_Brant_DS_IBD_WGS_20221110_ANV5_202304241911', 575),
+    mksrc('datarepo-343ca1c3', 'ANVIL_CCDG_Broad_AI_IBD_Brant_HMB_WGS_20221110_ANV5_202304241912', 907),
+    mksrc('datarepo-80a63603', 'ANVIL_CCDG_Broad_AI_IBD_Cho_WGS_20230313_ANV5_202304241903', 352),
+    mksrc('datarepo-a98e7a43', 'ANVIL_CCDG_Broad_AI_IBD_Kugathasan_WGS_20221110_ANV5_202304241906', 1406),
+    mksrc('datarepo-381bc957', 'ANVIL_CCDG_Broad_AI_IBD_McCauley_WGS_20221110_ANV5_202304241914', 1256),
+    mksrc('datarepo-6a10165d', 'ANVIL_CCDG_Broad_AI_IBD_McGovern_WGS_20221110_ANV5_202304241907', 11273),
+    mksrc('datarepo-a2743c82', 'ANVIL_CCDG_Broad_AI_IBD_Newberry_WGS_20221025_ANV5_202304241901', 135),
+    mksrc('datarepo-ed109b2f', 'ANVIL_CCDG_Broad_CVD_AF_BioVU_HMB_GSO_Arrays_20230612_ANV5_202306131350', 9),
+    mksrc('datarepo-3d8b62d7', 'ANVIL_CCDG_Broad_CVD_AF_BioVU_HMB_GSO_WES_20221025_ANV5_202304241856', 5039),
+    mksrc('datarepo-450ba911', 'ANVIL_CCDG_Broad_CVD_AF_ENGAGE_DS_WES_20230418_ANV5_202304210808', 13621),
+    mksrc('datarepo-dfabf632', 'ANVIL_CCDG_Broad_CVD_AF_Ellinor_MGH_WES_20221117_ANV5_202304271354', 499),
+    mksrc('datarepo-485eb707', 'ANVIL_CCDG_Broad_CVD_AF_Figtree_BioHeart_Arrays_20230128_ANV5_202304271554', 935),
+    mksrc('datarepo-58dffe5a', 'ANVIL_CCDG_Broad_CVD_AF_GAPP_DS_MDS_Arrays_20221103_ANV5_202304242105', 2087),
+    mksrc('datarepo-cf7f2c0c', 'ANVIL_CCDG_Broad_CVD_AF_GAPP_DS_MDS_WES_20221103_ANV5_202304242107', 2154),
+    mksrc('datarepo-f896734e', 'ANVIL_CCDG_Broad_CVD_AF_Marcus_UCSF_Arrays_20221102_ANV5_202304242039', 160),
+    mksrc('datarepo-40c2f4f4', 'ANVIL_CCDG_Broad_CVD_AF_Marcus_UCSF_WES_20221222_ANV5_202304242040', 599),
+    mksrc('datarepo-67117555', 'ANVIL_CCDG_Broad_CVD_AF_Rienstra_WES_20221222_ANV5_202304242035', 2097),
+    mksrc('datarepo-c45dd622', 'ANVIL_CCDG_Broad_CVD_AF_Swiss_Cases_DS_MDS_Arrays_20221103_ANV5_202304242110', 4467),
+    mksrc('datarepo-b12d2e52', 'ANVIL_CCDG_Broad_CVD_AF_Swiss_Cases_DS_MDS_WES_20230118_ANV5_202304242112', 4550),
+    mksrc('datarepo-43f6230a', 'ANVIL_CCDG_Broad_CVD_AFib_AFLMU_WGS_20231008_ANV5_202310091911', 386),
+    mksrc('datarepo-de64d25a', 'ANVIL_CCDG_Broad_CVD_AFib_UCSF_WGS_20221222_ANV5_202304242037', 112),
+    mksrc('datarepo-e25350dd', 'ANVIL_CCDG_Broad_CVD_EOCAD_PartnersBiobank_HMB_Arrays_20230517_ANV5_202310101704', 46570),  # noqa E501
+    mksrc('datarepo-9921a6fa', 'ANVIL_CCDG_Broad_CVD_EOCAD_PartnersBiobank_HMB_WES_20230621_ANV5_202306211933', 17479),
+    mksrc('datarepo-383d9d9b', 'ANVIL_CCDG_Broad_CVD_PROMIS_GRU_WES_20230418_ANV5_202306211912', 20557),
+    mksrc('datarepo-5df71da4', 'ANVIL_CCDG_Broad_MI_InStem_WES_20221122_ANV5_202304242236', 1452),
+    mksrc('datarepo-1793828c', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSALF_HMB_IRB_GSRS_WES_20230324_ANV5_202304241752', 18),
+    mksrc('datarepo-d44547dc', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSALF_HMB_IRB_WES_20230128_ANV5_202304271556', 19),
+    mksrc('datarepo-70c803d7', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPIL_BA_MDS_GSA_MD_20221117_ANV5_202304271400', 22),
+    mksrc('datarepo-f5a4a895', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPI_BA_ID_MDS_GSA_MD_20221117_ANV5_202304271358', 37),  # noqa E501
+    mksrc('datarepo-b8b8ba44', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EP_BA_CN_ID_MDS_GSA_MD_20221117_ANV5_202304271356', 1530),  # noqa E501
+    mksrc('datarepo-0b0ca621', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSRMB_DS_EAED_IRB_WES_20230621_ANV5_202306211945', 216),
+    mksrc('datarepo-f85048a3', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSRMB_DS_EAED_MDS_GSA_MD_20221117_ANV5_202304271401', 398),  # noqa E501
+    mksrc('datarepo-68037179', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUTMUV_DS_NS_ADLT_WES_20230128_ANV5_202304271559', 14),
+    mksrc('datarepo-025215fc', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUTMUV_DS_NS_WES_20230314_ANV5_202304271601', 107),
+    mksrc('datarepo-92905a2b', 'ANVIL_CCDG_Broad_NP_Epilepsy_BELATW_GRU_GSA_MD_20221117_ANV5_202304271403', 239),
+    mksrc('datarepo-3f3ad5c7', 'ANVIL_CCDG_Broad_NP_Epilepsy_BELULB_DS_EP_NPU_GSA_MD_20230118_ANV5_202304271404', 430)
+    # @formatter:on
+]))
+
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -276,6 +331,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('anvil', 'anvil3', anvil3_sources),
+                ('anvil', 'anvil4', anvil4_sources),
             ]
             for suffix, internal in [
                 ('', False),
