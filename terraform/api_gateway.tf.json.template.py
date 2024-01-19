@@ -18,6 +18,9 @@ from azul.terraform import (
     emit_tf,
     vpc,
 )
+from azul.types import (
+    MutableJSONs,
+)
 
 
 @dataclass(frozen=True)
@@ -132,6 +135,13 @@ api_gateway_log_format = {
     'status': '$context.status'
 }
 
+
+def add_priority(rules: MutableJSONs) -> MutableJSONs:
+    for priority, rule in enumerate(rules):
+        rule['priority'] = priority
+    return rules
+
+
 emit_tf({
     'data': [
         {
@@ -201,9 +211,41 @@ emit_tf({
                     'default_action': {
                         'allow': {}
                     },
-                    'rule': [
+                    'rule': add_priority([
                         {
-                            'priority': 0,
+                            'name': 'label_expensive_requests',
+                            'action': {
+                                'count': {}
+                            },
+                            'rule_label': {
+                                'name': 'azul:expensive'
+                            },
+                            'statement': {
+                                'or_statement': {
+                                    'statement': [
+                                        {
+                                            'byte_match_statement': {
+                                                'field_to_match': {
+                                                    'method': {}
+                                                },
+                                                'positional_constraint': 'EXACTLY',
+                                                'search_string': http_method,
+                                                'text_transformation': {
+                                                    'priority': 0,
+                                                    'type': 'NONE'
+                                                }
+                                            }
+                                        } for http_method in ['PUT', 'POST']
+                                    ]
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': 'label_expensive_requests',
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
+                        {
                             'name': 'blocked_ips',
                             'action': {
                                 'block': {}
@@ -220,7 +262,29 @@ emit_tf({
                             }
                         },
                         {
-                            'priority': 1,
+                            'name': config.waf_expensive_rate_rule_name,
+                            'action': {
+                                'block': {}
+                            },
+                            'statement': {
+                                'rate_based_statement': {
+                                    'limit': 100,  # limit must be between 100 and 20,000,000
+                                    'aggregate_key_type': 'IP',
+                                    'scope_down_statement': {
+                                        'label_match_statement': {
+                                            'scope': 'LABEL',
+                                            'key': 'azul:expensive'
+                                        }
+                                    }
+                                }
+                            },
+                            'visibility_config': {
+                                'metric_name': config.waf_expensive_rate_rule_name,
+                                'sampled_requests_enabled': True,
+                                'cloudwatch_metrics_enabled': True
+                            }
+                        },
+                        {
                             'name': config.waf_rate_rule_name,
                             'action': {
                                 'block': {
@@ -248,7 +312,6 @@ emit_tf({
                             }
                         },
                         {
-                            'priority': 2,
                             'name': 'aws_common_rule_set',
                             'override_action': {
                                 'none': {}
@@ -297,7 +360,6 @@ emit_tf({
                             }
                         },
                         {
-                            'priority': 3,
                             'name': 'aws_amazon_ip_reputation_list',
                             'override_action': {
                                 'none': {}
@@ -315,7 +377,6 @@ emit_tf({
                             }
                         },
                         {
-                            'priority': 4,
                             'name': 'aws_unix_rule_set',
                             'override_action': {
                                 'none': {}
@@ -332,7 +393,7 @@ emit_tf({
                                 'cloudwatch_metrics_enabled': True
                             }
                         },
-                    ],
+                    ]),
                     'scope': 'REGIONAL',
                     'visibility_config': {
                         'cloudwatch_metrics_enabled': True,
