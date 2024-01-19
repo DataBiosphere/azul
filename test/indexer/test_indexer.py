@@ -131,7 +131,7 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
 
     def _num_expected_replicas(self,
                                num_contribs: int,
-                               num_bundles: int = 1
+                               num_bundles: Optional[int] = None
                                ) -> int:
         """
         :param num_contribs: Number of contributions with distinct contents
@@ -140,8 +140,10 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
                             entities
         :return: How many replicas the indices are expected to contain
         """
-        # Bundle entities are not replicated
-        return max(0, num_contribs - num_bundles) if config.enable_replicas else 0
+        if num_bundles is None:
+            num_bundles = 0 if num_contribs == 0 else 1
+        # Bundle entities are not replicated.
+        return num_contribs - num_bundles if config.enable_replicas else 0
 
     def _assert_hit_counts(self,
                            hits: list[JSON],
@@ -473,11 +475,13 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
         self.assertEqual(len(actual_deletion_contributions), num_expected_deletion_contributions)
         self._assert_hit_counts(hits,
+                                # Deletion notifications add deletion markers to the contributions index
+                                # instead of removing the existing contributions.
                                 num_contribs=num_expected_addition_contributions + num_expected_deletion_contributions,
                                 num_aggs=num_expected_aggregates,
-                                # Indexing the same contribution twice (regardless of whether either is a deletion)
-                                # does not create a new replica, so we expect fewer replicas than contributions
-                                num_replicas=self._num_expected_replicas(num_expected_deletion_contributions))
+                                # These deletion markers do not affect the number of replicas because we don't
+                                # support deleting replicas.
+                                num_replicas=self._num_expected_replicas(num_expected_addition_contributions))
 
     def test_bundle_delete_downgrade(self):
         """
