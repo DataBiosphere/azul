@@ -1568,6 +1568,8 @@ class Config:
 
     waf_rate_rule_name = 'rate_rule'
 
+    waf_expensive_rate_rule_name = 'expensive_rate_rule'
+
     waf_rate_rule_period = 300  # seconds; this value is fixed by AWS
 
     waf_rate_rule_retry_after = 30  # seconds

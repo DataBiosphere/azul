@@ -302,24 +302,27 @@ emit_tf({
                                 )
                             ]
                         },
-                        'waf_rate_blocked': {
-                            'alarm_name': config.qualified_resource_name('waf_rate_blocked'),
-                            'comparison_operator': 'GreaterThanThreshold',
-                            'threshold': 0,
-                            'datapoints_to_alarm': 1,
-                            'evaluation_periods': 1,
-                            'period': 5 * 60,
-                            'metric_name': 'BlockedRequests',
-                            'namespace': 'AWS/WAFV2',
-                            'statistic': 'Sum',
-                            'treat_missing_data': 'notBreaching',
-                            'dimensions': {
-                                'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
-                                'Region': config.region,
-                                'Rule': config.waf_rate_rule_name
-                            },
-                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                            'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                        **{
+                            f'waf_{rule_type}_blocked': {
+                                'alarm_name': config.qualified_resource_name(f'waf_{rule_type}_blocked'),
+                                'comparison_operator': 'GreaterThanThreshold',
+                                'threshold': 0,
+                                'datapoints_to_alarm': 1,
+                                'evaluation_periods': 1,
+                                'period': 5 * 60,
+                                'metric_name': 'BlockedRequests',
+                                'namespace': 'AWS/WAFV2',
+                                'statistic': 'Sum',
+                                'treat_missing_data': 'notBreaching',
+                                'dimensions': {
+                                    'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
+                                    'Region': config.region,
+                                    'Rule': getattr(config, f'waf_{rule_type}_rule_name')
+                                },
+                                'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                                'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                            }
+                            for rule_type in ['rate', 'expensive_rate']
                         }
                     }
                 }
