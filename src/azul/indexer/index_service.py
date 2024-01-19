@@ -227,7 +227,8 @@ class IndexService(DocumentService):
             #        number of contributions per bundle.
             # https://github.com/DataBiosphere/azul/issues/610
             tallies.update(self.contribute(catalog, contributions))
-            self.replicate(catalog, replicas)
+        # FIXME: Replica index does not support deletions
+        #        https://github.com/DataBiosphere/azul/issues/5846
         self.aggregate(tallies)
 
     def deep_transform(self,
