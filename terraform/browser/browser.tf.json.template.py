@@ -136,20 +136,20 @@ def emit():
                         bucket_behaviour('browser',
                                          path_pattern='/explore*',
                                          explorer_domain_router=True,
-                                         add_response_security_headers=False),
+                                         add_response_headers=False),
                         google_search_behavior(),
                         *(
                             bucket_behaviour('consortia',
                                              path_pattern=path_pattern,
                                              ptm_next_path_mapper=True,
-                                             ptm_add_response_headers=False)
+                                             add_response_headers=False)
                             for path_pattern in ['/consortia*', '_next/*']
                         ),
                     ],
                     'default_cache_behavior':
                         bucket_behaviour('portal',
                                          add_trailing_slash=True,
-                                         add_response_security_headers=False),
+                                         add_response_headers=False),
                     'viewer_certificate': {
                         'acm_certificate_arn': '${aws_acm_certificate.portal.arn}',
                         'minimum_protocol_version': 'TLSv1.2_2021',
