@@ -1,5 +1,4 @@
-// FIXME: Delete me
-//        https://github.com/DataBiosphere/azul/issues/5871
+// Modify explore path based on host header
 
 function handler(event) {
 

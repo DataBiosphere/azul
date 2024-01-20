@@ -135,7 +135,7 @@ def emit():
                     'ordered_cache_behavior': [
                         bucket_behaviour('browser',
                                          path_pattern='/explore*',
-                                         explorer_domain_router=True,
+                                         bucket_path_mapper=True,
                                          add_response_headers=False),
                         google_search_behavior(),
                         *(
