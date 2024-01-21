@@ -77,8 +77,9 @@ def emit():
             'aws_s3_bucket': {
                 bucket: {
                     'bucket': name,
+                    'force_destroy': True,
                     'lifecycle': {
-                        'prevent_destroy': True
+                        'prevent_destroy': False
                     }
                 }
                 for bucket, name in buckets.items()
