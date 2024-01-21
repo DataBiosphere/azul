@@ -134,22 +134,10 @@ def emit():
                     'default_root_object': 'index.html',
                     'is_ipv6_enabled': True,
                     'ordered_cache_behavior': [
-                        bucket_behaviour('browser',
-                                         path_pattern='/explore*',
-                                         bucket_path_mapper=True,
-                                         add_response_headers=False),
-                        google_search_behavior(),
-                        *(
-                            bucket_behaviour('consortia',
-                                             path_pattern=path_pattern,
-                                             ptm_next_path_mapper=True,
-                                             add_response_headers=False)
-                            for path_pattern in ['/consortia*', '_next/*']
-                        ),
                     ],
                     'default_cache_behavior':
-                        bucket_behaviour('portal',
-                                         add_trailing_slash=True,
+                        bucket_behaviour('browser',
+                                         bucket_path_mapper=True,
                                          add_response_headers=False),
                     'viewer_certificate': {
                         'acm_certificate_arn': '${aws_acm_certificate.portal.arn}',
