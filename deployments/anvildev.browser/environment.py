@@ -38,6 +38,8 @@ def env() -> Mapping[str, Optional[str]]:
                     }
                 }
             },
+            # FIXME: Remove this site
+            #        https://github.com/DataBiosphere/azul/issues/5874
             'ucsc/anvil-portal': {
                 'main': {
                     'anvil': {
