@@ -545,7 +545,7 @@ class GitLabHelper:
 
     def tarball_version(self, branch: str) -> str:
         # package_version can't contain slashes
-        return branch.replace('/', '.')
+        return branch.replace('/', '_')
 
 
 def quote(s):
