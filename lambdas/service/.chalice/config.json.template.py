@@ -35,6 +35,7 @@ emit({
             "lambda_functions": {
                 "api_handler": chalice.vpc_lambda_config(app_name),
                 service.generate_manifest.name: {
+                    "reserved_concurrency": 10,
                     "lambda_timeout": config.service_lambda_timeout
                 },
                 service.update_health_cache.name: {
