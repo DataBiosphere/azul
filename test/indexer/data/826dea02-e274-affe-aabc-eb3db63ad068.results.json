@@ -863,7 +863,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_ab03c58f05fb6bf72860fee14821f1feb9e331cc",
+        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_ed0a841f18d24d3955ace40a353ad640e1da60f1",
         "_score": 1.0,
         "_source": {
             "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
@@ -876,7 +876,7 @@
                 "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
                 "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
                 "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-                "file_ref": "drs://data.terra.bio/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+                "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
                 "file_size": 213021639,
                 "is_supplementary": false,
                 "reference_assembly": [],
@@ -893,7 +893,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_bb4d58a1aa21adce6af1b09e7e75664afda5890e",
+        "_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_92347daeeff2cbb94cd3bf9f73bb40e8c52a1e40",
         "_score": 1.0,
         "_source": {
             "entity_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
@@ -918,7 +918,7 @@
                 "source_datarepo_row_ids": [
                     "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                 ],
-                "version": "redacted-/JIktcFZ"
+                "version": "2022-06-01T00:00:00.000000Z"
             }
         }
     },
@@ -1721,6 +1721,36 @@
         }
     },
     {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_33d8fab596f5af223936ba8f7ef6d218e4932cde",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+            "contents": {
+                "data_modality": [],
+                "datarepo_row_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
+                "file_format": ".bam",
+                "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
+                "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "file_size": 3306845592,
+                "is_supplementary": false,
+                "reference_assembly": [],
+                "source_datarepo_row_ids": [
+                    "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                ],
+                "version": "2022-06-01T00:00:00.000000Z",
+                "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "sha256": "",
+                "crc32": ""
+            },
+            "replica_type": "anvil_file",
+            "hub_ids": []
+        }
+    },
+    {
         "_index": "azul_v2_nadove4_test_files",
         "_type": "_doc",
         "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068__exists",
@@ -1906,36 +1936,6 @@
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
             "bundle_version": "",
             "bundle_deleted": false
-        }
-    },
-    {
-        "_index": "azul_v2_nadove4_test_replica",
-        "_type": "_doc",
-        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_da659bb0d46d83e5fd038f119f6fb76b0fc46b6e",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
-            "replica_type": "anvil_file",
-            "hub_ids": [],
-            "contents": {
-                "data_modality": [],
-                "datarepo_row_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
-                "file_format": ".bam",
-                "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
-                "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-                "file_ref": "drs://data.terra.bio/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                "file_size": 3306845592,
-                "is_supplementary": false,
-                "reference_assembly": [],
-                "source_datarepo_row_ids": [
-                    "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                ],
-                "version": "2022-06-01T00:00:00.000000Z",
-                "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
-                "sha256": "",
-                "crc32": ""
-            }
         }
     },
     {
@@ -2930,7 +2930,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_df5c9e8f2fdbbd0f85316396c1119451830f332f",
+        "_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_a990d631b61245811f3401dfa59a2d47edac01a5",
         "_score": 1.0,
         "_source": {
             "entity_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
@@ -2949,7 +2949,7 @@
                 "source_datarepo_row_ids": [
                     "sample:98048c3b-2525-4090-94fd-477de31f2608"
                 ],
-                "version": "redacted-/JIktcFZ"
+                "version": "2022-06-01T00:00:00.000000Z"
             }
         }
     },
@@ -3506,7 +3506,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461_026c212506d50c06d8225c2d5fac1e789eb4d301",
+        "_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461_0a85e766a03e5aedfa1bbcf0932e376dba5cd431",
         "_score": 1.0,
         "_source": {
             "entity_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
@@ -3531,7 +3531,7 @@
                 "source_datarepo_row_ids": [
                     "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                 ],
-                "version": "redacted-/JIktcFZ"
+                "version": "2022-06-01T00:00:00.000000Z"
             }
         }
     },
@@ -3844,31 +3844,6 @@
         }
     },
     {
-        "_index": "azul_v2_nadove4_test_replica",
-        "_type": "_doc",
-        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_1d8e455a019e942e4d2298f5f019778164640246",
-        "_score": 1.0,
-        "_source": {
-            "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
-            "replica_type": "anvil_donor",
-            "hub_ids": [],
-            "contents": {
-                "datarepo_row_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
-                "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-                "genetic_ancestry": [],
-                "organism_type": "redacted-ACw+6ecI",
-                "phenotypic_sex": "redacted-JfQ0b3xG",
-                "reported_ethnicity": [
-                    "redacted-NSkwDycK"
-                ],
-                "source_datarepo_row_ids": [
-                    "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                ],
-                "version": "redacted-/JIktcFZ"
-            }
-        }
-    },
-    {
         "_index": "azul_v2_nadove4_test_donors",
         "_type": "_doc",
         "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068__exists",
@@ -4100,6 +4075,31 @@
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
             "bundle_version": "",
             "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_v2_nadove4_test_replica",
+        "_type": "_doc",
+        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_ef7dbf88444d1f5f24e887821dbae7d1dc182e55",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+            "contents": {
+                "datarepo_row_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
+                "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+                "genetic_ancestry": [],
+                "organism_type": "redacted-ACw+6ecI",
+                "phenotypic_sex": "redacted-JfQ0b3xG",
+                "reported_ethnicity": [
+                    "redacted-NSkwDycK"
+                ],
+                "source_datarepo_row_ids": [
+                    "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+                ],
+                "version": "2022-06-01T00:00:00.000000Z"
+            },
+            "replica_type": "anvil_donor",
+            "hub_ids": []
         }
     }
 ]
