@@ -77,8 +77,9 @@ def emit():
             'aws_s3_bucket': {
                 bucket: {
                     'bucket': name,
+                    'force_destroy': True,
                     'lifecycle': {
-                        'prevent_destroy': True
+                        'prevent_destroy': False
                     }
                 }
                 for bucket, name in buckets.items()
@@ -133,23 +134,11 @@ def emit():
                     'default_root_object': 'index.html',
                     'is_ipv6_enabled': True,
                     'ordered_cache_behavior': [
-                        bucket_behaviour('browser',
-                                         path_pattern='/explore*',
-                                         explorer_domain_router=True,
-                                         add_response_security_headers=False),
-                        google_search_behavior(),
-                        *(
-                            bucket_behaviour('consortia',
-                                             path_pattern=path_pattern,
-                                             ptm_next_path_mapper=True,
-                                             ptm_add_response_headers=False)
-                            for path_pattern in ['/consortia*', '_next/*']
-                        ),
                     ],
                     'default_cache_behavior':
-                        bucket_behaviour('portal',
-                                         add_trailing_slash=True,
-                                         add_response_security_headers=False),
+                        bucket_behaviour('browser',
+                                         bucket_path_mapper=True,
+                                         add_response_headers=False),
                     'viewer_certificate': {
                         'acm_certificate_arn': '${aws_acm_certificate.portal.arn}',
                         'minimum_protocol_version': 'TLSv1.2_2021',
@@ -545,7 +534,7 @@ class GitLabHelper:
 
     def tarball_version(self, branch: str) -> str:
         # package_version can't contain slashes
-        return branch.replace('/', '.')
+        return branch.replace('/', '_')
 
 
 def quote(s):

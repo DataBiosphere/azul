@@ -33,11 +33,13 @@ def env() -> Mapping[str, Optional[str]]:
                     'anvil': {
                         'domain': '{AZUL_DOMAIN_NAME}',
                         'bucket': 'browser',
-                        'tarball_path': 'explore',
-                        'real_path': 'explore/anvil-cmg'
+                        'tarball_path': 'out',
+                        'real_path': ''
                     }
                 }
             },
+            # FIXME: Remove this site
+            #        https://github.com/DataBiosphere/azul/issues/5874
             'ucsc/anvil-portal': {
                 'main': {
                     'anvil': {

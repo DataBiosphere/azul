@@ -1,6 +1,3 @@
-// FIXME: Delete me
-//        https://github.com/DataBiosphere/azul/issues/5871
-
 function handler(event) {
     var response = event.response;
     var headers = response.headers;
