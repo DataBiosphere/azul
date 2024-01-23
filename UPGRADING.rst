@@ -28,6 +28,17 @@ Everyone
 
 Update Terraform on your developer machines to version 1.6.6.
 
+Operator
+~~~~~~~~
+
+Manually perform a two-phase deployment of the ``shared`` component of every
+main deployment. Perform the first phase using the ``apply_keep_unused``
+Makefile target for the lower deployments prior to running an integration test
+against your personal deployment. In a stable deployment (``prod``), perform
+the first phase before pushing the merge commit to the GitLab instance in that
+deployment. In lower and stable deployments, perform the second phase using the
+``apply`` Makefile target after the merge commit was successfully built on the
+GitLab instance in that deployment.
 
 #5848 Dummy S3 lifecycle rule has auto-generated name
 =====================================================
