@@ -30,8 +30,8 @@ Manually deploy the ``shared`` component of any main deployment just before
 pushing the PR branch to the GitLab instance in that deployment.
 
 
- #5847 Subgraph stitching query crashes BQ emulator
-===================================================
+#5847 Subgraph stitching query crashes BQ emulator
+==================================================
 
 Operator
 ~~~~~~~~
