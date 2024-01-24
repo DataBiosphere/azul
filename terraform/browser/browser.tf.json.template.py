@@ -176,24 +176,6 @@ def emit():
                 }
                 for bucket in buckets
             },
-            'aws_cloudfront_origin_request_policy': {
-                'google_search': {
-                    'depends_on': ['google_project_service.customsearch'],
-                    'name': config.qualified_resource_name('portal_search'),
-                    'headers_config': {
-                        'header_behavior': 'whitelist',
-                        'headers': {
-                            'items': ['Referer']
-                        }
-                    },
-                    'query_strings_config': {
-                        'query_string_behavior': 'all'
-                    },
-                    'cookies_config': {
-                        'cookie_behavior': 'none'
-                    }
-                }
-            },
             'aws_cloudfront_function': {
                 script.stem: cloudfront_function(script)
                 for script in Path(__file__).parent.glob('*.js')
@@ -236,6 +218,24 @@ def emit():
                         '${each.value.resource_record_value}',
                     ],
                     'ttl': 60
+                }
+            },
+            'aws_cloudfront_origin_request_policy': {
+                'google_search': {
+                    'depends_on': ['google_project_service.customsearch'],
+                    'name': config.qualified_resource_name('portal_search'),
+                    'headers_config': {
+                        'header_behavior': 'whitelist',
+                        'headers': {
+                            'items': ['Referer']
+                        }
+                    },
+                    'query_strings_config': {
+                        'query_string_behavior': 'all'
+                    },
+                    'cookies_config': {
+                        'cookie_behavior': 'none'
+                    }
                 }
             },
             'google_project_service': {
