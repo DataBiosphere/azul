@@ -20,6 +20,22 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+ #5847 Subgraph stitching query crashes BQ emulator
+===================================================
+
+Operator
+~~~~~~~~
+
+Manually perform a two-phase deployment of the ``shared`` component of every
+main deployment. In a lower deployment, perform the first phase using the
+``apply_keep_unused`` Makefile target just before pushing the PR branch to the
+GitLab instance in that deployment. In a stable deployment (``prod``), perform
+the first phase before pushing the merge commit to the GitLab instance in that
+deployment. In lower and stable deployments, perform the second phase using the
+``apply`` Makefile target after the merge commit was successfully built on the
+GitLab instance in that deployment.
+
+
 #5687 Update Terraform to 1.6.x
 ===============================
 

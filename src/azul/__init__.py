@@ -1483,7 +1483,7 @@ class Config:
             pycharm=f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
             elasticsearch=f'docker.io/ucscgi/azul-elasticsearch'
                           f':{self.docker_elasticsearch_version}',
-            bigquery_emulator='ghcr.io/goccy/bigquery-emulator:0.4.4',
+            bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             clamav='docker.io/clamav/clamav:1.2.1-26',
