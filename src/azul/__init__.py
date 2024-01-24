@@ -1486,7 +1486,7 @@ class Config:
             bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
-            clamav='docker.io/clamav/clamav:1.2.1-26',
+            clamav='docker.io/clamav/clamav:1.2.1-27',
             gitlab='docker.io/gitlab/gitlab-ce:16.8.1-ce.0',
             gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.8.0',
             dind=f'docker.io/library/docker:{self.docker_version}-dind',
