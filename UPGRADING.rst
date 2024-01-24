@@ -40,6 +40,11 @@ lower and stable deployments, perform the second phase using the ``apply``
 Makefile target after the merge commit was successfully built on the GitLab
 instance in that deployment.
 
+Deploy the ``gitlab`` component of any main deployment just after pushing the PR
+branch to GitHub. Run ``make -C terraform/gitlab/runner`` just before pushing
+the merge commit to the GitLab instance in that deployment.
+
+
 #5779 AWS event GetMacieSession results in AccessDenied error
 =============================================================
 

@@ -1487,8 +1487,8 @@ class Config:
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             clamav='docker.io/clamav/clamav:1.2.1-26',
-            gitlab='docker.io/gitlab/gitlab-ce:16.7.3-ce.0',
-            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.7.0',
+            gitlab='docker.io/gitlab/gitlab-ce:16.8.1-ce.0',
+            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.8.0',
             dind=f'docker.io/library/docker:{self.docker_version}-dind',
             # The images below are not used within the security boundary:
             _signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
