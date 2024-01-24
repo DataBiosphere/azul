@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5876 Upgrade dependencies 2024-01-22
+=====================================
+
+Everyone
+~~~~~~~~
+
+Update Terraform on your developer machines to version 1.6.6.
+
+
 #5848 Dummy S3 lifecycle rule has auto-generated name
 =====================================================
 
