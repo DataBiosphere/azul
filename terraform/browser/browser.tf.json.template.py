@@ -67,7 +67,7 @@ def emit():
                 }
             },
             'aws_route53_zone': {
-                'portal': {
+                'browser': {
                     'name': config.domain_name + '.',
                     'private_zone': False
                 }
@@ -111,7 +111,7 @@ def emit():
                                 'Resource': '${aws_s3_bucket.%s.arn}/*' % bucket,
                                 'Condition': {
                                     'StringEquals': {
-                                        'AWS:SourceArn': '${aws_cloudfront_distribution.portal.arn}'
+                                        'AWS:SourceArn': '${aws_cloudfront_distribution.browser.arn}'
                                     }
                                 }
                             }
@@ -121,7 +121,7 @@ def emit():
                 for bucket in buckets
             },
             'aws_cloudfront_distribution': {
-                'portal': {
+                'browser': {
                     'enabled': True,
                     'restrictions': {
                         'geo_restriction': {
@@ -140,7 +140,7 @@ def emit():
                                          bucket_path_mapper=True,
                                          add_response_headers=False),
                     'viewer_certificate': {
-                        'acm_certificate_arn': '${aws_acm_certificate.portal.arn}',
+                        'acm_certificate_arn': '${aws_acm_certificate.browser.arn}',
                         'minimum_protocol_version': 'TLSv1.2_2021',
                         'ssl_support_method': 'sni-only'
                     },
@@ -199,7 +199,7 @@ def emit():
                 for script in Path(__file__).parent.glob('*.js')
             },
             'aws_acm_certificate': {
-                'portal': {
+                'browser': {
                     'domain_name': config.domain_name,
                     'validation_method': 'DNS',
                     'lifecycle': {
@@ -208,30 +208,30 @@ def emit():
                 }
             },
             'aws_acm_certificate_validation': {
-                'portal': {
-                    'certificate_arn': '${aws_acm_certificate.portal.arn}',
-                    'validation_record_fqdns': '${[for r in aws_route53_record.portal_validation : r.fqdn]}',
+                'browser': {
+                    'certificate_arn': '${aws_acm_certificate.browser.arn}',
+                    'validation_record_fqdns': '${[for r in aws_route53_record.browser_validation : r.fqdn]}',
                 }
             },
             'aws_route53_record': {
-                'portal': {
-                    'zone_id': '${data.aws_route53_zone.portal.id}',
+                'browser': {
+                    'zone_id': '${data.aws_route53_zone.browser.id}',
                     'name': config.domain_name,
                     'type': 'A',
                     'alias': {
-                        'name': '${aws_cloudfront_distribution.portal.domain_name}',
-                        'zone_id': '${aws_cloudfront_distribution.portal.hosted_zone_id}',
+                        'name': '${aws_cloudfront_distribution.browser.domain_name}',
+                        'zone_id': '${aws_cloudfront_distribution.browser.hosted_zone_id}',
                         'evaluate_target_health': False
                     }
                 },
-                'portal_validation': {
+                'browser_validation': {
                     'for_each': '${{'
-                                'for o in aws_acm_certificate.portal.domain_validation_options : '
+                                'for o in aws_acm_certificate.browser.domain_validation_options : '
                                 'o.domain_name => o'
                                 '}}',
                     'name': '${each.value.resource_record_name}',
                     'type': '${each.value.resource_record_type}',
-                    'zone_id': '${data.aws_route53_zone.portal.id}',
+                    'zone_id': '${data.aws_route53_zone.browser.id}',
                     'records': [
                         '${each.value.resource_record_value}',
                     ],
@@ -363,7 +363,7 @@ def emit():
                             'command': ' '.join([
                                 'aws',
                                 'cloudfront create-invalidation',
-                                '--distribution-id ${aws_cloudfront_distribution.portal.id}',
+                                '--distribution-id ${aws_cloudfront_distribution.browser.id}',
                                 '--paths "/*"'
                             ])
                         }
