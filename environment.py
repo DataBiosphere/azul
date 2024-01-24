@@ -241,7 +241,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The tag of the Elasticsearch image that we use to run test cases.
         #
-        'azul_docker_elasticsearch_version': '7.17.16-9',
+        'azul_docker_elasticsearch_version': '7.17.17-10',
 
         # The tag of the PyCharm image that we use to format the source code in
         # continuous integration. We specify it here instead of directly in the
