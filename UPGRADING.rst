@@ -40,6 +40,11 @@ deployment. In lower and stable deployments, perform the second phase using the
 ``apply`` Makefile target after the merge commit was successfully built on the
 GitLab instance in that deployment.
 
+Deploy the ``gitlab`` component of any main deployment just after pushing the PR
+branch to GitHub. Run ``make -C terraform/gitlab/runner`` just before pushing
+the merge commit to the GitLab instance in that deployment.
+
+
 #5848 Dummy S3 lifecycle rule has auto-generated name
 =====================================================
 
