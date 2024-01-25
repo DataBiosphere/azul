@@ -302,7 +302,9 @@ def emit():
                     f'deploy_site_{i}': {
                         'triggers': {
                             'tarball_hash': gitlab_helper.tarball_hash(project, branch, site_name),
-                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket']
+                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket'],
+                            'tarball_path': site['tarball_path'],
+                            'real_path': site['real_path']
                         },
                         'provisioner': {
                             'local-exec': {
