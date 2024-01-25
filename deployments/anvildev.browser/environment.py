@@ -37,24 +37,6 @@ def env() -> Mapping[str, Optional[str]]:
                         'real_path': ''
                     }
                 }
-            },
-            # FIXME: Remove this site
-            #        https://github.com/DataBiosphere/azul/issues/5874
-            'ucsc/anvil-portal': {
-                'main': {
-                    'anvil': {
-                        'domain': '{AZUL_DOMAIN_NAME}',
-                        'bucket': 'portal',
-                        'tarball_path': 'public',
-                        'real_path': ''
-                    },
-                    'consortia': {
-                        'domain': '{AZUL_DOMAIN_NAME}',
-                        'bucket': 'consortia',
-                        'tarball_path': 'out',
-                        'real_path': ''
-                    }
-                }
             }
         })
     }

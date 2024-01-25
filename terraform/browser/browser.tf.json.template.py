@@ -22,6 +22,7 @@ from azul import (
     JSON,
     cached_property,
     config,
+    iif,
 )
 from azul.collections import (
     adict,
@@ -42,6 +43,9 @@ buckets = {
     for branch, sites in branches.items()
     for site_name, site in sites.items()
 }
+
+#: Whether to emit a Google custom search instance and a CF origin for it
+provision_custom_search = False
 
 
 def emit():
@@ -134,6 +138,7 @@ def emit():
                     'default_root_object': 'index.html',
                     'is_ipv6_enabled': True,
                     'ordered_cache_behavior': [
+                        *iif(provision_custom_search, [google_search_behavior()])
                     ],
                     'default_cache_behavior':
                         bucket_behaviour('browser',
@@ -153,7 +158,7 @@ def emit():
                             }
                             for bucket in buckets
                         ),
-                        google_search_origin()
+                        *iif(provision_custom_search, [google_search_origin()])
                     ],
                     'custom_error_response': [
                         {
@@ -175,24 +180,6 @@ def emit():
                     'signing_protocol': 'sigv4'
                 }
                 for bucket in buckets
-            },
-            'aws_cloudfront_origin_request_policy': {
-                'google_search': {
-                    'depends_on': ['google_project_service.customsearch'],
-                    'name': config.qualified_resource_name('portal_search'),
-                    'headers_config': {
-                        'header_behavior': 'whitelist',
-                        'headers': {
-                            'items': ['Referer']
-                        }
-                    },
-                    'query_strings_config': {
-                        'query_string_behavior': 'all'
-                    },
-                    'cookies_config': {
-                        'cookie_behavior': 'none'
-                    }
-                }
             },
             'aws_cloudfront_function': {
                 script.stem: cloudfront_function(script)
@@ -238,38 +225,58 @@ def emit():
                     'ttl': 60
                 }
             },
-            'google_project_service': {
-                api: {
-                    'service': f'{api}.googleapis.com',
-                    'disable_dependent_services': False,
-                    'disable_on_destroy': False,
-                } for api in ['apikeys', 'customsearch']
-            },
-            'google_apikeys_key': {
-                'google_search': {
-                    'depends_on': ['google_project_service.apikeys'],
-                    **{k: config.qualified_resource_name('portal') for k in ['name', 'display_name']},
-                    'project': '${local.google_project}',
-                    'restrictions': {
-                        'api_targets': [
-                            {
-                                'service': 'customsearch.googleapis.com'
+            **iif(provision_custom_search, {
+                'aws_cloudfront_origin_request_policy': {
+                    'google_search': {
+                        'depends_on': ['google_project_service.customsearch'],
+                        'name': config.qualified_resource_name('portal_search'),
+                        'headers_config': {
+                            'header_behavior': 'whitelist',
+                            'headers': {
+                                'items': ['Referer']
                             }
-                        ],
-                        'browser_key_restrictions': {
-                            'allowed_referrers': list(flatten(
-                                [f'https://{domain}', f'https://{domain}/*']
-                                for domain in {
-                                    'prod': [
-                                        'data-browser.lungmap.net',
-                                        config.domain_name
-                                    ],
-                                }.get(config.deployment_stage, [config.domain_name])
-                            ))
+                        },
+                        'query_strings_config': {
+                            'query_string_behavior': 'all'
+                        },
+                        'cookies_config': {
+                            'cookie_behavior': 'none'
+                        }
+                    }
+                },
+                'google_project_service': {
+                    api: {
+                        'service': f'{api}.googleapis.com',
+                        'disable_dependent_services': False,
+                        'disable_on_destroy': False,
+                    } for api in ['apikeys', 'customsearch']
+                },
+                'google_apikeys_key': {
+                    'google_search': {
+                        'depends_on': ['google_project_service.apikeys'],
+                        **{k: config.qualified_resource_name('portal') for k in ['name', 'display_name']},
+                        'project': '${local.google_project}',
+                        'restrictions': {
+                            'api_targets': [
+                                {
+                                    'service': 'customsearch.googleapis.com'
+                                }
+                            ],
+                            'browser_key_restrictions': {
+                                'allowed_referrers': list(flatten(
+                                    [f'https://{domain}', f'https://{domain}/*']
+                                    for domain in {
+                                        'prod': [
+                                            'data-browser.lungmap.net',
+                                            config.domain_name
+                                        ],
+                                    }.get(config.deployment_stage, [config.domain_name])
+                                ))
+                            }
                         }
                     }
                 }
-            },
+            }),
             'aws_s3_object': {
                 # The site deployment below needs to be triggered whenever the
                 # content changes but also when the bucket has been deleted and is
@@ -302,7 +309,9 @@ def emit():
                     f'deploy_site_{i}': {
                         'triggers': {
                             'tarball_hash': gitlab_helper.tarball_hash(project, branch, site_name),
-                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket']
+                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket'],
+                            'tarball_path': site['tarball_path'],
+                            'real_path': site['real_path']
                         },
                         'provisioner': {
                             'local-exec': {
@@ -424,6 +433,10 @@ def cloudfront_function(script: Path):
         comment = list(filter(None, map(str.strip, comment)))
         comment = comment[0].removeprefix(prefix).strip() if comment else None
         source = ''.join(source)
+        # I tried Terrafornm's try() but it won't catch undefined references
+        if provision_custom_search:
+            source = source.replace('{GOOGLE_SEARCH_API_KEY}',
+                                    '${google_apikeys_key.google_search.key_string}')
 
     return dict(name=config.qualified_resource_name(script.stem),
                 comment=comment,

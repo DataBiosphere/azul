@@ -35,7 +35,7 @@ function handler(event) {
     
 
     // Add the API key and let the request proceed
-    request.querystring["key"]={"value": "${google_apikeys_key.google_search.key_string}"};
+    request.querystring["key"]={"value": "{GOOGLE_SEARCH_API_KEY}"};
     
     return request;
 }
