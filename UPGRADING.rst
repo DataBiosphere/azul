@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5848 Dummy S3 lifecycle rule has auto-generated name
+=====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the PR branch to the GitLab instance in that deployment.
+
+
  #5847 Subgraph stitching query crashes BQ emulator
 ===================================================
 
