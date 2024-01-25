@@ -528,6 +528,9 @@
                 null
             ],
             "publications": [],
+            "is_tissue_atlas_project": [false],
+            "bionetwork_name": ["Immune"],
+            "tissue_atlas": [],
             "supplementary_links": [
                 null
             ]
@@ -864,6 +867,9 @@
                 "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
             ],
             "publications": [],
+            "is_tissue_atlas_project": [false],
+            "bionetwork_name": [null],
+            "tissue_atlas": [],
             "supplementary_links": [
                 "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
             ]
@@ -3273,6 +3279,9 @@
                 "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres"
             ],
             "publications": [],
+            "is_tissue_atlas_project": [false],
+            "bionetwork_name": [null],
+            "tissue_atlas": [],
             "supplementary_links": [
                 null
             ]

@@ -253,6 +253,9 @@ class TestIndexResponse(IndexResponseTestCase):
                         "projectId": ["e8642221-4c2c-4fd7-b926-a68bce363c88"],
                         "projectShortname": ["Single of human pancreas"],
                         "projectTitle": ["Single cell transcriptome patterns."],
+                        "bionetworkName": [None],
+                        "isTissueAtlasProject": [False],
+                        "tissueAtlas": None,
                         "estimatedCellCount": None,
                     }
                 ],
@@ -590,7 +593,10 @@ class TestIndexResponse(IndexResponseTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributedAnalyses": {},
-                            "accessions": [],
+                            "bionetworkName": [None],
+                            "tissueAtlas": [],
+                            "isTissueAtlasProject": False,
+                            "accessions": []
                         }
                     ],
                     "protocols": [
@@ -846,6 +852,9 @@ class TestIndexResponse(IndexResponseTestCase):
                         "estimatedCellCount": None,
                         "matrices": {},
                         "contributedAnalyses": {},
+                        "isTissueAtlasProject": False,
+                        "bionetworkName": [None],
+                        "tissueAtlas": [],
                         "accessions": [
                             {"namespace": "array_express", "accession": "E-AAAA-00"},
                             {"namespace": "geo_series", "accession": "GSE00000"},
@@ -3432,7 +3441,8 @@ class TestResponseFields(IndexResponseTestCase):
 
     def test_projects_response(self):
         """
-        Verify a project's contributors, laboratory, and publications.
+        Verify a project's contributors, laboratory, bionetworks,
+        and publications.
         """
         params = {
             'catalog': self.catalog,
@@ -3489,6 +3499,17 @@ class TestResponseFields(IndexResponseTestCase):
             }
         ]
         self.assertEqual(expected_publications, project['publications'])
+        expected_tissue_atlas = [
+            {'atlas': None, 'version': None},
+            {'atlas': None, 'version': None},
+            {'atlas': 'Lung', 'version': None},
+            {'atlas': 'Retina', 'version': 'v1.0'},
+            {'atlas': 'Blood', 'version': 'v1.0'},
+        ]
+        expected_bionetwork_name = ['Eye', 'Immune', 'Kidney', 'Lung', 'Skin']
+        self.assertEqual(expected_tissue_atlas, project['tissueAtlas'])
+        self.assertEqual(expected_bionetwork_name, project['bionetworkName'])
+        self.assertTrue(project['isTissueAtlasProject'])
 
 
 class TestUnpopulatedIndexResponse(IndexResponseTestCase):
@@ -3564,7 +3585,7 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
         sortable_fields = {
             field
             for field in self.field_mapping
-            if field not in {'assayType', 'organismAgeRange', 'accessions'}
+            if field not in {'assayType', 'organismAgeRange', 'accessions', 'tissueAtlas'}
         }
 
         for entity_type, field in product(self.entity_types(), sortable_fields):

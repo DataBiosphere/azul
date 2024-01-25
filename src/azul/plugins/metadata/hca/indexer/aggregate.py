@@ -179,7 +179,8 @@ class ProjectAggregator(SimpleAggregator):
                        'contact_names',
                        'contributors',
                        'publications',
-                       'accessions'):
+                       'accessions',
+                       'tissue_atlas'):
             return None
         elif field == 'estimated_cell_count':
             return MaxAccumulator()

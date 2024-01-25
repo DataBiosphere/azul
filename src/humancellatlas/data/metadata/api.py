@@ -306,6 +306,15 @@ class Accession:
     accession: str
 
 
+@dataclass(eq=True, frozen=True)
+class Bionetwork:
+    name: str
+    atlas_project: Optional[bool] = None
+    hca_tissue_atlas: Optional[str] = None
+    hca_tissue_atlas_version: Optional[str] = None
+    schema_version: Optional[str] = None
+
+
 @dataclass(init=False)
 class Project(Entity):
     project_short_name: str
@@ -316,6 +325,7 @@ class Project(Entity):
     accessions: OrderedSet[Accession]
     supplementary_links: OrderedSet[str]
     estimated_cell_count: Optional[int]
+    bionetworks: OrderedSet[Bionetwork]
 
     def __init__(self,
                  json: JSON,
@@ -341,6 +351,9 @@ class Project(Entity):
                 assert isinstance(value, list)
                 accessions.update(Accession(namespace=prefix, accession=v) for v in value)
         self.accessions = accessions
+        self.bionetworks = OrderedSet(Bionetwork(**bionetwork)
+                                      for bionetwork in content.get('hca_bionetworks', ())
+                                      if bionetwork)
 
     def _accessions(self, namespace: str) -> Set[str]:
         return {a.accession for a in self.accessions if a.namespace == namespace}

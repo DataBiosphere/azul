@@ -365,6 +365,9 @@ class SearchResponseFactory:
                 'projectShortname': project['project_short_name'],
                 'laboratory': sorted(set(project.get('laboratory', [None]))),
                 'estimatedCellCount': project['estimated_cell_count'],
+                'isTissueAtlasProject': project['is_tissue_atlas_project'],
+                'tissueAtlas': project.get('tissue_atlas'),
+                'bionetworkName': project['bionetwork_name']
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])

@@ -293,6 +293,8 @@ value_and_unit: ValueAndUnit = ValueAndUnit(JSON, str)
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
 
+tissue_atlas: Nested = Nested(atlas=null_str, version=null_str)
+
 age_range = ClosedRange(pass_thru_float)
 
 
@@ -658,6 +660,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'accession': p.accession
         }
 
+    def _tissue_atlas(self, b: api.Bionetwork):
+        return {
+            'atlas': b.hca_tissue_atlas,
+            'version': b.hca_tissue_atlas_version
+        }
+
     @classmethod
     def _project_types(cls) -> FieldTypes:
         return {
@@ -674,6 +682,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'supplementary_links': [null_str],
             '_type': null_str,
             'accessions': [accession],
+            'is_tissue_atlas_project': null_bool,
+            'tissue_atlas': [tissue_atlas],
+            'bionetwork_name': [null_str],
             'estimated_cell_count': null_int
         }
 
@@ -717,6 +728,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'supplementary_links': sorted(project.supplementary_links),
             '_type': 'project',
             'accessions': list(map(self._accession, project.accessions)),
+            'is_tissue_atlas_project': any(bionetwork.atlas_project
+                                           for bionetwork in project.bionetworks),
+            'tissue_atlas': list(map(self._tissue_atlas, project.bionetworks)),
+            'bionetwork_name': sorted(bionetwork.name for bionetwork in project.bionetworks),
             'estimated_cell_count': project.estimated_cell_count
         }
 

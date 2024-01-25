@@ -1937,6 +1937,51 @@
                             }
                         },
                         {
+                            "name": "is_tissue_atlas_project",
+                            "namespace": "projects",
+                            "type": {
+                                "items": ["null", "boolean"],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "tissue_atlas",
+                            "namespace": "projects",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "atlas",
+                                               "namespace": "projects.tissue_atlas",
+                                               "type": {
+                                                   "items": ["null", "string"],
+                                                   "type": "array"
+                                               }
+                                        },
+                                        {
+                                            "name": "version",
+                                            "namespace": "projects.tissue_atlas",
+                                            "type": {
+                                                "items": ["null", "string"],
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                   "name": "projects.tissue_atlas",
+                                   "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "bionetwork_name",
+                            "namespace": "projects",
+                            "type": {
+                                "items": ["null", "string"],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "estimated_cell_count",
                             "namespace": "projects",
                             "type": [

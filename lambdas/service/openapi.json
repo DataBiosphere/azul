@@ -3,7 +3,7 @@
     "info": {
         "title": "azul_service",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n",
-        "version": "3.4"
+        "version": "3.5"
     },
     "tags": [
         {
@@ -1017,6 +1017,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -1455,6 +1471,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -2076,6 +2108,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -2123,7 +2181,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     },
                     {
                         "name": "entity_type",
@@ -2165,6 +2223,7 @@
                                 "aggregateUpdateDate",
                                 "assayType",
                                 "biologicalSex",
+                                "bionetworkName",
                                 "bundleUuid",
                                 "bundleVersion",
                                 "cellCount",
@@ -2187,6 +2246,7 @@
                                 "institution",
                                 "instrumentManufacturerModel",
                                 "isIntermediate",
+                                "isTissueAtlasProject",
                                 "laboratory",
                                 "lastModifiedDate",
                                 "libraryConstructionApproach",
@@ -2216,6 +2276,7 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
+                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -2412,6 +2473,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -2850,6 +2927,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -3471,6 +3564,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -3518,7 +3637,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     },
                     {
                         "name": "entity_type",
@@ -3560,6 +3679,7 @@
                                 "aggregateUpdateDate",
                                 "assayType",
                                 "biologicalSex",
+                                "bionetworkName",
                                 "bundleUuid",
                                 "bundleVersion",
                                 "cellCount",
@@ -3582,6 +3702,7 @@
                                 "institution",
                                 "instrumentManufacturerModel",
                                 "isIntermediate",
+                                "isTissueAtlasProject",
                                 "laboratory",
                                 "lastModifiedDate",
                                 "libraryConstructionApproach",
@@ -3611,6 +3732,7 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
+                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -3922,6 +4044,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -4360,6 +4498,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -4981,6 +5135,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -5028,7 +5208,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     },
                     {
                         "name": "entity_type",
@@ -5070,6 +5250,7 @@
                                 "aggregateUpdateDate",
                                 "assayType",
                                 "biologicalSex",
+                                "bionetworkName",
                                 "bundleUuid",
                                 "bundleVersion",
                                 "cellCount",
@@ -5092,6 +5273,7 @@
                                 "institution",
                                 "instrumentManufacturerModel",
                                 "isIntermediate",
+                                "isTissueAtlasProject",
                                 "laboratory",
                                 "lastModifiedDate",
                                 "libraryConstructionApproach",
@@ -5121,6 +5303,7 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
+                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -5437,6 +5620,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -5875,6 +6074,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -6496,6 +6711,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -6543,7 +6784,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     }
                 ]
             },
@@ -6757,6 +6998,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -7195,6 +7452,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -7816,6 +8089,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -7863,7 +8162,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     }
                 ]
             }
@@ -8004,6 +8303,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -8442,6 +8757,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -9063,6 +9394,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -9110,7 +9467,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     },
                     {
                         "name": "format",
@@ -9355,6 +9712,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -9793,6 +10166,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -10414,6 +10803,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -10461,7 +10876,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     },
                     {
                         "name": "format",
@@ -10662,6 +11077,22 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "bionetworkName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "bundleUuid": {
                                             "type": "object",
                                             "properties": {
@@ -11100,6 +11531,22 @@
                                             "additionalProperties": false
                                         },
                                         "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isTissueAtlasProject": {
                                             "type": "object",
                                             "properties": {
                                                 "is": {
@@ -11721,6 +12168,32 @@
                                             ],
                                             "additionalProperties": false
                                         },
+                                        "tissueAtlas": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "atlas": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "version": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
                                         "updateDate": {
                                             "type": "object",
                                             "properties": {
@@ -11768,7 +12241,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bionetworkName, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, isTissueAtlasProject, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, tissueAtlas, updateDate, workflow\n"
                     },
                     {
                         "name": "format",

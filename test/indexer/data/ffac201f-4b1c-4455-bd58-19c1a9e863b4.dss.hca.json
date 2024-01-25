@@ -776,7 +776,8 @@
                 "update_date": "2019-10-09T15:32:48.934Z",
                 "schema_major_version": 14,
                 "schema_minor_version": 1
-            }
+            },
+            "hca_bionetworks": []
         },
         "library_preparation_protocol_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
