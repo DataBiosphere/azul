@@ -1390,12 +1390,6 @@ class CurlManifestGenerator(PagedManifestGenerator):
         manifest_options = [
             '--location',
             '--fail',
-            # The non-fetch endpoint provides a pre-authenticated signed S3 URL
-            *(
-                authentication_option
-                if url.netloc == config.service_endpoint.netloc
-                else ()
-            )
         ]
         file_options = [
             '--fail-early',  # Exit curl with error on the first failure encountered
