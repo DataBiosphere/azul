@@ -884,6 +884,8 @@ tf_config = {
                 ]
             }
         },
+        # FIXME: Enable Macie in AWS
+        #        https://github.com/DataBiosphere/azul/issues/5890
         'aws_securityhub_standards_control': {
             'best_practices': {
                 'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
