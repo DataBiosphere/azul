@@ -1150,6 +1150,8 @@ repository_summary_spec = {
     method_spec=repository_search_spec(post=False),
     cors=True
 )
+# FIXME: Properly document the POST version of /index
+#        https://github.com/DataBiosphere/azul/issues/5900
 @app.route(
     '/index/{entity_type}',
     methods=['POST'],
