@@ -193,10 +193,8 @@ class Main:
         dupes = direct_build_reqs & direct_runtime_reqs
         require(not dupes, 'Some requirements are declared as both run and build time', dupes)
 
-        all_reqs = self.get_reqs(self.build)
-        build_reqs = all_reqs - pip_reqs
-        all_runtime_reqs = self.get_reqs(self.runtime)
-        runtime_reqs = all_runtime_reqs - pip_reqs
+        build_reqs = self.get_reqs(self.build)
+        runtime_reqs = self.get_reqs(self.runtime)
         require(runtime_reqs <= build_reqs,
                 'Runtime requirements are not a subset of build requirements',
                 runtime_reqs - build_reqs)
@@ -217,9 +215,9 @@ class Main:
                 'Ambiguous transitive runtime requirement versions',
                 ambiguities)
 
-        build_only_reqs = build_reqs - runtime_reqs
+        build_only_reqs = build_reqs - pip_reqs - runtime_reqs
         transitive_build_reqs = build_only_reqs - direct_build_reqs
-        transitive_runtime_reqs = runtime_reqs - direct_runtime_reqs
+        transitive_runtime_reqs = runtime_reqs - pip_reqs - direct_runtime_reqs
         assert not transitive_build_reqs & transitive_runtime_reqs
         # Assert that all_reqs really includes everything
         for i, reqs in enumerate([
@@ -228,12 +226,12 @@ class Main:
             transitive_runtime_reqs,
             direct_build_reqs,
             transitive_build_reqs,
-            all_runtime_reqs
+            runtime_reqs
         ]):
-            assert reqs <= all_reqs, (i, reqs - all_reqs)
+            assert reqs <= build_reqs, (i, reqs - build_reqs)
         self.write_transitive_reqs(transitive_build_reqs, self.build)
         self.write_transitive_reqs(transitive_runtime_reqs, self.runtime)
-        self.write_all_reqs(all_reqs)
+        self.write_all_reqs(build_reqs)
 
     def parse_reqs(self, file_or_str: Union[IO, str]) -> PinnedRequirements:
         parsed_reqs = requirements.parse(file_or_str, recurse=False)
