@@ -44,6 +44,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    iif,
     mutable_furl,
     require,
 )
@@ -227,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '3.2'
+        'version': '3.3'
     },
     'tags': [
         {
@@ -1019,10 +1020,30 @@ def repository_search_params_spec():
     ]
 
 
-def repository_search_spec():
+def repository_search_spec(*, post: bool):
     id_spec_link = '#operations-Index-get_index__entity_type___entity_id_'
     return {
-        'summary': 'Search an index for entities of interest.',
+        'summary': fd(f'''
+            Search an index for entities of interest
+            {", with filters provided in the request body" if post else ""}.
+        '''),
+        'deprecated': post,
+        'description': iif(post, fd('''
+            Any of the query parameters documented below can alternatively be
+            passed as a property of a JSON object in the body of the request.
+            This can be useful in case the value of the `filters` query
+            parameter causes the URL to exceed the maximum length of 8192
+            characters, resulting in a 413 Request Entity Too Large response.
+
+            The request `GET /index/foo?filters={…}`, for example, is equivalent
+            to a `POST /index/foo` with the body `{"filters": {…}}`.
+
+            Note that the Swagger UI can't currently be used to pass a body.
+
+            Please also note that this endpoint should be considered beta and
+            may change or disappear in the future. That is the reason for the
+            deprecation.
+        ''')),
         'tags': ['Index'],
         'parameters': repository_search_params_spec(),
         'responses': {
@@ -1126,7 +1147,16 @@ repository_summary_spec = {
 @app.route(
     '/index/{entity_type}',
     methods=['GET'],
-    method_spec=repository_search_spec(),
+    method_spec=repository_search_spec(post=False),
+    cors=True
+)
+# FIXME: Properly document the POST version of /index
+#        https://github.com/DataBiosphere/azul/issues/5900
+@app.route(
+    '/index/{entity_type}',
+    methods=['POST'],
+    content_types=['application/json'],
+    method_spec=repository_search_spec(post=True),
     cors=True
 )
 @app.route(
@@ -1144,6 +1174,14 @@ repository_summary_spec = {
 def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON:
     request = app.current_request
     query_params = request.query_params or {}
+    if request.method == 'POST':
+        body = request.json_body
+        if not isinstance(body, dict):
+            raise BRE('Request body is not a JSON object')
+        elif body.keys() & query_params.keys():
+            raise BRE('Conflicting keys between body and query parameters')
+        else:
+            query_params.update(body)
     validate_repository_search(entity_type, query_params)
     validate_entity_type(entity_type)
     return app.repository_controller.search(catalog=app.catalog,

@@ -826,6 +826,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                            method: str,
                            url: furl,
                            *,
+                           body: tuple[bytes, str] | None = None,
                            stream: bool = False
                            ) -> urllib3.HTTPResponse:
         # The type of client used will be evident from the logger name in the
@@ -836,8 +837,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         else:
             http = self._plain_http
         url = str(url)
+        if body is None:
+            headers = None
+        else:
+            body, content_type = body
+            headers = {'Content-Type': content_type}
         response = http.request(method=method,
                                 url=url,
+                                body=body,
+                                headers=headers,
                                 timeout=float(config.api_gateway_lambda_timeout + 1),
                                 retries=urllib3.Retry(total=5,
                                                       redirect=0,
@@ -1347,7 +1355,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
         url = config.service_endpoint.set(path=('index', bundle_type),
                                           args={'filters': json.dumps(source_filter)})
-        response = self._get_url_unchecked(GET, url)
+
+        # Pass filters in the body of a POST if passing them in the URL of a GET
+        # makes the URL longer than what AWS allows for edge-optimized APIs
+        # https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html
+        limit = 8192
+        if len(str(url)) > limit:
+            body = {'filters': url.args.pop('filters')}
+            method, body = POST, (json.dumps(body).encode(), 'application/json'),
+            assert len(str(url)) <= limit, (url, limit)
+        else:
+            method, body = GET, None
+
+        response = self._get_url_unchecked(method, url, body=body)
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 
         with self._service_account_credentials:
