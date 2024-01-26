@@ -1490,6 +1490,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'policy_arn': '${aws_iam_policy.gitlab_vpc.arn}'
             }
         },
+        # FIXME: Move inspector-related resources from gitlab to shared component
+        #        https://github.com/DataBiosphere/azul/issues/5760
         'aws_inspector2_enabler': {
             'gitlab': {
                 'account_ids': [aws.account],
