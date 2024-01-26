@@ -2099,8 +2099,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'gitlab_' + resource: {
                     'alarm_name': 'azul-gitlab_' + resource,
                     'comparison_operator': 'GreaterThanOrEqualToThreshold',
-                    'datapoints_to_alarm': 6,
-                    'evaluation_periods': 6,
+                    'datapoints_to_alarm': periods,
+                    'evaluation_periods': periods,
                     'period': 60 * 10,
                     'metric_name': metric,
                     'namespace': 'CWAgent',
@@ -2120,13 +2120,13 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         state + '_actions': ['${data.aws_sns_topic.monitoring.arn}']
                         for state in ('insufficient_data', 'alarm', 'ok')
                     },
-                } for resource, metric, stat, threshold, dimensions in
+                } for resource, metric, periods, stat, threshold, dimensions in
                 [
                     # FIXME: Add `mem_used_percent` alarm
                     #        https://github.com/DataBiosphere/azul/issues/5139
-                    ('data_disk_use', 'disk_used_percent', 'Maximum', 75, {'path': gitlab_mount, 'fstype': 'ext4'}),
-                    ('root_disk_use', 'disk_used_percent', 'Maximum', 75, {'path': '/', 'fstype': 'xfs'}),
-                    ('cpu_use', 'cpu_usage_active', 'Average', 90, {'cpu': 'cpu-total'})
+                    ('data_disk_use', 'disk_used_percent', 6, 'Maximum', 75, {'path': gitlab_mount, 'fstype': 'ext4'}),
+                    ('root_disk_use', 'disk_used_percent', 6, 'Maximum', 75, {'path': '/', 'fstype': 'xfs'}),
+                    ('cpu_use', 'cpu_usage_active', 6 * 5, 'Average', 90, {'cpu': 'cpu-total'})
                 ]
             }
         }
