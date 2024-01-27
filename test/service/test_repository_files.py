@@ -81,7 +81,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class RepositoryPluginTestCase(LocalAppTestCase, metaclass=ABCMeta):
+class RepositoryFilesTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -106,24 +106,15 @@ class RepositoryPluginTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
 @mock.patch.object(SourceService, '_put', new=MagicMock())
 @mock.patch.object(SourceService, '_get')
-class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
-    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
 
-    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
-
-    @classmethod
-    def _sources(cls):
-        return set(map(cls.make_mock_source_spec, cls.mock_source_names))
-
-    catalog = 'testtdr'
-
-    @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
+    @mock.patch.dict(os.environ,
+                     AZUL_TDR_SERVICE_URL=str(DCP2TestCase.mock_tdr_service_url))
     @mock.patch.object(TerraClient,
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
                                       urllib3.PoolManager(ca_certs=certifi.where())))
-    def test_repository_files_proxy(self, mock_get_cached_sources):
+    def test_repository_files(self, mock_get_cached_sources):
         mock_get_cached_sources.return_value = []
         client = http_client(log)
 
@@ -184,6 +175,13 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
                 response = client.request('GET', str(azul_url), redirect=False)
             self.assertEqual(response.status, 404)
 
+    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
+    make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
+
+    @classmethod
+    def _sources(cls):
+        return set(map(cls.make_mock_source_spec, cls.mock_source_names))
+
     @mock.patch.object(TDRClient, 'snapshot_names_by_id')
     @mock.patch.object(TDRClient, 'validate', new=MagicMock())
     def test_list_sources(self,
@@ -236,7 +234,7 @@ class TestTDRRepositoryProxy(DCP2TestCase, RepositoryPluginTestCase):
             _test(authenticate=False, cache=False)
 
 
-class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
+class TestRepositoryFilesWithDSS(DCP1TestCase, RepositoryFilesTestCase):
     # These are the credentials defined in
     #
     # moto.instance_metadata.responses.InstanceMetadataResponse
@@ -259,7 +257,7 @@ class TestDSSRepositoryProxy(DCP1TestCase, RepositoryPluginTestCase):
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
-    def test_repository_files_proxy(self, dss_direct_access_role):
+    def test_repository_files(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None
         key = ('blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779'

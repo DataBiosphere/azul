@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from copy import (
-    deepcopy,
-)
 import json
 import os
 from typing import (
@@ -15,7 +12,6 @@ from typing import (
     cast,
 )
 
-import attr
 from elasticsearch.helpers import (
     scan,
 )
@@ -40,13 +36,18 @@ from azul.indexer.document import (
 from azul.indexer.index_service import (
     IndexService,
     IndexWriter,
-    Tallies,
 )
 from azul.plugins import (
     FieldPath,
 )
-from azul.plugins.metadata.hca import (
-    HCABundle,
+from azul.plugins.repository.dss import (
+    DSSBundle,
+)
+from azul.plugins.repository.tdr_anvil import (
+    TDRAnvilBundle,
+)
+from azul.plugins.repository.tdr_hca import (
+    TDRHCABundle,
 )
 from azul.types import (
     AnyJSON,
@@ -56,8 +57,11 @@ from azul.types import (
     MutableJSONs,
 )
 from azul_test_case import (
+    AnvilTestCase,
     AzulUnitTestCase,
     CatalogTestCase,
+    DCP1TestCase,
+    DCP2TestCase,
 )
 from es_test_case import (
     ElasticsearchTestCase,
@@ -76,12 +80,11 @@ class ForcedRefreshIndexService(IndexService):
         return writer
 
 
-class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
-
-    @classmethod
-    @abstractmethod
-    def _bundle_cls(cls) -> Type[BUNDLE]:
-        raise NotImplementedError
+class CannedFileTestCase(AzulUnitTestCase):
+    """
+    A test case that loads JSON cans. A can is a file containing test inputs or
+    expected outputs.
+    """
 
     @classmethod
     def _load_canned_file(cls,
@@ -111,11 +114,45 @@ class CannedBundleTestCase(AzulUnitTestCase, Generic[BUNDLE]):
         with open(os.path.join(data_prefix, file_name), 'r') as infile:
             return json.load(infile)
 
+
+class CannedBundleTestCase(CannedFileTestCase, Generic[BUNDLE]):
+    """
+    A test case that loads a canned bundle, i.e. a can containing the input to
+    tests involving a metadata plugin or the expected output of tests involving
+    a repository plugin.
+    """
+
+    @classmethod
+    @abstractmethod
+    def _bundle_cls(cls) -> Type[BUNDLE]:
+        raise NotImplementedError
+
     @classmethod
     def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> BUNDLE:
         bundle_cls = cls._bundle_cls()
         bundle_json = cls._load_canned_file(bundle, bundle_cls.canning_qualifier())
         return bundle_cls.from_json(bundle, bundle_json)
+
+
+class DCP1CannedBundleTestCase(DCP1TestCase, CannedBundleTestCase[DSSBundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[DSSBundle]:
+        return DSSBundle
+
+
+class DCP2CannedBundleTestCase(DCP2TestCase, CannedBundleTestCase[TDRHCABundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[TDRHCABundle]:
+        return TDRHCABundle
+
+
+class AnvilCannedBundleTestCase(AnvilTestCase, CannedBundleTestCase[TDRAnvilBundle]):
+
+    @classmethod
+    def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
+        return TDRAnvilBundle
 
 
 class IndexerTestCase(CatalogTestCase,
@@ -201,16 +238,6 @@ class IndexerTestCase(CatalogTestCase,
         else:
             cls.index_service.index(cls.catalog, bundle)
 
-    @classmethod
-    def _write_transforms(cls, bundle: HCABundle) -> Tallies:
-        bundle = attr.evolve(bundle,
-                             manifest=deepcopy(bundle.manifest),
-                             metadata_files=deepcopy(bundle.metadata_files))
-        transforms = cls.index_service.transform(cls.catalog, bundle, delete=False)
-        contributions, replicas = transforms
-        cls.index_service.replicate(cls.catalog, replicas)
-        return cls.index_service.contribute(cls.catalog, contributions)
-
     def _verify_sorted_lists(self, data: AnyJSON):
         """
         Traverse through an index document or service response to verify all
@@ -243,7 +270,10 @@ class IndexerTestCase(CatalogTestCase,
                             return 1
                     elif isinstance(data[0], list):
                         # In lieu of tuples, a range in JSON is a list of two values
-                        self.assertEqual(data, list(map(list, sorted(map(tuple, data)))))
+                        def pair(t: tuple) -> list:
+                            return list(t)
+
+                        self.assertEqual(data, list(map(pair, sorted(map(tuple, data)))))
                         return 1
                     else:
                         assert False, str(type(data[0]))

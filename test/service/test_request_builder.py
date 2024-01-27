@@ -3,7 +3,6 @@ from collections.abc import (
     Sequence,
 )
 import json
-import unittest
 
 import attr
 
@@ -31,8 +30,8 @@ from azul.service.elasticsearch_service import (
     ElasticsearchService,
     ToDictStage,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     WebServiceTestCase,
@@ -44,7 +43,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestRequestBuilder(DCP1TestCase, WebServiceTestCase):
+class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
     # Subclass the class under test so we can inject a mock plugin
     @attr.s(frozen=True, auto_attribs=True)
     class Service(ElasticsearchService):
@@ -183,9 +182,9 @@ class TestRequestBuilder(DCP1TestCase, WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_missing_values(self):
-        '''
+        """
         Tests creation of a request for facets that do not have a value
-        '''
+        """
         expected_output = {
             'post_filter': {
                 'bool': {
@@ -392,7 +391,3 @@ class TestRequestBuilder(DCP1TestCase, WebServiceTestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
-
-
-if __name__ == '__main__':
-    unittest.main()

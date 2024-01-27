@@ -207,7 +207,7 @@
         {
             "name": "library_preparation_protocol_0.json",
             "uuid": "2945bb1f-90de-42a3-afa1-f57a62c853f0",
-            "version": "2019-09-20T13:43:52.078000Z",
+            "version": "2019-09-20T13:43:52.178000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 1109,
             "indexed": true,
@@ -231,7 +231,7 @@
         {
             "name": "dissociation_protocol_0.json",
             "uuid": "eaf15851-97e3-4e4b-b81b-0e625098f4d5",
-            "version": "2019-09-20T13:43:52.077000Z",
+            "version": "2019-09-20T13:43:52.177000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 830,
             "indexed": true,
@@ -375,7 +375,7 @@
         {
             "name": "IDC9_L002_R1.fastq.gz",
             "uuid": "292b2faf-0db3-4ba1-a6a5-cb7bdfa9313d",
-            "version": "2019-09-24T09:35:08.057668Z",
+            "version": "2019-09-24T09:35:08.157668Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 1297795360,
             "indexed": false,
@@ -435,7 +435,7 @@
         {
             "name": "IDC9_L004_I1.fastq.gz",
             "uuid": "f0011946-dbea-4f87-9858-5e3fd32a9829",
-            "version": "2019-09-24T09:35:09.072703Z",
+            "version": "2019-09-24T09:35:09.172703Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 439983276,
             "indexed": false,

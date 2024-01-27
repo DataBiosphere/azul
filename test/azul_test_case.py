@@ -14,7 +14,6 @@ from re import (
 )
 from typing import (
     Optional,
-    Type,
 )
 from unittest import (
     TestCase,
@@ -30,6 +29,9 @@ from botocore.credentials import (
     Credentials,
 )
 import botocore.session
+from furl import (
+    furl,
+)
 import moto.backends
 import moto.core.models
 
@@ -48,7 +50,6 @@ from azul.logging import (
     get_test_logger,
 )
 from azul.plugins.repository.dss import (
-    DSSBundle,
     DSSSourceRef,
 )
 from azul.plugins.repository.tdr_hca import (
@@ -190,6 +191,11 @@ class AzulTestCase(TestCase):
         """
         self.assertEqual(set(), subset - superset)
 
+    @classmethod
+    def addClassPatch(cls, instance: patch) -> None:
+        instance.start()
+        cls.addClassCleanup(instance.stop)
+
 
 class AlwaysTearDownTestCase(TestCase):
     """
@@ -238,22 +244,11 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls._mock_aws_account()
-        cls._mock_aws_credentials()
-        cls._mock_aws_region()
-        cls._mock_dss_query_prefix()
-        cls._mock_lambda_env()
-        cls._mock_drs_domain()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls._restore_drs_domain()
-        cls._restore_lambda_env()
-        cls._restore_dss_query_prefix()
-        cls._restore_aws_region()
-        cls._restore_aws_credentials()
-        cls._restore_aws_account()
-        super().tearDownClass()
+        cls._patch_aws_account()
+        cls._patch_aws_credentials()
+        cls._patch_aws_region()
+        cls._patch_dss_query_prefix()
+        cls._patch_lambda_env()
 
     def setUp(self) -> None:
         super().setUp()
@@ -271,40 +266,30 @@ class AzulUnitTestCase(AzulTestCase):
             for region_name, backend in backends.items():
                 backend.reset()
 
-    _aws_account_mock = None
     _aws_account_name = 'test-hca-dev'
 
     @classmethod
-    def _mock_aws_account(cls):
+    def _patch_aws_account(cls):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
-        cls._aws_account_mock = patch.dict(os.environ,
-                                           AZUL_AWS_ACCOUNT_ID=moto.core.models.DEFAULT_ACCOUNT_ID,
-                                           azul_aws_account_name=cls._aws_account_name)
-        cls._aws_account_mock.start()
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AZUL_AWS_ACCOUNT_ID=moto.core.models.DEFAULT_ACCOUNT_ID,
+                                     azul_aws_account_name=cls._aws_account_name))
 
     @classmethod
-    def _restore_aws_account(cls):
-        cls._aws_account_mock.stop()
-
-    get_credentials_botocore = None
-    get_credentials_boto3 = None
-    _saved_boto3_default_session = None
-
-    @classmethod
-    def _mock_aws_credentials(cls):
+    def _patch_aws_credentials(cls):
         # Discard cached Boto3/botocore clients, resources and sessions
-        aws.clear_caches()
-        aws.discard_all_sessions()
+        def reset():
+            aws.clear_caches()
+            aws.discard_all_sessions()
+
+        reset()
+        cls.addClassCleanup(reset)
 
         # Save and then reset the default boto3session. This overrides any
         # session customizations such as those performed by envhook.py which
         # interfere with moto patchers, rendering them ineffective.
-        cls._saved_boto3_default_session = boto3.DEFAULT_SESSION
-        boto3.DEFAULT_SESSION = None
-
-        cls.get_credentials_botocore = botocore.session.Session.get_credentials
-        cls.get_credentials_boto3 = boto3.session.Session.get_credentials
+        cls.addClassPatch(patch.object(boto3, 'DEFAULT_SESSION', None))
 
         # This ensures that we don't accidentally use actual cloud resources in
         # unit tests. Furthermore, `boto3` and `botocore` cache credentials
@@ -320,74 +305,38 @@ class AzulUnitTestCase(AzulTestCase):
                                secret_key='test-secret-key',
                                token='test-session-token')
 
-        botocore.session.Session.get_credentials = dummy_get_credentials
-        boto3.session.Session.get_credentials = dummy_get_credentials
+        cls.addClassPatch(patch.object(botocore.session.Session,
+                                       'get_credentials',
+                                       dummy_get_credentials))
 
-    @classmethod
-    def _restore_aws_credentials(cls):
-        boto3.session.Session.get_credentials = cls.get_credentials_boto3
-        botocore.session.Session.get_credentials = cls.get_credentials_botocore
-        boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
-        # Discard cached Boto3/botocore clients, resources and sessions
-        aws.clear_caches()
-        aws.discard_all_sessions()
+        cls.addClassPatch(patch.object(boto3.session.Session,
+                                       'get_credentials',
+                                       dummy_get_credentials))
 
     # We almost certainly won't have access to this region
     _aws_test_region = 'us-gov-west-1'
-    _aws_region_mock = None
 
     @classmethod
-    def _mock_aws_region(cls):
+    def _patch_aws_region(cls):
         # Ensure that mock leakages fail by targeting a region we don't have
         # access to. Subclasses can override the selected region if moto rejects
         # the default one.
-        cls._aws_region_mock = patch.dict(os.environ, AWS_DEFAULT_REGION=cls._aws_test_region)
-        cls._aws_region_mock.start()
-
-    @classmethod
-    def _restore_aws_region(cls):
-        cls._aws_region_mock.stop()
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AWS_DEFAULT_REGION=cls._aws_test_region))
 
     dss_query_prefix = ''
-    _dss_prefix_mock = None
 
     @classmethod
-    def _mock_dss_query_prefix(cls):
-        cls._dss_prefix_mock = patch.object(target=type(config),
-                                            attribute='dss_query_prefix',
-                                            new_callable=PropertyMock,
-                                            return_value=cls.dss_query_prefix)
-        cls._dss_prefix_mock.start()
+    def _patch_dss_query_prefix(cls):
+        cls.addClassPatch(patch.object(target=type(config),
+                                       attribute='dss_query_prefix',
+                                       new_callable=PropertyMock,
+                                       return_value=cls.dss_query_prefix))
 
     @classmethod
-    def _restore_dss_query_prefix(cls):
-        cls._dss_prefix_mock.stop()
-
-    _lambda_env_mock = None
-
-    @classmethod
-    def _mock_lambda_env(cls):
-        cls._lambda_env_mock = patch.dict(os.environ,
-                                          AWS_LAMBDA_FUNCTION_NAME='unit-tests')
-        cls._lambda_env_mock.start()
-
-    @classmethod
-    def _restore_lambda_env(cls):
-        cls._lambda_env_mock.stop()
-
-    _drs_domain_name = 'azul_testing_fake_drs_domain.lan'
-    _drs_domain_mock = None
-
-    @classmethod
-    def _mock_drs_domain(cls):
-        cls._drs_domain_mock = patch.dict(os.environ,
-                                          AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name)
-        cls._drs_domain_mock.start()
-
-    @classmethod
-    def _restore_drs_domain(cls):
-        cls._drs_domain_mock.stop()
-        cls._drs_domain_mock = None
+    def _patch_lambda_env(cls):
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AWS_LAMBDA_FUNCTION_NAME='unit-tests'))
 
 
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
@@ -402,17 +351,10 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls._mock_catalogs()
+        cls._patch_catalogs()
 
     @classmethod
-    def tearDownClass(cls) -> None:
-        cls._restore_catalogs()
-        super().tearDownClass()
-
-    _catalog_mock = None
-
-    @classmethod
-    def _mock_catalogs(cls):
+    def _patch_catalogs(cls):
         # Reset the cached properties
         try:
             # noinspection PyPropertyAccess
@@ -430,19 +372,14 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         except AttributeError:
             pass
         # Patch the catalog property to use a single fake test catalog.
-        cls._catalog_mock = patch.object(target=type(config),
-                                         attribute='catalogs',
-                                         new_callable=PropertyMock,
-                                         return_value=cls.catalog_config())
-        cls._catalog_mock.start()
+        cls.addClassPatch(patch.object(target=type(config),
+                                       attribute='catalogs',
+                                       new_callable=PropertyMock,
+                                       return_value=cls.catalog_config()))
         assert cls.catalog_config()[cls.catalog]
         # Ensure that derived cached properties are affected
         assert config.default_catalog == cls.catalog
         assert config.integration_test_catalogs == {}
-
-    @classmethod
-    def _restore_catalogs(cls):
-        cls._catalog_mock.stop()
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
@@ -450,34 +387,45 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     A mixin for test cases that depend on certain DSS-related environment
     variables.
     """
-    source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
-
-    _source_patch = None
-    _source_cache_patch = None
-
-    @classmethod
-    def _bundle_cls(cls) -> Type[DSSBundle]:
-        return DSSBundle
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._source_patch = patch.dict(os.environ,
-                                       AZUL_DSS_SOURCE=str(cls.source.spec))
-        cls._source_patch.start()
+        cls._patch_source()
+        cls._patch_source_cache()
+        cls._patch_drs_domain()
+
+    source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
+
+    @classmethod
+    def _patch_source(cls):
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AZUL_DSS_SOURCE=str(cls.source.spec)))
+
+    @classmethod
+    def _patch_source_cache(cls):
         from service import (
             patch_source_cache,
         )
-        cls._source_cache_patch = patch_source_cache()
-        cls._source_cache_patch.start()
+        cls.addClassPatch(patch_source_cache())
+
+    # With DSS as the repository, which doesn't support DRS, Azul acts as a
+    # partial DRS implementation, proxying DSS. The REST endpoints making up
+    # that partial implementaton are exposed by the Azul service. Optionally, a
+    # CNAME alias for the canonical service endpoint can be set up. When the
+    # repository is DSS and if the alias is enabled by configuring
+    # AZUL_DRS_DOMAIN_NAME, all DRS URIs emitted by the service reference that
+    # alias instead of the service's canonical endpoint. In a unit test, the
+    # canonical service endpoint is 'localhost:' followed by some ephemeral
+    # port. Since many cans hard-code DRS URIs we need a predictable value for
+    # the DRS endpoint, so we patch AZUL_DRS_DOMAIN_NAME to achieve that.
+
+    _drs_domain_name = 'mock_drs_domain.lan'
 
     @classmethod
-    def tearDownClass(cls):
-        cls._source_patch.stop()
-        cls._source_patch = None
-        cls._source_cache_patch.stop()
-        cls._source_cache_patch = None
-        super().tearDownClass()
+    def _patch_drs_domain(cls):
+        cls.addClassPatch(patch.dict(os.environ,
+                                     AZUL_DRS_DOMAIN_NAME=cls._drs_domain_name))
 
 
 class DCP1TestCase(DSSTestCase):
@@ -495,6 +443,23 @@ class DCP1TestCase(DSSTestCase):
 
 
 class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._patch_tdr_service_url()
+        cls._patch_source_cache()
+
+    mock_tdr_service_url = furl('https://mock_tdr.lan')
+
+    @classmethod
+    def _patch_tdr_service_url(cls):
+        cls.addClassPatch(patch.object(type(config),
+                                       'tdr_service_url',
+                                       new=PropertyMock(return_value=cls.mock_tdr_service_url)))
+
+    _drs_domain_name = str(mock_tdr_service_url.netloc)
+
     source = TDRSourceRef(id='cafebabe-feed-4bad-dead-beaf8badf00d',
                           spec=TDRSourceSpec.parse('tdr:test_project:snapshot/snapshot:/2'))
 
@@ -502,22 +467,12 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
     def _sources(cls):
         return {str(cls.source.spec)}
 
-    _source_cache_patch = None
-
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def _patch_source_cache(cls):
         from service import (
             patch_source_cache,
         )
-        cls._source_cache_patch = patch_source_cache(hit=[cls.source.id])
-        cls._source_cache_patch.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._source_cache_patch.stop()
-        cls._source_cache_patch = None
-        super().tearDownClass()
+        cls.addClassPatch(patch_source_cache(hit=[cls.source.id]))
 
 
 class DCP2TestCase(TDRTestCase):

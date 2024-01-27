@@ -127,7 +127,7 @@ def is_optional(t) -> bool:
 
 def reify(t):
     """
-    Given a parameterized ``Union`` or ``Optional`` construct, return a tuple of
+    Given a parameterized type construct, return a tuple of
     subclasses of ``type`` representing all possible alternatives that can pass
     for that construct at runtime. The return value is meant to be used as the
     second argument to the ``isinstance`` or ``issubclass`` built-ins.
@@ -151,6 +151,15 @@ def reify(t):
     (<class 'str'>, <class 'int'>, <class 'set'>)
 
     >>> isinstance({}, reify(AnyJSON))
+    True
+
+    >>> isinstance({}, reify(JSON))
+    True
+
+    >>> isinstance([], reify(JSON))
+    False
+
+    >>> isinstance([], reify(JSONs))
     True
 
     >>> from collections import Counter
@@ -184,21 +193,24 @@ def reify(t):
     """
     # While `int | str` constructs a `UnionType` instance, `Union[str, int]`
     # constructs an instance of `Union`, so we need to handle both.
-    if get_origin(t) in (UnionType, Union):
+    origin = get_origin(t)
+    if origin in (UnionType, Union):
         def f(t):
             for a in get_args(t):
-                if get_origin(a) in (UnionType, Union):
+                o = get_origin(a)
+                if o in (UnionType, Union):
                     # handle Union of Union
                     yield from f(a)
                 else:
-                    o = get_origin(a)
                     yield a if o is None else o
 
         return tuple(OrderedSet(f(t)))
-    elif t.__module__ != 'typing':
-        return t
-    else:
+    elif origin is not None:
+        return origin
+    elif t.__module__ == 'typing':
         raise ValueError('Not a reifiable generic type', t)
+    else:
+        return t
 
 
 def get_generic_type_params(cls: type[Generic],

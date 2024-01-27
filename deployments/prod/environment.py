@@ -1087,8 +1087,6 @@ def env() -> Mapping[str, Optional[str]]:
                 ('hca', 'dcp34', dcp34_sources),
                 ('hca', 'pilot', pilot_sources),
                 ('hca', 'dcp1', dcp1_sources),
-                ('lungmap', 'lm2', lm2_sources),
-                ('lungmap', 'lm3', lm3_sources),
                 ('lungmap', 'lm4', lm4_sources)
             ] for suffix, internal in [
                 ('', False),

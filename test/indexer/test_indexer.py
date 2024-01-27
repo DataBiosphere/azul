@@ -11,7 +11,9 @@ from collections.abc import (
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
-import copy
+from copy import (
+    deepcopy,
+)
 from itertools import (
     chain,
 )
@@ -68,6 +70,7 @@ from azul.indexer.index_service import (
     IndexExistsAndDiffersException,
     IndexService,
     IndexWriter,
+    Tallies,
     log as index_service_log,
 )
 from azul.json import (
@@ -96,9 +99,9 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
-    DCP1TestCase,
 )
 from indexer import (
+    DCP1CannedBundleTestCase,
     IndexerTestCase,
 )
 
@@ -110,7 +113,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class HCAIndexerTestCase(DCP1TestCase, IndexerTestCase):
+class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
 
     @cached_property
     def old_bundle(self):
@@ -178,8 +181,18 @@ class HCAIndexerTestCase(DCP1TestCase, IndexerTestCase):
         actual |= Counter(self._parse_index_name(h)[1] for h in hits)
         self.assertDictEqual(expected, actual)
 
+    @classmethod
+    def _write_transforms(cls, bundle: HCABundle) -> Tallies:
+        bundle = attr.evolve(bundle,
+                             manifest=deepcopy(bundle.manifest),
+                             metadata_files=deepcopy(bundle.metadata_files))
+        transforms = cls.index_service.transform(cls.catalog, bundle, delete=False)
+        contributions, replicas = transforms
+        cls.index_service.replicate(cls.catalog, replicas)
+        return cls.index_service.contribute(cls.catalog, contributions)
 
-class TestHCAIndexer(HCAIndexerTestCase):
+
+class TestDCP1Indexer(DCP1IndexerTestCase):
 
     def test_indexing(self):
         """
@@ -312,7 +325,7 @@ class TestHCAIndexer(HCAIndexerTestCase):
                     self.index_service.delete_indices(self.catalog)
 
 
-class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
+class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
     """
     Conveniently sets up (tears down) indices before (after) each test.
     """
@@ -436,7 +449,7 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
         for doc_id in doc_ids:
             message_re = re.compile(fr'INFO:elasticsearch:'
                                     fr'Got 201 response after [^ ]+ from PUT to '
-                                    fr'.*_aggregate/_doc/{doc_id}.*')
+                                    fr'.*_aggregate/_create/{doc_id}.*')
             self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
@@ -546,7 +559,7 @@ class TestHCAIndexerWithIndexesSetUp(HCAIndexerTestCase):
 
     def _patch_bundle(self, bundle: Bundle) -> str:
         new_file_uuid = str(uuid4())
-        bundle.manifest = copy.deepcopy(bundle.manifest)
+        bundle.manifest = deepcopy(bundle.manifest)
         file_name = '21935_7#154_2.fastq.gz'
         for file in bundle.manifest:
             if file['name'] == file_name:

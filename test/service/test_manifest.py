@@ -102,7 +102,9 @@ from azul.types import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
-    DCP1TestCase,
+)
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from pfb_test_case import (
     PFBTestCase,
@@ -122,7 +124,9 @@ def setUpModule():
 
 
 @mock_s3
-class ManifestTestCase(DCP1TestCase, WebServiceTestCase, StorageServiceTestMixin):
+class ManifestTestCase(DCP1CannedBundleTestCase,
+                       WebServiceTestCase,
+                       StorageServiceTestMixin):
 
     def setUp(self):
         super().setUp()

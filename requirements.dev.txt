@@ -5,7 +5,7 @@ coverage==6.5.0
 docker==6.1.2
 flake8==5.0.4
 gevent==23.9.1
-gitpython==3.1.37
+gitpython==3.1.41
 google-api-python-client==2.103.0
 google-cloud-storage==2.12.0
 google-cloud-bigquery-reservation==1.11.3
@@ -23,6 +23,5 @@ git+https://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements
 responses==0.22.0
 strict-rfc3339==0.7
 watchdog==2.1.9
-git+https://github.com/DataBiosphere/azul-tinyquery@1.2+2#egg=tinyquery
 -r requirements.dev.trans.txt
 -r requirements.txt

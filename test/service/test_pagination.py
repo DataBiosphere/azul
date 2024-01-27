@@ -9,7 +9,6 @@ from typing import (
     Any,
     Optional,
 )
-import unittest
 
 import attr
 from more_itertools import (
@@ -21,8 +20,8 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
-from azul_test_case import (
-    DCP1TestCase,
+from indexer import (
+    DCP1CannedBundleTestCase,
 )
 from service import (
     DocumentCloningTestCase,
@@ -36,7 +35,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class TestPagination(DCP1TestCase, DocumentCloningTestCase):
+class TestPagination(DCP1CannedBundleTestCase, DocumentCloningTestCase):
 
     def setUp(self):
         super().setUp()
@@ -147,7 +146,3 @@ class TestPagination(DCP1TestCase, DocumentCloningTestCase):
         self.assertEqual(index_size, sum(page_lengths))
         values = list(chain.from_iterable(page.values for page in pages))
         self.assertEqual(values, list(sorted(unique(values), reverse=reverse)))
-
-
-if __name__ == '__main__':
-    unittest.main()

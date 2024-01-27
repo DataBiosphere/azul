@@ -203,7 +203,8 @@ class StorageServiceTestMixin:
             'mix in the appropriate subclass of CatalogTestCase.')
 def patch_source_cache(target: Union[None, type, Callable] = None,
                        /,
-                       hit: Optional[list[AnyJSON]] = None):
+                       hit: Optional[list[AnyJSON]] = None
+                       ) -> patch:
     """
     Patch the cache access methods of SourceService to emulate a cache miss or
     return a given set of sources.

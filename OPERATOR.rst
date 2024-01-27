@@ -448,8 +448,8 @@ Export AWS Inspector findings
 
     - Convert text to numbers, dates, and formulas: Checked
 
-#. Rename the new tab using `YYYY-MM-DD in-boundary` format, and move it to the
-   front of the stack
+#. Rename the new tab using ``YYYY-MM-DD`` with the date of the upgrade issue,
+   and move it to the front of the stack
 
 #. Apply visual formatting (e.g. column width) to the sheet using a previous
    sheet as a guide
