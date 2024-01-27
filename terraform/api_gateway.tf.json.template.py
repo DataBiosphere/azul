@@ -273,6 +273,18 @@ emit_tf({
                                             'action_to_use': {
                                                 'count': {}
                                             }
+                                        },
+                                        {
+                                            # This rule aims to limit bodies to
+                                            # 8192 bytes. We need to be able to
+                                            # handle larger bodies with hoisted
+                                            # parameters, so we demote the rule
+                                            # action to be counting instead of
+                                            # blocking.
+                                            'name': 'SizeRestrictions_BODY',
+                                            'action_to_use': {
+                                                'count': {}
+                                            }
                                         }
                                     ]
                                 }
