@@ -1372,8 +1372,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-        url = config.service_endpoint.set(path=('index', bundle_type),
-                                          args={'filters': json.dumps(source_filter)})
+        params = {
+            'filters': json.dumps(source_filter),
+            'catalog': catalog
+        }
+        url = config.service_endpoint.set(path=('index', bundle_type), args=params)
         response = self._get_url_unchecked(GET, url)
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 
