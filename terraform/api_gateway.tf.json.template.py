@@ -274,6 +274,7 @@ emit_tf({
                                                 'count': {}
                                             }
                                         },
+                                        # FIXME: https://github.com/DataBiosphere/azul-private/issues/128
                                         {
                                             # This rule aims to limit bodies to
                                             # 8192 bytes. We need to be able to
