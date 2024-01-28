@@ -245,9 +245,8 @@ anvil3_sources = mkdict(anvil2_sources, 160, mkdelta([
     # @formatter:on
 ]))
 
-anvil4_sources = mkdict(anvil3_sources, 210, mkdelta([
+anvil4_sources = mkdict(anvil3_sources, 209, mkdelta([
     # @formatter:off
-    mksrc('datarepo-10613413', 'ANVIL_CCDG_Baylor_CVD_AFib_BioVU_WGS_20221110_ANV5_202304241855', 1638),
     mksrc('datarepo-1a86e7ca', 'ANVIL_CCDG_Baylor_CVD_AFib_Groningen_WGS_20221122_ANV5_202304242224', 639),
     mksrc('datarepo-92716a90', 'ANVIL_CCDG_Baylor_CVD_AFib_VAFAR_HMB_IRB_WGS_20221020_ANV5_202304211525', 253),
     mksrc('datarepo-77445496', 'ANVIL_CCDG_Baylor_CVD_EOCAD_BioMe_WGS_20221122_ANV5_202304242226', 1201),
