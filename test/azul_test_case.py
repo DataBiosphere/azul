@@ -136,6 +136,11 @@ class AzulTestCase(TestCase):
                 ),
 
                 'Call to deprecated function (or staticmethod) patch_source_cache',
+
+                RE(
+                    'The \'body\' parameter is deprecated for the \'.*\' API '
+                    'and will be removed in .*. Instead use .*'
+                ),
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',

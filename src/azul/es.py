@@ -20,6 +20,9 @@ from elasticsearch import (
     RequestsHttpConnection,
     Urllib3HttpConnection,
 )
+from elasticsearch.transport import (
+    Transport,
+)
 
 from azul import (
     config,
@@ -165,7 +168,8 @@ class ESClientFactory:
         # error handling, we disable the implicit retries via max_retries=0.
         common_params = dict(hosts=[dict(host=host, port=port)],
                              timeout=timeout,
-                             max_retries=0)
+                             max_retries=0,
+                             transport_class=ProductAgnosticTransport)
         if host.endswith('.amazonaws.com'):
             aws_auth = CachedBotoAWSRequestsAuth(aws_host=host,
                                                  aws_region=aws.region_name,
@@ -178,3 +182,14 @@ class ESClientFactory:
         else:
             return Elasticsearch(connection_class=AzulUrllib3HttpConnection,
                                  **common_params)
+
+
+class ProductAgnosticTransport(Transport):
+    """
+    A transport class that disables client-side product verification. This
+    bypasses the check that would otherwise prevent us from using ES v7.15+ with
+    OpenSearch.
+    """
+
+    def _do_verify_elasticsearch(self, headers, timeout):
+        self._verified_elasticsearch = True
