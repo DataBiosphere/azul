@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5809 Concurrently running GitLab test jobs occasionally time out
+=================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5738 Suppress Inspector findings for images not used within boundary
 =====================================================================
 

@@ -74,7 +74,7 @@ setup:
 test:
   extends: .base_on_push
   stage: test
-  timeout: 1h
+  timeout: 1h 30m
   script:
     - make format  # Any ill-formatted sources, ...
     - test "$AZUL_IS_SANDBOX" = 1 && make requirements_update  # ... stale transitive dependencies ...
