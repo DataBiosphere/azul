@@ -3,16 +3,16 @@ from collections import (
 )
 import json
 import logging
-import os
+from pathlib import (
+    Path,
+)
 from typing import (
     ClassVar,
-    List,
     Mapping,
-    Optional,
+    Self,
     Sequence,
     Set,
-    Tuple,
-    Union,
+    TypeVar,
 )
 from uuid import (
     UUID,
@@ -23,15 +23,11 @@ import attr
 from furl import (
     furl,
 )
-from github import (
-    Github,
-    UnknownObjectException,
-)
-from github.Repository import (
-    Repository,
-)
+
+import git
 
 from humancellatlas.data.metadata.api import (
+    Bundle,
     JSON,
 )
 from humancellatlas.data.metadata.helpers.exception import (
@@ -138,15 +134,17 @@ class StagingArea:
     metadata: Mapping[str, MetadataFile]  # Key is the entity ID
     descriptors: Mapping[str, DescriptorFile]  # Key is the entity ID
 
-    def get_bundle(self, subgraph_id: str) -> Tuple[str, List[JSON], JSON]:
+    def get_bundle(self, subgraph_id: str) -> Bundle:
         """
-        Return a tuple consisting of the version of the downloaded bundle, a
-        list of the manifest entries for all metadata files in the bundle, and a
-        dictionary mapping the file name of each metadata file in the bundle to
-        the JSON contents of that file.
+        Return a bundle from the staging area
         """
-        log.debug('Composing bundle %s', subgraph_id)
+        version, manifest, metadata = self.get_bundle_parts(subgraph_id)
+        return Bundle(subgraph_id, version, manifest, metadata)
 
+    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, list[JSON], JSON]:
+        """
+        Return the components to create a bundle from the staging area
+        """
         links_file = self.links[subgraph_id]
         manifest = []
         metadata = {
@@ -178,15 +176,14 @@ class StagingArea:
                     manifest.append(file_manifest)
                 else:
                     pass
-        log.debug('Composed bundle with %i metadata files', len(metadata))
         return links_file.version, manifest, metadata
 
     def _entity_ids_by_type(self,
                             subgraph_id: str
-                            ) -> Mapping[str, Set[str]]:
+                            ) -> dict[str, Set[str]]:
         """
-        Parse the links in a subgraph and return a mapping of the entity types
-        (e.g. 'analysis_file', 'cell_suspension') to a set of entity IDs
+        Return a mapping of entity types (e.g. 'analysis_file',
+        'cell_suspension') to a set of entity IDs
         """
         links_file: LinksFile = self.links[subgraph_id]
         links_json = links_file.content
@@ -217,119 +214,113 @@ class StagingArea:
         return entity_ids
 
 
+JSON_FILE = TypeVar('JSON_FILE', bound=JsonFile)
+
+
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-class GitHubStagingAreaFactory:
-    repo: Repository
-    ref: str
-    path: Tuple[str, ...]
+class CannedStagingAreaFactory:
+    #: Path to a local directory containing one or more staging areas
+    base_path: Path
 
     @classmethod
-    def create(cls,
-               owner: str,
-               name: str,
-               ref: str,
-               path: Optional[str] = None
-               ) -> 'GitHubStagingAreaFactory':
+    def clone_remote(cls, remote_url: furl, local_path: Path, ref: str) -> Self:
         """
-        :param owner: The owner of the GitHub repository
-        :param name: The name of the GitHub repository
-        :param ref: A branch name, tag, or commit SHA
-        :param path: The path inside the repository to the base of the staging area
-        """
-        token = os.environ['GITHUB_TOKEN']  # A GitHub personal access token
-        log.debug('Requesting GitHub repo %s', (owner, name, ref, path))
-        github_api = Github(token)
-        rate_limit = github_api.get_rate_limit()
-        log.debug('GitHub API rate limit limit=%i, remaining=%i, reset=%s',
-                  rate_limit.core.limit, rate_limit.core.remaining, rate_limit.core.reset)
-        repo = github_api.get_repo(f'{owner}/{name}')
-        path = () if path == '' else tuple(path.split('/'))
-        return cls(repo=repo, ref=ref, path=path)
+        Clone a remote Git repository and return a factory for staging areas
+        inside that clone.
 
-    @classmethod
-    def from_url(cls, url: str) -> 'GitHubStagingAreaFactory':
-        """
-        :param url: The URL of a staging area in a GitHub repository with syntax
-                    `https://github.com/<OWNER>/<NAME>/tree/<REF>[/<PATH>]`.
-                    Note that REF can be a branch, tag, or commit SHA. If REF
-                    contains special characters like `/`, '?` or `#` they must
-                    be URL-encoded. This is especially noteworthy for `/` since
-                    it's the only way to distinguish slashes in REF from those
-                    in PATH. The slashes in PATH must not be URL-encoded, while
-                    occurrences of `#` and `?` must.
-        """
-        parsed_url = furl(url)
-        require(parsed_url.scheme == 'https', url)
-        require(parsed_url.host == 'github.com', url)
-        require(len(parsed_url.path.segments) > 3, url)
-        require(parsed_url.path.segments[2] == 'tree', url)
-        owner, name = parsed_url.path.segments[0:2]
-        ref = parsed_url.path.segments[3]
-        path = '/'.join(parsed_url.path.segments[4:])
-        return cls.create(owner=owner, name=name, ref=ref, path=path)
+        :param remote_url: The URL of a remote Git repository containing one or
+                           more staging areas
 
-    def load_staging_area(self) -> StagingArea:
-        staging_area_folders = self._get_folders(path=self.path)
+        :param local_path: The path to an empty local directory where the
+                           repository will be cloned
+
+        :param ref: A Git ref (branch, tag, or commit SHA)
+        """
+        log.debug('Cloning %s into %s', remote_url, local_path)
+        repo = git.Repo.clone_from(str(remote_url), local_path)
+        log.debug('Checking out ref %s', ref)
+        repo.git.checkout(ref)
+        return cls(base_path=local_path)
+
+    def load_staging_area(self, path: Path) -> StagingArea:
+        """
+        Create and return a staging area object from the files in a local
+        staging area.
+
+        :param path: The relative path from `self.base_path` to a local staging
+                     area
+        """
+        path = self.base_path / path
+        staging_area_folders = {p.name for p in path.iterdir()}
         expected_folders = {'data', 'descriptors', 'links', 'metadata'}
-        require(set(staging_area_folders) == expected_folders,
-                f'{self.repo.full_name} {self.path} is not a valid staging area')
-        links = self._get_files(path=self.path + ('links',))
-        metadata = {}
-        for folder in self._get_folders(path=self.path + ('metadata',)):
-            files = self._get_files(path=self.path + ('metadata', folder))
-            metadata.update(files)
-        descriptors = {}
-        for folder in self._get_folders(path=self.path + ('descriptors',)):
-            files = self._get_files(path=self.path + ('descriptors', folder))
-            descriptors.update(files)
-        return StagingArea(links=links, metadata=metadata, descriptors=descriptors)
+        require(expected_folders == staging_area_folders,
+                'Invalid staging area', path)
+        return StagingArea(links=self._get_link_files(path),
+                           metadata=self._get_metadata_files(path),
+                           descriptors=self._get_descriptor_files(path))
 
-    def _get_folders(self, path: Tuple[str, ...]) -> List[str]:
-        folders = []
-        log.debug('Getting list of folders in %s', path)
-        try:
-            path_contents = self.repo.get_contents(path='/'.join(path), ref=self.ref)
-        except UnknownObjectException as e:
-            raise ValueError('Github path not found', self.repo.full_name, self.path) from e
-        for content in path_contents:
-            if content.type == 'dir':
-                folders.append(content.name)
-        return folders
+    def _get_link_files(self, path: Path) -> dict[str, LinksFile]:
+        """
+        Return a mapping of file ID to file content for all the link files in
+        the staging area.
+        """
+        return self._get_files(path=path / 'links', file_cls=LinksFile)
+
+    def _get_metadata_files(self, path: Path) -> dict[str, MetadataFile]:
+        """
+        Return a mapping of file ID to file content for all the metadata files
+        in the staging area.
+        """
+        files = {}
+        for sub_dir in (path / 'metadata').iterdir():
+            assert sub_dir.is_dir()
+            files.update(self._get_files(path=sub_dir, file_cls=MetadataFile))
+        return files
+
+    def _get_descriptor_files(self, path: Path) -> dict[str, DescriptorFile]:
+        """
+        Return a mapping of file ID to file content for all the descriptor files
+        in the staging area.
+        """
+        files = {}
+        for sub_dir in (path / 'descriptors').iterdir():
+            assert sub_dir.is_dir()
+            files.update(self._get_files(path=sub_dir, file_cls=DescriptorFile))
+        return files
 
     def _get_files(self,
-                   path: Tuple[str, ...],
-                   ) -> Mapping[str, Union[LinksFile, MetadataFile, DescriptorFile]]:
+                   path: Path,
+                   file_cls: type[JSON_FILE]
+                   ) -> dict[str, JSON_FILE]:
+        """
+        Return a mapping of file ID to file content for all the files found in
+        the directory at the given path.
+        """
         files = {}
-        log.debug('Getting contents of %s', path)
-        path_str = '/'.join(path)
+        log.debug('Reading files in %s', path)
+        for file in path.iterdir():
+            assert file.is_file()
+            with open(file, 'r') as f:
+                content = json.load(f)
+            file_name = file.name
+            json_file = JsonFile.from_json(file_name, content)
+            require(isinstance(json_file, file_cls), json_file)
+            self._add_file(files, json_file)
+        return files
+
+    def _add_file(self, files: dict[str, JSON_FILE], file: JSON_FILE) -> None:
+        """
+        Add `file` to `files`. If a file with the same ID already exists in
+        `files`, the file with the most recent version will be kept.
+        """
         try:
-            path_contents = self.repo.get_contents(path=path_str, ref=self.ref)
-        except UnknownObjectException as e:
-            raise ValueError('Github path not found', self.repo.full_name, path_str) from e
-        for content in path_contents:
-            if content.type == 'dir':
-                log.warning('Unexpected folder %s found in %s/%s',
-                            content.name, self.repo.full_name, path_str)
-                continue
-            file_name = content.name
-            file_json = json.loads(content.decoded_content)
-            file = JsonFile.from_json(file_name, file_json)
-            if isinstance(file, LinksFile):
-                require(path[-1] == 'links', content.path)
-            elif isinstance(file, DescriptorFile):
-                require(path[-2] == 'descriptors', content.path)
-            else:
-                require(path[-2] == 'metadata', content.path)
-            try:
-                existing_version = files[file.uuid].version
-            except KeyError:
+            existing_version = files[file.uuid].version
+        except KeyError:
+            files[file.uuid] = file
+        else:
+            reject(file.version == existing_version, file)
+            if file.version > existing_version:
                 files[file.uuid] = file
             else:
-                # If multiple files with the same ID were found keep the
-                # one with the largest version.
-                reject(file.version == existing_version, file)
-                if file.version > existing_version:
-                    files[file.uuid] = file
-                else:
-                    pass
-        return files
+                log.debug('Discarding previous %s version of file %s',
+                          existing_version, file)
