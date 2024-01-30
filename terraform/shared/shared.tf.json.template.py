@@ -884,6 +884,17 @@ tf_config = {
                 ]
             }
         },
+        'aws_securityhub_standards_control': {
+            'best_practices': {
+                'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
+                                         '/aws-foundational-security-best-practices/v/1.0.0/Macie.1',
+                'control_status': 'DISABLED',
+                'disabled_reason': 'Generates alarm noise; tracked independently as follow-up work',
+                'depends_on': [
+                    'aws_securityhub_standards_subscription.best_practices'
+                ]
+            }
+        },
         'aws_iam_account_password_policy': {
             'cis': {
                 'require_uppercase_characters': True,
