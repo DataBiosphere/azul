@@ -19,15 +19,6 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 renamed: dict[str, Optional[str]] = {
-    'data.aws_route53_zone.portal': 'data.aws_route53_zone.browser',
-    'aws_cloudfront_distribution.portal': 'aws_cloudfront_distribution.browser',
-    'aws_acm_certificate.portal': 'aws_acm_certificate.browser',
-    'aws_acm_certificate_validation.portal': 'aws_acm_certificate_validation.browser',
-    'aws_route53_record.portal': 'aws_route53_record.browser',
-    # @formatter:off
-    'aws_route53_record.portal_validation["anvil.gi.ucsc.edu"]': 'aws_route53_record.browser_validation["anvil.gi.ucsc.edu"]',  # noqa E501
-    'aws_route53_record.portal_validation["prod.anvil.gi.ucsc.edu"]': 'aws_route53_record.browser_validation["prod.anvil.gi.ucsc.edu"]'  # noqa E501
-    # @formatter:on
 }
 
 
