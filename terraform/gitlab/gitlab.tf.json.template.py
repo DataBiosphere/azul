@@ -1020,6 +1020,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
             for zone in range(num_zones)
         },
+        'aws_vpc_endpoint': {
+            f'gitlab_{service}': {
+                'service_name': f'com.amazonaws.{config.region}.{service}',
+                'vpc_endpoint_type': 'Gateway',
+                'vpc_id': '${aws_vpc.gitlab.id}',
+                'route_table_ids': [
+                    '${aws_route_table.gitlab_%d.id}' % i for i in range(num_zones)
+                ],
+            }
+            for service in ['dynamodb', 's3']
+        },
         'aws_default_security_group': {
             'gitlab': {
                 'vpc_id': '${aws_vpc.gitlab.id}',
