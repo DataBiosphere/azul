@@ -82,12 +82,10 @@ anvil_sources = mkdict({}, 11, mkdelta([
     mksrc('datarepo-4150bd87', 'ANVIL_GTEx_V8_hg38_20230419_ANV5_202304202007', 100367)
 ]))
 
-anvil1_sources = mkdict(anvil_sources, 67, mkdelta([
+anvil1_sources = mkdict(anvil_sources, 63, mkdelta([
     mksrc('datarepo-d53aa186', 'ANVIL_CMG_BROAD_BRAIN_ENGLE_WES_20221102_ANV5_202304241525', 473),
     mksrc('datarepo-69b2535a', 'ANVIL_CMG_BROAD_BRAIN_SHERR_WGS_20221102_ANV5_202304241530', 3),
     mksrc('datarepo-490be510', 'ANVIL_CMG_BROAD_ORPHAN_SCOTT_WGS_20221102_ANV5_202304241538', 15),
-    mksrc('datarepo-6ddb7e8d', 'ANVIL_CMG_BaylorHopkins_HMB_IRB_NPU_WES_20221020_ANV5_202304211516', 2223),
-    mksrc('datarepo-d09f6f5a', 'ANVIL_CMG_BaylorHopkins_HMB_NPU_WES_20230525_ANV5_202306211834', 4804),
     mksrc('datarepo-3b33c41b', 'ANVIL_CMG_Broad_Blood_Gazda_WES_20221117_ANV5_202304241459', 612),
     mksrc('datarepo-96df3cea', 'ANVIL_CMG_Broad_Blood_Sankaran_WES_20221117_ANV5_202304241501', 1141),
     mksrc('datarepo-179ee079', 'ANVIL_CMG_Broad_Blood_Sankaran_WGS_20221117_ANV5_202304241503', 96),
@@ -102,7 +100,6 @@ anvil1_sources = mkdict(anvil_sources, 67, mkdelta([
     mksrc('datarepo-85952af8', 'ANVIL_CMG_Broad_Kidney_Hildebrandt_WES_20230525_ANV5_202305251733', 3544),
     mksrc('datarepo-ee4ae9a1', 'ANVIL_CMG_Broad_Kidney_Hildebrandt_WGS_20221025_ANV5_202304211844', 27),
     mksrc('datarepo-cf168274', 'ANVIL_CMG_Broad_Kidney_Pollak_WES_20221025_ANV5_202304211846', 147),
-    mksrc('datarepo-937b5d92', 'ANVIL_CMG_Broad_Muscle_Beggs_WES_20221102_ANV5_202304241506', 934),
     mksrc('datarepo-4d47ba2c', 'ANVIL_CMG_Broad_Muscle_Beggs_WGS_20221102_ANV5_202304241533', 141),
     mksrc('datarepo-82d1271a', 'ANVIL_CMG_Broad_Muscle_Bonnemann_WES_20221117_ANV5_202304241509', 305),
     mksrc('datarepo-6be3fb25', 'ANVIL_CMG_Broad_Muscle_Bonnemann_WGS_20221117_ANV5_202304241510', 152),
@@ -129,7 +126,6 @@ anvil1_sources = mkdict(anvil_sources, 67, mkdelta([
     mksrc('datarepo-b699c5e3', 'ANVIL_CMG_Broad_Rare_RGP_WES_20221102_ANV5_202304241540', 6),
     mksrc('datarepo-2d5bd095', 'ANVIL_CMG_Broad_Stillbirth_Wilkins_Haug_WES_20221102_ANV5_202304241542', 60),
     mksrc('datarepo-f3d0eda6', 'ANVIL_CMG_UWash_GRU_20230418_ANV5_202306211828', 5861),
-    mksrc('datarepo-19b85efe', 'ANVIL_CMG_YALE_DS_MC_20221026_ANV5_202304211522', 748),
     mksrc('datarepo-ab5c3fa5', 'ANVIL_CMG_YALE_DS_RARED_20221020_ANV5_202304211812', 173),
     mksrc('datarepo-d51578f4', 'ANVIL_CMG_Yale_GRU_20221020_ANV5_202304211517', 2196),
     mksrc('datarepo-bcedc554', 'ANVIL_CMG_Yale_HMB_20221020_ANV5_202304211813', 125),
@@ -142,7 +138,7 @@ anvil1_sources = mkdict(anvil_sources, 67, mkdelta([
     mksrc('datarepo-1cb73890', 'ANVIL_cmg_broad_heart_ware_wes_20221215_ANV5_202304242145', 40),
 ]))
 
-anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
+anvil2_sources = mkdict(anvil1_sources, 104, mkdelta([
     # @formatter:off
     mksrc('datarepo-36124817', 'ANVIL_African_American_Seq_HGV_20230727_ANV5_202308291753', 4656),
     mksrc('datarepo-d795027d', 'ANVIL_CCDG_Broad_CVD_AF_VAFAR_Arrays_20221020_ANV5_202304211823', 1390),
@@ -155,11 +151,8 @@ anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     mksrc('datarepo-710fc60d', 'ANVIL_CCDG_NYGC_NP_Alz_LOAD_WGS_20230605_ANV5_202306131256', 1049),
     mksrc('datarepo-9626b3eb', 'ANVIL_CCDG_NYGC_NP_Alz_WHICAP_WGS_20230605_ANV5_202306131303', 148),
     mksrc('datarepo-25ec7b57', 'ANVIL_CCDG_WASHU_PAGE_20221220_ANV5_202304271544', 690),
-    mksrc('datarepo-f2af4233', 'ANVIL_CCDG_WashU_CVD_PAGE_HMB_NPU_WGS_20221025_ANV5_202304211801', 38, prefix='8'),
     mksrc('datarepo-6d8536f4', 'ANVIL_CMH_GAFK_GS_linked_read_20221107_ANV5_202304211527', 626),
     mksrc('datarepo-482ab960', 'ANVIL_CMH_GAFK_GS_long_read_20221109_ANV5_202304211529', 777),
-    mksrc('datarepo-3b296131', 'ANVIL_CMH_GAFK_SCATAC_20221107_ANV5_202304211531', 322),
-    mksrc('datarepo-8acbf07f', 'ANVIL_CMH_GAFK_WGBS_20230327_ANV5_202304211534', 1475),
     mksrc('datarepo-8745e97d', 'ANVIL_CMH_GAFK_scRNA_20221107_ANV5_202304211533', 198),
     mksrc('datarepo-1c89dcac', 'ANVIL_CSER_CHARM_GRU_20221208_ANV5_202304271348', 2392),
     mksrc('datarepo-12d56848', 'ANVIL_CSER_NCGENES2_GRU_20221208_ANV5_202304271349', 104),
@@ -169,7 +162,6 @@ anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     mksrc('datarepo-90bab913', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_Finkel_SMA_DS_WGS_20230109_ANV5_202304242043', 3),  # noqa E501
     mksrc('datarepo-e4eb7641', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Braff_DS_WGS_20221115_ANV5_202304242052', 864),
     mksrc('datarepo-f9aef3dc', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Escamilla_DS_WGS_20221103_ANV5_202304242049', 85),
-    mksrc('datarepo-7c00e8e5', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Pato_GRU_WGS_20221115_ANV5_202304242056', 8084),
     mksrc('datarepo-aca6a582', 'ANVIL_NIMH_CIRM_FCDI_ConvergentNeuro_McCarroll_Eggan_GRU_Arrays_20230109_ANV5_202304242046', 6510),  # noqa E501
     mksrc('datarepo-06abb598', 'ANVIL_PAGE_BioMe_GRU_WGS_20221128_ANV5_202304211817', 308),
     mksrc('datarepo-7c4410ed', 'ANVIL_PAGE_MEC_GRU_WGS_20230131_ANV5_202304211721', 70),
@@ -192,10 +184,9 @@ anvil2_sources = mkdict(anvil1_sources, 112, mkdelta([
     # @formatter:on
 ]))
 
-anvil3_sources = mkdict(anvil2_sources, 160, mkdelta([
+anvil3_sources = mkdict(anvil2_sources, 151, mkdelta([
     # @formatter:off
     mksrc('datarepo-9a74aed3', 'ANVIL_CCDG_Baylor_CVD_ARIC_20231008_ANV5_202310091900', 10012),
-    mksrc('datarepo-a749913a', 'ANVIL_CCDG_Baylor_CVD_EOCAD_SoL_WGS_20230418_ANV5_202310101651', 9225),
     mksrc('datarepo-0768a322', 'ANVIL_CCDG_Broad_CVD_AF_Ellinor_MGH_Arrays_20221024_ANV5_202304211831', 387),
     mksrc('datarepo-2b135baf', 'ANVIL_CCDG_Broad_CVD_AFib_MGH_WGS_20221024_ANV5_202304211829', 105),
     mksrc('datarepo-96b594f9', 'ANVIL_CCDG_Broad_CVD_EOCAD_TaiChi_WGS_20221026_ANV5_202310101655', 912),
@@ -245,7 +236,7 @@ anvil3_sources = mkdict(anvil2_sources, 160, mkdelta([
     # @formatter:on
 ]))
 
-anvil4_sources = mkdict(anvil3_sources, 209, mkdelta([
+anvil4_sources = mkdict(anvil3_sources, 200, mkdelta([
     # @formatter:off
     mksrc('datarepo-1a86e7ca', 'ANVIL_CCDG_Baylor_CVD_AFib_Groningen_WGS_20221122_ANV5_202304242224', 639),
     mksrc('datarepo-92716a90', 'ANVIL_CCDG_Baylor_CVD_AFib_VAFAR_HMB_IRB_WGS_20221020_ANV5_202304211525', 253),
