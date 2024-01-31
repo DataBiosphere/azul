@@ -28,9 +28,6 @@ Connected issue: #0000
 - [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
 - [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
 - [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Selected `dev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
-- [ ] Selected `anvildev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
-- [ ] Selected `anvilprod.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
 
 
@@ -48,8 +45,11 @@ Connected issue: #0000
 - [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
+- [ ] Selected `dev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] Selected `dev.gitlab` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Selected `anvildev.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] Selected `anvildev.gitlab` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Selected `anvilprod.shared` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR does not change any Docker image versions</sub>
 - [ ] Selected `anvilprod.gitlab` and ran `CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
 - [ ] Assigned system administrator <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
 - [ ] Checked the items in the next section <sub>or this PR includes changes to files in terraform/gitlab</sub>
