@@ -210,7 +210,7 @@ issues are marked as merged, and the promotion PR checklist is completed with
 the operator unassigning themself from the promotion PR.
 
 .. _GitLab prod: https://gitlab.azul.data.humancellatlas.org/ucsc/azul
-.. _GitLab anvilprod: https://prod.anvil.gi.ucsc.edu
+.. _GitLab anvilprod: https://gitlab.explore.anvilproject.org
 
 As a final step in the process, a meeting is held once a week for developers to
 demonstrate to the team the changes they’ve implemented. Following the demo

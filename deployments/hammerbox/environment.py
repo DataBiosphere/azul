@@ -343,7 +343,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This deployment uses a subdomain of the `anvilprod` deployment's
         # domain.
         #
-        'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
+        'AZUL_DOMAIN_NAME': 'explore.anvilproject.org',
         'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
         'AZUL_PRIVATE_API': '0',
 

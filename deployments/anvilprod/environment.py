@@ -317,7 +317,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_STAGE': 'anvilprod',
 
-        'AZUL_DOMAIN_NAME': 'prod.anvil.gi.ucsc.edu',
+        'AZUL_DOMAIN_NAME': 'explore.anvilproject.org',
         'AZUL_PRIVATE_API': '0',
 
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-anvil-prod-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',

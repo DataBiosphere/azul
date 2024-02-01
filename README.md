@@ -2076,7 +2076,7 @@ Runtime platform                                    arch=amd64 os=linux pid=7 re
 Running in system-mode.
 
 Enter the GitLab instance URL (for example, https://gitlab.com/):
-https://gitlab.prod.anvil.gi.ucsc.edu/
+https://gitlab.anvil.gi.ucsc.edu/
 Enter the registration token:
 REDACTED
 Enter a description for the runner:
