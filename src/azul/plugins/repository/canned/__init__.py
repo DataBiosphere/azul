@@ -2,13 +2,10 @@
 This repository plugin allows reading from a canned staging area like the one in
 the GitHub repo https://github.com/HumanCellAtlas/schema-test-data .
 
-NOTE: Use of this plugin requires a GitHub personal access token specified in an
-environment variable `GITHUB_TOKEN`. See:
-https://github.com/DataBiosphere/hca-metadata-api#github-credentials
-
-Due to this requirement, this plugin cannot be used to index data directly from
-the canned staging area, however it can be used with the `can_bundle.py` script
-to create a local canned bundle from files in the canned staging area.
+NOTE: This plugin's purpose is for testing and verification of a canned staging
+area, and should not be used to create catalogs on a deployment. It can however
+be used with the `can_bundle.py` script to create a local canned bundle from the
+files in the canned staging area.
 """
 from collections.abc import (
     Sequence,
@@ -18,6 +15,12 @@ from dataclasses import (
     dataclass,
 )
 import logging
+from pathlib import (
+    Path,
+)
+from tempfile import (
+    TemporaryDirectory,
+)
 import time
 from typing import (
     Optional,
@@ -68,7 +71,7 @@ from azul.uuids import (
     validate_uuid_prefix,
 )
 from humancellatlas.data.metadata.helpers.staging_area import (
-    GitHubStagingAreaFactory,
+    CannedStagingAreaFactory,
     StagingArea,
 )
 
@@ -120,12 +123,51 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         ]
 
     def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
-        return spec.name
+        return str(spec)
+
+    def parse_github_url(self, url: furl) -> tuple[furl, Path, str]:
+        """
+        Parse a GitHub URL.
+
+        :param url: A GitHub URL of the format
+                    https://github.com/<OWNER>/<NAME>/tree/<REF>[/<PATH>]. Note
+                    that REF can be the name of a branch, the name of a tag, or
+                    a commit SHA. If REF contains special characters like `/`,
+                    '?` or `#` they must be URL-encoded. This is especially
+                    noteworthy for `/` in branch names.
+
+        :return: A tuple containing the URL of a GitHub repository, a relative
+                 path inside that repository, and a Git ref.
+
+        >>> plugin = Plugin(_sources=set())
+
+        >>> plugin.parse_github_url(furl('https://github.com/OWNER/NAME/tree/REF/tests'))
+        (furl('https://github.com/OWNER/NAME.git'), PosixPath('tests'), 'REF')
+        """
+        require(url.scheme == 'https', url)
+        require(url.host == 'github.com', url)
+        owner, name, slug, ref, *path = url.path.segments
+        require(slug == 'tree', url)
+        remote_url = furl(url.origin)
+        remote_url.path.add((owner, f'{name}.git'))
+        return remote_url, Path(*path), ref
 
     @lru_cache
-    def staging_area(self, source_spec: SimpleSourceSpec) -> StagingArea:
-        factory = GitHubStagingAreaFactory.from_url(source_spec.name)
-        return factory.load_staging_area()
+    def staging_area(self, url: str) -> StagingArea:
+        """
+        Process the contents of a staging area.
+
+        :param url: The URL of a staging area located in a GitHub repository.
+
+        :return: A StagingArea object containing the contents of the staging
+                 area's JSON files.
+        """
+        with TemporaryDirectory() as tmpdir:
+            remote_url, path, ref = self.parse_github_url(furl(url))
+            factory = CannedStagingAreaFactory.clone_remote(remote_url,
+                                                            Path(tmpdir),
+                                                            ref)
+            return factory.load_staging_area(path)
 
     def _assert_source(self, source: CannedSourceRef):
         assert source.spec in self.sources, (source, self.sources)
@@ -139,7 +181,8 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
-        for link in self.staging_area(source.spec).links.values():
+        staging_area = self.staging_area(source.spec.name)
+        for link in staging_area.links.values():
             if link.uuid.startswith(prefix):
                 bundle_fqids.append(CannedBundleFQID(source=source,
                                                      uuid=link.uuid,
@@ -151,8 +194,8 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
     def fetch_bundle(self, bundle_fqid: CannedBundleFQID) -> CannedBundle:
         self._assert_source(bundle_fqid.source)
         now = time.time()
-        staging_area = self.staging_area(bundle_fqid.source.spec)
-        version, manifest, metadata = staging_area.get_bundle(bundle_fqid.uuid)
+        staging_area = self.staging_area(bundle_fqid.source.spec.name)
+        version, manifest, metadata = staging_area.get_bundle_parts(bundle_fqid.uuid)
         if bundle_fqid.version is None:
             bundle_fqid = CannedBundleFQID(source=bundle_fqid.source,
                                            uuid=bundle_fqid.uuid,
@@ -168,55 +211,56 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
     def portal_db(self) -> Sequence[JSON]:
         return []
 
-    def _construct_file_url(self, source_url: str, file_name: str) -> str:
+    def _construct_file_url(self, url: furl, file_name: str) -> furl:
         """
         >>> plugin = Plugin(_sources=set())
-        >>> source_url = 'https://github.com/USER/REPO/tree/REF/tests'
+        >>> url = furl('https://github.com/OWNER/REPO/tree/REF/tests')
 
-        >>> plugin._construct_file_url(source_url, 'foo.zip')
-        'https://github.com/USER/REPO/raw/REF/tests/foo.zip'
+        >>> plugin._construct_file_url(url, 'foo.zip')
+        furl('https://github.com/OWNER/REPO/raw/REF/tests/data/foo.zip')
 
-        >>> plugin._construct_file_url(source_url, '')
+        >>> plugin._construct_file_url(url, '')
         Traceback (most recent call last):
         ...
         azul.RequirementError: file_name cannot be empty
         """
-        url = furl(source_url)
-        require(url.path.segments[2] == 'tree', source_url)
-        url.path.segments[2] = 'raw'
+        require(url.path.segments[2] == 'tree', str(url))
+        file_url = furl(url)
+        file_url.path.segments[2] = 'raw'
+        file_url.path.segments.append('data')
         require(len(file_name) > 0, 'file_name cannot be empty')
         require(not file_name.endswith('/'), file_name)
         for segment in file_name.split('/'):
-            url.path.segments.append(segment)
-        return str(url)
+            file_url.path.segments.append(segment)
+        return file_url
 
     def _direct_file_url(self,
                          file_uuid: str,
                          *,
                          file_version: Optional[str] = None,
-                         replica: Optional[str] = None,
-                         ) -> Optional[str]:
+                         ) -> Optional[furl]:
         # Check all sources for the file. If a file_version was specified return
         # when we find a match, otherwise continue checking all sources and
         # return the URL for the match with the latest (largest) version.
         found_version = None
         found_url = None
         for source_spec in self.sources:
-            staging_area = self.staging_area(source_spec)
+            staging_area = self.staging_area(source_spec.name)
             try:
                 descriptor = staging_area.descriptors[file_uuid]
             except KeyError:
                 continue
             else:
+                staging_area_url = furl(source_spec.name)
                 actual_file_version = descriptor.content['file_version']
                 if file_version:
                     if file_version == actual_file_version:
                         file_name = descriptor.content['file_name']
-                        return self._construct_file_url(source_spec.name, file_name)
+                        return self._construct_file_url(staging_area_url, file_name)
                 else:
                     if found_version is None or actual_file_version > found_version:
                         file_name = descriptor.content['file_name']
-                        found_url = self._construct_file_url(source_spec.name, file_name)
+                        found_url = self._construct_file_url(staging_area_url, file_name)
                         found_version = actual_file_version
         return found_url
 
@@ -234,7 +278,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
 
 
 class CannedFileDownload(RepositoryFileDownload):
-    _location: Optional[str] = None
+    _location: Optional[furl] = None
     _retry_after: Optional[int] = None
 
     def update(self,
@@ -243,13 +287,12 @@ class CannedFileDownload(RepositoryFileDownload):
                ) -> None:
         assert isinstance(plugin, Plugin)
         url = plugin._direct_file_url(file_uuid=self.file_uuid,
-                                      file_version=self.file_version,
-                                      replica=None)
+                                      file_version=self.file_version)
         self._location = url
 
     @property
     def location(self) -> Optional[str]:
-        return self._location
+        return None if self._location is None else str(self._location)
 
     @property
     def retry_after(self) -> Optional[int]:

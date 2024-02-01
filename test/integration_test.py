@@ -828,6 +828,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                            *,
                            stream: bool = False
                            ) -> urllib3.HTTPResponse:
+        method, url, body, headers = self._hoist_parameters(method, url)
         # The type of client used will be evident from the logger name in the
         # log message. Authenticated requests will be logged by the azul.oauth2
         # module, plain ones will be logged by this module's logger.
@@ -838,6 +839,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         url = str(url)
         response = http.request(method=method,
                                 url=url,
+                                body=body,
+                                headers=headers,
                                 timeout=float(config.api_gateway_lambda_timeout + 1),
                                 retries=urllib3.Retry(total=5,
                                                       redirect=0,
@@ -846,6 +849,30 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                 preload_content=not stream)
         assert isinstance(response, urllib3.HTTPResponse)
         return response
+
+    def _hoist_parameters(self,
+                          method: str,
+                          url: furl
+                          ) -> tuple[str, furl, bytes | None, dict | None]:
+        """
+        Pass filters in the body of a POST if passing them in the URL of a GET
+        makes the URL longer than what AWS allows for edge-optimized APIs.
+
+        https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html
+        """
+        body: bytes | None = None
+        headers: dict | None = None
+        if method in {GET, PUT, POST} and url.netloc == config.service_endpoint.netloc:
+            limit = 8192
+            if len(str(url)) > limit:
+                url = url.copy()
+                filters = url.args.pop('filters')
+                assert len(str(url)) <= limit, (url, limit)
+                body = json.dumps({'filters': filters}).encode()
+                headers = {'Content-Type': 'application/json'}
+                if method == GET:
+                    method = POST
+        return method, url, body, headers
 
     def _assertResponseStatus(self,
                               response: urllib3.HTTPResponse,
@@ -1345,8 +1372,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-        url = config.service_endpoint.set(path=('index', bundle_type),
-                                          args={'filters': json.dumps(source_filter)})
+        params = {
+            'filters': json.dumps(source_filter),
+            'catalog': catalog
+        }
+        url = config.service_endpoint.set(path=('index', bundle_type), args=params)
         response = self._get_url_unchecked(GET, url)
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 

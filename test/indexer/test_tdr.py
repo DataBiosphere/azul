@@ -6,6 +6,7 @@ from io import (
     BytesIO,
 )
 import json
+import logging
 from operator import (
     attrgetter,
 )
@@ -75,6 +76,7 @@ from azul.plugins.repository.tdr import (
 from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
     TDRHCABundle,
+    log as plugin_log,
 )
 from azul.terra import (
     TDRClient,
@@ -308,28 +310,21 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         with self.assertRaises(RequirementError):
             self._test_fetch_bundle(bundle, load_tables=False)
 
-    @patch('azul.plugins.repository.tdr_hca.Plugin._find_upstream_bundles')
-    def test_subgraph_stitching(self, _mock_find_upstream_bundles):
+    def test_subgraph_stitching(self):
         downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
         upstream_uuids = [
             'b0c2c714-45ee-4759-a32b-8ccbbcf911d4',
             'bd4939c1-a078-43bd-8477-99ae59ceb555',
         ]
-        # FIXME: Fix the crash in bigquery-emulator and remove the mock
-        #        https://github.com/DataBiosphere/azul/issues/5847
-        _mock_find_upstream_bundles.side_effect = [
-            {SourcedBundleFQID(source=self.source,
-                               uuid=uuid,
-                               version='2020-08-10T21:24:26.174274Z')}
-            for uuid in upstream_uuids
-        ]
         bundle = self._load_canned_bundle(SourcedBundleFQID(source=self.source,
                                                             uuid=downstream_uuid,
                                                             version='2020-08-10T21:24:26.174274Z'))
         assert any(e['is_stitched'] for e in bundle.manifest)
-        self._test_fetch_bundle(bundle, load_tables=True)
-        self.assertEqual(_mock_find_upstream_bundles.call_count,
-                         len(upstream_uuids))
+        with self.assertLogs(plugin_log, level=logging.DEBUG) as cm:
+            self._test_fetch_bundle(bundle, load_tables=True)
+        record = one(r for r in cm.records if 'Stitched 2 bundle(s): ' in r.message)
+        for upstream_uuid in upstream_uuids:
+            self.assertIn("uuid='" + upstream_uuid, record.message)
 
     def _test_fetch_bundle(self,
                            test_bundle: TDRHCABundle,

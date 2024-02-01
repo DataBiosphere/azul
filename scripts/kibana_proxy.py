@@ -79,7 +79,7 @@ class KibanaProxy:
         proxy_port = self.options.proxy_port or kibana_port + 2
         containers = []
         try:
-            proxy = self.create_container(config.docker_images['signing_proxy'],
+            proxy = self.create_container(config.docker_images['_signing_proxy'],
                                           name='proxy',
                                           auto_remove=True,
                                           command=['-target', self.es_endpoint, '-port', str(proxy_port)],
@@ -92,7 +92,7 @@ class KibanaProxy:
                                           },
                                           ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
             containers.append(proxy)
-            kibana = self.create_container(config.docker_images['kibana'],
+            kibana = self.create_container(config.docker_images['_kibana'],
                                            name='kibana',
                                            auto_remove=True,
                                            detach=True,
@@ -102,7 +102,7 @@ class KibanaProxy:
                                            },
                                            network_mode=f'container:{proxy.name}')
             containers.append(kibana)
-            cerebro = self.create_container(config.docker_images['cerebro'],
+            cerebro = self.create_container(config.docker_images['_cerebro'],
                                             name='cerebro',
                                             auto_remove=True,
                                             command=[f'-Dhttp.port={cerebro_port}'],

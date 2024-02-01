@@ -404,6 +404,7 @@ def set_empty_s3_bucket_lifecycle_config(tf_config: JSON) -> JSON:
             # achieves the goal of preventing/removing policies that originate
             # from outside TF.
             bucket.setdefault('lifecycle_rule', {
+                'id': config.qualified_resource_name('dummy'),
                 'enabled': False,
                 'expiration': {'days': 36500}
             })
@@ -723,13 +724,6 @@ class Chalice:
             package_zip = str(self.package_zip_path(app_name))
             resource['source_code_hash'] = '${filebase64sha256("%s")}' % package_zip
             resource['filename'] = package_zip
-
-            # FIXME: Remove this hack after upgrading Chalice to a version that
-            #        supports Python 3.11
-            #        https://github.com/DataBiosphere/azul/issues/5639
-            #
-            assert resource['runtime'] == 'python3.10', resource['runtime']
-            resource['runtime'] = 'python3.11'
 
         for resource_type, argument in [
             ('aws_cloudwatch_event_rule', 'name'),

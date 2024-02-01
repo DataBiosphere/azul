@@ -20,6 +20,62 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5779 AWS event GetMacieSession results in AccessDenied error
+=============================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5809 Concurrently running GitLab test jobs occasionally time out
+=================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5738 Suppress Inspector findings for images not used within boundary
+=====================================================================
+
+Operator
+~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5848 Dummy S3 lifecycle rule has auto-generated name
+=====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the PR branch to the GitLab instance in that deployment.
+
+
+ #5847 Subgraph stitching query crashes BQ emulator
+===================================================
+
+Operator
+~~~~~~~~
+
+Manually perform a two-phase deployment of the ``shared`` component of every
+main deployment. In a lower deployment, perform the first phase using the
+``apply_keep_unused`` Makefile target just before pushing the PR branch to the
+GitLab instance in that deployment. In a stable deployment (``prod``), perform
+the first phase before pushing the merge commit to the GitLab instance in that
+deployment. In lower and stable deployments, perform the second phase using the
+``apply`` Makefile target after the merge commit was successfully built on the
+GitLab instance in that deployment.
+
+
 #5687 Update Terraform to 1.6.x
 ===============================
 

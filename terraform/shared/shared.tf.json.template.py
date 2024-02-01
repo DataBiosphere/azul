@@ -378,9 +378,9 @@ tf_config = {
                 }
             }
         },
-        **(
-            {
-                'aws_cloudformation_stack': {
+        'aws_cloudformation_stack': {
+            **(
+                {
                     'chatbot': {
                         'name': config.qualified_resource_name('chatbot'),
                         'template_body': json.dumps({
@@ -402,8 +402,47 @@ tf_config = {
                                 }
                             }
                         })
+                    },
+                }
+                if config.slack_integration else
+                {}
+            ),
+            # Images whose short name begins with '_' are only used outside the
+            # security boundary, so vulnerabilities that are detected within
+            # them do not need to be addressed with the same urgency.
+            #
+            # Using CF stack because the AWS provider does not support
+            # Inspector filters and the AWSCC provider fails due to
+            # https://github.com/hashicorp/terraform-provider-awscc/issues/1364
+            'inspector_filters': {
+                'name': config.qualified_resource_name('inspectorfilters'),
+                'template_body': json.dumps({
+                    'AWSTemplateFormatVersion': '2010-09-09',
+                    'Description': 'Create suppression rules for select Docker images in AWS Inspector',
+                    'Resources': {
+                        image_ref.tf_alnum_repository: {
+                            'Type': 'AWS::InspectorV2::Filter',
+                            'Properties': {
+                                'Name': 'exclude_image' + alias,
+                                'FilterAction': 'SUPPRESS',
+                                'FilterCriteria': {
+                                    'EcrImageRepositoryName': [
+                                        {
+                                            'Comparison': 'EQUALS',
+                                            'Value': image_ref.name
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                        for alias, image_ref in docker.images_by_alias.items()
+                        if alias.startswith('_')
                     }
-                },
+                })
+            }
+        },
+        **(
+            {
                 'aws_cloudwatch_event_rule': {
                     'inspector': {
                         'name': 'inspector',
@@ -842,6 +881,19 @@ tf_config = {
                                  '/cis-aws-foundations-benchmark/v/1.2.0',
                 'depends_on': [
                     'aws_securityhub_account.shared'
+                ]
+            }
+        },
+        # FIXME: Enable Macie in AWS
+        #        https://github.com/DataBiosphere/azul/issues/5890
+        'aws_securityhub_standards_control': {
+            'best_practices': {
+                'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
+                                         '/aws-foundational-security-best-practices/v/1.0.0/Macie.1',
+                'control_status': 'DISABLED',
+                'disabled_reason': 'Generates alarm noise; tracked independently as follow-up work',
+                'depends_on': [
+                    'aws_securityhub_standards_subscription.best_practices'
                 ]
             }
         },

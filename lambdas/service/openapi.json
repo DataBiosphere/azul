@@ -3,7 +3,7 @@
     "info": {
         "title": "azul_service",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n",
-        "version": "3.2"
+        "version": "3.4"
     },
     "tags": [
         {
@@ -2277,8 +2277,1520 @@
                     }
                 ]
             },
+            "post": {
+                "summary": "\nSearch an index for entities of interest\n, with filters provided in the request body.\n",
+                "deprecated": true,
+                "description": "\nAny of the query parameters documented below can alternatively be passed as\na property of a JSON object in the body of the request. This can be useful\nin case the value of the `filters` query parameter causes the URL to exceed\nthe maximum length of 8192 characters, resulting in a 413 Request Entity Too\nLarge response.\n\nThe request `GET /index/foo?filters={\u2026}`, for example, is equivalent to a\n`POST /index/foo` request with the body `{\"filters\": {\u2026}}`.\n\n\nNote that the Swagger UI can't currently be used to pass a body.\n\nPlease also note that this endpoint should be considered beta and\nmay change or disappear in the future. That is the reason for the\ndeprecation.\n",
+                "tags": [
+                    "Index"
+                ],
+                "parameters": [
+                    {
+                        "name": "catalog",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "dcp2"
+                            ],
+                            "default": "dcp2"
+                        },
+                        "description": "The name of the catalog to query."
+                    },
+                    {
+                        "name": "filters",
+                        "in": "query",
+                        "required": false,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessions": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "namespace": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "accession": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "aggregateLastModifiedDate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "aggregateSubmissionDate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "aggregateUpdateDate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "assayType": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "biologicalSex": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "bundleUuid": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "bundleVersion": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "cellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "cellLineType": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "contactName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "contentDescription": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "developmentStage": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "donorCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "donorDisease": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "effectiveCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "effectiveOrgan": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "entryId": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "fileFormat": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "fileId": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "fileName": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "fileSize": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "fileSource": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "fileVersion": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "genusSpecies": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "institution": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "instrumentManufacturerModel": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "isIntermediate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "laboratory": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "lastModifiedDate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "libraryConstructionApproach": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "matrixCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "modelOrgan": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "modelOrganPart": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "nucleicAcidSource": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "organ": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "organPart": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "organismAge": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "unit"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "organismAgeRange": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "number",
+                                                                    "format": "double"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "number",
+                                                                    "format": "double"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "number",
+                                                                        "format": "double"
+                                                                    },
+                                                                    {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "number",
+                                                                            "format": "double"
+                                                                        },
+                                                                        "minItems": 2,
+                                                                        "maxItems": 2
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "contains"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "number",
+                                                                    "format": "double"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "intersects"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "pairedEnd": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "boolean",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "preservationMethod": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "project": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "projectDescription": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "minItems": 2,
+                                                                "maxItems": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "within"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "projectId": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "projectTitle": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "publicationTitle": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "sampleDisease": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "sampleEntityType": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "sampleId": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "selectedCellType": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "sourceId": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "sourceSpec": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "specimenDisease": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "specimenOrgan": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "specimenOrganPart": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "submissionDate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "updateDate": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "workflow": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "default": "{}",
+                                    "example": {
+                                        "cellCount": {
+                                            "within": [
+                                                [
+                                                    10000,
+                                                    1000000000
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a field name, a relation (relational operator),\nand an array of field values. The available relations are \"is\",\n\"within\", \"contains\", and \"intersects\". Multiple filters are combined\nusing \"and\" logic. An entity must match all filters to be included in\nthe response. How multiple field values within a single filter are\ncombined depends on the relation.\n\nFor the \"is\" relation, multiple values are combined using \"or\" logic.\nFor example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}` selects\nentities where the file format is either \"fastq\" or \"fastq.gz\". For the\n\"within\", \"intersects\", and \"contains\" relations, the field values must\ncome in nested pairs specifying upper and lower bounds, and multiple\npairs are combined using \"and\" logic. For example, `{\"donorCount\":\n{\"within\": [[1,5], [5,10]]}}` selects entities whose donor organism\ncount falls within both ranges, i.e., is exactly 5.\n\nThe accessions field supports filtering for a specific accession and/or\nnamespace within a project. For example, `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\"}]}}` will filter for projects that have an\n`array_express` accession. Similarly, `{\"accessions\": {\"is\": [\n{\"accession\":\"ERP112843\"}]}}` will filter for projects that have the\naccession `ERP112843` while `{\"accessions\": {\"is\": [\n{\"namespace\":\"array_express\", \"accession\": \"E-AAAA-00\"}]}}` will filter\nfor projects that match both values.\n\nThe organismAge field is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported field names are: accessions, aggregateLastModifiedDate, aggregateSubmissionDate, aggregateUpdateDate, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveCellCount, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, institution, instrumentManufacturerModel, isIntermediate, laboratory, lastModifiedDate, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, submissionDate, updateDate, workflow\n"
+                    },
+                    {
+                        "name": "entity_type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "bundles",
+                                "files",
+                                "projects",
+                                "samples"
+                            ]
+                        },
+                        "description": "Which index to search."
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "minimum": 1,
+                            "default": 10
+                        },
+                        "description": "\nThe number of hits included per page. The maximum size allowed\ndepends on the catalog and entity type.\n"
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "accessions",
+                                "aggregateLastModifiedDate",
+                                "aggregateSubmissionDate",
+                                "aggregateUpdateDate",
+                                "assayType",
+                                "biologicalSex",
+                                "bundleUuid",
+                                "bundleVersion",
+                                "cellCount",
+                                "cellLineType",
+                                "contactName",
+                                "contentDescription",
+                                "developmentStage",
+                                "donorCount",
+                                "donorDisease",
+                                "effectiveCellCount",
+                                "effectiveOrgan",
+                                "entryId",
+                                "fileFormat",
+                                "fileId",
+                                "fileName",
+                                "fileSize",
+                                "fileSource",
+                                "fileVersion",
+                                "genusSpecies",
+                                "institution",
+                                "instrumentManufacturerModel",
+                                "isIntermediate",
+                                "laboratory",
+                                "lastModifiedDate",
+                                "libraryConstructionApproach",
+                                "matrixCellCount",
+                                "modelOrgan",
+                                "modelOrganPart",
+                                "nucleicAcidSource",
+                                "organ",
+                                "organPart",
+                                "organismAge",
+                                "organismAgeRange",
+                                "pairedEnd",
+                                "preservationMethod",
+                                "project",
+                                "projectDescription",
+                                "projectEstimatedCellCount",
+                                "projectId",
+                                "projectTitle",
+                                "publicationTitle",
+                                "sampleDisease",
+                                "sampleEntityType",
+                                "sampleId",
+                                "selectedCellType",
+                                "sourceId",
+                                "sourceSpec",
+                                "specimenDisease",
+                                "specimenOrgan",
+                                "specimenOrganPart",
+                                "submissionDate",
+                                "updateDate",
+                                "workflow"
+                            ]
+                        },
+                        "description": "\nThe field to sort the hits by. The default value depends on the\nentity type.\n"
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        },
+                        "description": "\nThe ordering of the sorted hits, either ascending or descending.\nThe default value depends on the entity type.\n"
+                    },
+                    {
+                        "name": "search_before",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "deprecated": true
+                    },
+                    {
+                        "name": "search_before_uid",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "deprecated": true
+                    },
+                    {
+                        "name": "search_after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "deprecated": true
+                    },
+                    {
+                        "name": "search_after_uid",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "deprecated": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\nPaginated list of entities that meet the search criteria\n(\"hits\"). The structure of these hits is documented under\nthe [corresponding endpoint for a specific\nentity](#operations-Index-get_index__entity_type___entity_id_).\n\nThe `pagination` section describes the total number of hits\nand total number of pages, as well as user-supplied search\nparameters for page size and sorting behavior. It also\nprovides links for navigating forwards and backwards between\npages of results.\n\nThe `termFacets` section tabulates the occurrence of unique\nvalues within nested fields of the `hits` section across all\nentities meeting the filter criteria (this includes entities\nnot listed on the current page, meaning that this section\nwill be invariable across all pages from the same search).\nNot every nested field is tabulated, but the set of\ntabulated fields is consistent between entity types.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "hits": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "protocols": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    },
+                                                    "entryId": {
+                                                        "type": "string"
+                                                    },
+                                                    "sources": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    },
+                                                    "samples": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    },
+                                                    "specimens": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    },
+                                                    "cellLines": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    },
+                                                    "donorOrganisms": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    },
+                                                    "organoids": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "cellSuspensions": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {},
+                                                            "additionalProperties": true
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "protocols",
+                                                    "entryId",
+                                                    "sources",
+                                                    "samples",
+                                                    "specimens",
+                                                    "cellLines",
+                                                    "donorOrganisms",
+                                                    "organoids",
+                                                    "cellSuspensions"
+                                                ],
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": true
+                                        },
+                                        "termFacets": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "required": [
+                                        "hits",
+                                        "pagination",
+                                        "termFacets"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "get": {
-                "summary": "Search an index for entities of interest.",
+                "summary": "\nSearch an index for entities of interest\n.\n",
+                "deprecated": false,
+                "description": "",
                 "tags": [
                     "Index"
                 ],
@@ -6363,7 +7875,7 @@
                     "Manifests"
                 ],
                 "summary": "Initiate the preparation of a manifest",
-                "description": "\nCreate a manifest preparation job, returning either\n\n- a 301 redirect to the URL of the status of that job or\n\n- a 302 redirect to the URL of an already prepared manifest.\n\nThis endpoint is not suitable for interactive use via the\nSwagger UI. Please use [PUT /fetch/manifest/files][1] instead.\n\n[1]: #operations-Manifests-put_fetch_manifest_files\n",
+                "description": "\nCreate a manifest preparation job, returning either\n\n- a 301 redirect to the URL of the status of that job or\n\n- a 302 redirect to the URL of an already prepared manifest.\n\nThis endpoint is not suitable for interactive use via the\nSwagger UI. Please use [PUT /fetch/manifest/files][1] instead.\n\n[1]: #operations-Manifests-put_fetch_manifest_files\n\nAny of the query parameters documented below can alternatively be passed as\na property of a JSON object in the body of the request. This can be useful\nin case the value of the `filters` query parameter causes the URL to exceed\nthe maximum length of 8192 characters, resulting in a 413 Request Entity Too\nLarge response.\n\nThe request `GET /index/foo?filters={\u2026}`, for example, is equivalent to a\n`POST /index/foo` request with the body `{\"filters\": {\u2026}}`.\n",
                 "parameters": [
                     {
                         "name": "catalog",
@@ -7714,7 +9226,7 @@
                     "Manifests"
                 ],
                 "summary": "Initiate the preparation of a manifestvia XHR",
-                "description": "\nCreate a manifest preparation job, returning a 200 status\nresponse whose JSON body emulates the HTTP headers that would be\nfound in a response to an equivalent request to the [PUT\n/manifest/files][1] endpoint.\n\nWhenever client-side JavaScript code is used in a web\napplication to request the preparation of a manifest from Azul,\nthis endpoint should be used instead of [PUT\n/manifest/files][1]. This way, the client can use XHR to make\nthe request, retaining full control over the handling of\nredirects and enabling the client to bypass certain limitations\non the native handling of redirects in web browsers. For\nexample, most browsers ignore the `Retry-After` header in\nredirect responses, causing them to prematurely exhaust the\nupper limit on the number of consecutive redirects, before the\nmanifest generation job is done.\n\n[1]: #operations-Manifests-put_manifest_files\n",
+                "description": "\nCreate a manifest preparation job, returning a 200 status\nresponse whose JSON body emulates the HTTP headers that would be\nfound in a response to an equivalent request to the [PUT\n/manifest/files][1] endpoint.\n\nWhenever client-side JavaScript code is used in a web\napplication to request the preparation of a manifest from Azul,\nthis endpoint should be used instead of [PUT\n/manifest/files][1]. This way, the client can use XHR to make\nthe request, retaining full control over the handling of\nredirects and enabling the client to bypass certain limitations\non the native handling of redirects in web browsers. For\nexample, most browsers ignore the `Retry-After` header in\nredirect responses, causing them to prematurely exhaust the\nupper limit on the number of consecutive redirects, before the\nmanifest generation job is done.\n\n[1]: #operations-Manifests-put_manifest_files\n\nAny of the query parameters documented below can alternatively be passed as\na property of a JSON object in the body of the request. This can be useful\nin case the value of the `filters` query parameter causes the URL to exceed\nthe maximum length of 8192 characters, resulting in a 413 Request Entity Too\nLarge response.\n\nThe request `GET /index/foo?filters={\u2026}`, for example, is equivalent to a\n`POST /index/foo` request with the body `{\"filters\": {\u2026}}`.\n",
                 "parameters": [
                     {
                         "name": "catalog",

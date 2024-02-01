@@ -44,6 +44,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    iif,
     mutable_furl,
     require,
 )
@@ -227,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '3.2'
+        'version': '3.4'
     },
     'tags': [
         {
@@ -1019,10 +1020,34 @@ def repository_search_params_spec():
     ]
 
 
-def repository_search_spec():
+parameter_hoisting_note = fd('''
+    Any of the query parameters documented below can alternatively be passed as
+    a property of a JSON object in the body of the request. This can be useful
+    in case the value of the `filters` query parameter causes the URL to exceed
+    the maximum length of 8192 characters, resulting in a 413 Request Entity Too
+    Large response.
+
+    The request `GET /index/foo?filters={…}`, for example, is equivalent to a
+    `POST /index/foo` request with the body `{"filters": {…}}`.
+''')
+
+
+def repository_search_spec(*, post: bool):
     id_spec_link = '#operations-Index-get_index__entity_type___entity_id_'
     return {
-        'summary': 'Search an index for entities of interest.',
+        'summary': fd(f'''
+            Search an index for entities of interest
+            {", with filters provided in the request body" if post else ""}.
+        '''),
+        'deprecated': post,
+        'description': iif(post, parameter_hoisting_note + fd('''
+
+            Note that the Swagger UI can't currently be used to pass a body.
+
+            Please also note that this endpoint should be considered beta and
+            may change or disappear in the future. That is the reason for the
+            deprecation.
+        ''')),
         'tags': ['Index'],
         'parameters': repository_search_params_spec(),
         'responses': {
@@ -1126,7 +1151,16 @@ repository_summary_spec = {
 @app.route(
     '/index/{entity_type}',
     methods=['GET'],
-    method_spec=repository_search_spec(),
+    method_spec=repository_search_spec(post=False),
+    cors=True
+)
+# FIXME: Properly document the POST version of /index
+#        https://github.com/DataBiosphere/azul/issues/5900
+@app.route(
+    '/index/{entity_type}',
+    methods=['POST'],
+    content_types=['application/json'],
+    method_spec=repository_search_spec(post=True),
     cors=True
 )
 @app.route(
@@ -1144,6 +1178,7 @@ repository_summary_spec = {
 def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON:
     request = app.current_request
     query_params = request.query_params or {}
+    _hoist_parameters(query_params, request)
     validate_repository_search(entity_type, query_params)
     validate_entity_type(entity_type)
     return app.repository_controller.search(catalog=app.catalog,
@@ -1152,6 +1187,18 @@ def repository_search(entity_type: str, entity_id: Optional[str] = None) -> JSON
                                             filters=query_params.get('filters'),
                                             pagination=app.get_pagination(entity_type),
                                             authentication=request.authentication)
+
+
+def _hoist_parameters(query_params, request):
+    if request.method in ('POST', 'PUT'):
+        body = request.json_body
+        if body is not None:
+            if not isinstance(body, dict):
+                raise BRE('Request body is not a JSON object')
+            elif body.keys() & query_params.keys():
+                raise BRE('Conflicting keys between body and query parameters')
+            else:
+                query_params.update(body)
 
 
 @app.route(
@@ -1274,7 +1321,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                 Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
 
                 [1]: #operations-Manifests-put_fetch_manifest_files
-                ''') if initiate and not fetch else fd('''
+            ''') + iif(put, parameter_hoisting_note) if initiate and not fetch else fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning either
 
@@ -1288,7 +1335,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                 instead.
 
                 [1]: #operations-Manifests-get_fetch_manifest_files
-                ''') if not initiate and not fetch else fd('''
+            ''') if not initiate and not fetch else fd('''
                 Create a manifest preparation job, returning a 200 status
                 response whose JSON body emulates the HTTP headers that would be
                 found in a response to an equivalent request to the [PUT
@@ -1307,7 +1354,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                 manifest generation job is done.
 
                 [1]: #operations-Manifests-put_manifest_files
-                ''') if initiate and fetch else fd('''
+            ''') + iif(put, parameter_hoisting_note) if initiate and fetch else fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning a 200 status response whose JSON body emulates the
                 HTTP headers that would be found in a response to an equivalent
@@ -1518,6 +1565,7 @@ def fetch_file_manifest_with_token(token: str):
 def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
     request = app.current_request
     query_params = request.query_params or {}
+    _hoist_parameters(query_params, request)
     if token_or_key is None:
         query_params.setdefault('filters', '{}')
         # We list the `catalog` validator first so that the catalog is validated

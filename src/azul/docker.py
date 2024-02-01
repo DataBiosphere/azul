@@ -88,6 +88,15 @@ class ImageRef:
         return 'repository_' + hash
 
     @property
+    def tf_alnum_repository(self):
+        """
+        An alphanumeric string suitable for identifying (in Terraform config)
+        the ECR repository resource holding this image. Unlike `tf_repository`,
+        the string may only contain characters in [0-9a-zA-Z].
+        """
+        return 'repository' + sha1(self.name.encode()).hexdigest()
+
+    @property
     def tf_image(self):
         """
         A string suitable for identifying (in Terraform config) any resource
@@ -134,7 +143,12 @@ class Platform:
         return '/'.join(result)
 
 
-images = list(map(ImageRef.parse, config.docker_images.values()))
+images_by_alias = {
+    alias: ImageRef.parse(name)
+    for alias, name in config.docker_images.items()
+}
+
+images = images_by_alias.values()
 
 platforms = list(map(Platform.parse, config.docker_platforms))
 

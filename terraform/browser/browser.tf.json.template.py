@@ -22,6 +22,7 @@ from azul import (
     JSON,
     cached_property,
     config,
+    iif,
 )
 from azul.collections import (
     adict,
@@ -42,6 +43,9 @@ buckets = {
     for branch, sites in branches.items()
     for site_name, site in sites.items()
 }
+
+#: Whether to emit a Google custom search instance and a CF origin for it
+provision_custom_search = False
 
 
 def emit():
@@ -67,7 +71,7 @@ def emit():
                 }
             },
             'aws_route53_zone': {
-                'portal': {
+                'browser': {
                     'name': config.domain_name + '.',
                     'private_zone': False
                 }
@@ -77,8 +81,9 @@ def emit():
             'aws_s3_bucket': {
                 bucket: {
                     'bucket': name,
+                    'force_destroy': True,
                     'lifecycle': {
-                        'prevent_destroy': True
+                        'prevent_destroy': False
                     }
                 }
                 for bucket, name in buckets.items()
@@ -110,7 +115,7 @@ def emit():
                                 'Resource': '${aws_s3_bucket.%s.arn}/*' % bucket,
                                 'Condition': {
                                     'StringEquals': {
-                                        'AWS:SourceArn': '${aws_cloudfront_distribution.portal.arn}'
+                                        'AWS:SourceArn': '${aws_cloudfront_distribution.browser.arn}'
                                     }
                                 }
                             }
@@ -120,7 +125,7 @@ def emit():
                 for bucket in buckets
             },
             'aws_cloudfront_distribution': {
-                'portal': {
+                'browser': {
                     'enabled': True,
                     'restrictions': {
                         'geo_restriction': {
@@ -133,25 +138,14 @@ def emit():
                     'default_root_object': 'index.html',
                     'is_ipv6_enabled': True,
                     'ordered_cache_behavior': [
-                        bucket_behaviour('browser',
-                                         path_pattern='/explore*',
-                                         explorer_domain_router=True,
-                                         add_response_security_headers=False),
-                        google_search_behavior(),
-                        *(
-                            bucket_behaviour('consortia',
-                                             path_pattern=path_pattern,
-                                             ptm_next_path_mapper=True,
-                                             ptm_add_response_headers=False)
-                            for path_pattern in ['/consortia*', '_next/*']
-                        ),
+                        *iif(provision_custom_search, [google_search_behavior()])
                     ],
                     'default_cache_behavior':
-                        bucket_behaviour('portal',
-                                         add_trailing_slash=True,
-                                         add_response_security_headers=False),
+                        bucket_behaviour('browser',
+                                         bucket_path_mapper=True,
+                                         add_response_headers=False),
                     'viewer_certificate': {
-                        'acm_certificate_arn': '${aws_acm_certificate.portal.arn}',
+                        'acm_certificate_arn': '${aws_acm_certificate.browser.arn}',
                         'minimum_protocol_version': 'TLSv1.2_2021',
                         'ssl_support_method': 'sni-only'
                     },
@@ -164,7 +158,7 @@ def emit():
                             }
                             for bucket in buckets
                         ),
-                        google_search_origin()
+                        *iif(provision_custom_search, [google_search_origin()])
                     ],
                     'custom_error_response': [
                         {
@@ -187,30 +181,12 @@ def emit():
                 }
                 for bucket in buckets
             },
-            'aws_cloudfront_origin_request_policy': {
-                'google_search': {
-                    'depends_on': ['google_project_service.customsearch'],
-                    'name': config.qualified_resource_name('portal_search'),
-                    'headers_config': {
-                        'header_behavior': 'whitelist',
-                        'headers': {
-                            'items': ['Referer']
-                        }
-                    },
-                    'query_strings_config': {
-                        'query_string_behavior': 'all'
-                    },
-                    'cookies_config': {
-                        'cookie_behavior': 'none'
-                    }
-                }
-            },
             'aws_cloudfront_function': {
                 script.stem: cloudfront_function(script)
                 for script in Path(__file__).parent.glob('*.js')
             },
             'aws_acm_certificate': {
-                'portal': {
+                'browser': {
                     'domain_name': config.domain_name,
                     'validation_method': 'DNS',
                     'lifecycle': {
@@ -219,68 +195,88 @@ def emit():
                 }
             },
             'aws_acm_certificate_validation': {
-                'portal': {
-                    'certificate_arn': '${aws_acm_certificate.portal.arn}',
-                    'validation_record_fqdns': '${[for r in aws_route53_record.portal_validation : r.fqdn]}',
+                'browser': {
+                    'certificate_arn': '${aws_acm_certificate.browser.arn}',
+                    'validation_record_fqdns': '${[for r in aws_route53_record.browser_validation : r.fqdn]}',
                 }
             },
             'aws_route53_record': {
-                'portal': {
-                    'zone_id': '${data.aws_route53_zone.portal.id}',
+                'browser': {
+                    'zone_id': '${data.aws_route53_zone.browser.id}',
                     'name': config.domain_name,
                     'type': 'A',
                     'alias': {
-                        'name': '${aws_cloudfront_distribution.portal.domain_name}',
-                        'zone_id': '${aws_cloudfront_distribution.portal.hosted_zone_id}',
+                        'name': '${aws_cloudfront_distribution.browser.domain_name}',
+                        'zone_id': '${aws_cloudfront_distribution.browser.hosted_zone_id}',
                         'evaluate_target_health': False
                     }
                 },
-                'portal_validation': {
+                'browser_validation': {
                     'for_each': '${{'
-                                'for o in aws_acm_certificate.portal.domain_validation_options : '
+                                'for o in aws_acm_certificate.browser.domain_validation_options : '
                                 'o.domain_name => o'
                                 '}}',
                     'name': '${each.value.resource_record_name}',
                     'type': '${each.value.resource_record_type}',
-                    'zone_id': '${data.aws_route53_zone.portal.id}',
+                    'zone_id': '${data.aws_route53_zone.browser.id}',
                     'records': [
                         '${each.value.resource_record_value}',
                     ],
                     'ttl': 60
                 }
             },
-            'google_project_service': {
-                api: {
-                    'service': f'{api}.googleapis.com',
-                    'disable_dependent_services': False,
-                    'disable_on_destroy': False,
-                } for api in ['apikeys', 'customsearch']
-            },
-            'google_apikeys_key': {
-                'google_search': {
-                    'depends_on': ['google_project_service.apikeys'],
-                    **{k: config.qualified_resource_name('portal') for k in ['name', 'display_name']},
-                    'project': '${local.google_project}',
-                    'restrictions': {
-                        'api_targets': [
-                            {
-                                'service': 'customsearch.googleapis.com'
+            **iif(provision_custom_search, {
+                'aws_cloudfront_origin_request_policy': {
+                    'google_search': {
+                        'depends_on': ['google_project_service.customsearch'],
+                        'name': config.qualified_resource_name('portal_search'),
+                        'headers_config': {
+                            'header_behavior': 'whitelist',
+                            'headers': {
+                                'items': ['Referer']
                             }
-                        ],
-                        'browser_key_restrictions': {
-                            'allowed_referrers': list(flatten(
-                                [f'https://{domain}', f'https://{domain}/*']
-                                for domain in {
-                                    'prod': [
-                                        'data-browser.lungmap.net',
-                                        config.domain_name
-                                    ],
-                                }.get(config.deployment_stage, [config.domain_name])
-                            ))
+                        },
+                        'query_strings_config': {
+                            'query_string_behavior': 'all'
+                        },
+                        'cookies_config': {
+                            'cookie_behavior': 'none'
+                        }
+                    }
+                },
+                'google_project_service': {
+                    api: {
+                        'service': f'{api}.googleapis.com',
+                        'disable_dependent_services': False,
+                        'disable_on_destroy': False,
+                    } for api in ['apikeys', 'customsearch']
+                },
+                'google_apikeys_key': {
+                    'google_search': {
+                        'depends_on': ['google_project_service.apikeys'],
+                        **{k: config.qualified_resource_name('portal') for k in ['name', 'display_name']},
+                        'project': '${local.google_project}',
+                        'restrictions': {
+                            'api_targets': [
+                                {
+                                    'service': 'customsearch.googleapis.com'
+                                }
+                            ],
+                            'browser_key_restrictions': {
+                                'allowed_referrers': list(flatten(
+                                    [f'https://{domain}', f'https://{domain}/*']
+                                    for domain in {
+                                        'prod': [
+                                            'data-browser.lungmap.net',
+                                            config.domain_name
+                                        ],
+                                    }.get(config.deployment_stage, [config.domain_name])
+                                ))
+                            }
                         }
                     }
                 }
-            },
+            }),
             'aws_s3_object': {
                 # The site deployment below needs to be triggered whenever the
                 # content changes but also when the bucket has been deleted and is
@@ -313,7 +309,9 @@ def emit():
                     f'deploy_site_{i}': {
                         'triggers': {
                             'tarball_hash': gitlab_helper.tarball_hash(project, branch, site_name),
-                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket']
+                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket'],
+                            'tarball_path': site['tarball_path'],
+                            'real_path': site['real_path']
                         },
                         'provisioner': {
                             'local-exec': {
@@ -374,7 +372,7 @@ def emit():
                             'command': ' '.join([
                                 'aws',
                                 'cloudfront create-invalidation',
-                                '--distribution-id ${aws_cloudfront_distribution.portal.id}',
+                                '--distribution-id ${aws_cloudfront_distribution.browser.id}',
                                 '--paths "/*"'
                             ])
                         }
@@ -435,6 +433,10 @@ def cloudfront_function(script: Path):
         comment = list(filter(None, map(str.strip, comment)))
         comment = comment[0].removeprefix(prefix).strip() if comment else None
         source = ''.join(source)
+        # I tried Terrafornm's try() but it won't catch undefined references
+        if provision_custom_search:
+            source = source.replace('{GOOGLE_SEARCH_API_KEY}',
+                                    '${google_apikeys_key.google_search.key_string}')
 
     return dict(name=config.qualified_resource_name(script.stem),
                 comment=comment,
@@ -545,7 +547,7 @@ class GitLabHelper:
 
     def tarball_version(self, branch: str) -> str:
         # package_version can't contain slashes
-        return branch.replace('/', '.')
+        return branch.replace('/', '_')
 
 
 def quote(s):

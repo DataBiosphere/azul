@@ -223,7 +223,17 @@ emit_tf({
                             'priority': 1,
                             'name': config.waf_rate_rule_name,
                             'action': {
-                                'block': {}
+                                'block': {
+                                    'custom_response': {
+                                        'response_code': 429,
+                                        'response_header': [
+                                            {
+                                                'name': 'Retry-After',
+                                                'value': '10'
+                                            }
+                                        ]
+                                    }
+                                }
                             },
                             'statement': {
                                 'rate_based_statement': {
@@ -260,6 +270,19 @@ emit_tf({
                                             # of the request line and header
                                             # values to 10240 bytes.
                                             'name': 'SizeRestrictions_QUERYSTRING',
+                                            'action_to_use': {
+                                                'count': {}
+                                            }
+                                        },
+                                        # FIXME: https://github.com/DataBiosphere/azul-private/issues/128
+                                        {
+                                            # This rule aims to limit bodies to
+                                            # 8192 bytes. We need to be able to
+                                            # handle larger bodies with hoisted
+                                            # parameters, so we demote the rule
+                                            # action to be counting instead of
+                                            # blocking.
+                                            'name': 'SizeRestrictions_BODY',
                                             'action_to_use': {
                                                 'count': {}
                                             }
