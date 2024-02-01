@@ -145,8 +145,8 @@ class HealthCheckTestCase(LocalAppTestCase,
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
         app = load_app_module(self.lambda_name(), unit_test=True)
-        app.update_health_cache(MagicMock(), MagicMock())
         with self._mock():
+            app.update_health_cache(MagicMock(), MagicMock())
             response = self._test('/health/cached')
         self.assertEqual(200, response.status_code)
 
