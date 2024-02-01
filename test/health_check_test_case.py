@@ -2,6 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from contextlib import (
+    contextmanager,
+)
 import os
 import random
 import time
@@ -88,7 +91,8 @@ class HealthCheckTestCase(LocalAppTestCase,
     @mock_sqs
     def test_health_all_ok(self):
         self._create_mock_queues()
-        response = self._test(path='/health/')
+        with self._mock():
+            response = self._test('/health/')
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'up': True,
@@ -118,7 +122,8 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         for keys, expected_response in expected.items():
             with self.subTest(keys=keys):
-                response = self._test(path=f'health/{keys}')
+                with self._mock():
+                    response = self._test(f'health/{keys}')
                 self.assertEqual(200, response.status_code)
                 self.assertEqual(expected_response, response.json())
 
@@ -128,7 +133,8 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_cached_health(self):
         self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
-        response = self._test(path='/health/cached')
+        with self._mock():
+            response = self._test('/health/cached')
         self.assertEqual(404, response.status_code)
         expected_response = {
             'Code': 'NotFoundError',
@@ -140,14 +146,16 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         app = load_app_module(self.lambda_name(), unit_test=True)
         app.update_health_cache(MagicMock(), MagicMock())
-        response = self._test(path='/health/cached')
+        with self._mock():
+            response = self._test('/health/cached')
         self.assertEqual(200, response.status_code)
 
         # Another failure is observed when the cache health object is older than
         # 2 minutes
         future_time = time.time() + 3 * 60
         with patch('time.time', new=lambda: future_time):
-            response = self._test(path='/health/cached')
+            with self._mock():
+                response = self._test('/health/cached')
             self.assertEqual(500, response.status_code)
             expected_response = {
                 'Code': 'ChaliceViewError',
@@ -158,7 +166,8 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_laziness(self):
         # Note the absence of moto decorators on this test.
         # If Health weren't lazy, it would fail due the lack of mocks for SQS.
-        response = self._test(path='/health/other_lambdas')
+        with self._mock():
+            response = self._test('/health/other_lambdas')
         # The use of subTests ensures that we see the result of both
         # assertions. In the case of the health endpoint, the body of a 503
         # may carry a body with additional information.
@@ -181,7 +190,8 @@ class HealthCheckTestCase(LocalAppTestCase,
         mock_endpoint = ('7c9f2ddb-74ca-46a3-9438-24ce1fe7050e.com', 80)
         with patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
                                                              es_instance_count=1)):
-            response = self._test()
+            with self._mock():
+                response = self._test('/health/fast')
             self.assertEqual(503, response.status_code)
             self.assertEqual(self._expected_health(es_up=False), response.json())
 
@@ -258,16 +268,15 @@ class HealthCheckTestCase(LocalAppTestCase,
             }
         }
 
-    def _test(self,
-              *,
-              path: str = '/health/fast',
-              endpoints_up: bool = True,
-              lambdas_up: bool = True
-              ):
+    @contextmanager
+    def _mock(self, *, endpoints_up: bool = True, lambdas_up: bool = True):
         with self.helper() as helper:
             self._mock_other_lambdas(helper, up=lambdas_up)
             with self._mock_service_endpoints(helper, up=endpoints_up):
-                return requests.get(str(self.base_url.set(path=path)))
+                yield
+
+    def _test(self, path: str) -> requests.Response:
+        return requests.get(str(self.base_url.set(path=path)))
 
     def helper(self):
         helper = responses.RequestsMock()

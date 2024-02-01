@@ -42,7 +42,8 @@ class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
     @mock_sqs
     def test_all_api_endpoints_down(self):
         self._create_mock_queues()
-        response = self._test(endpoints_up=False)
+        with self._mock(endpoints_up=False):
+            response = self._test('/health/fast')
         self.assertEqual(503, response.status_code)
         self.assertEqual(self._expected_health(endpoints_up=False), response.json())
 
