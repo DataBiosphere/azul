@@ -328,14 +328,16 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         for entity_type, typed_keys in sorted(keys_by_type.items()):
             pk_column = entity_type + '_id'
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
-            if entity_type == 'donors':
+            if entity_type == 'donor':
                 # We expect that the foreign key `part_of_dataset_id` is
                 # redundant for biosamples and donors. To simplify our queries,
                 # we do not follow the latter during the graph traversal.
-                # Here, we validate our expectation.
-                dataset_id: Key = one(keys_by_type['datasets'])
+                # Here, we validate our expectation. Note that the key is an
+                # array for biosamples, but not for donors.
+                dataset_id: Key = one(keys_by_type['dataset'])
                 for row in rows:
-                    require(row.pop('part_of_dataset_id') == dataset_id)
+                    donor_dataset_id = row.pop('part_of_dataset_id')
+                    require(donor_dataset_id == dataset_id, donor_dataset_id, dataset_id)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
                 entity = EntityReference(entity_id=row['datarepo_row_id'], entity_type=entity_type)

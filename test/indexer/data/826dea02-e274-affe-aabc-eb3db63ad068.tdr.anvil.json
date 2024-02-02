@@ -13,7 +13,7 @@
             "source_datarepo_row_ids": [
                 "sample:98048c3b-2525-4090-94fd-477de31f2608"
             ],
-            "version": "redacted-/JIktcFZ"
+            "version": "2022-06-01T00:00:00.000000Z"
         },
         "dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
             "consent_group": [
@@ -57,7 +57,7 @@
             "source_datarepo_row_ids": [
                 "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
             ],
-            "version": "redacted-/JIktcFZ"
+            "version": "2022-06-01T00:00:00.000000Z"
         },
         "diagnosis/939a4bd3-86ed-4a8a-81f4-fbe0ee673461": {
             "datarepo_row_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
@@ -78,7 +78,7 @@
             "source_datarepo_row_ids": [
                 "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
             ],
-            "version": "redacted-/JIktcFZ"
+            "version": "2022-06-01T00:00:00.000000Z"
         },
         "donor/bfd991f2-2797-4083-972a-da7c6d7f1b2e": {
             "datarepo_row_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
@@ -92,7 +92,7 @@
             "source_datarepo_row_ids": [
                 "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
             ],
-            "version": "redacted-/JIktcFZ"
+            "version": "2022-06-01T00:00:00.000000Z"
         },
         "file/15b76f9c-6b46-433f-851d-34e89f1b9ba6": {
             "data_modality": [],
@@ -101,7 +101,7 @@
             "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
             "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
             "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-            "file_ref": "drs://data.terra.bio/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+            "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
             "file_size": 213021639,
             "is_supplementary": false,
             "reference_assembly": [],
@@ -120,7 +120,7 @@
             "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
             "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
             "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-            "file_ref": "drs://data.terra.bio/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+            "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
             "file_size": 3306845592,
             "is_supplementary": false,
             "reference_assembly": [],

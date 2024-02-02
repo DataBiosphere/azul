@@ -85,6 +85,7 @@ from azul.terra import (
     TerraCredentialsProvider,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
     JSONs,
     reify,
@@ -232,8 +233,21 @@ class TDRPluginTestCase(TDRTestCase,
         bq.insert_rows(table=table, selected_fields=schema, rows=map(dump_row, rows))
 
     def _bq_schema(self, row: BigQueryRow) -> list[bigquery.SchemaField]:
+
+        def field_type(key: str, value: AnyJSON) -> str:
+            if key == 'version':
+                return 'TIMESTAMP'
+            elif isinstance(value, bool):
+                return 'BOOLEAN'
+            elif isinstance(value, int):
+                return 'INTEGER'
+            else:
+                return 'STRING'
+
         return [
-            bigquery.SchemaField(name=k, field_type='TIMESTAMP' if k == 'version' else 'STRING')
+            bigquery.SchemaField(name=k,
+                                 field_type=field_type(k, v),
+                                 mode='REPEATED' if isinstance(v, list) else 'NULLABLE')
             for k, v in row.items()
         ]
 
@@ -274,41 +288,37 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         bundle = self._load_canned_bundle(self.bundle_fqid)
         # Test valid links
         self._test_fetch_bundle(bundle, load_tables=True)
-
-        # FIXME: Rewrite this part to use BigQuery DML statements
-        #        https://github.com/DataBiosphere/azul/issues/5046
-        if False:
-            self._test_invalid_links(bundle)
-
-    def _test_invalid_links(self, bundle: TDRHCABundle):
-        # Directly modify the canned tables to test invalid links not present
-        # in the canned bundle.
-        dataset = self.source.spec.bq_name
-        links_table = self.tinyquery.tables_by_name[dataset + '.links']
-        links_content_column = links_table.columns['content'].values
-        links_content = json.loads(one(links_content_column))
-        link = first(link
-                     for link in links_content['links']
-                     if link['link_type'] == 'supplementary_file_link')
-        # Test invalid entity_type in supplementary_file_link
-        assert link['entity']['entity_type'] == 'project'
-        link['entity']['entity_type'] = 'cell_suspension'
-        # Update table
-        links_content_column[0] = json.dumps(links_content)
-        # Invoke code under test
-        with self.assertRaises(RequirementError):
-            self._test_fetch_bundle(bundle,
-                                    load_tables=False)  # Avoid resetting tables to canned state
-
-        # Undo previous change
-        link['entity']['entity_type'] = 'project'
-        # Test invalid entity_id in supplementary_file_link
-        link['entity']['entity_id'] += '_wrong'
-        # Update table
-        links_content_column[0] = json.dumps(links_content)
-        # Invoke code under test
-        with self.assertRaises(RequirementError):
-            self._test_fetch_bundle(bundle, load_tables=False)
+        # Test invalid links by modifying the canned bundle
+        spec = self.source.spec
+        plugin = self.plugin_for_source_spec(spec)
+        links = one(plugin.tdr.run_sql(f'''
+            SELECT links_id, content
+            FROM {plugin._full_table_name(spec, 'links')}
+        '''))
+        links_id, links_content = links['links_id'], json.loads(links['content'])
+        link = first(
+            link
+            for link in links_content['links']
+            if link['link_type'] == 'supplementary_file_link'
+        )
+        linked_entity = link['entity']
+        assert linked_entity['entity_type'] == 'project', linked_entity
+        bad_link_fields = [
+            {'entity_type': 'cell_suspension'},
+            {'entity_id': linked_entity['entity_id'] + '_wrong'}
+        ]
+        for field in bad_link_fields:
+            link['entity'] = linked_entity | field
+            # Update table with invalid link
+            plugin.tdr.run_sql(f'''
+                UPDATE {plugin._full_table_name(spec, 'links')}
+                SET content = {json.dumps(links_content)!r}
+                WHERE links_id = "{links_id}"
+            ''')
+            # Invoke code under test
+            with self.assertRaises(RequirementError):
+                self._test_fetch_bundle(bundle,
+                                        load_tables=False)  # Avoid resetting tables to canned state
 
     def test_subgraph_stitching(self):
         downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
