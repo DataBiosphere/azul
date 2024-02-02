@@ -204,40 +204,53 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
-        # The version of Docker used throughout the system. This variable is
-        # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitLab build.
+        # The version of Docker used throughout the system.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. In
+        # order to update that file, you must run `_refresh && make
+        # environment.boot` after changing the definition below.
+        #
         # This variable is not intended to be overridden per deployment or
-        # locally. Modifying the value requires redeploying the `shared` and
-        # `gitlab` components, as well as building and pushing the executor
-        # image (see terraform/gitlab /runner/Dockerfile for how).
+        # locally.
         #
-        'azul_docker_version': None,
+        # Modifying this variable requires redeploying the `shared` and `gitlab`
+        # components, as well as building and pushing the executor image (see
+        # terraform/gitlab/runner/Dockerfile for how).
+        #
+        'azul_docker_version': '24.0.8',
 
-        # The version of Python used throughout the system. This variable is
-        # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitLab and
-        # GitHub Actions build. This variable is not intended to be overridden
-        # per deployment or locally.  Note that the value of this variable is
-        # duplicated in the value of the `azul_python_image` variable documented
-        # below. Both variable values must be kept consistent.
+        # The version of Python used throughout the system.
         #
-        'azul_python_version': None,
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab and GitHub
+        # Actions build. In order to update that file, you must run `_refresh &&
+        # make environment.boot` after changing the definition below.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        # Modifying this variable requires redeploying the `shared` component.
+        #
+        'azul_python_version': '3.11.7',
 
         # The fully qualified name of the base image of the Azul image, i.e.,
         # the image that is built using the Dockerfile at the root of the
         # project. The base image must have Python installed, so using the
         # official Docker image for Python is the obvious choice, which explains
-        # the name of this variable. This variable is defined in the bootstrap
-        # environment (environment.boot) because it is required to be available
-        # during the early stages of the GitLab build. This variable is not
-        # intended to be overridden per deployment or locally. Note that the
-        # Docker image tag in value of this variable duplicates the value of
-        # `azul_python_version` above. Both variable values must be kept
-        # consistent. Modifying the value of this variable requires redeploying
-        # the `shared` component.
+        # the name of this variable.
         #
-        'azul_python_image': None,
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. In
+        # order to update that file, you must run `_refresh && make
+        # environment.boot` after changing the definition below.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        # Modifying this variable requires redeploying the `shared` component.
+        #
+        'azul_python_image': 'docker.io/library/python:{azul_python_version}-bullseye',
 
         # The tag of the Elasticsearch image that we use to run test cases.
         #
@@ -250,13 +263,17 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_docker_pycharm_version': '2023.3.2-11',
 
-        # The version of Terraform used throughout the system. This variable is
-        # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitLab build.
+        # The version of Terraform used throughout the system.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. In
+        # order to update that file, you must run `_refresh && make
+        # environment.boot` after changing the definition below.
+        #
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': None,
+        'azul_terraform_version': '1.6.6',
 
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET
