@@ -180,7 +180,7 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
                     for doc in docs
                 )
             )
-            self.es_client.bulk(body, index=self._index_name, refresh=True)
+            self.es_client.bulk(body=body, index=self._index_name, refresh=True)
 
     @property
     def _index_name(self):
