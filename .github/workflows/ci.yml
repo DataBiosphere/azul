@@ -54,6 +54,7 @@ jobs:
           chmod -R g+w . && sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
           make -C lambdas openapi
           make environment.boot
+          make -C .github
           make check_clean
           make pep8
           AZUL_DEBUG=0 GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} make test
