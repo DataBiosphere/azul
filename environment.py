@@ -252,17 +252,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_python_image': 'docker.io/library/python:{azul_python_version}-bullseye',
 
-        # The tag of the Elasticsearch image that we use to run test cases.
-        #
-        'azul_docker_elasticsearch_version': '7.17.17-10',
-
-        # The tag of the PyCharm image that we use to format the source code in
-        # continuous integration. We specify it here instead of directly in the
-        # Makefile so that a change to the version does not require updating
-        # requirements.
-        #
-        'azul_docker_pycharm_version': '2023.3.2-11',
-
         # The version of Terraform used throughout the system.
         #
         # This variable is duplicated in a file called `environment.boot`
@@ -284,8 +273,8 @@ def env() -> Mapping[str, Optional[str]]:
             # executor image (see terraform/gitlab/runner/Dockerfile for how).
             docker='docker.io/library/docker:{azul_docker_version}',
             python='{azul_python_image}',
-            pycharm='docker.io/ucscgi/azul-pycharm:{azul_docker_pycharm_version}',
-            elasticsearch='docker.io/ucscgi/azul-elasticsearch:{azul_docker_elasticsearch_version}',
+            pycharm='docker.io/ucscgi/azul-pycharm:2023.3.2-11',
+            elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.17-10',
             bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.

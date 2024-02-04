@@ -90,8 +90,8 @@ Connected issue: #0000
 
 ### System administrator
 
-- [ ] Removed unused image tags from [Elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not include changes to `azul_docker_elasticsearch_version`</sub>
-- [ ] Removed unused image tags from [PyCharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not include changes to `azul_docker_pycharm_version`</sub>
+- [ ] Removed unused image tags from [Elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not alter references to that image`</sub>
+- [ ] Removed unused image tags from [PyCharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not alter references to that image`</sub>
 - [ ] PR is assigned to no one
 
 
