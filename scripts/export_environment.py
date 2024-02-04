@@ -169,7 +169,17 @@ def load_env() -> Tuple[Environment, Optional[str]]:
             # https://github.com/python/typeshed/issues/6042
             # noinspection PyTypeChecker
             env.maps.append(filter_env(module.env()))
+    env.maps.append(load_boot_env(root_dir))
     return env, warning
+
+
+def load_boot_env(root_dir: Path) -> dict[str, str]:
+    boot = {}
+    with open(root_dir / 'environment.boot') as f:
+        for line in f:
+            k, _, v = line.partition('=')
+            boot[k.strip()] = v.strip()
+    return boot
 
 
 def filter_env(env: DraftEnvironment) -> Environment:

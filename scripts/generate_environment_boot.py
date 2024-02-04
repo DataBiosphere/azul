@@ -1,6 +1,7 @@
 import os
 
 from azul import (
+    config,
     logging,
 )
 from azul.files import (
@@ -21,9 +22,22 @@ def main():
         for line in lines:
             if line:
                 name, _, old = line.partition('=')
-                new = os.environ[name]
-                if old != new:
-                    log.info('Updating %r from %r to %r', name, old, new)
+                cur = os.environ.get(name)
+                if name == 'azul_python_image':
+                    new = config.docker_images['python']
+                    if old != cur:
+                        log.warning('%r differs between boot (%r) and current (%r) environment. '
+                                    'This suggests that the environment was not loaded correctly.',
+                                    name, old, cur)
+                    if old != new:
+                        log.info('Updating %r from %r to %r. '
+                                 'You need to run _refresh.',
+                                 name, old, new)
+                else:
+                    assert cur is not None
+                    new = cur
+                    if old != new:
+                        log.info('Updating %r from %r to %r', name, old, new)
                 f.write(f'{name}={new}\n')
 
 

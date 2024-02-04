@@ -234,24 +234,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_python_version': '3.11.7',
 
-        # The fully qualified name of the base image of the Azul image, i.e.,
-        # the image that is built using the Dockerfile at the root of the
-        # project. The base image must have Python installed, so using the
-        # official Docker image for Python is the obvious choice, which explains
-        # the name of this variable.
-        #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build. In
-        # order to update that file, you must run `_refresh && make
-        # environment.boot` after changing the definition below.
-        #
-        # This variable is not intended to be overridden per deployment or
-        # locally.
-        #
-        # Modifying this variable requires redeploying the `shared` component.
-        #
-        'azul_python_image': 'docker.io/library/python:{azul_python_version}-bullseye',
-
         # The version of Terraform used throughout the system.
         #
         # This variable is duplicated in a file called `environment.boot`
@@ -272,7 +254,9 @@ def env() -> Mapping[str, Optional[str]]:
             # Updating the Docker image also requires building and pushing the
             # executor image (see terraform/gitlab/runner/Dockerfile for how).
             docker='docker.io/library/docker:{azul_docker_version}',
-            python='{azul_python_image}',
+            # Run `_refresh && make environment.boot` after modifying the Python
+            # image reference.
+            python='docker.io/library/python:{azul_python_version}-bullseye',
             pycharm='docker.io/ucscgi/azul-pycharm:2023.3.2-11',
             elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.17-10',
             bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
