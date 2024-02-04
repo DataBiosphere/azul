@@ -275,6 +275,30 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_terraform_version': '1.6.6',
 
+        # A dictionary mapping the short name of each Docker image used in Azul
+        # to its fully qualified name. Note that a change to any of the image
+        # references below requires redeploying the `shared` TF component.
+
+        'azul_docker_images': json.dumps(dict(
+            # Updating the Docker image also requires building and pushing the
+            # executor image (see terraform/gitlab/runner/Dockerfile for how).
+            docker='docker.io/library/docker:{azul_docker_version}',
+            python='{azul_python_image}',
+            pycharm='docker.io/ucscgi/azul-pycharm:{azul_docker_pycharm_version}',
+            elasticsearch='docker.io/ucscgi/azul-elasticsearch:{azul_docker_elasticsearch_version}',
+            bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
+            # Updating any of the four images below additionally requires
+            # redeploying the `gitlab` TF component.
+            clamav='docker.io/clamav/clamav:1.2.1-27',
+            gitlab='docker.io/gitlab/gitlab-ce:16.8.1-ce.0',
+            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.7.1',
+            dind='docker.io/library/docker:{azul_docker_version}-dind',
+            # The images below are not used within the security boundary:
+            _signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
+            _cerebro='docker.io/lmenezes/cerebro:0.9.4',
+            _kibana='docker.elastic.co/kibana/kibana-oss:7.10.2'
+        )),
+
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET
         # /bundles/{uuid} and GET /files/{UUID} endpoints. If 1, S3 GetObject

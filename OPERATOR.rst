@@ -331,7 +331,8 @@ Create a backup of the GitLab volume, see `Backup GitLab volumes`_ for help.
 
 Edit the `GitLab Terraform`_ file, updating the version of the Docker images for
 ``gitlab-ce``, ``gitlab-runner`` and ``clamav``. The same images are also
-mentioned in ``azul.config.docker_images``. Update those entries, too. Then run
+mentioned in ``azul_docker_images`` in ``environment.py``. Update those entries,
+too. Then run
 … ::
 
     _select dev.shared
@@ -608,7 +609,7 @@ operations which you should expect to take an hour or longer:
 - deploying a plan that involves ACM certificates
 
 - deploying a ``shared`` component after modifying
-  ``azul.config.docker_images``, especially on a slow uplink
+  ``azul_docker_images`` in ``environment.py``, especially on a slow uplink
 
 To make things worse, if the credentials expire while Terraform is updating
 resources, it will not be able to write the partially updated state back to the

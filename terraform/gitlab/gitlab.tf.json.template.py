@@ -228,8 +228,8 @@ other_public_keys = {
 }
 
 # Note that a change to the image references here also requires updating
-# azul.config.docker_images and redeploying the `shared` TF component prior to
-# deploying the `gitlab` component.
+# azul_docker_images in environment.py and redeploying the `shared` TF component
+# prior to deploying the `gitlab` component.
 
 clamav_image = config.docker_registry + config.docker_images['clamav']
 dind_image = config.docker_registry + config.docker_images['dind']
