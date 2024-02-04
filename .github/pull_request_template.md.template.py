@@ -402,16 +402,6 @@ def main():
                     'content': 'Added `reqs` label to PR',
                     'alt': 'or this PR does not touch requirements*.txt'
                 },
-                *iif(t is T.upgrade, [
-                    {
-                        'type': 'cli',
-                        'content': f'Selected `{deployment}.shared` and '
-                                   f'ran `CI_COMMIT_REF_NAME={t.target_branch} '
-                                   f'make -C terraform/shared apply_keep_unused`',
-                        'alt': 'or this PR does not change any Docker image versions'
-                    }
-                    for deployment in t.deployments
-                ]),
                 iif(t in (T.default, T.upgrade), {
                     'type': 'cli',
                     'content': '`make integration_test` passes in personal deployment',
@@ -546,15 +536,24 @@ def main():
                 for deployment in t.deployments
             ]),
             *iif(t in (T.upgrade, T.promotion), [
-                *[
-                    {
-                        'type': 'cli',
-                        'content': f'Selected `{deployment}.gitlab` and '
-                                   f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/gitlab apply`',
-                        'alt': 'or this PR does not include any changes to files in terraform/gitlab'
-                    }
+                *flatten([
+                    [
+                        iif(t is T.upgrade, {
+                            'type': 'cli',
+                            'content': f'Selected `{deployment}.shared` and '
+                                       f'ran `CI_COMMIT_REF_NAME={t.target_branch} '
+                                       f'make -C terraform/shared apply_keep_unused`',
+                            'alt': 'or this PR does not change any Docker image versions'
+                        }),
+                        {
+                            'type': 'cli',
+                            'content': f'Selected `{deployment}.gitlab` and '
+                                       f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/gitlab apply`',
+                            'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                        }
+                    ]
                     for deployment in t.deployments
-                ],
+                ]),
                 {
                     'type': 'cli',
                     'content': 'Assigned system administrator',
