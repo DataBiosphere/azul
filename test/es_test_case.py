@@ -7,6 +7,9 @@ from unittest import (
 from azul import (
     config,
 )
+from azul.docker import (
+    resolve_docker_image_for_launch,
+)
 from azul.es import (
     ESClientFactory,
 )
@@ -36,7 +39,8 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        es_endpoint = cls._create_container(config.docker_images['elasticsearch'],
+        image = resolve_docker_image_for_launch('elasticsearch')
+        es_endpoint = cls._create_container(image=image,
                                             container_port=9200,
                                             environment=['xpack.security.enabled=false',
                                                          'discovery.type=single-node',

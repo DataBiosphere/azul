@@ -204,59 +204,97 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
-        # The version of Docker used throughout the system. This variable is
-        # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitLab build.
-        # This variable is not intended to be overridden per deployment or
-        # locally. Modifying the value requires redeploying the `shared` and
-        # `gitlab` components, as well as building and pushing the executor
-        # image (see terraform/gitlab /runner/Dockerfile for how).
+        # The version of Docker used throughout the system.
         #
-        'azul_docker_version': None,
-
-        # The version of Python used throughout the system. This variable is
-        # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitLab and
-        # GitHub Actions build. This variable is not intended to be overridden
-        # per deployment or locally.  Note that the value of this variable is
-        # duplicated in the value of the `azul_python_image` variable documented
-        # below. Both variable values must be kept consistent.
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. In
+        # order to update that file, you must run `_refresh && make
+        # environment.boot` after changing the definition below.
         #
-        'azul_python_version': None,
-
-        # The fully qualified name of the base image of the Azul image, i.e.,
-        # the image that is built using the Dockerfile at the root of the
-        # project. The base image must have Python installed, so using the
-        # official Docker image for Python is the obvious choice, which explains
-        # the name of this variable. This variable is defined in the bootstrap
-        # environment (environment.boot) because it is required to be available
-        # during the early stages of the GitLab build. This variable is not
-        # intended to be overridden per deployment or locally. Note that the
-        # Docker image tag in value of this variable duplicates the value of
-        # `azul_python_version` above. Both variable values must be kept
-        # consistent. Modifying the value of this variable requires redeploying
-        # the `shared` component.
-        #
-        'azul_python_image': None,
-
-        # The tag of the Elasticsearch image that we use to run test cases.
-        #
-        'azul_docker_elasticsearch_version': '7.17.17-10',
-
-        # The tag of the PyCharm image that we use to format the source code in
-        # continuous integration. We specify it here instead of directly in the
-        # Makefile so that a change to the version does not require updating
-        # requirements.
-        #
-        'azul_docker_pycharm_version': '2023.3.2-11',
-
-        # The version of Terraform used throughout the system. This variable is
-        # defined in the bootstrap environment (environment.boot) because it is
-        # required to be available during the early stages of the GitLab build.
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': None,
+        # Modifying this variable requires redeploying the `shared` and `gitlab`
+        # components, as well as building and pushing the executor image (see
+        # terraform/gitlab/runner/Dockerfile for how).
+        #
+        'azul_docker_version': '24.0.8',
+
+        # The version of Python used throughout the system.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab and GitHub
+        # Actions build. In order to update that file, you must run `_refresh &&
+        # make environment.boot` after changing the definition below.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        # Modifying this variable requires redeploying the `shared` component.
+        #
+        'azul_python_version': '3.11.7',
+
+        # The version of Terraform used throughout the system.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. In
+        # order to update that file, you must run `_refresh && make
+        # environment.boot` after changing the definition below.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        'azul_terraform_version': '1.6.6',
+
+        # A dictionary mapping the short name of each Docker image used in Azul
+        # to its fully qualified name. Note that a change to any of the image
+        # references below requires redeploying the `shared` TF component.
+
+        'azul_docker_images': json.dumps({
+            # Updating the Docker image also requires building and pushing the
+            # executor image (see terraform/gitlab/runner/Dockerfile for how).
+            'docker': {
+                'ref': 'docker.io/library/docker:{azul_docker_version}'
+            },
+            # Run `_refresh && make environment.boot` after modifying the Python
+            # image reference.
+            'python': {
+                'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
+            },
+            'pycharm': {
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.2-11'
+            },
+            'elasticsearch': {
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.17-10'
+            },
+            'bigquery_emulator': {
+                'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
+            },
+            # Updating any of the four images below additionally requires
+            # redeploying the `gitlab` TF component.
+            'clamav': {
+                'ref': 'docker.io/clamav/clamav:1.2.1-27'
+            },
+            'gitlab': {
+                'ref': 'docker.io/gitlab/gitlab-ce:16.8.1-ce.0'
+            },
+            'gitlab_runner': {
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.7.1'
+            },
+            'dind': {
+                'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
+            },
+            # The images below are not used within the security boundary:
+            '_signing_proxy': {
+                'ref': 'docker.io/cllunsford/aws-signing-proxy:0.2.2'
+            },
+            '_cerebro': {
+                'ref': 'docker.io/lmenezes/cerebro:0.9.4'
+            },
+            '_kibana': {
+                'ref': 'docker.elastic.co/kibana/kibana-oss:7.10.2'
+            }
+        }),
 
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET

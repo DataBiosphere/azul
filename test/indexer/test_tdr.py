@@ -57,6 +57,9 @@ from azul.auth import (
 from azul.bigquery import (
     BigQueryRow,
 )
+from azul.docker import (
+    resolve_docker_image_for_launch,
+)
 from azul.indexer import (
     SourcedBundleFQID,
 )
@@ -182,7 +185,8 @@ class TDRPluginTestCase(TDRTestCase,
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.netloc = cls._create_container(image=config.docker_images['bigquery_emulator'],
+        image = resolve_docker_image_for_launch('bigquery_emulator')
+        cls.netloc = cls._create_container(image=image,
                                            platform='linux/amd64',
                                            container_port=9050,
                                            command=[

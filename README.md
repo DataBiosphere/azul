@@ -37,7 +37,8 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python, see [environment.boot](environment.boot) for exact version
+- Python, the specific verson is defined in an environment variable called
+  `azul_python_version` defined in [environment.py](environment.py)
 
 - The `bash` shell
 
@@ -51,10 +52,10 @@ generic with minimal need for project-specific behavior.
 
 - Terraform, to manage deployments. Azul requires a specific version of
   Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.boot](environment.boot). Refer to the official documentation on
-  how to [install terraform]. Terraform comes as a single, statically linked
-  binary, so the easiest method of installation is to download the binary and
-  put it in a directory mentioned in the `PATH` environment variable.
+  [environment.py](environment.py). Refer to the official documentation on how
+  to [install terraform]. Terraform comes as a single, statically linked binary,
+  so the easiest method of installation is to download the binary and put it in
+  a directory mentioned in the `PATH` environment variable.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
@@ -186,12 +187,12 @@ end.
    Linux users whose distribution does not offer the required Python version
    should consider installing [pyenv] first, then Python using `pyenv install
    x.y.z` and setting `PYENV_VERSION` to `x.y.z`, where `x.y.z` is the value of
-   `azul_python_version` in [environment.boot](environment.boot). You may need
-   to update [pyenv] itself before it recognizes the given Python version. Even
-   if a distribution provides the required minor version of Python natively,
-   using [pyenv] is generally preferred because it offers every patch-level
-   release of Python, supports an arbitrary number of different Python versions
-   to be installed concurrently and allows for easily switching between them.
+   `azul_python_version` in [environment.py](environment.py). You may need to
+   update [pyenv] itself before it recognizes the given Python version. Even if
+   a distribution provides the required minor version of Python natively, using
+   [pyenv] is generally preferred because it offers every patch-level release of
+   Python, supports an arbitrary number of different Python versions to be
+   installed concurrently and allows for easily switching between them.
 
    Ubuntu users using their system's default Python installation must
    install `python3-dev` before any wheel requirements can be built.
@@ -1032,8 +1033,8 @@ found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications.
 
 ## Setting up the Azul build prerequisites on macOS 12 (Monterey)
 
-The steps below are examplary for Python 3.11.6. Replace `3.11.6` with the 
-version listed in [environment.boot](environment.boot).   
+The steps below are examplary for Python 3.11.6. Replace `3.11.6` with the value
+of `azul_python_version` in [environment.py](environment.py).
 
 Make `bash` the default shell. Google it.
 
@@ -2212,7 +2213,7 @@ While the unit test is running (paused at a breakpoint), open a terminal window.
 Download the Kibana container:
 
 ```
-kibana_image=$azul_docker_registry$(python -m azul "config.docker_images['kibana']")
+kibana_image=$azul_docker_registry$(python -m azul "config.docker_images['kibana']['ref']")
 docker pull $kibana_image
 ```
 
