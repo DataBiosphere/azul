@@ -250,27 +250,51 @@ def env() -> Mapping[str, Optional[str]]:
         # to its fully qualified name. Note that a change to any of the image
         # references below requires redeploying the `shared` TF component.
 
-        'azul_docker_images': json.dumps(dict(
+        'azul_docker_images': json.dumps({
             # Updating the Docker image also requires building and pushing the
             # executor image (see terraform/gitlab/runner/Dockerfile for how).
-            docker='docker.io/library/docker:{azul_docker_version}',
+            'docker': {
+                'ref': 'docker.io/library/docker:{azul_docker_version}'
+            },
             # Run `_refresh && make environment.boot` after modifying the Python
             # image reference.
-            python='docker.io/library/python:{azul_python_version}-bullseye',
-            pycharm='docker.io/ucscgi/azul-pycharm:2023.3.2-11',
-            elasticsearch='docker.io/ucscgi/azul-elasticsearch:7.17.17-10',
-            bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
+            'python': {
+                'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
+            },
+            'pycharm': {
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.2-11'
+            },
+            'elasticsearch': {
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.17-10'
+            },
+            'bigquery_emulator': {
+                'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
+            },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
-            clamav='docker.io/clamav/clamav:1.2.1-27',
-            gitlab='docker.io/gitlab/gitlab-ce:16.8.1-ce.0',
-            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.7.1',
-            dind='docker.io/library/docker:{azul_docker_version}-dind',
+            'clamav': {
+                'ref': 'docker.io/clamav/clamav:1.2.1-27'
+            },
+            'gitlab': {
+                'ref': 'docker.io/gitlab/gitlab-ce:16.8.1-ce.0'
+            },
+            'gitlab_runner': {
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.7.1'
+            },
+            'dind': {
+                'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
+            },
             # The images below are not used within the security boundary:
-            _signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
-            _cerebro='docker.io/lmenezes/cerebro:0.9.4',
-            _kibana='docker.elastic.co/kibana/kibana-oss:7.10.2'
-        )),
+            '_signing_proxy': {
+                'ref': 'docker.io/cllunsford/aws-signing-proxy:0.2.2'
+            },
+            '_cerebro': {
+                'ref': 'docker.io/lmenezes/cerebro:0.9.4'
+            },
+            '_kibana': {
+                'ref': 'docker.elastic.co/kibana/kibana-oss:7.10.2'
+            }
+        }),
 
         # Whether to enable direct access to objects in the DSS main bucket. If
         # 0, bundles and files are retrieved from the DSS using the GET

@@ -24,7 +24,7 @@ def main():
                 name, _, old = line.partition('=')
                 cur = os.environ.get(name)
                 if name == 'azul_python_image':
-                    new = config.docker_images['python']
+                    new = config.docker_images['python']['ref']
                     if old != cur:
                         log.warning('%r differs between boot (%r) and current (%r) environment. '
                                     'This suggests that the environment was not loaded correctly.',

@@ -17,6 +17,9 @@ from azul.collections import (
 from azul.deployment import (
     aws,
 )
+from azul.docker import (
+    resolve_docker_image_for_launch,
+)
 from azul.strings import (
     departition,
 )
@@ -231,10 +234,10 @@ other_public_keys = {
 # azul_docker_images in environment.py and redeploying the `shared` TF component
 # prior to deploying the `gitlab` component.
 
-clamav_image = config.docker_registry + config.docker_images['clamav']
-dind_image = config.docker_registry + config.docker_images['dind']
-gitlab_image = config.docker_registry + config.docker_images['gitlab']
-runner_image = config.docker_registry + config.docker_images['gitlab_runner']
+clamav_image = resolve_docker_image_for_launch('clamav')
+dind_image = resolve_docker_image_for_launch('dind')
+gitlab_image = resolve_docker_image_for_launch('gitlab')
+runner_image = resolve_docker_image_for_launch('gitlab_runner')
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami

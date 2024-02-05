@@ -1447,8 +1447,11 @@ class Config:
     def terraform_version(self) -> str:
         return self.environ['azul_terraform_version']
 
+    class ImageSpec(TypedDict):
+        ref: str
+
     @property
-    def docker_images(self) -> dict[str, str]:
+    def docker_images(self) -> dict[str, ImageSpec]:
         import json
         return json.loads(self.environ['azul_docker_images'])
 

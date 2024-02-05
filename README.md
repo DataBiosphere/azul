@@ -2213,7 +2213,7 @@ While the unit test is running (paused at a breakpoint), open a terminal window.
 Download the Kibana container:
 
 ```
-kibana_image=$azul_docker_registry$(python -m azul "config.docker_images['kibana']")
+kibana_image=$azul_docker_registry$(python -m azul "config.docker_images['kibana']['ref']")
 docker pull $kibana_image
 ```
 
