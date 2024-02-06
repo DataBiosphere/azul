@@ -229,7 +229,7 @@ emit_tf({
                                         'response_header': [
                                             {
                                                 'name': 'Retry-After',
-                                                'value': '10'
+                                                'value': str(config.waf_rate_rule_retry_after)
                                             }
                                         ]
                                     }
