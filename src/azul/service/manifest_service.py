@@ -1394,7 +1394,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
         file_options = [
             '--fail-early',  # Exit curl with error on the first failure encountered
             '--continue-at -',  # Resume partially downloaded files
-            '--retry 2',  # Retry a file download up to X times on transient error
+            '--retry 15',  # Retry a file download up to X times on transient error
             '--retry-delay 10',  # Sleep for X seconds between retries
         ]
         return {
