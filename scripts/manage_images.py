@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 from operator import (
     itemgetter,
@@ -37,8 +38,12 @@ from azul.deployment import (
 from azul.docker import (
     ImageRef,
     Platform,
+    Repository,
     images,
     platforms,
+)
+from azul.files import (
+    write_file_atomically,
 )
 from azul.logging import (
     configure_script_logging,
@@ -238,6 +243,12 @@ class Semaphore(ContextManager):
         semaphore.unlink()
 
 
+def update_manifests():
+    manifests = Repository.get_manifests()
+    with write_file_atomically(config.docker_image_manifests_path) as f:
+        json.dump(manifests, f, indent=4)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=AzulArgumentHelpFormatter)
@@ -248,6 +259,9 @@ def main():
                        help='Clean up. Use this after all invocations with --copy have exited.')
     group.add_argument('--delete-unused', nargs='+', metavar='REPOSITORY',
                        help='Delete unused images and tags from the given ECR image repository.')
+    group.add_argument('--update-manifests', action='store_true',
+                       help='Update the canned manifests for all images')
+
     options = parser.parse_args(argv[1:])
 
     if options.copy or options.cleanup:
@@ -270,6 +284,8 @@ def main():
     elif options.delete_unused:
         for repository in options.delete_unused:
             delete_unused_images(repository)
+    elif options.update_manifests:
+        update_manifests()
     else:
         assert False, options
 

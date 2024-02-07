@@ -7,22 +7,39 @@ from collections import (
 from hashlib import (
     sha1,
 )
+import json
 import logging
+import os
+import subprocess
 from typing import (
     Iterable,
     Optional,
+    Self,
+    TypedDict,
 )
 
 import attr
+import attrs
+from dxf import (
+    DXF,
+    DXFBase,
+)
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
     padded,
 )
+import requests
 
 from azul import (
     cached_property,
     config,
     require,
+)
+from azul.types import (
+    JSONs,
 )
 
 log = logging.getLogger(__name__)
@@ -74,9 +91,27 @@ class ImageRef:
     @property
     def name(self):
         """
-        The part before the first colon i.e., everything except the tag.
+        The name of the image, starting with the registry, up to, but not
+        including, the tag.
         """
-        return '/'.join([self.registry, self.username, *self.repository])
+        return '/'.join([self.registry, self.relative_name])
+
+    @property
+    def relative_name(self):
+        """
+        The name of the image relative to the registry.
+        """
+        return '/'.join([self.username, *self.repository])
+
+    @property
+    def registry_host(self):
+        """
+        Same as :py:attr:``registry`` with hacks for DockerHub.
+
+        https://github.com/docker/cli/issues/3793#issuecomment-1269051403
+        """
+        registry = self.registry
+        return 'registry-1.docker.io' if registry == 'docker.io' else registry
 
     @property
     def tf_repository(self):
@@ -123,18 +158,24 @@ class Platform:
     arch: str
     variant: Optional[str]
 
-    def normalize(self) -> 'Platform':
+    def normalize(self) -> Self:
         os = _normalize_os(self.os)
         arch, variant = _normalize_arch(self.arch, self.variant)
         return Platform(os=os, arch=arch, variant=variant)
 
     @classmethod
-    def parse(cls, platform: str) -> 'Platform':
+    def parse(cls, platform: str) -> Self:
         os, arch, variant = padded(platform.split('/'), None, 3)
         require(os, 'Invalid operating system in Docker platform', platform)
         require(arch, 'Invalid architecture in Docker platform', platform)
         require(variant or variant is None, 'Invalid variant in Docker platform', platform)
         return Platform(os=os, arch=arch, variant=variant)
+
+    @classmethod
+    def from_json(cls, platform) -> Self:
+        return cls(os=platform['os'],
+                   arch=platform['architecture'],
+                   variant=platform.get('variant'))
 
     def __str__(self) -> str:
         result = [self.os, self.arch]
@@ -170,7 +211,7 @@ def _filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) ->
     api = docker.client.from_env().api
     dist = api.inspect_distribution(str(image))
     actual_platforms = {
-        Platform(os=p['os'], arch=p['architecture'], variant=p.get('variant')).normalize()
+        Platform.from_json(p).normalize()
         for p in dist['Platforms']
     }
     matching_platforms = allowed_platforms & actual_platforms
@@ -217,6 +258,141 @@ def _normalize_arch(arch: str,
         elif variant in ('5', '6', '8'):
             variant = 'v' + variant
     return arch, variant
+
+
+class Artifact(TypedDict):
+    """
+    An manifest or a blob, something that can be hashed.
+    """
+
+    #: A hash of the content, most likely starting in `sha256:`
+    digest: str
+
+
+class Manifest(Artifact):
+    """
+    A Docker image
+    """
+    #: Type of system to run the image on, as in `os/arch` or `os/arch/variant`
+    platform: str
+
+    #: The hash of the image config JSON, most likely starting in `sha256:`.
+    #: This is consistent accross registries and includes the hashes of the
+    #: uncompressed, binary content of the image, and is commonly referred to as
+    #: the "image ID".
+    id: str
+
+
+class ManifestList(Artifact):
+    """
+    A multi-platform image, also known as an image index
+    """
+    #: The images in the list, by platform (`os/arch` or `os/arch/variant`)
+    manifests: dict[str, Manifest]
+
+
+@attrs.define(frozen=True, slots=False)
+class Repository:
+    host: str
+    name: str
+
+    @classmethod
+    def get_manifests(cls):
+        manifests: dict[str, Manifest | ManifestList] = {}
+        for alias, ref in images_by_alias.items():
+            log.info('Getting information for %r (%s)', alias, ref)
+            repository = Repository(host=ref.registry_host,
+                                    name=ref.relative_name)
+            digest = repository.get_tag(ref.tag)
+            manifests[str(ref)] = repository.get_manifest(digest)
+        return manifests
+
+    def get_tag(self, tag: str) -> str:
+        """
+        Return the manifest digest associated with the given tag.
+        """
+        log.info('Getting tag %r', tag)
+        digest, _ = self._client.head_manifest_and_response(tag)
+        return digest
+
+    def get_manifest(self, digest: str) -> Manifest | ManifestList:
+        """
+        Return the manifest for the given digest.
+        """
+        log.info('Getting manifest %r', digest)
+        manifest, _ = self._client.get_manifest_and_response(digest)
+        manifest = json.loads(manifest)
+        match manifest['mediaType']:
+            case ('application/vnd.oci.image.index.v1+json'
+                  | 'application/vnd.docker.distribution.manifest.list.v2+json'):
+                return {
+                    'digest': digest,
+                    'manifests': self._get_manifests(manifest['manifests'])
+                }
+            case ('application/vnd.docker.distribution.manifest.v2+json'
+                  | 'application/vnd.oci.image.manifest.v1+json'):
+                config_digest = manifest['config']['digest']
+                config = json.loads(self.get_blob(config_digest))
+                return {
+                    'digest': digest,
+                    'id': config_digest,
+                    'platform': str(Platform.from_json(config).normalize())
+                }
+            case media_type:
+                raise NotImplementedError(media_type)
+
+    def _get_manifests(self, manifest_list: JSONs):
+        manifests: dict[str, Manifest] = {}
+        for entry in manifest_list:
+            platform = Platform.from_json(entry['platform']).normalize()
+            if platform in platforms:
+                platform = str(platform)
+                digest = entry['digest']
+                manifest: Manifest = self.get_manifest(digest)
+                require(manifest['platform'] == platform,
+                        'Inconsistent platform in config and manifest',
+                        entry, manifest)
+                manifests[platform] = manifest
+        return manifests
+
+    def get_blob(self, digest: str) -> bytes:
+        """
+        Return the content for the given digest.
+        """
+        log.info('Getting blob %r', digest)
+        chunks = self._client.pull_blob(digest)
+        return b''.join(chunks)
+
+    @cached_property
+    def _client(self):
+        return DXF(host=self.host, repo=self.name, auth=self._auth)
+
+    def _auth(self, dxf: DXFBase, response: requests.Response):
+        host: str = furl(response.request.url).host
+        if host == 'ghcr.io':
+            dxf.authenticate(authorization=self._ghcr_io_auth,
+                             response=response)
+        elif host.endswith('.docker.io') or host == 'docker.io':
+            username, password = self._docker_io_auth
+            dxf.authenticate(username=username,
+                             password=password,
+                             response=response)
+        else:
+            raise NotImplementedError(host)
+
+    @property
+    def _ghcr_io_auth(self) -> str:
+        return 'Authorization: ' + os.environ['GITHUB_TOKEN']
+
+    @cached_property
+    def _docker_io_auth(self) -> tuple[str, str]:
+        with open(os.path.expanduser('~/.docker/config.json')) as f:
+            config = json.load(f)
+        command = 'docker-credential-' + config['credsStore']
+        output = subprocess.check_output(args=[command, 'get'],
+                                         input=b'https://index.docker.io/v1/')
+        output = json.loads(output)
+        return output['Username'], output['Secret']
 
 
 def resolve_docker_image_for_launch(alias: str) -> str:

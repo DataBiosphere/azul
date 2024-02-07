@@ -246,3 +246,6 @@ integration_test: check_python check_branch $(project_root)/lambdas/service/.cha
 .PHONY: check_clean
 check_clean: check_env
 	git diff --exit-code && git diff --cached --exit-code
+
+image_manifests.json: check_python
+	python scripts/manage_images.py --update-manifests
