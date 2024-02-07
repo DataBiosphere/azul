@@ -1,3 +1,7 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from base64 import (
     urlsafe_b64encode,
 )
@@ -18,7 +22,6 @@ from typing import (
     TypedDict,
 )
 
-import attr
 import attrs
 from dxf import (
     DXF,
@@ -45,13 +48,16 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(frozen=True, kw_only=True, auto_attribs=True)
-class ImageRef:
+@attrs.define(frozen=True)
+class ImageRef(metaclass=ABCMeta):
     """
-    A fully qualified reference to a Docker image. Does not support any
-    abbreviations such as omitting the registry (defaulting to ``docker.io``),
-    username (defaulting to ``library``) or tag (defaulting to ``latest``).
+    A fully qualified reference to a Docker image in a registry.
+
+    Does not support any abbreviations such as omitting the registry (defaulting
+    to ``docker.io``), username (defaulting to ``library``) or tag (defaulting
+    to ``latest``).
     """
+
     #: The part before the first slash. This is usually the domain name of image
     #: registry e.g., ``"docker.io"``
     registry: str
@@ -65,28 +71,21 @@ class ImageRef:
     #: have at least one element.
     repository: list[str]
 
-    #: The part after the colon. This is the name of a tag assigned to the
-    #: image.
-    tag: str
+    @classmethod
+    def parse(cls, image_ref: str) -> Self:
+        if '@' in image_ref:
+            return DigestImageRef.parse(image_ref)
+        else:
+            return TagImageRef.parse(image_ref)
 
     @classmethod
-    def parse(cls, image_ref: str) -> 'ImageRef':
-        name, tag = image_ref.split(':')
-        return cls.create(name, tag)
-
-    @classmethod
-    def create(cls, name: str, tag: str) -> 'ImageRef':
+    def _create(cls, name: str, **kwargs) -> Self:
         registry, username, *repository = name.split('/')
+        # noinspection PyArgumentList
         return cls(registry=registry,
                    username=username,
                    repository=repository,
-                   tag=tag)
-
-    def __str__(self) -> str:
-        """
-        The inverse of :py:meth:`parse`.
-        """
-        return self.name + ':' + self.tag
+                   **kwargs)
 
     @property
     def name(self):
@@ -151,8 +150,79 @@ class ImageRef:
         """
         return _filter_platforms(self, platforms)
 
+    @property
+    @abstractmethod
+    def qualifier(self) -> str:
+        raise NotImplementedError
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+
+@attrs.define(frozen=True)
+class DigestImageRef(ImageRef):
+    """
+    A fully qualified and stable reference to a Docker image in a registry.
+    """
+
+    #: The part after the '@', a hash of the image manifest. While it uniquely
+    #: identifies an image within a registry, it is not consistent accross
+    #: registries. The same image can have different digests in different
+    #: registries.
+    digest: str
+
+    @classmethod
+    def parse(cls, image_ref: str) -> Self:
+        name, digest = image_ref.split('@')
+        return cls.create(name, digest)
+
+    @classmethod
+    def create(cls, name: str, digest: str) -> Self:
+        return super()._create(name, digest=digest)
+
+    def __str__(self) -> str:
+        """
+        The inverse of :py:meth:`parse`.
+        """
+        return self.name + '@' + self.digest
+
+    @property
+    def qualifier(self) -> str:
+        return self.digest
+
+
+@attrs.define(frozen=True)
+class TagImageRef(ImageRef):
+    """
+    A fully qualified reference to a tagged Docker image in a registry.
+    """
+
+    #: The part after the colon in an image name. This is the name of a tag
+    #: associated with the image. Tags refer to digests and are mutable. For a
+    #: stable references to images in a registry use :py:class:`DigestImageRef`.
+    tag: str
+
+    @classmethod
+    def parse(cls, image_ref: str) -> Self:
+        name, tag = image_ref.split(':')
+        return cls.create(name, tag)
+
+    @classmethod
+    def create(cls, name: str, tag: str) -> Self:
+        return super()._create(name, tag=tag)
+
+    def __str__(self) -> str:
+        """
+        The inverse of :py:meth:`parse`.
+        """
+        return self.name + ':' + self.tag
+
+    @property
+    def qualifier(self) -> str:
+        return self.tag
+
+    def with_digest(self, digest: str) -> DigestImageRef:
+        return DigestImageRef.create(self.name, digest)
+
+
+@attrs.define(frozen=True)
 class Platform:
     os: str
     arch: str
@@ -185,7 +255,7 @@ class Platform:
 
 
 images_by_alias = {
-    alias: ImageRef.parse(spec['ref'])
+    alias: TagImageRef.parse(spec['ref'])
     for alias, spec in config.docker_images.items()
 }
 
@@ -198,13 +268,15 @@ for image in images:
     images_by_name[image.name].append(image)
 del image
 
-images_by_tf_repository: dict[tuple[str, str], list[ImageRef]] = (lambda: {
+images_by_tf_repository: dict[tuple[str, str], list[TagImageRef]] = {
     (name, one(set(image.tf_repository for image in images))): images
     for name, images in images_by_name.items()
-})()
+}
 
 
-def _filter_platforms(image: ImageRef, allowed_platforms: Iterable[Platform]) -> set[Platform]:
+def _filter_platforms(image: ImageRef,
+                      allowed_platforms: Iterable[Platform]
+                      ) -> set[Platform]:
     import docker
     allowed_platforms = {p.normalize() for p in allowed_platforms}
     log.info('Distribution for image %r …', image)

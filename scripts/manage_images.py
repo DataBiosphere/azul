@@ -36,9 +36,9 @@ from azul.deployment import (
     aws,
 )
 from azul.docker import (
-    ImageRef,
     Platform,
     Repository,
+    TagImageRef,
     images,
     platforms,
 )
@@ -53,9 +53,9 @@ log = logging.getLogger(__name__)
 
 
 def copy_image(src: str):
-    src = ImageRef.parse(src)
-    dst = ImageRef.create(name=config.docker_registry + src.name,
-                          tag=src.tag)
+    src = TagImageRef.parse(src)
+    dst = TagImageRef.create(name=config.docker_registry + src.name,
+                             tag=src.tag)
     dst_parts = []
     client = docker.client.from_env()
     for platform in src.platforms:
@@ -89,8 +89,8 @@ def copy_image(src: str):
                 'Pull failed, local image has wrong architecture)', image.attrs)
         require(image.attrs['Os'] == platform.os,
                 'Pull failed, local image has wrong OS)', image.attrs)
-        dst_part = ImageRef.create(name=config.docker_registry + src.name,
-                                   tag=make_platform_tag(src.tag, platform))
+        dst_part = TagImageRef.create(name=config.docker_registry + src.name,
+                                      tag=make_platform_tag(src.tag, platform))
         image.tag(dst_part.name, tag=dst_part.tag)
         log.info('Pushing image %r', dst_part)
         output = client.api.push(dst_part.name,
