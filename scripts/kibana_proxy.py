@@ -100,7 +100,7 @@ class KibanaProxy:
                                            auto_remove=True,
                                            detach=True,
                                            environment={
-                                               'ELASTICSEARCH_HOSTS': f'http://localhost:{proxy_port}',
+                                               'KIBANA_ELASTICSEARCH_URL': f'http://localhost:{proxy_port}',
                                                'SERVER_PORT': kibana_port
                                            },
                                            network_mode=f'container:{proxy.name}')

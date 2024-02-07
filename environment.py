@@ -292,7 +292,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/lmenezes/cerebro:0.9.4'
             },
             '_kibana': {
-                'ref': 'docker.elastic.co/kibana/kibana-oss:7.10.2'
+                'ref': 'docker.io/bitnami/kibana:7.10.2'
             }
         }),
 
