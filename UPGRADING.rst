@@ -26,8 +26,8 @@ have too many entries in this file.
 Operator
 ~~~~~~~~
 
-Manually deploy the ``gitlab`` component of any main deployment just before
-pushing the merge commit to the GitLab instance in that deployment.
+Manually deploy the ``shared`` and ``gitlab`` components of any main deployment
+just before pushing the merge commit to the GitLab instance in that deployment.
 
 
 #5975 Upgrade ES domain for Hammerbox
