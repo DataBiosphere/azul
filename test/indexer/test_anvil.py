@@ -69,6 +69,11 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
         return cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068')
 
     @classmethod
+    def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
+        return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
+                               entity_type=BundleEntityType.supplementary)
+
+    @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
                                entity_type=BundleEntityType.duos)
@@ -131,6 +136,9 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
 
     def test_fetch_primary_bundle(self):
         self._test_fetch_bundle(self.primary_bundle())
+
+    def test_fetch_supplementary_bundle(self):
+        self._test_fetch_bundle(self.supplementary_bundle())
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
