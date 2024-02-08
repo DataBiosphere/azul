@@ -1813,7 +1813,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Unit]',
                                 'Description=Scheduled ClamAV malware scan of entire file system',
                                 '[Timer]',
-                                'OnCalendar=Sun *-*-* 8:0:0',
+                                # Run a clamscan twice daily at 1am and 1pm PST
+                                'OnCalendar=*-*-* 9,21:0:0',
                                 '[Install]',
                                 'WantedBy=timers.target'
                             )
