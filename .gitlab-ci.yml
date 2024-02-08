@@ -14,7 +14,8 @@ variables:
   # Override the default job timeout (5m) to work around a regression introduced
   # in gitlab-runner v16.8.0, which prematurely terminates running jobs. If/when
   # we start using `after_script`, we'll need to set the job timeout to
-  # <after_script timeout> + <intended job run time>, ensuring OK completion.
+  # <after_script timeout> + <intended job run time> to avoid premature
+  # termination.
   RUNNER_AFTER_SCRIPT_TIMEOUT: 0s
 
 stages:
