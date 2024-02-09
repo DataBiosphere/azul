@@ -1523,6 +1523,7 @@ class TestManifestResponse(ManifestTestCase):
                         response = requests.request(method, str(request_url))
                         self.assertEqual(200, response.status_code)
                         self.assertEqual(expected, response.json())
+                        self.assertEqual('application/json', response.headers['Content-Type'])
                         if format is ManifestFormat.curl:
                             test(format=format, fetch=False, url=expected_url)
             else:
@@ -1534,6 +1535,7 @@ class TestManifestResponse(ManifestTestCase):
                 self.assertEqual(302, response.status_code)
                 self.assertEqual(expected, response.text)
                 self.assertEqual(object_url, furl(response.headers['location']))
+                self.assertEqual('text/plain', response.headers['Content-Type'])
 
         for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
