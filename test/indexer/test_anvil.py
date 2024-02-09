@@ -1,6 +1,10 @@
+from abc import (
+    ABC,
+)
 from collections import (
     defaultdict,
 )
+import json
 from operator import (
     itemgetter,
 )
@@ -9,12 +13,19 @@ from typing import (
     cast,
 )
 from unittest.mock import (
+    Mock,
     PropertyMock,
     patch,
 )
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
+)
+from urllib3 import (
+    HTTPResponse,
 )
 
 from azul import (
@@ -35,6 +46,12 @@ from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundle,
     TDRAnvilBundleFQID,
 )
+from azul.terra import (
+    TDRClient,
+)
+from azul_test_case import (
+    TDRTestCase,
+)
 from indexer import (
     AnvilCannedBundleTestCase,
     IndexerTestCase,
@@ -47,6 +64,38 @@ from indexer.test_tdr import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+class DUOSTestCase(TDRTestCase, ABC):
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls._patch_duos()
+
+    mock_duos_url = furl('https:://mock_duos.lan')
+
+    duos_id = 'foo'
+    duos_description = 'Study description from DUOS'
+
+    @classmethod
+    def _patch_duos(cls) -> None:
+        cls.addClassPatch(patch.object(type(config),
+                                       'duos_service_url',
+                                       new=PropertyMock(return_value=cls.mock_duos_url)))
+        cls.addClassPatch(patch.object(TDRClient,
+                                       '_request',
+                                       side_effect=[
+                                           Mock(spec=HTTPResponse, status=200, data=json.dumps({
+                                               'name': cls.source.spec.name,
+                                               'duosFirecloudGroup': {
+                                                   'duosId': cls.duos_id
+                                               }
+                                           })),
+                                           Mock(spec=HTTPResponse, status=200, data=json.dumps({
+                                               'studyDescription': cls.duos_description
+                                           }))
+                                       ]))
 
 
 class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
@@ -78,7 +127,9 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
                                entity_type=BundleEntityType.duos)
 
 
-class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]):
+class TestAnvilIndexer(AnvilIndexerTestCase,
+                       TDRPluginTestCase[tdr_anvil.Plugin],
+                       DUOSTestCase):
 
     @classmethod
     def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
@@ -111,10 +162,13 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
                     finally:
                         self.index_service.delete_indices(self.catalog)
 
-    def _test_fetch_bundle(self, bundle_fqid: TDRAnvilBundleFQID):
+    def _test_fetch_bundle(self,
+                           bundle_fqid: TDRAnvilBundleFQID,
+                           load_tables: bool = True):
         canned_bundle = self._load_canned_bundle(bundle_fqid)
         assert isinstance(canned_bundle, TDRAnvilBundle)
-        self._make_mock_tdr_tables(bundle_fqid)
+        if load_tables:
+            self._make_mock_tdr_tables(bundle_fqid)
         plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
         bundle = plugin.fetch_bundle(bundle_fqid)
         assert isinstance(bundle, TDRAnvilBundle)
@@ -127,6 +181,9 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
 
     def test_fetch_supplementary_bundle(self):
         self._test_fetch_bundle(self.supplementary_bundle())
+
+    def test_fetch_duos_bundle(self):
+        self._test_fetch_bundle(self.duos_bundle(), load_tables=False)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
