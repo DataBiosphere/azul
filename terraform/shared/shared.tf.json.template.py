@@ -999,7 +999,8 @@ tf_config = {
                         'aws_ecr_repository.' + image.tf_repository
                     ],
                     'triggers': {
-                        'script_hash': '${filesha256("%s/scripts/manage_images.py")}' % config.project_root
+                        'script_hash': '${filesha256("%s/scripts/manage_images.py")}' % config.project_root,
+                        'manifest_hash': '${filesha256("%s/image_manifests.json")}' % config.project_root
                     },
                     'lifecycle': {
                         # While `triggers` above only accepts strings, this
@@ -1067,6 +1068,7 @@ tf_config = {
                     ],
                     'triggers': {
                         'script_hash': '${filesha256("%s/scripts/manage_images.py")}' % config.project_root,
+                        'manifest_hash': '${filesha256("%s/image_manifests.json")}' % config.project_root,
                         'images': ','.join(sorted(image.tf_image for image in images)),
                         'keep_unused': json.dumps(config.terraform_keep_unused)
                     },

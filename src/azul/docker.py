@@ -16,13 +16,20 @@ import logging
 import os
 import subprocess
 from typing import (
+    Any,
     Iterable,
+    Literal,
     Optional,
     Self,
     TypedDict,
+    cast,
 )
 
 import attrs
+import docker
+from docker.models.images import (
+    Image,
+)
 from dxf import (
     DXF,
     DXFBase,
@@ -157,17 +164,6 @@ class ImageRef(metaclass=ABCMeta):
         hash = urlsafe_b64encode(sha1(str(self).encode()).digest()).decode()[:-1]
         return 'image_' + hash
 
-    @cached_property
-    def platforms(self) -> set['Platform']:
-        """
-        The set of relevant platforms this image is available for. A relevant
-        platform is one that is listed in :py:attr:`config.docker_platforms`.
-        This method uses the Docker client library to inspect the image in the
-        registry that hosts it, via the Docker daemon the client is configured
-        to use.
-        """
-        return _filter_platforms(self, platforms)
-
     @property
     @abstractmethod
     def qualifier(self) -> str:
@@ -260,10 +256,13 @@ class Platform:
         return Platform(os=os, arch=arch, variant=variant)
 
     @classmethod
-    def from_json(cls, platform) -> Self:
-        return cls(os=platform['os'],
-                   arch=platform['architecture'],
-                   variant=platform.get('variant'))
+    def from_json(cls, platform, config: bool = False) -> Self:
+        def case(s):
+            return s.capitalize() if config else s
+
+        return cls(os=platform[case('os')],
+                   arch=platform[case('architecture')],
+                   variant=platform.get(case('variant')))
 
     def __str__(self) -> str:
         result = [self.os, self.arch]
@@ -290,23 +289,6 @@ images_by_tf_repository: dict[tuple[str, str], list[TagImageRef]] = {
     (name, one(set(image.tf_repository for image in images))): images
     for name, images in images_by_name.items()
 }
-
-
-def _filter_platforms(image: ImageRef,
-                      allowed_platforms: Iterable[Platform]
-                      ) -> set[Platform]:
-    import docker
-    allowed_platforms = {p.normalize() for p in allowed_platforms}
-    log.info('Distribution for image %r …', image)
-    api = docker.client.from_env().api
-    dist = api.inspect_distribution(str(image))
-    actual_platforms = {
-        Platform.from_json(p).normalize()
-        for p in dist['Platforms']
-    }
-    matching_platforms = allowed_platforms & actual_platforms
-    log.info('     … declares matching platforms %r', matching_platforms)
-    return matching_platforms
 
 
 # https://github.com/containerd/containerd/blob/1fbd70374134b891f97ce19c70b6e50c7b9f4e0d/platforms/database.go#L62
@@ -485,9 +467,74 @@ class Repository:
         return output['Username'], output['Secret']
 
 
+def pull_docker_image(ref: ImageRef) -> Image:
+    return _push_or_pull(ref, 'pull')
+
+
+def push_docker_image(ref: ImageRef) -> Image:
+    return _push_or_pull(ref, 'push')
+
+
+def _push_or_pull(ref: ImageRef,
+                  direction: Literal['push'] | Literal['pull']
+                  ) -> Image:
+    log.info('%sing image %r …', direction.capitalize(), ref)
+    client = docker.client.from_env()
+    # Despite its name, the `tag` keyword argument can be a digest, too
+    method = getattr(client.api, direction)
+    output = method(ref.name, tag=ref.qualifier, stream=True)
+    log_lines(ref, direction, output)
+    log.info('%sed image %r', direction.capitalize(), ref)
+    return client.images.get(str(ref))
+
+
+def log_lines(context: Any, command: str, output: Iterable[bytes]):
+    for line in output:
+        log.debug('%s: docker %s %s', context, command, line.decode().strip())
+
+
+def get_docker_image_manifest(ref: TagImageRef) -> Manifest | ManifestList:
+    return get_docker_image_manifests()[str(ref)]
+
+
+def get_docker_image_manifests() -> dict[str, Manifest | ManifestList]:
+    with open(config.docker_image_manifests_path) as f:
+        return json.load(f)
+
+
 def resolve_docker_image_for_launch(alias: str) -> str:
     """
     Return an image reference that can be used to launch a container from the
-    image with the given alias.
+    image with the given alias. The alias is the top level key in the JSON
+    object contained in the environment variable `azul_docker_images`.
     """
-    return config.docker_registry + config.docker_images[alias]['ref']
+    ref = TagImageRef.parse(config.docker_images[alias]['ref'])
+    log.info('Resolving image %r %r …', alias, ref)
+    manifest = get_docker_image_manifest(ref)
+    # Use image mirrored in ECR (if defined), instead of the upstream registry
+    ref_to_pull = TagImageRef.parse(config.docker_registry + str(ref))
+    # If no mirror registry is configured, both refs will be equal and we will
+    # pull from the upstream registry. We should pull by digest in that case,
+    # since the tag might have been altered in the upstream registry. If a
+    # mirror is configured, we will need to pull the image by its tag because we
+    # don't track the repository digest of images mirrored to ECR.
+    if ref == ref_to_pull:
+        ref_to_pull = ref.with_digest(manifest['digest'])
+    image = pull_docker_image(ref_to_pull)
+    # In either case, the verification below ensures that the image we pulled
+    # has the expected ID.
+    try:
+        manifests = cast(ManifestList, manifest)['manifests']
+    except KeyError:
+        # For single-platform images, this is straight forward.
+        assert image.id == cast(Manifest, manifest)['id']
+    else:
+        # To determine the expected ID for images that are part of a multi-
+        # platform image aka "manifest list" aka "image index", we need to know
+        # what specific platform was pulled since we left it to Docker to
+        # determine the best match.
+        platform = Platform.from_json(image.attrs, config=True).normalize()
+        assert image.id == manifests[str(platform)]['id']
+    # Returning the image ID means that the container will be launched using
+    # exactly the image we just pulled and verified.
+    return image.id
