@@ -42,7 +42,8 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
     @mock_sts
     @mock_sqs
     def test_queues_down(self):
-        response = self._test()
+        with self._mock():
+            response = self._test('/health/fast')
         self.assertEqual(503, response.status_code)
         self.assertEqual(self._expected_health(), response.json())
 

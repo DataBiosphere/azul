@@ -16,6 +16,7 @@ import importlib.util
 from io import (
     StringIO,
 )
+import json
 import os
 from pathlib import (
     Path,
@@ -168,7 +169,17 @@ def load_env() -> Tuple[Environment, Optional[str]]:
             # https://github.com/python/typeshed/issues/6042
             # noinspection PyTypeChecker
             env.maps.append(filter_env(module.env()))
+    env.maps.append(load_boot_env(root_dir))
     return env, warning
+
+
+def load_boot_env(root_dir: Path) -> dict[str, str]:
+    boot = {}
+    with open(root_dir / 'environment.boot') as f:
+        for line in f:
+            k, _, v = line.partition('=')
+            boot[k.strip()] = v.strip()
+    return boot
 
 
 def filter_env(env: DraftEnvironment) -> Environment:
@@ -189,29 +200,50 @@ class ResolvedEnvironment(DraftEnvironment):
 
     def __getitem__(self, k: str) -> Optional[str]:
         if k.isidentifier():
-            v = self._env[k]
             if k in self._keys:
                 raise RecursionError('Circular reference', k)
-            elif v is None:
-                if self._keys:
-                    raise KeyError
-                else:
-                    return v
             else:
-                self._keys.add(k)
-                try:
-                    return v.format_map(self)
-                except KeyError:
-                    return None
-                except ValueError:
-                    return v
-                finally:
-                    self._keys.remove(k)
+                v = self._env[k]
+                if v is None:
+                    if self._keys:
+                        raise KeyError
+                    else:
+                        return v
+                elif not isinstance(v, str):
+                    raise TypeError('Referenced must be a string or None', v)
+                else:
+                    self._keys.add(k)
+                    try:
+                        if v and (v[0] == '{' and v[-1] == '}' or v[0] == '[' and v[-1] == ']'):
+                            try:
+                                v = json.loads(v)
+                            except ValueError:
+                                pass
+                            else:
+                                return json.dumps(self._format(v))
+                        try:
+                            return self._format(v)
+                        except KeyError:
+                            return None
+                        except ValueError:
+                            return v
+                    finally:
+                        self._keys.remove(k)
         else:
             # For some reason, format_map does not enforce the syntax of the
             # format string correctly:
             # https://docs.python.org/3.8/library/string.html#grammar-token-field-name
-            raise ValueError('Not a valid format field_name', k)
+            raise ValueError('Not a valid variable reference', k)
+
+    def _format(self, v):
+        if isinstance(v, dict):
+            return {k: self._format(v) for k, v in v.items()}
+        elif isinstance(v, list):
+            return [self._format(v) for v in v]
+        elif isinstance(v, str):
+            return v.format_map(self)
+        else:
+            return v
 
     def __len__(self) -> int:
         return len(self._env)
@@ -238,10 +270,20 @@ def resolve_env(env: Environment) -> Environment:
     >>> resolve_env({'x': '42'})
     {'x': '42'}
 
+    >>> resolve_env({'x': 42})
+    Traceback (most recent call last):
+    ...
+    TypeError: ('Referenced must be a string or None', 42)
+
     Value referencing another variable:
 
     >>> resolve_env({'x': '{y}', 'y': '42'})
     {'x': '42', 'y': '42'}
+
+    >>> resolve_env({'x': '{y}', 'y': 42})
+    Traceback (most recent call last):
+    ...
+    TypeError: ('Referenced must be a string or None', 42)
 
     A reference to a missing variable, or a variable whose value is None, causes
     the entire referencing value to be undefined. This is unlike Unix shell
@@ -292,20 +334,39 @@ def resolve_env(env: Environment) -> Environment:
 
     {'x': '42', 'y': '42', 'o': '{', 'c': '}'}
 
-    JSON strings are supported. A heuristic prevents curly braces in JSON from
-    being interpreted as delimiting variable references.
+    Serialized JSON objects and arrays are supported, as long as they make up
+    the entire variable value. Variable references in string values of JSON
+    objects are translated, as are those in string elements of JSON arrays.
 
     >>> resolve_env({'x': '{}'})
     {'x': '{}'}
 
     >>> resolve_env({'x':'{ }'})
-    {'x': '{ }'}
+    {'x': '{}'}
+
+    >>> resolve_env({'x':' { }'})
+    {'x': ' { }'}
+
+    >>> resolve_env({'x':'[]'})
+    {'x': '[]'}
+
+    >>> resolve_env({'x':'[ ]'})
+    {'x': '[]'}
+
+    >>> resolve_env({'x':' [ ]'})
+    {'x': ' [ ]'}
 
     >>> resolve_env({'x': '{"foo": "bar"}'})
     {'x': '{"foo": "bar"}'}
 
     >>> resolve_env({'x': '{"foo": "bar"}', 'y': '{x}'})
     {'x': '{"foo": "bar"}', 'y': '{"foo": "bar"}'}
+
+    >>> resolve_env({'x': '{"foo": ["{y}","{y}"]}', 'y': 'bar'})
+    {'x': '{"foo": ["bar", "bar"]}', 'y': 'bar'}
+
+    >>> resolve_env({'x': '[42, null, true, {}, "b{y}"]', 'y': 'ar'})
+    {'x': '[42, null, true, {}, "bar"]', 'y': 'ar'}
     """
     return dict(ResolvedEnvironment(env))
 

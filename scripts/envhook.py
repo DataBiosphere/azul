@@ -53,7 +53,6 @@ class EnvHook:
             if enabled == 0:
                 self._print('Currently disabled because the ENVHOOK environment variable is set to 0.')
             else:
-                self.set_env(self.load_boot_env())
                 self.set_env(self.load_env())
                 self.share_aws_cli_credential_cache()
         finally:
@@ -127,15 +126,6 @@ class EnvHook:
                 raise BadSymlinkDestination(link, cur_dst, dst)
         else:
             assert False
-
-    def load_boot_env(self) -> Mapping[str, str]:
-        project_root: Path = self.export_environment.root_dir
-        boot = {}
-        with open(project_root / 'environment.boot') as f:
-            for line in f:
-                k, _, v = line.partition('=')
-                boot[k.strip()] = v.strip()
-        return boot
 
     def load_env(self) -> Mapping[str, str]:
         resolve_env = self.export_environment.resolve_env

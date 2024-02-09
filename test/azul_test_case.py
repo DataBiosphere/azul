@@ -137,12 +137,12 @@ class AzulTestCase(TestCase):
 
                 'Call to deprecated function (or staticmethod) patch_source_cache',
 
-                # FIXME: ES client causes urllib3 DeprecationWarning
-                #        https://github.com/DataBiosphere/azul/issues/5592
-                (
-                    'HTTPResponse.getheaders() is deprecated and will be removed in urllib3 v2.1.0.'
-                    ' Instead access HTTPResponse.headers directly.',
-                    'elasticsearch.connection.http_urllib3'
+                # FIXME: DeprecationWarning for ES body parameter
+                #        https://github.com/DataBiosphere/azul/issues/5912
+                #
+                RE(
+                    'The \'body\' parameter is deprecated for the \'.*\' API '
+                    'and will be removed in .*. Instead use .*'
                 ),
             },
             UserWarning: {

@@ -1,7 +1,7 @@
 """
 Extract information from Azul config and print to standard output.
 
-Usage example: python -m azul "config.docker_images['kibana']"
+Usage example: python -m azul "config.docker_images['kibana']['ref']"
 """
 
 import sys

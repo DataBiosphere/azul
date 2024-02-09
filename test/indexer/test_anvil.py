@@ -5,9 +5,9 @@ from operator import (
     itemgetter,
 )
 from typing import (
+    Type,
     cast,
 )
-import unittest
 from unittest.mock import (
     PropertyMock,
     patch,
@@ -28,6 +28,9 @@ from azul.indexer.document import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins.repository import (
+    tdr_anvil,
+)
 from azul.plugins.repository.tdr_anvil import (
     BundleEntityType,
     TDRAnvilBundle,
@@ -36,6 +39,9 @@ from azul.plugins.repository.tdr_anvil import (
 from indexer import (
     AnvilCannedBundleTestCase,
     IndexerTestCase,
+)
+from indexer.test_tdr import (
+    TDRPluginTestCase,
 )
 
 
@@ -81,7 +87,11 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
         }
 
 
-class TestAnvilIndexer(AnvilIndexerTestCase):
+class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]):
+
+    @classmethod
+    def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
+        return tdr_anvil.Plugin
 
     def test_indexing(self):
         self.maxDiff = None
@@ -108,6 +118,17 @@ class TestAnvilIndexer(AnvilIndexerTestCase):
                         self.assertEqual(expected_hits, hits)
                     finally:
                         self.index_service.delete_indices(self.catalog)
+
+    def test_fetch_bundle(self):
+        canned_bundle = self._load_canned_bundle(self.bundle)
+        assert isinstance(canned_bundle, TDRAnvilBundle)
+        self._make_mock_tdr_tables(self.bundle)
+        plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
+        bundle = plugin.fetch_bundle(self.bundle)
+        assert isinstance(bundle, TDRAnvilBundle)
+        self.assertEqual(canned_bundle.fqid, bundle.fqid)
+        self.assertEqual(canned_bundle.entities, bundle.entities)
+        self.assertEqual(canned_bundle.links, bundle.links)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
@@ -162,17 +183,3 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
             DocumentType.contribution: 2,
             **({DocumentType.replica: 2} if config.enable_replicas else {})
         })
-
-    # FIXME: Enable test after the issue with TinyQuery `WITH` has been resolved
-    #        https://github.com/DataBiosphere/azul/issues/5046
-    @unittest.skip('TinyQuery does not support the WITH clause')
-    def test_fetch_bundle(self):
-        canned_bundle = self._load_canned_bundle(self.bundle)
-        assert isinstance(canned_bundle, TDRAnvilBundle)
-        self._make_mock_tdr_tables(self.bundle)
-        plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
-        bundle = plugin.fetch_bundle(self.bundle)
-        assert isinstance(bundle, TDRAnvilBundle)
-        self.assertEqual(canned_bundle.fqid, bundle.fqid)
-        self.assertEqual(canned_bundle.entities, bundle.entities)
-        self.assertEqual(canned_bundle.links, bundle.links)

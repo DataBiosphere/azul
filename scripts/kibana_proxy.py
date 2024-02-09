@@ -43,10 +43,12 @@ from docker.models.containers import (
 
 from azul import (
     cached_property,
-    config,
 )
 from azul.deployment import (
     aws,
+)
+from azul.docker import (
+    resolve_docker_image_for_launch,
 )
 from azul.logging import (
     configure_script_logging,
@@ -62,7 +64,6 @@ class KibanaProxy:
         self.docker = docker.from_env()
 
     def create_container(self, image: str, *args, **kwargs) -> Container:
-        image = config.docker_registry + image
         try:
             container = self.docker.containers.create(image, *args, **kwargs)
         except docker.errors.ImageNotFound:
@@ -79,7 +80,8 @@ class KibanaProxy:
         proxy_port = self.options.proxy_port or kibana_port + 2
         containers = []
         try:
-            proxy = self.create_container(config.docker_images['_signing_proxy'],
+            image = resolve_docker_image_for_launch('_signing_proxy')
+            proxy = self.create_container(image=image,
                                           name='proxy',
                                           auto_remove=True,
                                           command=['-target', self.es_endpoint, '-port', str(proxy_port)],
@@ -92,7 +94,8 @@ class KibanaProxy:
                                           },
                                           ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
             containers.append(proxy)
-            kibana = self.create_container(config.docker_images['_kibana'],
+            image = resolve_docker_image_for_launch('_kibana')
+            kibana = self.create_container(image=image,
                                            name='kibana',
                                            auto_remove=True,
                                            detach=True,
@@ -102,7 +105,8 @@ class KibanaProxy:
                                            },
                                            network_mode=f'container:{proxy.name}')
             containers.append(kibana)
-            cerebro = self.create_container(config.docker_images['_cerebro'],
+            image = resolve_docker_image_for_launch('_cerebro')
+            cerebro = self.create_container(image=image,
                                             name='cerebro',
                                             auto_remove=True,
                                             command=[f'-Dhttp.port={cerebro_port}'],

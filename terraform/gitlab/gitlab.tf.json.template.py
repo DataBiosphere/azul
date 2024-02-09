@@ -17,6 +17,9 @@ from azul.collections import (
 from azul.deployment import (
     aws,
 )
+from azul.docker import (
+    resolve_docker_image_for_launch,
+)
 from azul.strings import (
     departition,
 )
@@ -228,13 +231,13 @@ other_public_keys = {
 }
 
 # Note that a change to the image references here also requires updating
-# azul.config.docker_images and redeploying the `shared` TF component prior to
-# deploying the `gitlab` component.
+# azul_docker_images in environment.py and redeploying the `shared` TF component
+# prior to deploying the `gitlab` component.
 
-clamav_image = config.docker_registry + config.docker_images['clamav']
-dind_image = config.docker_registry + config.docker_images['dind']
-gitlab_image = config.docker_registry + config.docker_images['gitlab']
-runner_image = config.docker_registry + config.docker_images['gitlab_runner']
+clamav_image = resolve_docker_image_for_launch('clamav')
+dind_image = resolve_docker_image_for_launch('dind')
+gitlab_image = resolve_docker_image_for_launch('gitlab')
+runner_image = resolve_docker_image_for_launch('gitlab_runner')
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
@@ -1016,6 +1019,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'subnet_id': f'${{aws_subnet.gitlab_private_{zone}.id}}'
             }
             for zone in range(num_zones)
+        },
+        'aws_vpc_endpoint': {
+            f'gitlab_{service}': {
+                'service_name': f'com.amazonaws.{config.region}.{service}',
+                'vpc_endpoint_type': 'Gateway',
+                'vpc_id': '${aws_vpc.gitlab.id}',
+                'route_table_ids': [
+                    '${aws_route_table.gitlab_%d.id}' % i for i in range(num_zones)
+                ],
+            }
+            for service in ['dynamodb', 's3']
         },
         'aws_default_security_group': {
             'gitlab': {

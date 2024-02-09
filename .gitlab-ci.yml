@@ -76,10 +76,12 @@ test:
   stage: test
   timeout: 1h 30m
   script:
-    - make format  # Any ill-formatted sources, ...
-    - test "$AZUL_IS_SANDBOX" = 1 && make requirements_update  # ... stale transitive dependencies ...
-    - make -C lambdas openapi # ... or changes to the canned OpenAPI definition document ...
-    - make check_clean  # would dirty up the working copy and fail the build.
+    - make format
+    - test "$AZUL_IS_SANDBOX" = 1 && make requirements_update
+    - make -C lambdas openapi
+    - make environment.boot
+    - make -C .github
+    - make check_clean
     - make pep8
     - AZUL_DEBUG=0 make test
 

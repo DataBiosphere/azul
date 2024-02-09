@@ -1444,57 +1444,16 @@ class Config:
         return self.environ['azul_docker_registry']
 
     @property
-    def docker_elasticsearch_version(self) -> str:
-        return self.environ['azul_docker_elasticsearch_version']
-
-    @property
-    def docker_pycharm_version(self) -> str:
-        return self.environ['azul_docker_pycharm_version']
-
-    @property
-    def python_version(self) -> str:
-        return self.environ['azul_python_version']
-
-    @property
-    def python_image(self) -> str:
-        return self.environ['azul_python_image']
-
-    @property
-    def docker_version(self) -> str:
-        return self.environ['azul_docker_version']
-
-    @property
     def terraform_version(self) -> str:
         return self.environ['azul_terraform_version']
 
+    class ImageSpec(TypedDict):
+        ref: str
+
     @property
-    def docker_images(self) -> dict[str, str]:
-        """
-        A dictionary mapping the short name of each Docker image used in Azul to
-        its fully qualified name.
-        """
-        # Note that a change to any of the image references below requires
-        # redeploying the `shared` TF component.
-        return dict(
-            # Updating the Docker image also requires building and pushing the
-            # executor image (see terraform/gitlab/runner/Dockerfile for how).
-            docker=f'docker.io/library/docker:{self.docker_version}',
-            python=self.python_image,
-            pycharm=f'docker.io/ucscgi/azul-pycharm:{self.docker_pycharm_version}',
-            elasticsearch=f'docker.io/ucscgi/azul-elasticsearch'
-                          f':{self.docker_elasticsearch_version}',
-            bigquery_emulator='ghcr.io/hannes-ucsc/bigquery-emulator:azul',
-            # Updating any of the four images below additionally requires
-            # redeploying the `gitlab` TF component.
-            clamav='docker.io/clamav/clamav:1.2.1-26',
-            gitlab='docker.io/gitlab/gitlab-ce:16.7.3-ce.0',
-            gitlab_runner='docker.io/gitlab/gitlab-runner:ubuntu-v16.7.0',
-            dind=f'docker.io/library/docker:{self.docker_version}-dind',
-            # The images below are not used within the security boundary:
-            _signing_proxy='docker.io/cllunsford/aws-signing-proxy:0.2.2',
-            _cerebro='docker.io/lmenezes/cerebro:0.9.4',
-            _kibana='docker.elastic.co/kibana/kibana-oss:7.10.2'
-        )
+    def docker_images(self) -> dict[str, ImageSpec]:
+        import json
+        return json.loads(self.environ['azul_docker_images'])
 
     docker_platforms = [
         'linux/arm64',

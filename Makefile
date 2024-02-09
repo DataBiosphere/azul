@@ -6,6 +6,10 @@ include common.mk
 azul_image ?= docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul
 azul_image_tag ?= latest
 
+.PHONY: hello
+hello: check_python
+	@echo Looking good!
+
 .PHONY: virtualenv
 virtualenv: check_env
 	@if test -s "$$VIRTUAL_ENV"; then echo -e "\nRun 'deactivate' first\n"; false; fi
@@ -81,9 +85,8 @@ requirements_update: check_venv check_docker
 	    -r requirements.txt \
 	    --dest=${azul_chalice_bin}
 
-.PHONY: hello
-hello: check_python
-	@echo Looking good!
+environment.boot: check_python
+	python scripts/generate_environment_boot.py
 
 .PHONY: lambdas
 lambdas: check_env
@@ -220,7 +223,7 @@ format: check_venv check_docker
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
 	    --workdir /home/developer/azul \
-	    $(azul_docker_registry)$$(python -m azul "config.docker_images['pycharm']") \
+	    $(azul_docker_registry)$$(python -m azul "config.docker_images['pycharm']['ref']") \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test

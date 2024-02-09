@@ -144,8 +144,8 @@ class Platform:
 
 
 images_by_alias = {
-    alias: ImageRef.parse(name)
-    for alias, name in config.docker_images.items()
+    alias: ImageRef.parse(spec['ref'])
+    for alias, spec in config.docker_images.items()
 }
 
 images = images_by_alias.values()
@@ -217,3 +217,11 @@ def _normalize_arch(arch: str,
         elif variant in ('5', '6', '8'):
             variant = 'v' + variant
     return arch, variant
+
+
+def resolve_docker_image_for_launch(alias: str) -> str:
+    """
+    Return an image reference that can be used to launch a container from the
+    image with the given alias.
+    """
+    return config.docker_registry + config.docker_images[alias]['ref']
