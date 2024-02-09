@@ -69,10 +69,20 @@ class ImageRef(metaclass=ABCMeta):
 
     #: The part after the second slash, split on the remaining slashes. Will
     #: have at least one element.
-    repository: list[str]
+    repository: tuple[str]
 
     @classmethod
     def parse(cls, image_ref: str) -> Self:
+        """
+        >>> ImageRef.parse('2@1')
+        DigestImageRef(registry='docker.io', username='library', repository=('2',), digest='1')
+        >>> ImageRef.parse('3/2:1')
+        TagImageRef(registry='docker.io', username='3', repository=('2',), tag='1')
+        >>> ImageRef.parse('4/3/2:1')
+        TagImageRef(registry='4', username='3', repository=('2',), tag='1')
+        >>> ImageRef.parse('5/4/3/2:1')
+        TagImageRef(registry='5', username='4', repository=('3', '2'), tag='1')
+        """
         if '@' in image_ref:
             return DigestImageRef.parse(image_ref)
         else:
@@ -80,11 +90,19 @@ class ImageRef(metaclass=ABCMeta):
 
     @classmethod
     def _create(cls, name: str, **kwargs) -> Self:
-        registry, username, *repository = name.split('/')
+        name = name.split('/')
+        if len(name) == 1:
+            registry, username, repository = 'docker.io', 'library', name
+        elif len(name) == 2:
+            registry, (username, *repository) = 'docker.io', name
+        elif len(name) > 2:
+            registry, username, *repository = name
+        else:
+            assert False
         # noinspection PyArgumentList
         return cls(registry=registry,
                    username=username,
-                   repository=repository,
+                   repository=tuple(repository),
                    **kwargs)
 
     @property
@@ -93,14 +111,14 @@ class ImageRef(metaclass=ABCMeta):
         The name of the image, starting with the registry, up to, but not
         including, the tag.
         """
-        return '/'.join([self.registry, self.relative_name])
+        return '/'.join((self.registry, self.relative_name))
 
     @property
     def relative_name(self):
         """
         The name of the image relative to the registry.
         """
-        return '/'.join([self.username, *self.repository])
+        return '/'.join((self.username, *self.repository))
 
     @property
     def registry_host(self):
