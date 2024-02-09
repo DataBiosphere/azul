@@ -19,6 +19,8 @@ Connected issue: #0000
 
 ### Author (upgrading deployments)
 
+- [ ] Documented upgrading of deployments in UPGRADING.rst <sub>or this PR does not require upgrading deployments</sub>
+- [ ] Added `u` tag to commit title <sub>or this PR does not require upgrading deployments</sub>
 - [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
 
 
