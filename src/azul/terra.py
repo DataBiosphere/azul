@@ -68,6 +68,7 @@ from azul.drs import (
 )
 from azul.http import (
     LimitedRetryHttpClient,
+    Propagate429HttpClient,
 )
 from azul.indexer import (
     SourceRef as BaseSourceRef,
@@ -322,7 +323,9 @@ class TerraClient(OAuth2Client):
     credentials_provider: TerraCredentialsProvider
 
     def _create_http_client(self) -> urllib3.request.RequestMethods:
-        return LimitedRetryHttpClient(super()._create_http_client())
+        return Propagate429HttpClient(
+            LimitedRetryHttpClient(super()._create_http_client())
+        )
 
     def _request(self,
                  method: str,
