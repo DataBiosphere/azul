@@ -310,12 +310,18 @@ def main():
                     'type': 'h2',
                     'content': 'Author (upgrading deployments)'
                 },
-                iif(t is T.default, {
+                iif(t in (T.default, T.upgrade), {
+                    'type': 'cli',
+                    'content': 'Ran `make image_manifests.json` and committed any resulting changes',
+                    'alt': 'or this PR does not modify `azul_docker_images` '
+                           'or any other variables referenced in the definition of that variable'
+                }),
+                iif(t in (T.default, T.upgrade), {
                     'type': 'cli',
                     'content': 'Documented upgrading of deployments in UPGRADING.rst',
                     'alt': 'or this PR does not require upgrading deployments'
                 }),
-                iif(t is T.default, {
+                iif(t in (T.default, T.upgrade), {
                     'type': 'cli',
                     'content': 'Added `u` tag to commit title',
                     'alt': 'or this PR does not require upgrading deployments'

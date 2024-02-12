@@ -8,6 +8,7 @@ import azul.bigquery
 import azul.bytes
 import azul.caching
 import azul.collections
+import azul.docker
 import azul.doctests
 import azul.dss
 import azul.exceptions
@@ -68,6 +69,7 @@ def load_tests(_loader, tests, _ignore):
         azul.caching,
         azul.collections,
         azul.doctests,
+        azul.docker,
         azul.dss,
         azul.exceptions,
         azul.files,
