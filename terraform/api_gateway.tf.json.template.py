@@ -204,7 +204,7 @@ emit_tf({
                     'rule': [
                         {
                             'priority': 0,
-                            'name': 'BlockedIPs',
+                            'name': 'blocked_ips',
                             'action': {
                                 'block': {}
                             },
@@ -214,7 +214,7 @@ emit_tf({
                                 }
                             },
                             'visibility_config': {
-                                'metric_name': 'BlockedIPs',
+                                'metric_name': 'blocked_ips',
                                 'sampled_requests_enabled': True,
                                 'cloudwatch_metrics_enabled': True
                             }
@@ -249,7 +249,7 @@ emit_tf({
                         },
                         {
                             'priority': 2,
-                            'name': 'AWS-CommonRuleSet',
+                            'name': 'aws_common_rule_set',
                             'override_action': {
                                 'none': {}
                             },
@@ -291,14 +291,14 @@ emit_tf({
                                 }
                             },
                             'visibility_config': {
-                                'metric_name': 'AWS-CommonRuleSet',
+                                'metric_name': 'aws_common_rule_set',
                                 'sampled_requests_enabled': True,
                                 'cloudwatch_metrics_enabled': True
                             }
                         },
                         {
                             'priority': 3,
-                            'name': 'AWS-AmazonIpReputationList',
+                            'name': 'aws_amazon_ip_reputation_list',
                             'override_action': {
                                 'none': {}
                             },
@@ -309,14 +309,14 @@ emit_tf({
                                 }
                             },
                             'visibility_config': {
-                                'metric_name': 'AWS-AmazonIpReputationList',
+                                'metric_name': 'aws_amazon_ip_reputation_list',
                                 'sampled_requests_enabled': True,
                                 'cloudwatch_metrics_enabled': True
                             }
                         },
                         {
                             'priority': 4,
-                            'name': 'AWS-UnixRuleSet',
+                            'name': 'aws_unix_rule_set',
                             'override_action': {
                                 'none': {}
                             },
@@ -327,7 +327,7 @@ emit_tf({
                                 }
                             },
                             'visibility_config': {
-                                'metric_name': 'AWS-UnixRuleSet',
+                                'metric_name': 'aws_unix_rule_set',
                                 'sampled_requests_enabled': True,
                                 'cloudwatch_metrics_enabled': True
                             }
