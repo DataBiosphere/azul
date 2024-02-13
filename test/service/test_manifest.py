@@ -1132,6 +1132,8 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         Test BDBagManifestGenerator._remove_redundant_entries() directly with a
         large set of sample data
         """
+        # FIXME: DeprecationWarning for datetime methods in Python 3.12
+        #        https://github.com/DataBiosphere/azul/issues/5953
         now = datetime.utcnow()
 
         def v(i):
