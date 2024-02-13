@@ -76,6 +76,8 @@ class ReindexDetector:
         ]
 
     def _lambda_invocation_counts(self) -> dict[Lambda, int]:
+        # FIXME: DeprecationWarning for datetime methods in Python 3.12
+        #        https://github.com/DataBiosphere/azul/issues/5953
         end = datetime.utcnow()
         start = end - timedelta(minutes=self.interval)
         lambdas_by_name = {
