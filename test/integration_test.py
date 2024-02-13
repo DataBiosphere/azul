@@ -147,6 +147,7 @@ from azul.plugins.repository.tdr import (
 )
 from azul.plugins.repository.tdr_anvil import (
     BundleEntityType,
+    TDRAnvilBundleFQID,
     TDRAnvilBundleFQIDJSON,
 )
 from azul.portal_service import (
@@ -387,7 +388,15 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         # prefix as possible.
         for source in self.managed_access_sources_by_catalog[catalog]:
             assert str(source.spec) in sources
-            bundle_fqids = sorted(self.azul_client.list_bundles(catalog, source, prefix=''))
+            bundle_fqids = sorted(
+                bundle_fqid
+                for bundle_fqid in self.azul_client.list_bundles(catalog, source, prefix='')
+                if not (
+                    # DUOS bundles are too sparse to fulfill the managed access tests
+                    config.is_anvil_enabled(catalog)
+                    and cast(TDRAnvilBundleFQID, bundle_fqid).entity_type is BundleEntityType.duos
+                )
+            )
             bundle_fqid = self.random.choice(bundle_fqids)
             # FIXME: We shouldn't need to include the common prefix
             #        https://github.com/DataBiosphere/azul/issues/3579
