@@ -3,7 +3,7 @@ awscli==1.29.63
 git+https://github.com/DataBiosphere/azul-chalice@1.31.2+13#egg=chalice
 coverage==6.5.0
 docker==7.1.0
-flake8==5.0.4
+flake8==7.1.1
 gevent==23.9.1
 gitpython==3.1.41
 google-api-python-client==2.103.0
