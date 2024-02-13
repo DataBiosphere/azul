@@ -108,7 +108,7 @@ class T(Enum):
         return S('issue' + iif(default, 's'))
 
     @property
-    def deployments(self) -> Mapping[str, str]:
+    def target_deployments(self) -> Mapping[str, str]:
         """
         Maps the name of each deployment to that of the respective sandbox.
         """
@@ -116,7 +116,7 @@ class T(Enum):
             {
                 'prod': None  # There is no sandbox for production
             }
-            if self in (T.promotion, T.hotfix) else
+            if self.target_branch == 'prod' else
             {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
@@ -535,30 +535,30 @@ def main():
             *iif(t is T.promotion, [
                 {
                     'type': 'cli',
-                    'content': f'Selected `{deployment}.shared` and '
+                    'content': f'Selected `{d}.shared` and '
                                f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/shared apply`',
                     'alt': 'or this PR does not change any Docker image versions'
                 }
-                for deployment in t.deployments
+                for d in t.target_deployments
             ]),
             *iif(t in (T.upgrade, T.promotion), [
                 *flatten([
                     [
                         iif(t is T.upgrade, {
                             'type': 'cli',
-                            'content': f'Selected `{deployment}.shared` and '
+                            'content': f'Selected `{d}.shared` and '
                                        f'ran `CI_COMMIT_REF_NAME={t.target_branch} '
                                        f'make -C terraform/shared apply_keep_unused`',
                             'alt': 'or this PR does not change any Docker image versions'
                         }),
                         {
                             'type': 'cli',
-                            'content': f'Selected `{deployment}.gitlab` and '
+                            'content': f'Selected `{d}.gitlab` and '
                                        f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/gitlab apply`',
                             'alt': 'or this PR does not include any changes to files in terraform/gitlab'
                         }
                     ]
-                    for deployment in t.deployments
+                    for d in t.target_deployments
                 ]),
                 {
                     'type': 'cli',
@@ -580,7 +580,7 @@ def main():
                         'content': f'Background migrations for `{d}.gitlab` are complete',
                         'alt': 'or this PR does not include any changes to files in terraform/gitlab'
                     }
-                    for d in t.deployments
+                    for d in t.target_deployments
                 ],
                 {
                     'type': 'cli',
@@ -593,14 +593,14 @@ def main():
                 *[
                     {
                         'type': 'cli',
-                        'content': f'Selected `{deployment}.gitlab` and '
+                        'content': f'Selected `{d}.gitlab` and '
                                    f'ran `make -C terraform/gitlab/runner`',
                         'alt': 'or this PR does not change `azul_docker_version`'
                     }
-                    for deployment in t.deployments
+                    for d in t.target_deployments
                 ],
             ]),
-            iif(any(sandbox is not None for sandbox in t.deployments.values()), {
+            iif(any(s is not None for s in t.target_deployments.values()), {
                 'type': 'cli',
                 'content': 'Added `sandbox` label',
                 'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
@@ -612,40 +612,40 @@ def main():
                 [
                     {
                         'type': 'cli',
-                        'content': f'Pushed PR branch to GitLab `{deployment}`',
+                        'content': f'Pushed PR branch to GitLab `{d}`',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Build passes in `{sandbox}` deployment',
+                        'content': f'Build passes in `{s}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Reviewed build logs for anomalies in `{sandbox}` deployment',
+                        'content': f'Reviewed build logs for anomalies in `{s}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     *iif(t is T.default, [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{sandbox}`',
+                            'content': f'Deleted unreferenced indices in `{s}`',
                             'alt': f'or this PR does not remove catalogs '
-                                   f'or otherwise causes unreferenced indices in `{deployment}`'
+                                   f'or otherwise causes unreferenced indices in `{d}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{sandbox}`',
-                            'alt': f'or this PR does not require reindexing `{deployment}`'
+                            'content': f'Started reindex in `{s}`',
+                            'alt': f'or this PR does not require reindexing `{d}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for failures in `{sandbox}`',
-                            'alt': f'or this PR does not require reindexing `{deployment}`'
+                            'content': f'Checked for failures in `{s}`',
+                            'alt': f'or this PR does not require reindexing `{d}`'
                         }
                     ])
                 ]
-                for i, (deployment, sandbox) in enumerate(t.deployments.items())
-                if sandbox is not None
+                for i, (d, s) in enumerate(t.target_deployments.items())
+                if s is not None
             ))),
             {
                 'type': 'cli',
@@ -703,7 +703,7 @@ def main():
                     'content': f'Pushed merge commit to GitLab `{d}`',
                     'alt': iif(t in (T.hotfix, T.promotion, T.upgrade), None, 'or PR is labeled `no sandbox`')
                 }
-                for d in t.deployments
+                for d in t.target_deployments
             ],
             *flatten(
                 [
@@ -718,16 +718,16 @@ def main():
                                    + iif(t in (T.default, T.backport), '<sup>1</sup>')
                     }
                 ]
-                for d, s in t.deployments.items()
+                for d, s in t.target_deployments.items()
             ),
             *iif(t is T.upgrade, [
                 {
                     'type': 'cli',
-                    'content': f'Selected `{deployment}.shared` and '
+                    'content': f'Selected `{d}.shared` and '
                                f'ran `make -C terraform/shared apply`',
                     'alt': 'or this PR does not change any Docker image versions'
                 }
-                for deployment in t.deployments
+                for d in t.target_deployments
             ]),
             {
                 'type': 'cli',
@@ -738,7 +738,7 @@ def main():
                     'type': 'cli',
                     'content': f'Deleted PR branch from GitLab `{d}`'
                 }
-                for d, s in t.deployments.items()
+                for d, s in t.target_deployments.items()
                 if t is not t.promotion
             ),
             *iif(t is T.promotion, [
@@ -773,54 +773,54 @@ def main():
                     [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{deployment}`',
+                            'content': f'Deleted unreferenced indices in `{d}`',
                             'alt': f'or this PR does not remove catalogs '
-                                   f'or otherwise causes unreferenced indices in `{deployment}`'
+                                   f'or otherwise causes unreferenced indices in `{d}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Considered deindexing individual sources in `{deployment}`',
+                            'content': f'Considered deindexing individual sources in `{d}`',
                             'alt': (
-                                f'or this PR does not merely remove sources from existing catalogs in `{deployment}`'
+                                f'or this PR does not merely remove sources from existing catalogs in `{d}`'
                             )
                         },
                         {
                             'type': 'cli',
-                            'content': f'Considered indexing individual sources in `{deployment}`',
+                            'content': f'Considered indexing individual sources in `{d}`',
                             'alt': (
-                                f'or this PR does not merely add sources to existing catalogs in `{deployment}`'
+                                f'or this PR does not merely add sources to existing catalogs in `{d}`'
                             )
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{deployment}`',
+                            'content': f'Started reindex in `{d}`',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                f'or this PR does not require reindexing `{deployment}`'
+                                f'or this PR does not require reindexing `{d}`'
                             )
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for and triaged indexing failures in `{deployment}`',
+                            'content': f'Checked for and triaged indexing failures in `{d}`',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                f'or this PR does not require reindexing `{deployment}`'
+                                f'or this PR does not require reindexing `{d}`'
                             )
 
                         },
                         {
                             'type': 'cli',
-                            'content': f'Emptied fail queues in `{deployment}` deployment',
+                            'content': f'Emptied fail queues in `{d}` deployment',
                             'alt': (
                                 'or neither this PR nor a prior failed promotion requires it'
                                 if t is T.hotfix else
-                                f'or this PR does not require reindexing `{deployment}`'
+                                f'or this PR does not require reindexing `{d}`'
                             )
                         }
                     ]
-                    for deployment, sandbox in t.deployments.items()
+                    for d, s in t.target_deployments.items()
                 ))),
                 iif(t is T.hotfix, {
                     'type': 'cli',
