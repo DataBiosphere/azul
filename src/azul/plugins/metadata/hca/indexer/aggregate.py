@@ -49,7 +49,6 @@ class HCAAggregate(Aggregate):
 
     @cached_property
     def cell_count(self) -> int:
-        cs: JSON
         return sum(cs['total_estimated_cells']
                    for cs in self.contents['cell_suspensions']
                    if cs['total_estimated_cells'] is not None)
