@@ -387,9 +387,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         # prefix as possible.
         for source in self.managed_access_sources_by_catalog[catalog]:
             assert str(source.spec) in sources
-            bundle_fqid = self.random.choice(
-                self.azul_client.list_bundles(catalog, source, prefix='')
-            )
+            bundle_fqids = sorted(self.azul_client.list_bundles(catalog, source, prefix=''))
+            bundle_fqid = self.random.choice(bundle_fqids)
             # FIXME: We shouldn't need to include the common prefix
             #        https://github.com/DataBiosphere/azul/issues/3579
             common = source.spec.prefix.common
@@ -1303,9 +1302,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                                                      indexed_source_ids,
                                                                                      managed_access_source_ids)
                     with self.subTest('managed_access_manifest', catalog=catalog):
-                        self._test_managed_access_manifest(catalog,
-                                                           files,
-                                                           first(public_source_ids & indexed_source_ids))
+                        source_id = self.random.choice(sorted(public_source_ids & indexed_source_ids))
+                        self._test_managed_access_manifest(catalog, files, source_id)
 
     def _test_managed_access_repository_sources(self,
                                                 catalog: CatalogName,
@@ -1403,7 +1401,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             one(file['files'])['url']
             for file in files
         }
-        file_url = furl(first(managed_access_file_urls))
+        file_url = furl(self.random.choice(sorted(managed_access_file_urls)))
         response = self._get_url_unchecked(GET, file_url)
         self.assertEqual(404, response.status)
         with self._service_account_credentials:
@@ -1453,7 +1451,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         files_url = furl(url=endpoint, path='index/files', args=params)
         response = self._get_url_json(GET, files_url)
-        public_bundle = first(bundle_uuids(one(response['hits'])))
+        public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
         self.assertNotIn(public_bundle, managed_access_bundles)
 
         filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
@@ -1765,7 +1763,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                                                                min_bundles=1,
                                                                check_all=False,
                                                                public_1st=False))
-        return self.random.choice(bundle_fqids)
+        return self.random.choice(sorted(bundle_fqids))
 
     def _can_bundle(self,
                     source: str,
