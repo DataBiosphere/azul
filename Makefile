@@ -84,6 +84,7 @@ requirements_update: check_venv check_docker
 	rm ${azul_chalice_bin}/*
 	pip download \
 	    --platform=manylinux2014_x86_64 \
+	    --only-binary=:all: \
 	    --no-deps \
 	    -r requirements.txt \
 	    --dest=${azul_chalice_bin}
