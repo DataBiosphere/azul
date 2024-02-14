@@ -14,7 +14,7 @@ hello: check_python
 virtualenv: check_env
 	@if test -s "$$VIRTUAL_ENV"; then echo -e "\nRun 'deactivate' first\n"; false; fi
 	if test -e .venv; then rm -rf .venv/; fi
-	python3.11 -m venv .venv
+	python3.12 -m venv .venv
 	@echo -e "\nRun 'source .venv/bin/activate' now!\n"
 
 .PHONY: envhook
@@ -81,6 +81,7 @@ requirements_update: check_venv check_docker
 	rm ${azul_chalice_bin}/*
 	pip download \
 	    --platform=manylinux2014_x86_64 \
+	    --only-binary=:all: \
 	    --no-deps \
 	    -r requirements.txt \
 	    --dest=${azul_chalice_bin}

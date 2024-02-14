@@ -15,7 +15,7 @@ def env() -> Mapping[str, Optional[str]]:
     other environment variables in the form `{FOO}` where FOO is the name of an
     environment variable. See
 
-    https://docs.python.org/3.11/library/string.html#format-string-syntax
+    https://docs.python.org/3.12/library/string.html#format-string-syntax
 
     for the concrete syntax. These references will be resolved *after* the
     overall environment has been compiled by merging all relevant
@@ -234,7 +234,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make image_manifests.json`
         # and redeploying the `shared` component.
         #
-        'azul_python_version': '3.11.7',
+        'azul_python_version': '3.12.1',
 
         # The version of Terraform used throughout the system.
         #

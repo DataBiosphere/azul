@@ -1,4 +1,4 @@
-https://docs.python.org/3.11/license.html
+https://docs.python.org/3.12/license.html
 
 The MIT License
 
