@@ -147,11 +147,11 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='dataset',
                                       entity_id='2370f948-2783-4eb6-afea-e022897f4dcf')
-        dataset_bundle = self.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                                          version=self.bundle.version,
-                                          entity_type=BundleEntityType.duos)
+        duos_bundle = self.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
+                                       version=self.bundle.version,
+                                       entity_type=BundleEntityType.duos)
 
-        bundles = [self.bundle, dataset_bundle]
+        bundles = [self.bundle, duos_bundle]
         for bundle_fqid in bundles:
             bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
             bundle.links.clear()
