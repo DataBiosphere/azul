@@ -111,6 +111,8 @@ Connected issue: #0000
 ### Operator
 
 - [ ] Ran `script/export_inspector_findings.py` against `anvilprod`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
+- [ ] Propagated the `reindex:partial` and `reindex:prod` labels to the next promotion PR <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `reindex:partial` and `reindex:prod` labels from the description of this PR to that of the next promotion PR <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to system administrator
 
 <sup>1</sup>A relevant finding is a high or critical vulnerability in an image

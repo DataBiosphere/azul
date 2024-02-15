@@ -1,6 +1,9 @@
 from enum import (
     Enum,
 )
+from itertools import (
+    chain,
+)
 from os.path import (
     basename,
     dirname,
@@ -8,6 +11,7 @@ from os.path import (
 import sys
 import textwrap
 from typing import (
+    AbstractSet,
     Mapping,
 )
 
@@ -19,6 +23,9 @@ from more_itertools import (
 
 from azul import (
     iif,
+)
+from azul.collections import (
+    OrderedSet,
 )
 from azul.strings import (
     join_grammatically,
@@ -114,7 +121,8 @@ class T(Enum):
         """
         return (
             {
-                'prod': None  # There is no sandbox for production
+                # There currently is no sandbox for production deployments
+                'prod': None
             }
             if self.target_branch == 'prod' else
             {
@@ -123,6 +131,24 @@ class T(Enum):
                 'anvilprod': 'hammerbox'
             }
         )
+
+    @property
+    def downstream_deployments(self) -> AbstractSet[str]:
+        return OrderedSet(chain(
+            self.target_deployments.keys(),
+            self.promotion.target_deployments if self.target_branch == 'develop' else []
+        ))
+
+    @property
+    def labels_to_promote(self):
+        return [
+            'reindex:partial',
+            *['reindex:' + d for d in self.target_deployments]
+        ]
+
+
+def bq(s):
+    return '`' + s + '`'
 
 
 def main():
@@ -261,10 +287,24 @@ def main():
                     'content': 'Added `r` tag to commit title',
                     'alt': 'or this PR does not require reindexing'
                 }),
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'PR is labeled `reindex:{d}`',
+                        'alt': f'or this PR does not require reindexing `{d}`'
+                    }
+                    for d in t.target_deployments
+                ],
                 {
                     'type': 'cli',
-                    'content': 'Added `reindex` label to PR',
-                    'alt': 'or this PR does not require reindexing'
+                    'content': 'This PR is labeled `reindex:partial` and '
+                               + 'its description documents the specific reindexing procedure for '
+                               + join_grammatically([f'`{d}`' for d in t.downstream_deployments]),
+                    'alt': 'or requires a full reindex '
+                           + iif(len(t.downstream_deployments) == 1,
+                                 'or is not labeled',
+                                 'or carries none of the labels ')
+                           + join_grammatically([f'`reindex:{d}`' for d in t.downstream_deployments])
                 },
                 {
                     'type': 'cli',
@@ -507,7 +547,7 @@ def main():
             *iif(t is T.default, [
                 {
                     'type': 'cli',
-                    'content': 'Checked `reindex` label and `r` commit title tag'
+                    'content': 'Checked `reindex:…` labels and `r` commit title tag'
                 },
                 {
                     'type': 'cli',
@@ -635,12 +675,12 @@ def main():
                         {
                             'type': 'cli',
                             'content': f'Started reindex in `{s}`',
-                            'alt': f'or this PR does not require reindexing `{d}`'
+                            'alt': f'or this PR is not labeled `reindex:{d}`'
                         },
                         {
                             'type': 'cli',
                             'content': f'Checked for failures in `{s}`',
-                            'alt': f'or this PR does not require reindexing `{d}`'
+                            'alt': f'or this PR is not labeled `reindex:{d}`'
                         }
                     ])
                 ]
@@ -771,54 +811,33 @@ def main():
                 # for all of them, and so on.
                 *flatten(zip(*(
                     [
-                        {
-                            'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{d}`',
-                            'alt': f'or this PR does not remove catalogs '
-                                   f'or otherwise causes unreferenced indices in `{d}`'
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Considered deindexing individual sources in `{d}`',
-                            'alt': (
-                                f'or this PR does not merely remove sources from existing catalogs in `{d}`'
-                            )
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Considered indexing individual sources in `{d}`',
-                            'alt': (
-                                f'or this PR does not merely add sources to existing catalogs in `{d}`'
-                            )
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Started reindex in `{d}`',
-                            'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                f'or this PR does not require reindexing `{d}`'
-                            )
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Checked for and triaged indexing failures in `{d}`',
-                            'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                f'or this PR does not require reindexing `{d}`'
-                            )
-
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Emptied fail queues in `{d}` deployment',
-                            'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                f'or this PR does not require reindexing `{d}`'
-                            )
-                        }
+                        *[
+                            {
+                                'type': 'cli',
+                                'content': f'{action} in `{d}`',
+                                'alt': f'or this PR is neither labeled `reindex:partial` nor `reindex:{d}`'
+                            } for action in [
+                                'Deindexed all unreferenced catalogs',
+                                'Deindexed specific sources',
+                                'Indexed specific sources'
+                            ]
+                        ],
+                        *[
+                            {
+                                'type': 'cli',
+                                'content': f'{action} in `{d}`',
+                                'alt': (
+                                    'or neither this PR nor a failed, prior promotion requires it'
+                                    if t is T.hotfix else
+                                    f'or this PR does not require reindexing `{d}`'
+                                )
+                            }
+                            for action in [
+                                'Started reindex',
+                                'Checked for, triaged and possibly requeued messages in both fail queues',
+                                'Emptied fail queues',
+                            ]
+                        ]
                     ]
                     for d, s in t.target_deployments.items()
                 ))),
@@ -838,6 +857,22 @@ def main():
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
                            'relevant<sup>1</sup> findings as a comment on the connected issue.'
             }),
+            *iif(t.target_branch == 'develop' and t is not T.backport, [
+                {
+                    'type': 'cli',
+                    'content': 'Propagated the '
+                               + join_grammatically(list(map(bq, t.promotion.labels_to_promote)))
+                               + ' labels to the next promotion PR',
+                    'alt': 'or this PR carries none of these labels'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'Propagated any specific instructions related to the '
+                               + join_grammatically(list(map(bq, t.promotion.labels_to_promote)))
+                               + ' labels from the description of this PR to that of the next promotion PR',
+                    'alt': 'or this PR carries none of these labels'
+                }
+            ]),
             {
                 'type': 'cli',
                 'content': 'PR is assigned to '

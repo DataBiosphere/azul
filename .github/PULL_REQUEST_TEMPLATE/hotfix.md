@@ -66,12 +66,12 @@ Connected issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
-- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not merely remove sources from existing catalogs in `prod`</sub>
-- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add sources to existing catalogs in `prod`</sub>
-- [ ] Started reindex in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
-- [ ] Checked for and triaged indexing failures in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
-- [ ] Emptied fail queues in `prod` deployment <sub>or neither this PR nor a prior failed promotion requires it</sub>
+- [ ] Deindexed all unreferenced catalogs in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
+- [ ] Deindexed specific sources in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
+- [ ] Indexed specific sources in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
+- [ ] Started reindex in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
+- [ ] Emptied fail queues in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
 - [ ] Created backport PR and linked to it in a comment on this PR
 
 

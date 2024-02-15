@@ -36,7 +36,10 @@ title is `Fix: ` followed by the issue title
 ### Author (reindex, API changes)
 
 - [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
-- [ ] Added `reindex` label to PR <sub>or this PR does not require reindexing</sub>
+- [ ] PR is labeled `reindex:dev` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] PR is labeled `reindex:anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] PR is labeled `reindex:anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `dev`, `anvildev`, `anvilprod` and `prod` <sub>or requires a full reindex or carries none of the labels `reindex:dev`, `reindex:anvildev`, `reindex:anvilprod` and `reindex:prod`</sub>
 - [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
 - [ ] Added `a` (`A`) tag to commit title for backwards (in)compatible changes <sub>or this PR does not modify a REST API</sub>
 - [ ] Updated REST API version number in `app.py` <sub>or this PR does not modify a REST API</sub>
@@ -109,7 +112,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 ### Operator (before pushing merge the commit)
 
-- [ ] Checked `reindex` label and `r` commit title tag
+- [ ] Checked `reindex:…` labels and `r` commit title tag
 - [ ] Checked that demo expectations are clear <sub>or all connected issues are labeled `no demo`</sub>
 - [ ] PR has checklist items for upgrading instructions <sub>or PR is not labeled `upgrade`</sub>
 - [ ] Squashed PR branch and rebased onto `develop`
@@ -128,12 +131,12 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Deleted unreferenced indices in `sandbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `dev`</sub>
 - [ ] Deleted unreferenced indices in `anvilbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvildev`</sub>
 - [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilprod`</sub>
-- [ ] Started reindex in `sandbox` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Started reindex in `anvilbox` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Started reindex in `hammerbox` <sub>or this PR does not require reindexing `anvilprod`</sub>
-- [ ] Checked for failures in `sandbox` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Checked for failures in `anvilbox` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Checked for failures in `hammerbox` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] Started reindex in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] Started reindex in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] Started reindex in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
+- [ ] Checked for failures in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] Checked for failures in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but only include `p` if the PR is labeled `partial`</sub>
@@ -172,28 +175,30 @@ pushed determines this checklist item.
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `dev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `dev`</sub>
-- [ ] Deleted unreferenced indices in `anvildev` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvildev`</sub>
-- [ ] Deleted unreferenced indices in `anvilprod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilprod`</sub>
-- [ ] Considered deindexing individual sources in `dev` <sub>or this PR does not merely remove sources from existing catalogs in `dev`</sub>
-- [ ] Considered deindexing individual sources in `anvildev` <sub>or this PR does not merely remove sources from existing catalogs in `anvildev`</sub>
-- [ ] Considered deindexing individual sources in `anvilprod` <sub>or this PR does not merely remove sources from existing catalogs in `anvilprod`</sub>
-- [ ] Considered indexing individual sources in `dev` <sub>or this PR does not merely add sources to existing catalogs in `dev`</sub>
-- [ ] Considered indexing individual sources in `anvildev` <sub>or this PR does not merely add sources to existing catalogs in `anvildev`</sub>
-- [ ] Considered indexing individual sources in `anvilprod` <sub>or this PR does not merely add sources to existing catalogs in `anvilprod`</sub>
+- [ ] Deindexed all unreferenced catalogs in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
+- [ ] Deindexed all unreferenced catalogs in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
+- [ ] Deindexed all unreferenced catalogs in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
+- [ ] Deindexed specific sources in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
+- [ ] Deindexed specific sources in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
+- [ ] Deindexed specific sources in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
+- [ ] Indexed specific sources in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
+- [ ] Indexed specific sources in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
+- [ ] Indexed specific sources in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
 - [ ] Started reindex in `dev` <sub>or this PR does not require reindexing `dev`</sub>
 - [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
 - [ ] Started reindex in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
-- [ ] Checked for and triaged indexing failures in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Checked for and triaged indexing failures in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Checked for and triaged indexing failures in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
-- [ ] Emptied fail queues in `dev` deployment <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Emptied fail queues in `anvildev` deployment <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Emptied fail queues in `anvilprod` deployment <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `dev` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] Emptied fail queues in `dev` <sub>or this PR does not require reindexing `dev`</sub>
+- [ ] Emptied fail queues in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] Emptied fail queues in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
 
 
 ### Operator
 
+- [ ] Propagated the `reindex:partial` and `reindex:prod` labels to the next promotion PR <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `reindex:partial` and `reindex:prod` labels from the description of this PR to that of the next promotion PR <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to no one
 
 
