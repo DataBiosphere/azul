@@ -203,7 +203,10 @@ class Plugin(MetadataPlugin[HCABundle]):
                     'project_title': 'projectTitle',
                     'publication_titles': 'publicationTitle',
                     'accessions': 'accessions',
-                    'estimated_cell_count': 'projectEstimatedCellCount'
+                    'estimated_cell_count': 'projectEstimatedCellCount',
+                    'is_tissue_atlas_project': 'isTissueAtlasProject',
+                    'tissue_atlas': 'tissueAtlas',
+                    'bionetwork_name': 'bionetworkName'
                 },
                 'sequencing_protocols': {
                     'instrument_manufacturer_model': 'instrumentManufacturerModel',
@@ -297,7 +300,10 @@ class Plugin(MetadataPlugin[HCABundle]):
             'projectDescription',
             'institution',
             'contactName',
-            'publicationTitle'
+            'publicationTitle',
+            'isTissueAtlasProject',
+            'tissueAtlas',
+            'bionetworkName'
         ]
 
     @property

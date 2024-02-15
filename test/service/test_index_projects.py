@@ -81,6 +81,9 @@ class TestIndexProjectsEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
             'matrices',
             'contributedAnalyses',
             'accessions',
+            'tissueAtlas',
+            'isTissueAtlasProject',
+            'bionetworkName',
             'estimatedCellCount'
         }
         response_json = get_response_json()
