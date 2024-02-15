@@ -457,7 +457,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             name: CatalogName
             bundles: set[SourcedBundleFQID]
             notifications: list[JSON]
-            random: Random = self.random
 
         def _wait_for_indexer():
             self.azul_client.wait_for_indexer()
