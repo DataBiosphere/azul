@@ -508,18 +508,7 @@ def resolve_docker_image_for_launch(alias: str) -> str:
     image with the given alias. The alias is the top level key in the JSON
     object contained in the environment variable `azul_docker_images`.
     """
-    ref = TagImageRef.parse(config.docker_images[alias]['ref'])
-    log.info('Resolving image %r %r …', alias, ref)
-    manifest = get_docker_image_manifest(ref)
-    # Use image mirrored in ECR (if defined), instead of the upstream registry
-    ref_to_pull = TagImageRef.parse(config.docker_registry + str(ref))
-    # If no mirror registry is configured, both refs will be equal and we will
-    # pull from the upstream registry. We should pull by digest in that case,
-    # since the tag might have been altered in the upstream registry. If a
-    # mirror is configured, we will need to pull the image by its tag because we
-    # don't track the repository digest of images mirrored to ECR.
-    if ref == ref_to_pull:
-        ref_to_pull = ref.with_digest(manifest['digest'])
+    ref_to_pull, manifest = resolve_docker_image_for_pull(alias)
     image = pull_docker_image(ref_to_pull)
     # In either case, the verification below ensures that the image we pulled
     # has the expected ID.
@@ -538,3 +527,25 @@ def resolve_docker_image_for_launch(alias: str) -> str:
     # Returning the image ID means that the container will be launched using
     # exactly the image we just pulled and verified.
     return image.id
+
+
+def resolve_docker_image_for_pull(alias: str
+                                  ) -> tuple[TagImageRef, Manifest | ManifestList]:
+    """
+    Return an image reference that can be used to pull the image
+    with the given alias from the ECR. Also return a JSON structure
+    that describes the image ID and digest.
+    """
+    ref = TagImageRef.parse(config.docker_images[alias]['ref'])
+    log.info('Resolving image %r %r …', alias, ref)
+    # Use image mirrored in ECR (if defined), instead of the upstream registry
+    ref_to_pull = TagImageRef.parse(config.docker_registry + str(ref))
+    manifest = get_docker_image_manifest(ref)
+    # If no mirror registry is configured, both refs will be equal and we will
+    # pull from the upstream registry. We should pull by digest in that case,
+    # since the tag might have been altered in the upstream registry. If a
+    # mirror is configured, we will need to pull the image by its tag because we
+    # don't track the repository digest of images mirrored to ECR.
+    if ref == ref_to_pull:
+        ref_to_pull = ref.with_digest(manifest['digest'])
+    return ref_to_pull, manifest
