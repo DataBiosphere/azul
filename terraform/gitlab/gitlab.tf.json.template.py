@@ -1828,10 +1828,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
-                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
-                                # journald, so we don't need systemd to capture process output.
-                                'StandardOutput=null',
-                                'StandardError=null',
+                                # We omit the StandardOutput and StandardError
+                                # directives for `docker exec` commands since,
+                                # although we explicitly configure Docker to log
+                                # to journald, it only does so for `docker run`
+                                # commands. Omitting these directives here, the
+                                # service uses systemd's default (journal).
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop prune-images',
@@ -1883,10 +1885,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab.service',
                                 'Requires=docker.service gitlab.service',
                                 '[Service]',
-                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
-                                # journald, so we don't need systemd to capture process output.
-                                'StandardOutput=null',
-                                'StandardError=null',
+                                # We omit the StandardOutput and StandardError
+                                # directives for `docker exec` commands since,
+                                # although we explicitly configure Docker to log
+                                # to journald, it only does so for `docker run`
+                                # commands. Omitting these directives here, the
+                                # service uses systemd's default (journal).
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop registry-garbage-collect',
