@@ -223,7 +223,7 @@ format: check_venv check_docker
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
 	    --workdir /home/developer/azul \
-	    $(azul_docker_registry)$$(python -m azul "config.docker_images['pycharm']['ref']") \
+	    $$(AZUL_DEBUG=0 python -m azul 'docker.resolve_docker_image_for_launch("pycharm")') \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test
@@ -246,3 +246,6 @@ integration_test: check_python check_branch $(project_root)/lambdas/service/.cha
 .PHONY: check_clean
 check_clean: check_env
 	git diff --exit-code && git diff --cached --exit-code
+
+image_manifests.json: check_python
+	python scripts/manage_images.py --update-manifests

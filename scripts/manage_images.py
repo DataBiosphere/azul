@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 from operator import (
     itemgetter,
@@ -13,12 +14,12 @@ from sys import (
 from typing import (
     Any,
     ContextManager,
-    Iterable,
+    cast,
 )
 
-import docker
 from more_itertools import (
     chunked,
+    one,
     partition,
 )
 import posix_ipc
@@ -26,7 +27,6 @@ import posix_ipc
 from azul import (
     config,
     reject,
-    require,
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
@@ -35,10 +35,20 @@ from azul.deployment import (
     aws,
 )
 from azul.docker import (
-    ImageRef,
+    DigestImageRef,
+    Manifest,
+    ManifestList,
     Platform,
-    images,
+    Repository,
+    TagImageRef,
+    get_docker_image_manifest,
+    get_docker_image_manifests,
     platforms,
+    pull_docker_image,
+    push_docker_image,
+)
+from azul.files import (
+    write_file_atomically,
 )
 from azul.logging import (
     configure_script_logging,
@@ -48,54 +58,87 @@ log = logging.getLogger(__name__)
 
 
 def copy_image(src: str):
-    src = ImageRef.parse(src)
-    dst = ImageRef.create(name=config.docker_registry + src.name,
-                          tag=src.tag)
-    dst_parts = []
-    client = docker.client.from_env()
-    for platform in src.platforms:
-        log.info('Pulling image %r for platform %r …', src, platform)
-        # While we're free to pick the tag for the image at the destination
-        # (ECR), and can therefore make it platform-specific, the source tag is
-        # often ambiguous in that it matches multiple images for different
-        # platforms. The `platform=` argument to `.pull()` disambiguates that
-        # and ensures that the right image is being pulled. However, the pull
-        # also applies the ambiguous tag to the resulting local image. This
-        # means that a pull of an image with a given tag and platform may
-        # clobber the tag from an earlier pull of an another platform of the
-        # same tag. Furthermore, it is difficult to detect a failed pull because
-        # one would have to look for the absence of the output line indicating
-        # success. This is further complicated by the fact that the format of
-        # that line is not documented.
-        output = client.api.pull(src.name,
-                                 platform=str(platform),
-                                 tag=src.tag,
-                                 stream=True)
-        log_lines(src, 'pull', output)
-        log.info('Pulled image %r for platform %r', src, platform)
-        # For ambiguous tags, the following line will get the image for the most
-        # recent *successful* pull. If the most recent pull failed, this will
-        # get the image from the successful pull before that. If no pulls were
-        # successful for this tag, the line will fail.
-        image = client.images.get(str(src))
-        # And if there was a previous successful pull for the tag, the
-        # assertions below will detect the platform mismatch.
-        require(image.attrs['Architecture'] == platform.arch,
-                'Pull failed, local image has wrong architecture)', image.attrs)
-        require(image.attrs['Os'] == platform.os,
-                'Pull failed, local image has wrong OS)', image.attrs)
-        dst_part = ImageRef.create(name=config.docker_registry + src.name,
-                                   tag=make_platform_tag(src.tag, platform))
-        image.tag(dst_part.name, tag=dst_part.tag)
-        log.info('Pushing image %r', dst_part)
-        output = client.api.push(dst_part.name,
-                                 tag=dst_part.tag,
-                                 stream=True)
-        log_lines(src, 'push', output)
-        log.info('Pushed image %r', dst_part)
-        dst_parts.append(dst_part)
+    src = TagImageRef.parse(src)
+    manifest_or_list = get_docker_image_manifest(src)
+    try:
+        manifests = cast(ManifestList, manifest_or_list)['manifests']
+    except KeyError:
+        copy_single_platform_image(src, cast(Manifest, manifest_or_list), tag=src.tag)
+    else:
+        copy_multi_platform_image(src, manifests)
 
-    log.info('Creating manifest image %r', dst)
+
+def copy_single_platform_image(src: TagImageRef,
+                               manifest: Manifest,
+                               tag: str,
+                               ) -> DigestImageRef:
+    platform = Platform.parse(manifest['platform'])
+    log.info('Copying image %r for platform %r', src, platform)
+    image = pull_docker_image(src.with_digest(manifest['digest']))
+    assert image.id == manifest['id'], (src, image.attrs, manifest)
+
+    dst = TagImageRef.create(name=config.docker_registry + src.name, tag=tag)
+    image.tag(dst.name, tag=dst.tag)
+    image = push_docker_image(dst)
+    assert image.id == manifest['id'], (dst, image.attrs, manifest)
+
+    # After a successful push of the image, Docker should have recorded the
+    # digest under which the image is known in the destination repository, i.e.,
+    # the one it was just pushed to. Earlier, when the image was pulled from the
+    # source repository, that repository's digest of the image was recorded. The
+    # source and destination digests are usually different. If the copied image
+    # is to be part of a multi-platform image in the destination repository, we
+    # obviously need to supply the destination digest. Often, we can figure this
+    # out just by looking at the repository digests that Docker recorded for the
+    # image during pushes and pulls.
+    #
+    refs = set()
+    for ref in image.attrs['RepoDigests']:
+        ref = DigestImageRef.parse(ref)
+        if ref == dst.with_digest(ref.digest):
+            refs.add(ref)
+
+    # However, when Docker is asked to pull a multi-platform image, it actually
+    # pulls one of the platform images that are part of that image and then
+    # records the digest of the multi-platform image with the single-platform
+    # image that it pulled. Other people have observed this, too:
+    #
+    # https://github.com/docker/hub-feedback/issues/1925
+    #
+    # Using an image in Azul involves a pull from the repository it was copied
+    # to. Recall that we only pull from the upstream repository during the
+    # copying of an image. While the pull records the multi-platform digest, a
+    # subsequent push (as would occur if this script were to be invoked again)
+    # will record the single-platform digest. Both digests will be associated
+    # with the ECR repository the image was copied to. If that's the case, we
+    # need to make a roundtrip to ECR to resolve the ambiguity.
+    #
+    if len(refs) > 1:
+        refs = set()
+        response = aws.ecr.describe_images(repositoryName=src.name)
+        for image in response['imageDetails']:
+            if tag in image.get('imageTags', []):
+                refs.add(dst.with_digest(image['imageDigest']))
+
+    return one(refs)
+
+
+def copy_multi_platform_image(src: TagImageRef,
+                              manifests: dict[str, Manifest]
+                              ) -> None:
+    log.info('Copying all parts of multi-platform image %r …', src)
+    dst_parts: list[DigestImageRef] = []
+    for platform, manifest in manifests.items():
+        assert platform == manifest['platform'], (platform, manifest)
+        platform = Platform.parse(platform)
+        dst_tag = make_platform_tag(src.tag, platform)
+        dst_part = copy_single_platform_image(src, manifest, tag=dst_tag)
+        dst_parts.append(dst_part)
+    log.info('Copied all parts (%d in total) of multi-platform image %r',
+             len(dst_parts), src)
+
+    dst = TagImageRef.create(name=config.docker_registry + src.name, tag=src.tag)
+    log.info('Assembling multi-platform image %r …', dst)
     subprocess.run([
         'docker', 'manifest', 'rm',
         str(dst)
@@ -105,11 +148,12 @@ def copy_image(src: str):
         str(dst),
         *list(map(str, dst_parts))
     ], check=True)
+    log.info('Pushing multi-platform image %r …', dst)
     subprocess.run([
         'docker', 'manifest', 'push',
         str(dst)
     ], check=True)
-    log.info('Created manifest image %r', dst)
+    log.info('Successfully copied multi-platform image from %r to %r', src, dst)
 
 
 def make_platform_tag(tag, platform: Platform):
@@ -126,18 +170,19 @@ def platform_tag_suffix(platform):
 
 
 def delete_unused_images(repository):
-    # The set of expected tags computed below is an upper bound. Not every
-    # platform is available for every image in the source repository the image
-    # was copied from. If a bug causes the ECR repository to end up with an
-    # image tagged with a platform that didn't exist in the source repository,
-    # this function will not delete that image. We're accepting that improbable
-    # outcome in return for not having to list images in the source repository.
-    expected_tags = set(
-        image.tag if platform is None else make_platform_tag(image.tag, platform)
-        for image in images
-        for platform in [None, *platforms]  # None for the multi-platform index image
-        if image.name == repository
-    )
+    expected_tags = set()
+    for ref, manifest_or_list in get_docker_image_manifests().items():
+        ref = TagImageRef.parse(ref)
+        expected_tags.add(ref.tag)
+        try:
+            manifests = cast(ManifestList, manifest_or_list)['manifests']
+        except KeyError:
+            pass
+        else:
+            for platform in manifests.keys():
+                platform = Platform.parse(platform)
+                expected_tags.add(make_platform_tag(ref.tag, platform))
+
     log.info('Listing images in repository %r', repository)
     paginator = aws.ecr.get_paginator('describe_images')
     pages = paginator.paginate(repositoryName=repository)
@@ -179,11 +224,6 @@ def delete_unused_images(repository):
                                'Failed to delete images', response['failures'])
     else:
         log.info('No stale images found, nothing to delete')
-
-
-def log_lines(context: Any, command: str, output: Iterable[bytes]):
-    for line in output:
-        log.info('%s: docker %s %s', context, command, line.decode().strip())
 
 
 class Semaphore(ContextManager):
@@ -238,6 +278,12 @@ class Semaphore(ContextManager):
         semaphore.unlink()
 
 
+def update_manifests():
+    manifests = Repository.get_manifests()
+    with write_file_atomically(config.docker_image_manifests_path) as f:
+        json.dump(manifests, f, indent=4)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=AzulArgumentHelpFormatter)
@@ -248,6 +294,9 @@ def main():
                        help='Clean up. Use this after all invocations with --copy have exited.')
     group.add_argument('--delete-unused', nargs='+', metavar='REPOSITORY',
                        help='Delete unused images and tags from the given ECR image repository.')
+    group.add_argument('--update-manifests', action='store_true',
+                       help='Update the canned manifests for all images')
+
     options = parser.parse_args(argv[1:])
 
     if options.copy or options.cleanup:
@@ -270,6 +319,8 @@ def main():
     elif options.delete_unused:
         for repository in options.delete_unused:
             delete_unused_images(repository)
+    elif options.update_manifests:
+        update_manifests()
     else:
         assert False, options
 

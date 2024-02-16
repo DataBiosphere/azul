@@ -81,7 +81,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
                                                ports=ports,
                                                **kwargs)
         try:
-            container_info = cls._docker.api.inspect_container(container.name)
+            container_info = cls._docker.api.inspect_container(container.id)
             network_settings = container_info['NetworkSettings']
             if is_sibling:  # no coverage
                 container_ip = network_settings['IPAddress']

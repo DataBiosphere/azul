@@ -15,6 +15,9 @@ from itertools import (
 )
 import logging
 import os
+from pathlib import (
+    Path,
+)
 import re
 import shlex
 from typing import (
@@ -1448,6 +1451,10 @@ class Config:
         return self.environ['azul_terraform_version']
 
     class ImageSpec(TypedDict):
+        """
+        Captures key information about a Docker image used in Azul
+        """
+        #: Fully qualified image reference, registry/repository/user/name:tag
         ref: str
 
     @property
@@ -1461,6 +1468,10 @@ class Config:
     ]
 
     waf_rate_rule_name = 'RateRule'
+
+    @property
+    def docker_image_manifests_path(self) -> Path:
+        return Path(config.project_root) / 'image_manifests.json'
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm
