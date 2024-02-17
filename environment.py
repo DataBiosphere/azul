@@ -234,7 +234,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make image_manifests.json`
         # and redeploying the `shared` component.
         #
-        'azul_python_version': '3.11.7',
+        'azul_python_version': '3.11.8',
 
         # The version of Terraform used throughout the system.
         #
@@ -265,7 +265,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.2-11'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.3-13'
             },
             'elasticsearch': {
                 'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.17-10'
