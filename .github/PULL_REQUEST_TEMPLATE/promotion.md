@@ -28,7 +28,10 @@ Connected issue: #0000
 
 ### Author (upgrading deployments)
 
-- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
+- [ ] This PR is labeled `upgrade` <sub>or does not require upgrading deployments</sub>
+- [ ] This PR is labeled `deploy:shared` <sub>or does not modify `image_manifests.json`, and does not require deploying the `shared` component for any other reason</sub>
+- [ ] This PR is labeled `deploy:gitlab` <sub>or does not require deploying the `gitlab` component</sub>
+- [ ] This PR is labeled `deploy:runner` <sub>or does not require deploying the `runner` image</sub>
 
 
 ### System administrator (after approval)
@@ -42,21 +45,21 @@ Connected issue: #0000
 ### Operator (before pushing merge the commit)
 
 - [ ] Pushed PR branch to GitHub
-- [ ] Selected `prod.shared` and ran `CI_COMMIT_REF_NAME=prod make -C terraform/shared apply` <sub>or this PR does not change any Docker image versions</sub>
-- [ ] Selected `prod.gitlab` and ran `CI_COMMIT_REF_NAME=prod make -C terraform/gitlab apply` <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
-- [ ] Assigned system administrator <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
-- [ ] Checked the items in the next section <sub>or this PR includes changes to files in terraform/gitlab</sub>
+- [ ] Ran `_select prod.shared && CI_COMMIT_REF_NAME=prod make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Ran `_select prod.gitlab && CI_COMMIT_REF_NAME=prod make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
+- [ ] Assigned system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
 
 
 ### System administrator
 
-- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR does not include any changes to files in terraform/gitlab</sub>
+- [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] PR is assigned to operator
 
 
 ### Operator (before pushing merge the commit)
 
-- [ ] Selected `prod.gitlab` and ran `make -C terraform/gitlab/runner` <sub>or this PR does not change `azul_docker_version`</sub>
+- [ ] Ran `_select prod.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Title of merge commit starts with title from this PR
 - [ ] Added PR reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>

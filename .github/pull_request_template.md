@@ -54,10 +54,13 @@ title is `Fix: ` followed by the issue title
 
 ### Author (upgrading deployments)
 
-- [ ] Ran `make image_manifests.json` and committed any resulting changes <sub>or this PR does not modify `azul_docker_images` or any other variables referenced in the definition of that variable</sub>
 - [ ] Documented upgrading of deployments in UPGRADING.rst <sub>or this PR does not require upgrading deployments</sub>
 - [ ] Added `u` tag to commit title <sub>or this PR does not require upgrading deployments</sub>
-- [ ] Added `upgrade` label to PR <sub>or this PR does not require upgrading deployments</sub>
+- [ ] Ran `make image_manifests.json` and committed the resulting changes <sub>or this PR does not modify `azul_docker_images`, or any other variables referenced in the definition of that variable</sub>
+- [ ] This PR is labeled `upgrade` <sub>or does not require upgrading deployments</sub>
+- [ ] This PR is labeled `deploy:shared` <sub>or does not modify `image_manifests.json`, and does not require deploying the `shared` component for any other reason</sub>
+- [ ] This PR is labeled `deploy:gitlab` <sub>or does not require deploying the `gitlab` component</sub>
+- [ ] This PR is labeled `deploy:runner` <sub>or does not require deploying the `runner` image</sub>
 
 
 ### Author (operator tasks)
@@ -118,6 +121,29 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
+- [ ] Ran `_select dev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Ran `_select dev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Ran `_select anvildev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Ran `_select anvildev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Ran `_select anvilprod.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Ran `_select anvilprod.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
+- [ ] Assigned system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
+
+
+### System administrator
+
+- [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] PR is assigned to operator
+
+
+### Operator (before pushing merge the commit)
+
+- [ ] Ran `_select dev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
+- [ ] Ran `_select anvildev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
+- [ ] Ran `_select anvilprod.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
@@ -163,6 +189,9 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Reviewed build logs for anomalies on GitLab `anvildev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvilprod`<sup>1</sup>
 - [ ] Reviewed build logs for anomalies on GitLab `anvilprod`<sup>1</sup>
+- [ ] Ran `_select dev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Ran `_select anvildev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Ran `_select anvilprod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
@@ -197,8 +226,8 @@ pushed determines this checklist item.
 
 ### Operator
 
-- [ ] Propagated the `reindex:partial` and `reindex:prod` labels to the next promotion PR <sub>or this PR carries none of these labels</sub>
-- [ ] Propagated any specific instructions related to the `reindex:partial` and `reindex:prod` labels from the description of this PR to that of the next promotion PR <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels to the next promotion PR <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels from the description of this PR to that of the next promotion PR <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to no one
 
 

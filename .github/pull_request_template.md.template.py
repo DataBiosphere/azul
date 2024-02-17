@@ -140,11 +140,18 @@ class T(Enum):
         ))
 
     @property
-    def labels_to_promote(self):
-        return [
+    def labels_to_promote(self) -> tuple[str, ...]:
+        return (
+            'deploy:shared',
+            'deploy:gitlab',
+            'deploy:runner',
             'reindex:partial',
-            *['reindex:' + d for d in self.target_deployments]
-        ]
+            *('reindex:' + d for d in self.target_deployments)
+        )
+
+    @property
+    def deploy_shared_target(self) -> str:
+        return 'apply_keep_unused' if self.target_branch == 'develop' else 'apply'
 
 
 def bq(s):
@@ -345,31 +352,49 @@ def main():
                     'alt': 'or this PR is not chained to another PR'
                 }
             ]),
-            *iif(t in (T.default, T.promotion, T.upgrade), [
+            *iif(t not in (T.hotfix, T.backport), [
                 {
                     'type': 'h2',
                     'content': 'Author (upgrading deployments)'
                 },
-                iif(t in (T.default, T.upgrade), {
-                    'type': 'cli',
-                    'content': 'Ran `make image_manifests.json` and committed any resulting changes',
-                    'alt': 'or this PR does not modify `azul_docker_images` '
-                           'or any other variables referenced in the definition of that variable'
-                }),
-                iif(t in (T.default, T.upgrade), {
-                    'type': 'cli',
-                    'content': 'Documented upgrading of deployments in UPGRADING.rst',
-                    'alt': 'or this PR does not require upgrading deployments'
-                }),
-                iif(t in (T.default, T.upgrade), {
-                    'type': 'cli',
-                    'content': 'Added `u` tag to commit title',
-                    'alt': 'or this PR does not require upgrading deployments'
-                }),
+                *iif(t.target_branch == 'develop', [
+                    {
+                        'type': 'cli',
+                        'content': 'Documented upgrading of deployments in UPGRADING.rst',
+                        'alt': 'or this PR does not require upgrading deployments'
+                    },
+                    {
+                        'type': 'cli',
+                        'content': 'Added `u` tag to commit title',
+                        'alt': 'or this PR does not require upgrading deployments'
+                    },
+                    {
+                        'type': 'cli',
+                        'content': 'Ran `make image_manifests.json` and committed the resulting changes',
+                        'alt': 'or this PR does not modify `azul_docker_images`, '
+                               'or any other variables referenced in the definition of that variable'
+                    }
+                ]),
                 {
                     'type': 'cli',
-                    'content': 'Added `upgrade` label to PR',
-                    'alt': 'or this PR does not require upgrading deployments'
+                    'content': 'This PR is labeled `upgrade`',
+                    'alt': 'or does not require upgrading deployments'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `deploy:shared`',
+                    'alt': 'or does not modify `image_manifests.json`, and does not '
+                           'require deploying the `shared` component for any other reason'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `deploy:gitlab`',
+                    'alt': 'or does not require deploying the `gitlab` component'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `deploy:runner`',
+                    'alt': 'or does not require deploying the `runner` image'
                 }
             ]),
             *iif(t is T.default, [
@@ -572,43 +597,39 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed PR branch to GitHub'
             },
-            *iif(t is T.promotion, [
-                {
-                    'type': 'cli',
-                    'content': f'Selected `{d}.shared` and '
-                               f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/shared apply`',
-                    'alt': 'or this PR does not change any Docker image versions'
-                }
-                for d in t.target_deployments
-            ]),
-            *iif(t in (T.upgrade, T.promotion), [
+            *iif(t not in (T.backport, T.hotfix), [
                 *flatten([
                     [
-                        iif(t is T.upgrade, {
-                            'type': 'cli',
-                            'content': f'Selected `{d}.shared` and '
-                                       f'ran `CI_COMMIT_REF_NAME={t.target_branch} '
-                                       f'make -C terraform/shared apply_keep_unused`',
-                            'alt': 'or this PR does not change any Docker image versions'
-                        }),
                         {
                             'type': 'cli',
-                            'content': f'Selected `{d}.gitlab` and '
-                                       f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/gitlab apply`',
-                            'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                            'content': 'Ran ' + bq(
+                                f'_select {d}.shared && '
+                                f'CI_COMMIT_REF_NAME={t.target_branch} '
+                                f'make -C terraform/shared {t.deploy_shared_target}'
+                            ),
+                            'alt': 'or this PR is not labeled `deploy:shared`'
+                        },
+                        {
+                            'type': 'cli',
+                            'content': 'Ran ' + bq(
+                                f'_select {d}.gitlab && '
+                                f'CI_COMMIT_REF_NAME={t.target_branch} '
+                                f'make -C terraform/gitlab apply'
+                            ),
+                            'alt': 'or this PR is not labeled `deploy:gitlab`'
                         }
                     ]
                     for d in t.target_deployments
                 ]),
                 {
                     'type': 'cli',
-                    'content': 'Assigned system administrator',
-                    'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                    'content': 'Checked the items in the next section',
+                    'alt': 'or this PR is labeled `deploy:gitlab`'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Checked the items in the next section',
-                    'alt': 'or this PR includes changes to files in terraform/gitlab'
+                    'content': 'Assigned system administrator',
+                    'alt': 'or this PR is not labeled `deploy:gitlab`'
                 },
                 {
                     'type': 'h2',
@@ -618,7 +639,7 @@ def main():
                     {
                         'type': 'cli',
                         'content': f'Background migrations for `{d}.gitlab` are complete',
-                        'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                        'alt': 'or this PR is not labeled `deploy:gitlab`'
                     }
                     for d in t.target_deployments
                 ],
@@ -633,9 +654,11 @@ def main():
                 *[
                     {
                         'type': 'cli',
-                        'content': f'Selected `{d}.gitlab` and '
-                                   f'ran `make -C terraform/gitlab/runner`',
-                        'alt': 'or this PR does not change `azul_docker_version`'
+                        'content': 'Ran ' + bq(
+                            f'_select {d}.gitlab && '
+                            f'make -C terraform/gitlab/runner'
+                        ),
+                        'alt': 'or this PR is not labeled `deploy:runner`'
                     }
                     for d in t.target_deployments
                 ],
@@ -760,12 +783,14 @@ def main():
                 ]
                 for d, s in t.target_deployments.items()
             ),
-            *iif(t is T.upgrade, [
+            *iif(t.target_branch == 'develop' and t is not T.backport, [
                 {
                     'type': 'cli',
-                    'content': f'Selected `{d}.shared` and '
-                               f'ran `make -C terraform/shared apply`',
-                    'alt': 'or this PR does not change any Docker image versions'
+                    'content': 'Ran ' + bq(
+                        f'_select {d}.shared && '
+                        f'make -C terraform/shared apply'
+                    ),
+                    'alt': 'or this PR is not labeled `deploy:shared`'
                 }
                 for d in t.target_deployments
             ]),
