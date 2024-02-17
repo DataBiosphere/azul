@@ -33,6 +33,13 @@ Connected issues: #0000
 title is `Fix: ` followed by the issue title
 
 
+### Author (chains)
+
+- [ ] This PR is blocked by previous PR in the chain <sub>or is not chained to another PR</sub>
+- [ ] The blocking PR is labeled `base` <sub>or this PR is not chained to another PR</sub>
+- [ ] This PR is labeled `chained` <sub>or is not chained to another PR</sub>
+
+
 ### Author (reindex, API changes)
 
 - [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
@@ -43,13 +50,6 @@ title is `Fix: ` followed by the issue title
 - [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 - [ ] Added `a` (`A`) tag to commit title for backwards (in)compatible changes <sub>or this PR does not modify a REST API</sub>
 - [ ] Updated REST API version number in `app.py` <sub>or this PR does not modify a REST API</sub>
-
-
-### Author (chains)
-
-- [ ] This PR is blocked by previous PR in the chain <sub>or is not chained to another PR</sub>
-- [ ] The blocking PR is labeled `base` <sub>or this PR is not chained to another PR</sub>
-- [ ] This PR is labeled `chained` <sub>or is not chained to another PR</sub>
 
 
 ### Author (upgrading deployments)

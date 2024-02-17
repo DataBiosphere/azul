@@ -284,6 +284,27 @@ def main():
                 'content': '<sup>1</sup> when the issue title describes a problem, the corresponding PR title is '
                            '`Fix: ` followed by the issue title'
             }),
+            *iif(t is T.default, [
+                {
+                    'type': 'h2',
+                    'content': 'Author (chains)'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is blocked by previous PR in the chain',
+                    'alt': 'or is not chained to another PR'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'The blocking PR is labeled `base`',
+                    'alt': 'or this PR is not chained to another PR'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `chained`',
+                    'alt': 'or is not chained to another PR'
+                }
+            ]),
             *iif(t in (T.default, T.promotion), [
                 {
                     'type': 'h2',
@@ -330,27 +351,6 @@ def main():
                         'alt': 'or this PR does not modify a REST API'
                     }
                 ])
-            ]),
-            *iif(t is T.default, [
-                {
-                    'type': 'h2',
-                    'content': 'Author (chains)'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'This PR is blocked by previous PR in the chain',
-                    'alt': 'or is not chained to another PR'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'The blocking PR is labeled `base`',
-                    'alt': 'or this PR is not chained to another PR'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'This PR is labeled `chained`',
-                    'alt': 'or is not chained to another PR'
-                }
             ]),
             *iif(t not in (T.hotfix, T.backport), [
                 {
