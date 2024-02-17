@@ -219,7 +219,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
         # for how).
         #
-        'azul_docker_version': '24.0.8',
+        'azul_docker_version': '24.0.9',
 
         # The version of Python used throughout the system.
         #
