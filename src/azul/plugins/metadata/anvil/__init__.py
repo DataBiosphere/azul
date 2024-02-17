@@ -5,6 +5,9 @@ from typing import (
     Type,
 )
 
+from azul import (
+    config,
+)
 from azul.indexer.document import (
     DocumentType,
     EntityType,
@@ -63,7 +66,11 @@ class Plugin(MetadataPlugin[AnvilBundle]):
 
     @property
     def manifest_formats(self) -> Sequence[ManifestFormat]:
-        return [ManifestFormat.compact, ManifestFormat.terra_pfb]
+        return [
+            ManifestFormat.compact,
+            ManifestFormat.terra_pfb,
+            *([ManifestFormat.verbatim_pfb] if config.enable_replicas else [])
+        ]
 
     def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
         return (
@@ -214,6 +221,10 @@ class Plugin(MetadataPlugin[AnvilBundle]):
     @property
     def source_id_field(self) -> str:
         return 'sourceId'
+
+    @property
+    def implicit_hub_type(self) -> str:
+        return 'datasets'
 
     @property
     def facets(self) -> Sequence[str]:

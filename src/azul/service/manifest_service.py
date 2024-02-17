@@ -1,3 +1,4 @@
+import abc
 from abc import (
     ABCMeta,
     abstractmethod,
@@ -78,6 +79,7 @@ from furl import (
     furl,
 )
 from more_itertools import (
+    chunked,
     one,
 )
 import msgpack
@@ -107,6 +109,7 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer.document import (
+    DocumentType,
     FieldPath,
     FieldTypes,
     null_str,
@@ -1711,11 +1714,7 @@ Bundle = dict[Qualifier, Groups]
 Bundles = dict[FQID, Bundle]
 
 
-class PFBManifestGenerator(FileBasedManifestGenerator):
-
-    @classmethod
-    def format(cls) -> ManifestFormat:
-        return ManifestFormat.terra_pfb
+class PFBManifestGenerator(FileBasedManifestGenerator, metaclass=abc.ABCMeta):
 
     @classmethod
     def file_name_extension(cls):
@@ -1728,6 +1727,27 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
     @property
     def entity_type(self) -> str:
         return 'files'
+
+    def _create_pfb(self, field_types: FieldTypes, docs: Iterable[JSON]) -> str:
+        pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
+        converter = avro_pfb.PFBConverter(pfb_schema, self.repository_plugin)
+        for doc in docs:
+            converter.add_doc(doc)
+
+        entity = avro_pfb.pfb_metadata_entity(field_types)
+        entities = itertools.chain([entity], converter.entities())
+
+        fd, path = mkstemp(suffix='.avro')
+        os.close(fd)
+        avro_pfb.write_pfb_entities(entities, pfb_schema, path)
+        return path
+
+
+class TerraPFBManifestGenerator(PFBManifestGenerator):
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.terra_pfb
 
     @property
     def included_fields(self) -> list[FieldPath] | None:
@@ -1748,18 +1768,8 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         transformers = self.service.transformer_types(self.catalog)
         transformer = one(t for t in transformers if t.entity_type() == 'files')
         field_types = transformer.field_types()
-        pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
-
-        converter = avro_pfb.PFBConverter(pfb_schema, self.repository_plugin)
-        for doc in self._all_docs_sorted():
-            converter.add_doc(doc)
-
-        entity = avro_pfb.pfb_metadata_entity(field_types)
-        entities = itertools.chain([entity], converter.entities())
-
-        fd, path = mkstemp(suffix='.avro')
-        os.close(fd)
-        avro_pfb.write_pfb_entities(entities, pfb_schema, path)
+        docs = self._all_docs_sorted()
+        path = self._create_pfb(field_types, docs)
         return path, None
 
 
@@ -2005,3 +2015,85 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             # Join concatenated values using the joiner
             row = {k: self.padded_joiner.join(sorted(v)) if isinstance(v, set) else v for k, v in row.items()}
             bundle_tsv_writer.writerow(row)
+
+
+class VerbatimPFBManifestGenerator(PFBManifestGenerator):
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.verbatim_pfb
+
+    @property
+    def implicit_hub_type(self) -> str:
+        return self.service.metadata_plugin(self.catalog).implicit_hub_type
+
+    def included_fields(self) -> list[FieldPath]:
+        # This is used when searching the aggregates, which are only used to
+        # obtain the hub IDs (explicit and implicit) to perform a join on the
+        # replicas index.
+        return [
+            ('entity_id',),
+            ('contents', self.implicit_hub_type, 'document_id')
+        ]
+
+    def _replica_terms(self) -> Iterable[dict[str, str]]:
+        request = self._create_request()
+        for hit in request.scan():
+            yield {
+                # Most replicas track their hubs explicitly, however...
+                'hubs_ids': hit['entity_id'],
+                # ... for projects and datasets, there are too many hubs to
+                # track them all in the replica, so they are instead retrieved
+                # by entity ID.
+                'entity_id': hit['contents'][self.implicit_hub_type]['document_id']
+            }
+
+    def _all_replicas(self) -> Iterable[JSON]:
+        emitted_replica_ids = set()
+        page_size = 100
+        for page in chunked(self._replica_terms(), page_size):
+            for replica in self._join_replicas(page):
+                # A single replica may have many hubs. To prevent replicas from
+                # being emitted more than once, we need to keep track of
+                # replicas already emitted.
+                if replica['_id'] not in emitted_replica_ids:
+                    yield replica
+                    # Note that this can be zero for replicas that use implicit
+                    # hubs, in which case there are actually many hubs
+                    explicit_hub_count = len(replica['_source']['hub_ids'])
+                    # We don't have to track the IDs of replicas with only one
+                    # hub, since we know that there are no other hubs that could
+                    # cause their re-emission.
+                    if explicit_hub_count != 1:
+                        emitted_replica_ids.add(replica['_id'])
+
+    def _join_replicas(self,
+                       query_terms: Iterable[dict[str, str]]
+                       ) -> Iterable[JSON]:
+        terms_by_field = defaultdict(list)
+        for terms in query_terms:
+            for field, term in terms.items():
+                terms_by_field[field].append(term)
+        request = self.service.create_request(catalog=self.catalog,
+                                              entity_type='replica',
+                                              doc_type=DocumentType.replica)
+        request.query = {
+            'query': {
+                'bool': {
+                    'should': [
+                        {'terms': {field: terms}}
+                        for field, terms in terms_by_field.items()
+                    ]
+                }
+            }
+        }
+        return request.scan()
+
+    def _infer_field_types(self, replicas: Iterable[JSON]) -> FieldTypes:
+        raise NotImplementedError
+
+    def create_file(self) -> tuple[str, Optional[str]]:
+        replicas = self._all_replicas()
+        field_types = self._infer_field_types(replicas)
+        path = self._create_pfb(field_types, replicas)
+        return path, None

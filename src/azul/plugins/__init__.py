@@ -133,6 +133,7 @@ class ManifestFormat(Enum):
     terra_bdbag = 'terra.bdbag'
     terra_pfb = 'terra.pfb'
     curl = 'curl'
+    verbatim_pfb = 'verbatim.pfb'
 
 
 T = TypeVar('T', bound='Plugin')
@@ -401,6 +402,11 @@ class MetadataPlugin(Plugin[BUNDLE]):
     @property
     @abstractmethod
     def source_id_field(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def implicit_hub_type(self) -> str:
         raise NotImplementedError
 
     @property
