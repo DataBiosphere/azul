@@ -38,6 +38,7 @@ Connected issue: #0000
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
+- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to current operator
 

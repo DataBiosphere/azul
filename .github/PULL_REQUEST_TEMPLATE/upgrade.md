@@ -41,6 +41,7 @@ Connected issue: #0000
 
 - [ ] Actually approved the PR
 - [ ] Labeled connected issue as `no demo`
+- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to current operator

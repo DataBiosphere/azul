@@ -549,6 +549,11 @@ def main():
                     'Labeled PR as `no sandbox`'
                 )
             }),
+            {
+                'type': 'cli',
+                'content': 'A comment to this PR details the completed security design review',
+                'alt': 'or this PR is a promotion or a backport'
+            },
             iif(t is not T.promotion, {
                 'type': 'cli',
                 'content': 'PR title is appropriate as title of merge commit'
