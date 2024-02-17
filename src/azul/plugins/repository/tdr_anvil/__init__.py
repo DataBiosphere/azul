@@ -211,7 +211,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             '''
         )))
         bundles = []
-        dataset_count = 0
+        duos_count = 0
         for row in rows:
             # Reversibly tweak the entity UUID to prevent
             # collisions between entity IDs and bundle IDs
@@ -224,8 +224,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             # concurrently for every partition, but only one partition actually
             # emits the bundle.
             if row['entity_type'] == duos:
-                require(0 == dataset_count)
-                dataset_count += 1
+                require(0 == duos_count)
+                duos_count += 1
                 # Ensure that one partition will always contain the DUOS bundle
                 # regardless of the choice of common prefix
                 if not bundle_uuid[len(common_prefix):].startswith(prefix):
@@ -291,8 +291,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             return self._supplementary_bundle(bundle_fqid)
         elif bundle_fqid.entity_type is BundleEntityType.duos:
             assert config.duos_service_url is not None, bundle_fqid
-            log.info('Bundle %r is a dataset description', bundle_fqid.uuid)
-            return self._dataset_description(bundle_fqid)
+            log.info('Bundle %r is a DUOS bundle', bundle_fqid.uuid)
+            return self._duos_bundle(bundle_fqid)
         else:
             assert False, bundle_fqid.entity_type
 
@@ -379,7 +379,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         result.add_links({Link(**link_args)}, entities_by_key)
         return result
 
-    def _dataset_description(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
+    def _duos_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         duos_info = self.tdr.get_duos(bundle_fqid.source)
         description = None if duos_info is None else duos_info.get('studyDescription')
         entity_id = change_version(bundle_fqid.uuid,

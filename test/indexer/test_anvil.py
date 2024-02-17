@@ -56,7 +56,7 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     def bundle_fqid(cls,
                     *,
                     uuid,
-                    version,
+                    version='',
                     entity_type=BundleEntityType.primary
                     ) -> TDRAnvilBundleFQID:
         return TDRAnvilBundleFQID(source=cls.source,
@@ -65,15 +65,18 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
                                   entity_type=entity_type)
 
     @classmethod
-    def bundles(cls) -> list[TDRAnvilBundleFQID]:
-        return [
-            cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
-                            version='')
-        ]
+    def primary_bundle(cls) -> TDRAnvilBundleFQID:
+        return cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068')
 
-    @property
-    def bundle(self) -> TDRAnvilBundleFQID:
-        return one(self.bundles())
+    @classmethod
+    def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
+        return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
+                               entity_type=BundleEntityType.supplementary)
+
+    @classmethod
+    def duos_bundle(cls) -> TDRAnvilBundleFQID:
+        return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
+                               entity_type=BundleEntityType.duos)
 
     @classmethod
     def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
@@ -95,7 +98,8 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
 
     def test_indexing(self):
         self.maxDiff = None
-        canned_hits = self._load_canned_result(self.bundle)
+        bundle = self.primary_bundle()
+        canned_hits = self._load_canned_result(bundle)
         for enable_replicas in True, False:
             with patch.object(target=type(config),
                               attribute='enable_replicas',
@@ -112,23 +116,29 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
                         ]
                     self.index_service.create_indices(self.catalog)
                     try:
-                        self._index_canned_bundle(self.bundle)
+                        self._index_canned_bundle(bundle)
                         hits = self._get_all_hits()
                         hits.sort(key=itemgetter('_id'))
                         self.assertEqual(expected_hits, hits)
                     finally:
                         self.index_service.delete_indices(self.catalog)
 
-    def test_fetch_bundle(self):
-        canned_bundle = self._load_canned_bundle(self.bundle)
+    def _test_fetch_bundle(self, bundle_fqid: TDRAnvilBundleFQID):
+        canned_bundle = self._load_canned_bundle(bundle_fqid)
         assert isinstance(canned_bundle, TDRAnvilBundle)
-        self._make_mock_tdr_tables(self.bundle)
+        self._make_mock_tdr_tables(bundle_fqid)
         plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
-        bundle = plugin.fetch_bundle(self.bundle)
+        bundle = plugin.fetch_bundle(bundle_fqid)
         assert isinstance(bundle, TDRAnvilBundle)
         self.assertEqual(canned_bundle.fqid, bundle.fqid)
         self.assertEqual(canned_bundle.entities, bundle.entities)
         self.assertEqual(canned_bundle.links, bundle.links)
+
+    def test_fetch_primary_bundle(self):
+        self._test_fetch_bundle(self.primary_bundle())
+
+    def test_fetch_supplementary_bundle(self):
+        self._test_fetch_bundle(self.supplementary_bundle())
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
@@ -147,11 +157,7 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='dataset',
                                       entity_id='2370f948-2783-4eb6-afea-e022897f4dcf')
-        dataset_bundle = self.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                                          version=self.bundle.version,
-                                          entity_type=BundleEntityType.duos)
-
-        bundles = [self.bundle, dataset_bundle]
+        bundles = [self.primary_bundle(), self.duos_bundle()]
         for bundle_fqid in bundles:
             bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
             bundle.links.clear()
