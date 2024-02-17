@@ -270,13 +270,13 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `partial` label to PR',
-                    'alt': 'or this PR completely resolves all connected issues'
+                    'content': 'This PR is labeled `partial`',
+                    'alt': 'or completely resolves all connected issues'
                 },
                 {
                     'type': 'cli',
-                    'content': 'All connected issues are resolved partially',
-                    'alt': 'or this PR does not have the `partial` label'
+                    'content': 'This PR partially resolves each of the connected issues',
+                    'alt': 'or does not have the `partial` label'
                 }
             ]),
             iif(t is T.default, {
@@ -297,8 +297,8 @@ def main():
                 *[
                     {
                         'type': 'cli',
-                        'content': f'PR is labeled `reindex:{d}`',
-                        'alt': f'or this PR does not require reindexing `{d}`'
+                        'content': f'This PR is labeled `reindex:{d}`',
+                        'alt': f'or does not require reindexing `{d}`'
                     }
                     for d in t.target_deployments
                 ],
@@ -315,7 +315,7 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'PR and connected issue are labeled `API`',
+                    'content': 'This PR and its connected issues are labeled `API`',
                     'alt': 'or this PR does not modify a REST API'
                 },
                 *iif(t is T.default, [
@@ -339,17 +339,17 @@ def main():
                 {
                     'type': 'cli',
                     'content': 'This PR is blocked by previous PR in the chain',
+                    'alt': 'or is not chained to another PR'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'The blocking PR is labeled `base`',
                     'alt': 'or this PR is not chained to another PR'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `base` label to the blocking PR',
-                    'alt': 'or this PR is not chained to another PR'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'Added `chained` label to this PR',
-                    'alt': 'or this PR is not chained to another PR'
+                    'content': 'This PR is labeled `chained`',
+                    'alt': 'or is not chained to another PR'
                 }
             ]),
             *iif(t not in (T.hotfix, T.backport), [
@@ -441,8 +441,8 @@ def main():
                         },
                         {
                             'type': 'cli',
-                            'content': 'Added `partial` label to PR',
-                            'alt': 'or this PR is a permanent hotfix'
+                            'content': 'This PR is labeled `partial`',
+                            'alt': 'or represents a permanent hotfix'
                         },
                     ] if t is T.hotfix else [
                     ]),
@@ -461,22 +461,22 @@ def main():
                 {
                     'type': 'cli',
                     'content': 'Ran `make requirements_update`',
-                    'alt': 'or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile'
+                    'alt': 'or this PR does not modify `requirements*.txt`, `common.mk`, `Makefile` and `Dockerfile`'
                 },
                 {
                     'type': 'cli',
                     'content': 'Added `R` tag to commit title',
-                    'alt': 'or this PR does not touch requirements*.txt'
+                    'alt': 'or this PR does not modify `requirements*.txt`'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `reqs` label to PR',
-                    'alt': 'or this PR does not touch requirements*.txt'
+                    'content': 'This PR is labeled `reqs`',
+                    'alt': 'or does not modify `requirements*.txt`'
                 },
                 iif(t in (T.default, T.upgrade), {
                     'type': 'cli',
                     'content': '`make integration_test` passes in personal deployment',
-                    'alt': 'or this PR does not touch functionality that could break the IT'
+                    'alt': 'or this PR does not modify functionality that could affect the IT outcome'
                 })
             ]),
             *iif(t is T.default, [
@@ -712,11 +712,13 @@ def main():
             ))),
             {
                 'type': 'cli',
-                'content': 'Title of merge commit starts with title from this PR'
+                'content': 'The title of the merge commit starts with the title of this PR'
             },
             {
                 'type': 'cli',
-                'content': f"Added PR reference {iif(t is T.backport, '(this PR) ')}to merge commit title"
+                'content': 'Added PR # reference '
+                           + iif(t is T.backport, '(to this PR) ')
+                           + 'to merge commit title'
             },
             {
                 'type': 'cli',

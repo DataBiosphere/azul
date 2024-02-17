@@ -23,15 +23,15 @@ Connected issue: #0000
 - [ ] Added `h` tag to commit title <sub>or this PR does not include a temporary hotfix</sub>
 - [ ] Added `H` tag to commit title <sub>or this PR does not include a permanent hotfix</sub>
 - [ ] Added `hotfix` label to PR
-- [ ] Added `partial` label to PR <sub>or this PR is a permanent hotfix</sub>
+- [ ] This PR is labeled `partial` <sub>or represents a permanent hotfix</sub>
 
 
 ### Author (before every review)
 
 - [ ] Rebased PR branch on `prod`, squashed old fixups
-- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
-- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not modify `requirements*.txt`, `common.mk`, `Makefile` and `Dockerfile`</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not modify `requirements*.txt`</sub>
+- [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
 
 
 ### System administrator (after approval)
@@ -48,8 +48,8 @@ Connected issue: #0000
 - [ ] Squashed PR branch and rebased onto `prod`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Title of merge commit starts with title from this PR
-- [ ] Added PR reference to merge commit title
+- [ ] The title of the merge commit starts with the title of this PR
+- [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
 - [ ] Moved connected issue to *Merged prod* column in ZenHub
 - [ ] Pushed merge commit to GitHub

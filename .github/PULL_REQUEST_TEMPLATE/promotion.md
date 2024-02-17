@@ -21,9 +21,9 @@ Connected issue: #0000
 
 ### Author (reindex, API changes)
 
-- [ ] PR is labeled `reindex:prod` <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] This PR is labeled `reindex:prod` <sub>or does not require reindexing `prod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `prod` <sub>or requires a full reindex or is not labeled`reindex:prod`</sub>
-- [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
+- [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 
 
 ### Author (upgrading deployments)
@@ -60,8 +60,8 @@ Connected issue: #0000
 ### Operator (before pushing merge the commit)
 
 - [ ] Ran `_select prod.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
-- [ ] Title of merge commit starts with title from this PR
-- [ ] Added PR reference to merge commit title
+- [ ] The title of the merge commit starts with the title of this PR
+- [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
 - [ ] Pushed merge commit to GitHub
 

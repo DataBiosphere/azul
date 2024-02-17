@@ -26,8 +26,8 @@ Connected issues: #0000
 ### Author (partiality)
 
 - [ ] Added `p` tag to titles of partial commits
-- [ ] Added `partial` label to PR <sub>or this PR completely resolves all connected issues</sub>
-- [ ] All connected issues are resolved partially <sub>or this PR does not have the `partial` label</sub>
+- [ ] This PR is labeled `partial` <sub>or completely resolves all connected issues</sub>
+- [ ] This PR partially resolves each of the connected issues <sub>or does not have the `partial` label</sub>
 
 <sup>1</sup> when the issue title describes a problem, the corresponding PR
 title is `Fix: ` followed by the issue title
@@ -36,20 +36,20 @@ title is `Fix: ` followed by the issue title
 ### Author (reindex, API changes)
 
 - [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
-- [ ] PR is labeled `reindex:dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] PR is labeled `reindex:anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] PR is labeled `reindex:anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
+- [ ] This PR is labeled `reindex:dev` <sub>or does not require reindexing `dev`</sub>
+- [ ] This PR is labeled `reindex:anvildev` <sub>or does not require reindexing `anvildev`</sub>
+- [ ] This PR is labeled `reindex:anvilprod` <sub>or does not require reindexing `anvilprod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `dev`, `anvildev`, `anvilprod` and `prod` <sub>or requires a full reindex or carries none of the labels `reindex:dev`, `reindex:anvildev`, `reindex:anvilprod` and `reindex:prod`</sub>
-- [ ] PR and connected issue are labeled `API` <sub>or this PR does not modify a REST API</sub>
+- [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 - [ ] Added `a` (`A`) tag to commit title for backwards (in)compatible changes <sub>or this PR does not modify a REST API</sub>
 - [ ] Updated REST API version number in `app.py` <sub>or this PR does not modify a REST API</sub>
 
 
 ### Author (chains)
 
-- [ ] This PR is blocked by previous PR in the chain <sub>or this PR is not chained to another PR</sub>
-- [ ] Added `base` label to the blocking PR <sub>or this PR is not chained to another PR</sub>
-- [ ] Added `chained` label to this PR <sub>or this PR is not chained to another PR</sub>
+- [ ] This PR is blocked by previous PR in the chain <sub>or is not chained to another PR</sub>
+- [ ] The blocking PR is labeled `base` <sub>or this PR is not chained to another PR</sub>
+- [ ] This PR is labeled `chained` <sub>or is not chained to another PR</sub>
 
 
 ### Author (upgrading deployments)
@@ -77,10 +77,10 @@ title is `Fix: ` followed by the issue title
 ### Author (before every review)
 
 - [ ] Rebased PR branch on `develop`, squashed old fixups
-- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
-- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not modify `requirements*.txt`, `common.mk`, `Makefile` and `Dockerfile`</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not modify `requirements*.txt`</sub>
+- [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
+- [ ] `make integration_test` passes in personal deployment <sub>or this PR does not modify functionality that could affect the IT outcome</sub>
 
 
 ### Peer reviewer (after requesting changes)
@@ -163,8 +163,8 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Checked for failures in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
 - [ ] Checked for failures in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
 - [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
-- [ ] Title of merge commit starts with title from this PR
-- [ ] Added PR reference to merge commit title
+- [ ] The title of the merge commit starts with the title of this PR
+- [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but only include `p` if the PR is labeled `partial`</sub>
 - [ ] Moved connected issues to Merged column in ZenHub
 - [ ] Pushed merge commit to GitHub
