@@ -54,7 +54,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference (to this PR) to merge commit title
-- [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
+- [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
 - [ ] Pushed merge commit to GitHub
 
 

@@ -732,8 +732,8 @@ def main():
                 'type': 'cli',
                 'content': 'Collected commit title tags in merge commit title',
                 'alt': iif(t is T.default,
-                           'but only include `p` if the PR is labeled `partial`',
-                           'but exclude any `p` tags')
+                           'but only included `p` if the PR is also labeled `partial`',
+                           'but excluded any `p` tags')
             },
             iif(t in (T.default, T.upgrade, T.hotfix), {
                 'type': 'cli',

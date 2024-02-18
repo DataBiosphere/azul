@@ -166,7 +166,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference to merge commit title
-- [ ] Collected commit title tags in merge commit title <sub>but only include `p` if the PR is labeled `partial`</sub>
+- [ ] Collected commit title tags in merge commit title <sub>but only included `p` if the PR is also labeled `partial`</sub>
 - [ ] Moved connected issues to Merged column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
