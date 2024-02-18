@@ -83,6 +83,9 @@ images_we_build_ourselves = {
     for k in ['Elasticsearch', 'PyCharm']
 }
 
+prod = 'prod'
+develop = 'develop'
+
 
 class T(Enum):
     default = 'pull_request_template.md'
@@ -101,7 +104,7 @@ class T(Enum):
 
     @property
     def target_branch(self):
-        return 'prod' if self in (T.promotion, T.hotfix) else 'develop'
+        return prod if self in (T.promotion, T.hotfix) else develop
 
     @property
     def issues(self):
@@ -122,9 +125,9 @@ class T(Enum):
         return (
             {
                 # There currently is no sandbox for production deployments
-                'prod': None
+                prod: None
             }
-            if self.target_branch == 'prod' else
+            if self.target_branch == prod else
             {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
@@ -136,7 +139,7 @@ class T(Enum):
     def downstream_deployments(self) -> AbstractSet[str]:
         return OrderedSet(chain(
             self.target_deployments.keys(),
-            self.promotion.target_deployments if self.target_branch == 'develop' else []
+            self.promotion.target_deployments if self.target_branch == develop else []
         ))
 
     @property
@@ -151,7 +154,7 @@ class T(Enum):
 
     @property
     def deploy_shared_target(self) -> str:
-        return 'apply_keep_unused' if self.target_branch == 'develop' else 'apply'
+        return 'apply_keep_unused' if self.target_branch == develop else 'apply'
 
 
 def bq(s):
@@ -165,16 +168,16 @@ def main():
             {
                 'type': 'comment',
                 'content': {
-                    T.default: 'This is the PR template for regular PRs against `develop`. '
+                    T.default: f'This is the PR template for regular PRs against {bq(develop)}. '
                                "Edit the URL in your browser's location bar, appending either "
                                + join_grammatically([f'`&template={tt.file}`' for tt in T if tt.dir],
                                                     joiner=', ',
                                                     last_joiner=' or ')
                                + ' to switch the template.',
-                    T.backport: 'This is the PR template for backport PRs against `develop`.',
+                    T.backport: f'This is the PR template for backport PRs against {bq(develop)}.',
                     T.upgrade: 'This is the PR template for upgrading Azul dependencies.',
-                    T.hotfix: 'This is the PR template for hotfix PRs against `prod`.',
-                    T.promotion: 'This is the PR template for promotion PRs against `prod`.'
+                    T.hotfix: f'This is the PR template for hotfix PRs against {bq(prod)}.',
+                    T.promotion: f'This is the PR template for promotion PRs against {bq(prod)}.'
                 }[t]
             },
             iif(t is not T.backport, {
@@ -357,7 +360,7 @@ def main():
                     'type': 'h2',
                     'content': 'Author (upgrading deployments)'
                 },
-                *iif(t.target_branch == 'develop', [
+                *iif(t.target_branch == develop, [
                     {
                         'type': 'cli',
                         'content': 'Documented upgrading of deployments in UPGRADING.rst',
@@ -422,7 +425,7 @@ def main():
                         {
                             'type': 'cli',
                             'content': 'Reverted the temporary hotfixes for any connected issues',
-                            'alt': 'or the `prod` branch has no temporary hotfixes for any connected issues'
+                            'alt': f'or the {bq(prod)} branch has no temporary hotfixes for any connected issues'
                         }
                     ] if t is T.default else [
                         {
@@ -756,7 +759,7 @@ def main():
                         'alt': 'or this PR is not labeled `base`'
                     }
                     for content in [
-                        'Changed the target branch of the blocked PR to `develop`',
+                        f'Changed the target branch of the blocked PR to {bq(develop)}',
                         'Removed the `chained` label from the blocked PR',
                         'Removed the blocking relationship from the blocked PR',
                         'Removed the `base` label from this PR'
@@ -790,7 +793,7 @@ def main():
                 ]
                 for d, s in t.target_deployments.items()
             ),
-            *iif(t.target_branch == 'develop' and t is not T.backport, [
+            *iif(t.target_branch == develop and t is not T.backport, [
                 {
                     'type': 'cli',
                     'content': 'Ran ' + bq(
@@ -889,7 +892,7 @@ def main():
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
                            'relevant<sup>1</sup> findings as a comment on the connected issue.'
             }),
-            *iif(t.target_branch == 'develop' and t is not T.backport, [
+            *iif(t.target_branch == develop and t is not T.backport, [
                 {
                     'type': 'cli',
                     'content': 'Propagated the '
