@@ -39,6 +39,7 @@ from azul import (
 from azul.http import (
     HasCachedHttpClient,
     LimitedRetryHttpClient,
+    Propagate429HttpClient,
 )
 from azul.types import (
     MutableJSON,
@@ -182,7 +183,9 @@ class CompactDRSURI(DRSURI):
 class IdentifiersDotOrgClient(HasCachedHttpClient):
 
     def _create_http_client(self) -> urllib3.request.RequestMethods:
-        return LimitedRetryHttpClient(super()._create_http_client())
+        return Propagate429HttpClient(
+            LimitedRetryHttpClient(super()._create_http_client())
+        )
 
     def resolve(self, prefix: str, accession: str) -> mutable_furl:
         namespace_id = self._prefix_to_namespace(prefix)

@@ -92,6 +92,12 @@ class LimitedTimeoutException(Exception):
         super().__init__(f'No response from {url} within {timeout} seconds')
 
 
+class TooManyRequestsException(Exception):
+
+    def __init__(self, url: furl):
+        super().__init__(f'Maximum request rate exceeded for {url}')
+
+
 class LimitedRetry(urllib3.Retry):
     """
     First, set up the fixtures:
@@ -195,6 +201,16 @@ class LimitedRetryHttpClient(HttpClientDecorator):
             return super().urlopen(method, url, retries=retry, timeout=timeout, **kwargs)
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.MaxRetryError):
             raise LimitedTimeoutException(url, timeout)
+
+
+class Propagate429HttpClient(HttpClientDecorator):
+
+    def urlopen(self, method, url, **kwargs):
+        response = super().urlopen(method, url, **kwargs)
+        if response.status == 429:
+            raise TooManyRequestsException(url)
+        else:
+            return response
 
 
 class HasCachedHttpClient:

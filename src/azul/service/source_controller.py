@@ -4,6 +4,7 @@ from typing import (
 )
 
 from chalice import (
+    TooManyRequestsError,
     UnauthorizedError,
 )
 
@@ -20,6 +21,7 @@ from azul.chalice import (
 )
 from azul.http import (
     LimitedTimeoutException,
+    TooManyRequestsException,
 )
 from azul.service import (
     Filters,
@@ -51,6 +53,8 @@ class SourceController(ServiceAppController):
             raise UnauthorizedError
         except LimitedTimeoutException as e:
             raise ServiceUnavailableError(*e.args)
+        except TooManyRequestsException as e:
+            raise TooManyRequestsError(*e.args)
         else:
             authoritative_source_ids = {source.id for source in sources}
             cached_source_ids = self._list_source_ids(catalog, authentication)
@@ -77,6 +81,8 @@ class SourceController(ServiceAppController):
             raise UnauthorizedError
         except LimitedTimeoutException as e:
             raise ServiceUnavailableError(*e.args)
+        except TooManyRequestsException as e:
+            raise TooManyRequestsError(*e.args)
         else:
             return source_ids
 

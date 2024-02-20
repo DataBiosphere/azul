@@ -14,6 +14,7 @@ from typing import (
 from chalice import (
     BadRequestError,
     NotFoundError,
+    TooManyRequestsError,
 )
 
 from azul import (
@@ -31,6 +32,7 @@ from azul.chalice import (
 )
 from azul.http import (
     LimitedTimeoutException,
+    TooManyRequestsException,
 )
 from azul.indexer.document import (
     FieldType,
@@ -242,6 +244,8 @@ class RepositoryController(SourceController):
             download.update(plugin, authentication)
         except LimitedTimeoutException as e:
             raise ServiceUnavailableError(*e.args)
+        except TooManyRequestsException as e:
+            raise TooManyRequestsError(*e.args)
         if download.retry_after is not None:
             retry_after = min(download.retry_after, int(1.3 ** request_index))
             query_params = {
