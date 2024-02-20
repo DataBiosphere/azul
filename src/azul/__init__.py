@@ -1469,6 +1469,10 @@ class Config:
 
     waf_rate_rule_name = 'RateRule'
 
+    waf_rate_rule_period = 300  # seconds; this value is fixed by AWS
+
+    waf_rate_rule_retry_after = 30  # seconds
+
     @property
     def docker_image_manifests_path(self) -> Path:
         return Path(config.project_root) / 'image_manifests.json'
