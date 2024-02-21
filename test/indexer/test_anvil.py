@@ -18,7 +18,6 @@ from more_itertools import (
 )
 
 from azul import (
-    CatalogName,
     config,
 )
 from azul.indexer.document import (
@@ -77,17 +76,6 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
                                entity_type=BundleEntityType.duos)
-
-    @classmethod
-    def catalog_config(cls) -> dict[CatalogName, config.Catalog]:
-        return {
-            cls.catalog: config.Catalog(name=cls.catalog,
-                                        atlas='anvil',
-                                        internal=False,
-                                        plugins=dict(metadata=config.Catalog.Plugin(name='anvil'),
-                                                     repository=config.Catalog.Plugin(name='tdr_anvil')),
-                                        sources={str(cls.source.spec)})
-        }
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]):
