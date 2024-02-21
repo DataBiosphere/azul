@@ -1140,6 +1140,7 @@ class Document(Generic[C]):
                          field_types: Union[FieldType, FieldTypes],
                          *,
                          forward: bool,
+                         globs: Optional[list[str]] = None,
                          path: tuple[str, ...] = ()
                          ) -> AnyMutableJSON:
         """
@@ -1155,6 +1156,10 @@ class Document(Generic[C]):
 
         :param forward: If True, substitute None values with their respective
                         Elasticsearch placeholder.
+
+        :param globs: A list of dotted field paths expected to be present in the
+                      resulting document. If an unexpected field is found, an
+                      AssertionError will be raised.
 
         :param path: Used internally during document traversal to capture the
                      current path into the document as a tuple of keys.
@@ -1177,14 +1182,25 @@ class Document(Generic[C]):
                             raise KeyError(f'Key {key!r} not defined in field_types')
                         except TypeError:
                             raise TypeError(f'Key {key!r} not defined in field_types')
-                        new_doc[key] = cls.translate_fields(val, field_type, forward=forward, path=(*path, key))
+                        new_doc[key] = cls.translate_fields(val,
+                                                            field_type,
+                                                            forward=forward,
+                                                            globs=globs,
+                                                            path=(*path, key))
                         if forward and isinstance(field_type, FieldType) and field_type.shadowed:
                             # Add a non-translated shadow copy of this field's
                             # numeric value for sum aggregations
                             new_doc[key + '_'] = val
                 return new_doc
             elif isinstance(doc, list):
-                return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
+                return [
+                    cls.translate_fields(val,
+                                         field_types,
+                                         forward=forward,
+                                         globs=globs,
+                                         path=path)
+                    for val in doc
+                ]
             else:
                 assert False, (path, type(doc))
         else:
@@ -1199,6 +1215,10 @@ class Document(Generic[C]):
                 field_type = field_types
             else:
                 assert False, (path, type(field_types))
+            if globs:
+                # The glob may be a prefix instead of a complete path, as is the
+                # case for `contents.files.related_files`
+                assert '.'.join(path) in globs or '.'.join(path[:-1]) in globs, path
             if forward:
                 if isinstance(doc, list):
                     if not doc and field_type.allow_sorting_by_empty_lists:

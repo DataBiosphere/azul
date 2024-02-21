@@ -2,6 +2,7 @@ from collections.abc import (
     Iterable,
 )
 from typing import (
+    Optional,
     Type,
 )
 
@@ -29,6 +30,7 @@ from azul.indexer.transform import (
     Transformer,
 )
 from azul.plugins import (
+    FieldGlobs,
     FieldPath,
     MetadataPlugin,
 )
@@ -109,8 +111,10 @@ class DocumentService:
                          catalog: CatalogName,
                          doc: AnyJSON,
                          *,
-                         forward: bool
+                         forward: bool,
+                         globs: Optional[FieldGlobs] = None
                          ) -> AnyMutableJSON:
         return Document.translate_fields(doc,
                                          self.field_types(catalog),
-                                         forward=forward)
+                                         forward=forward,
+                                         globs=globs)
