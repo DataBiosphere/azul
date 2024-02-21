@@ -1,0 +1,41 @@
+{
+    "tables": {
+        "dataset": {
+            "rows": [
+                {
+                    "datarepo_row_id": "677dd55c-3fa3-4b07-8c98-985d94d7577e",
+                    "dataset_id": "385290c3-dff5-fb6d-2501-fa0ba3ad1c35",
+                    "consent_group": [],
+                    "data_use_permission": [],
+                    "owner": [],
+                    "principal_investigator": [],
+                    "registered_identifier": [],
+                    "title": "ANVIL_1000G_2019_Dev",
+                    "data_modality": [],
+                    "source_datarepo_row_ids": [
+                        "workspace_attributes:95684a9c-e0a1-4c05-9f1f-de628a38420c"
+                    ]
+                }
+            ]
+        },
+        "file": {
+            "rows": [
+                {
+                    "datarepo_row_id": "6b0f6c0f-5d80-4242-accb-840921351cd5",
+                    "file_id": "1fab11f5-7eab-4318-9a58-68d8d06e0715",
+                    "data_modality": [],
+                    "file_format": ".txt",
+                    "file_size": 15079345,
+                    "file_md5sum": "S/GBrRjzZAQYqh3rdiPYzA\u003d\u003d",
+                    "reference_assembly": [],
+                    "file_name": "CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt",
+                    "file_ref": "drs://mock_tdr.lan/v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715",
+                    "is_supplementary": true,
+                    "source_datarepo_row_ids": [
+                        "file_inventory:04ff3af2-0543-4ea6-830a-d31b957fa2ee"
+                    ]
+                }
+            ]
+        }
+    }
+}

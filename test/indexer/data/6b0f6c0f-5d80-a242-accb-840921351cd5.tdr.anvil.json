@@ -1,0 +1,49 @@
+{
+    "entities": {
+        "dataset/677dd55c-3fa3-4b07-8c98-985d94d7577e": {
+            "consent_group": [],
+            "data_modality": [],
+            "data_use_permission": [],
+            "datarepo_row_id": "677dd55c-3fa3-4b07-8c98-985d94d7577e",
+            "dataset_id": "385290c3-dff5-fb6d-2501-fa0ba3ad1c35",
+            "owner": [],
+            "principal_investigator": [],
+            "registered_identifier": [],
+            "source_datarepo_row_ids": [
+                "workspace_attributes:95684a9c-e0a1-4c05-9f1f-de628a38420c"
+            ],
+            "title": "ANVIL_1000G_2019_Dev",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "file/6b0f6c0f-5d80-4242-accb-840921351cd5": {
+            "data_modality": [],
+            "datarepo_row_id": "6b0f6c0f-5d80-4242-accb-840921351cd5",
+            "file_format": ".txt",
+            "file_id": "1fab11f5-7eab-4318-9a58-68d8d06e0715",
+            "file_md5sum": "S/GBrRjzZAQYqh3rdiPYzA==",
+            "file_name": "CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt",
+            "file_ref": "drs://mock_tdr.lan/v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715",
+            "file_size": 15079345,
+            "is_supplementary": true,
+            "reference_assembly": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:04ff3af2-0543-4ea6-830a-d31b957fa2ee"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z",
+            "drs_uri": "drs://mock_tdr.lan/v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715",
+            "sha256": "",
+            "crc32": ""
+        }
+    },
+    "links": [
+        {
+            "inputs": [
+                "dataset/677dd55c-3fa3-4b07-8c98-985d94d7577e"
+            ],
+            "activity": null,
+            "outputs": [
+                "file/6b0f6c0f-5d80-4242-accb-840921351cd5"
+            ]
+        }
+    ]
+}

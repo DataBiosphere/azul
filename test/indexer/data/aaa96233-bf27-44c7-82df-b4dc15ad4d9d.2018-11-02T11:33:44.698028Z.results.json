@@ -243,6 +243,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -488,6 +491,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -728,6 +734,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -993,6 +1002,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -1258,6 +1270,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -1573,6 +1588,8 @@
                         "_type": [
                             "project"
                         ],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": [0],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -1873,6 +1890,8 @@
                         "_type": [
                             "project"
                         ],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": [0],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -2171,6 +2190,8 @@
                         "_type": [
                             "project"
                         ],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": [0],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -2429,6 +2450,8 @@
                         "_type": [
                             "project"
                         ],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": [0],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -2751,6 +2774,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -3025,6 +3051,9 @@
                         ],
                         "_type": "project",
                         "accessions": [],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": 0,
+                        "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
@@ -3302,6 +3331,8 @@
                         "_type": [
                             "project"
                         ],
+                        "bionetwork_name": ["~null"],
+                        "is_tissue_atlas_project": [0],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }

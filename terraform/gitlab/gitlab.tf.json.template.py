@@ -18,7 +18,7 @@ from azul.deployment import (
     aws,
 )
 from azul.docker import (
-    resolve_docker_image_for_launch,
+    resolve_docker_image_for_pull,
 )
 from azul.strings import (
     departition,
@@ -230,14 +230,13 @@ other_public_keys = {
     'prod': []
 }
 
-# Note that a change to the image references here also requires updating
-# azul_docker_images in environment.py and redeploying the `shared` TF component
-# prior to deploying the `gitlab` component.
+# FIXME: Launch GitLab, DinD & runner images using image ID
+#        https://github.com/DataBiosphere/azul/issues/5960
 
-clamav_image = resolve_docker_image_for_launch('clamav')
-dind_image = resolve_docker_image_for_launch('dind')
-gitlab_image = resolve_docker_image_for_launch('gitlab')
-runner_image = resolve_docker_image_for_launch('gitlab_runner')
+clamav_image, _ = resolve_docker_image_for_pull('clamav')
+dind_image, _ = resolve_docker_image_for_pull('dind')
+gitlab_image, _ = resolve_docker_image_for_pull('gitlab')
+runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
@@ -1627,7 +1626,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'ExecStartPre=-/usr/bin/docker rm gitlab-dind',
                                 'ExecStartPre=-/usr/bin/docker network rm gitlab-runner-net',
                                 'ExecStartPre=/usr/bin/docker network create gitlab-runner-net',
-                                'ExecStartPre=/usr/bin/docker pull ' + dind_image,
+                                'ExecStartPre=/usr/bin/docker pull ' + str(dind_image),
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'run',
@@ -1677,7 +1676,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--volume /etc/resolv.conf:/etc/resolv.conf',
                                     f'--volume {gitlab_mount}/docker:/var/lib/docker',
                                     f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
-                                    dind_image
+                                    str(dind_image)
                                 ),
                                 '[Install]',
                                 'WantedBy=multi-user.target',
@@ -1701,7 +1700,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab',
                                 'ExecStartPre=-/usr/bin/docker rm gitlab',
-                                'ExecStartPre=/usr/bin/docker pull ' + gitlab_image,
+                                'ExecStartPre=/usr/bin/docker pull ' + str(gitlab_image),
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'run',
@@ -1714,7 +1713,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     f'--volume {gitlab_mount}/config:/etc/gitlab',
                                     f'--volume {gitlab_mount}/logs:/var/log/gitlab',
                                     f'--volume {gitlab_mount}/data:/var/opt/gitlab',
-                                    gitlab_image
+                                    str(gitlab_image)
                                 ),
                                 '[Install]',
                                 'WantedBy=multi-user.target'
@@ -1738,7 +1737,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'Restart=always',
                                 'ExecStartPre=-/usr/bin/docker stop gitlab-runner',
                                 'ExecStartPre=-/usr/bin/docker rm gitlab-runner',
-                                'ExecStartPre=/usr/bin/docker pull ' + runner_image,
+                                'ExecStartPre=/usr/bin/docker pull ' + str(runner_image),
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'run',
@@ -1747,7 +1746,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
                                     '--network gitlab-runner-net',
                                     '--env DOCKER_HOST=tcp://gitlab-dind:2375',
-                                    runner_image
+                                    str(runner_image)
                                 ),
                                 '[Install]',
                                 'WantedBy=multi-user.target'
@@ -1771,7 +1770,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop clamscan',
                                 'ExecStartPre=-/usr/bin/docker rm clamscan',
-                                'ExecStartPre=/usr/bin/docker pull ' + clamav_image,
+                                'ExecStartPre=/usr/bin/docker pull ' + str(clamav_image),
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'run',
@@ -1780,7 +1779,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--volume /var/run/docker.sock:/var/run/docker.sock',
                                     '--volume /:/scan:ro',
                                     f'--volume {gitlab_mount}/clamav:/var/lib/clamav:rw',
-                                    clamav_image,
+                                    str(clamav_image),
                                     '/bin/sh',
                                     '-c',
                                     qq(
@@ -1829,15 +1828,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
-                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
-                                # journald, so we don't need systemd to capture process output.
-                                'StandardOutput=null',
-                                'StandardError=null',
+                                # We omit the StandardOutput and StandardError
+                                # directives for `docker exec` commands since,
+                                # although we explicitly configure Docker to log
+                                # to journald, it only does so for `docker run`
+                                # commands. Omitting these directives here, the
+                                # service uses systemd's default (journal).
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop prune-images',
                                 'ExecStartPre=-/usr/bin/docker rm prune-images',
-                                'ExecStartPre=/usr/bin/docker pull ' + dind_image,
+                                'ExecStartPre=/usr/bin/docker pull ' + str(dind_image),
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'exec',  # Execute (as in `docker exec`) …
@@ -1884,15 +1885,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab.service',
                                 'Requires=docker.service gitlab.service',
                                 '[Service]',
-                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
-                                # journald, so we don't need systemd to capture process output.
-                                'StandardOutput=null',
-                                'StandardError=null',
+                                # We omit the StandardOutput and StandardError
+                                # directives for `docker exec` commands since,
+                                # although we explicitly configure Docker to log
+                                # to journald, it only does so for `docker run`
+                                # commands. Omitting these directives here, the
+                                # service uses systemd's default (journal).
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop registry-garbage-collect',
                                 'ExecStartPre=-/usr/bin/docker rm registry-garbage-collect',
-                                'ExecStartPre=/usr/bin/docker pull ' + gitlab_image,
+                                'ExecStartPre=/usr/bin/docker pull ' + str(gitlab_image),
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'exec',  # Execute (as in `docker exec`) …

@@ -225,14 +225,22 @@ class ManifestController(SourceController):
                 'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
 
+        # Note: Response objects returned without a 'Content-Type' header will
+        # be given one of type 'application/json' as default by Chalice.
+        # https://aws.github.io/chalice/tutorials/basicrestapi.html#customizing-the-http-response
+
         if fetch:
             return Response(body=body)
         else:
             status = body.pop('Status')
             command_line: FlatJSON = body.pop('CommandLine', None)
             headers = {k: str(v) for k, v in body.items()}
-            new_body = None if command_line is None else ''.join(
-                f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
-                for shell, cmd in command_line.items()
-            )
+            if command_line is None:
+                new_body = None
+            else:
+                headers['Content-Type'] = 'text/plain'
+                new_body = ''.join(
+                    f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
+                    for shell, cmd in command_line.items()
+                )
             return Response(body=new_body, status_code=status, headers=headers)

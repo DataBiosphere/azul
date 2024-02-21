@@ -6,6 +6,9 @@ from azul import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins.repository.tdr_anvil import (
+    TDRAnvilBundleFQID,
+)
 from indexer.test_anvil import (
     AnvilIndexerTestCase,
 )
@@ -30,6 +33,10 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
     def tearDownClass(cls):
         cls._teardown_indices()
         super().tearDownClass()
+
+    @classmethod
+    def bundles(cls) -> list[TDRAnvilBundleFQID]:
+        return [cls.primary_bundle()]
 
     def test_entity_indices(self):
         self.maxDiff = None

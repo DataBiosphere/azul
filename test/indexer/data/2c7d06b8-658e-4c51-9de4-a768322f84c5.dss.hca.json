@@ -686,6 +686,33 @@
                     "organization": "NIDCR Combined Technical Research Core"
                 }
             ],
+             "hca_bionetworks": [
+                {
+                    "name": "Kidney"
+                },
+                {
+                    "name": "Skin",
+                    "atlas_project": true
+                },
+                {
+                    "name": "Lung",
+                    "atlas_project": false,
+                    "hca_tissue_atlas": "Lung"
+                },
+                {
+                    "name": "Eye",
+                    "atlas_project": false,
+                    "hca_tissue_atlas": "Retina",
+                    "hca_tissue_atlas_version": "v1.0"
+                },
+                {
+                    "name": "Immune",
+                    "atlas_project": false,
+                    "hca_tissue_atlas": "Blood",
+                    "hca_tissue_atlas_version": "v1.0",
+                    "schema_version": "1.0.1"
+                }
+            ],
             "provenance": {
                 "document_id": "50151324-f3ed-4358-98af-ec352a940a61",
                 "submission_date": "2021-09-21T17:26:49.830Z",
