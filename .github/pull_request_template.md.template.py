@@ -737,11 +737,9 @@ def main():
             },
             iif(t in (T.default, T.upgrade, T.hotfix), {
                 'type': 'cli',
-                'content': (
-                    'Moved connected issue to *Merged prod* column in ZenHub'
-                    if t is t.hotfix else
-                    f'Moved connected {t.issues} to Merged column in ZenHub'
-                )
+                'content': iif(t is t.hotfix,
+                               'Moved connected issue to *Merged prod* column in ZenHub',
+                               f'Moved connected {t.issues} to Merged column in ZenHub')
             }),
             {
                 'type': 'cli',
