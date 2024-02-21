@@ -12,7 +12,11 @@ import sys
 import textwrap
 from typing import (
     AbstractSet,
+    Iterable,
     Mapping,
+    Protocol,
+    TypedDict,
+    cast,
 )
 
 from more_itertools import (
@@ -33,47 +37,61 @@ from azul.strings import (
 from azul.template import (
     emit_text,
 )
-from azul.types import (
-    JSONs,
-)
 
 
-def emit_checklist(checklist: JSONs):
-    def comment(i, _):
+class Item(TypedDict):
+    type: str
+    content: str
+    alt: str
+
+
+class EmptyItem(TypedDict):
+    pass
+
+
+class Handler(Protocol):
+
+    def __call__(self, i: Item, j: Item | None) -> Iterable[str]:
+        """
+        :param i: the checklist item
+        :param j: the preceding checklist item
+        :return: lines of Markdown code to emit
+        """
+
+
+def emit_checklist(checklist: Iterable[Item | EmptyItem]):
+    def comment(i: Item, _) -> Iterable[str]:
         return '<!--', *wrap(i), '-->'
 
-    def p(i, _):
+    def p(i: Item, _) -> Iterable[str]:
         return '', *wrap(i)
 
-    def h1(i, _):
+    def h1(i: Item, _) -> Iterable[str]:
         return '', '', '## ' + i['content']
 
-    def h2(i, _):
+    def h2(i: Item, _) -> Iterable[str]:
         return '', '', '### ' + i['content']
 
-    def cli(i, j):
-        return (
-            *margin(i, j),
-            '- [ ] ' + i['content']
-            + (' <sub>' + i['alt'] + '</sub>' if i.get('alt') is not None else '')
-        )
+    def cli(i: Item, j: Item | None) -> Iterable[str]:
+        alt = '' if i.get('alt') is None else ' <sub>' + i['alt'] + '</sub>'
+        return *margin(i, j), '- [ ] ' + i['content'] + alt
 
-    def li(i, j):
+    def li(i: Item, j: Item | None) -> Iterable[str]:
         return *margin(i, j), '- ' + i['content']
 
-    handlers = locals().copy()
-    del handlers['checklist']
+    handlers = {k: cast(Handler, v) for k, v in locals().items() if callable(v)}
 
-    def margin(i, j):
-        return [] if (j and j['type'] == i['type']) else ['']
+    def margin(i: Item, j: Item | None) -> Iterable[str]:
+        return [] if j and j['type'] == i['type'] else ['']
 
-    def wrap(i): return textwrap.wrap(i['content'], 80)
+    def wrap(i: Item) -> Iterable[str]:
+        return textwrap.wrap(i['content'], 80)
 
     with emit_text() as f:
-        f.writelines(line + '\n' for line in flatten(
-            handlers[i['type']](i, j)
-            for j, i in stagger(filter(bool, checklist), offsets=(-1, 0))
-        ))
+        non_empty_items: Iterable[Item] = filter(bool, checklist)
+        item_pairs = stagger(non_empty_items, offsets=(0, -1))
+        lines = flatten(handlers[i['type']](i, j) for i, j in item_pairs)
+        f.writelines(line + '\n' for line in lines)
 
 
 dir = 'PULL_REQUEST_TEMPLATE'
