@@ -35,6 +35,9 @@ emit({
             "lambda_functions": {
                 "api_handler": chalice.vpc_lambda_config(app_name),
                 service.generate_manifest.name: {
+                    # The minimum request rate enforceable by the WAF (100/5min)
+                    # is too lenient for manifest requests, so we further
+                    # restrict the manifest lambda with a low concurrency.
                     "reserved_concurrency": 10,
                     "lambda_timeout": config.service_lambda_timeout
                 },

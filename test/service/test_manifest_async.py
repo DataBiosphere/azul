@@ -19,6 +19,9 @@ from uuid import (
 from botocore.exceptions import (
     ClientError,
 )
+from chalice import (
+    TooManyRequestsError,
+)
 from furl import (
     furl,
 )
@@ -124,22 +127,29 @@ class TestAsyncManifestService(AzulUnitTestCase):
 
     def test_status_failed(self, _sfn):
         """
-        A failed manifest job should raise a GenerationFailed
+        A failed manifest job should raise an appropriate exception
         """
         service = AsyncManifestService()
         execution_name = service.execution_name(self.execution_id)
-        _sfn.describe_execution.return_value = {
-            'executionArn': service.execution_arn(execution_name),
-            'stateMachineArn': service.machine_arn,
-            'name': execution_name,
-            'status': 'FAILED',
-            'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
-            'stopDate': datetime.datetime(2018, 11, 14, 16, 6, 55, 860000),
-            'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
-        }
         token = Token(execution_id=self.execution_id, request_index=0, retry_after=0)
-        with self.assertRaises(GenerationFailed):
-            service.inspect_generation(token)
+        for error, exception in [
+            ('Lambda.TooManyRequestsException', TooManyRequestsError),
+            ('', GenerationFailed),
+        ]:
+            with self.subTest(error=error):
+                _sfn.describe_execution.return_value = {
+                    'executionArn': service.execution_arn(execution_name),
+                    'stateMachineArn': service.machine_arn,
+                    'name': execution_name,
+                    'status': 'FAILED',
+                    'error': error,
+                    'cause': '',
+                    'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
+                    'stopDate': datetime.datetime(2018, 11, 14, 16, 6, 55, 860000),
+                    'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
+                }
+                with self.assertRaises(exception):
+                    service.inspect_generation(token)
 
 
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
