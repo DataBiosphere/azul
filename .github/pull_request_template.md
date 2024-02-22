@@ -93,7 +93,7 @@ Uncheck the *Author (before every review)* checklists.
 - [ ] PR is not a draft
 - [ ] Ticket is in *Review requested* column
 - [ ] Requested review from system administrator
-- [ ] PR is assigned to system administrator
+- [ ] PR is assigned to only the system administrator
 
 
 ### System administrator (after requesting changes)
@@ -111,7 +111,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] PR title is appropriate as title of merge commit
 - [ ] `N reviews` label is accurate
 - [ ] Moved ticket to *Approved* column
-- [ ] PR is assigned to current operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -137,7 +137,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] PR is assigned to operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)

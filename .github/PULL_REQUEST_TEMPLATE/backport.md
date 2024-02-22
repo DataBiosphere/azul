@@ -35,7 +35,7 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] PR is assigned to current operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)

@@ -44,7 +44,7 @@ Connected issue: #0000
 - [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] PR is assigned to current operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -67,7 +67,7 @@ Connected issue: #0000
 - [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] PR is assigned to operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -117,7 +117,7 @@ Connected issue: #0000
 - [ ] Ran `script/export_inspector_findings.py` against `anvilprod`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
 - [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels to the next promotion PR <sub>or this PR carries none of these labels</sub>
 - [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels from the description of this PR to that of the next promotion PR <sub>or this PR carries none of these labels</sub>
-- [ ] PR is assigned to system administrator
+- [ ] PR is assigned to only the system administrator
 
 <sup>1</sup>A relevant finding is a high or critical vulnerability in an image
 that is used within the security boundary. Images not used within the boundary

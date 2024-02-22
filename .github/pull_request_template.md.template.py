@@ -527,7 +527,7 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'PR is assigned to system administrator'
+                    'content': 'PR is assigned to only the system administrator'
                 }
             ]),
             *iif(t in (T.default, T.backport), [
@@ -589,7 +589,7 @@ def main():
             },
             {
                 'type': 'cli',
-                'content': 'PR is assigned to current operator'
+                'content': 'PR is assigned to only the operator'
             },
             {
                 'type': 'h2',
@@ -671,7 +671,7 @@ def main():
                 ],
                 {
                     'type': 'cli',
-                    'content': 'PR is assigned to operator',
+                    'content': 'PR is assigned to only the operator',
                 },
                 {
                     'type': 'h2',
@@ -927,7 +927,7 @@ def main():
             {
                 'type': 'cli',
                 'content': 'PR is assigned to '
-                           + iif(t in (T.upgrade, T.promotion), 'system administrator', 'no one')
+                           + iif(t in (T.upgrade, T.promotion), 'only the system administrator', 'no one')
             },
             iif(t is T.upgrade, {
                 'type': 'p',

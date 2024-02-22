@@ -40,7 +40,7 @@ Connected issue: #0000
 - [ ] Labeled PR as `no sandbox`
 - [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] Moved ticket to *Approved* column
-- [ ] PR is assigned to current operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -55,7 +55,7 @@ Connected issue: #0000
 ### System administrator
 
 - [ ] Background migrations for `prod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] PR is assigned to operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -90,7 +90,7 @@ Connected issue: #0000
 
 ### Operator
 
-- [ ] PR is assigned to system administrator
+- [ ] PR is assigned to only the system administrator
 
 
 ### System administrator
