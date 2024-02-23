@@ -124,11 +124,7 @@ class Transformer(metaclass=ABCMeta):
                             source=self.bundle.fqid.source,
                             contents=contents)
 
-    def _replica(self,
-                 contents: MutableJSON,
-                 entity: EntityReference,
-                 hub_ids: list[EntityID]
-                 ) -> Replica:
+    def _replica(self, contents: MutableJSON, entity: EntityReference) -> Replica:
         coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
                                          entity=attr.evolve(entity,
                                                             entity_type='replica'))
@@ -136,7 +132,7 @@ class Transformer(metaclass=ABCMeta):
                        version=None,
                        replica_type=self.replica_type(entity),
                        contents=contents,
-                       hub_ids=hub_ids)
+                       hub_ids=[])
 
     @classmethod
     @abstractmethod
