@@ -63,7 +63,6 @@ from azul.indexer.document import (
     IndexName,
     Replica,
     ReplicaCoordinates,
-    VersionType,
     null_bool,
     null_int,
     null_str,
@@ -407,11 +406,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         expected_tallies_2[entity] = 1
         self.assertEqual(expected_tallies_2, tallies_2)
 
-        # All writes were logged as overwrites, except one. There are 1 fewer
-        # replicas than contributions.
-        num_replicas = num_contributions - 2 if config.enable_replicas else 0
-        self.assertEqual(num_contributions - 1 + num_replicas,
-                         len(logs.output))
+        # All writes were logged as overwrites, except one.
+        self.assertEqual(num_contributions - 1, len(logs.output))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
                                 r'Document .* exists. '
                                 r'Retrying with overwrite\.$')
@@ -2138,7 +2134,6 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         ]:
             with self.subTest(case):
                 replica.hub_ids[:] = hub_ids
-                replica.version_type = VersionType.create_only
                 self.index_service.replicate(self.catalog, [replica])
                 hit = one(self._get_all_hits())
                 self.assertEqual(hit['_id'], coordinates.document_id)

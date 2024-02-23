@@ -512,26 +512,13 @@ class IndexService(DocumentService):
             writer.write(replicas)
             retry_replicas = []
             for r in replicas:
-                if r.version_type is VersionType.create_only:
-                    if r.coordinates in writer.retries:
-                        retry_replicas.append(r)
-                    else:
-                        num_written += 1
-                elif r.version_type is VersionType.none:
-                    if r.coordinates in writer.retries:
-                        retry_replicas.append(r)
-                        conflicts = writer.conflicts[r.coordinates]
-                        if conflicts in (0, 1):
-                            num_present += conflicts
-                        else:
-                            assert False, (conflicts, r.coordinates)
-                    else:
-                        # Replica was already counted in `num_present`, so
-                        # incrementing `num_written` would result in an incorrect
-                        # final count
-                        pass
+                if r.coordinates in writer.retries:
+                    retry_replicas.append(r)
+                    # Only increment on the first conflict
+                    if writer.conflicts[r.coordinates] == 1:
+                        num_present += 1
                 else:
-                    assert False, r.version_type
+                    num_written += 1
             replicas = retry_replicas
 
         writer.raise_on_errors()
