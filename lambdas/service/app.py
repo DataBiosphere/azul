@@ -228,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '3.5'
+        'version': '4.0'
     },
     'tags': [
         {
@@ -1273,16 +1273,14 @@ def get_summary():
                                              authentication=request.authentication)
 
 
-def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
+def manifest_route(*, fetch: bool, initiate: bool):
     return app.route(
         # The path parameter could be a token *or* an object key, but we don't
         # want to complicate the API with this detail
         ('/fetch' if fetch else '')
         + ('/manifest/files' if initiate else '/manifest/files/{token}'),
         # The initial PUT request is idempotent.
-        # FIXME: Remove `put` argument and derive method from `initiate`
-        #        https://github.com/DataBiosphere/azul/issues/5533
-        methods=['PUT' if put else 'GET'],
+        methods=['PUT' if initiate else 'GET'],
         interactive=fetch,
         cors=True,
         path_spec=None if initiate else {
@@ -1293,9 +1291,6 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
             ]
         },
         method_spec={
-            # FIXME: Remove deprecation
-            #        https://github.com/DataBiosphere/azul/issues/5533
-            'deprecated': initiate and not put,
             'tags': ['Manifests'],
             'summary':
                 (
@@ -1316,7 +1311,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                 Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
 
                 [1]: #operations-Manifests-put_fetch_manifest_files
-            ''') + iif(put, parameter_hoisting_note) if initiate and not fetch else fd('''
+            ''') + parameter_hoisting_note if initiate and not fetch else fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning either
 
@@ -1349,7 +1344,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                 manifest generation job is done.
 
                 [1]: #operations-Manifests-put_manifest_files
-            ''') + iif(put, parameter_hoisting_note) if initiate and fetch else fd('''
+            ''') + parameter_hoisting_note if initiate and fetch else fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning a 200 status response whose JSON body emulates the
                 HTTP headers that would be found in a response to an equivalent
@@ -1530,7 +1525,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
     )
 
 
-@manifest_route(fetch=False, initiate=True, put=True)
+@manifest_route(fetch=False, initiate=True)
 def file_manifest():
     return _file_manifest(fetch=False)
 
@@ -1540,15 +1535,8 @@ def file_manifest_with_token(token: str):
     return _file_manifest(fetch=False, token_or_key=token)
 
 
-@manifest_route(fetch=True, initiate=True, put=True)
-def fetch_file_manifest():
-    return _file_manifest(fetch=True)
-
-
-# FIXME: Remove this route
-#        https://github.com/DataBiosphere/azul/issues/5533
 @manifest_route(fetch=True, initiate=True)
-def fetch_file_manifest_get():
+def fetch_file_manifest():
     return _file_manifest(fetch=True)
 
 
