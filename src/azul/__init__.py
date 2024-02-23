@@ -765,6 +765,10 @@ class Config:
     def enable_replicas(self) -> bool:
         return self._boolean(self.environ['AZUL_ENABLE_REPLICAS'])
 
+    @property
+    def replica_conflict_limit(self) -> int:
+        return int(self.environ['AZUL_REPLICA_CONFLICT_LIMIT'])
+
     # Because this property is relatively expensive to produce and frequently
     # used we are applying aggressive caching here, knowing very well that
     # this eliminates the option to reconfigure the running process by

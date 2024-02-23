@@ -418,7 +418,7 @@ class IndexService(DocumentService):
         with a count of 0 may exist. This is ok. See description of aggregate().
         """
         tallies = Counter()
-        writer = self._create_writer(catalog)
+        writer = self._create_writer(DocumentType.contribution, catalog)
         while contributions:
             writer.write(contributions)
             retry_contributions = []
@@ -452,7 +452,7 @@ class IndexService(DocumentService):
         catalogs.
         """
         # Use catalog specified in each tally
-        writer = self._create_writer(catalog=None)
+        writer = self._create_writer(DocumentType.aggregate, catalog=None)
         while True:
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
@@ -506,7 +506,7 @@ class IndexService(DocumentService):
                   catalog: CatalogName,
                   replicas: list[Replica]
                   ) -> tuple[int, int]:
-        writer = self._create_writer(catalog)
+        writer = self._create_writer(DocumentType.replica, catalog)
         num_replicas = len(replicas)
         num_written, num_present = 0, 0
         while replicas:
@@ -798,16 +798,25 @@ class IndexService(DocumentService):
                 for entity_type, entities in result.items()
             }
 
-    def _create_writer(self, catalog: Optional[CatalogName]) -> 'IndexWriter':
+    def _create_writer(self,
+                       doc_type: DocumentType,
+                       catalog: Optional[CatalogName]
+                       ) -> 'IndexWriter':
         # We allow one conflict retry in the case of duplicate notifications and
         # switch from 'add' to 'update'. After that, there should be no
-        # conflicts because we use an SQS FIFO message group per entity. For
-        # other errors we use SQS message redelivery to take care of the
-        # retries.
+        # conflicts because we use an SQS FIFO message group per entity.
+        # Conflicts are common when writing replicas due to entities being
+        # shared between bundles. For other errors we use SQS message redelivery
+        # to take care of the retries.
+        limits = {
+            DocumentType.contribution: 1,
+            DocumentType.aggregate: 1,
+            DocumentType.replica: config.replica_conflict_limit
+        }
         return IndexWriter(catalog,
                            self.catalogued_field_types(),
                            refresh=False,
-                           conflict_retry_limit=1,
+                           conflict_retry_limit=limits[doc_type],
                            error_retry_limit=0)
 
 
