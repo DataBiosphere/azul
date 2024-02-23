@@ -508,38 +508,22 @@ class IndexService(DocumentService):
                   ) -> tuple[int, int]:
         writer = self._create_writer(DocumentType.replica, catalog)
         num_replicas = len(replicas)
-        num_written, num_present = 0, 0
+        num_written = 0
         while replicas:
             writer.write(replicas)
             retry_replicas = []
             for r in replicas:
-                if r.version_type is VersionType.create_only:
-                    if r.coordinates in writer.retries:
-                        retry_replicas.append(r)
-                    else:
-                        num_written += 1
-                elif r.version_type is VersionType.none:
-                    if r.coordinates in writer.retries:
-                        retry_replicas.append(r)
-                        conflicts = writer.conflicts[r.coordinates]
-                        if conflicts in (0, 1):
-                            num_present += conflicts
-                        else:
-                            assert False, (conflicts, r.coordinates)
-                    else:
-                        # Replica was already counted in `num_present`, so
-                        # incrementing `num_written` would result in an incorrect
-                        # final count
-                        pass
+                if r.coordinates in writer.retries:
+                    retry_replicas.append(r)
                 else:
-                    assert False, r.version_type
+                    num_written += 1
             replicas = retry_replicas
 
         writer.raise_on_errors()
-        assert num_written + num_present == num_replicas, (
-            num_written, num_present, num_replicas
+        assert num_written == num_replicas, (
+            num_written, num_replicas
         )
-        return num_written, num_present
+        return num_written
 
     def _read_aggregates(self,
                          entities: CataloguedTallies
@@ -931,8 +915,6 @@ class IndexWriter:
         if isinstance(doc, Aggregate):
             log.debug('Successfully wrote %s with %i contribution(s).',
                       coordinates, doc.num_contributions)
-        elif isinstance(doc, Replica) and doc.version_type is VersionType.none:
-            log.debug('Successfully updated %s.', coordinates)
         else:
             log.debug('Successfully wrote %s.', coordinates)
 
