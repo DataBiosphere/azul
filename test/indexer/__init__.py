@@ -70,8 +70,11 @@ from es_test_case import (
 
 class ForcedRefreshIndexService(IndexService):
 
-    def _create_writer(self, catalog: Optional[CatalogName]) -> IndexWriter:
-        writer = super()._create_writer(catalog)
+    def _create_writer(self,
+                       doc_type: DocumentType,
+                       catalog: Optional[CatalogName]
+                       ) -> IndexWriter:
+        writer = super()._create_writer(doc_type, catalog)
         # With a single client thread, refresh=True is faster than
         # refresh="wait_for". The latter would limit the request rate to
         # 1/refresh_interval. That's only one request per second with

@@ -183,6 +183,10 @@ def env() -> Mapping[str, Optional[str]]:
         # Whether to create and populate an index for replica documents.
         'AZUL_ENABLE_REPLICAS': '1',
 
+        # Maximum number of conflicts to allow before giving when writing
+        # replica documents.
+        'AZUL_REPLICA_CONFLICT_LIMIT': '10',
+
         # The name of the current deployment. This variable controls the name of
         # all cloud resources and is the main vehicle for isolating cloud
         # resources between deployments.
