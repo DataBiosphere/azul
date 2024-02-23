@@ -1100,8 +1100,8 @@ class OpType(Enum):
     #: Remove the document from the index or fail if it does not exist
     delete = auto()
 
-    #: Modify a document in the index via a scripted update or fail if it does
-    #: not exist
+    #: Modify a document in the index via a scripted update or create it if it
+    #: does not exist
     update = auto()
 
 
@@ -1362,7 +1362,6 @@ class Document(Generic[C]):
         raise NotImplementedError
 
     def _body(self, field_types: FieldTypes) -> JSON:
-        assert self.op_type is not OpType.update
         body = self.to_json()
         if self.needs_translation:
             body = self.translate_fields(doc=body,
@@ -1546,10 +1545,6 @@ class Replica(Document[ReplicaCoordinates[E]]):
 
     hub_ids: list[EntityID]
 
-    #: The version_type attribute will change to VersionType.none if writing
-    #: to Elasticsearch fails with 409
-    version_type: VersionType = VersionType.create_only
-
     needs_translation: ClassVar[bool] = False
 
     def __attrs_post_init__(self):
@@ -1569,29 +1564,23 @@ class Replica(Document[ReplicaCoordinates[E]]):
 
     @property
     def op_type(self) -> OpType:
-        if self.version_type is VersionType.create_only:
-            return OpType.create
-        elif self.version_type is VersionType.none:
-            return OpType.update
-        else:
-            assert False, self.version_type
+        assert self.version_type is VersionType.none, self.version_type
+        return OpType.update
 
     def _body(self, field_types: FieldTypes) -> JSON:
-        if self.op_type is OpType.update:
-            return {
-                'script': {
-                    'source': '''
+        return {
+            'script': {
+                'source': '''
                         Stream stream = Stream.concat(ctx._source.hub_ids.stream(),
                                                       params.hub_ids.stream());
                         ctx._source.hub_ids = stream.sorted().distinct().collect(Collectors.toList());
                     ''',
-                    'params': {
-                        'hub_ids': self.hub_ids
-                    }
+                'params': {
+                    'hub_ids': self.hub_ids
                 }
-            }
-        else:
-            return super()._body(field_types)
+            },
+            'upsert': super()._body(field_types)
+        }
 
 
 CataloguedContribution = Contribution[CataloguedEntityReference]
