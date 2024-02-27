@@ -237,7 +237,7 @@ class IndexName:
                *,
                catalog: CatalogName,
                entity_type: str,
-               doc_type: 'DocumentType'
+               doc_type: DocumentType
                ) -> Self:
         return cls(prefix=config.index_prefix,
                    version=2,
