@@ -111,4 +111,6 @@ class DocumentService:
                          *,
                          forward: bool
                          ) -> AnyMutableJSON:
-        return Document.translate_fields(doc, self.field_types(catalog), forward=forward)
+        return Document.translate_fields(doc,
+                                         self.field_types(catalog),
+                                         forward=forward)
