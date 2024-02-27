@@ -129,11 +129,6 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load(self.catalog).create()
 
-    def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
-        index_name = IndexName.parse(hit['_index'])
-        index_name.validate()
-        return index_name.entity_type, index_name.doc_type
-
     def _num_expected_replicas(self,
                                num_contribs: int,
                                num_bundles: int = 1
