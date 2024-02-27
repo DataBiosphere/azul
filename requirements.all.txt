@@ -10,9 +10,9 @@ blinker==1.7.0
 boto3==1.28.63
 boto3-stubs==1.28.63
 botocore==1.31.63
-botocore-stubs==1.34.39
+botocore-stubs==1.34.50
 brotli==1.1.0
-cachetools==5.3.2
+cachetools==5.3.3
 certifi==2024.2.2
 cffi==1.16.0
 chalice==1.30.0+12
@@ -22,7 +22,7 @@ click==8.1.7
 colorama==0.4.4
 configargparse==1.7
 coverage==6.5.0
-cryptography==42.0.2
+cryptography==42.0.5
 deprecated==1.2.13
 docker==6.1.2
 docutils==0.16
@@ -51,8 +51,8 @@ google-crc32c==1.5.0
 google-resumable-media==2.7.0
 googleapis-common-protos==1.62.0
 greenlet==3.0.3
-grpcio==1.60.1
-grpcio-status==1.60.1
+grpcio==1.62.0
+grpcio-status==1.62.0
 http-message-signatures==0.4.4
 http_sfv==0.9.9
 httplib2==0.22.0
@@ -66,7 +66,7 @@ jmespath==1.0.1
 jq==1.3.0
 jsonschema==4.17.3
 jsonschema-spec==0.1.6
-jwcrypto==1.5.3
+jwcrypto==1.5.4
 lazy-object-proxy==1.10.0
 locust==2.12.2
 markupsafe==2.1.5
@@ -91,7 +91,7 @@ pathable==0.4.3
 pip==23.3.2
 posix-ipc==1.1.1
 proto-plus==1.23.0
-protobuf==4.25.2
+protobuf==4.25.3
 psutil==5.9.8
 py-partiql-parser==0.3.3
 pyasn1==0.5.1
@@ -127,10 +127,10 @@ smmap==5.0.1
 strict-rfc3339==0.7
 toml==0.10.2
 tqdm==4.66.2
-types-awscrt==0.20.3
+types-awscrt==0.20.4
 types-s3transfer==0.10.0
 types-toml==0.10.8.7
-typing_extensions==4.9.0
+typing_extensions==4.10.0
 tzlocal==2.1
 uritemplate==4.1.1
 urllib3==1.26.18
@@ -143,4 +143,4 @@ wrapt==1.16.0
 www-authenticate==0.9.2
 xmltodict==0.13.0
 zope.event==5.0
-zope.interface==6.1
+zope.interface==6.2

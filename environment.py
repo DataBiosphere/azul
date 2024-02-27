@@ -219,7 +219,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
         # for how).
         #
-        'azul_docker_version': '24.0.8',
+        'azul_docker_version': '24.0.9',
 
         # The version of Python used throughout the system.
         #
@@ -234,7 +234,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make image_manifests.json`
         # and redeploying the `shared` component.
         #
-        'azul_python_version': '3.11.7',
+        'azul_python_version': '3.11.8',
 
         # The version of Terraform used throughout the system.
         #
@@ -265,10 +265,10 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.2-11'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.3-13'
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.17-10'
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-11'
             },
             'bigquery_emulator': {
                 'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
@@ -276,13 +276,13 @@ def env() -> Mapping[str, Optional[str]]:
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.2.1-27'
+                'ref': 'docker.io/clamav/clamav:1.3.0-37'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.8.1-ce.0'
+                'ref': 'docker.io/gitlab/gitlab-ce:16.9.0-ce.0'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.7.1'
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.0'
             },
             'dind': {
                 'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
