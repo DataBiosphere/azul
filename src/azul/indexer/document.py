@@ -192,12 +192,12 @@ class IndexName:
         >>> IndexName(prefix='_', version=2, deployment='dev', catalog='foo', entity_type='bar')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Prefix '_' is to short, too long or contains invalid characters.
+        azul.RequirementError: Prefix '_' is too short, too long or contains invalid characters.
 
         >>> IndexName(prefix='azul', version=2, deployment='_', catalog='foo', entity_type='bar')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Deployment name '_' is to short, too long or contains invalid characters.
+        azul.RequirementError: Deployment name '_' is too short, too long or contains invalid characters.
 
         >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='_', entity_type='bar')
         Traceback (most recent call last):
