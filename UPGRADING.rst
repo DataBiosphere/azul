@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5503 Ensure S3 signed manifest URLs don't expire prematurely
+=============================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5728 Many stale images in gitlab-dind and GitLab registry
 ==========================================================
 

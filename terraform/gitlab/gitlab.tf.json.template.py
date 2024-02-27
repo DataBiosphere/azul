@@ -672,6 +672,21 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'resources': [
                             '*'
                         ]
+                    },
+
+                    # Allow the service Lambda role to assume itself. This is
+                    # used when generating a signed URL to get new credentials
+                    # and reset the expiration of those credentials.
+                    {
+                        'actions': [
+                            'sts:AssumeRole'
+                        ],
+                        'principals': {
+                            'type': 'AWS',
+                            'identifiers': [
+                                f'arn:aws:iam::{aws.account}:role/azul-service-*'
+                            ]
+                        }
                     }
                 ]
             },

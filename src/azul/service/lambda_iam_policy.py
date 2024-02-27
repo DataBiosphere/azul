@@ -193,6 +193,15 @@ policy = {
             ] if direct_access_role is not None else [
             ]
         ),
-        *chalice.vpc_lambda_iam_policy()
+        *chalice.vpc_lambda_iam_policy(),
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": [
+                config.lambda_role_arn('service')
+            ]
+        }
     ]
 }
