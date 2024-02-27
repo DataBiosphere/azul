@@ -57,7 +57,8 @@ class Transformer(metaclass=ABCMeta):
     @abstractmethod
     def replica_type(self, entity: EntityReference) -> str:
         """
-        The type of replica emitted by this transformer.
+        The name of the type of replica emitted by this transformer for a given
+        entity.
 
         See :py:attr:`Replica.replica_type`
         """
