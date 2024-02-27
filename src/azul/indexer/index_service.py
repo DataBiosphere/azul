@@ -401,8 +401,8 @@ class IndexService(DocumentService):
     def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
         for index_name in self.index_names(catalog):
-            if es_client.indices.exists(index=index_name):
-                es_client.indices.delete(index=index_name)
+            if es_client.indices.exists(index=str(index_name)):
+                es_client.indices.delete(index=str(index_name))
 
     def contribute(self,
                    catalog: CatalogName,
