@@ -1532,11 +1532,8 @@ class Replica(Document[ReplicaCoordinates[E]]):
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
-        return {
-            **super().field_types(pass_thru_json),
-            'replica_type': pass_thru_str,
-            'hub_ids': pass_thru_str
-        }
+        # Replicas do not undergo translation
+        raise NotImplementedError
 
     def to_json(self) -> JSON:
         return dict(super().to_json(),
