@@ -1279,14 +1279,9 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
         # want to complicate the API with this detail
         ('/fetch' if fetch else '')
         + ('/manifest/files' if initiate else '/manifest/files/{token}'),
+        # The initial PUT request is idempotent.
         # FIXME: Remove `put` argument and derive method from `initiate`
         #        https://github.com/DataBiosphere/azul/issues/5533
-        # FIXME: Modify comment to reflect the actual idempotence of the request
-        #        https://github.com/DataBiosphere/azul/issues/3271
-        # The initial request is currently not idempotent, and POST would be a
-        # more appropriate HTTP method to use. However, once a fix for #3271
-        # lands, the initial request *will* be idempotent. We already use PUT,
-        # in order to avoid having changing the REST API yet again.
         methods=['PUT' if put else 'GET'],
         interactive=fetch,
         cors=True,
