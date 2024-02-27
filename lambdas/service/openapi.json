@@ -9582,7 +9582,7 @@
                 "tags": [
                     "Manifests"
                 ],
-                "summary": "Initiate the preparation of a manifestvia XHR",
+                "summary": "Initiate the preparation of a manifest via XHR",
                 "description": "\nCreate a manifest preparation job, returning a 200 status\nresponse whose JSON body emulates the HTTP headers that would be\nfound in a response to an equivalent request to the [PUT\n/manifest/files][1] endpoint.\n\nWhenever client-side JavaScript code is used in a web\napplication to request the preparation of a manifest from Azul,\nthis endpoint should be used instead of [PUT\n/manifest/files][1]. This way, the client can use XHR to make\nthe request, retaining full control over the handling of\nredirects and enabling the client to bypass certain limitations\non the native handling of redirects in web browsers. For\nexample, most browsers ignore the `Retry-After` header in\nredirect responses, causing them to prematurely exhaust the\nupper limit on the number of consecutive redirects, before the\nmanifest generation job is done.\n\n[1]: #operations-Manifests-put_manifest_files\n\nAny of the query parameters documented below can alternatively be passed as\na property of a JSON object in the body of the request. This can be useful\nin case the value of the `filters` query parameter causes the URL to exceed\nthe maximum length of 8192 characters, resulting in a 413 Request Entity Too\nLarge response.\n\nThe request `GET /index/foo?filters={\u2026}`, for example, is equivalent to a\n`POST /index/foo` request with the body `{\"filters\": {\u2026}}`.\n",
                 "parameters": [
                     {
@@ -10947,7 +10947,7 @@
                 "tags": [
                     "Manifests"
                 ],
-                "summary": "Initiate the preparation of a manifestvia XHR",
+                "summary": "Initiate the preparation of a manifest via XHR",
                 "description": "\nCreate a manifest preparation job, returning a 200 status\nresponse whose JSON body emulates the HTTP headers that would be\nfound in a response to an equivalent request to the [PUT\n/manifest/files][1] endpoint.\n\nWhenever client-side JavaScript code is used in a web\napplication to request the preparation of a manifest from Azul,\nthis endpoint should be used instead of [PUT\n/manifest/files][1]. This way, the client can use XHR to make\nthe request, retaining full control over the handling of\nredirects and enabling the client to bypass certain limitations\non the native handling of redirects in web browsers. For\nexample, most browsers ignore the `Retry-After` header in\nredirect responses, causing them to prematurely exhaust the\nupper limit on the number of consecutive redirects, before the\nmanifest generation job is done.\n\n[1]: #operations-Manifests-put_manifest_files\n",
                 "parameters": [
                     {
@@ -12325,7 +12325,7 @@
                 "tags": [
                     "Manifests"
                 ],
-                "summary": "Determine status of a manifest preparation jobvia XHR",
+                "summary": "Determine status of a manifest preparation job via XHR",
                 "description": "\nCheck on the status of an ongoing manifest preparation job,\nreturning a 200 status response whose JSON body emulates the\nHTTP headers that would be found in a response to an equivalent\nrequest to the [GET /manifest/files/{token}][1] endpoint.\n\nWhenever client-side JavaScript code is used in a web\napplication to request the preparation of a manifest from Azul,\nthis endpoint should be used instead of [GET\n/manifest/files/{token}][1]. This way, the client can use XHR to\nmake the request, retaining full control over the handling of\nredirects and enabling the client to bypass certain limitations\non the native handling of redirects in web browsers. For\nexample, most browsers ignore the `Retry-After` header in\nredirect responses, causing them to prematurely exhaust the\nupper limit on the number of consecutive redirects, before the\nmanifest generation job is done.\n\n[1]: #operations-Manifests-get_manifest_files\n",
                 "parameters": [],
                 "responses": {

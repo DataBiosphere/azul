@@ -1303,7 +1303,7 @@ def manifest_route(*, fetch: bool, initiate: bool, put: bool = False):
                     if initiate else
                     'Determine status of a manifest preparation job'
                 ) + (
-                    'via XHR' if fetch else ''
+                    ' via XHR' if fetch else ''
                 ),
             'description': fd('''
                 Create a manifest preparation job, returning either
