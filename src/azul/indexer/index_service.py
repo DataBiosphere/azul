@@ -638,11 +638,15 @@ class IndexService(DocumentService):
         log.info('Read %i contribution(s)', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
             entity_ref = attrgetter('entity')
+            contributions_by_entity = cast(
+                Iterator[tuple[EntityReference, Iterator[Contribution]]],
+                groupby(sorted(contributions, key=entity_ref), key=entity_ref)
+            )
             log.debug(
                 'Number of contributions read, by entity: %r',
                 {
                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in groupby(sorted(contributions, key=entity_ref), key=entity_ref)
+                    for entity, contribution_group in contributions_by_entity
                 }
             )
         return contributions
