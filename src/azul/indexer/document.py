@@ -35,6 +35,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     config,
+    reject,
     require,
 )
 from azul.enums import (
@@ -117,7 +118,7 @@ class IndexName:
     types to not match the version regex below.
     """
     #: Every index name starts with this prefix
-    prefix: str = 'azul'
+    prefix: ClassVar[str] = 'azul'
 
     #: The version of the index naming scheme
     version: int
@@ -125,100 +126,86 @@ class IndexName:
     #: The name of the deployment the index belongs to
     deployment: str
 
-    #: The catalog the index belongs to or None for v1 indices.
-    catalog: Optional[CatalogName] = attr.ib(default=None)
+    #: The catalog the index belongs to
+    catalog: CatalogName
 
     #: The type of entities this index contains metadata about
     entity_type: str
 
     #: Whether the documents in the index are contributions, aggregates, or
     #: replicas
-    doc_type: DocumentType = DocumentType.contribution
+    doc_type: DocumentType
 
     index_name_version_re: ClassVar[re.Pattern] = re.compile(r'v(\d+)')
 
     def __attrs_post_init__(self):
         """
-        >>> IndexName(prefix='azul',
-        ...           version=1,
-        ...           deployment='dev',
-        ...           entity_type='foo_bar') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName(prefix='azul',
-        ...           version=1,
-        ...           deployment='dev',
-        ...           catalog=None,
-        ...           entity_type='foo_bar')  # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName(prefix='azul',
-        ...           version=2,
+        >>> IndexName(version=2,
         ...           deployment='dev',
         ...           catalog='main',
-        ...           entity_type='foo_bar') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        ...           entity_type='foo_bar',
+        ...           doc_type=DocumentType.contribution)
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
                   entity_type='foo_bar',
                   doc_type=<DocumentType.contribution>)
 
-        >>> IndexName(prefix='azul', version=1, deployment='dev', catalog='hca', entity_type='foo')
+        >>> IndexName(version=1,
+        ...           deployment='',
+        ...           catalog='',
+        ...           entity_type='',
+        ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Version 1 prohibits a catalog name ('hca').
+        azul.RequirementError: ('Version must be 2', 1)
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', entity_type='foo')
+        >>> IndexName(version=2,
+        ...           deployment='dev',
+        ...           catalog=None,  # noqa
+        ...           entity_type='foo',
+        ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Version 2 requires a catalog name (None).
+        azul.RequirementError: ('Catalog name is required', None)
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog=None, entity_type='foo')
+        >>> IndexName(version=2,
+        ...           deployment='_',
+        ...           catalog='foo',
+        ...           entity_type='bar',
+        ...           doc_type=DocumentType.contribution)
+        ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Version 2 requires a catalog name (None).
+        azul.RequirementError: Deployment name '_' is too short, too long
+        or contains invalid characters.
 
-        >>> IndexName(prefix='_', version=2, deployment='dev', catalog='foo', entity_type='bar')
-        Traceback (most recent call last):
-        ...
-        azul.RequirementError: Prefix '_' is too short, too long or contains invalid characters.
-
-        >>> IndexName(prefix='azul', version=2, deployment='_', catalog='foo', entity_type='bar')
-        Traceback (most recent call last):
-        ...
-        azul.RequirementError: Deployment name '_' is too short, too long or contains invalid characters.
-
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='_', entity_type='bar')
+        >>> IndexName(version=2,
+        ...           deployment='dev',
+        ...           catalog='_',
+        ...           entity_type='bar',
+        ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
         azul.RequirementError: ('Catalog name is invalid', '_')
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='foo', entity_type='_')
+        >>> IndexName(version=2,
+        ...           deployment='dev',
+        ...           catalog='foo',
+        ...           entity_type='_',
+        ...           doc_type=DocumentType.contribution)
+        ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: entity_type is either too short, too long or contains invalid characters: '_'
+        azul.RequirementError: entity_type is either too short, too long
+        or contains invalid characters: '_'
         """
         config.validate_prefix(self.prefix)
-        require(self.version > 0, f'Version must be at least 1, not {self.version}.')
+        require(self.version == 2, 'Version must be 2', self.version)
         config.validate_deployment_name(self.deployment)
-        if self.version == 1:
-            require(self.catalog is None,
-                    f'Version {self.version} prohibits a catalog name ({self.catalog!r}).')
-        else:
-            require(self.catalog is not None,
-                    f'Version {self.version} requires a catalog name ({self.catalog!r}).')
-            config.Catalog.validate_name(self.catalog)
+        require(self.catalog is not None, 'Catalog name is required', self.catalog)
+        config.Catalog.validate_name(self.catalog)
         config.validate_entity_type(self.entity_type)
         if self.doc_type is DocumentType.replica:
             assert self.entity_type == 'replica', self.entity_type
@@ -228,9 +215,8 @@ class IndexName:
 
     def validate(self):
         require(self.deployment == config.deployment_stage,
-                'Index name does not use current deployment', self, config.deployment_stage)
-        require(self.prefix == config.index_prefix,
-                'Index name has invalid prefix', self, config.index_prefix)
+                'Index name does not use current deployment',
+                self, config.deployment_stage)
 
     @classmethod
     def create(cls,
@@ -239,8 +225,7 @@ class IndexName:
                entity_type: str,
                doc_type: DocumentType
                ) -> Self:
-        return cls(prefix=config.index_prefix,
-                   version=2,
+        return cls(version=2,
                    deployment=config.deployment_stage,
                    catalog=catalog,
                    entity_type=entity_type,
@@ -251,105 +236,71 @@ class IndexName:
         """
         Parse the name of an index from any deployment and any version of Azul.
 
-        >>> IndexName.parse('azul_foo_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName.parse('azul_foo_aggregate_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo',
-                  doc_type=<DocumentType.aggregate>)
-
-        >>> IndexName.parse('azul_foo_bar_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName.parse('azul_foo_bar_aggregate_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.aggregate>)
-
-        >>> IndexName.parse('good_foo_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='good',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo',
-                  doc_type=<DocumentType.contribution>)
-
         >>> IndexName.parse('azul_dev')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ['azul', 'dev']
+        azul.RequirementError: ('Too few index name elements', ['azul', 'dev'])
 
-        >>> IndexName.parse('azul_aggregate_dev') # doctest: +ELLIPSIS
+        >>> IndexName.parse('azul_foo_dev')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: entity_type ... ''
+        azul.RequirementError: Version is required
 
-        >>> IndexName.parse('azul_v2_dev_main_foo') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azl_v2_dev_main_foo')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Unexpected prefix', 'azul', 'azl')
+
+        >>> IndexName.parse('azul_v2_dev_main_foo')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
                   entity_type='foo',
                   doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
                   entity_type='foo',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_bar') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
                   entity_type='foo_bar',
                   doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
                   entity_type='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='staging',
                   catalog='hca',
                   entity_type='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_dev_main_replica') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_replica')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
                   entity_type='replica',
                   doc_type=<DocumentType.replica>)
 
-        >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate') # doctest: +ELLIPSIS
+        >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate')
+        ... # doctest: +ELLIPSIS
         Traceback (most recent call last):
             ...
         azul.RequirementError: entity_type ... 'foo_bar_'
@@ -357,22 +308,18 @@ class IndexName:
         >>> IndexName.parse('azul_v3_bla')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: 3
-
+        azul.RequirementError: ('Version must be 2', 3)
         """
         index_name = index_name.split('_')
-        require(len(index_name) > 2, index_name)
+        require(len(index_name) > 2, 'Too few index name elements', index_name)
         prefix, *index_name = index_name
+        require(prefix == cls.prefix, 'Unexpected prefix', cls.prefix, prefix)
         version = cls.index_name_version_re.fullmatch(index_name[0])
-        if version:
-            _, *index_name = index_name
-            version = int(version.group(1))
-            require(version == 2, version)
-            deployment, catalog, *index_name = index_name
-        else:
-            version = 1
-            catalog = None
-            *index_name, deployment = index_name
+        reject(version is None, 'Version is required')
+        _, *index_name = index_name
+        version = int(version.group(1))
+        require(version == 2, 'Version must be 2', version)
+        deployment, catalog, *index_name = index_name
         if index_name[-1] == 'aggregate':
             *index_name, _ = index_name
             doc_type = DocumentType.aggregate
@@ -382,8 +329,7 @@ class IndexName:
             doc_type = DocumentType.contribution
         entity_type = '_'.join(index_name)
         config.validate_entity_type(entity_type)
-        self = cls(prefix=prefix,
-                   version=version,
+        self = cls(version=version,
                    deployment=deployment,
                    catalog=catalog,
                    entity_type=entity_type,
@@ -392,19 +338,11 @@ class IndexName:
 
     def __str__(self) -> str:
         """
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo'))
-        'azul_foo_dev'
-
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo', doc_type=DocumentType.aggregate))
-        'azul_foo_aggregate_dev'
-
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar'))
-        'azul_foo_bar_dev'
-
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar', doc_type=DocumentType.aggregate))
-        'azul_foo_bar_aggregate_dev'
-
-        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo'))
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='main',
+        ...               entity_type='foo',
+        ...               doc_type=DocumentType.contribution))
         'azul_v2_dev_main_foo'
 
         >>> str(IndexName(version=2,
@@ -414,7 +352,11 @@ class IndexName:
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_aggregate'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo_bar'))
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='main',
+        ...               entity_type='foo_bar',
+        ...               doc_type=DocumentType.contribution))
         'azul_v2_dev_main_foo_bar'
 
         >>> str(IndexName(version=2,
@@ -432,26 +374,16 @@ class IndexName:
         'azul_v2_staging_hca_foo_bar_aggregate'
         """
         aggregate = ['aggregate'] if self.doc_type is DocumentType.aggregate else []
-        if self.version == 1:
-            require(self.catalog is None)
-            return '_'.join([
-                self.prefix,
-                self.entity_type,
-                *aggregate,
-                self.deployment
-            ])
-        elif self.version == 2:
-            require(self.catalog is not None, self.catalog)
-            return '_'.join([
-                self.prefix,
-                f'v{self.version}',
-                self.deployment,
-                self.catalog,
-                self.entity_type,
-                *aggregate,
-            ])
-        else:
-            assert False, self.version
+        assert self.version == 2, self
+        require(self.catalog is not None, self.catalog)
+        return '_'.join([
+            self.prefix,
+            f'v{self.version}',
+            self.deployment,
+            self.catalog,
+            self.entity_type,
+            *aggregate,
+        ])
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)

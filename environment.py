@@ -418,10 +418,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_SHARE_ES_DOMAIN': '0',
 
-        # Prefix to describe ES indices
-        #
-        'AZUL_INDEX_PREFIX': 'azul',
-
         # The number of nodes in the AWS-hosted Elasticsearch cluster
         #
         'AZUL_ES_INSTANCE_COUNT': None,

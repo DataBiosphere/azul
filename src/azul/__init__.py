@@ -762,10 +762,6 @@ class Config:
         return int(self.environ['AZUL_ES_VOLUME_SIZE'])
 
     @property
-    def index_prefix(self) -> str:
-        return self._term_from_env('AZUL_INDEX_PREFIX')
-
-    @property
     def enable_replicas(self) -> bool:
         return self._boolean(self.environ['AZUL_ENABLE_REPLICAS'])
 
