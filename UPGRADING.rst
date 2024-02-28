@@ -20,6 +20,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5975 Upgrade ES domain for Hammerbox
+=====================================
+
+Update the ``ES_INSTANCE_COUNT`` environment variable for any personal
+deployments that are co-located with ``hammerbox``, using that deployment's
+``environment.py`` as a template.
+
+
 #5876 Upgrade dependencies 2024-02-05
 =====================================
 
