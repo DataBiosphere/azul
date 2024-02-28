@@ -203,6 +203,15 @@ class IndexName:
         ...
         azul.RequirementError: qualifier is either too short, too long
         or contains invalid characters: '_'
+
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='hca',
+        ...               qualifier='foo',
+        ...               doc_type=DocumentType.replica))
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Unexpected replica qualifier', 'foo')
         """
         config.validate_prefix(self.prefix)
         require(self.version == 2, 'Version must be 2', self.version)
@@ -211,7 +220,10 @@ class IndexName:
         config.Catalog.validate_name(self.catalog)
         config.validate_qualifier(self.qualifier)
         if self.doc_type is DocumentType.replica:
-            assert self.qualifier == 'replica', self.qualifier
+            # To shorten the string representation of replica index names, we
+            # expect the qualifier and document type to be the same string.
+            require(self.qualifier == self.doc_type.value,
+                    'Unexpected replica qualifier', self.qualifier)
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
@@ -323,10 +335,10 @@ class IndexName:
         version = int(version.group(1))
         require(version == 2, 'Version must be 2', version)
         deployment, catalog, *index_name = index_name
-        if index_name[-1] == 'aggregate':
+        if index_name[-1] == DocumentType.aggregate.value:
             *index_name, _ = index_name
             doc_type = DocumentType.aggregate
-        elif index_name == ['replica']:
+        elif index_name == [DocumentType.replica.value]:
             doc_type = DocumentType.replica
         else:
             doc_type = DocumentType.contribution
@@ -375,8 +387,23 @@ class IndexName:
         ...               qualifier='foo_bar',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_staging_hca_foo_bar_aggregate'
+
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='hca',
+        ...               qualifier='replica',
+        ...               doc_type=DocumentType.replica))
+        'azul_v2_dev_hca_replica'
         """
-        aggregate = ['aggregate'] if self.doc_type is DocumentType.aggregate else []
+        if self.doc_type is DocumentType.aggregate:
+            doc_type = ['aggregate']
+        elif self.doc_type is DocumentType.contribution:
+            doc_type = []
+        elif self.doc_type is DocumentType.replica:
+            assert self.qualifier == self.doc_type.value
+            doc_type = []
+        else:
+            assert False, self.doc_type
         assert self.version == 2, self
         require(self.catalog is not None, self.catalog)
         return '_'.join([
@@ -385,7 +412,7 @@ class IndexName:
             self.deployment,
             self.catalog,
             self.qualifier,
-            *aggregate,
+            *doc_type,
         ])
 
 
@@ -590,6 +617,9 @@ class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
     # Overrides the property in the base class. We need this to be statically
     # accessible through the class.
     index_qualifier: ClassVar[str] = 'replica'
+
+    # The current v2 index name encoding depends on this
+    assert index_qualifier == doc_type.value
 
     @property
     def document_id(self) -> str:
