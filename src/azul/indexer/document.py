@@ -414,8 +414,12 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
         """
         assert isinstance(self.entity, CataloguedEntityReference)
         return str(IndexName.create(catalog=self.entity.catalog,
-                                    qualifier=self.entity.entity_type,
+                                    qualifier=self.index_qualifier,
                                     doc_type=self.doc_type))
+
+    @property
+    def index_qualifier(self):
+        return self.entity.entity_type
 
     @property
     @abstractmethod
@@ -583,9 +587,17 @@ class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
     #: A hash of the replica's JSON document
     content_hash: str
 
+    # Overrides the property in the base class. We need this to be statically
+    # accessible through the class.
+    index_qualifier: ClassVar[str] = 'replica'
+
     @property
     def document_id(self) -> str:
-        return f'{self.entity.entity_id}_{self.content_hash}'
+        return '_'.join((
+            self.entity.entity_type,
+            self.entity.entity_id,
+            self.content_hash
+        ))
 
     @classmethod
     def _from_index(cls,
@@ -593,14 +605,16 @@ class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
                     document_id: str
                     ) -> 'ReplicaCoordinates[CataloguedEntityReference]':
         assert index_name.doc_type is DocumentType.replica, index_name
-        entity_id, content_hash = document_id.split('_')
+        assert index_name.qualifier == cls.index_qualifier, index_name
+        # entity_type, the first component, may contain underscores
+        entity_type, entity_id, content_hash = document_id.rsplit('_', 2)
         return cls(content_hash=content_hash,
                    entity=CataloguedEntityReference(catalog=index_name.catalog,
-                                                    entity_type='replica',
+                                                    entity_type=entity_type,
                                                     entity_id=entity_id))
 
     def __str__(self) -> str:
-        return f'replica of {self.entity.entity_id}'
+        return f'replica of {self.entity}'
 
 
 # The native type of the field in documents as they are being created by a
@@ -1479,7 +1493,6 @@ class Replica(Document[ReplicaCoordinates[E]]):
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, ReplicaCoordinates)
         assert self.coordinates.doc_type is DocumentType.replica
-        assert self.entity.entity_type == 'replica', self.entity
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:

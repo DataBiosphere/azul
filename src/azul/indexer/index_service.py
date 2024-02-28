@@ -80,6 +80,7 @@ from azul.indexer.document import (
     IndexName,
     OpType,
     Replica,
+    ReplicaCoordinates,
     VersionType,
 )
 from azul.indexer.document_service import (
@@ -177,7 +178,7 @@ class IndexService(DocumentService):
         ] + (
             [
                 IndexName.create(catalog=catalog,
-                                 qualifier='replica',
+                                 qualifier=ReplicaCoordinates.index_qualifier,
                                  doc_type=DocumentType.replica)
             ]
             if config.enable_replicas else

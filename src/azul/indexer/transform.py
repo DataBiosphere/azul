@@ -127,8 +127,7 @@ class Transformer(metaclass=ABCMeta):
 
     def _replica(self, contents: MutableJSON, entity: EntityReference) -> Replica:
         coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
-                                         entity=attr.evolve(entity,
-                                                            entity_type='replica'))
+                                         entity=entity)
         return Replica(coordinates=coordinates,
                        version=None,
                        replica_type=self.replica_type(entity),

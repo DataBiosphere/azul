@@ -380,7 +380,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         if config.enable_replicas:
             coordinates.append(
                 ReplicaCoordinates(
-                    entity=attr.evolve(entity, entity_type='replica'),
+                    entity=entity,
                     content_hash=json_hash(entity_contents).hexdigest()
                 ).with_catalog(self.catalog)
             )
