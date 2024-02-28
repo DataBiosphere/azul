@@ -119,7 +119,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
                         self._index_canned_bundle(bundle)
                         hits = self._get_all_hits()
                         hits.sort(key=itemgetter('_id'))
-                        self.assertEqual(expected_hits, hits)
+                        self.assertElasticEqual(expected_hits, hits)
                     finally:
                         self.index_service.delete_indices(self.catalog)
 
