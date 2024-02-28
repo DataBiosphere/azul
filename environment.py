@@ -279,10 +279,10 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/clamav/clamav:1.3.0-37'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.9.0-ce.0'
+                'ref': 'docker.io/gitlab/gitlab-ce:16.9.1-ce.0'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.0'
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.1'
             },
             'dind': {
                 'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
