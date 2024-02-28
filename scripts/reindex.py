@@ -63,8 +63,13 @@ parser.add_argument('--catalogs',
                     nargs='+',
                     metavar='NAME',
                     default=[
-                        c for c in config.catalogs
-                        if c not in config.integration_test_catalogs
+                        catalog.name
+                        for catalog in config.catalogs.values()
+                        if not catalog.is_integration_test_catalog
+                    ]
+                    if config.current_catalog is None else
+                    [
+                        config.catalogs[config.current_catalog].name
                     ],
                     choices=config.catalogs,
                     help='The names of the catalogs to reindex.')

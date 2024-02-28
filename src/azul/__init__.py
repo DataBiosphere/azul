@@ -910,6 +910,10 @@ class Config:
     def default_catalog(self) -> CatalogName:
         return first(self.catalogs)
 
+    @property
+    def current_catalog(self) -> Optional[str]:
+        return self.environ.get('azul_current_catalog')
+
     def it_catalog_for(self, catalog: CatalogName) -> Optional[CatalogName]:
         it_catalog = self.catalogs[catalog].it_catalog
         assert it_catalog in self.integration_test_catalogs, it_catalog
