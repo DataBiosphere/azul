@@ -401,7 +401,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     be generic in E, the type of EntityReference.
     """
     entity: E
-    doc_type: DocumentType
+    doc_type: ClassVar[DocumentType]
 
     @property
     def index_name(self) -> str:
@@ -465,7 +465,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
-    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.contribution)
+    doc_type: ClassVar[DocumentType] = DocumentType.contribution
     bundle: BundleFQID
     deleted: bool
 
@@ -530,7 +530,7 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     Document coordinates for aggregates. Aggregate coordinates always carry a
     catalog.
     """
-    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.aggregate)
+    doc_type: ClassVar[DocumentType] = DocumentType.aggregate
 
     @classmethod
     def _from_index(cls,
@@ -562,7 +562,7 @@ class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
     contents of the underlying metadata document.
     """
 
-    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.replica)
+    doc_type: ClassVar[DocumentType] = DocumentType.replica
 
     #: A hash of the replica's JSON document
     content_hash: str
