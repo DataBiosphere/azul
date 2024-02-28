@@ -512,10 +512,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             assert isinstance(entity, api.Entity), entity
             replica = self._replica(entity.json, entity_ref)
-        return (
-            self._contribution(contribution, entity_ref),
-            replica
-        )
+        return self._contribution(contribution, entity_ref), replica
 
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,

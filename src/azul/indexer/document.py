@@ -392,16 +392,18 @@ class IndexName:
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     """
-    Document coordinates of contributions. Contributions produced by
-    transformers don't specify a catalog, the catalog is supplied when the
-    contributions are written to the index and it is guaranteed to be the same
-    for all contributions produced in response to one notification. When
-    contributions are read back during aggregation, they specify a catalog, the
-    catalog they were read from. Because of that duality this class has to
-    be generic in E, the type of EntityReference.
+    The coordinates of a document ultimately define two strings: 1) the name of
+    the Elasticsearch index that contains the document and 2) the unique ID by
+    which it can be retrieved from that index. Both of these strings are
+    composed of smaller elements information, e.g., a reference to the entity
+    the document contains metadata about and the type of the document. Concrete
+    subclasses typically add more such elements to be encoded in their index
+    names and document IDs.
     """
-    entity: E
+
     doc_type: ClassVar[DocumentType]
+
+    entity: E
 
     @property
     def index_name(self) -> str:
@@ -465,8 +467,24 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
+    """
+    Coordinates of contribution documents. Contributions originate from a
+    subgraph ("bundle") and represent either the addition of metadata to an
+    entity or the removal of metadata from an entity.
+
+    Contributions produced by
+    transformers don't specify a catalog, the catalog is supplied when the
+    contributions are written to the index and it is guaranteed to be the same
+    for all contributions produced in response to one notification. When
+    contributions are read back during aggregation, they specify a catalog, the
+    catalog they were read from. Because of that duality this class has to be
+    generic in E, the type of EntityReference.
+    """
+
     doc_type: ClassVar[DocumentType] = DocumentType.contribution
+
     bundle: BundleFQID
+
     deleted: bool
 
     def __attrs_post_init__(self):
@@ -527,16 +545,14 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     """
-    Document coordinates for aggregates. Aggregate coordinates always carry a
+    Coordinates of aggregate documents. Aggregate coordinates always carry a
     catalog.
     """
+
     doc_type: ClassVar[DocumentType] = DocumentType.aggregate
 
     @classmethod
-    def _from_index(cls,
-                    index_name: IndexName,
-                    document_id: str
-                    ) -> Self:
+    def _from_index(cls, index_name: IndexName, document_id: str) -> Self:
         entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.aggregate
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
@@ -557,9 +573,9 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
     """
-    Document coordinates for replicas. Replicas are content-addressed, so
-    these these coordinates depend not only on the entity reference, but on the
-    contents of the underlying metadata document.
+    Coordinates of replica documents. Replicas are content-addressed, so these
+    coordinates depend not only on the entity reference, but on the contents of
+    the underlying metadata document.
     """
 
     doc_type: ClassVar[DocumentType] = DocumentType.replica
