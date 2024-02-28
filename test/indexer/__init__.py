@@ -191,12 +191,12 @@ class IndexerTestCase(CatalogTestCase,
             )
 
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if not (
                 # Replicas may contain (intentionally) unsorted metadata
                 doc_type is DocumentType.replica
                 # DUOS contributions contain no lists
-                or is_duos_contribution(entity_type, doc_type)
+                or is_duos_contribution(qualifier, doc_type)
             ):
                 self._verify_sorted_lists(hit['_source'])
         return hits
@@ -204,7 +204,7 @@ class IndexerTestCase(CatalogTestCase,
     def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
         index_name = IndexName.parse(hit['_index'])
         index_name.validate()
-        return index_name.entity_type, index_name.doc_type
+        return index_name.qualifier, index_name.doc_type
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """
@@ -216,7 +216,7 @@ class IndexerTestCase(CatalogTestCase,
         for hit in expected_hits:
             index_name = IndexName.parse(hit['_index'])
             index_name = IndexName.create(catalog=self.catalog,
-                                          entity_type=index_name.entity_type,
+                                          qualifier=index_name.qualifier,
                                           doc_type=index_name.doc_type)
             hit['_index'] = str(index_name)
         return expected_hits

@@ -671,5 +671,5 @@ class ElasticsearchService(DocumentService):
         """
         return Search(using=self._es_client,
                       index=str(IndexName.create(catalog=catalog,
-                                                 entity_type=entity_type,
+                                                 qualifier=entity_type,
                                                  doc_type=DocumentType.aggregate)))

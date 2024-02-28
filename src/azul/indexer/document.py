@@ -129,8 +129,11 @@ class IndexName:
     #: The catalog the index belongs to
     catalog: CatalogName
 
-    #: The type of entities this index contains metadata about
-    entity_type: str
+    #: An additional qualifier to distinguish between indices of the same
+    #: `doc_type`. For indices containing contribution or aggregate documents,
+    #: for example, this is the name of the type of entity the documents contain
+    #: metadata about.
+    qualifier: str
 
     #: Whether the documents in the index are contributions, aggregates, or
     #: replicas
@@ -143,19 +146,19 @@ class IndexName:
         >>> IndexName(version=2,
         ...           deployment='dev',
         ...           catalog='main',
-        ...           entity_type='foo_bar',
+        ...           qualifier='foo_bar',
         ...           doc_type=DocumentType.contribution)
         ... # doctest: +NORMALIZE_WHITESPACE
         IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.contribution>)
 
         >>> IndexName(version=1,
         ...           deployment='',
         ...           catalog='',
-        ...           entity_type='',
+        ...           qualifier='',
         ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
@@ -164,7 +167,7 @@ class IndexName:
         >>> IndexName(version=2,
         ...           deployment='dev',
         ...           catalog=None,  # noqa
-        ...           entity_type='foo',
+        ...           qualifier='foo',
         ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
@@ -173,7 +176,7 @@ class IndexName:
         >>> IndexName(version=2,
         ...           deployment='_',
         ...           catalog='foo',
-        ...           entity_type='bar',
+        ...           qualifier='bar',
         ...           doc_type=DocumentType.contribution)
         ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
@@ -184,7 +187,7 @@ class IndexName:
         >>> IndexName(version=2,
         ...           deployment='dev',
         ...           catalog='_',
-        ...           entity_type='bar',
+        ...           qualifier='bar',
         ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
@@ -193,12 +196,12 @@ class IndexName:
         >>> IndexName(version=2,
         ...           deployment='dev',
         ...           catalog='foo',
-        ...           entity_type='_',
+        ...           qualifier='_',
         ...           doc_type=DocumentType.contribution)
         ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: entity_type is either too short, too long
+        azul.RequirementError: qualifier is either too short, too long
         or contains invalid characters: '_'
         """
         config.validate_prefix(self.prefix)
@@ -206,9 +209,9 @@ class IndexName:
         config.validate_deployment_name(self.deployment)
         require(self.catalog is not None, 'Catalog name is required', self.catalog)
         config.Catalog.validate_name(self.catalog)
-        config.validate_entity_type(self.entity_type)
+        config.validate_qualifier(self.qualifier)
         if self.doc_type is DocumentType.replica:
-            assert self.entity_type == 'replica', self.entity_type
+            assert self.qualifier == 'replica', self.qualifier
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
@@ -222,13 +225,13 @@ class IndexName:
     def create(cls,
                *,
                catalog: CatalogName,
-               entity_type: str,
+               qualifier: str,
                doc_type: DocumentType
                ) -> Self:
         return cls(version=2,
                    deployment=config.deployment_stage,
                    catalog=catalog,
-                   entity_type=entity_type,
+                   qualifier=qualifier,
                    doc_type=doc_type)
 
     @classmethod
@@ -256,7 +259,7 @@ class IndexName:
         IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo',
+                  qualifier='foo',
                   doc_type=<DocumentType.contribution>)
 
         >>> IndexName.parse('azul_v2_dev_main_foo_aggregate')
@@ -264,7 +267,7 @@ class IndexName:
         IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo',
+                  qualifier='foo',
                   doc_type=<DocumentType.aggregate>)
 
         >>> IndexName.parse('azul_v2_dev_main_foo_bar')
@@ -272,7 +275,7 @@ class IndexName:
         IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.contribution>)
 
         >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate')
@@ -280,7 +283,7 @@ class IndexName:
         IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
         >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate')
@@ -288,7 +291,7 @@ class IndexName:
         IndexName(version=2,
                   deployment='staging',
                   catalog='hca',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
         >>> IndexName.parse('azul_v2_dev_main_replica')
@@ -296,14 +299,14 @@ class IndexName:
         IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='replica',
+                  qualifier='replica',
                   doc_type=<DocumentType.replica>)
 
         >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate')
         ... # doctest: +ELLIPSIS
         Traceback (most recent call last):
             ...
-        azul.RequirementError: entity_type ... 'foo_bar_'
+        azul.RequirementError: qualifier ... 'foo_bar_'
 
         >>> IndexName.parse('azul_v3_bla')
         Traceback (most recent call last):
@@ -327,12 +330,12 @@ class IndexName:
             doc_type = DocumentType.replica
         else:
             doc_type = DocumentType.contribution
-        entity_type = '_'.join(index_name)
-        config.validate_entity_type(entity_type)
+        qualifier = '_'.join(index_name)
+        config.validate_qualifier(qualifier)
         self = cls(version=version,
                    deployment=deployment,
                    catalog=catalog,
-                   entity_type=entity_type,
+                   qualifier=qualifier,
                    doc_type=doc_type)
         return self
 
@@ -341,35 +344,35 @@ class IndexName:
         >>> str(IndexName(version=2,
         ...               deployment='dev',
         ...               catalog='main',
-        ...               entity_type='foo',
+        ...               qualifier='foo',
         ...               doc_type=DocumentType.contribution))
         'azul_v2_dev_main_foo'
 
         >>> str(IndexName(version=2,
         ...               deployment='dev',
         ...               catalog='main',
-        ...               entity_type='foo',
+        ...               qualifier='foo',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_aggregate'
 
         >>> str(IndexName(version=2,
         ...               deployment='dev',
         ...               catalog='main',
-        ...               entity_type='foo_bar',
+        ...               qualifier='foo_bar',
         ...               doc_type=DocumentType.contribution))
         'azul_v2_dev_main_foo_bar'
 
         >>> str(IndexName(version=2,
         ...               deployment='dev',
         ...               catalog='main',
-        ...               entity_type='foo_bar',
+        ...               qualifier='foo_bar',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_bar_aggregate'
 
         >>> str(IndexName(version=2,
         ...               deployment='staging',
         ...               catalog='hca',
-        ...               entity_type='foo_bar',
+        ...               qualifier='foo_bar',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_staging_hca_foo_bar_aggregate'
         """
@@ -381,7 +384,7 @@ class IndexName:
             f'v{self.version}',
             self.deployment,
             self.catalog,
-            self.entity_type,
+            self.qualifier,
             *aggregate,
         ])
 
@@ -409,7 +412,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
         """
         assert isinstance(self.entity, CataloguedEntityReference)
         return str(IndexName.create(catalog=self.entity.catalog,
-                                    entity_type=self.entity.entity_type,
+                                    qualifier=self.entity.entity_type,
                                     doc_type=self.doc_type))
 
     @property
@@ -497,7 +500,7 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
                     index_name: IndexName,
                     document_id: str
                     ) -> 'ContributionCoordinates[CataloguedEntityReference]':
-        entity_type = index_name.entity_type
+        entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.contribution
         entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
         if deleted == 'deleted':
@@ -534,7 +537,7 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
                     index_name: IndexName,
                     document_id: str
                     ) -> Self:
-        entity_type = index_name.entity_type
+        entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.aggregate
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
                                                     entity_type=entity_type,

@@ -170,14 +170,14 @@ class IndexService(DocumentService):
     def index_names(self, catalog: CatalogName) -> list[IndexName]:
         return [
             IndexName.create(catalog=catalog,
-                             entity_type=entity_type,
+                             qualifier=entity_type,
                              doc_type=doc_type)
             for entity_type in self.entity_types(catalog)
             for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ] + (
             [
                 IndexName.create(catalog=catalog,
-                                 entity_type='replica',
+                                 qualifier='replica',
                                  doc_type=DocumentType.replica)
             ]
             if config.enable_replicas else
@@ -581,7 +581,7 @@ class IndexService(DocumentService):
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
             index = str(IndexName.create(catalog=entity.catalog,
-                                         entity_type=entity.entity_type,
+                                         qualifier=entity.entity_type,
                                          doc_type=DocumentType.contribution))
             entity_ids_by_index[index].add(entity.entity_id)
 

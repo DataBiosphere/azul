@@ -1199,8 +1199,8 @@ class Config:
         return cls.term_re.fullmatch(term) is not None
 
     @classmethod
-    def validate_entity_type(cls, entity_type: str) -> None:
-        cls._validate_term(entity_type, name='entity_type')
+    def validate_qualifier(cls, qualifier: str) -> None:
+        cls._validate_term(qualifier, name='qualifier')
 
     def secrets_manager_secret_name(self, *args):
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
