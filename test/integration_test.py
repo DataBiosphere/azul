@@ -584,36 +584,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
         assert supported_formats
-        validators: dict[ManifestFormat, Callable[[str, bytes], None]] = {
-            ManifestFormat.compact: self._check_compact_manifest,
-            ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
-            ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
-            ManifestFormat.curl: self._check_curl_manifest,
-            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest,
-            ManifestFormat.verbatim_pfb: self._check_terra_pfb_manifest
-        }
         for format in [None, *supported_formats]:
-            # IT catalogs with just one public source are always indexed
-            # completely if that source contains less than the minimum number of
-            # bundles required. So regardless of any randomness employed by this
-            # test, manifests derived from these catalogs will always be based
-            # on the same content hash. Since the resulting reuse of cached
-            # manifests interferes with this test, we need another means of
-            # randomizing the manifest key: a random but all-inclusive filter.
-            tibi_byte = 1024 ** 4
-            filters = {
-                self._file_size_facet(catalog): {
-                    'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
-                }
-            }
+            filters = self._manifest_filters(catalog)
             first_fetch = bool(self.random.getrandbits(1))
             for fetch in [first_fetch, not first_fetch]:
                 with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
                     args = dict(catalog=catalog, filters=json.dumps(filters))
                     if format is None:
-                        validator = validators[first(supported_formats)]
+                        format = first(supported_formats)
                     else:
-                        validator = validators[format]
                         args['format'] = format.value
 
                     # Wrap self._get_url to collect all HTTP responses
@@ -633,7 +612,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
                         def worker(_):
                             response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
-                            validator(catalog, response)
+                            self._manifest_validators[format](catalog, response)
 
                         num_workers = 3
                         with ThreadPoolExecutor(max_workers=num_workers) as tpe:
@@ -647,6 +626,32 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     # function execution is expected to have been started.
                     expect_execution = fetch == first_fetch
                     self.assertEqual(1 if expect_execution else 0, len(execution_ids))
+
+    def _manifest_filters(self, catalog: CatalogName) -> JSON:
+        # IT catalogs with just one public source are always indexed completely
+        # if that source contains less than the minimum number of bundles
+        # required. So regardless of any randomness employed by this test,
+        # manifests derived from these catalogs will always be based on the same
+        # content hash. Since the resulting reuse of cached manifests interferes
+        # with this test, we need another means of randomizing the manifest key:
+        # a random but all-inclusive filter.
+        tibi_byte = 1024 ** 4
+        return {
+            self._file_size_facet(catalog): {
+                'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
+            }
+        }
+
+    @cached_property
+    def _manifest_validators(self) -> dict[ManifestFormat, Callable[[str, bytes], None]]:
+        return {
+            ManifestFormat.compact: self._check_compact_manifest,
+            ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
+            ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
+            ManifestFormat.curl: self._check_curl_manifest,
+            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest,
+            ManifestFormat.verbatim_pfb: self._check_terra_pfb_manifest
+        }
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],
