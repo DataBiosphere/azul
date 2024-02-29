@@ -3590,10 +3590,7 @@
             },
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "replica_type": "project",
-            "hub_ids": [
-                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
-            ]
+            "hub_ids": []
         },
         "_type": "_doc"
     }
