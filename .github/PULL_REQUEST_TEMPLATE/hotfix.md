@@ -23,24 +23,25 @@ Connected issue: #0000
 - [ ] Added `h` tag to commit title <sub>or this PR does not include a temporary hotfix</sub>
 - [ ] Added `H` tag to commit title <sub>or this PR does not include a permanent hotfix</sub>
 - [ ] Added `hotfix` label to PR
-- [ ] Added `partial` label to PR <sub>or this PR is a permanent hotfix</sub>
+- [ ] This PR is labeled `partial` <sub>or represents a permanent hotfix</sub>
 
 
 ### Author (before every review)
 
 - [ ] Rebased PR branch on `prod`, squashed old fixups
-- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
-- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not modify `requirements*.txt`, `common.mk`, `Makefile` and `Dockerfile`</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not modify `requirements*.txt`</sub>
+- [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
 
 
 ### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
+- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] PR is assigned to current operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -48,9 +49,9 @@ Connected issue: #0000
 - [ ] Squashed PR branch and rebased onto `prod`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
-- [ ] Title of merge commit starts with title from this PR
-- [ ] Added PR reference to merge commit title
-- [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
+- [ ] The title of the merge commit starts with the title of this PR
+- [ ] Added PR # reference to merge commit title
+- [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
 - [ ] Moved connected issue to *Merged prod* column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
@@ -66,12 +67,12 @@ Connected issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deleted unreferenced indices in `prod` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `prod`</sub>
-- [ ] Considered deindexing individual sources in `prod` <sub>or this PR does not merely remove sources from existing catalogs in `prod`</sub>
-- [ ] Considered indexing individual sources in `prod` <sub>or this PR does not merely add sources to existing catalogs in `prod`</sub>
-- [ ] Started reindex in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
-- [ ] Checked for and triaged indexing failures in `prod` <sub>or neither this PR nor a prior failed promotion requires it</sub>
-- [ ] Emptied fail queues in `prod` deployment <sub>or neither this PR nor a prior failed promotion requires it</sub>
+- [ ] Deindexed all unreferenced catalogs in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
+- [ ] Deindexed specific sources in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
+- [ ] Indexed specific sources in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
+- [ ] Started reindex in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
+- [ ] Emptied fail queues in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
 - [ ] Created backport PR and linked to it in a comment on this PR
 
 

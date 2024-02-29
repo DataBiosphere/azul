@@ -18,9 +18,9 @@ This is the PR template for backport PRs against `develop`.
 ### Author (before every review)
 
 - [ ] Merged `develop` into PR branch to integrate upstream changes
-- [ ] Ran `make requirements_update` <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
-- [ ] Added `R` tag to commit title <sub>or this PR does not touch requirements*.txt</sub>
-- [ ] Added `reqs` label to PR <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not modify `requirements*.txt`, `common.mk`, `Makefile` and `Dockerfile`</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not modify `requirements*.txt`</sub>
+- [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
 
 
 ### System administrator (after requesting changes)
@@ -32,9 +32,10 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 - [ ] Actually approved the PR
 - [ ] Decided if PR can be labeled `no sandbox`
+- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
-- [ ] PR is assigned to current operator
+- [ ] PR is assigned to only the operator
 
 
 ### Operator (before pushing merge the commit)
@@ -51,9 +52,9 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Title of merge commit starts with title from this PR
-- [ ] Added PR reference (this PR) to merge commit title
-- [ ] Collected commit title tags in merge commit title <sub>but exclude any `p` tags</sub>
+- [ ] The title of the merge commit starts with the title of this PR
+- [ ] Added PR # reference (to this PR) to merge commit title
+- [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
 - [ ] Pushed merge commit to GitHub
 
 
