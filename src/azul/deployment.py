@@ -367,7 +367,7 @@ class AWS:
             #        role is already assumed
             yield
         else:
-            sts = self.client('sts')
+            sts = self.sts
             identity = sts.get_caller_identity()
             # If we used the current identity's ARN to derive the session name,
             # we'd quickly risk exceeding the maximum 64 character limit on the
@@ -425,7 +425,7 @@ class AWS:
         return boto3.session.Session(botocore_session=session)
 
     @_cache
-    def client(self, *args, azul_logging: bool = False, **kwargs):
+    def client(self, service_name: str, *args, azul_logging: bool = False, **kwargs):
         """
         Outside of a context established by `.assumed_role_credentials()` this
         method returns a Boto3 client object of the same type as that of
@@ -445,12 +445,16 @@ class AWS:
         if the cached value is used by a thread other than the one that called
         this function.
 
+        :param service_name: The name of an AWS service, e.g. 's3' or 'ec2'.
+
         :param azul_logging: Whether to log the client's requests and
                              responses. Note that using DEBUG level will
                              enable logging of request bodies, which could
                              contain sensitive or secret information.
         """
-        client = self.boto3_session.client(*args, **kwargs)
+        client = self.boto3_session.client(service_name, *args, **kwargs)
+        log.info('Allocated new Boto3 client for %r with ID %r',
+                 service_name, id(client))
         if azul_logging:
             events = client.meta.events
             events.register_last(self._request_event_name, self._log_client_request)
