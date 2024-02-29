@@ -1489,7 +1489,7 @@ class TestManifestResponse(ManifestTestCase):
                 expected_url_for_bash = f"'{expected_url}'"
             if format is ManifestFormat.curl:
                 manifest_options = '--location --fail'
-                file_options = '--fail-early --continue-at - --retry 2 --retry-delay 10'
+                file_options = '--fail-early --continue-at - --retry 15 --retry-delay 10'
                 expected = {
                     'cmd.exe': f'curl.exe {manifest_options} "{expected_url}"'
                                f' | curl.exe {file_options} --config -',

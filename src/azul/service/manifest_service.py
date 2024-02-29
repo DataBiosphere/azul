@@ -35,6 +35,9 @@ from itertools import (
     chain,
 )
 import logging
+from math import (
+    ceil,
+)
 from operator import (
     itemgetter,
 )
@@ -1394,8 +1397,14 @@ class CurlManifestGenerator(PagedManifestGenerator):
         file_options = [
             '--fail-early',  # Exit curl with error on the first failure encountered
             '--continue-at -',  # Resume partially downloaded files
-            '--retry 2',  # Retry a file download up to X times on transient error
-            '--retry-delay 10',  # Sleep for X seconds between retries
+            # We want curl to make enough retries so that it waits a total of
+            # one and a half times the evaluation period of the WAF rate rule,
+            # long enough for the tripped rule to clear.
+            f'--retry {ceil(config.waf_rate_rule_period * 1.5 / config.waf_rate_rule_retry_after)}',
+            # Curl will respect the 'Retry-After' header if given in a response,
+            # like the one returned when the WAF rate rule is tripped. Otherwise,
+            # curl will wait for the number of seconds specified here.
+            '--retry-delay 10',
         ]
         return {
             'cmd.exe': ' '.join([
