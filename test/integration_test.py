@@ -499,6 +499,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
+            self._test_manifest_tagging_race(catalog.name)
             self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
             if index:
@@ -643,6 +644,46 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
             }
         }
+
+    def _test_manifest_tagging_race(self, catalog: CatalogName):
+        validators: dict[ManifestFormat, Callable[[CatalogName, bytes], None]] = {
+            ManifestFormat.compact: self._check_compact_manifest,
+            ManifestFormat.curl: self._check_curl_manifest,
+        }
+
+        for format, validator in validators.items():
+            with self.subTest('manifest_tagging_race', catalog=catalog, format=format):
+                filters = self._manifest_filters(catalog)
+                manifest_url = config.service_endpoint.set(path='/manifest/files',
+                                                           args=dict(catalog=catalog,
+                                                                     filters=json.dumps(filters),
+                                                                     format=format.value))
+                method = PUT
+                responses = []
+                while True:
+                    response = self._get_url(method, manifest_url)
+                    if response.status == 301:
+                        responses.append(response)
+                        # Request the same manifest without following the
+                        # redirect in order to expose the race condition that
+                        # returns an untagged cached manifest. This happens
+                        # when a step function execution has generated a
+                        # manifest but is still in the process of tagging the
+                        # object. The more requests we make, the more likely it
+                        # is that we catch the execution in this racy state. We
+                        # still have to throttle the requests in order to
+                        # prevent tripping the WAF rate limit.
+                        rate_limit = config.waf_rate_rule_period / config.waf_rate_rule_limit
+                        time.sleep(rate_limit)
+                    elif response.status == 302:
+                        responses.append(response)
+                        method, manifest_url = GET, furl(response.headers['Location'])
+                    else:
+                        break
+
+                validator(catalog, response.data)
+                execution_ids = self._manifest_execution_ids(responses, fetch=False)
+                self.assertEqual(1, len(execution_ids))
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],
