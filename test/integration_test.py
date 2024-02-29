@@ -504,6 +504,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
+            self._test_manifest_tagging_race(catalog.name)
             self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
             if index:
@@ -652,6 +653,52 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest,
             ManifestFormat.verbatim_pfb: self._check_terra_pfb_manifest
         }
+
+    def _manifest_formats(self, catalog: CatalogName) -> Sequence[ManifestFormat]:
+        supported_formats = self.metadata_plugin(catalog).manifest_formats
+        assert supported_formats
+        return supported_formats
+
+    def _test_manifest_tagging_race(self, catalog: CatalogName):
+        supported_formats = self._manifest_formats(catalog)
+        for format in [ManifestFormat.compact, ManifestFormat.curl]:
+            if format in supported_formats:
+                with self.subTest('manifest_tagging_race', catalog=catalog, format=format):
+                    filters = self._manifest_filters(catalog)
+                    manifest_url = config.service_endpoint.set(path='/manifest/files',
+                                                               args=dict(catalog=catalog,
+                                                                         filters=json.dumps(filters),
+                                                                         format=format.value))
+                    method = PUT
+                    responses = []
+                    while True:
+                        response = self._get_url(method, manifest_url)
+                        if response.status == 301:
+                            responses.append(response)
+                            # Request the same manifest without following the
+                            # redirect in order to expose a potential race
+                            # condition that causes an untagged manifest object.
+                            # The race condition could happen when a step
+                            # function execution has finished generating a
+                            # manifest object but is still in the process of
+                            # tagging it.
+                            #
+                            # The more often we make these requests, the more
+                            # likely it is that we catch the execution in this
+                            # racy state. However, we still have to throttle the
+                            # requests in order to prevent tripping the WAF rate
+                            # limit.
+                            time.sleep(config.waf_rate_rule_period / config.waf_rate_rule_limit)
+                        elif response.status == 302:
+                            responses.append(response)
+                            method, manifest_url = GET, furl(response.headers['Location'])
+                        else:
+                            assert response.status == 200, response
+                            self._manifest_validators[format](catalog, response.data)
+                            break
+
+                execution_ids = self._manifest_execution_ids(responses, fetch=False)
+                self.assertEqual(1, len(execution_ids))
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],
