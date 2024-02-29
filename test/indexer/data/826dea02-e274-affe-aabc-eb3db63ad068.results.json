@@ -1481,10 +1481,7 @@
         "_source": {
             "entity_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
             "replica_type": "anvil_dataset",
-            "hub_ids": [
-                "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
-                "3b17377b-16b1-431c-9967-e5d01fc5923f"
-            ],
+            "hub_ids": [],
             "contents": {
                 "consent_group": [
                     "DS-BDIS"

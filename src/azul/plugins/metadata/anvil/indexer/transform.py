@@ -477,9 +477,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
 class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
 
-    def _transform(self, entity: EntityReference) -> Transform:
-        files = self._entities_by_type['file']
-        contents = dict(
+    def _contents(self) -> MutableJSON:
+        return dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 self._entities_by_type[activity_type]
                 for activity_type in self._activity_polymorphic_types
@@ -488,10 +487,8 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
             datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, self._entities_by_type['diagnosis']),
             donors=self._entities(self._donor, self._entities_by_type['donor']),
-            files=self._entities(self._file, files)
+            files=self._entities(self._file, self._entities_by_type['file'])
         )
-        hub_ids = [f.entity_id for f in files]
-        return self._add_replica(contents, entity, hub_ids)
 
     @classmethod
     def field_types(cls) -> FieldTypes:
@@ -591,6 +588,11 @@ class BundleTransformer(SingletonTransformer):
         return EntityReference(entity_type='bundle',
                                entity_id=self.bundle.uuid)
 
+    def _transform(self, entity: EntityReference) -> Transform:
+        contents = self._contents()
+        hub_ids = [f.entity_id for f in self._entities_by_type['file']]
+        return self._add_replica(contents, entity, hub_ids)
+
 
 class DatasetTransformer(SingletonTransformer):
 
@@ -600,6 +602,18 @@ class DatasetTransformer(SingletonTransformer):
 
     def _singleton(self) -> EntityReference:
         return self._only_dataset()
+
+    def _transform(self, entity: EntityReference) -> Transform:
+        contents = self._contents()
+        # Every file in a snapshot is linked to that snapshot's singular
+        # dataset, making an explicit list of hub IDs for the dataset both
+        # redundant and impractically large (we observe that for large
+        # snapshots, trying to track this many files in a single data structure
+        # causes a prohibitively high rate of conflicts during replica updates).
+        # Therefore, we leave the hub IDs field empty for datasets and rely on
+        # the tenet that every file is an implicit hub of its parent dataset.
+        hub_ids = []
+        return self._add_replica(contents, entity, hub_ids)
 
 
 class DonorTransformer(BaseTransformer):
