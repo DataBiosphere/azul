@@ -80,6 +80,7 @@ from azul.indexer.document import (
     IndexName,
     OpType,
     Replica,
+    ReplicaCoordinates,
     VersionType,
 )
 from azul.indexer.document_service import (
@@ -170,14 +171,14 @@ class IndexService(DocumentService):
     def index_names(self, catalog: CatalogName) -> list[IndexName]:
         return [
             IndexName.create(catalog=catalog,
-                             entity_type=entity_type,
+                             qualifier=entity_type,
                              doc_type=doc_type)
             for entity_type in self.entity_types(catalog)
             for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ] + (
             [
                 IndexName.create(catalog=catalog,
-                                 entity_type='replica',
+                                 qualifier=ReplicaCoordinates.index_qualifier,
                                  doc_type=DocumentType.replica)
             ]
             if config.enable_replicas else
@@ -401,8 +402,8 @@ class IndexService(DocumentService):
     def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
         for index_name in self.index_names(catalog):
-            if es_client.indices.exists(index=index_name):
-                es_client.indices.delete(index=index_name)
+            if es_client.indices.exists(index=str(index_name)):
+                es_client.indices.delete(index=str(index_name))
 
     def contribute(self,
                    catalog: CatalogName,
@@ -581,7 +582,7 @@ class IndexService(DocumentService):
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
             index = str(IndexName.create(catalog=entity.catalog,
-                                         entity_type=entity.entity_type,
+                                         qualifier=entity.entity_type,
                                          doc_type=DocumentType.contribution))
             entity_ids_by_index[index].add(entity.entity_id)
 
@@ -638,11 +639,15 @@ class IndexService(DocumentService):
         log.info('Read %i contribution(s)', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
             entity_ref = attrgetter('entity')
+            contributions_by_entity = cast(
+                Iterator[tuple[EntityReference, Iterator[Contribution]]],
+                groupby(sorted(contributions, key=entity_ref), key=entity_ref)
+            )
             log.debug(
                 'Number of contributions read, by entity: %r',
                 {
                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in groupby(sorted(contributions, key=entity_ref), key=entity_ref)
+                    for entity, contribution_group in contributions_by_entity
                 }
             )
         return contributions

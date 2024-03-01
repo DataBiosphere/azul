@@ -433,7 +433,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_e7a2881e67a92734fcf2f98e7f2c215a5b6c0a6d",
+        "_id": "sequencingactivity_1509ef40-d1ba-440d-b298-16b7c173dcd4_e7a2881e67a92734fcf2f98e7f2c215a5b6c0a6d",
         "_score": 1.0,
         "_source": {
             "entity_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
@@ -863,7 +863,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_ed0a841f18d24d3955ace40a353ad640e1da60f1",
+        "_id": "file_15b76f9c-6b46-433f-851d-34e89f1b9ba6_ed0a841f18d24d3955ace40a353ad640e1da60f1",
         "_score": 1.0,
         "_source": {
             "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
@@ -893,7 +893,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_92347daeeff2cbb94cd3bf9f73bb40e8c52a1e40",
+        "_id": "diagnosis_15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_92347daeeff2cbb94cd3bf9f73bb40e8c52a1e40",
         "_score": 1.0,
         "_source": {
             "entity_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
@@ -1469,7 +1469,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "2370f948-2783-4eb6-afea-e022897f4dcf_f10ae38d485330bf8fc7a95f7eb06626b984ad6a",
+        "_id": "dataset_2370f948-2783-4eb6-afea-e022897f4dcf_f10ae38d485330bf8fc7a95f7eb06626b984ad6a",
         "_score": 1.0,
         "_source": {
             "entity_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
@@ -1723,7 +1723,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_33d8fab596f5af223936ba8f7ef6d218e4932cde",
+        "_id": "file_3b17377b-16b1-431c-9967-e5d01fc5923f_33d8fab596f5af223936ba8f7ef6d218e4932cde",
         "_score": 1.0,
         "_source": {
             "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -2184,7 +2184,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "816e364e-1193-4e5b-a91a-14e4b009157c_5eabdcb475879b310467a4d8c31cab38deff5e6f",
+        "_id": "sequencingactivity_816e364e-1193-4e5b-a91a-14e4b009157c_5eabdcb475879b310467a4d8c31cab38deff5e6f",
         "_score": 1.0,
         "_source": {
             "entity_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -2930,7 +2930,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_a990d631b61245811f3401dfa59a2d47edac01a5",
+        "_id": "biosample_826dea02-e274-4ffe-aabc-eb3db63ad068_a990d631b61245811f3401dfa59a2d47edac01a5",
         "_score": 1.0,
         "_source": {
             "entity_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
@@ -3506,7 +3506,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461_0a85e766a03e5aedfa1bbcf0932e376dba5cd431",
+        "_id": "diagnosis_939a4bd3-86ed-4a8a-81f4-fbe0ee673461_0a85e766a03e5aedfa1bbcf0932e376dba5cd431",
         "_score": 1.0,
         "_source": {
             "entity_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
@@ -4080,7 +4080,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_ef7dbf88444d1f5f24e887821dbae7d1dc182e55",
+        "_id": "donor_bfd991f2-2797-4083-972a-da7c6d7f1b2e_ef7dbf88444d1f5f24e887821dbae7d1dc182e55",
         "_score": 1.0,
         "_source": {
             "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",

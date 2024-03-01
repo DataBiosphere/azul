@@ -129,11 +129,6 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load(self.catalog).create()
 
-    def _parse_index_name(self, hit) -> tuple[str, DocumentType]:
-        index_name = IndexName.parse(hit['_index'])
-        index_name.validate()
-        return index_name.entity_type, index_name.doc_type
-
     def _num_expected_replicas(self,
                                num_contribs: int,
                                num_bundles: int = 1
@@ -229,7 +224,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                         contributions = []
                                         replicas = []
                                         for hit in hits:
-                                            entity_type, doc_type = self._parse_index_name(hit)
+                                            qualifier, doc_type = self._parse_index_name(hit)
                                             if doc_type is DocumentType.replica:
                                                 entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
                                                 replicas.append(entity_id)
@@ -246,7 +241,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                                 # plugin, verbatim
                                                 actual = hit['_source']['contents']
                                                 self.assertEqual(expected, actual)
-                                            elif doc_type is DocumentType.contribution and entity_type != 'bundles':
+                                            elif doc_type is DocumentType.contribution and qualifier != 'bundles':
                                                 entity_id = ContributionCoordinates.from_hit(hit).entity.entity_id
                                                 contributions.append(entity_id)
                                         contributions.sort()
@@ -283,7 +278,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                     hits = self._get_all_hits()
                     self._assert_hit_counts(hits, size)
                     for hit in hits:
-                        entity_type, doc_type = self._parse_index_name(hit)
+                        qualifier, doc_type = self._parse_index_name(hit)
                         if doc_type is DocumentType.aggregate:
                             doc = aggregate_cls.from_index(field_types, hit)
                             self.assertNotEqual(doc.contents, {})
@@ -309,7 +304,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                             num_replicas=self._num_expected_replicas(size))
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
-                        entity_type, doc_type = self._parse_index_name(hit)
+                        qualifier, doc_type = self._parse_index_name(hit)
                         if doc_type is DocumentType.contribution:
                             doc = Contribution.from_index(field_types, hit)
                             docs_by_entity[doc.entity].append(doc)
@@ -350,8 +345,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                      entity_type: Optional[EntityType] = None,
                      ) -> Iterable[JSON]:
         for hit in hits:
-            hit_entity_type, hit_doc_type = self._parse_index_name(hit)
-            if entity_type in (None, hit_entity_type) and doc_type in (None, hit_doc_type):
+            qualifier, hit_doc_type = self._parse_index_name(hit)
+            if entity_type in (None, qualifier) and doc_type in (None, hit_doc_type):
                 yield hit
 
     def test_duplicate_notification(self):
@@ -385,7 +380,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         if config.enable_replicas:
             coordinates.append(
                 ReplicaCoordinates(
-                    entity=attr.evolve(entity, entity_type='replica'),
+                    entity=entity,
                     content_hash=json_hash(entity_contents).hexdigest()
                 ).with_catalog(self.catalog)
             )
@@ -1023,7 +1018,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._index_canned_bundle(bundle)
         hits = self._get_all_hits()
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             contents = hit['_source']['contents']
             for file in contents.get('files', ()):
                 if file['file_format'] == 'Rds':
@@ -1034,7 +1029,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     expected_cell_count = self.translated_bool_null
                 if (
                     doc_type is DocumentType.aggregate and
-                    entity_type not in ('bundles', 'files')
+                    qualifier not in ('bundles', 'files')
                 ):
                     expected_source = [expected_source]
                 self.assertEqual(expected_source, file['file_source'])
@@ -1054,9 +1049,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         files = set()
         contributed_analyses = set()
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             contents = hit['_source']['contents']
-            if entity_type == 'files' and doc_type in (DocumentType.aggregate, DocumentType.contribution):
+            if qualifier == 'files' and doc_type in (DocumentType.aggregate, DocumentType.contribution):
                 file = one(contents['files'])
                 files.add(
                     (
@@ -1065,7 +1060,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                         null_bool.from_index(file['is_intermediate'])
                     )
                 )
-            elif entity_type == 'projects' and doc_type is DocumentType.aggregate:
+            elif qualifier == 'projects' and doc_type is DocumentType.aggregate:
                 self.assertEqual([], contents['matrices'])
                 for file in one(contents['contributed_analyses'])['file']:
                     contributed_analyses.add(
@@ -1115,27 +1110,27 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._assert_hit_counts(hits, sum(num_expected.values()))
         num_contribs, num_aggregates = Counter(), Counter()
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             source = hit['_source']
             contents = source['contents']
             if doc_type is DocumentType.aggregate:
-                num_aggregates[entity_type] += 1
+                num_aggregates[qualifier] += 1
                 bundle = one(source['bundles'])
                 actual_fqid = self.bundle_fqid(uuid=bundle['uuid'],
                                                version=bundle['version'])
                 self.assertEqual(analysis_bundle, actual_fqid)
-                if entity_type == 'files':
+                if qualifier == 'files':
                     self.assertEqual(1, len(contents['files']))
-                elif entity_type == 'bundles':
+                elif qualifier == 'bundles':
                     self.assertEqual(num_files, len(contents['files']))
                 else:
                     self.assertEqual(num_files, sum(file['count'] for file in contents['files']))
             elif doc_type is DocumentType.contribution:
-                num_contribs[entity_type] += 1
+                num_contribs[qualifier] += 1
                 actual_fqid = self.bundle_fqid(uuid=source['bundle_uuid'],
                                                version=source['bundle_version'])
                 self.assertEqual(analysis_bundle, actual_fqid)
-                self.assertEqual(1 if entity_type == 'files' else num_files, len(contents['files']))
+                self.assertEqual(1 if qualifier == 'files' else num_files, len(contents['files']))
             elif doc_type is DocumentType.replica:
                 continue
             else:
@@ -1198,7 +1193,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 num_replicas=num_replicas)
         hits_by_id = {}
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if (
                 doc_type is DocumentType.replica
                 or (doc_type is DocumentType.aggregate and ignore_aggregates)
@@ -1221,7 +1216,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
                 self.assertEqual('Single of human pancreas', get(project['project_short_name']))
                 self.assertIn('John Dear', get(project['laboratory']))
-                if doc_type is DocumentType.aggregate and entity_type != 'projects':
+                if doc_type is DocumentType.aggregate and qualifier != 'projects':
                     self.assertIn('Farmers Trucks', project['institutions'])
                 elif doc_type is DocumentType.contribution:
                     self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
@@ -1266,7 +1261,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 assert False, doc_type
 
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             source = hit['_source']
@@ -1289,7 +1284,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 self.assertNotEqual(old_project['project_title'], project['project_title'])
                 self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
                 self.assertNotEqual(old_project['laboratory'], project['laboratory'])
-                if doc_type is DocumentType.aggregate and entity_type != 'projects':
+                if doc_type is DocumentType.aggregate and qualifier != 'projects':
                     self.assertNotEqual(old_project['institutions'], project['institutions'])
                 elif doc_type is DocumentType.contribution:
                     self.assertNotEqual(old_project['contributors'], project['contributors'])
@@ -1303,7 +1298,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                              get(project['project_short_name']))
             self.assertNotIn('Sarah Teichmann', project['laboratory'])
             self.assertIn('Molecular Atlas', project['laboratory'])
-            if doc_type is DocumentType.aggregate and entity_type != 'projects':
+            if doc_type is DocumentType.aggregate and qualifier != 'projects':
                 self.assertNotIn('Farmers Trucks', project['institutions'])
             elif doc_type is DocumentType.contribution:
                 self.assertNotIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
@@ -1358,18 +1353,18 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 num_replicas=self._num_expected_replicas(num_contribs=num_contribs - 1,
                                                                          num_bundles=2))
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             contents = hit['_source']['contents']
             if doc_type is DocumentType.aggregate:
                 self.assertEqual(hit['_id'], hit['_source']['entity_id'])
-            if entity_type == 'files':
+            if qualifier == 'files':
                 contents = hit['_source']['contents']
                 self.assertEqual(1, len(contents['files']))
                 if doc_type is DocumentType.aggregate:
                     file_uuids.add(contents['files'][0]['uuid'])
-            elif entity_type in ('samples', 'projects'):
+            elif qualifier in ('samples', 'projects'):
                 if doc_type is DocumentType.aggregate:
                     self.assertEqual(2, len(hit['_source']['bundles']))
                     # All four files are fastqs so they are grouped together
@@ -1378,13 +1373,13 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     self.assertEqual(2, len(contents['files']))
                 else:
                     assert False, doc_type
-            elif entity_type == 'bundles':
+            elif qualifier == 'bundles':
                 if doc_type is DocumentType.aggregate:
                     self.assertEqual(1, len(hit['_source']['bundles']))
                     self.assertEqual(2, len(contents['files']))
                 else:
                     self.assertEqual(2, len(contents['files']))
-            elif entity_type == 'cell_suspensions':
+            elif qualifier == 'cell_suspensions':
                 if doc_type is DocumentType.aggregate:
                     self.assertEqual(1, len(hit['_source']['bundles']))
                     self.assertEqual(1, len(contents['files']))
@@ -1411,8 +1406,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         zarrs = []
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
-            if entity_type == 'files':
+            qualifier, doc_type = self._parse_index_name(hit)
+            if qualifier == 'files':
                 file = one(hit['_source']['contents']['files'])
                 if len(file['related_files']) > 0:
                     self.assertEqual(file['file_format'], 'matrix')
@@ -1443,18 +1438,18 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         file_names, aggregate_file_names = set(), set()
         entities_with_matrix_files = set()
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             files = hit['_source']['contents']['files']
             if doc_type is DocumentType.aggregate:
-                if entity_type == 'files':
+                if qualifier == 'files':
                     aggregate_file_names.add(one(files)['name'])
                 else:
                     for file in files:
                         # FIXME: need for one() is odd, file_format is a group field
                         #        https://github.com/DataBiosphere/azul/issues/612
-                        if entity_type == 'bundles':
+                        if qualifier == 'bundles':
                             if file['file_format'] == 'matrix':
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])
                         else:
@@ -1486,12 +1481,12 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         expected_cell_count = 380
         documents_with_cell_suspension = 0
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             contents = hit['_source']['contents']
             if doc_type is DocumentType.replica:
                 continue
             cell_suspensions = contents['cell_suspensions']
-            if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
+            if qualifier == 'files' and contents['files'][0]['file_format'] == 'pdf':
                 # The PDF files in that bundle aren't linked to a specimen
                 self.assertEqual(0, len(cell_suspensions))
             else:
@@ -1513,7 +1508,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 for cell_suspension in cell_suspensions:
                     self.assertEqual({'bone marrow', 'temporal lobe'}, set(cell_suspension['organ_part']))
                     self.assertEqual({'Plasma cells'}, set(cell_suspension['selected_cell_type']))
-                if entity_type == 'cell_suspensions':
+                if qualifier == 'cell_suspensions':
                     counted_cell_count += one(cell_suspensions)['total_estimated_cells']
                     self.assertEqual(1, len(cell_suspensions))
                 else:
@@ -1542,7 +1537,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.assertGreater(len(hits), 0)
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.aggregate:
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
@@ -1551,7 +1546,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 # why each data file and bundle should only have a cell count of
                 # 1. Both bundles refer to the same specimen and project, so the
                 # cell count for those should be 2.
-                expected_cells = 1 if entity_type in ('files', 'cell_suspensions', 'bundles') else 2
+                expected_cells = 1 if qualifier in ('files', 'cell_suspensions', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
                 self.assertEqual(one(contents['analysis_protocols'])['workflow'], ['smartseq2_v2.1.0'])
             elif doc_type is DocumentType.contribution:
@@ -1575,7 +1570,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.aggregate:
                 contents = hit['_source']['contents']
                 cell_suspensions = contents['cell_suspensions']
@@ -1588,7 +1583,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 self.assertEqual(10000, cell_suspensions[0]['total_estimated_cells'])
                 sample = one(contents['samples'])
                 self.assertEqual(sample['organ'], sample['effective_organ'])
-                if entity_type == 'samples':
+                if qualifier == 'samples':
                     self.assertTrue(sample['effective_organ'] in {'Brain 1', 'Brain 2', 'Brain 3'})
                 else:
                     self.assertEqual(set(sample['effective_organ']), {'Brain 1', 'Brain 2', 'Brain 3'})
@@ -1607,7 +1602,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         for hit in hits:
             source = hit['_source']
             contents = source['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             specimen_diseases = contents['specimens'][0]['disease']
@@ -1631,17 +1626,17 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         for hit in hits:
 
             contents = hit['_source']['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             aggregate = doc_type is DocumentType.aggregate
 
-            if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
+            if qualifier != 'files' or one(contents['files'])['file_format'] != 'pdf':
                 inner_cell_suspensions += len(contents['cell_suspensions'])
 
             for specimen in contents['specimens']:
                 inner_specimens += 1
-                expect_list = aggregate and entity_type != 'specimens'
+                expect_list = aggregate and qualifier != 'specimens'
                 self.assertEqual(['skin of body'] if expect_list else 'skin of body', specimen['organ'])
                 self.assertEqual(['skin epidermis'], specimen['organ_part'])
 
@@ -1673,7 +1668,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             contents = hit['_source']['contents']
@@ -1684,7 +1679,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 'array_express': ['E-AAAA-00'],
                 'insdc_study': ['PRJNA000000']
             }
-            if entity_type == 'projects':
+            if qualifier == 'projects':
                 expected_accessions = [
                     {'namespace': namespace, 'accession': accession}
                     for namespace, accessions in accessions_by_namespace.items()
@@ -1713,28 +1708,28 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         ]
         actual = NestedDict(2, list)
         for hit in sorted(hits, key=lambda d: d['_id']):
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
                 continue
             contents = hit['_source']['contents']
             for inner_entity_type, field_name in field_paths:
                 for inner_entity in contents[inner_entity_type]:
                     value = inner_entity[field_name]
-                    insort(actual[doc_type][entity_type][inner_entity_type], value)
+                    insort(actual[doc_type][qualifier][inner_entity_type], value)
 
         expected = NestedDict(1, dict)
         for doc_type in DocumentType.contribution, DocumentType.aggregate:
-            for entity_type in self.index_service.entity_types(self.catalog):
-                expected[doc_type][entity_type] = {
+            for qualifier in self.index_service.entity_types(self.catalog):
+                expected[doc_type][qualifier] = {
                     'cell_suspensions': [0, 20000, 20000],
                     'files': [2100, 15000, 15000],
                     'projects': [10000, 10000, 10000]
-                } if entity_type == 'cell_suspensions' else {
+                } if qualifier == 'cell_suspensions' else {
                     # project.estimated_cell_count is aggregated using max, not sum
                     'cell_suspensions': [40000],
                     'files': [17100],
                     'projects': [10000]
-                } if doc_type is DocumentType.aggregate and entity_type == 'projects' else {
+                } if doc_type is DocumentType.aggregate and qualifier == 'projects' else {
                     'cell_suspensions': [20000, 20000] if doc_type is DocumentType.aggregate else [0, 20000, 20000],
                     'files': [2100, 15000],
                     'projects': [10000, 10000]
@@ -1796,8 +1791,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         sources = defaultdict(list)
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
-            sources[entity_type, doc_type].append(hit['_source'])
+            qualifier, doc_type = self._parse_index_name(hit)
+            sources[qualifier, doc_type].append(hit['_source'])
             # bundle has 240 imaging_protocol_0.json['target'] items, each with
             # an assay_type of 'in situ sequencing'
             if doc_type is DocumentType.aggregate:
@@ -1819,8 +1814,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                         'samples': 1,
                     },
                     {
-                        entity_type: len(sources)
-                        for (entity_type, _doc_type), sources in sources.items()
+                        qualifier: len(sources)
+                        for (qualifier, _doc_type), sources in sources.items()
                         if _doc_type is doc_type
                     }
                 )
@@ -1845,10 +1840,10 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             aggregate = doc_type is DocumentType.aggregate
             contribution = doc_type is DocumentType.contribution
-            if entity_type == 'samples':
+            if qualifier == 'samples':
                 sample = one(contents['samples'])
                 sample_entity_type = sample['entity_type']
                 if aggregate:
@@ -1885,12 +1880,12 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type in [DocumentType.contribution, DocumentType.aggregate]:
                 cell_suspension = one(contents['cell_suspensions'])
                 self.assertEqual(cell_suspension['organ'], ['embryo', 'immune system'])
                 self.assertEqual(cell_suspension['organ_part'], ['skin epidermis', self.translated_str_null])
-            if doc_type is DocumentType.aggregate and entity_type != 'samples':
+            if doc_type is DocumentType.aggregate and qualifier != 'samples':
                 self.assertEqual(one(contents['samples'])['entity_type'], sample_entity_types)
             elif doc_type in (DocumentType.aggregate, DocumentType.contribution):
                 for sample in contents['samples']:
@@ -1951,8 +1946,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
-            if entity_type == 'projects':
+            qualifier, doc_type = self._parse_index_name(hit)
+            if qualifier == 'projects':
                 if doc_type is DocumentType.aggregate:
                     self.assertElasticEqual([aggregate_donor], contents['donors'])
                 elif doc_type is DocumentType.contribution:
@@ -1977,13 +1972,13 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, doc_type = self._parse_index_name(hit)
+            qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.aggregate:
                 # bundle aggregates keep individual files
-                num_inner_files = 2 if entity_type == 'bundles' else 1
+                num_inner_files = 2 if qualifier == 'bundles' else 1
             elif doc_type is DocumentType.contribution:
                 # one inner file per file contribution
-                num_inner_files = 1 if entity_type == 'files' else 2
+                num_inner_files = 1 if qualifier == 'files' else 2
             elif doc_type is DocumentType.replica:
                 continue
             else:
@@ -1999,7 +1994,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         # Check that the dynamic mapping has the related_files field disabled
         index = str(IndexName.create(catalog=self.catalog,
-                                     entity_type='files',
+                                     qualifier='files',
                                      doc_type=DocumentType.aggregate))
         mapping = self.es_client.indices.get_mapping(index=index)
         contents = mapping[index]['mappings']['properties']['contents']

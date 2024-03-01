@@ -185,7 +185,7 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
     @property
     def _index_name(self):
         return str(IndexName.create(catalog=self.catalog,
-                                    entity_type='files',
+                                    qualifier='files',
                                     doc_type=DocumentType.aggregate))
 
 

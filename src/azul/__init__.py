@@ -686,13 +686,13 @@ class Config:
     @classmethod
     def validate_prefix(cls, prefix):
         require(cls._is_valid_qualifier(prefix),
-                f'Prefix {prefix!r} is to short, '
+                f'Prefix {prefix!r} is too short, '
                 f'too long or contains invalid characters.')
 
     @classmethod
     def validate_deployment_name(cls, deployment_name):
         require(cls._is_valid_qualifier(deployment_name),
-                f'Deployment name {deployment_name!r} is to short, '
+                f'Deployment name {deployment_name!r} is too short, '
                 f'too long or contains invalid characters.')
 
     @classmethod
@@ -760,10 +760,6 @@ class Config:
     @property
     def es_volume_size(self) -> int:
         return int(self.environ['AZUL_ES_VOLUME_SIZE'])
-
-    @property
-    def index_prefix(self) -> str:
-        return self._term_from_env('AZUL_INDEX_PREFIX')
 
     @property
     def enable_replicas(self) -> bool:
@@ -1203,8 +1199,8 @@ class Config:
         return cls.term_re.fullmatch(term) is not None
 
     @classmethod
-    def validate_entity_type(cls, entity_type: str) -> None:
-        cls._validate_term(entity_type, name='entity_type')
+    def validate_qualifier(cls, qualifier: str) -> None:
+        cls._validate_term(qualifier, name='qualifier')
 
     def secrets_manager_secret_name(self, *args):
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])

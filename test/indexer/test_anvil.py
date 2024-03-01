@@ -119,7 +119,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase, TDRPluginTestCase[tdr_anvil.Plugin]
                         self._index_canned_bundle(bundle)
                         hits = self._get_all_hits()
                         hits.sort(key=itemgetter('_id'))
-                        self.assertEqual(expected_hits, hits)
+                        self.assertElasticEqual(expected_hits, hits)
                     finally:
                         self.index_service.delete_indices(self.catalog)
 
@@ -167,12 +167,12 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
         hits = self._get_all_hits()
         doc_counts: dict[DocumentType, int] = defaultdict(int)
         for hit in hits:
-            entity_type, doc_type = self._parse_index_name(hit)
-            if entity_type == 'bundles':
+            qualifier, doc_type = self._parse_index_name(hit)
+            if qualifier == 'bundles':
                 continue
-            elif entity_type in {'datasets', 'replica'}:
+            elif qualifier in {'datasets', 'replica'}:
                 doc_counts[doc_type] += 1
-                if entity_type == 'datasets' and doc_type is DocumentType.aggregate:
+                if qualifier == 'datasets' and doc_type is DocumentType.aggregate:
                     self.assertEqual(2, hit['_source']['num_contributions'])
                     self.assertEqual(sorted(b.uuid for b in bundles),
                                      sorted(b['uuid'] for b in hit['_source']['bundles']))
@@ -183,7 +183,7 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
                     # This field is populated only in the DUOS bundle
                     self.assertEqual('Study description from DUOS', contents['description'])
             else:
-                self.fail(entity_type)
+                self.fail(qualifier)
         self.assertDictEqual(doc_counts, {
             DocumentType.aggregate: 1,
             DocumentType.contribution: 2,
