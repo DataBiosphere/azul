@@ -2,9 +2,6 @@ from contextlib import (
     contextmanager,
 )
 import datetime
-from itertools import (
-    product,
-)
 import json
 from typing import (
     ContextManager,
@@ -160,12 +157,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     def test(self, get_cached_manifest, get_manifest, _sfn):
         with responses.RequestsMock() as helper:
             helper.add_passthru(str(self.base_url))
-            # FIXME: Remove put=False and therefore `put`
-            #        https://github.com/DataBiosphere/azul/issues/5533
-            for put, fetch in product((True, False), repeat=2):
-                if not fetch and not put:
-                    continue  # we provide the backwards-compatible GET only for fetch
-                with self.subTest(put=put, fetch=fetch):
+            for fetch in (True, False):
+                with self.subTest(fetch=fetch):
                     format = ManifestFormat.compact
                     filters = Filters(explicit={'organ': {'is': ['lymph node']}},
                                       source_ids={self.source.id})
@@ -227,7 +220,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         'startDate': 123
                     }
                     for i, expected_status in enumerate(3 * [301] + [302]):
-                        response = requests.request(method='PUT' if put and i == 0 else 'GET',
+                        response = requests.request(method='PUT' if i == 0 else 'GET',
                                                     url=str(url),
                                                     allow_redirects=False)
                         if fetch:

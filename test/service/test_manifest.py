@@ -1518,14 +1518,12 @@ class TestManifestResponse(ManifestTestCase):
                     'Location': str(expected_url),
                     'CommandLine': expected
                 }
-                for method in ['PUT', 'GET']:
-                    with self.subTest(method=method):
-                        response = requests.request(method, str(request_url))
-                        self.assertEqual(200, response.status_code)
-                        self.assertEqual(expected, response.json())
-                        self.assertEqual('application/json', response.headers['Content-Type'])
-                        if format is ManifestFormat.curl:
-                            test(format=format, fetch=False, url=expected_url)
+                response = requests.request('PUT', str(request_url))
+                self.assertEqual(200, response.status_code)
+                self.assertEqual(expected, response.json())
+                self.assertEqual('application/json', response.headers['Content-Type'])
+                if format is ManifestFormat.curl:
+                    test(format=format, fetch=False, url=expected_url)
             else:
                 response = requests.request(method, str(request_url), allow_redirects=False)
                 expected = ''.join(
