@@ -1319,6 +1319,10 @@ class PagedManifestGenerator(ManifestGenerator):
         request = pipeline.prepare_request(request)
         return request
 
+    def _search_after(self, hit: Hit) -> tuple[str, str]:
+        a, b = hit.meta.sort
+        return a, b
+
 
 class FileBasedManifestGenerator(ManifestGenerator):
     """
@@ -1507,9 +1511,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 for related_file in file['related_files']:
                     _write(related_file, is_related_file=True)
             assert hit is not None
-            search_after = tuple(hit.meta.sort)
             return partition.next_page(file_name=None,
-                                       search_after=search_after)
+                                       search_after=self._search_after(hit))
         else:
             return partition.last_page()
 
@@ -1686,10 +1689,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
                     row.update(related)
                     writer.writerow(row)
             assert hit is not None
-            search_after = tuple(hit.meta.sort)
             file_name = project_short_names.pop() if len(project_short_names) == 1 else None
             return partition.next_page(file_name=file_name,
-                                       search_after=search_after)
+                                       search_after=self._search_after(hit))
         else:
             return partition.last_page()
 
