@@ -1341,8 +1341,8 @@ class TestManifestCache(ManifestTestCase):
                         response = self._get_manifest(ManifestFormat.compact,
                                                       filters=filters)
                         self.assertEqual(200, response.status_code)
-                    file_name = str(furl(response.url).path)
-                    file_names[project_id].append(file_name)
+                        file_name = str(furl(response.url).path)
+                        file_names[project_id].append(file_name)
 
                 self.assertEqual(file_names.keys(), set(project_ids))
                 self.assertEqual([2, 2], list(map(len, file_names.values())))
