@@ -108,8 +108,8 @@ def dotted(path_or_element: Union[FieldPathElement, FieldPath],
 
 class DocumentSlice(TypedDict, total=False):
     """
-    Also known in Elasticsearch land as a *source filter*, but those two words
-    have different meaning in Azul.
+    Also known in Elasticsearch land as a *source filter*, but that phrase has
+    a different meaning in Azul.
 
     https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
     """
