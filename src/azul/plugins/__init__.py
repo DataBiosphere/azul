@@ -55,6 +55,8 @@ from azul.indexer.document import (
     Aggregate,
     DocumentType,
     EntityType,
+    FieldPath,
+    FieldPathElement,
     IndexName,
 )
 from azul.indexer.transform import (
@@ -79,8 +81,6 @@ if TYPE_CHECKING:
     )
 
 FieldName = str
-FieldPathElement = str
-FieldPath = tuple[FieldPathElement, ...]
 
 FieldMapping = Mapping[FieldName, FieldPath]
 

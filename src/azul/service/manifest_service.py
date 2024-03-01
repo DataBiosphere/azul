@@ -107,6 +107,7 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer.document import (
+    FieldPath,
     FieldTypes,
     null_str,
 )
@@ -120,12 +121,11 @@ from azul.json_freeze import (
 from azul.plugins import (
     ColumnMapping,
     DocumentSlice,
-    FieldGlobs,
-    FieldPath,
     ManifestConfig,
     ManifestFormat,
     MutableManifestConfig,
     RepositoryPlugin,
+    dotted,
 )
 from azul.service import (
     FileUrlFunc,
@@ -872,15 +872,15 @@ class ManifestGenerator(metaclass=ABCMeta):
         return self.service.metadata_plugin(self.catalog).manifest
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         """
-        A list of field paths or path patterns to be included when requesting
-        entity documents from the index.
+        A list of field paths to be included when requesting entity documents
+        from the index or None if all fields should be included.
 
         https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
         """
         return [
-            '.'.join(chain(field_path, (field_name,)))
+            (*field_path, field_name)
             for field_path, column_mapping in self.manifest_config.items()
             for field_name in column_mapping.keys()
         ]
@@ -1052,7 +1052,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         return request
 
     def _create_pipeline(self):
-        document_slice = DocumentSlice(includes=self.field_globs)
+        if self.included_fields is None:
+            document_slice = DocumentSlice()
+        else:
+            document_slice = DocumentSlice(includes=list(map(dotted, self.included_fields)))
         pipeline = self.service.create_chain(catalog=self.catalog,
                                              entity_type=self.entity_type,
                                              filters=self.filters,
@@ -1064,7 +1067,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         return self.service.translate_fields(self.catalog,
                                              hit.to_dict(),
                                              forward=False,
-                                             globs=self.field_globs)
+                                             allowed_paths=self.included_fields)
 
     column_joiner = config.manifest_column_joiner
     padded_joiner = ' ' + column_joiner + ' '
@@ -1381,10 +1384,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         return [
-            *super().field_globs,
-            'contents.files.related_files'
+            *super().included_fields,
+            ('contents', 'files', 'related_files')
         ]
 
     @classmethod
@@ -1632,10 +1635,10 @@ class CompactManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         return [
-            *super().field_globs,
-            'contents.files.related_files'
+            *super().included_fields,
+            ('contents', 'files', 'related_files')
         ]
 
     def write_page_to(self,
@@ -1727,12 +1730,12 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         """
         We want all of the metadata because then we can use the field_types()
         to generate the complete schema.
         """
-        return []
+        return None
 
     def _all_docs_sorted(self) -> Iterable[JSON]:
         request = self._create_request()
@@ -1779,10 +1782,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         return [
-            *super().field_globs,
-            'contents.files.drs_uri'
+            *super().included_fields,
+            ('contents', 'files', 'drs_uri')
         ]
 
     @classmethod

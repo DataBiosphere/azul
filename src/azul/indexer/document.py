@@ -647,6 +647,9 @@ class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
         return f'replica of {self.entity}'
 
 
+FieldPathElement = str
+FieldPath = tuple[FieldPathElement, ...]
+
 # The native type of the field in documents as they are being created by a
 # transformer or processed by an aggregator.
 N = TypeVar('N')
@@ -1140,8 +1143,8 @@ class Document(Generic[C]):
                          field_types: Union[FieldType, FieldTypes],
                          *,
                          forward: bool,
-                         globs: Optional[list[str]] = None,
-                         path: tuple[str, ...] = ()
+                         allowed_paths: list[FieldPath] | None = None,
+                         path: FieldPath = ()
                          ) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into
@@ -1157,9 +1160,9 @@ class Document(Generic[C]):
         :param forward: If True, substitute None values with their respective
                         Elasticsearch placeholder.
 
-        :param globs: A list of dotted field paths expected to be present in the
-                      resulting document. If an unexpected field is found, an
-                      AssertionError will be raised.
+        :param allowed_paths: A list of field paths expected to be present in
+                              the resulting document. If an unexpected field is
+                              found, an AssertionError will be raised.
 
         :param path: Used internally during document traversal to capture the
                      current path into the document as a tuple of keys.
@@ -1185,7 +1188,7 @@ class Document(Generic[C]):
                         new_doc[key] = cls.translate_fields(val,
                                                             field_type,
                                                             forward=forward,
-                                                            globs=globs,
+                                                            allowed_paths=allowed_paths,
                                                             path=(*path, key))
                         if forward and isinstance(field_type, FieldType) and field_type.shadowed:
                             # Add a non-translated shadow copy of this field's
@@ -1197,7 +1200,7 @@ class Document(Generic[C]):
                     cls.translate_fields(val,
                                          field_types,
                                          forward=forward,
-                                         globs=globs,
+                                         allowed_paths=allowed_paths,
                                          path=path)
                     for val in doc
                 ]
@@ -1215,10 +1218,10 @@ class Document(Generic[C]):
                 field_type = field_types
             else:
                 assert False, (path, type(field_types))
-            if globs:
-                # The glob may be a prefix instead of a complete path, as is the
-                # case for `contents.files.related_files`
-                assert '.'.join(path) in globs or '.'.join(path[:-1]) in globs, path
+            if allowed_paths is not None:
+                # An allowed path may be a prefix instead of a complete path,
+                # as is the case for `contents.files.related_files`
+                assert path in allowed_paths or path[:-1] in allowed_paths, (path, allowed_paths)
             if forward:
                 if isinstance(doc, list):
                     if not doc and field_type.allow_sorting_by_empty_lists:
