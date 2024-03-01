@@ -1637,7 +1637,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                       output: IO[str]
                       ) -> ManifestPartition:
         column_mappings = self.manifest_config.values()
-        column_names = list(chain.from_iterable(map(dict.values, column_mappings)))
+        column_names = list(chain.from_iterable(d.values() for d in column_mappings))
         writer = csv.DictWriter(output, column_names, dialect='excel-tab')
 
         if partition.page_index == 0:
@@ -1952,7 +1952,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         column_names = dict.fromkeys(chain(
             ['entity:participant_id'],
             bundle_column_mapping.values(),
-            *map(dict.values, other_column_mappings.values())))
+            *(d.values() for d in other_column_mappings.values())
+        ))
 
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
