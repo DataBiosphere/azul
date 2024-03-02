@@ -274,6 +274,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             ('contents', 'files'): {
                 'document_id': 'file_document_id',
                 'file_format': 'file_format',
+                'uuid': 'file_uuid',
+                'version': 'file_version',
                 'reference_assembly': 'file_reference_assembly',
                 'crc32': 'file_crc32',
                 'sha256': 'file_sha256',
