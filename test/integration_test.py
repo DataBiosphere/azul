@@ -1281,7 +1281,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         es_client = ESClientFactory.get()
         service = IndexService()
         for index_name in service.index_names(catalog):
-            self.assertTrue(es_client.indices.exists(index_name))
+            self.assertTrue(es_client.indices.exists(index=str(index_name)))
 
     def _test_managed_access(self,
                              catalog: CatalogName,
