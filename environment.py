@@ -265,10 +265,10 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.3-13'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.3-14'
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-11'
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-12'
             },
             'bigquery_emulator': {
                 'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
@@ -276,13 +276,13 @@ def env() -> Mapping[str, Optional[str]]:
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.3.0-37'
+                'ref': 'docker.io/clamav/clamav:1.3.0-40'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.9.0-ce.0'
+                'ref': 'docker.io/gitlab/gitlab-ce:16.9.1-ce.0'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.0'
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.1'
             },
             'dind': {
                 'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
