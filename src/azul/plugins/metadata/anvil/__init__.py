@@ -273,10 +273,17 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             },
             ('contents', 'files'): {
                 'document_id': 'file_document_id',
+                'name': 'file_name',
                 'file_format': 'file_format',
+                'size': 'file_size',
+                'uuid': 'file_uuid',
+                'version': 'file_version',
                 'reference_assembly': 'file_reference_assembly',
+                'is_supplementary': 'file_is_supplementary',
+                'data_modality': 'file_data_modality',
                 'crc32': 'file_crc32',
                 'sha256': 'file_sha256',
+                'file_md5sum': 'file_md5',
                 'drs_uri': 'file_drs_uri',
                 'file_url': 'file_url'
             }

@@ -410,7 +410,7 @@ class SlicingStage(_ElasticsearchStage[Response, Response]):
         if self.document_slice is None:
             return self.plugin.document_slice(self.entity_type)
         else:
-            return None
+            return self.document_slice
 
 
 # FIXME: Elminate Eliminate reliance on Elasticsearch DSL
