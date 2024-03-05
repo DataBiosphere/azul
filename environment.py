@@ -138,6 +138,10 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_CATALOGS': None,
 
+        # The name of a catalog to perform reindex or other operational tasks on.
+        #
+        'azul_current_catalog': None,
+
         # The Account ID number for AWS
         #
         'AZUL_AWS_ACCOUNT_ID': None,
