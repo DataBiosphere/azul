@@ -125,7 +125,7 @@ class AsyncManifestService:
         token = Token.first(execution_id)
         input = json.dumps(input)
         try:
-            # If there already is an exception of the given name, and if that
+            # If there already is an execution of the given name, and if that
             # execution is still ongoing and was given the same input as what we
             # pass here, `start_execution` will succeed idempotently
             execution = self._sfn.start_execution(stateMachineArn=self.machine_arn,
@@ -133,12 +133,12 @@ class AsyncManifestService:
                                                   input=input)
         except self._sfn.exceptions.ExecutionAlreadyExists:
             # This exception indicates that there is already an execution with
-            # the given name but that it is has ended, or that its input differs
+            # the given name but that it has ended, or that its input differs
             # from what we were passing now. The latter case is unexpected and
             # therefore constitues an error. In the former case we return the
             # token so that the client has to make another request to actually
             # obtain the resulting manifest. Strictly speaking, we could return
-            # the manifest here but it keeps the control flow simpler. This is
+            # the manifest here, but it keeps the control flow simpler. This
             # benevolent race is rare enough to not worry about optimizing.
             execution = self._sfn.describe_execution(executionArn=execution_arn)
             if execution['input'] != input:
