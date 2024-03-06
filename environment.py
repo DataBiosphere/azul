@@ -272,7 +272,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.4-15'
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-12'
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-13'
             },
             'bigquery_emulator': {
                 'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
