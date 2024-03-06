@@ -269,7 +269,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.3-14'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.4-15'
             },
             'elasticsearch': {
                 'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-12'
