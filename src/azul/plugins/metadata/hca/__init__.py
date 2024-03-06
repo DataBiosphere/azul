@@ -155,7 +155,12 @@ class Plugin(MetadataPlugin[HCABundle]):
 
     @property
     def manifest_formats(self) -> Sequence[ManifestFormat]:
-        return tuple(ManifestFormat)
+        return [
+            ManifestFormat.compact,
+            ManifestFormat.terra_bdbag,
+            ManifestFormat.terra_pfb,
+            ManifestFormat.curl,
+        ]
 
     @property
     def _field_mapping(self) -> MetadataPlugin._FieldMapping:
