@@ -938,6 +938,22 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             f'arn:aws:kms:{aws.region_name}:{aws.account}:key/*',
                             f'arn:aws:kms:{aws.region_name}:{aws.account}:alias/*'
                         ]
+                    },
+
+                    # The SSM agent requires explicit permission to access
+                    # certain AWS-managed buckets if S3 traffic is routed
+                    # through a VPC gateway endpoint. See:
+                    # https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent-minimum-s3-permissions.html
+                    {
+                        'actions': [
+                            's3:GetObject',
+                            's3:HeadBucket',
+                            's3:HeadObject'
+                        ],
+                        'resources': [
+                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}/*',
+                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}/*'
+                        ]
                     }
                 ]
             }

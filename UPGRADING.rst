@@ -20,6 +20,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5964 SSM Agent in GitLab lacks sufficient permissions in its role
+==================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5984 AWS event GetMacieSession results in AccessDenied error again
 ===================================================================
 
