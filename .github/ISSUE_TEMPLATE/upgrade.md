@@ -4,6 +4,8 @@ about: 'Issue template for bi-weekly dependency upgrades'
 title: Upgrade dependencies
 labels: orange,operator,infra,enh,debt 
 assignees: ''
+_start: 2023-11-27T09:00
+_period: 14 days
 ---
 - [ ] Update [PyCharm image](https://github.com/DataBiosphere/azul-docker-pycharm)
   - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=bullseye) tag (only same Debian release), if possible

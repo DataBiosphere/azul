@@ -4,6 +4,8 @@ about: 'Issue template for the current operator to perform a scheduled promotion
 title: Promotion
 labels: -,infra,no demo,operator,orange,task
 assignees: ''
+_start: 2024-02-27T09:00
+_period: 7 days
 ---
 - [ ] Confirmed with tech lead the commit that will be promoted
 - [ ] Confirmed this issues maches the appropriate title convention `Promotion yyyy-mm-dd`

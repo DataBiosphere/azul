@@ -1,193 +1,211 @@
-import argparse
+from argparse import (
+    ArgumentParser,
+)
+from dataclasses import (
+    dataclass,
+    field,
+)
 from datetime import (
+    date,
     datetime,
-    timedelta,
 )
 import json
 import logging
 from operator import (
     itemgetter,
 )
+from pathlib import (
+    Path,
+)
 import subprocess
 import sys
+from typing import (
+    TypedDict,
+)
 import zoneinfo
 
 tz = zoneinfo.ZoneInfo('America/Los_Angeles')
 
 log = logging.getLogger('azul.github.schedule')
 
-one_week = 7  # in days
+
+class FrontMatter(TypedDict):
+    name: str
+    about: str
+    title: str
+    labels: str
+    assignees: str
+    _repository: str
+    _start: str
+    _period: str
 
 
-def create_issue(gh_create_issue: list[str], gh_issue_lookup: list[str]) -> None:
-    process = subprocess.run(gh_issue_lookup, check=True, stdout=subprocess.PIPE)
-    results = json.loads(process.stdout)
-    issues = set(map(itemgetter('number'), results))
-    if issues:
-        log.info('At least one matching issue already exists: %r', issues)
-    else:
-        subprocess.run(gh_create_issue, check=True)
+@dataclass(kw_only=True)
+class IssueTemplate:
+    path: Path
+    dry_run: bool
+    properties: FrontMatter = field(init=False)
+    body: str = field(init=False)
 
+    def __post_init__(self):
+        """
+        Load the issue template at the given path and parse any YAML front
+        matter embedded in the template. GitHub uses the front-matter in issue
+        templates to allow for customizing issue properties other than the
+        issue's description, such as its title.
 
-def gh_commands(template: str,
-                issue_date: datetime) -> tuple[list[str], list[str]]:
-    template = f'.github/ISSUE_TEMPLATE/{template}'
-    front_matter, body = _load_issue_template(template)
-    labels, title, assignees = [front_matter[x]
-                                for x in ('labels', 'title', 'assignees')]
+        https://jekyllrb.com/docs/front-matter/
+        """
+        with open(self.path) as f:
+            front_matter = {}
+            line = f.readline()
+            sep = '---\n'
+            if line == sep:
+                for line in f:
+                    if line == sep:
+                        break
+                    else:
+                        k, _, v = line.partition(':')
+                        front_matter[k.strip()] = v.strip()
+            else:
+                f.seek(0)
+            self.body = f.read()
+            self.properties = front_matter
 
-    issue_date = issue_date.date()
-    in_repository = []
-    if template.endswith('fedramp_inventory_review.md'):
-        in_repository = ['--repo DataBiosphere/' + front_matter['repository']]
-    elif template.endswith('promotion.md'):
-        # We want the Wendsday date promotion issue to be created on Tuesdays
-        issue_date = issue_date + timedelta(days=1)
-    if assignees:
-        assignees = [f'--assignee {assignees}']
-    return [
-        'gh', 'issue', 'list',
-        f'--search=in:title "{title} {issue_date}"',
-        '--json=number',
-        '--limit=10',
-    ], [
-        'gh', 'issue', 'create',
-        *in_repository,
-        *assignees,
-        f'--title={title} {issue_date}',
-        f'--label={labels}',
-        f'--body={body}'
-    ]
-
-
-def _load_issue_template(path: str) -> tuple[dict[str, str], str]:
-    """
-    Load the issue template at the given path and parse any YAML front-matter
-    embedded in the template. GitHub uses the front-matter in issue templates to
-    allow for customizing issue properties other than the issue's description,
-    such as its title.
-
-    https://jekyllrb.com/docs/front-matter/
-
-    :return: A tuple of front matter, a dictionary, and the body, a str. If
-             there is no front-matter or if it is empty, the first element will
-             be an empty dictionary
-    """
-    with open(path) as f:
-        front_matter = {}
-        line = f.readline()
-        sep = '---\n'
-        if line == sep:
-            for line in f:
-                if line == sep:
-                    break
-                else:
-                    k, _, v = line.partition(':')
-                    front_matter[k.strip()] = v.strip()
+    def is_eligible(self, now: datetime) -> bool | None:
+        try:
+            start = self.properties['_start']
+        except KeyError:
+            return None
         else:
-            f.seek(0)
-        return front_matter, f.read()
+            period = self.properties['_period']
+            return self._is_eligible(start, period, now) or self.dry_run
 
+    @classmethod
+    def _is_eligible(cls, start: str, period: str, now: datetime):
+        """
+        >>> f = IssueTemplate._is_eligible
+        >>> f('2024-04-04T10:00','1 year',  datetime(2024, 4, 4, 10, 0, tzinfo=tz))
+        True
+        >>> f('2024-04-04T10:00','2 years', datetime(2025, 4, 4, 10, 0, tzinfo=tz))
+        False
+        >>> f('2024-04-04T10:00','2 years', datetime(2026, 4, 4, 10, 0, tzinfo=tz))
+        True
 
-def main(templates: list[tuple[str, datetime]], dry_run: bool) -> None:
-    for template, create_date in templates:
-        cmd_lookup, cmd_create = gh_commands(template, create_date)
-        if dry_run:
-            log.info('Would be running a mock command that creates an issue')
-            print(' '.join(cmd_create))
+        >>> f('2024-03-01T09:00','1 month',  datetime(2024, 4, 1, 9, 51, tzinfo=tz))
+        True
+        >>> f('2024-03-01T09:00','2 months', datetime(2024, 4, 1, 9, 51, tzinfo=tz))
+        False
+        >>> f('2024-03-01T09:00','2 months', datetime(2024, 5, 1, 9, 51, tzinfo=tz))
+        True
+
+        >>> f('2023-11-27T09:00','14 days', datetime(2024, 3, 11, 9, 00, tzinfo=tz))
+        False
+        >>> f('2023-11-27T09:00','14 days', datetime(2024, 3, 18, 9, 00, tzinfo=tz))
+        True
+
+        >>> f('2024-03-01T09:00:00Z','1 hour', datetime.now())
+        Traceback (most recent call last):
+        ...
+        AssertionError: Start time must not specify a timezone
+
+        >>> f('2024-03-01T09:01','1 month', datetime.now())
+        ... # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        AssertionError: ('Start time must be on the hour',
+        datetime.datetime(2024, 3, 1, 9, 1, tzinfo=zoneinfo.ZoneInfo(key='America/Los_Angeles')))
+
+        >>> f('2024-03-01T09:00','1 hour', datetime.now())
+        Traceback (most recent call last):
+        ...
+        AssertionError: ('Invalid time unit in period', 'hour')
+        """
+        start = datetime.fromisoformat(start)
+        assert start.tzinfo is None, 'Start time must not specify a timezone'
+        start = start.replace(tzinfo=tz)
+        assert (start.minute, start.second, start.microsecond) == (0, 0, 0), (
+            'Start time must be on the hour',
+            start
+        )
+        period, _, unit = period.partition(' ')
+        period = int(period)
+        unit = unit.removesuffix('s')
+        match unit:
+            case 'year':
+                actual = (now.year - start.year) % period, now.month, now.day, now.hour
+                expected = 0, start.month, start.day, start.hour
+            case 'month':
+                actual = (now.month - start.month) % period, now.day, now.hour
+                expected = 0, start.day, now.hour
+            case 'day':
+                hour, start = start.hour, start.replace(hour=0)
+                actual = (now - start).days % period, now.hour
+                expected = 0, hour
+            case _:
+                assert False, ('Invalid time unit in period', unit)
+        return actual == expected
+
+    def create_issue(self, title_date: date) -> None:
+        title = self.properties['title'] + ' ' + str(title_date)
+        flags = []
+        repository = self.properties.get('_repository')
+        if repository is not None:
+            flags.append(f'--repo={repository}')
+        command = [
+            'gh', 'issue', 'list',
+            *flags,
+            f'--search=in:title "{title}"',
+            '--json=number',
+            '--limit=10',
+        ]
+        log.info('Running %r', command)
+        process = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+        results = json.loads(process.stdout)
+        issues = set(map(itemgetter('number'), results))
+
+        if issues:
+            log.info('At least one matching issue already exists: %r', issues)
         else:
-            create_issue(cmd_create, cmd_lookup)
+            assignees = self.properties.get('assignees')
+            if assignees is not None:
+                flags.append(f'--assignee={assignees}')
+            command = [
+                'gh', 'issue', 'create',
+                *flags,
+                f'--title={title}',
+                f'--label={self.properties["labels"]}',
+                f'--body={self.body}'
+            ]
+            if self.dry_run:
+                log.info('Would run %r', command)
+            else:
+                log.info('Running %r', command)
+                subprocess.run(command, check=True)
 
 
-def _create(template: str,
-            start: datetime,
-            period_days: int,
-            at_hour: int,
-            ) -> tuple[str, datetime] | None:
-    """
-    Return a tuple of the template and the datetime.now() instance that matches the
-    configured shcedule for the provided template. This logs the schedule check for
-    each, and it only returns what falls within the schedule window.
-    """
-    log.info('Checking configured schedule time window for %r', template)
-    if 0 == (now - start).days % period_days and now.hour == at_hour:
-        log.info('Scheduling %r, it falls within schedule window', template)
-        return template, now
-    else:
-        log.info('Current time is outside of the configured schedule window')
+def main(args):
+    parser = ArgumentParser(description='Create GitHub issues from templates, '
+                                        'at a schedule defined in the front '
+                                        'matter of each template.')
+    parser.add_argument('--dry-run',
+                        action='store_true',
+                        help='Do not modify anything, just log what would be modified. '
+                             'Assume an issue is due for every template.')
+    options = parser.parse_args(args)
+    now = datetime.now(tz)
+    for template in Path('.github/ISSUE_TEMPLATE').glob('*.md'):
+        self = IssueTemplate(path=template, dry_run=options.dry_run)
+        match self.is_eligible(now):
+            case None:
+                log.info('Issue template %s is ineligible', self.path)
+            case False:
+                log.info('Ignoring issue template %s since it defines no schedule.', self.path)
+            case True:
+                self.create_issue(now.date())
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(levelname)+7s %(name)s: %(message)s')
-
-    args = sys.argv[1:]
-    parser = argparse.ArgumentParser(
-        description='Dryrun to display the command used by GH Actions to create an issue'
-    )
-    parser.add_argument('--dry-run',
-                        metavar='MOCKED_DATE',
-                        type=lambda s: datetime.strptime(s, '%Y-%m-%dT%H:%M'),
-                        help='Dry run based on mock date to verify the template issue configuration')
-    args = parser.parse_args(args)
-
-    now = datetime.now(tz)
-    if args.dry_run:
-        dt = args.dry_run
-        now = now.replace(year=dt.year,
-                          month=dt.month,
-                          day=dt.day,
-                          hour=dt.hour,
-                          minute=dt.minute)
-
-    templates = [
-        # Pick any date for `start` and an issue will be created on that date,
-        # and thereafter based on the given period, but only in the future.
-        # Note that this doesn't mean that the start date has to lie in the
-        # future. As an example, …
-        _create(template, start, period, hour) for template, start, period, hour in [
-            (
-                'upgrade.md',  # … the schedule for upgrade.md is set …
-                datetime(2023, 11, 27, tzinfo=tz),  # … for Monday …
-                one_week * 2,  # … every other week (14 days) …
-                9  # … at 9am.
-            ),
-            (
-                'promotion.md',
-                datetime(2024, 2, 27, tzinfo=tz),
-                one_week,
-                9
-            ),
-            (
-                'gitlab_backups.md',
-                datetime(2024, 2, 26, tzinfo=tz),
-                one_week * 2,
-                9
-            ),
-            (
-                'opensearch_updates.md',
-                datetime(2024, 2, 26, tzinfo=tz),
-                one_week * 2,
-                9
-            ),
-            (
-                'fedramp_inventory_review.md',
-                datetime(2024, 3, 1, tzinfo=tz),
-                one_week * 4,
-                9
-            ),
-            (
-                'audited_events_rule_set_review.md',
-                datetime(2024, 4, 3, tzinfo=tz),
-                364,  # Every year, (364 days)
-                10
-            ),
-        ]
-    ]
-    templates = list(filter(None, templates))  # Purge what isn't scheduled
-
-    if templates:
-        assert None not in templates, templates
-        main(templates, bool(args.dry_run))
-    else:
-        log.info('All templates are outside of the configured schedule window')
+    main(sys.argv[1:])

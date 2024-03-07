@@ -4,7 +4,9 @@ about: 'Issue template for the current operator to perform a Port and Protocol r
 title: Monthly inventory review
 labels: +,compliance,infra,no demo,operator,orange,task,
 assignees: hannes-ucsc
-repository: azul-private
+_repository: DataBiosphere/azul-private
+_start: 2024-03-01T09:00
+_period: 1 month
 ---
 It is time for the system administrator to review the FedRAMP inventory and perform a Port and Protocol review in all deployments
 

@@ -4,6 +4,8 @@ about: 'Issue template for operator tasks to update OpenSearch instances softwar
 title: Apply Amazon OpenSearch (ES) Software Update
 labels: -,infra,no demo,operator,orange,task
 assignees: ''
+_start: 2024-02-26T09:00
+_period: 14 days
 ---
 - [ ] Applied Amazon OpenSearch Software Update <sub>or OpenSearch is running on the lattest version</sub>
     - [ ] Update `azul-index-dev`

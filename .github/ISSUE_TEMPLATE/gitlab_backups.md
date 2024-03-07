@@ -4,6 +4,8 @@ about: 'Issue template for operator tasks to backup GitLab data volumes'
 title: Apply GitLab data volume backups
 labels: -,infra,no demo,operator,orange,task
 assignees: ''
+_start: 2024-02-26T09:00
+_period: 14 days
 ---
 
 - [ ] Ran GitLab data-volume backup script for `dev.gitlab`
