@@ -63,6 +63,22 @@ Getting started as operator
 Operator jobs
 -------------
 
+First order of business: add a calendar event for the next scheduled operator
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As soon as your shift begins and before performing any other actions as an
+operator create the following Google Calendar event in the `Team Boardwalk
+calendar`_.
+
+Create an all-day calendar event for the two weeks after your current stint,
+using the title ``Azul Operator: <name>`` with the name of the operator who will
+be serving next.
+
+If you are aware of any schedule irregularities, such as one operator performing
+more than one consecutive stints, create events for those as well.
+
+.. _`Team Boardwalk calendar`: https://calendar.google.com/calendar/u/0/r?cid=dWNzYy5lZHVfMDRuZ3J1NXQzNDB0aWd0cW5qYWQ5Nm5jOWtAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ
+
 Check weekly for Amazon OpenSearch Service updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
