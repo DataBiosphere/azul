@@ -1012,6 +1012,8 @@ class Config:
         if deployment in {'prod'}:
             assert self.is_shared_deployment(deployment)
             return True
+        else:
+            return False
 
     @property
     def is_sandbox_deployment(self) -> bool:
@@ -1412,8 +1414,14 @@ class Config:
     def cloudwatch_dashboard_template(self) -> str:
         return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
 
+    class SecurityContact(TypedDict):
+        name: str
+        title: str
+        email_address: str
+        phone_number: str
+
     @property
-    def security_contact(self) -> Optional[dict[str]]:
+    def security_contact(self) -> SecurityContact | None:
         value = self.environ.get('azul_security_contact')
         if value is None:
             return None

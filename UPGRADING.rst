@@ -20,6 +20,40 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#5975 Upgrade ES domain for Hammerbox
+=====================================
+
+Update the ``ES_INSTANCE_COUNT`` environment variable for any personal
+deployments that are co-located with ``hammerbox``, using that deployment's
+``environment.py`` as a template.
+
+
+#5876 Upgrade dependencies 2024-02-05
+=====================================
+
+Everyone
+~~~~~~~~
+
+Update Python on your developer machines to version 3.11.8. In your working
+copy, run ``make virtualenv`` and ``make requirements envhook``.
+
+Operator
+~~~~~~~~
+
+Manually perform a two-phase deployment of the ``shared`` component of every
+main deployment. Perform the first phase using the ``apply_keep_unused``
+Makefile target for the lower deployments after pushing the squashed and rebased
+PR branch to GitHub. In a stable deployment (``prod``), perform the first phase
+before pushing the merge commit to the GitLab instance in that deployment. In
+lower and stable deployments, perform the second phase using the ``apply``
+Makefile target after the merge commit was successfully built on the GitLab
+instance in that deployment.
+
+Deploy the ``gitlab`` component of any main deployment just after pushing the PR
+branch to GitHub. Run ``make -C terraform/gitlab/runner`` just before pushing
+the merge commit to the GitLab instance in that deployment.
+
+
 #5728 Many stale images in gitlab-dind and GitLab registry
 ==========================================================
 

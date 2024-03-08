@@ -1,6 +1,9 @@
 from enum import (
     Enum,
 )
+from itertools import (
+    chain,
+)
 from os.path import (
     basename,
     dirname,
@@ -8,7 +11,12 @@ from os.path import (
 import sys
 import textwrap
 from typing import (
+    AbstractSet,
+    Iterable,
     Mapping,
+    Protocol,
+    TypedDict,
+    cast,
 )
 
 from more_itertools import (
@@ -20,53 +28,70 @@ from more_itertools import (
 from azul import (
     iif,
 )
+from azul.collections import (
+    OrderedSet,
+)
 from azul.strings import (
     join_grammatically,
 )
 from azul.template import (
     emit_text,
 )
-from azul.types import (
-    JSONs,
-)
 
 
-def emit_checklist(checklist: JSONs):
-    def comment(i, _):
+class Item(TypedDict):
+    type: str
+    content: str
+    alt: str
+
+
+class EmptyItem(TypedDict):
+    pass
+
+
+class Handler(Protocol):
+
+    def __call__(self, i: Item, j: Item | None) -> Iterable[str]:
+        """
+        :param i: the checklist item
+        :param j: the preceding checklist item
+        :return: lines of Markdown code to emit
+        """
+
+
+def emit_checklist(checklist: Iterable[Item | EmptyItem]):
+    def comment(i: Item, _) -> Iterable[str]:
         return '<!--', *wrap(i), '-->'
 
-    def p(i, _):
+    def p(i: Item, _) -> Iterable[str]:
         return '', *wrap(i)
 
-    def h1(i, _):
+    def h1(i: Item, _) -> Iterable[str]:
         return '', '', '## ' + i['content']
 
-    def h2(i, _):
+    def h2(i: Item, _) -> Iterable[str]:
         return '', '', '### ' + i['content']
 
-    def cli(i, j):
-        return (
-            *margin(i, j),
-            '- [ ] ' + i['content']
-            + (' <sub>' + i['alt'] + '</sub>' if i.get('alt') is not None else '')
-        )
+    def cli(i: Item, j: Item | None) -> Iterable[str]:
+        alt = '' if i.get('alt') is None else ' <sub>' + i['alt'] + '</sub>'
+        return *margin(i, j), '- [ ] ' + i['content'] + alt
 
-    def li(i, j):
+    def li(i: Item, j: Item | None) -> Iterable[str]:
         return *margin(i, j), '- ' + i['content']
 
-    handlers = locals().copy()
-    del handlers['checklist']
+    handlers = {k: cast(Handler, v) for k, v in locals().items() if callable(v)}
 
-    def margin(i, j):
-        return [] if (j and j['type'] == i['type']) else ['']
+    def margin(i: Item, j: Item | None) -> Iterable[str]:
+        return [] if j and j['type'] == i['type'] else ['']
 
-    def wrap(i): return textwrap.wrap(i['content'], 80)
+    def wrap(i: Item) -> Iterable[str]:
+        return textwrap.wrap(i['content'], 80)
 
     with emit_text() as f:
-        f.writelines(line + '\n' for line in flatten(
-            handlers[i['type']](i, j)
-            for j, i in stagger(filter(bool, checklist), offsets=(-1, 0))
-        ))
+        non_empty_items: Iterable[Item] = filter(bool, checklist)
+        item_pairs = stagger(non_empty_items, offsets=(0, -1))
+        lines = flatten(handlers[i['type']](i, j) for i, j in item_pairs)
+        f.writelines(line + '\n' for line in lines)
 
 
 dir = 'PULL_REQUEST_TEMPLATE'
@@ -75,6 +100,9 @@ images_we_build_ourselves = {
     k: f'https://hub.docker.com/repository/docker/ucscgi/azul-{k.lower()}'
     for k in ['Elasticsearch', 'PyCharm']
 }
+
+prod = 'prod'
+develop = 'develop'
 
 
 class T(Enum):
@@ -94,7 +122,7 @@ class T(Enum):
 
     @property
     def target_branch(self):
-        return 'prod' if self in (T.promotion, T.hotfix) else 'develop'
+        return prod if self in (T.promotion, T.hotfix) else develop
 
     @property
     def issues(self):
@@ -108,21 +136,47 @@ class T(Enum):
         return S('issue' + iif(default, 's'))
 
     @property
-    def deployments(self) -> Mapping[str, str]:
+    def target_deployments(self) -> Mapping[str, str]:
         """
         Maps the name of each deployment to that of the respective sandbox.
         """
         return (
             {
-                'prod': None  # There is no sandbox for production
+                # There currently is no sandbox for production deployments
+                prod: None
             }
-            if self in (T.promotion, T.hotfix) else
+            if self.target_branch == prod else
             {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
                 'anvilprod': 'hammerbox'
             }
         )
+
+    @property
+    def downstream_deployments(self) -> AbstractSet[str]:
+        return OrderedSet(chain(
+            self.target_deployments.keys(),
+            self.promotion.target_deployments if self.target_branch == develop else []
+        ))
+
+    @property
+    def labels_to_promote(self) -> tuple[str, ...]:
+        return (
+            'deploy:shared',
+            'deploy:gitlab',
+            'deploy:runner',
+            'reindex:partial',
+            *('reindex:' + d for d in self.target_deployments)
+        )
+
+    @property
+    def deploy_shared_target(self) -> str:
+        return 'apply_keep_unused' if self.target_branch == develop else 'apply'
+
+
+def bq(s):
+    return '`' + s + '`'
 
 
 def main():
@@ -132,16 +186,16 @@ def main():
             {
                 'type': 'comment',
                 'content': {
-                    T.default: 'This is the PR template for regular PRs against `develop`. '
+                    T.default: f'This is the PR template for regular PRs against {bq(develop)}. '
                                "Edit the URL in your browser's location bar, appending either "
                                + join_grammatically([f'`&template={tt.file}`' for tt in T if tt.dir],
                                                     joiner=', ',
                                                     last_joiner=' or ')
                                + ' to switch the template.',
-                    T.backport: 'This is the PR template for backport PRs against `develop`.',
+                    T.backport: f'This is the PR template for backport PRs against {bq(develop)}.',
                     T.upgrade: 'This is the PR template for upgrading Azul dependencies.',
-                    T.hotfix: 'This is the PR template for hotfix PRs against `prod`.',
-                    T.promotion: 'This is the PR template for promotion PRs against `prod`.'
+                    T.hotfix: f'This is the PR template for hotfix PRs against {bq(prod)}.',
+                    T.promotion: f'This is the PR template for promotion PRs against {bq(prod)}.'
                 }[t]
             },
             iif(t is not T.backport, {
@@ -237,13 +291,13 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `partial` label to PR',
-                    'alt': 'or this PR completely resolves all connected issues'
+                    'content': 'This PR is labeled `partial`',
+                    'alt': 'or completely resolves all connected issues'
                 },
                 {
                     'type': 'cli',
-                    'content': 'All connected issues are resolved partially',
-                    'alt': 'or this PR does not have the `partial` label'
+                    'content': 'This PR partially resolves each of the connected issues',
+                    'alt': 'or does not have the `partial` label'
                 }
             ]),
             iif(t is T.default, {
@@ -251,6 +305,27 @@ def main():
                 'content': '<sup>1</sup> when the issue title describes a problem, the corresponding PR title is '
                            '`Fix: ` followed by the issue title'
             }),
+            *iif(t is T.default, [
+                {
+                    'type': 'h2',
+                    'content': 'Author (chains)'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is blocked by previous PR in the chain',
+                    'alt': 'or is not chained to another PR'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'The blocking PR is labeled `base`',
+                    'alt': 'or this PR is not chained to another PR'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `chained`',
+                    'alt': 'or is not chained to another PR'
+                }
+            ]),
             *iif(t in (T.default, T.promotion), [
                 {
                     'type': 'h2',
@@ -261,14 +336,28 @@ def main():
                     'content': 'Added `r` tag to commit title',
                     'alt': 'or this PR does not require reindexing'
                 }),
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'This PR is labeled `reindex:{d}`',
+                        'alt': f'or does not require reindexing `{d}`'
+                    }
+                    for d in t.target_deployments
+                ],
                 {
                     'type': 'cli',
-                    'content': 'Added `reindex` label to PR',
-                    'alt': 'or this PR does not require reindexing'
+                    'content': 'This PR is labeled `reindex:partial` and '
+                               + 'its description documents the specific reindexing procedure for '
+                               + join_grammatically([f'`{d}`' for d in t.downstream_deployments]),
+                    'alt': 'or requires a full reindex '
+                           + iif(len(t.downstream_deployments) == 1,
+                                 'or is not labeled',
+                                 'or carries none of the labels ')
+                           + join_grammatically([f'`reindex:{d}`' for d in t.downstream_deployments])
                 },
                 {
                     'type': 'cli',
-                    'content': 'PR and connected issue are labeled `API`',
+                    'content': 'This PR and its connected issues are labeled `API`',
                     'alt': 'or this PR does not modify a REST API'
                 },
                 *iif(t is T.default, [
@@ -284,52 +373,49 @@ def main():
                     }
                 ])
             ]),
-            *iif(t is T.default, [
-                {
-                    'type': 'h2',
-                    'content': 'Author (chains)'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'This PR is blocked by previous PR in the chain',
-                    'alt': 'or this PR is not chained to another PR'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'Added `base` label to the blocking PR',
-                    'alt': 'or this PR is not chained to another PR'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'Added `chained` label to this PR',
-                    'alt': 'or this PR is not chained to another PR'
-                }
-            ]),
-            *iif(t in (T.default, T.promotion, T.upgrade), [
+            *iif(t not in (T.hotfix, T.backport), [
                 {
                     'type': 'h2',
                     'content': 'Author (upgrading deployments)'
                 },
-                iif(t in (T.default, T.upgrade), {
-                    'type': 'cli',
-                    'content': 'Ran `make image_manifests.json` and committed any resulting changes',
-                    'alt': 'or this PR does not modify `azul_docker_images` '
-                           'or any other variables referenced in the definition of that variable'
-                }),
-                iif(t in (T.default, T.upgrade), {
-                    'type': 'cli',
-                    'content': 'Documented upgrading of deployments in UPGRADING.rst',
-                    'alt': 'or this PR does not require upgrading deployments'
-                }),
-                iif(t in (T.default, T.upgrade), {
-                    'type': 'cli',
-                    'content': 'Added `u` tag to commit title',
-                    'alt': 'or this PR does not require upgrading deployments'
-                }),
+                *iif(t.target_branch == develop, [
+                    {
+                        'type': 'cli',
+                        'content': 'Documented upgrading of deployments in UPGRADING.rst',
+                        'alt': 'or this PR does not require upgrading deployments'
+                    },
+                    {
+                        'type': 'cli',
+                        'content': 'Added `u` tag to commit title',
+                        'alt': 'or this PR does not require upgrading deployments'
+                    },
+                    {
+                        'type': 'cli',
+                        'content': 'Ran `make image_manifests.json` and committed the resulting changes',
+                        'alt': 'or this PR does not modify `azul_docker_images`, '
+                               'or any other variables referenced in the definition of that variable'
+                    }
+                ]),
                 {
                     'type': 'cli',
-                    'content': 'Added `upgrade` label to PR',
-                    'alt': 'or this PR does not require upgrading deployments'
+                    'content': 'This PR is labeled `upgrade`',
+                    'alt': 'or does not require upgrading deployments'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `deploy:shared`',
+                    'alt': 'or does not modify `image_manifests.json`, and does not '
+                           'require deploying the `shared` component for any other reason'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `deploy:gitlab`',
+                    'alt': 'or does not require deploying the `gitlab` component'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `deploy:runner`',
+                    'alt': 'or does not require deploying the `runner` image'
                 }
             ]),
             *iif(t is T.default, [
@@ -357,7 +443,7 @@ def main():
                         {
                             'type': 'cli',
                             'content': 'Reverted the temporary hotfixes for any connected issues',
-                            'alt': 'or the `prod` branch has no temporary hotfixes for any connected issues'
+                            'alt': f'or the {bq(prod)} branch has no temporary hotfixes for any connected issues'
                         }
                     ] if t is T.default else [
                         {
@@ -376,8 +462,8 @@ def main():
                         },
                         {
                             'type': 'cli',
-                            'content': 'Added `partial` label to PR',
-                            'alt': 'or this PR is a permanent hotfix'
+                            'content': 'This PR is labeled `partial`',
+                            'alt': 'or represents a permanent hotfix'
                         },
                     ] if t is T.hotfix else [
                     ]),
@@ -396,22 +482,22 @@ def main():
                 {
                     'type': 'cli',
                     'content': 'Ran `make requirements_update`',
-                    'alt': 'or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile'
+                    'alt': 'or this PR does not modify `requirements*.txt`, `common.mk`, `Makefile` and `Dockerfile`'
                 },
                 {
                     'type': 'cli',
                     'content': 'Added `R` tag to commit title',
-                    'alt': 'or this PR does not touch requirements*.txt'
+                    'alt': 'or this PR does not modify `requirements*.txt`'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Added `reqs` label to PR',
-                    'alt': 'or this PR does not touch requirements*.txt'
+                    'content': 'This PR is labeled `reqs`',
+                    'alt': 'or does not modify `requirements*.txt`'
                 },
                 iif(t in (T.default, T.upgrade), {
                     'type': 'cli',
                     'content': '`make integration_test` passes in personal deployment',
-                    'alt': 'or this PR does not touch functionality that could break the IT'
+                    'alt': 'or this PR does not modify functionality that could affect the IT outcome'
                 })
             ]),
             *iif(t is T.default, [
@@ -441,7 +527,7 @@ def main():
                 },
                 {
                     'type': 'cli',
-                    'content': 'PR is assigned to system administrator'
+                    'content': 'PR is assigned to only the system administrator'
                 }
             ]),
             *iif(t in (T.default, T.backport), [
@@ -484,6 +570,11 @@ def main():
                     'Labeled PR as `no sandbox`'
                 )
             }),
+            {
+                'type': 'cli',
+                'content': 'A comment to this PR details the completed security design review',
+                'alt': 'or this PR is a promotion or a backport'
+            },
             iif(t is not T.promotion, {
                 'type': 'cli',
                 'content': 'PR title is appropriate as title of merge commit'
@@ -498,7 +589,7 @@ def main():
             },
             {
                 'type': 'cli',
-                'content': 'PR is assigned to current operator'
+                'content': 'PR is assigned to only the operator'
             },
             {
                 'type': 'h2',
@@ -507,7 +598,7 @@ def main():
             *iif(t is T.default, [
                 {
                     'type': 'cli',
-                    'content': 'Checked `reindex` label and `r` commit title tag'
+                    'content': 'Checked `reindex:…` labels and `r` commit title tag'
                 },
                 {
                     'type': 'cli',
@@ -532,43 +623,39 @@ def main():
                 'type': 'cli',
                 'content': 'Pushed PR branch to GitHub'
             },
-            *iif(t is T.promotion, [
-                {
-                    'type': 'cli',
-                    'content': f'Selected `{deployment}.shared` and '
-                               f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/shared apply`',
-                    'alt': 'or this PR does not change any Docker image versions'
-                }
-                for deployment in t.deployments
-            ]),
-            *iif(t in (T.upgrade, T.promotion), [
+            *iif(t not in (T.backport, T.hotfix), [
                 *flatten([
                     [
-                        iif(t is T.upgrade, {
-                            'type': 'cli',
-                            'content': f'Selected `{deployment}.shared` and '
-                                       f'ran `CI_COMMIT_REF_NAME={t.target_branch} '
-                                       f'make -C terraform/shared apply_keep_unused`',
-                            'alt': 'or this PR does not change any Docker image versions'
-                        }),
                         {
                             'type': 'cli',
-                            'content': f'Selected `{deployment}.gitlab` and '
-                                       f'ran `CI_COMMIT_REF_NAME={t.target_branch} make -C terraform/gitlab apply`',
-                            'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                            'content': 'Ran ' + bq(
+                                f'_select {d}.shared && '
+                                f'CI_COMMIT_REF_NAME={t.target_branch} '
+                                f'make -C terraform/shared {t.deploy_shared_target}'
+                            ),
+                            'alt': 'or this PR is not labeled `deploy:shared`'
+                        },
+                        {
+                            'type': 'cli',
+                            'content': 'Ran ' + bq(
+                                f'_select {d}.gitlab && '
+                                f'CI_COMMIT_REF_NAME={t.target_branch} '
+                                f'make -C terraform/gitlab apply'
+                            ),
+                            'alt': 'or this PR is not labeled `deploy:gitlab`'
                         }
                     ]
-                    for deployment in t.deployments
+                    for d in t.target_deployments
                 ]),
                 {
                     'type': 'cli',
-                    'content': 'Assigned system administrator',
-                    'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                    'content': 'Checked the items in the next section',
+                    'alt': 'or this PR is labeled `deploy:gitlab`'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Checked the items in the next section',
-                    'alt': 'or this PR includes changes to files in terraform/gitlab'
+                    'content': 'Assigned system administrator',
+                    'alt': 'or this PR is not labeled `deploy:gitlab`'
                 },
                 {
                     'type': 'h2',
@@ -578,13 +665,13 @@ def main():
                     {
                         'type': 'cli',
                         'content': f'Background migrations for `{d}.gitlab` are complete',
-                        'alt': 'or this PR does not include any changes to files in terraform/gitlab'
+                        'alt': 'or this PR is not labeled `deploy:gitlab`'
                     }
-                    for d in t.deployments
+                    for d in t.target_deployments
                 ],
                 {
                     'type': 'cli',
-                    'content': 'PR is assigned to operator',
+                    'content': 'PR is assigned to only the operator',
                 },
                 {
                     'type': 'h2',
@@ -593,14 +680,16 @@ def main():
                 *[
                     {
                         'type': 'cli',
-                        'content': f'Selected `{deployment}.gitlab` and '
-                                   f'ran `make -C terraform/gitlab/runner`',
-                        'alt': 'or this PR does not change `azul_docker_version`'
+                        'content': 'Ran ' + bq(
+                            f'_select {d}.gitlab && '
+                            f'make -C terraform/gitlab/runner'
+                        ),
+                        'alt': 'or this PR is not labeled `deploy:runner`'
                     }
-                    for deployment in t.deployments
+                    for d in t.target_deployments
                 ],
             ]),
-            iif(any(sandbox is not None for sandbox in t.deployments.values()), {
+            iif(any(s is not None for s in t.target_deployments.values()), {
                 'type': 'cli',
                 'content': 'Added `sandbox` label',
                 'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
@@ -612,63 +701,63 @@ def main():
                 [
                     {
                         'type': 'cli',
-                        'content': f'Pushed PR branch to GitLab `{deployment}`',
+                        'content': f'Pushed PR branch to GitLab `{d}`',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Build passes in `{sandbox}` deployment',
+                        'content': f'Build passes in `{s}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     {
                         'type': 'cli',
-                        'content': f'Reviewed build logs for anomalies in `{sandbox}` deployment',
+                        'content': f'Reviewed build logs for anomalies in `{s}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
                     *iif(t is T.default, [
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{sandbox}`',
+                            'content': f'Deleted unreferenced indices in `{s}`',
                             'alt': f'or this PR does not remove catalogs '
-                                   f'or otherwise causes unreferenced indices in `{deployment}`'
+                                   f'or otherwise causes unreferenced indices in `{d}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Started reindex in `{sandbox}`',
-                            'alt': f'or this PR does not require reindexing `{deployment}`'
+                            'content': f'Started reindex in `{s}`',
+                            'alt': f'or this PR is not labeled `reindex:{d}`'
                         },
                         {
                             'type': 'cli',
-                            'content': f'Checked for failures in `{sandbox}`',
-                            'alt': f'or this PR does not require reindexing `{deployment}`'
+                            'content': f'Checked for failures in `{s}`',
+                            'alt': f'or this PR is not labeled `reindex:{d}`'
                         }
                     ])
                 ]
-                for i, (deployment, sandbox) in enumerate(t.deployments.items())
-                if sandbox is not None
+                for i, (d, s) in enumerate(t.target_deployments.items())
+                if s is not None
             ))),
             {
                 'type': 'cli',
-                'content': 'Title of merge commit starts with title from this PR'
+                'content': 'The title of the merge commit starts with the title of this PR'
             },
             {
                 'type': 'cli',
-                'content': f"Added PR reference {iif(t is T.backport, '(this PR) ')}to merge commit title"
+                'content': 'Added PR # reference '
+                           + iif(t is T.backport, '(to this PR) ')
+                           + 'to merge commit title'
             },
             {
                 'type': 'cli',
                 'content': 'Collected commit title tags in merge commit title',
                 'alt': iif(t is T.default,
-                           'but only include `p` if the PR is labeled `partial`',
-                           'but exclude any `p` tags')
+                           'but only included `p` if the PR is also labeled `partial`',
+                           'but excluded any `p` tags')
             },
             iif(t in (T.default, T.upgrade, T.hotfix), {
                 'type': 'cli',
-                'content': (
-                    'Moved connected issue to *Merged prod* column in ZenHub'
-                    if t is t.hotfix else
-                    f'Moved connected {t.issues} to Merged column in ZenHub'
-                )
+                'content': iif(t is t.hotfix,
+                               'Moved connected issue to *Merged prod* column in ZenHub',
+                               f'Moved connected {t.issues} to Merged column in ZenHub')
             }),
             {
                 'type': 'cli',
@@ -686,7 +775,7 @@ def main():
                         'alt': 'or this PR is not labeled `base`'
                     }
                     for content in [
-                        'Changed the target branch of the blocked PR to `develop`',
+                        f'Changed the target branch of the blocked PR to {bq(develop)}',
                         'Removed the `chained` label from the blocked PR',
                         'Removed the blocking relationship from the blocked PR',
                         'Removed the `base` label from this PR'
@@ -703,7 +792,7 @@ def main():
                     'content': f'Pushed merge commit to GitLab `{d}`',
                     'alt': iif(t in (T.hotfix, T.promotion, T.upgrade), None, 'or PR is labeled `no sandbox`')
                 }
-                for d in t.deployments
+                for d in t.target_deployments
             ],
             *flatten(
                 [
@@ -718,16 +807,18 @@ def main():
                                    + iif(t in (T.default, T.backport), '<sup>1</sup>')
                     }
                 ]
-                for d, s in t.deployments.items()
+                for d, s in t.target_deployments.items()
             ),
-            *iif(t is T.upgrade, [
+            *iif(t.target_branch == develop and t is not T.backport, [
                 {
                     'type': 'cli',
-                    'content': f'Selected `{deployment}.shared` and '
-                               f'ran `make -C terraform/shared apply`',
-                    'alt': 'or this PR does not change any Docker image versions'
+                    'content': 'Ran ' + bq(
+                        f'_select {d}.shared && '
+                        f'make -C terraform/shared apply'
+                    ),
+                    'alt': 'or this PR is not labeled `deploy:shared`'
                 }
-                for deployment in t.deployments
+                for d in t.target_deployments
             ]),
             {
                 'type': 'cli',
@@ -738,7 +829,7 @@ def main():
                     'type': 'cli',
                     'content': f'Deleted PR branch from GitLab `{d}`'
                 }
-                for d, s in t.deployments.items()
+                for d, s in t.target_deployments.items()
                 if t is not t.promotion
             ),
             *iif(t is T.promotion, [
@@ -771,56 +862,35 @@ def main():
                 # for all of them, and so on.
                 *flatten(zip(*(
                     [
-                        {
-                            'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{deployment}`',
-                            'alt': f'or this PR does not remove catalogs '
-                                   f'or otherwise causes unreferenced indices in `{deployment}`'
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Considered deindexing individual sources in `{deployment}`',
-                            'alt': (
-                                f'or this PR does not merely remove sources from existing catalogs in `{deployment}`'
-                            )
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Considered indexing individual sources in `{deployment}`',
-                            'alt': (
-                                f'or this PR does not merely add sources to existing catalogs in `{deployment}`'
-                            )
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Started reindex in `{deployment}`',
-                            'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                f'or this PR does not require reindexing `{deployment}`'
-                            )
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Checked for and triaged indexing failures in `{deployment}`',
-                            'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                f'or this PR does not require reindexing `{deployment}`'
-                            )
-
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Emptied fail queues in `{deployment}` deployment',
-                            'alt': (
-                                'or neither this PR nor a prior failed promotion requires it'
-                                if t is T.hotfix else
-                                f'or this PR does not require reindexing `{deployment}`'
-                            )
-                        }
+                        *[
+                            {
+                                'type': 'cli',
+                                'content': f'{action} in `{d}`',
+                                'alt': f'or this PR is neither labeled `reindex:partial` nor `reindex:{d}`'
+                            } for action in [
+                                'Deindexed all unreferenced catalogs',
+                                'Deindexed specific sources',
+                                'Indexed specific sources'
+                            ]
+                        ],
+                        *[
+                            {
+                                'type': 'cli',
+                                'content': f'{action} in `{d}`',
+                                'alt': (
+                                    'or neither this PR nor a failed, prior promotion requires it'
+                                    if t is T.hotfix else
+                                    f'or this PR does not require reindexing `{d}`'
+                                )
+                            }
+                            for action in [
+                                'Started reindex',
+                                'Checked for, triaged and possibly requeued messages in both fail queues',
+                                'Emptied fail queues',
+                            ]
+                        ]
                     ]
-                    for deployment, sandbox in t.deployments.items()
+                    for d, s in t.target_deployments.items()
                 ))),
                 iif(t is T.hotfix, {
                     'type': 'cli',
@@ -838,10 +908,26 @@ def main():
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
                            'relevant<sup>1</sup> findings as a comment on the connected issue.'
             }),
+            *iif(t.target_branch == develop and t is not T.backport, [
+                {
+                    'type': 'cli',
+                    'content': 'Propagated the '
+                               + join_grammatically(list(map(bq, t.promotion.labels_to_promote)))
+                               + ' labels to the next promotion PR',
+                    'alt': 'or this PR carries none of these labels'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'Propagated any specific instructions related to the '
+                               + join_grammatically(list(map(bq, t.promotion.labels_to_promote)))
+                               + ' labels from the description of this PR to that of the next promotion PR',
+                    'alt': 'or this PR carries none of these labels'
+                }
+            ]),
             {
                 'type': 'cli',
                 'content': 'PR is assigned to '
-                           + iif(t in (T.upgrade, T.promotion), 'system administrator', 'no one')
+                           + iif(t in (T.upgrade, T.promotion), 'only the system administrator', 'no one')
             },
             iif(t is T.upgrade, {
                 'type': 'p',

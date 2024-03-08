@@ -32,7 +32,9 @@ def emit_text(*, remove: bool = False):
         with open('/dev/null', 'a') as f:
             yield f
     else:
-        f = tempfile.NamedTemporaryFile(mode='w+', dir=os.path.dirname(path), encoding='utf-8', delete=False)
+        f = tempfile.NamedTemporaryFile(mode='w+',
+                                        dir=os.path.dirname(path),
+                                        encoding='utf-8', delete=False)
         try:
             yield f
         except BaseException:
