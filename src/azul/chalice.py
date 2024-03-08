@@ -136,7 +136,7 @@ class AzulChaliceApp(Chalice):
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
         # Middleware is invoked in order of registration
         self.register_middleware(self._logging_middleware, 'http')
-        self.register_middleware(self._hsts_header_middleware, 'http')
+        self.register_middleware(self._security_headers_middleware, 'http')
         self.register_middleware(self._api_gateway_context_middleware, 'http')
         self.register_middleware(self._authentication_middleware, 'http')
 
@@ -192,13 +192,14 @@ class AzulChaliceApp(Chalice):
         finally:
             config.lambda_is_handling_api_gateway_request = False
 
-    def _hsts_header_middleware(self, event, get_response):
+    def _security_headers_middleware(self, event, get_response):
         """
-        Add a response header to inform browser to use HTTPS
+        Add headers to the response
         """
         response = get_response(event)
         seconds = 60 * 60 * 24 * 365
         response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
     def route(self,
