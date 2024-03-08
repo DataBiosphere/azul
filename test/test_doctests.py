@@ -105,6 +105,7 @@ def load_tests(_loader, tests, _ignore):
         load_script('envhook'),
         load_script('export_environment'),
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
+        load_module(root + '/.github/workflows/schedule.py', 'schedule'),
         test_tagging,
         service
     ]:
