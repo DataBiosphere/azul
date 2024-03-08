@@ -192,14 +192,15 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        if self._limit_access():
-            filters_json = self.filters.reify(self.plugin)
-        else:
-            filters_json = self.filters.explicit
+        filters_json = self.filters.reify(self.plugin, limit_access=self._limit_access())
         return self._translate_filters(filters_json)
 
     @abstractmethod
     def _limit_access(self) -> bool:
+        """
+        Whether to enforce the managed access controls during filter
+        reification.
+        """
         raise NotImplementedError
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
@@ -227,7 +228,9 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         for field_path, relation_and_values in self.prepared_filters.items():
             if field_path not in skip_field_paths:
                 relation, values = one(relation_and_values.items())
-                if relation == 'is':
+                # Note that `is_not` is only used internally (for filtering by
+                # inaccessible sources)
+                if relation in ('is', 'is_not'):
                     field_type = self.service.field_type(self.catalog, field_path)
                     if isinstance(field_type, Nested):
                         term_queries = []
@@ -245,6 +248,8 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                             # as absent fields
                             absent_query = Q('bool', must_not=[Q('exists', field=dotted(field_path))])
                             query = Q('bool', should=[query, absent_query])
+                    if relation == 'is_not':
+                        query = Q('bool', must_not=[query])
                     filter_list.append(query)
                 elif relation in ('contains', 'within', 'intersects'):
                     for value in values:

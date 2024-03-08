@@ -48,6 +48,7 @@ FilterOperator = TypedDict(
     'FilterOperator',
     {
         'is': list[PrimitiveJSON | FlatJSON],
+        'is_not': list[PrimitiveJSON | FlatJSON],
         'intersects': Sequence[FilterRange],
         'contains': Sequence[FilterRange | int | float | str],
         'within': Sequence[FilterRange],
@@ -65,10 +66,16 @@ class Filters:
 
     @classmethod
     def from_json(cls, json: JSON) -> 'Filters':
+        """
+        Deserialize an instance of this class without reifying it.
+        """
         return cls(explicit=json['explicit'],
                    source_ids=set(json['source_ids']))
 
     def to_json(self) -> JSON:
+        """
+        The inverse of :py:meth:`from_json`.
+        """
         return {
             'explicit': self.explicit,
             'source_ids': sorted(self.source_ids)
@@ -77,21 +84,76 @@ class Filters:
     def update(self, filters: FiltersJSON) -> 'Filters':
         return attr.evolve(self, explicit={**self.explicit, **filters})
 
-    def reify(self, plugin: MetadataPlugin) -> FiltersJSON:
+    def reify(self,
+              plugin: MetadataPlugin,
+              *,
+              limit_access: bool = True
+              ) -> FiltersJSON:
+        """
+        Combine the explicit filters passed in by clients with the implicit ones
+        representing additional restrictions such as which sources are
+        accessible to clients.
+
+        :param plugin: Metadata plugin for the current request's catalog
+
+        :param limit_access: Whether to enforce data access controls by
+                             inserting an implicit filter on the source ID facet
+        """
         filters = copy_json(self.explicit)
         special_fields = plugin.special_fields
-        facet_filter = filters.setdefault(special_fields.source_id, {})
-        # Other operators are not supported on string fields
-        assert facet_filter.keys() <= {'is'}, facet_filter
-        try:
-            requested_source_ids = facet_filter['is']
-        except KeyError:
-            facet_filter['is'] = list(self.source_ids)
+
+        def extract_filter(field: str, *, default: set | None) -> set | None:
+            filter = filters.pop(field, {})
+            # Other operators are not supported on string or boolean fields
+            assert filter.keys() <= {'is'}, filter
+            try:
+                values = filter['is']
+            except KeyError:
+                return default
+            else:
+                return set(values)
+
+        explicit_sources = extract_filter(special_fields.source_id, default=None)
+        accessible = extract_filter(special_fields.accessible, default={False, True})
+        source_relation = 'is'
+
+        if limit_access:
+            if explicit_sources is None:
+                sources = self.source_ids if True in accessible else []
+            else:
+                forbidden_sources = explicit_sources - self.source_ids
+                if forbidden_sources:
+                    raise ForbiddenError('Cannot filter by inaccessible sources',
+                                         forbidden_sources)
+                else:
+                    sources = explicit_sources if True in accessible else []
         else:
-            inaccessible = set(requested_source_ids) - self.source_ids
-            if inaccessible:
-                raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
-        assert set(filters[special_fields.source_id]['is']) <= self.source_ids
+            if accessible == set():
+                sources = []
+            elif accessible == {False, True}:
+                sources = explicit_sources
+            elif accessible == {True}:
+                if explicit_sources is None:
+                    sources = self.source_ids
+                else:
+                    sources = self.source_ids & explicit_sources
+            elif accessible == {False}:
+                if explicit_sources is None:
+                    sources = self.source_ids
+                    source_relation = 'is_not'
+                else:
+                    sources = explicit_sources - self.source_ids
+            else:
+                assert False, accessible
+
+        if sources is None:
+            assert limit_access is False, limit_access
+        else:
+            filters[special_fields.source_id] = {source_relation: sorted(sources)}
+
+        if limit_access:
+            assert set(filters[special_fields.source_id]['is']) <= self.source_ids
+
         return filters
 
 
