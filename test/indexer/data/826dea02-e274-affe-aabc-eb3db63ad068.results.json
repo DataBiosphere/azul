@@ -438,7 +438,9 @@
         "_source": {
             "entity_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
             "replica_type": "anvil_sequencingactivity",
-            "hub_ids": [],
+            "hub_ids": [
+                "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
+            ],
             "contents": {
                 "activity_type": "Sequencing",
                 "assay_type": [],
@@ -868,7 +870,9 @@
         "_source": {
             "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
             "replica_type": "anvil_file",
-            "hub_ids": [],
+            "hub_ids": [
+                "15b76f9c-6b46-433f-851d-34e89f1b9ba6"
+            ],
             "contents": {
                 "data_modality": [],
                 "datarepo_row_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
@@ -898,7 +902,10 @@
         "_source": {
             "entity_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
             "replica_type": "anvil_diagnosis",
-            "hub_ids": [],
+            "hub_ids": [
+                "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                "3b17377b-16b1-431c-9967-e5d01fc5923f"
+            ],
             "contents": {
                 "datarepo_row_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
                 "diagnosis_age_lower_bound": null,
@@ -1747,7 +1754,9 @@
                 "crc32": ""
             },
             "replica_type": "anvil_file",
-            "hub_ids": []
+            "hub_ids": [
+                "3b17377b-16b1-431c-9967-e5d01fc5923f"
+            ]
         }
     },
     {
@@ -2189,7 +2198,9 @@
         "_source": {
             "entity_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
             "replica_type": "anvil_sequencingactivity",
-            "hub_ids": [],
+            "hub_ids": [
+                "3b17377b-16b1-431c-9967-e5d01fc5923f"
+            ],
             "contents": {
                 "activity_type": "Sequencing",
                 "assay_type": [],
@@ -2935,7 +2946,10 @@
         "_source": {
             "entity_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
             "replica_type": "anvil_biosample",
-            "hub_ids": [],
+            "hub_ids": [
+                "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                "3b17377b-16b1-431c-9967-e5d01fc5923f"
+            ],
             "contents": {
                 "anatomical_site": null,
                 "apriori_cell_type": [],
@@ -3511,7 +3525,10 @@
         "_source": {
             "entity_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
             "replica_type": "anvil_diagnosis",
-            "hub_ids": [],
+            "hub_ids": [
+                "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                "3b17377b-16b1-431c-9967-e5d01fc5923f"
+            ],
             "contents": {
                 "datarepo_row_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
                 "diagnosis_age_lower_bound": null,
@@ -4099,7 +4116,10 @@
                 "version": "2022-06-01T00:00:00.000000Z"
             },
             "replica_type": "anvil_donor",
-            "hub_ids": []
+            "hub_ids": [
+                "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
+                "3b17377b-16b1-431c-9967-e5d01fc5923f"
+            ]
         }
     }
 ]
