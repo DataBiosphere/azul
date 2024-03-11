@@ -67,7 +67,8 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                             '"*", "Access-Control-Allow-Headers": '
                             '"Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key", '
                             '"Strict-Transport-Security": "max-age=31536000; includeSubDomains", '
-                            '"X-Content-Type-Options": "nosniff"}. '
+                            '"X-Content-Type-Options": "nosniff", '
+                            '"X-Frame-Options": "DENY"}. '
                             'See next line for the first 1024 characters of the body.\n'
                             '{"up": true}'
                         )

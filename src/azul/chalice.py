@@ -200,6 +200,7 @@ class AzulChaliceApp(Chalice):
         seconds = 60 * 60 * 24 * 365
         response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains'
         response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
         return response
 
     def route(self,
