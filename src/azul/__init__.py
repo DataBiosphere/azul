@@ -1489,6 +1489,10 @@ class Config:
 
     waf_rate_rule_retry_after = 30  # seconds
 
+    waf_rate_rule_limit = 1000
+
+    assert 100 <= waf_rate_rule_limit <= 2_000_000_000  # mandated by AWS
+
     @property
     def vpc_cidr(self) -> str:
         return self.environ['azul_vpc_cidr']
