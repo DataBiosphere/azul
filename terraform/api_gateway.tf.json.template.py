@@ -248,7 +248,7 @@ emit_tf({
                                 },
                                 'statement': {
                                     'rate_based_statement': {
-                                        'limit': 1000,  # limit must be between 100 and 20,000,000
+                                        'limit': config.waf_rate_rule_limit,
                                         'aggregate_key_type': 'IP'
                                     }
                                 },
