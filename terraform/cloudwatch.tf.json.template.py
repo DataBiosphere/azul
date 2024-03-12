@@ -201,7 +201,8 @@ emit_tf({
                                     {
                                         'id': 'log_count_raw',
                                         'metric': {
-                                            'metric_name': config.qualified_resource_name(f'{lambda_}cachehealth'),
+                                            'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                                           '%scachehealth.metric_transformation[0].name}' % lambda_,
                                             'namespace': 'LogMetrics',
                                             'period': 10 * 60,
                                             'stat': 'Sum',

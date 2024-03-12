@@ -551,7 +551,8 @@ tf_config = {
                     'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
                     'comparison_operator': 'GreaterThanOrEqualToThreshold',
                     'evaluation_periods': 1,
-                    'metric_name': a.metric_name,
+                    'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                   '%s.metric_transformation[0].name}' % a.name,
                     'namespace': 'LogMetrics',
                     'statistic': a.statistic,
                     'treat_missing_data': 'notBreaching',
@@ -569,7 +570,8 @@ tf_config = {
                     'alarm_name': config.qualified_resource_name(resource_name, suffix='.alarm'),
                     'comparison_operator': 'GreaterThanOrEqualToThreshold',
                     'evaluation_periods': 1,
-                    'metric_name': config.qualified_resource_name(resource_name),
+                    'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                   '%s.metric_transformation[0].name}' % resource_name,
                     'namespace': 'LogMetrics',
                     'statistic': 'Sum',
                     'treat_missing_data': 'notBreaching',
@@ -609,7 +611,8 @@ tf_config = {
                         {
                             'id': 'log_count_raw',
                             'metric': {
-                                'metric_name': config.qualified_resource_name(resource_name),
+                                'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                               '%s.metric_transformation[0].name}' % resource_name,
                                 'namespace': 'LogMetrics',
                                 'period': period,
                                 'stat': 'Sum',
