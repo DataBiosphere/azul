@@ -89,6 +89,12 @@ class ImageRef(metaclass=ABCMeta):
         TagImageRef(registry='4', username='3', repository=('2',), tag='1')
         >>> ImageRef.parse('5/4/3/2:1')
         TagImageRef(registry='5', username='4', repository=('3', '2'), tag='1')
+        >>> ImageRef.parse('localhost:5000/docker.io/ucscgi/azul-pycharm:2023.3.4-15')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        TagImageRef(registry='localhost:5000',
+                    username='docker.io',
+                    repository=('ucscgi', 'azul-pycharm'),
+                    tag='2023.3.4-15')
         """
         if '@' in image_ref:
             return DigestImageRef.parse(image_ref)
@@ -215,7 +221,8 @@ class TagImageRef(ImageRef):
 
     @classmethod
     def parse(cls, image_ref: str) -> Self:
-        name, tag = image_ref.split(':')
+        # A colon in the first part of the name might separate host and port
+        name, _, tag = image_ref.rpartition(':')
         return cls.create(name, tag)
 
     @classmethod
@@ -437,7 +444,10 @@ class Repository:
 
     @cached_property
     def _client(self):
-        return DXF(host=self.host, repo=self.name, auth=self._auth)
+        return DXF(host=self.host,
+                   repo=self.name,
+                   auth=self._auth,
+                   insecure=self.host.startswith('localhost:') or self.host == 'localhost')
 
     def _auth(self, dxf: DXFBase, response: requests.Response):
         host: str = furl(response.request.url).host
