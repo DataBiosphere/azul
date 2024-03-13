@@ -668,7 +668,7 @@ class ElasticsearchService(DocumentService):
                        ) -> Search:
         """
         Create an Elasticsearch request against the index containing documents
-        for the given entity+document type in the given catalog.
+        of the given entity and document types, in the given catalog.
         """
         return Search(using=self._es_client,
                       index=str(IndexName.create(catalog=catalog,

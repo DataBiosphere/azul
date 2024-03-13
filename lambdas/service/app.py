@@ -228,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '4.0'
+        'version': '4.1'
     },
     'tags': [
         {
@@ -1398,6 +1398,10 @@ def manifest_route(*, fetch: bool, initiate: bool):
                           file][4] manifest. This manifest can be used with the curl
                           program to download all the files listed in the manifest.
 
+                        - `{ManifestFormat.verbatim_jsonl.value}` for a verbatim
+                          manifest in [JSONL][5] format. Each line contains an
+                          unaltered metadata entity from the underlying repository.
+
                         [1]: https://bd2k.ini.usc.edu/tools/bdbag/
 
                         [2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954
@@ -1405,6 +1409,8 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         [3]: https://github.com/uc-cdis/pypfb
 
                         [4]: https://curl.haxx.se/docs/manpage.html#-K
+
+                        [5]: https://jsonlines.org/
                     '''
                 )
             ] if initiate else [],
