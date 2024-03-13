@@ -682,7 +682,8 @@ def validate_organism_age_filter(values):
 
 
 def validate_field(field: str):
-    if field not in app.metadata_plugin.field_mapping:
+    fields = app.fields
+    if field not in fields:
         raise BRE(f'Unknown field `{field}`')
 
 
