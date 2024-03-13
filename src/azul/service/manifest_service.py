@@ -34,6 +34,7 @@ import itertools
 from itertools import (
     chain,
 )
+import json
 import logging
 from math import (
     ceil,
@@ -69,6 +70,7 @@ from bdbag import (
     bdbag_api,
 )
 from elasticsearch_dsl import (
+    Q,
     Search,
 )
 from elasticsearch_dsl.response import (
@@ -78,6 +80,7 @@ from furl import (
     furl,
 )
 from more_itertools import (
+    chunked,
     one,
 )
 import msgpack
@@ -107,6 +110,7 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer.document import (
+    DocumentType,
     FieldPath,
     FieldTypes,
     null_str,
@@ -2002,3 +2006,106 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             # Join concatenated values using the joiner
             row = {k: self.padded_joiner.join(sorted(v)) if isinstance(v, set) else v for k, v in row.items()}
             bundle_tsv_writer.writerow(row)
+
+
+class VerbatimManifestGenerator(FileBasedManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'application/jsonl'
+
+    @classmethod
+    def file_name_extension(cls) -> str:
+        return 'jsonl'
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.verbatim_jsonl
+
+    @property
+    def entity_type(self) -> str:
+        return 'files'
+
+    @property
+    def included_fields(self) -> list[FieldPath]:
+        # This is only used when searching the aggregates, which are only used
+        # to perform a "join" on the replicas index. Therefore, we only need the
+        # "keys" used for the join.
+        return [
+            ('entity_id',),
+            ('contents', self.implicit_hub_type, 'document_id')
+        ]
+
+    @property
+    def implicit_hub_type(self) -> str:
+        return self.service.metadata_plugin(self.catalog).implicit_hub_type
+
+    @attrs.frozen(kw_only=True)
+    class ReplicaKeys:
+        """
+        Most replicas contain a list of the entity ID of their hubs, usually
+        file entities. However, some low-cardinality entities like HCA projects
+        have too many hubs to track within their replica document.
+
+        This class captures the information needed to locate all replicas
+        associated with a given a hub entity, either using the hub's entity ID
+        or the replica's entity ID.
+        """
+        hub_id: str
+        replica_id: str
+
+    def _replica_keys(self) -> Iterable[ReplicaKeys]:
+        hub_type = self.implicit_hub_type
+        request = self._create_request()
+        for hit in request.scan():
+            yield self.ReplicaKeys(hub_id=hit['entity_id'],
+                                   replica_id=one(one(hit['contents'][hub_type])['document_id']))
+
+    def _all_replicas(self) -> Iterable[JSON]:
+        emitted_replica_ids = set()
+        page_size = 100
+        for page in chunked(self._replica_keys(), page_size):
+            num_replicas = 0
+            num_new_replicas = 0
+            for replica in self._join_replicas(page):
+                num_replicas += 1
+                # A single replica may have many hubs. To prevent replicas from
+                # being emitted more than once, we need to keep track of
+                # replicas already emitted.
+                replica_id = replica.meta.id
+                if replica_id not in emitted_replica_ids:
+                    num_new_replicas += 1
+                    yield replica.contents.to_dict()
+                    # Note that this will be zero for replicas that use implicit
+                    # hubs, in which case there are actually many hubs
+                    explicit_hub_count = len(replica.hub_ids)
+                    # We don't have to track the IDs of replicas with only one
+                    # hub, since we know that there are no other hubs that could
+                    # cause their re-emission.
+                    if explicit_hub_count != 1:
+                        emitted_replica_ids.add(replica_id)
+            log.info('Found %d replicas (%d already emitted) from page of %d hubs',
+                     num_replicas, num_replicas - num_new_replicas, len(page))
+
+    def _join_replicas(self, keys: Iterable[ReplicaKeys]) -> Iterable[Hit]:
+        request = self.service.create_request(catalog=self.catalog,
+                                              entity_type='replica',
+                                              doc_type=DocumentType.replica)
+        hub_ids, replica_ids = set(), set()
+        for key in keys:
+            hub_ids.add(key.hub_id)
+            replica_ids.add(key.replica_id)
+        request = request.query(Q('bool', should=[
+            {'terms': {'hub_ids.keyword': list(hub_ids)}},
+            {'terms': {'entity_id.keyword': list(replica_ids)}}
+        ]))
+        return request.scan()
+
+    def create_file(self) -> tuple[str, Optional[str]]:
+        fd, path = mkstemp(suffix=f'.{self.file_name_extension()}')
+        os.close(fd)
+        with open(path, 'w') as f:
+            for replica in self._all_replicas():
+                json.dump(replica, f)
+                f.write('\n')
+        return path, None
