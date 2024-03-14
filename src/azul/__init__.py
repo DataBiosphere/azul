@@ -1489,6 +1489,14 @@ class Config:
 
     waf_rate_rule_retry_after = 30  # seconds
 
+    @property
+    def vpc_cidr(self) -> str:
+        return self.environ['azul_vpc_cidr']
+
+    @property
+    def vpn_subnet(self) -> str:
+        return self.environ['azul_vpn_subnet']
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 
