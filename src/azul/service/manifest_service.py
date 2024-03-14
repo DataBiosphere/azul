@@ -750,8 +750,17 @@ class ManifestService(ElasticsearchService):
                 try:
                     encoded_file_name = tagging[self.file_name_tag]
                 except KeyError:
-                    # Can't be absent under S3's strong consistency
-                    assert False, (object_key, self.file_name_tag)
+                    # While unpaged manifest generators apply the tag *at*
+                    # object creation, paged ones do so in a separate request.
+                    # Reaching this point for a paged manifest (no name tag)
+                    # means that the manifest has been created but not yet
+                    # tagged. In this case, we treat the manifest as if it
+                    # doesn't yet exist and return None. This assumes that the
+                    # caller will then raise a `CachedManifestNotFound`
+                    # exception causing a redirect response to the client and
+                    # when the client follows the redirect, the tagging should
+                    # be complete.
+                    return None
                 else:
                     encoded_file_name = encoded_file_name.encode('ascii')
                     return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
