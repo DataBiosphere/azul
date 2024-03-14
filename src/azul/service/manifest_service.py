@@ -746,8 +746,16 @@ class ManifestService(ElasticsearchService):
                 try:
                     encoded_file_name = tagging[self.file_name_tag]
                 except KeyError:
-                    # Can't be absent under S3's strong consistency
-                    assert False, (object_key, self.file_name_tag)
+                    # Paged manifest generators apply the tag after creating
+                    # the object. If we happen to be right in between the
+                    # creation and application of tags, we pretend that the
+                    # manifest object doesn't exist, assuming that the caller
+                    # will tell the client to check back later. Note that this
+                    # involves the attempted creation of step-function
+                    # execution, but because step-functions generate manifests
+                    # idempotentently, subsequent requests for the same
+                    # manifest are associated to a single SF execution.
+                    return None
                 else:
                     encoded_file_name = encoded_file_name.encode('ascii')
                     return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
