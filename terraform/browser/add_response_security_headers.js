@@ -11,6 +11,7 @@ function handler(event) {
     headers['strict-transport-security'] = {
         value: 'max-age=63072000; includeSubdomains; preload'
     };
+    headers['x-content-type-options'] = { value: 'nosniff' };
     headers['x-frame-options'] = { value: 'DENY' };
     headers['x-xss-protection'] = { value: '1; mode=block' };
 
