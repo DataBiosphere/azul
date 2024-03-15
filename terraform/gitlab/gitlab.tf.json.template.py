@@ -177,11 +177,9 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 # https://github.com/docker/libnetwork/blob/a79d3687931697244b8e03485bf7b2042f8ec6b6/ipamutils/utils.go#L10
 #
 
-cidr_offset = ['dev', 'prod', 'anvildev', 'anvilprod'].index(config.deployment_stage)
+vpc_cidr = config.vpc_cidr
 
-vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
-
-vpn_subnet = f'10.{42 + cidr_offset}.0.0/16'  # can't overlap VPC CIDR and subnet mask must be <= 22 bits
+vpn_subnet = config.vpn_subnet
 
 # The public key of that keypair
 #

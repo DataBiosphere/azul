@@ -853,5 +853,23 @@ def env() -> Mapping[str, Optional[str]]:
         #     'channel_id': 'your-channel-id'
         # })
         #
-        'azul_slack_integration': None
+        'azul_slack_integration': None,
+
+        # The CIDR of the Azul VPC. The VPC is shared by all deployments. Keep
+        # that in mind when deciding on the width of the netmask. Also note that
+        # the CIDR is split into four subnets. In other words, a /8 CIDR is
+        # probably not a suitable choice. In the platform-hca-dev account, for
+        # example, there are currently sixty network interfaces and most of them
+        # are in two of the four subnets. Dividing a /8 CIDR into four subnets
+        # would only allow for 64 IP addresses in each of the subnets, which is
+        # dangerously close to that current number of network interfaces.
+        #
+        'azul_vpc_cidr': None,
+
+        # The CIDR of the subnet used for the IP addresses on each end of a VPN
+        # tunnel. AWS uses NAT between the tunnel IPs and the two IPs of an ENI
+        # in the Azul VPC. This subnet can't overlap the VPC CIDR and the subnet
+        # mask must be less than 22 bits.
+        #
+        'azul_vpn_subnet': None
     }
