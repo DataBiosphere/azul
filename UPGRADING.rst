@@ -20,6 +20,36 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6048 Fix: VPC CIDR in ``prod`` is wrong
+========================================
+
+Operator
+~~~~~~~~
+
+Checkout the PR branch and run the following commands::
+
+    _select prod
+    CI_COMMIT_REF_NAME=prod make deploy
+    cd terraform
+    terraform plan -out destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan -destroy -target={aws_security_group.{elasticsearch,indexer,service},aws_elasticsearch_domain.index}
+    terraform apply destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan
+    cd ..
+
+Deploy the ``gitlab`` component::
+
+    _select prod.gitlab
+    CI_COMMIT_REF_NAME=prod make -C terraform/gitlab
+
+This will destroy and recreate many resources. It will most likely fail at some
+point, either because of a missing dependency declaration in our TF config or a
+bug in the Terraform AWS provider or in Terraform core. Manually delete any
+resource mentioned in any error messages and retry the command. Once the command
+completes successfully, ensure that the GitLab web application is functional.
+
+After successfully deploying the ``gitlab`` component, complete the PR
+checklist.
+
+
 #6045 Fix: VPC CIDR in ``dev`` is wrong
 =======================================
 
