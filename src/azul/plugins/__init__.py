@@ -55,6 +55,8 @@ from azul.indexer.document import (
     Aggregate,
     DocumentType,
     EntityType,
+    FieldPath,
+    FieldPathElement,
     IndexName,
 )
 from azul.indexer.transform import (
@@ -79,8 +81,6 @@ if TYPE_CHECKING:
     )
 
 FieldName = str
-FieldPathElement = str
-FieldPath = tuple[FieldPathElement, ...]
 
 FieldMapping = Mapping[FieldName, FieldPath]
 
@@ -108,8 +108,8 @@ def dotted(path_or_element: Union[FieldPathElement, FieldPath],
 
 class DocumentSlice(TypedDict, total=False):
     """
-    Also known in Elasticsearch land as a *source filter*, but those two words
-    have different meaning in Azul.
+    Also known in Elasticsearch land as a *source filter*, but that phrase has
+    a different meaning in Azul.
 
     https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
     """

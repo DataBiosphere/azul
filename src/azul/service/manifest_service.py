@@ -107,6 +107,7 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer.document import (
+    FieldPath,
     FieldTypes,
     null_str,
 )
@@ -120,12 +121,11 @@ from azul.json_freeze import (
 from azul.plugins import (
     ColumnMapping,
     DocumentSlice,
-    FieldGlobs,
-    FieldPath,
     ManifestConfig,
     ManifestFormat,
     MutableManifestConfig,
     RepositoryPlugin,
+    dotted,
 )
 from azul.service import (
     FileUrlFunc,
@@ -872,15 +872,15 @@ class ManifestGenerator(metaclass=ABCMeta):
         return self.service.metadata_plugin(self.catalog).manifest
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         """
-        A list of field paths or path patterns to be included when requesting
-        entity documents from the index.
+        A list of field paths to be included when requesting entity documents
+        from the index or None if all fields should be included.
 
         https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
         """
         return [
-            '.'.join(chain(field_path, (field_name,)))
+            (*field_path, field_name)
             for field_path, column_mapping in self.manifest_config.items()
             for field_name in column_mapping.keys()
         ]
@@ -1052,7 +1052,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         return request
 
     def _create_pipeline(self):
-        document_slice = DocumentSlice(includes=self.field_globs)
+        if self.included_fields is None:
+            document_slice = DocumentSlice()
+        else:
+            document_slice = DocumentSlice(includes=list(map(dotted, self.included_fields)))
         pipeline = self.service.create_chain(catalog=self.catalog,
                                              entity_type=self.entity_type,
                                              filters=self.filters,
@@ -1061,7 +1064,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         return pipeline
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
-        return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
+        return self.service.translate_fields(self.catalog,
+                                             hit.to_dict(),
+                                             forward=False,
+                                             allowed_paths=self.included_fields)
 
     column_joiner = config.manifest_column_joiner
     padded_joiner = ' ' + column_joiner + ' '
@@ -1098,10 +1104,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             return field_type.to_tsv(field_value)
 
         def validate(field_value: str) -> str:
-            assert (
-                self.catalog in {'dcp1', 'dcp1-it'}
-                or self.column_joiner not in field_value
-            )
+            assert self.column_joiner not in field_value
             return field_value
 
         for field_name, column_name in column_mapping.items():
@@ -1319,6 +1322,10 @@ class PagedManifestGenerator(ManifestGenerator):
         request = pipeline.prepare_request(request)
         return request
 
+    def _search_after(self, hit: Hit) -> tuple[str, str]:
+        a, b = hit.meta.sort
+        return a, b
+
 
 class FileBasedManifestGenerator(ManifestGenerator):
     """
@@ -1374,10 +1381,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         return [
-            *super().field_globs,
-            'contents.files.related_files'
+            *super().included_fields,
+            ('contents', 'files', 'related_files')
         ]
 
     @classmethod
@@ -1507,9 +1514,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 for related_file in file['related_files']:
                     _write(related_file, is_related_file=True)
             assert hit is not None
-            search_after = tuple(hit.meta.sort)
             return partition.next_page(file_name=None,
-                                       search_after=search_after)
+                                       search_after=self._search_after(hit))
         else:
             return partition.last_page()
 
@@ -1626,10 +1632,10 @@ class CompactManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         return [
-            *super().field_globs,
-            'contents.files.related_files'
+            *super().included_fields,
+            ('contents', 'files', 'related_files')
         ]
 
     def write_page_to(self,
@@ -1637,7 +1643,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                       output: IO[str]
                       ) -> ManifestPartition:
         column_mappings = self.manifest_config.values()
-        column_names = list(chain.from_iterable(map(dict.values, column_mappings)))
+        column_names = list(chain.from_iterable(d.values() for d in column_mappings))
         writer = csv.DictWriter(output, column_names, dialect='excel-tab')
 
         if partition.page_index == 0:
@@ -1686,10 +1692,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
                     row.update(related)
                     writer.writerow(row)
             assert hit is not None
-            search_after = tuple(hit.meta.sort)
             file_name = project_short_names.pop() if len(project_short_names) == 1 else None
             return partition.next_page(file_name=file_name,
-                                       search_after=search_after)
+                                       search_after=self._search_after(hit))
         else:
             return partition.last_page()
 
@@ -1722,12 +1727,12 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         """
         We want all of the metadata because then we can use the field_types()
         to generate the complete schema.
         """
-        return []
+        return None
 
     def _all_docs_sorted(self) -> Iterable[JSON]:
         request = self._create_request()
@@ -1774,10 +1779,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @cached_property
-    def field_globs(self) -> FieldGlobs:
+    def included_fields(self) -> list[FieldPath] | None:
         return [
-            *super().field_globs,
-            'contents.files.drs_uri'
+            *super().included_fields,
+            ('contents', 'files', 'drs_uri')
         ]
 
     @classmethod
@@ -1952,7 +1957,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         column_names = dict.fromkeys(chain(
             ['entity:participant_id'],
             bundle_column_mapping.values(),
-            *map(dict.values, other_column_mappings.values())))
+            *(d.values() for d in other_column_mappings.values())
+        ))
 
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):

@@ -138,6 +138,10 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_CATALOGS': None,
 
+        # The name of a catalog to perform reindex or other operational tasks on.
+        #
+        'azul_current_catalog': None,
+
         # The Account ID number for AWS
         #
         'AZUL_AWS_ACCOUNT_ID': None,
@@ -182,6 +186,10 @@ def env() -> Mapping[str, Optional[str]]:
 
         # Whether to create and populate an index for replica documents.
         'AZUL_ENABLE_REPLICAS': '1',
+
+        # Maximum number of conflicts to allow before giving when writing
+        # replica documents.
+        'AZUL_REPLICA_CONFLICT_LIMIT': '10',
 
         # The name of the current deployment. This variable controls the name of
         # all cloud resources and is the main vehicle for isolating cloud
@@ -265,10 +273,10 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.3-13'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.4-15'
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-11'
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-13'
             },
             'bigquery_emulator': {
                 'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
@@ -276,13 +284,13 @@ def env() -> Mapping[str, Optional[str]]:
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.3.0-37'
+                'ref': 'docker.io/clamav/clamav:1.3.0-41'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.9.0-ce.0'
+                'ref': 'docker.io/gitlab/gitlab-ce:16.9.1-ce.0'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.0'
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.1'
             },
             'dind': {
                 'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
@@ -417,10 +425,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Boolean value, 1 to share `dev` ES domain, 0 to create your own
         #
         'AZUL_SHARE_ES_DOMAIN': '0',
-
-        # Prefix to describe ES indices
-        #
-        'AZUL_INDEX_PREFIX': 'azul',
 
         # The number of nodes in the AWS-hosted Elasticsearch cluster
         #
@@ -849,5 +853,23 @@ def env() -> Mapping[str, Optional[str]]:
         #     'channel_id': 'your-channel-id'
         # })
         #
-        'azul_slack_integration': None
+        'azul_slack_integration': None,
+
+        # The CIDR of the Azul VPC. The VPC is shared by all deployments. Keep
+        # that in mind when deciding on the width of the netmask. Also note that
+        # the CIDR is split into four subnets. In other words, a /8 CIDR is
+        # probably not a suitable choice. In the platform-hca-dev account, for
+        # example, there are currently sixty network interfaces and most of them
+        # are in two of the four subnets. Dividing a /8 CIDR into four subnets
+        # would only allow for 64 IP addresses in each of the subnets, which is
+        # dangerously close to that current number of network interfaces.
+        #
+        'azul_vpc_cidr': None,
+
+        # The CIDR of the subnet used for the IP addresses on each end of a VPN
+        # tunnel. AWS uses NAT between the tunnel IPs and the two IPs of an ENI
+        # in the Azul VPC. This subnet can't overlap the VPC CIDR and the subnet
+        # mask must be less than 22 bits.
+        #
+        'azul_vpn_subnet': None
     }

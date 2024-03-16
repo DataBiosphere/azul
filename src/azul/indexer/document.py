@@ -35,6 +35,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     config,
+    reject,
     require,
 )
 from azul.enums import (
@@ -117,7 +118,7 @@ class IndexName:
     types to not match the version regex below.
     """
     #: Every index name starts with this prefix
-    prefix: str = 'azul'
+    prefix: ClassVar[str] = 'azul'
 
     #: The version of the index naming scheme
     version: int
@@ -125,125 +126,124 @@ class IndexName:
     #: The name of the deployment the index belongs to
     deployment: str
 
-    #: The catalog the index belongs to or None for v1 indices.
-    catalog: Optional[CatalogName] = attr.ib(default=None)
+    #: The catalog the index belongs to
+    catalog: CatalogName
 
-    #: The type of entities this index contains metadata about
-    entity_type: str
+    #: An additional qualifier to distinguish between indices of the same
+    #: `doc_type`. For indices containing contribution or aggregate documents,
+    #: for example, this is the name of the type of entity the documents contain
+    #: metadata about.
+    qualifier: str
 
     #: Whether the documents in the index are contributions, aggregates, or
     #: replicas
-    doc_type: DocumentType = DocumentType.contribution
+    doc_type: DocumentType
 
     index_name_version_re: ClassVar[re.Pattern] = re.compile(r'v(\d+)')
 
     def __attrs_post_init__(self):
         """
-        >>> IndexName(prefix='azul',
-        ...           version=1,
-        ...           deployment='dev',
-        ...           entity_type='foo_bar') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName(prefix='azul',
-        ...           version=1,
-        ...           deployment='dev',
-        ...           catalog=None,
-        ...           entity_type='foo_bar')  # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName(prefix='azul',
-        ...           version=2,
+        >>> IndexName(version=2,
         ...           deployment='dev',
         ...           catalog='main',
-        ...           entity_type='foo_bar') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        ...           qualifier='foo_bar',
+        ...           doc_type=DocumentType.contribution)
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.contribution>)
 
-        >>> IndexName(prefix='azul', version=1, deployment='dev', catalog='hca', entity_type='foo')
+        >>> IndexName(version=1,
+        ...           deployment='',
+        ...           catalog='',
+        ...           qualifier='',
+        ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Version 1 prohibits a catalog name ('hca').
+        azul.RequirementError: ('Version must be 2', 1)
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', entity_type='foo')
+        >>> IndexName(version=2,
+        ...           deployment='dev',
+        ...           catalog=None,  # noqa
+        ...           qualifier='foo',
+        ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Version 2 requires a catalog name (None).
+        azul.RequirementError: ('Catalog name is required', None)
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog=None, entity_type='foo')
+        >>> IndexName(version=2,
+        ...           deployment='_',
+        ...           catalog='foo',
+        ...           qualifier='bar',
+        ...           doc_type=DocumentType.contribution)
+        ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Version 2 requires a catalog name (None).
+        azul.RequirementError: Deployment name '_' is too short, too long
+        or contains invalid characters.
 
-        >>> IndexName(prefix='_', version=2, deployment='dev', catalog='foo', entity_type='bar')
-        Traceback (most recent call last):
-        ...
-        azul.RequirementError: Prefix '_' is to short, too long or contains invalid characters.
-
-        >>> IndexName(prefix='azul', version=2, deployment='_', catalog='foo', entity_type='bar')
-        Traceback (most recent call last):
-        ...
-        azul.RequirementError: Deployment name '_' is to short, too long or contains invalid characters.
-
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='_', entity_type='bar')
+        >>> IndexName(version=2,
+        ...           deployment='dev',
+        ...           catalog='_',
+        ...           qualifier='bar',
+        ...           doc_type=DocumentType.contribution)
         Traceback (most recent call last):
         ...
         azul.RequirementError: ('Catalog name is invalid', '_')
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='foo', entity_type='_')
+        >>> IndexName(version=2,
+        ...           deployment='dev',
+        ...           catalog='foo',
+        ...           qualifier='_',
+        ...           doc_type=DocumentType.contribution)
+        ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: entity_type is either too short, too long or contains invalid characters: '_'
+        azul.RequirementError: qualifier is either too short, too long
+        or contains invalid characters: '_'
+
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='hca',
+        ...               qualifier='foo',
+        ...               doc_type=DocumentType.replica))
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Unexpected replica qualifier', 'foo')
         """
         config.validate_prefix(self.prefix)
-        require(self.version > 0, f'Version must be at least 1, not {self.version}.')
+        require(self.version == 2, 'Version must be 2', self.version)
         config.validate_deployment_name(self.deployment)
-        if self.version == 1:
-            require(self.catalog is None,
-                    f'Version {self.version} prohibits a catalog name ({self.catalog!r}).')
-        else:
-            require(self.catalog is not None,
-                    f'Version {self.version} requires a catalog name ({self.catalog!r}).')
-            config.Catalog.validate_name(self.catalog)
-        config.validate_entity_type(self.entity_type)
+        require(self.catalog is not None, 'Catalog name is required', self.catalog)
+        config.Catalog.validate_name(self.catalog)
+        config.validate_qualifier(self.qualifier)
         if self.doc_type is DocumentType.replica:
-            assert self.entity_type == 'replica', self.entity_type
+            # To shorten the string representation of replica index names, we
+            # expect the qualifier and document type to be the same string.
+            require(self.qualifier == self.doc_type.value,
+                    'Unexpected replica qualifier', self.qualifier)
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
 
     def validate(self):
         require(self.deployment == config.deployment_stage,
-                'Index name does not use current deployment', self, config.deployment_stage)
-        require(self.prefix == config.index_prefix,
-                'Index name has invalid prefix', self, config.index_prefix)
+                'Index name does not use current deployment',
+                self, config.deployment_stage)
 
     @classmethod
     def create(cls,
                *,
                catalog: CatalogName,
-               entity_type: str,
-               doc_type: 'DocumentType'
+               qualifier: str,
+               doc_type: DocumentType
                ) -> Self:
-        return cls(prefix=config.index_prefix,
-                   version=2,
+        return cls(version=2,
                    deployment=config.deployment_stage,
                    catalog=catalog,
-                   entity_type=entity_type,
+                   qualifier=qualifier,
                    doc_type=doc_type)
 
     @classmethod
@@ -251,222 +251,186 @@ class IndexName:
         """
         Parse the name of an index from any deployment and any version of Azul.
 
-        >>> IndexName.parse('azul_foo_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName.parse('azul_foo_aggregate_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo',
-                  doc_type=<DocumentType.aggregate>)
-
-        >>> IndexName.parse('azul_foo_bar_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.contribution>)
-
-        >>> IndexName.parse('azul_foo_bar_aggregate_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo_bar',
-                  doc_type=<DocumentType.aggregate>)
-
-        >>> IndexName.parse('good_foo_dev') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='good',
-                  version=1,
-                  deployment='dev',
-                  catalog=None,
-                  entity_type='foo',
-                  doc_type=<DocumentType.contribution>)
-
         >>> IndexName.parse('azul_dev')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ['azul', 'dev']
+        azul.RequirementError: ('Too few index name elements', ['azul', 'dev'])
 
-        >>> IndexName.parse('azul_aggregate_dev') # doctest: +ELLIPSIS
+        >>> IndexName.parse('azul_foo_dev')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: entity_type ... ''
+        azul.RequirementError: Version is required
 
-        >>> IndexName.parse('azul_v2_dev_main_foo') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azl_v2_dev_main_foo')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Unexpected prefix', 'azul', 'azl')
+
+        >>> IndexName.parse('azul_v2_dev_main_foo')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo',
+                  qualifier='foo',
                   doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo',
+                  qualifier='foo',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_bar') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.contribution>)
 
-        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='staging',
                   catalog='hca',
-                  entity_type='foo_bar',
+                  qualifier='foo_bar',
                   doc_type=<DocumentType.aggregate>)
 
-        >>> IndexName.parse('azul_v2_dev_main_replica') # doctest: +NORMALIZE_WHITESPACE
-        IndexName(prefix='azul',
-                  version=2,
+        >>> IndexName.parse('azul_v2_dev_main_replica')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        IndexName(version=2,
                   deployment='dev',
                   catalog='main',
-                  entity_type='replica',
+                  qualifier='replica',
                   doc_type=<DocumentType.replica>)
 
-        >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate') # doctest: +ELLIPSIS
+        >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate')
+        ... # doctest: +ELLIPSIS
         Traceback (most recent call last):
             ...
-        azul.RequirementError: entity_type ... 'foo_bar_'
+        azul.RequirementError: qualifier ... 'foo_bar_'
 
         >>> IndexName.parse('azul_v3_bla')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: 3
-
+        azul.RequirementError: ('Version must be 2', 3)
         """
         index_name = index_name.split('_')
-        require(len(index_name) > 2, index_name)
+        require(len(index_name) > 2, 'Too few index name elements', index_name)
         prefix, *index_name = index_name
+        require(prefix == cls.prefix, 'Unexpected prefix', cls.prefix, prefix)
         version = cls.index_name_version_re.fullmatch(index_name[0])
-        if version:
-            _, *index_name = index_name
-            version = int(version.group(1))
-            require(version == 2, version)
-            deployment, catalog, *index_name = index_name
-        else:
-            version = 1
-            catalog = None
-            *index_name, deployment = index_name
-        if index_name[-1] == 'aggregate':
+        reject(version is None, 'Version is required')
+        _, *index_name = index_name
+        version = int(version.group(1))
+        require(version == 2, 'Version must be 2', version)
+        deployment, catalog, *index_name = index_name
+        if index_name[-1] == DocumentType.aggregate.value:
             *index_name, _ = index_name
             doc_type = DocumentType.aggregate
-        elif index_name == ['replica']:
+        elif index_name == [DocumentType.replica.value]:
             doc_type = DocumentType.replica
         else:
             doc_type = DocumentType.contribution
-        entity_type = '_'.join(index_name)
-        config.validate_entity_type(entity_type)
-        self = cls(prefix=prefix,
-                   version=version,
+        qualifier = '_'.join(index_name)
+        config.validate_qualifier(qualifier)
+        self = cls(version=version,
                    deployment=deployment,
                    catalog=catalog,
-                   entity_type=entity_type,
+                   qualifier=qualifier,
                    doc_type=doc_type)
         return self
 
     def __str__(self) -> str:
         """
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo'))
-        'azul_foo_dev'
-
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo', doc_type=DocumentType.aggregate))
-        'azul_foo_aggregate_dev'
-
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar'))
-        'azul_foo_bar_dev'
-
-        >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar', doc_type=DocumentType.aggregate))
-        'azul_foo_bar_aggregate_dev'
-
-        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo'))
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='main',
+        ...               qualifier='foo',
+        ...               doc_type=DocumentType.contribution))
         'azul_v2_dev_main_foo'
 
         >>> str(IndexName(version=2,
         ...               deployment='dev',
         ...               catalog='main',
-        ...               entity_type='foo',
+        ...               qualifier='foo',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_aggregate'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo_bar'))
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='main',
+        ...               qualifier='foo_bar',
+        ...               doc_type=DocumentType.contribution))
         'azul_v2_dev_main_foo_bar'
 
         >>> str(IndexName(version=2,
         ...               deployment='dev',
         ...               catalog='main',
-        ...               entity_type='foo_bar',
+        ...               qualifier='foo_bar',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_dev_main_foo_bar_aggregate'
 
         >>> str(IndexName(version=2,
         ...               deployment='staging',
         ...               catalog='hca',
-        ...               entity_type='foo_bar',
+        ...               qualifier='foo_bar',
         ...               doc_type=DocumentType.aggregate))
         'azul_v2_staging_hca_foo_bar_aggregate'
+
+        >>> str(IndexName(version=2,
+        ...               deployment='dev',
+        ...               catalog='hca',
+        ...               qualifier='replica',
+        ...               doc_type=DocumentType.replica))
+        'azul_v2_dev_hca_replica'
         """
-        aggregate = ['aggregate'] if self.doc_type is DocumentType.aggregate else []
-        if self.version == 1:
-            require(self.catalog is None)
-            return '_'.join([
-                self.prefix,
-                self.entity_type,
-                *aggregate,
-                self.deployment
-            ])
-        elif self.version == 2:
-            require(self.catalog is not None, self.catalog)
-            return '_'.join([
-                self.prefix,
-                f'v{self.version}',
-                self.deployment,
-                self.catalog,
-                self.entity_type,
-                *aggregate,
-            ])
+        if self.doc_type is DocumentType.aggregate:
+            doc_type = ['aggregate']
+        elif self.doc_type is DocumentType.contribution:
+            doc_type = []
+        elif self.doc_type is DocumentType.replica:
+            assert self.qualifier == self.doc_type.value
+            doc_type = []
         else:
-            assert False, self.version
+            assert False, self.doc_type
+        assert self.version == 2, self
+        require(self.catalog is not None, self.catalog)
+        return '_'.join([
+            self.prefix,
+            f'v{self.version}',
+            self.deployment,
+            self.catalog,
+            self.qualifier,
+            *doc_type,
+        ])
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     """
-    Document coordinates of contributions. Contributions produced by
-    transformers don't specify a catalog, the catalog is supplied when the
-    contributions are written to the index and it is guaranteed to be the same
-    for all contributions produced in response to one notification. When
-    contributions are read back during aggregation, they specify a catalog, the
-    catalog they were read from. Because of that duality this class has to
-    be generic in E, the type of EntityReference.
+    The coordinates of a document ultimately define two strings: 1) the name of
+    the Elasticsearch index that contains the document and 2) the unique ID by
+    which it can be retrieved from that index. Both of these strings are
+    composed of smaller elements information, e.g., a reference to the entity
+    the document contains metadata about and the type of the document. Concrete
+    subclasses typically add more such elements to be encoded in their index
+    names and document IDs.
     """
+
+    doc_type: ClassVar[DocumentType]
+
     entity: E
-    doc_type: DocumentType
 
     @property
     def index_name(self) -> str:
@@ -477,8 +441,12 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
         """
         assert isinstance(self.entity, CataloguedEntityReference)
         return str(IndexName.create(catalog=self.entity.catalog,
-                                    entity_type=self.entity.entity_type,
+                                    qualifier=self.index_qualifier,
                                     doc_type=self.doc_type))
+
+    @property
+    def index_qualifier(self):
+        return self.entity.entity_type
 
     @property
     @abstractmethod
@@ -530,8 +498,24 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
-    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.contribution)
+    """
+    Coordinates of contribution documents. Contributions originate from a
+    subgraph ("bundle") and represent either the addition of metadata to an
+    entity or the removal of metadata from an entity.
+
+    Contributions produced by
+    transformers don't specify a catalog, the catalog is supplied when the
+    contributions are written to the index and it is guaranteed to be the same
+    for all contributions produced in response to one notification. When
+    contributions are read back during aggregation, they specify a catalog, the
+    catalog they were read from. Because of that duality this class has to be
+    generic in E, the type of EntityReference.
+    """
+
+    doc_type: ClassVar[DocumentType] = DocumentType.contribution
+
     bundle: BundleFQID
+
     deleted: bool
 
     def __attrs_post_init__(self):
@@ -565,7 +549,7 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
                     index_name: IndexName,
                     document_id: str
                     ) -> 'ContributionCoordinates[CataloguedEntityReference]':
-        entity_type = index_name.entity_type
+        entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.contribution
         entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
         if deleted == 'deleted':
@@ -592,17 +576,15 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
     """
-    Document coordinates for aggregates. Aggregate coordinates always carry a
+    Coordinates of aggregate documents. Aggregate coordinates always carry a
     catalog.
     """
-    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.aggregate)
+
+    doc_type: ClassVar[DocumentType] = DocumentType.aggregate
 
     @classmethod
-    def _from_index(cls,
-                    index_name: IndexName,
-                    document_id: str
-                    ) -> Self:
-        entity_type = index_name.entity_type
+    def _from_index(cls, index_name: IndexName, document_id: str) -> Self:
+        entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.aggregate
         return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
                                                     entity_type=entity_type,
@@ -622,19 +604,30 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
 class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
     """
-    Document coordinates for replicas. Replicas are content-addressed, so
-    these these coordinates depend not only on the entity reference, but on the
-    contents of the underlying metadata document.
+    Coordinates of replica documents. Replicas are content-addressed, so these
+    coordinates depend not only on the entity reference, but on the contents of
+    the underlying metadata document.
     """
 
-    doc_type: DocumentType = attr.ib(init=False, default=DocumentType.replica)
+    doc_type: ClassVar[DocumentType] = DocumentType.replica
 
     #: A hash of the replica's JSON document
     content_hash: str
 
+    # Overrides the property in the base class. We need this to be statically
+    # accessible through the class.
+    index_qualifier: ClassVar[str] = 'replica'
+
+    # The current v2 index name encoding depends on this
+    assert index_qualifier == doc_type.value
+
     @property
     def document_id(self) -> str:
-        return f'{self.entity.entity_id}_{self.content_hash}'
+        return '_'.join((
+            self.entity.entity_type,
+            self.entity.entity_id,
+            self.content_hash
+        ))
 
     @classmethod
     def _from_index(cls,
@@ -642,15 +635,20 @@ class ReplicaCoordinates(DocumentCoordinates[E], Generic[E]):
                     document_id: str
                     ) -> 'ReplicaCoordinates[CataloguedEntityReference]':
         assert index_name.doc_type is DocumentType.replica, index_name
-        entity_id, content_hash = document_id.split('_')
+        assert index_name.qualifier == cls.index_qualifier, index_name
+        # entity_type, the first component, may contain underscores
+        entity_type, entity_id, content_hash = document_id.rsplit('_', 2)
         return cls(content_hash=content_hash,
                    entity=CataloguedEntityReference(catalog=index_name.catalog,
-                                                    entity_type='replica',
+                                                    entity_type=entity_type,
                                                     entity_id=entity_id))
 
     def __str__(self) -> str:
-        return f'replica of {self.entity.entity_id}'
+        return f'replica of {self.entity}'
 
+
+FieldPathElement = str
+FieldPath = tuple[FieldPathElement, ...]
 
 # The native type of the field in documents as they are being created by a
 # transformer or processed by an aggregator.
@@ -1102,6 +1100,10 @@ class OpType(Enum):
     #: Remove the document from the index or fail if it does not exist
     delete = auto()
 
+    #: Modify a document in the index via a scripted update or create it if it
+    #: does not exist
+    update = auto()
+
 
 C = TypeVar('C', bound=DocumentCoordinates)
 
@@ -1145,7 +1147,8 @@ class Document(Generic[C]):
                          field_types: Union[FieldType, FieldTypes],
                          *,
                          forward: bool,
-                         path: tuple[str, ...] = ()
+                         allowed_paths: list[FieldPath] | None = None,
+                         path: FieldPath = ()
                          ) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into
@@ -1160,6 +1163,10 @@ class Document(Generic[C]):
 
         :param forward: If True, substitute None values with their respective
                         Elasticsearch placeholder.
+
+        :param allowed_paths: A list of field paths expected to be present in
+                              the resulting document. If an unexpected field is
+                              found, an AssertionError will be raised.
 
         :param path: Used internally during document traversal to capture the
                      current path into the document as a tuple of keys.
@@ -1182,14 +1189,25 @@ class Document(Generic[C]):
                             raise KeyError(f'Key {key!r} not defined in field_types')
                         except TypeError:
                             raise TypeError(f'Key {key!r} not defined in field_types')
-                        new_doc[key] = cls.translate_fields(val, field_type, forward=forward, path=(*path, key))
+                        new_doc[key] = cls.translate_fields(val,
+                                                            field_type,
+                                                            forward=forward,
+                                                            allowed_paths=allowed_paths,
+                                                            path=(*path, key))
                         if forward and isinstance(field_type, FieldType) and field_type.shadowed:
                             # Add a non-translated shadow copy of this field's
                             # numeric value for sum aggregations
                             new_doc[key + '_'] = val
                 return new_doc
             elif isinstance(doc, list):
-                return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
+                return [
+                    cls.translate_fields(val,
+                                         field_types,
+                                         forward=forward,
+                                         allowed_paths=allowed_paths,
+                                         path=path)
+                    for val in doc
+                ]
             else:
                 assert False, (path, type(doc))
         else:
@@ -1204,6 +1222,10 @@ class Document(Generic[C]):
                 field_type = field_types
             else:
                 assert False, (path, type(field_types))
+            if allowed_paths is not None:
+                # An allowed path may be a prefix instead of a complete path,
+                # as is the case for `contents.files.related_files`
+                assert path in allowed_paths or path[:-1] in allowed_paths, (path, allowed_paths)
             if forward:
                 if isinstance(doc, list):
                     if not doc and field_type.allow_sorting_by_empty_lists:
@@ -1308,11 +1330,7 @@ class Document(Generic[C]):
                 if op_type is OpType.delete else
                 {
                     '_source' if bulk else 'body':
-                        self.translate_fields(doc=self.to_json(),
-                                              field_types=field_types[coordinates.entity.catalog],
-                                              forward=True)
-                        if self.needs_translation else
-                        self.to_json()
+                        self._body(field_types[coordinates.entity.catalog])
                 }
             ),
             '_id' if bulk else 'id': self.coordinates.document_id
@@ -1342,6 +1360,14 @@ class Document(Generic[C]):
     @property
     def op_type(self) -> OpType:
         raise NotImplementedError
+
+    def _body(self, field_types: FieldTypes) -> JSON:
+        body = self.to_json()
+        if self.needs_translation:
+            body = self.translate_fields(doc=body,
+                                         field_types=field_types,
+                                         forward=True)
+        return body
 
 
 class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
@@ -1519,33 +1545,42 @@ class Replica(Document[ReplicaCoordinates[E]]):
 
     hub_ids: list[EntityID]
 
-    #: The version_type attribute will change to VersionType.none if writing
-    #: to Elasticsearch fails with 409
-    version_type: VersionType = VersionType.create_only
-
     needs_translation: ClassVar[bool] = False
 
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, ReplicaCoordinates)
         assert self.coordinates.doc_type is DocumentType.replica
-        assert self.entity.entity_type == 'replica', self.entity
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
-        return {
-            **super().field_types(pass_thru_json),
-            'replica_type': pass_thru_str,
-            'hub_ids': pass_thru_str
-        }
+        # Replicas do not undergo translation
+        raise NotImplementedError
 
     def to_json(self) -> JSON:
         return dict(super().to_json(),
                     replica_type=self.replica_type,
-                    hub_ids=self.hub_ids)
+                    # Ensure that index contents is deterministic for unit tests
+                    hub_ids=sorted(set(self.hub_ids)))
 
     @property
     def op_type(self) -> OpType:
-        return OpType.create
+        assert self.version_type is VersionType.none, self.version_type
+        return OpType.update
+
+    def _body(self, field_types: FieldTypes) -> JSON:
+        return {
+            'script': {
+                'source': '''
+                        Stream stream = Stream.concat(ctx._source.hub_ids.stream(),
+                                                      params.hub_ids.stream());
+                        ctx._source.hub_ids = stream.sorted().distinct().collect(Collectors.toList());
+                    ''',
+                'params': {
+                    'hub_ids': self.hub_ids
+                }
+            },
+            'upsert': super()._body(field_types)
+        }
 
 
 CataloguedContribution = Contribution[CataloguedEntityReference]

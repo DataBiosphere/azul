@@ -152,7 +152,7 @@ class TestIndexResponse(IndexResponseTestCase):
         }
         # Tests are assumed to only ever run with the azul dev index
         results = self.es_client.search(index=str(IndexName.create(catalog=self.catalog,
-                                                                   entity_type=entity_type,
+                                                                   qualifier=entity_type,
                                                                    doc_type=DocumentType.aggregate)),
                                         body=body)
         return self._index_service.translate_fields(catalog=self.catalog,

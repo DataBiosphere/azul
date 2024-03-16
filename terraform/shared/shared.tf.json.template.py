@@ -524,6 +524,25 @@ tf_config = {
                     'value': 1,
                     'default_value': 0,
                 }
+            },
+            **{
+                name: {
+                    'name': config.qualified_resource_name(name, suffix='.filter'),
+                    'pattern': pattern,
+                    'log_group_name': '/aws/cwagent/azul-gitlab',
+                    'metric_transformation': {
+                        'name': config.qualified_resource_name(name),
+                        'namespace': 'LogMetrics',
+                        'value': 1,
+                        'default_value': 0,
+                    }
+                }
+                for name, pattern in [
+                    ('clamscan', '"clamscan succeeded"'),
+                    ('freshclam', '"freshclam succeeded"'),
+                    # Using '?' to create an "a OR b" filter pattern
+                    ('clam_fail', '?"clamscan failed" ?"freshclam failed"'),
+                ]
             }
         },
         'aws_cloudwatch_metric_alarm': {
@@ -546,8 +565,26 @@ tf_config = {
                 for a in cis_alarms
             },
             **{
-                'trail_logs': {
-                    'alarm_name': config.qualified_resource_name('trail_logs', suffix='.alarm'),
+                'clam_fail': {
+                    'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
+                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                    'evaluation_periods': 1,
+                    'metric_name': 'clam_fail',
+                    'namespace': 'LogMetrics',
+                    'statistic': 'Sum',
+                    'treat_missing_data': 'notBreaching',
+                    'threshold': 1,
+                    # With ClamScan running twice a day we've got a 12h period,
+                    # plus 8h upper bound on running time, minus 2h lower bound
+                    # on running time, giving us an 18h evaluation period.
+                    'period': 18 * 60 * 60,
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+                }
+            },
+            **{
+                resource_name: {
+                    'alarm_name': config.qualified_resource_name(resource_name, suffix='.alarm'),
                     'comparison_operator': 'LessThanThreshold',
                     'threshold': 1,
                     'datapoints_to_alarm': 1,
@@ -570,14 +607,18 @@ tf_config = {
                         {
                             'id': 'log_count_raw',
                             'metric': {
-                                'metric_name': config.qualified_resource_name('trail_logs'),
+                                'metric_name': config.qualified_resource_name(resource_name),
                                 'namespace': 'LogMetrics',
-                                'period': 10 * 60,
+                                'period': period,
                                 'stat': 'Sum',
                             }
                         }
                     ]
-                }
+                } for resource_name, period in [
+                    ('trail_logs', 10 * 60),
+                    ('clamscan', 18 * 60 * 60),
+                    ('freshclam', 18 * 60 * 60)
+                ]
             }
         },
         'aws_iam_role': {
@@ -887,14 +928,17 @@ tf_config = {
         # FIXME: Enable Macie in AWS
         #        https://github.com/DataBiosphere/azul/issues/5890
         'aws_securityhub_standards_control': {
-            'best_practices': {
-                'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
-                                         '/aws-foundational-security-best-practices/v/1.0.0/Macie.1',
-                'control_status': 'DISABLED',
-                'disabled_reason': 'Generates alarm noise; tracked independently as follow-up work',
-                'depends_on': [
-                    'aws_securityhub_standards_subscription.best_practices'
-                ]
+            **{
+                f'best_practices_macie_{num}': {
+                    'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
+                                             f'/aws-foundational-security-best-practices/v/1.0.0/Macie.{num}',
+                    'control_status': 'DISABLED',
+                    'disabled_reason': 'Generates alarm noise; tracked independently as follow-up work',
+                    'depends_on': [
+                        'aws_securityhub_standards_subscription.best_practices'
+                    ]
+                }
+                for num in [1, 2]
             }
         },
         'aws_iam_account_password_policy': {

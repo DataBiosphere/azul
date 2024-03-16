@@ -3,7 +3,6 @@ name: A New Issue
 about: 'Template for new issues'
 title: ''
 labels: orange 
-assignees: ''
 ---
 
 <!--

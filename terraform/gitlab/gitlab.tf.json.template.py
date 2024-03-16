@@ -177,11 +177,9 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 # https://github.com/docker/libnetwork/blob/a79d3687931697244b8e03485bf7b2042f8ec6b6/ipamutils/utils.go#L10
 #
 
-cidr_offset = ['dev', 'prod', 'anvildev', 'anvilprod'].index(config.deployment_stage)
+vpc_cidr = config.vpc_cidr
 
-vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
-
-vpn_subnet = f'10.{42 + cidr_offset}.0.0/16'  # can't overlap VPC CIDR and subnet mask must be <= 22 bits
+vpn_subnet = config.vpn_subnet
 
 # The public key of that keypair
 #
@@ -241,10 +239,10 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.28 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.29 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
-    'us-east-1': 'ami-07cece3df6c51512b'
+    'us-east-1': 'ami-02adfaf34663c8edb'
 }
 
 gitlab_mount = '/mnt/gitlab'
@@ -937,6 +935,22 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'resources': [
                             f'arn:aws:kms:{aws.region_name}:{aws.account}:key/*',
                             f'arn:aws:kms:{aws.region_name}:{aws.account}:alias/*'
+                        ]
+                    },
+
+                    # The SSM agent requires explicit permission to access
+                    # certain AWS-managed buckets if S3 traffic is routed
+                    # through a VPC gateway endpoint. See:
+                    # https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent-minimum-s3-permissions.html
+                    {
+                        'actions': [
+                            's3:GetObject',
+                            's3:HeadBucket',
+                            's3:HeadObject'
+                        ],
+                        'resources': [
+                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}/*',
+                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}/*'
                         ]
                     }
                 ]
@@ -1813,7 +1827,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Unit]',
                                 'Description=Scheduled ClamAV malware scan of entire file system',
                                 '[Timer]',
-                                'OnCalendar=Sun *-*-* 8:0:0',
+                                # Run a clamscan twice daily at 1am and 1pm PST
+                                'OnCalendar=*-*-* 9,21:0:0',
                                 '[Install]',
                                 'WantedBy=timers.target'
                             )
@@ -1834,7 +1849,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 # to journald, it only does so for `docker run`
                                 # commands. Omitting these directives here, the
                                 # service uses systemd's default (journal).
-                                'Type=simple',
+                                'Type=oneshot',  # oneshot to allow multiple ExecStart
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop prune-images',
                                 'ExecStartPre=-/usr/bin/docker rm prune-images',
@@ -1845,6 +1860,25 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'gitlab-dind',  # … inside the gitlab-dind container …
                                     'docker',  # … the docker …
                                     'image',  # … image command …
+                                    'prune',  # … to delete, …
+                                    '--force',  # … without prompting for confirmation, …
+                                    '--all',  # … all images …
+                                    f'--filter "until={90 * 24}h"',  # … except those from more recent builds.
+                                    #
+                                    # If we deleted more recent images, we
+                                    # would risk failing the requirements
+                                    # check on sandbox builds since that
+                                    # check depends on image caching. The
+                                    # deadline below assumes that the most
+                                    # recent pipeline was run less than a
+                                    # month ago.
+                                ),
+                                jw(
+                                    'ExecStart=/usr/bin/docker',
+                                    'exec',  # Execute (as in `docker exec`) …
+                                    'gitlab-dind',  # … inside the gitlab-dind container …
+                                    'docker',  # … the docker …
+                                    'buildx',  # … buildx command …
                                     'prune',  # … to delete, …
                                     '--force',  # … without prompting for confirmation, …
                                     '--all',  # … all images …

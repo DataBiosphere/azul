@@ -105,7 +105,9 @@ class TestAppLogging(AzulUnitTestCase):
                         self.assertEqual(
                             azul_log.output[2],
                             'DEBUG:azul.chalice:Returning 500 response with headers {"Content-Type": "text/plain", '
-                            '"Strict-Transport-Security": "max-age=31536000; includeSubDomains"}. '
+                            '"Strict-Transport-Security": "max-age=31536000; includeSubDomains", '
+                            '"X-Content-Type-Options": "nosniff", '
+                            '"X-Frame-Options": "DENY"}. '
                             'See next line for the first 1024 characters of the body.\n' + response)
                     else:
                         # Otherwise, a generic error response is returned …

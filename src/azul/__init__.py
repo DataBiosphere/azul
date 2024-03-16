@@ -686,13 +686,13 @@ class Config:
     @classmethod
     def validate_prefix(cls, prefix):
         require(cls._is_valid_qualifier(prefix),
-                f'Prefix {prefix!r} is to short, '
+                f'Prefix {prefix!r} is too short, '
                 f'too long or contains invalid characters.')
 
     @classmethod
     def validate_deployment_name(cls, deployment_name):
         require(cls._is_valid_qualifier(deployment_name),
-                f'Deployment name {deployment_name!r} is to short, '
+                f'Deployment name {deployment_name!r} is too short, '
                 f'too long or contains invalid characters.')
 
     @classmethod
@@ -762,12 +762,12 @@ class Config:
         return int(self.environ['AZUL_ES_VOLUME_SIZE'])
 
     @property
-    def index_prefix(self) -> str:
-        return self._term_from_env('AZUL_INDEX_PREFIX')
-
-    @property
     def enable_replicas(self) -> bool:
         return self._boolean(self.environ['AZUL_ENABLE_REPLICAS'])
+
+    @property
+    def replica_conflict_limit(self) -> int:
+        return int(self.environ['AZUL_REPLICA_CONFLICT_LIMIT'])
 
     # Because this property is relatively expensive to produce and frequently
     # used we are applying aggressive caching here, knowing very well that
@@ -913,6 +913,10 @@ class Config:
     @property
     def default_catalog(self) -> CatalogName:
         return first(self.catalogs)
+
+    @property
+    def current_catalog(self) -> Optional[str]:
+        return self.environ.get('azul_current_catalog')
 
     def it_catalog_for(self, catalog: CatalogName) -> Optional[CatalogName]:
         it_catalog = self.catalogs[catalog].it_catalog
@@ -1203,8 +1207,8 @@ class Config:
         return cls.term_re.fullmatch(term) is not None
 
     @classmethod
-    def validate_entity_type(cls, entity_type: str) -> None:
-        cls._validate_term(entity_type, name='entity_type')
+    def validate_qualifier(cls, qualifier: str) -> None:
+        cls._validate_term(qualifier, name='qualifier')
 
     def secrets_manager_secret_name(self, *args):
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
@@ -1475,6 +1479,10 @@ class Config:
         'linux/amd64'
     ]
 
+    @property
+    def docker_image_manifests_path(self) -> Path:
+        return Path(config.project_root) / 'image_manifests.json'
+
     waf_rate_rule_name = 'RateRule'
 
     waf_rate_rule_period = 300  # seconds; this value is fixed by AWS
@@ -1482,8 +1490,12 @@ class Config:
     waf_rate_rule_retry_after = 30  # seconds
 
     @property
-    def docker_image_manifests_path(self) -> Path:
-        return Path(config.project_root) / 'image_manifests.json'
+    def vpc_cidr(self) -> str:
+        return self.environ['azul_vpc_cidr']
+
+    @property
+    def vpn_subnet(self) -> str:
+        return self.environ['azul_vpn_subnet']
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm

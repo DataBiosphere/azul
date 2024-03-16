@@ -109,6 +109,10 @@ class DocumentService:
                          catalog: CatalogName,
                          doc: AnyJSON,
                          *,
-                         forward: bool
+                         forward: bool,
+                         allowed_paths: list[FieldPath] | None = None
                          ) -> AnyMutableJSON:
-        return Document.translate_fields(doc, self.field_types(catalog), forward=forward)
+        return Document.translate_fields(doc,
+                                         self.field_types(catalog),
+                                         forward=forward,
+                                         allowed_paths=allowed_paths)

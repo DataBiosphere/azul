@@ -20,6 +20,146 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6048 Fix: VPC CIDR in ``prod`` is wrong
+========================================
+
+Operator
+~~~~~~~~
+
+Checkout the PR branch and run the following commands::
+
+    _select prod
+    CI_COMMIT_REF_NAME=prod make deploy
+    cd terraform
+    terraform plan -out destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan -destroy -target={aws_security_group.{elasticsearch,indexer,service},aws_elasticsearch_domain.index}
+    terraform apply destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan
+    cd ..
+
+Deploy the ``gitlab`` component::
+
+    _select prod.gitlab
+    CI_COMMIT_REF_NAME=prod make -C terraform/gitlab
+
+This will destroy and recreate many resources. It will most likely fail at some
+point, either because of a missing dependency declaration in our TF config or a
+bug in the Terraform AWS provider or in Terraform core. Manually delete any
+resource mentioned in any error messages and retry the command. Once the command
+completes successfully, ensure that the GitLab web application is functional.
+
+After successfully deploying the ``gitlab`` component, complete the PR
+checklist.
+
+
+#6045 Fix: VPC CIDR in ``dev`` is wrong
+=======================================
+
+Operator
+~~~~~~~~
+
+Before deploying ``dev.gitlab`` ask team members to checkout ``develop`` and to
+run the following commands in every one of their personal deployments collocated
+with ``dev``::
+
+    _select …
+    make deploy
+    cd terraform
+    terraform plan -out destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan -destroy -target={aws_lambda_function.{indexer{,{_aggregate,_contribute}{,_retry},_indexercachehealth},service{,_manifest,_servicecachehealth}},aws_security_group.{indexer,service}}
+    terraform apply destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan
+
+This will destroy the VPC-dependent resources in their deployment, and should
+allow for the destruction of the VPC in the next step. Ask team members to
+confirm the completion of this step. After receiving confirmation from every
+team member, checkout the PR branch and run the following commands::
+
+    _select sandbox
+    CI_COMMIT_REF_NAME=develop make deploy
+    cd terraform
+    terraform plan -out destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan -destroy -target={aws_security_group.{elasticsearch,indexer,service},aws_elasticsearch_domain.index}
+    terraform apply destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan
+    cd ..
+
+Among the resources the above command destroys is the Elasticsearch domain that
+hosts the indices for the ``sandbox`` deployment and any personal deployments
+sharing the domain with the ``sandbox`` deployment.
+
+Repeat this for `dev`.
+
+Deploy the ``gitlab`` component::
+
+    _select dev.gitlab
+    CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
+
+This will destroy and recreate many more resources. It will most likely fail at
+some point, either because of a missing dependency declaration in our TF config
+or a bug in the Terraform AWS provider or in Terraform core. Manually delete any
+resource mentioned in any error messages and retry the command. Once the command
+completes successfully, ensure that the GitLab web application is functional.
+
+After successfully deploying the ``gitlab`` component, continue with the PR
+checklist. Once the sandbox build succeeds, ask team members to checkout
+``develop`` and to run the following commands in every one of their personal
+deployments collocated with ``dev``::
+
+    _select …
+    make deploy
+    make reindex
+
+This will recreate their VPC-dependent resources previously destroyed and
+repopulate their indices on the ``sandbox`` domain.
+
+Complete the PR checklist.
+
+
+#5964 SSM Agent in GitLab lacks sufficient permissions in its role
+==================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``gitlab`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5984 AWS event GetMacieSession results in AccessDenied error again
+===================================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` component of any main deployment just before
+pushing the merge commit to the GitLab instance in that deployment.
+
+
+#5970 Upgrade dependencies 2024-02-19
+=====================================
+
+Operator
+~~~~~~~~
+
+Manually perform a two-phase deployment of the ``shared`` component of every
+main deployment. Perform the first phase using the ``apply_keep_unused``
+Makefile target for the lower deployments after pushing the squashed and rebased
+PR branch to GitHub. In a stable deployment (``prod``), perform the first phase
+before pushing the merge commit to the GitLab instance in that deployment. In
+lower and stable deployments, perform the second phase using the ``apply``
+Makefile target after the merge commit was successfully built on the GitLab
+instance in that deployment.
+
+Deploy the ``gitlab`` component of any main deployment just after pushing the PR
+branch to GitHub. Run ``make -C terraform/gitlab/runner`` just before pushing
+the merge commit to the GitLab instance in that deployment.
+
+
+#3895 Setup CloudWatch alarm for ClamAV notifications
+=====================================================
+
+Operator
+~~~~~~~~
+
+Manually deploy the ``shared`` and ``gitlab`` components of any main deployment
+just before pushing the merge commit to the GitLab instance in that deployment.
+
+
 #5975 Upgrade ES domain for Hammerbox
 =====================================
 

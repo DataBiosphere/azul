@@ -62,7 +62,7 @@ class TestDataExtractorTestCase(DCP1IndexerTestCase):
                 def index_name(entity_type):
                     doc_type = DocumentType.aggregate if aggregate else DocumentType.contribution
                     return str(IndexName.create(catalog=self.catalog,
-                                                entity_type=entity_type,
+                                                qualifier=entity_type,
                                                 doc_type=doc_type))
 
                 total_projects = self.es_client.count(index=index_name('projects'))

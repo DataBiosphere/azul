@@ -80,6 +80,7 @@ from azul.indexer.document import (
     IndexName,
     OpType,
     Replica,
+    ReplicaCoordinates,
     VersionType,
 )
 from azul.indexer.document_service import (
@@ -170,14 +171,14 @@ class IndexService(DocumentService):
     def index_names(self, catalog: CatalogName) -> list[IndexName]:
         return [
             IndexName.create(catalog=catalog,
-                             entity_type=entity_type,
+                             qualifier=entity_type,
                              doc_type=doc_type)
             for entity_type in self.entity_types(catalog)
             for doc_type in (DocumentType.contribution, DocumentType.aggregate)
         ] + (
             [
                 IndexName.create(catalog=catalog,
-                                 entity_type='replica',
+                                 qualifier=ReplicaCoordinates.index_qualifier,
                                  doc_type=DocumentType.replica)
             ]
             if config.enable_replicas else
@@ -226,7 +227,8 @@ class IndexService(DocumentService):
             #        number of contributions per bundle.
             # https://github.com/DataBiosphere/azul/issues/610
             tallies.update(self.contribute(catalog, contributions))
-            self.replicate(catalog, replicas)
+        # FIXME: Replica index does not support deletions
+        #        https://github.com/DataBiosphere/azul/issues/5846
         self.aggregate(tallies)
 
     def deep_transform(self,
@@ -401,8 +403,8 @@ class IndexService(DocumentService):
     def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
         for index_name in self.index_names(catalog):
-            if es_client.indices.exists(index=index_name):
-                es_client.indices.delete(index=index_name)
+            if es_client.indices.exists(index=str(index_name)):
+                es_client.indices.delete(index=str(index_name))
 
     def contribute(self,
                    catalog: CatalogName,
@@ -416,7 +418,7 @@ class IndexService(DocumentService):
         with a count of 0 may exist. This is ok. See description of aggregate().
         """
         tallies = Counter()
-        writer = self._create_writer(catalog)
+        writer = self._create_writer(DocumentType.contribution, catalog)
         while contributions:
             writer.write(contributions)
             retry_contributions = []
@@ -450,7 +452,7 @@ class IndexService(DocumentService):
         catalogs.
         """
         # Use catalog specified in each tally
-        writer = self._create_writer(catalog=None)
+        writer = self._create_writer(DocumentType.aggregate, catalog=None)
         while True:
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
@@ -504,33 +506,24 @@ class IndexService(DocumentService):
                   catalog: CatalogName,
                   replicas: list[Replica]
                   ) -> tuple[int, int]:
-        writer = self._create_writer(catalog)
+        writer = self._create_writer(DocumentType.replica, catalog)
         num_replicas = len(replicas)
-        num_written, num_present = 0, 0
+        num_written = 0
         while replicas:
             writer.write(replicas)
             retry_replicas = []
             for r in replicas:
                 if r.coordinates in writer.retries:
-                    conflicts = writer.conflicts[r.coordinates]
-                    if conflicts == 0:
-                        retry_replicas.append(r)
-                    elif conflicts == 1:
-                        # FIXME: Track replica hub IDs
-                        #        https://github.com/DataBiosphere/azul/issues/5360
-                        writer.conflicts.pop(r.coordinates)
-                        num_present += 1
-                    else:
-                        assert False, (conflicts, r.coordinates)
+                    retry_replicas.append(r)
                 else:
                     num_written += 1
             replicas = retry_replicas
 
         writer.raise_on_errors()
-        assert num_written + num_present == num_replicas, (
-            num_written, num_present, num_replicas
+        assert num_written == num_replicas, (
+            num_written, num_replicas
         )
-        return num_written, num_present
+        return num_written
 
     def _read_aggregates(self,
                          entities: CataloguedTallies
@@ -581,7 +574,7 @@ class IndexService(DocumentService):
         entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
             index = str(IndexName.create(catalog=entity.catalog,
-                                         entity_type=entity.entity_type,
+                                         qualifier=entity.entity_type,
                                          doc_type=DocumentType.contribution))
             entity_ids_by_index[index].add(entity.entity_id)
 
@@ -638,11 +631,15 @@ class IndexService(DocumentService):
         log.info('Read %i contribution(s)', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
             entity_ref = attrgetter('entity')
+            contributions_by_entity = cast(
+                Iterator[tuple[EntityReference, Iterator[Contribution]]],
+                groupby(sorted(contributions, key=entity_ref), key=entity_ref)
+            )
             log.debug(
                 'Number of contributions read, by entity: %r',
                 {
                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in groupby(sorted(contributions, key=entity_ref), key=entity_ref)
+                    for entity, contribution_group in contributions_by_entity
                 }
             )
         return contributions
@@ -785,16 +782,25 @@ class IndexService(DocumentService):
                 for entity_type, entities in result.items()
             }
 
-    def _create_writer(self, catalog: Optional[CatalogName]) -> 'IndexWriter':
+    def _create_writer(self,
+                       doc_type: DocumentType,
+                       catalog: Optional[CatalogName]
+                       ) -> 'IndexWriter':
         # We allow one conflict retry in the case of duplicate notifications and
         # switch from 'add' to 'update'. After that, there should be no
-        # conflicts because we use an SQS FIFO message group per entity. For
-        # other errors we use SQS message redelivery to take care of the
-        # retries.
+        # conflicts because we use an SQS FIFO message group per entity.
+        # Conflicts are common when writing replicas due to entities being
+        # shared between bundles. For other errors we use SQS message redelivery
+        # to take care of the retries.
+        limits = {
+            DocumentType.contribution: 1,
+            DocumentType.aggregate: 1,
+            DocumentType.replica: config.replica_conflict_limit
+        }
         return IndexWriter(catalog,
                            self.catalogued_field_types(),
                            refresh=False,
-                           conflict_retry_limit=1,
+                           conflict_retry_limit=limits[doc_type],
                            error_retry_limit=0)
 
 
@@ -850,8 +856,6 @@ class IndexWriter:
     def _write_individually(self, documents: Iterable[Document]):
         log.info('Writing documents individually')
         for doc in documents:
-            if isinstance(doc, Replica):
-                assert doc.version_type is VersionType.create_only, doc
             try:
                 method = getattr(self.es_client, doc.op_type.name)
                 method(refresh=self.refresh, **doc.to_index(self.catalog, self.field_types))
