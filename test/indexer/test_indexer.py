@@ -61,7 +61,6 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     IndexName,
-    Replica,
     ReplicaCoordinates,
     null_bool,
     null_int,
@@ -132,7 +131,7 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
 
     def _num_expected_replicas(self,
                                num_contribs: int,
-                               num_bundles: Optional[int] = None
+                               num_bundles: int = 1
                                ) -> int:
         """
         :param num_contribs: Number of contributions with distinct contents
@@ -141,10 +140,8 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
                             entities
         :return: How many replicas the indices are expected to contain
         """
-        if num_bundles is None:
-            num_bundles = 0 if num_contribs == 0 else 1
-        # Bundle entities are not replicated.
-        return num_contribs - num_bundles if config.enable_replicas else 0
+        # Bundle entities are not replicated
+        return max(0, num_contribs - num_bundles) if config.enable_replicas else 0
 
     def _assert_hit_counts(self,
                            hits: list[JSON],
@@ -401,8 +398,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         expected_tallies_2[entity] = 1
         self.assertEqual(expected_tallies_2, tallies_2)
 
-        # All writes were logged as overwrites, except one.
-        self.assertEqual(num_contributions - 1, len(logs.output))
+        # All writes were logged as overwrites, except one. There are 1 fewer
+        # replicas than contributions.
+        num_replicas = num_contributions - 2 if config.enable_replicas else 0
+        self.assertEqual(num_contributions - 1 + num_replicas,
+                         len(logs.output))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
                                 r'Document .* exists. '
                                 r'Retrying with overwrite\.$')
@@ -473,13 +473,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
         self.assertEqual(len(actual_deletion_contributions), num_expected_deletion_contributions)
         self._assert_hit_counts(hits,
-                                # Deletion notifications add deletion markers to the contributions index
-                                # instead of removing the existing contributions.
                                 num_contribs=num_expected_addition_contributions + num_expected_deletion_contributions,
                                 num_aggs=num_expected_aggregates,
-                                # These deletion markers do not affect the number of replicas because we don't
-                                # support deleting replicas.
-                                num_replicas=self._num_expected_replicas(num_expected_addition_contributions))
+                                # Indexing the same contribution twice (regardless of whether either is a deletion)
+                                # does not create a new replica, so we expect fewer replicas than contributions
+                                num_replicas=self._num_expected_replicas(num_expected_deletion_contributions))
 
     def test_bundle_delete_downgrade(self):
         """
@@ -2109,30 +2107,6 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         contributor['institution'] += ' || LabMED'
         with self.assertRaisesRegex(RequirementError, "'||' is disallowed"):
             self._index_bundle(bundle)
-
-    def test_replica_update(self):
-        contents = {'replica': {}}
-        coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
-                                         entity=CataloguedEntityReference(catalog=self.catalog,
-                                                                          entity_type='replica',
-                                                                          entity_id='foo'))
-        replica = Replica(version=None,
-                          replica_type='file',
-                          contents=contents,
-                          hub_ids=[],
-                          coordinates=coordinates)
-
-        for case, hub_ids, expected_hub_ids in [
-            ('New replica', ['1', '1'], ['1']),
-            ('Additional hub IDs', ['3', '2', '1'], ['1', '2', '3']),
-            ('Redundant hub IDs', ['1', '2'], ['1', '2', '3'])
-        ]:
-            with self.subTest(case):
-                replica.hub_ids[:] = hub_ids
-                self.index_service.replicate(self.catalog, [replica])
-                hit = one(self._get_all_hits())
-                self.assertEqual(hit['_id'], coordinates.document_id)
-                self.assertEqual(hit['_source']['hub_ids'], expected_hub_ids)
 
 
 class TestIndexManagement(AzulUnitTestCase):

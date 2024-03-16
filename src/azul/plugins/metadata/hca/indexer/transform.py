@@ -503,8 +503,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _add_replica(self,
                      contribution: MutableJSON,
-                     entity: Union[api.Entity, DatedEntity],
-                     hub_ids: list[EntityID]
+                     entity: Union[api.Entity, DatedEntity]
                      ) -> Transform:
         entity_ref = EntityReference(entity_id=str(entity.document_id),
                                      entity_type=self.entity_type())
@@ -512,7 +511,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             replica = None
         else:
             assert isinstance(entity, api.Entity), entity
-            replica = self._replica(entity.json, entity_ref, hub_ids)
+            replica = self._replica(entity.json, entity_ref)
         return self._contribution(contribution, entity_ref), replica
 
     def _find_ancestor_samples(self,
@@ -1466,8 +1465,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         additional_contents = self.matrix_stratification_values(file)
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
-                hub_ids = list(map(str, visitor.files))
-                yield self._add_replica(contents, file, hub_ids)
+                yield self._add_replica(contents, file)
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
@@ -1562,8 +1560,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
-            hub_ids = list(map(str, visitor.files))
-            yield self._add_replica(contents, cell_suspension, hub_ids)
+            yield self._add_replica(contents, cell_suspension)
 
 
 class SampleTransformer(PartitionedTransformer):
@@ -1608,8 +1605,7 @@ class SampleTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
-            hub_ids = list(map(str, visitor.files))
-            yield self._add_replica(contents, sample, hub_ids)
+            yield self._add_replica(contents, sample)
 
 
 class BundleAsEntity(DatedEntity):
@@ -1709,12 +1705,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],
                         projects=[self._project(self._api_project)])
-        hub_ids = self._hub_ids(visitor)
-        return self._add_replica(contents, self._singleton_entity(), hub_ids)
-
-    @abstractmethod
-    def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
-        raise NotImplementedError
+        return self._add_replica(contents, self._singleton_entity())
 
 
 class ProjectTransformer(SingletonTransformer):
@@ -1725,14 +1716,6 @@ class ProjectTransformer(SingletonTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'projects'
-
-    def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
-        # Every file in a snapshot is linked to that snapshot's singular
-        # project, making an explicit list of hub IDs for the project both
-        # redundant and impractically large. Therefore, we leave the hub IDs
-        # field empty for projects and rely on the tenet that every file is an
-        # implicit hub of its parent project.
-        return []
 
 
 class BundleTransformer(SingletonTransformer):
@@ -1750,6 +1733,3 @@ class BundleTransformer(SingletonTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'bundles'
-
-    def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
-        return list(map(str, visitor.files))

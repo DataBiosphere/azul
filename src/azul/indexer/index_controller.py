@@ -185,14 +185,10 @@ class IndexController(AppController):
                                for entity, num_contributions in tallies.items()]
 
                     if replicas:
-                        if delete:
-                            # FIXME: Replica index does not support deletions
-                            #        https://github.com/DataBiosphere/azul/issues/5846
-                            log.warning('Deletion of replicas is not supported')
-                        else:
-                            log.info('Writing %i replicas to index.', len(replicas))
-                            num_written = self.index_service.replicate(catalog, replicas)
-                            log.info('Successfully wrote %i replicas', num_written)
+                        log.info('Writing %i replicas to index.', len(replicas))
+                        num_written, num_present = self.index_service.replicate(catalog, replicas)
+                        log.info('Successfully wrote %i replicas; %i were already present',
+                                 num_written, num_present)
                     else:
                         log.info('No replicas to write.')
 
