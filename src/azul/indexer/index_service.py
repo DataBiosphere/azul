@@ -227,7 +227,8 @@ class IndexService(DocumentService):
             #        number of contributions per bundle.
             # https://github.com/DataBiosphere/azul/issues/610
             tallies.update(self.contribute(catalog, contributions))
-            self.replicate(catalog, replicas)
+        # FIXME: Replica index does not support deletions
+        #        https://github.com/DataBiosphere/azul/issues/5846
         self.aggregate(tallies)
 
     def deep_transform(self,
@@ -417,7 +418,7 @@ class IndexService(DocumentService):
         with a count of 0 may exist. This is ok. See description of aggregate().
         """
         tallies = Counter()
-        writer = self._create_writer(catalog)
+        writer = self._create_writer(DocumentType.contribution, catalog)
         while contributions:
             writer.write(contributions)
             retry_contributions = []
@@ -451,7 +452,7 @@ class IndexService(DocumentService):
         catalogs.
         """
         # Use catalog specified in each tally
-        writer = self._create_writer(catalog=None)
+        writer = self._create_writer(DocumentType.aggregate, catalog=None)
         while True:
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
@@ -505,33 +506,24 @@ class IndexService(DocumentService):
                   catalog: CatalogName,
                   replicas: list[Replica]
                   ) -> tuple[int, int]:
-        writer = self._create_writer(catalog)
+        writer = self._create_writer(DocumentType.replica, catalog)
         num_replicas = len(replicas)
-        num_written, num_present = 0, 0
+        num_written = 0
         while replicas:
             writer.write(replicas)
             retry_replicas = []
             for r in replicas:
                 if r.coordinates in writer.retries:
-                    conflicts = writer.conflicts[r.coordinates]
-                    if conflicts == 0:
-                        retry_replicas.append(r)
-                    elif conflicts == 1:
-                        # FIXME: Track replica hub IDs
-                        #        https://github.com/DataBiosphere/azul/issues/5360
-                        writer.conflicts.pop(r.coordinates)
-                        num_present += 1
-                    else:
-                        assert False, (conflicts, r.coordinates)
+                    retry_replicas.append(r)
                 else:
                     num_written += 1
             replicas = retry_replicas
 
         writer.raise_on_errors()
-        assert num_written + num_present == num_replicas, (
-            num_written, num_present, num_replicas
+        assert num_written == num_replicas, (
+            num_written, num_replicas
         )
-        return num_written, num_present
+        return num_written
 
     def _read_aggregates(self,
                          entities: CataloguedTallies
@@ -790,16 +782,25 @@ class IndexService(DocumentService):
                 for entity_type, entities in result.items()
             }
 
-    def _create_writer(self, catalog: Optional[CatalogName]) -> 'IndexWriter':
+    def _create_writer(self,
+                       doc_type: DocumentType,
+                       catalog: Optional[CatalogName]
+                       ) -> 'IndexWriter':
         # We allow one conflict retry in the case of duplicate notifications and
         # switch from 'add' to 'update'. After that, there should be no
-        # conflicts because we use an SQS FIFO message group per entity. For
-        # other errors we use SQS message redelivery to take care of the
-        # retries.
+        # conflicts because we use an SQS FIFO message group per entity.
+        # Conflicts are common when writing replicas due to entities being
+        # shared between bundles. For other errors we use SQS message redelivery
+        # to take care of the retries.
+        limits = {
+            DocumentType.contribution: 1,
+            DocumentType.aggregate: 1,
+            DocumentType.replica: config.replica_conflict_limit
+        }
         return IndexWriter(catalog,
                            self.catalogued_field_types(),
                            refresh=False,
-                           conflict_retry_limit=1,
+                           conflict_retry_limit=limits[doc_type],
                            error_retry_limit=0)
 
 
@@ -855,8 +856,6 @@ class IndexWriter:
     def _write_individually(self, documents: Iterable[Document]):
         log.info('Writing documents individually')
         for doc in documents:
-            if isinstance(doc, Replica):
-                assert doc.version_type is VersionType.create_only, doc
             try:
                 method = getattr(self.es_client, doc.op_type.name)
                 method(refresh=self.refresh, **doc.to_index(self.catalog, self.field_types))
