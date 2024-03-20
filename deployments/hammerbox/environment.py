@@ -290,10 +290,9 @@ anvil4_sources = mkdict(anvil3_sources, 200, mkdelta([
     # @formatter:on
 ]))
 
-anvil5_sources = mkdict(anvil4_sources, 263, mkdelta([
+anvil5_sources = mkdict(anvil4_sources, 262, mkdelta([
     # @formatter:off
     mksrc('datarepo-3c30a9a2', 'ANVIL_1000G_high_coverage_2019_20230517_ANV5_202403030329', 6804),
-    mksrc('datarepo-82f4ebb0', 'ANVIL_ALSCompute_Collection_GRU_20231016_ANV5_202402062051', 14593),
     mksrc('datarepo-adf70694', 'ANVIL_ALS_FTD_ALS_AssociatedGenes_GRU_v1_20231221_ANV5_202401112025', 11853),
     mksrc('datarepo-815ad21b', 'ANVIL_ALS_FTD_DEMENTIA_SEQ_GRU_v1_20231221_ANV5_202401112033', 1351),
     mksrc('datarepo-ab46a8e4', 'ANVIL_CCDG_NYGC_NP_Autism_ACE2_DS_MDS_WGS_20230605_ANV5_202403032021', 158),
