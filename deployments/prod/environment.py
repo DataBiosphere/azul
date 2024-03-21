@@ -1053,6 +1053,11 @@ lm4_sources = mkdict(lm3_sources, 7, mkdelta([
     mksrc('datarepo-3f332829', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20231207_lm4', 1),
 ]))
 
+lm5_sources = mkdict(lm4_sources, 9, mkdelta([
+    mksrc('datarepo-ac5f1124', 'lungmap_prod_1977dc4784144263a8706b0f207d8ab3__20240206_20240222_lm5', 1),
+    mksrc('datarepo-aa408857', 'lungmap_prod_fdadee7e209745d5bf81cc280bd8348e__20240206_20240222_lm5', 1),
+]))
+
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -1097,7 +1102,8 @@ def env() -> Mapping[str, Optional[str]]:
                 ('hca', 'dcp35', dcp35_sources),
                 ('hca', 'dcp36', dcp36_sources),
                 ('hca', 'pilot', pilot_sources),
-                ('lungmap', 'lm4', lm4_sources)
+                ('lungmap', 'lm4', lm4_sources),
+                ('lungmap', 'lm5', lm5_sources)
             ] for suffix, internal in [
                 ('', False),
                 ('-it', True)
