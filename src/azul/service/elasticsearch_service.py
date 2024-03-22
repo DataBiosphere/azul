@@ -192,10 +192,15 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        return self._translate_filters(self._reify_filters())
+        if self._limit_access():
+            filters_json = self.filters.reify(self.plugin)
+        else:
+            filters_json = self.filters.explicit
+        return self._translate_filters(filters_json)
 
-    def _reify_filters(self):
-        return self.filters.reify(self.plugin)
+    @abstractmethod
+    def _limit_access(self) -> bool:
+        raise NotImplementedError
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
