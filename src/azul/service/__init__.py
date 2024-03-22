@@ -79,11 +79,10 @@ class Filters:
 
     def reify(self, plugin: MetadataPlugin) -> FiltersJSON:
         filters = copy_json(self.explicit)
-        # We can safely ignore the `within`, `contains`, and `intersects`
-        # operators since these always return empty results when used with
-        # string fields.
         special_fields = plugin.special_fields
         facet_filter = filters.setdefault(special_fields.source_id, {})
+        # Other operators are not supported on string fields
+        assert facet_filter.keys() <= {'is'}, facet_filter
         try:
             requested_source_ids = facet_filter['is']
         except KeyError:
