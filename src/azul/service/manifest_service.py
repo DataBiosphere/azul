@@ -2012,19 +2012,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             bundle_tsv_writer.writerow(row)
 
 
-class VerbatimManifestGenerator(FileBasedManifestGenerator):
-
-    @property
-    def content_type(self) -> str:
-        return 'application/jsonl'
-
-    @classmethod
-    def file_name_extension(cls) -> str:
-        return 'jsonl'
-
-    @classmethod
-    def format(cls) -> ManifestFormat:
-        return ManifestFormat.verbatim_jsonl
+class VerbatimManifestGenerator(FileBasedManifestGenerator, metaclass=ABCMeta):
 
     @property
     def entity_type(self) -> str:
@@ -2104,6 +2092,21 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator):
             {'terms': {'entity_id.keyword': list(replica_ids)}}
         ]))
         return request.scan()
+
+
+class JSONLVerbatimManifestGenerator(VerbatimManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'application/jsonl'
+
+    @classmethod
+    def file_name_extension(cls) -> str:
+        return 'jsonl'
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.verbatim_jsonl
 
     def create_file(self) -> tuple[str, Optional[str]]:
         fd, path = mkstemp(suffix=f'.{self.file_name_extension()}')
