@@ -585,7 +585,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
             ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
             ManifestFormat.curl: self._check_curl_manifest,
-            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest
+            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest,
+            ManifestFormat.verbatim_pfb: self._check_terra_pfb_manifest
         }
         for format in [None, *supported_formats]:
             # IT catalogs with just one public source are always indexed

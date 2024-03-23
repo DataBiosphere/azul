@@ -228,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '7.2'
+        'version': '7.3'
     },
     'tags': [
         {
@@ -1413,6 +1413,10 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         - `{ManifestFormat.verbatim_jsonl.value}` for a verbatim
                           manifest in [JSONL][5] format. Each line contains an
                           unaltered metadata entity from the underlying repository.
+
+                        - `{ManifestFormat.verbatim_pfb.value}` for a verbatim
+                          manifest in the [PFB format][3]. This format is mainly
+                          used for exporting data to Terra.
 
                         [1]: https://bd2k.ini.usc.edu/tools/bdbag/
 

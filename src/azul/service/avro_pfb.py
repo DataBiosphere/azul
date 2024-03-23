@@ -1,3 +1,4 @@
+import bisect
 from collections import (
     defaultdict,
 )
@@ -16,6 +17,7 @@ from typing import (
     ClassVar,
     MutableSet,
     Self,
+    Sequence,
 )
 from uuid import (
     UUID,
@@ -58,6 +60,8 @@ from azul.plugins.metadata.hca.indexer.transform import (
     value_and_unit,
 )
 from azul.types import (
+    AnyJSON,
+    AnyMutableJSON,
     JSON,
     MutableJSON,
 )
@@ -190,6 +194,17 @@ class PFBEntity:
         return cls(id=id_, name=name, object=object_)
 
     @classmethod
+    def for_replica(cls, replica: MutableJSON, schema: JSON) -> Self:
+        name, object_ = replica['replica_type'], replica['contents']
+        cls._add_missing_fields(name, object_, schema)
+        # Note that it is possible for two distinct replicas to have the same
+        # entity ID. For example, replicas representing the DUOS registration
+        # of AnVIL datasets have the same ID as the replica for the dataset
+        # itself. Terra appears to combine PFB entities with the same ID
+        # into a single row.
+        return cls(id=replica['entity_id'], name=name, object=object_)
+
+    @classmethod
     def _add_missing_fields(cls, name: str, object_: MutableJSON, schema):
         """
         Compare entities against the schema and add any fields that are missing.
@@ -215,6 +230,8 @@ class PFBEntity:
                     else:
                         assert 'null' in field_type['items'], field
                         default_value = [None]
+                elif field_type == 'null':
+                    default_value = None
                 else:
                     assert False, field
                 object_[field_name] = default_value
@@ -251,7 +268,9 @@ class PFBRelation:
         return cls(dst_id=entity.id, dst_name=entity.name)
 
 
-def pfb_metadata_entity(entity_types: Iterable[str]) -> MutableJSON:
+def pfb_metadata_entity(entity_types: Iterable[str],
+                        links: bool = True
+                        ) -> MutableJSON:
     """
     The Metadata entity encodes the possible relationships between tables.
 
@@ -266,7 +285,7 @@ def pfb_metadata_entity(entity_types: Iterable[str]) -> MutableJSON:
                     'name': entity_type,
                     'ontology_reference': '',
                     'values': {},
-                    'links': [] if entity_type == 'files' else [{
+                    'links': [] if not links or entity_type == 'files' else [{
                         'multiplicity': 'MANY_TO_MANY',
                         'dst': 'files',
                         'name': 'files'
@@ -292,6 +311,20 @@ def pfb_schema_from_field_types(field_types: FieldTypes) -> JSON:
         if isinstance(field_type, dict)
     )
     return _avro_pfb_schema(entity_schemas)
+
+
+def pfb_schema_from_replicas(replicas: Iterable[JSON]
+                             ) -> tuple[Sequence[str], JSON]:
+    schemas_by_replica_type = {}
+    for replica in replicas:
+        replica_type, replica_contents = replica['replica_type'], replica['contents']
+        _update_replica_schema(schema=schemas_by_replica_type,
+                               path=(replica_type,),
+                               key=replica_type,
+                               value=replica_contents)
+    schemas_by_replica_type = sorted(schemas_by_replica_type.items())
+    keys, values = zip(*schemas_by_replica_type)
+    return keys, _avro_pfb_schema(values)
 
 
 def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
@@ -474,6 +507,13 @@ def _inject_reference_handover_values(entity: MutableJSON, doc: JSON):
 #        that all of the primitive field types types are nullable
 #        https://github.com/DataBiosphere/azul/issues/4094
 
+_json_to_pfb_types = {
+    bool: 'boolean',
+    float: 'double',
+    int: 'long',
+    str: 'string'
+}
+
 _nullable_to_pfb_types = {
     null_bool: ['null', 'boolean'],
     null_float: ['null', 'double'],
@@ -561,10 +601,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     'type': 'array',
                     'items': {
                         'type': 'array',
-                        'items': {
-                            int: 'long',
-                            float: 'double'
-                        }[field_type.ends_type.native_type]
+                        'items': _json_to_pfb_types[field_type.ends_type.native_type]
                     }
                 }
             }
@@ -603,3 +640,129 @@ def _entity_schema_recursive(field_types: FieldTypes,
             pass
         else:
             assert False, field_type
+
+
+def _update_replica_schema(*,
+                           schema: MutableJSON,
+                           path: tuple[str, ...],
+                           key: str,
+                           value: AnyMutableJSON):
+    """
+    Update in place a (part of an) existing PFB schema to ensure that it
+    accommodates a given (part of a) JSON document. The schema will only ever
+    expand, so after updating it will describe a superset of the documents that
+    it described pre-update. Starting from an empty schema, repeatedly calling
+    this function allows us to discover a general schema for a series of
+    documents of unknown shape.
+
+    :param schema: a part of a PFB schema. It may be empty.
+
+    :param path: the series of field names that locate `schema` within its
+                 top-level parent schema. The first entry should be the name of
+                 the underlying PFB entity's record type.
+
+    :param key: the key within `schema` whose associated value will be updated
+                to describe `value`. This is the only part of `schema` that may
+                be mutated.
+
+    :param value: a part of a PFB entity.
+    """
+    try:
+        old_type = schema[key]
+    except KeyError:
+        schema[key] = _new_replica_schema(path=path, value=value)
+    else:
+        if old_type == []:
+            schema[key] = _new_replica_schema(path=path, value=value)
+        elif value is None:
+            if old_type == 'null' or isinstance(old_type, list):
+                pass
+            else:
+                schema[key] = ['null', old_type]
+        elif old_type == 'null':
+            schema[key] = [
+                'null',
+                _new_replica_schema(path=path, value=value)
+            ]
+        elif isinstance(value, list):
+            if isinstance(old_type, list):
+                old_type = old_type[1]
+            assert old_type['type'] == 'array', old_type
+            for v in value:
+                _update_replica_schema(schema=old_type,
+                                       path=path,
+                                       key='items',
+                                       value=v)
+        elif isinstance(value, dict):
+            if isinstance(old_type, list):
+                old_type = old_type[1]
+            assert old_type['type'] == 'record', old_type
+            old_fields = {field['name']: field for field in old_type['fields']}
+            for k in value.keys() | old_fields.keys():
+                try:
+                    field = old_fields[k]
+                except KeyError:
+                    field = {
+                        'name': k,
+                        'namespace': '.'.join(path),
+                        'type': 'null'
+                    }
+                    bisect.insort(old_type['fields'], field, key=itemgetter('name'))
+                    new_value = value[k]
+                else:
+                    new_value = value.get(k)
+                _update_replica_schema(schema=field,
+                                       path=(*path, k),
+                                       key='type',
+                                       value=new_value)
+        else:
+            new_type = _json_to_pfb_types[type(value)]
+            if isinstance(old_type, list):
+                old_type = old_type[1]
+            assert old_type == new_type, (old_type, value)
+
+
+def _new_replica_schema(*,
+                        path: tuple[str, ...],
+                        value: AnyJSON,
+                        ) -> AnyMutableJSON:
+    """
+    Create a part of a PFB schema to describe a part of a PFB entity represented
+    as a JSON document.
+
+    :param path: the location of `value` within the root document as a series
+                 of keys. The first key should be the name of the underlying PFB
+                 entity's type within the schema.
+
+    :param value: a part of a PFB entity.
+
+    :return: JSON describing the contents of `value` as a part of PFB schema.
+    """
+    if value is None:
+        result = 'null'
+    elif isinstance(value, list):
+        # Empty list indicates "no type" (emtpy union). This will be replaced
+        # with an actual type unless we never encounter a non-empty array.
+        result = {'type': 'array', 'items': []}
+        for v in value:
+            _update_replica_schema(schema=result,
+                                   path=path,
+                                   key='items',
+                                   value=v)
+    elif isinstance(value, dict):
+        name = '.'.join(path)
+        result = {
+            'name': name,
+            'type': 'record',
+            'fields': [
+                {
+                    'name': k,
+                    'namespace': name,
+                    'type': _new_replica_schema(path=(*path, k), value=v)
+                }
+                for k, v in sorted(value.items())
+            ]
+        }
+    else:
+        result = _json_to_pfb_types[type(value)]
+    return result

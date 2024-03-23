@@ -20,6 +20,9 @@ from io import (
     BytesIO,
 )
 import json
+from operator import (
+    itemgetter,
+)
 import os
 from pathlib import (
     Path,
@@ -67,6 +70,8 @@ from azul import (
 )
 from azul.collections import (
     adict,
+    compose_keys,
+    none_safe_key,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -2069,3 +2074,22 @@ class TestAnvilManifests(AnvilManifestTestCase):
             for entity_ref, entity in self._load_canned_bundle(bundle).entities.items()
         ]
         self._assert_jsonl(expected, response)
+
+    @unittest.skipIf(not config.enable_replicas,
+                     'The format is replica-based')
+    @manifest_test
+    def test_verbatim_pfb_manifest(self):
+        response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
+        self.assertEqual(200, response.status_code)
+        manifest = fastavro.reader(BytesIO(response.content))
+        schema = manifest.writer_schema
+        entities = list(manifest)
+        with open(self._data_path('service') / 'verbatim/pfb_schema.json') as f:
+            expected_schema = json.load(f)
+        with open(self._data_path('service') / 'verbatim/pfb_entities.json') as f:
+            expected_entities = json.load(f)
+        sort_key = compose_keys(none_safe_key(), itemgetter('id'))
+        entities.sort(key=sort_key)
+        expected_entities.sort(key=sort_key)
+        self.assertEqual(expected_schema, schema)
+        self.assertEqual(expected_entities, entities)

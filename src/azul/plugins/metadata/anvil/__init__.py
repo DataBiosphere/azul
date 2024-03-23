@@ -75,7 +75,10 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return [
             ManifestFormat.compact,
             ManifestFormat.terra_pfb,
-            *iif(config.enable_replicas, [ManifestFormat.verbatim_jsonl])
+            *iif(config.enable_replicas, [
+                ManifestFormat.verbatim_jsonl,
+                ManifestFormat.verbatim_pfb
+            ])
         ]
 
     def transformer_types(self) -> Iterable[Type[BaseTransformer]]:

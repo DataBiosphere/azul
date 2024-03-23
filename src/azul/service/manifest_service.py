@@ -2120,3 +2120,33 @@ class JSONLVerbatimManifestGenerator(VerbatimManifestGenerator):
                 json.dump(entry, f)
                 f.write('\n')
         return path, None
+
+
+class PFBVerbatimManifestGenerator(VerbatimManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'application/octet-stream'
+
+    @classmethod
+    def file_name_extension(cls):
+        return 'avro'
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.verbatim_pfb
+
+    def create_file(self) -> tuple[str, Optional[str]]:
+        replicas = list(self._all_replicas())
+        replica_types, pfb_schema = avro_pfb.pfb_schema_from_replicas(replicas)
+        pfb_metadata_entity = avro_pfb.pfb_metadata_entity(replica_types, links=False)
+
+        def pfb_entities():
+            yield pfb_metadata_entity
+            for replica in replicas:
+                yield avro_pfb.PFBEntity.for_replica(dict(replica), pfb_schema).to_json(())
+
+        fd, path = mkstemp(suffix=f'.{self.file_name_extension()}')
+        os.close(fd)
+        avro_pfb.write_pfb_entities(pfb_entities(), pfb_schema, path)
+        return path, None
