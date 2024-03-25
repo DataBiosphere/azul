@@ -352,10 +352,10 @@ emit_tf({
                         'waf_rate_blocked': {
                             'alarm_name': config.qualified_resource_name('waf_rate_blocked'),
                             'comparison_operator': 'GreaterThanThreshold',
-                            'threshold': 0,
+                            'threshold': 6000,
                             'datapoints_to_alarm': 1,
                             'evaluation_periods': 1,
-                            'period': 5 * 60,
+                            'period': 10 * 60,
                             'metric_name': 'BlockedRequests',
                             'namespace': 'AWS/WAFV2',
                             'statistic': 'Sum',
