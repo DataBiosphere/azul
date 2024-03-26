@@ -11,10 +11,10 @@ import json
 from operator import (
     attrgetter,
 )
-import sys
 from typing import (
     Iterator,
     Sequence,
+    Self,
 )
 
 import attrs
@@ -27,9 +27,18 @@ from azul import (
     JSON,
     reject,
     require,
+    CatalogName,
+    cached_property,
+    config,
 )
 from azul.collections import (
     adict,
+)
+from azul.deployment import (
+    aws,
+)
+from azul.service.storage_service import (
+    StorageService,
 )
 from azul.time import (
     format_dcp2_datetime,
@@ -46,7 +55,7 @@ class MaintenanceImpactKind(Enum):
 @attrs.define
 class MaintenanceImpact:
     kind: MaintenanceImpactKind
-    affected_catalogs: list[str]
+    affected_catalogs: list[CatalogName]
 
     @classmethod
     def from_json(cls, impact: JSON):
@@ -58,8 +67,9 @@ class MaintenanceImpact:
                     affected_catalogs=self.affected_catalogs)
 
     def validate(self):
-        require(all(isinstance(c, str) and c for c in self.affected_catalogs),
-                'Invalid catalog name/pattern')
+        require(all(
+            isinstance(c, CatalogName) and c for c in self.affected_catalogs),
+            'Invalid catalog name/pattern')
         require(all({0: True, 1: c[-1] == '*'}.get(c.count('*'), False)
                     for c in self.affected_catalogs),
                 'Invalid catalog pattern')
@@ -75,7 +85,7 @@ class MaintenanceEvent:
     actual_end: datetime | None
 
     @classmethod
-    def from_json(cls, event: JSON):
+    def from_json(cls, event: JSON) -> Self:
         return cls(planned_start=cls._parse_datetime(event['planned_start']),
                    planned_duration=timedelta(seconds=event['planned_duration']),
                    description=event['description'],
@@ -154,9 +164,9 @@ class MaintenanceSchedule:
     def pending_events(self) -> list[MaintenanceEvent]:
         """
         Returns a list of pending events in this schedule. The elements in the
-        returned list can be modified until another method is invoked on this schedule. The
-        modifications will be reflected in ``self.events`` but the caller is
-        responsible for ensuring they don't invalidate this schedule.
+        returned list can be modified until another method is invoked on this
+        schedule. The modifications will be reflected in ``self.events`` but the
+        caller is responsible for ensuring they don't invalidate this schedule.
         """
         events = enumerate(self.events)
         for i, e in events:
@@ -223,3 +233,55 @@ class MaintenanceSchedule:
                 next_event.planned_start = event.end
             event = next_event
         self.validate()
+
+
+class MaintenanceService:
+
+    @property
+    def bucket(self):
+        return aws.shared_bucket
+
+    @property
+    def object_key(self):
+        return f'azul/{config.deployment_stage}/azul.json'
+
+    @cached_property
+    def storage_service(self):
+        return StorageService(self.bucket)
+
+    def list_upcoming_events(self, all_events: bool = False) -> JSON:
+        """
+        Display's the schedule, of active and pending events
+        """
+        schedule = MaintenanceSchedule.from_json(self._get_schedule)
+        schedule.validate()
+
+        if not all_events:
+            active = schedule.active_event()
+            schedule = MaintenanceSchedule([active])
+            schedule.events += schedule.pending_events()
+        # Business logic and validation
+        # Start of an event
+        # if: actual_start is set [This is the start]
+        # else: planned_start
+        # Ending of event
+        # if: actual_end is set [This is the end]
+        return schedule.to_json()
+
+    @property
+    def _get_schedule(self) -> JSON:
+        try:
+            schedule = json.loads(self.storage_service.get(self.object_key))
+        except self.storage_service.client.exceptions.NoSuchKey:
+            schedule = self._create_empty_schedule
+        return schedule['maintenance']['schedule']
+
+    @property
+    def _create_empty_schedule(self):
+        schedule = {
+            'maintenance': {
+                'schedule': {}
+            }
+        }
+        self.storage_service.put(self.object_key, json.dumps(schedule).encode())
+        return schedule
