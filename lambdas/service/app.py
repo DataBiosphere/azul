@@ -69,6 +69,9 @@ from azul.indexer.document import (
 from azul.logging import (
     configure_app_logging,
 )
+from azul.maintenance import (
+    MaintenanceService,
+)
 from azul.openapi import (
     application_json,
     format_description as fd,
@@ -323,6 +326,10 @@ class ServiceApp(AzulChaliceApp):
         manifest_url_func: ManifestUrlFunc = self.manifest_url
         return self._service_controller(ManifestController,
                                         manifest_url_func=manifest_url_func)
+
+    @cached_property
+    def maintenance_service(self) -> MaintenanceService:
+        return MaintenanceService()
 
     def _service_controller(self, controller_cls: Type[C], **kwargs) -> C:
         file_url_func: FileUrlFunc = self.file_url
@@ -837,6 +844,16 @@ def get_integrations():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
                     body=json.dumps(body))
+
+
+@app.route(
+    '/maintenance/schedule',
+    methods=['GET'],
+    cors=True
+#     TODO: spect-out
+)
+def get_maintenance():
+    return app.maintenance_service.list_upcoming_events()
 
 
 @app.route(
