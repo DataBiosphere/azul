@@ -6,21 +6,20 @@ labels: -,infra,no demo,operator,orange,task
 _start: 2024-02-26T09:00
 _period: 14 days
 ---
-- [ ] Applied Amazon OpenSearch Software Update <sub>or OpenSearch is running on the lattest version</sub>
-    - [ ] Update `azul-index-dev`
-    - [ ] Cleared `azul-index-dev` outstanding notifications regarding this update
-    - [ ] Update `azul-index-anvildev`
-    - [ ] Cleared `azul-index-anvildev` outstanding notifications regarding this update
-    - [ ] Update `azul-index-anvilprod`
-    - [ ] Cleared `azul-index-anvilprod` outstanding notifications regarding this update
-    - [ ] Confirm with Azul devs that their personal deployments in `dev` are idle
-    - [ ] Update `azul-index-sandbox`
-    - [ ] Cleared `azul-index-sandbox` outstanding notifications regarding this update
-    - [ ] Confirm with Azul devs that their personal deployments in `anvil` are idle
-    - [ ] Update `azul-index-anvilbox`
-    - [ ] Cleared `azul-index-anvilbox` outstanding notifications regarding this update
-    - [ ] Confirm with Azul devs that their personal deployments in `anvilprod` are idle
-    - [ ] Update `azul-index-hammerbox`
-    - [ ] Cleared `azul-index-hammerbox` outstanding notifications regarding this update
-    - [ ] Update `azul-index-prod`
-    - [ ] Cleared `azul-index-prod` outstanding notifications regarding this update
+- [ ] Update `azul-index-dev` <sub>or `azul-index-dev` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-dev`
+- [ ] Update `azul-index-anvildev` <sub>or `azul-index-anvildev` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-anvildev`
+- [ ] Update `azul-index-anvilprod` <sub>or `azul-index-anvilprod` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-anvilprod`
+- [ ] Devs confirmed personal deployments collocated with `dev` are idle <sub>or `azul-index-sandbox` is on the latest version</sub>
+- [ ] Update `azul-index-sandbox` <sub>or `azul-index-sandbox` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-sandbox`
+- [ ] Devs confirmed personal deployments collocated with `anvil` are idle <sub>or `azul-index-anvilbox` is on the latest version</sub>
+- [ ] Update `azul-index-anvilbox` <sub>or `azul-index-anvilbox` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-anvilbox`
+- [ ] Devs confirmed personal deployments collocated with `anvilprod` are idle <sub>or `azul-index-hammerbox` is on the latest version</sub>
+- [ ] Update `azul-index-hammerbox` <sub>or `azul-index-hammerbox` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-hammerbox`
+- [ ] Update `azul-index-prod` <sub>or `azul-index-prod` is on the latest version</sub>
+- [ ] There are no outstanding notifications in `azul-index-prod`
