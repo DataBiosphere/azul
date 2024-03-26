@@ -8,6 +8,9 @@ from typing import (
 )
 
 import attrs
+from chalice import (
+    TooManyRequestsError,
+)
 import msgpack
 
 from azul import (
@@ -171,6 +174,8 @@ class AsyncManifestService:
             elif status == 'RUNNING':
                 log.info('Execution %r is still running', execution_arn)
                 return token.next()
+            elif execution['error'] == 'Lambda.TooManyRequestsException':
+                raise TooManyRequestsError(execution['error'], execution['cause'])
             else:
                 raise GenerationFailed(status=status, output=output)
 
