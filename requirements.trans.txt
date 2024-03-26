@@ -18,8 +18,8 @@ orderedmultidict==1.0.1
 packaging==24.0
 proto-plus==1.23.0
 protobuf==4.25.3
-pyasn1==0.5.1
-pyasn1-modules==0.3.0
+pyasn1==0.6.0
+pyasn1_modules==0.4.0
 pycparser==2.21
 pyopenssl==24.1.0
 python-dateutil==2.9.0.post0
