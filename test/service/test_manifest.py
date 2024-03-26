@@ -1460,7 +1460,12 @@ class TestManifestResponse(ManifestTestCase):
         Verify the response from manifest endpoints for all manifest formats
         """
 
-        def test(*, format: ManifestFormat, fetch: bool, url: Optional[furl] = None):
+        def test(*,
+                 format: ManifestFormat,
+                 fetch: bool,
+                 initial_method: Optional[str] = None,
+                 url: Optional[furl] = None):
+            assert initial_method or url, (format, fetch)
             object_url = furl('https://url.to.manifest?foo=bar')
             default_file_name = 'some_object_key.csv'
             manifest_key = ManifestKey(catalog=self.catalog,
@@ -1507,7 +1512,7 @@ class TestManifestResponse(ManifestTestCase):
                     'bash': f'curl {options} {file_name} {expected_url_for_bash}'
                 }
             if url is None:
-                method, request_url = 'PUT', self.base_url.set(path=path, args=args)
+                method, request_url = initial_method, self.base_url.set(path=path, args=args)
             else:
                 assert not fetch
                 method, request_url = 'GET', url
@@ -1518,7 +1523,7 @@ class TestManifestResponse(ManifestTestCase):
                     'Location': str(expected_url),
                     'CommandLine': expected
                 }
-                response = requests.request('PUT', str(request_url))
+                response = requests.request(initial_method, str(request_url))
                 self.assertEqual(200, response.status_code)
                 self.assertEqual(expected, response.json())
                 self.assertEqual('application/json', response.headers['Content-Type'])
@@ -1537,8 +1542,9 @@ class TestManifestResponse(ManifestTestCase):
 
         for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
-                with self.subTest(format=format, fetch=fetch):
-                    test(format=format, fetch=fetch)
+                for initial_method in ['PUT', 'POST']:
+                    with self.subTest(format=format, fetch=fetch, initial_method=initial_method):
+                        test(format=format, fetch=fetch, initial_method=initial_method)
 
 
 class TestManifestExpiration(AzulUnitTestCase):

@@ -601,45 +601,53 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             }
             first_fetch = bool(self.random.getrandbits(1))
             for fetch in [first_fetch, not first_fetch]:
-                with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
-                    args = dict(catalog=catalog, filters=json.dumps(filters))
-                    if format is None:
-                        validator = validators[first(supported_formats)]
-                    else:
-                        validator = validators[format]
-                        args['format'] = format.value
+                for initial_method in [PUT, POST]:
+                    with self.subTest('manifest',
+                                      catalog=catalog,
+                                      format=format,
+                                      fetch=fetch,
+                                      initial_method=initial_method):
+                        args = dict(catalog=catalog, filters=json.dumps(filters))
+                        if format is None:
+                            validator = validators[first(supported_formats)]
+                        else:
+                            validator = validators[format]
+                            args['format'] = format.value
 
-                    # Wrap self._get_url to collect all HTTP responses
-                    _get_url = self._get_url
-                    responses = list()
+                        # Wrap self._get_url to collect all HTTP responses
+                        _get_url = self._get_url
+                        responses = list()
 
-                    def get_url(*args, **kwargs):
-                        response = _get_url(*args, **kwargs)
-                        responses.append(response)
-                        return response
+                        def get_url(*args, **kwargs):
+                            response = _get_url(*args, **kwargs)
+                            responses.append(response)
+                            return response
 
-                    with mock.patch.object(self, '_get_url', new=get_url):
+                        with mock.patch.object(self, '_get_url', new=get_url):
 
-                        # Make multiple identical concurrent requests to test
-                        # the idempotence of manifest generation, and its
-                        # resilience against DOS attacks.
+                            # Make multiple identical concurrent requests to test
+                            # the idempotence of manifest generation, and its
+                            # resilience against DOS attacks.
 
-                        def worker(_):
-                            response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
-                            validator(catalog, response)
+                            def worker(_):
+                                response = self._check_endpoint(initial_method,
+                                                                '/manifest/files',
+                                                                args=args,
+                                                                fetch=fetch)
+                                validator(catalog, response)
 
-                        num_workers = 3
-                        with ThreadPoolExecutor(max_workers=num_workers) as tpe:
-                            results = list(tpe.map(worker, range(num_workers)))
+                            num_workers = 3
+                            with ThreadPoolExecutor(max_workers=num_workers) as tpe:
+                                results = list(tpe.map(worker, range(num_workers)))
 
-                    self.assertEqual([None] * num_workers, results)
-                    execution_ids = self._manifest_execution_ids(responses, fetch=fetch)
-                    # The second iteration of the inner-most loop re-requests
-                    # the manifest with only `fetch` being different. In that
-                    # case, the manifest will already be cached and no step
-                    # function execution is expected to have been started.
-                    expect_execution = fetch == first_fetch
-                    self.assertEqual(1 if expect_execution else 0, len(execution_ids))
+                        self.assertEqual([None] * num_workers, results)
+                        execution_ids = self._manifest_execution_ids(responses, fetch=fetch)
+                        # The second iteration of the inner-most loop re-requests
+                        # the manifest with only `fetch` being different. In that
+                        # case, the manifest will already be cached and no step
+                        # function execution is expected to have been started.
+                        expect_execution = fetch == first_fetch
+                        self.assertEqual(1 if expect_execution else 0, len(execution_ids))
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],
