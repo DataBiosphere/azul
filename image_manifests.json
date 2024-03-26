@@ -59,9 +59,9 @@
             }
         }
     },
-    "ghcr.io/hannes-ucsc/bigquery-emulator:azul": {
-        "digest": "sha256:5500114fdbe7227e5a05571a5a1df21ca94625c9fef1ae22b721e39c8ea06c8c",
-        "id": "sha256:2fc698b738dd0feeab79fa175dbca3dc4cf59f7a766e16b85541327e6b3681fc",
+    "docker.io/ucscgi/azul-bigquery-emulator:0.4.4-1": {
+        "digest": "sha256:370f153965ed67597b40c987fa7de06bddaed3d66664ae4144770dc9fc46c244",
+        "id": "sha256:929d93d8e6abd42c6b0f8fa9d1833b010e22fa461b02182fadc7e3a6e1313a9a",
         "platform": "linux/amd64"
     },
     "docker.io/clamav/clamav:1.2.1-27": {
