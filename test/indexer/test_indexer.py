@@ -2110,6 +2110,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         with self.assertRaisesRegex(RequirementError, "'||' is disallowed"):
             self._index_bundle(bundle)
 
+    @unittest.skipIf(not config.enable_replicas, 'Test requires the replica index')
     def test_replica_update(self):
         contents = {'replica': {}}
         coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
