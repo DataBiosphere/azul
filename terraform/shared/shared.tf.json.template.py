@@ -53,29 +53,13 @@ cis_alarms = [
                         # Filtering on the errorCode alone catches too many false
                         # positives, so we exclude those logs with the additional
                         # conditions below.
-                        paren(' || '.join([
-                            '$.eventSource != "s3.amazonaws.com"',
-                            '$.eventName != "GetObject"',
-                            '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "s3.amazonaws.com"',
-                            '$.eventName != "HeadBucket"',
-                            '$.userIdentity.invokedBy != "config.amazonaws.com"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "s3.amazonaws.com"',
-                            '$.eventName != "HeadObject"',
-                            '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
-                        ])),
+                        # Note: Contrary to CloudWatch queries, a metric filter
+                        # pattern such as "$.foo != 'bar'" will not match a
+                        # record that does not contain the field "foo", nor is
+                        # there a way to match absense of a field.
                         paren(' || '.join([
                             '$.eventSource != "inspector2.amazonaws.com"',
                             '$.eventName != "DescribeOrganizationConfiguration"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "elasticloadbalancing.amazonaws.com"',
-                            '$.eventName != "DescribeTargetGroupAttributes"',
-                            '$.userIdentity.invokedBy != "inspector2.amazonaws.com"',
                         ])),
                         paren(' || '.join([
                             '$.eventSource != "ec2.amazonaws.com"',
