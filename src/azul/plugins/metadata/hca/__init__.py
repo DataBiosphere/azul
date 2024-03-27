@@ -8,6 +8,9 @@ from typing import (
     Type,
 )
 
+from azul import (
+    config,
+)
 from azul.indexer.document import (
     Aggregate,
     DocumentType,
@@ -155,7 +158,13 @@ class Plugin(MetadataPlugin[HCABundle]):
 
     @property
     def manifest_formats(self) -> Sequence[ManifestFormat]:
-        return tuple(ManifestFormat)
+        return [
+            ManifestFormat.compact,
+            ManifestFormat.terra_bdbag,
+            ManifestFormat.terra_pfb,
+            ManifestFormat.curl,
+            *([ManifestFormat.verbatim_jsonl] if config.enable_replicas else [])
+        ]
 
     @property
     def _field_mapping(self) -> MetadataPlugin._FieldMapping:
@@ -261,6 +270,10 @@ class Plugin(MetadataPlugin[HCABundle]):
     @property
     def source_id_field(self) -> str:
         return 'sourceId'
+
+    @property
+    def implicit_hub_type(self) -> str:
+        return 'projects'
 
     @property
     def facets(self) -> Sequence[str]:

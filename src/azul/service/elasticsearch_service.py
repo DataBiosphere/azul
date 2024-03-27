@@ -663,13 +663,14 @@ class ElasticsearchService(DocumentService):
 
     def create_request(self,
                        catalog: CatalogName,
-                       entity_type: str
+                       entity_type: str,
+                       doc_type: DocumentType = DocumentType.aggregate
                        ) -> Search:
         """
-        Create an Elasticsearch request against the index containing aggregate
-        documents for the given entity type in the given catalog.
+        Create an Elasticsearch request against the index containing documents
+        of the given entity and document types, in the given catalog.
         """
         return Search(using=self._es_client,
                       index=str(IndexName.create(catalog=catalog,
                                                  qualifier=entity_type,
-                                                 doc_type=DocumentType.aggregate)))
+                                                 doc_type=doc_type)))
