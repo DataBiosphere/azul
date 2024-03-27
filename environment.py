@@ -227,7 +227,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
         # for how).
         #
-        'azul_docker_version': '24.0.9',
+        'azul_docker_version': '25.0.5',
 
         # The version of Python used throughout the system.
         #
@@ -273,10 +273,10 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.4-15'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-17'
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-13'
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-14'
             },
             'bigquery_emulator': {
                 'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
@@ -289,10 +289,10 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/clamav/clamav:1.2.1-27'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.9.1-ce.0'
+                'ref': 'docker.io/gitlab/gitlab-ce:16.10.0-ce.0'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.9.1'
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.10.0'
             },
             'dind': {
                 'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
