@@ -279,7 +279,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-14'
             },
             'bigquery_emulator': {
-                'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-1'
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
