@@ -1364,14 +1364,33 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         bundle_type = self._bundle_type(catalog)
         project_type = self._project_type(catalog)
 
-        hits = self._get_entities(catalog, project_type)
-        sources_found = set()
-        for hit in hits:
-            source_id = source_id_from_hit(hit)
-            sources_found.add(source_id)
-            self.assertEqual(source_id not in managed_access_source_ids,
-                             one(hit[project_type])['accessible'])
-        self.assertIsSubset(managed_access_source_ids, sources_found)
+        def check_hits(*, accessible: Optional[bool] = None) -> JSONs:
+            filters = None if accessible is None else {
+                'accessible': {'is': [accessible]}
+            }
+            hits = self._get_entities(catalog, project_type, filters=filters)
+            accessible_sources = set()
+            inaccessible_sources = set()
+            for hit in hits:
+                source_id = source_id_from_hit(hit)
+                source_accessible = source_id not in managed_access_source_ids
+                hit_accessible = one(hit[project_type])['accessible']
+                self.assertEqual(source_accessible, hit_accessible, hit['entryId'])
+                if accessible is not None:
+                    self.assertEqual(accessible, hit_accessible)
+                if source_accessible:
+                    accessible_sources.add(source_id)
+                else:
+                    inaccessible_sources.add(source_id)
+            self.assertIsDisjoint(accessible_sources, inaccessible_sources)
+            self.assertIsDisjoint(managed_access_source_ids, accessible_sources)
+            self.assertEqual(set() if accessible else managed_access_source_ids,
+                             inaccessible_sources)
+            return hits
+
+        hits = check_hits()
+        check_hits(accessible=True)
+        check_hits(accessible=False)
 
         bundle_fqids = self._get_indexed_bundles(catalog)
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}

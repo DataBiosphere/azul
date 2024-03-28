@@ -209,7 +209,7 @@ class RepositoryService(ElasticsearchService):
         field_mapping = plugin.field_mapping
 
         for facet in filters.explicit.keys():
-            if facet not in field_mapping:
+            if facet != 'accessible' and facet not in field_mapping:
                 raise BadArgumentException(f'Unable to filter by undefined facet {facet}.')
 
         facet = pagination.sort

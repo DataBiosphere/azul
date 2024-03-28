@@ -191,6 +191,13 @@ class AzulTestCase(TestCase):
         """
         self.assertEqual(set(), subset - superset)
 
+    def assertIsDisjoint(self, set1: Set, set2: Set):
+        """
+        More useful than using :meth:`assertTrue` and :meth:`set.isdisjoint`
+        because the offending elements are shown.
+        """
+        self.assertEqual(set(), set1 & set2)
+
     @classmethod
     def addClassPatch(cls, instance: patch) -> None:
         instance.start()
