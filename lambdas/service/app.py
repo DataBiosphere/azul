@@ -228,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '4.0'
+        'version': '4.1'
     },
     'tags': [
         {
@@ -1273,14 +1273,15 @@ def get_summary():
                                              authentication=request.authentication)
 
 
-def manifest_route(*, fetch: bool, initiate: bool):
+def manifest_route(*, fetch: bool, method: str):
+    initiate = method in ['PUT', 'POST']
     return app.route(
         # The path parameter could be a token *or* an object key, but we don't
         # want to complicate the API with this detail
         ('/fetch' if fetch else '')
         + ('/manifest/files' if initiate else '/manifest/files/{token}'),
         # The initial PUT request is idempotent.
-        methods=['PUT' if initiate else 'GET'],
+        methods=[method],
         interactive=fetch,
         cors=True,
         path_spec=None if initiate else {
@@ -1300,7 +1301,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 ) + (
                     ' via XHR' if fetch else ''
                 ),
-            'description': fd('''
+            'description': fd(f'''
                 Create a manifest preparation job, returning either
 
                 - a 301 redirect to the URL of the status of that job or
@@ -1308,9 +1309,9 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 - a 302 redirect to the URL of an already prepared manifest.
 
                 This endpoint is not suitable for interactive use via the
-                Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
+                Swagger UI. Please use [{method} /fetch/manifest/files][1] instead.
 
-                [1]: #operations-Manifests-put_fetch_manifest_files
+                [1]: #operations-Manifests-{method.lower()}_fetch_manifest_files
             ''') + parameter_hoisting_note if initiate and not fetch else fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning either
@@ -1324,16 +1325,16 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 Swagger UI. Please use [GET /fetch/manifest/files/{token}][1]
                 instead.
 
-                [1]: #operations-Manifests-get_fetch_manifest_files
-            ''') if not initiate and not fetch else fd('''
+                [1]: #operations-Manifests-get_fetch_manifest_files__token_
+            ''') if not initiate and not fetch else fd(f'''
                 Create a manifest preparation job, returning a 200 status
                 response whose JSON body emulates the HTTP headers that would be
-                found in a response to an equivalent request to the [PUT
+                found in a response to an equivalent request to the [{method}
                 /manifest/files][1] endpoint.
 
                 Whenever client-side JavaScript code is used in a web
                 application to request the preparation of a manifest from Azul,
-                this endpoint should be used instead of [PUT
+                this endpoint should be used instead of [{method}
                 /manifest/files][1]. This way, the client can use XHR to make
                 the request, retaining full control over the handling of
                 redirects and enabling the client to bypass certain limitations
@@ -1343,7 +1344,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 upper limit on the number of consecutive redirects, before the
                 manifest generation job is done.
 
-                [1]: #operations-Manifests-put_manifest_files
+                [1]: #operations-Manifests-{method.lower()}_manifest_files
             ''') + parameter_hoisting_note if initiate and fetch else fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning a 200 status response whose JSON body emulates the
@@ -1362,7 +1363,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 upper limit on the number of consecutive redirects, before the
                 manifest generation job is done.
 
-                [1]: #operations-Manifests-get_manifest_files
+                [1]: #operations-Manifests-get_manifest_files__token_
             '''),
             'parameters': [
                 catalog_param_spec,
@@ -1421,10 +1422,8 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         'Location': {
                             'description': fd('''
                                 The URL of the manifest preparation job at
-                            ''') + fd('''the [`GET
-                                /manifest/files/{token}`][2] endpoint.
-
-                                [2]: #operations-Manifests-get_fetch_manifest_files_token
+                            ''') + fd('''the `GET
+                                /manifest/files/{token}` endpoint.
                                 ''') if initiate else fd('''
                                 The URL of this endpoint
                                 '''),
@@ -1480,14 +1479,14 @@ def manifest_route(*, fetch: bool, initiate: bool):
 
                         For a detailed description of these properties see the
                         documentation for the respective response headers
-                        documented under ''') + (fd('''
-                        [PUT /manifest/files][1].
+                        documented under ''') + (fd(f'''
+                        [{method} /manifest/files][1].
 
-                        [1]: #operations-Manifests-put_manifest_files
+                        [1]: #operations-Manifests-{method.lower()}_manifest_files
                         ''') if initiate else fd('''
                         [GET /manifest/files/{token}][1].
 
-                        [1]: #operations-Manifests-get_manifest_files
+                        [1]: #operations-Manifests-get_manifest_files__token_
                         ''')) + fd('''
 
                         Note: For a 200 status code response whose body has the
@@ -1497,7 +1496,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         redirect, this time a genuine (not emulated) 302 status
                         redirect to the actual location of the manifest.
 
-                        [2]: #operations-Manifests-get_manifest_files
+                        [2]: #operations-Manifests-get_manifest_files__token_
 
                         Note: A 200 status response with a `Status` property of
                         302 in its body additionally contains a `CommandLine`
@@ -1525,22 +1524,24 @@ def manifest_route(*, fetch: bool, initiate: bool):
     )
 
 
-@manifest_route(fetch=False, initiate=True)
+@manifest_route(fetch=False, method='PUT')
+@manifest_route(fetch=False, method='POST')
 def file_manifest():
     return _file_manifest(fetch=False)
 
 
-@manifest_route(fetch=False, initiate=False)
+@manifest_route(fetch=False, method='GET')
 def file_manifest_with_token(token: str):
     return _file_manifest(fetch=False, token_or_key=token)
 
 
-@manifest_route(fetch=True, initiate=True)
+@manifest_route(fetch=True, method='PUT')
+@manifest_route(fetch=True, method='POST')
 def fetch_file_manifest():
     return _file_manifest(fetch=True)
 
 
-@manifest_route(fetch=True, initiate=False)
+@manifest_route(fetch=True, method='GET')
 def fetch_file_manifest_with_token(token: str):
     return _file_manifest(fetch=True, token_or_key=token)
 
