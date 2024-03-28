@@ -499,6 +499,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
+            self._test_manifest_tagging_race(catalog.name)
             self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
             if index:
@@ -586,19 +587,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.curl: self._check_curl_manifest
         }
         for format in [None, *supported_formats]:
-            # IT catalogs with just one public source are always indexed
-            # completely if that source contains less than the minimum number of
-            # bundles required. So regardless of any randomness employed by this
-            # test, manifests derived from these catalogs will always be based
-            # on the same content hash. Since the resulting reuse of cached
-            # manifests interferes with this test, we need another means of
-            # randomizing the manifest key: a random but all-inclusive filter.
-            tibi_byte = 1024 ** 4
-            filters = {
-                self._file_size_facet(catalog): {
-                    'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
-                }
-            }
+            filters = self._manifest_filters(catalog)
             first_fetch = bool(self.random.getrandbits(1))
             for fetch in [first_fetch, not first_fetch]:
                 with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
@@ -640,6 +629,65 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     # function execution is expected to have been started.
                     expect_execution = fetch == first_fetch
                     self.assertEqual(1 if expect_execution else 0, len(execution_ids))
+
+    def _manifest_filters(self, catalog: CatalogName) -> JSON:
+        # IT catalogs with just one public source are always indexed completely
+        # if that source contains less than the minimum number of bundles
+        # required. So regardless of any randomness employed by this test,
+        # manifests derived from these catalogs will always be based on the same
+        # content hash. Since the resulting reuse of cached manifests interferes
+        # with this test, we need another means of randomizing the manifest key:
+        # a random but all-inclusive filter.
+        tibi_byte = 1024 ** 4
+        return {
+            self._file_size_facet(catalog): {
+                'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
+            }
+        }
+
+    def _test_manifest_tagging_race(self, catalog: CatalogName):
+        validators: dict[ManifestFormat, Callable[[CatalogName, bytes], None]] = {
+            ManifestFormat.compact: self._check_compact_manifest,
+            ManifestFormat.curl: self._check_curl_manifest,
+        }
+        validators = {  # Filter out inactive formats based on Plugin
+            k: v for k, v in validators.items()
+            if k in self.metadata_plugin(catalog).manifest_formats
+        }
+
+        for format, validator in validators.items():
+            with self.subTest('manifest_tagging_race', catalog=catalog, format=format):
+                filters = self._manifest_filters(catalog)
+                manifest_url = config.service_endpoint.set(path='/manifest/files',
+                                                           args=dict(catalog=catalog,
+                                                                     filters=json.dumps(filters),
+                                                                     format=format.value))
+                method = PUT
+                responses = []
+                while True:
+                    response = self._get_url(method, manifest_url)
+                    if response.status == 301:
+                        responses.append(response)
+                        # Request the same manifest without following the
+                        # redirect in order to expose the race condition that
+                        # returns an untagged cached manifest. This happens
+                        # when a step function execution has generated a
+                        # manifest but is still in the process of tagging the
+                        # object. The more requests we make, the more likely it
+                        # is that we catch the execution in this racy state. We
+                        # still have to throttle the requests in order to
+                        # prevent tripping the WAF rate limit.
+                        rate_limit = config.waf_rate_rule_period / config.waf_rate_rule_limit
+                        time.sleep(rate_limit)
+                    elif response.status == 302:
+                        responses.append(response)
+                        method, manifest_url = GET, furl(response.headers['Location'])
+                    else:
+                        break
+
+                    validator(catalog, response.data)
+                    execution_ids = self._manifest_execution_ids(responses, fetch=False)
+                    self.assertEqual(1, len(execution_ids))
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],

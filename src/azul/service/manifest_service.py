@@ -1293,6 +1293,7 @@ class PagedManifestGenerator(ManifestGenerator):
                     file_name = self.file_name(manifest_key, base_name=partition.file_name)
                     tagging = self.tagging(file_name)
                     if tagging is not None:
+                        time.sleep(16)  # Exposes race in manifest tagging; testing purposes only
                         self.storage.put_object_tagging(object_key, tagging)
                     return partition.last(file_name)
                 else:
