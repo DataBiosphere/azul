@@ -739,6 +739,12 @@ def validate_json_param(name: str, value: str) -> MutableJSON:
         raise BRE(f'The {name!r} parameter is not valid JSON')
 
 
+def validate_wait(wait: str | None):
+    valid_values = ['0', '1']
+    if wait not in [None, *valid_values]:
+        raise BRE(f'Invalid wait value `{wait}`. Must be one of {valid_values}')
+
+
 class Mandatory:
     """
     Validation wrapper signifying that a parameter is mandatory.
@@ -1313,6 +1319,26 @@ def get_summary():
                                              authentication=request.authentication)
 
 
+def wait_parameter_spec(*, default: int) -> JSON:
+    valid_values = [0, 1]
+    assert default in valid_values, default
+    return params.query(
+        'wait',
+        schema.optional(schema.with_default(default,
+                                            type_=schema.enum(*valid_values))),
+        description=fd('''
+            If 0, the client is responsible for honoring the waiting period
+            specified in the `Retry-After` response header. If 1, the server
+            will delay the response in order to consume as much of that waiting
+            period as possible. This parameter should only be set to 1 by
+            clients who can't honor the `Retry-After` header, preventing them
+            from quickly exhausting the maximum number of redirects. If the
+            server cannot wait the full amount, any amount of wait time left
+            will still be returned in the `Retry-After` header of the response.
+        ''')
+    )
+
+
 post_manifest_example_url = (
     f'{app.base_url}/manifest/files'
     f'?catalog={list(config.catalogs.keys())[0]}'
@@ -1347,7 +1373,8 @@ def manifest_route(*, fetch: bool, initiate: bool, curl: bool = False):
             'parameters': [
                 params.path('token', str, description=fd('''
                     An opaque string representing the manifest preparation job
-                '''))
+                ''')),
+                *([] if fetch else [wait_parameter_spec(default=0)])
             ]
         },
         method_spec={
@@ -1465,6 +1492,7 @@ def manifest_route(*, fetch: bool, initiate: bool, curl: bool = False):
             '''),
             'parameters': [
                 catalog_param_spec,
+                *([wait_parameter_spec(default=1)] if curl else []),
                 filters_param_spec,
                 params.query(
                     'format',
@@ -1660,24 +1688,32 @@ def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
         and request.headers.get('content-type') == 'application/x-www-form-urlencoded'
         and request.raw_body != b''
     ):
-        raise BRE('The body must be empty for a POST request of content-type '
-                  '`application/x-www-form-urlencoded` to this endpoint')
+        raise BRE('POST requests to this endpoint must have an empty body if '
+                  'they specify a `Content-Type` header of '
+                  '`application/x-www-form-urlencoded`')
     query_params = request.query_params or {}
     _hoist_parameters(query_params, request)
     if token_or_key is None:
         query_params.setdefault('filters', '{}')
+        if post:
+            query_params.setdefault('wait', '1')
         # We list the `catalog` validator first so that the catalog is validated
         # before any other potentially catalog-dependent validators are invoked
         validate_params(query_params,
                         catalog=validate_catalog,
                         format=validate_manifest_format,
-                        filters=validate_filters)
+                        filters=validate_filters,
+                        **({'wait': validate_wait} if post else {}))
         # Now that the catalog is valid, we can provide the default format that
         # depends on it
         default_format = app.metadata_plugin.manifest_formats[0].value
         query_params.setdefault('format', default_format)
     else:
-        validate_params(query_params)
+        validate_params(query_params,
+                        # If the initial request was a POST to the non-fetch
+                        # endpoint, the 'wait' param will be carried over to
+                        # each subsequent GET request to the non-fetch endpoint.
+                        **({'wait': validate_wait} if not fetch else {}))
     return app.manifest_controller.get_manifest_async(query_params=query_params,
                                                       token_or_key=token_or_key,
                                                       fetch=fetch,
@@ -1724,21 +1760,7 @@ repository_files_spec = {
                 made. If that fails, the UUID of the file will be used instead.
             ''')
         ),
-        params.query(
-            'wait',
-            schema.optional(schema.with_default(0)),
-            description=fd('''
-                If 0, the client is responsible for honoring the waiting period
-                specified in the Retry-After response header. If 1, the server
-                will delay the response in order to consume as much of that
-                waiting period as possible. This parameter should only be set to
-                1 by clients who can't honor the `Retry-After` header,
-                preventing them from quickly exhausting the maximum number of
-                redirects. If the server cannot wait the full amount, any amount
-                of wait time left will still be returned in the Retry-After
-                header of the response.
-            ''')
-        ),
+        wait_parameter_spec(default=0),
         params.query(
             'replica',
             schema.optional(str),
@@ -1878,16 +1900,6 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
 
     def validate_replica(replica: str) -> None:
         if replica not in ('aws', 'gcp'):
-            raise ValueError
-
-    def validate_wait(wait: Optional[str]) -> Optional[int]:
-        if wait is None:
-            return None
-        elif wait == '0':
-            return False
-        elif wait == '1':
-            return True
-        else:
             raise ValueError
 
     def validate_version(version: str) -> None:

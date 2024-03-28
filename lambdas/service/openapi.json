@@ -9632,6 +9632,21 @@
                         "description": "The name of the catalog to query."
                     },
                     {
+                        "name": "wait",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "enum": [
+                                0,
+                                1
+                            ],
+                            "default": 1
+                        },
+                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the `Retry-After` response header. If 1, the server\nwill delay the response in order to consume as much of that waiting\nperiod as possible. This parameter should only be set to 1 by\nclients who can't honor the `Retry-After` header, preventing them\nfrom quickly exhausting the maximum number of redirects. If the\nserver cannot wait the full amount, any amount of wait time left\nwill still be returned in the `Retry-After` header of the response.\n"
+                    },
+                    {
                         "name": "filters",
                         "in": "query",
                         "required": false,
@@ -10988,6 +11003,21 @@
                         "type": "string"
                     },
                     "description": "\nAn opaque string representing the manifest preparation job\n"
+                },
+                {
+                    "name": "wait",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                        "type": "integer",
+                        "format": "int64",
+                        "enum": [
+                            0,
+                            1
+                        ],
+                        "default": 0
+                    },
+                    "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the `Retry-After` response header. If 1, the server\nwill delay the response in order to consume as much of that waiting\nperiod as possible. This parameter should only be set to 1 by\nclients who can't honor the `Retry-After` header, preventing them\nfrom quickly exhausting the maximum number of redirects. If the\nserver cannot wait the full amount, any amount of wait time left\nwill still be returned in the `Retry-After` header of the response.\n"
                 }
             ],
             "get": {
@@ -12541,9 +12571,13 @@
                         "schema": {
                             "type": "integer",
                             "format": "int64",
+                            "enum": [
+                                0,
+                                1
+                            ],
                             "default": 0
                         },
-                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the Retry-After response header. If 1, the server\nwill delay the response in order to consume as much of that\nwaiting period as possible. This parameter should only be set to\n1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any amount\nof wait time left will still be returned in the Retry-After\nheader of the response.\n"
+                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the `Retry-After` response header. If 1, the server\nwill delay the response in order to consume as much of that waiting\nperiod as possible. This parameter should only be set to 1 by\nclients who can't honor the `Retry-After` header, preventing them\nfrom quickly exhausting the maximum number of redirects. If the\nserver cannot wait the full amount, any amount of wait time left\nwill still be returned in the `Retry-After` header of the response.\n"
                     },
                     {
                         "name": "replica",
@@ -12677,9 +12711,13 @@
                         "schema": {
                             "type": "integer",
                             "format": "int64",
+                            "enum": [
+                                0,
+                                1
+                            ],
                             "default": 0
                         },
-                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the Retry-After response header. If 1, the server\nwill delay the response in order to consume as much of that\nwaiting period as possible. This parameter should only be set to\n1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any amount\nof wait time left will still be returned in the Retry-After\nheader of the response.\n"
+                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the `Retry-After` response header. If 1, the server\nwill delay the response in order to consume as much of that waiting\nperiod as possible. This parameter should only be set to 1 by\nclients who can't honor the `Retry-After` header, preventing them\nfrom quickly exhausting the maximum number of redirects. If the\nserver cannot wait the full amount, any amount of wait time left\nwill still be returned in the `Retry-After` header of the response.\n"
                     },
                     {
                         "name": "replica",

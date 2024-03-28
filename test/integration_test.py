@@ -602,8 +602,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
         assert supported_formats
-        for curl, format in chain(
-            product([False, True], [None, *supported_formats])
+        for curl, wait, format in chain(
+            product([False], [None], [None, *supported_formats]),
+            product([True], [None, 0, 1], [None, *supported_formats])
         ):
             filters = self._manifest_filters(catalog)
             if curl:
@@ -614,9 +615,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 fetch_modes = [first_fetch, not first_fetch]
             for fetch in fetch_modes:
                 with self.subTest('manifest', catalog=catalog, format=format,
-                                  fetch=fetch, curl=curl):
+                                  fetch=fetch, curl=curl, wait=wait):
                     args = dict(catalog=catalog,
-                                filters=json.dumps(filters))
+                                filters=json.dumps(filters),
+                                **({} if wait is None else {'wait': wait}))
                     if format is None:
                         format = first(supported_formats)
                     else:
@@ -892,6 +894,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 retry_after = response.headers.get('Retry-After')
                 if retry_after is not None:
                     retry_after = float(retry_after)
+                    if url.args.get('wait') == 1:
+                        # The wait should have happened server-side and been
+                        # subtracted from the retry-after that was returned.
+                        self.assertEqual(0.0, retry_after)
                     log.info('Sleeping %.3fs to honor Retry-After header', retry_after)
                     time.sleep(retry_after)
                 url = furl(response.headers['Location'])
