@@ -650,6 +650,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.compact: self._check_compact_manifest,
             ManifestFormat.curl: self._check_curl_manifest,
         }
+        validators = {  # Filter out inactive formats based on Plugin
+            k: v for k, v in validators.items()
+            if k in self.metadata_plugin(catalog).manifest_formats
+        }
 
         for format, validator in validators.items():
             with self.subTest('manifest_tagging_race', catalog=catalog, format=format):
@@ -681,9 +685,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     else:
                         break
 
-                validator(catalog, response.data)
-                execution_ids = self._manifest_execution_ids(responses, fetch=False)
-                self.assertEqual(1, len(execution_ids))
+                    validator(catalog, response.data)
+                    execution_ids = self._manifest_execution_ids(responses, fetch=False)
+                    self.assertEqual(1, len(execution_ids))
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],
