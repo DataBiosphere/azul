@@ -1133,7 +1133,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 Swagger UI. Please use [GET /fetch/manifest/files/{token}][1]
                 instead.
 
-                [1]: #operations-Manifests-get_fetch_manifest_files
+                [1]: #operations-Manifests-get_fetch_manifest_files__token_
             ''') if not initiate and not fetch else fd('''
                 Create a manifest preparation job, returning a 200 status
                 response whose JSON body emulates the HTTP headers that would be
@@ -1173,7 +1173,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 upper limit on the number of consecutive redirects, before the
                 manifest generation job is done.
 
-                [1]: #operations-Manifests-get_manifest_files
+                [1]: #operations-Manifests-get_manifest_files__token_
             '''),
             'parameters': [
                 catalog_param_spec,
@@ -1234,13 +1234,10 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         'Location': {
                             'description': fd('''
                                 The URL of the manifest preparation job at
-                            ''') + fd('''the [`GET
-                                /manifest/files/{token}`][2] endpoint.
-
-                                [2]: #operations-Manifests-get_fetch_manifest_files_token
-                                ''') if initiate else fd('''
+                                the `GET /manifest/files/{token}` endpoint.
+                            ''') if initiate else fd('''
                                 The URL of this endpoint
-                                '''),
+                            '''),
                             'schema': {'type': 'string', 'format': 'url'}
                         },
                         'Retry-After': {
@@ -1300,7 +1297,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         ''') if initiate else fd('''
                         [GET /manifest/files/{token}][1].
 
-                        [1]: #operations-Manifests-get_manifest_files
+                        [1]: #operations-Manifests-get_manifest_files__token_
                         ''')) + fd('''
 
                         Note: For a 200 status code response whose body has the
@@ -1310,7 +1307,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         redirect, this time a genuine (not emulated) 302 status
                         redirect to the actual location of the manifest.
 
-                        [2]: #operations-Manifests-get_manifest_files
+                        [2]: #operations-Manifests-get_manifest_files__token_
 
                         Note: A 200 status response with a `Status` property of
                         302 in its body additionally contains a `CommandLine`
