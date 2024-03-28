@@ -1034,8 +1034,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                 assert joiner not in part, (joiner, part)
         return '.'.join([manifest_hash, source_hash, cls.file_name_extension()])
 
-    @classmethod
-    def file_name(cls,
+    def file_name(self,
                   manifest_key: ManifestKey,
                   base_name: Optional[str] = None
                   ) -> str:
@@ -1043,9 +1042,10 @@ class ManifestGenerator(metaclass=ABCMeta):
             file_name_prefix = unicodedata.normalize('NFKD', base_name)
             file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
             timestamp = datetime.now().strftime('%Y-%m-%d %H.%M')
-            file_name = f'{file_name_prefix} {timestamp}.{cls.file_name_extension()}'
+            file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension()}'
         else:
-            file_name = 'hca-manifest-' + cls.s3_object_key_base(manifest_key)
+            atlas = config.catalogs[self.catalog].atlas
+            file_name = atlas + '-manifest-' + self.s3_object_key_base(manifest_key)
         return file_name
 
     def _create_request(self) -> Search:
