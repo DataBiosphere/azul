@@ -551,7 +551,8 @@ tf_config = {
                     'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
                     'comparison_operator': 'GreaterThanOrEqualToThreshold',
                     'evaluation_periods': 1,
-                    'metric_name': a.metric_name,
+                    'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                   '%s.metric_transformation[0].name}' % a.name,
                     'namespace': 'LogMetrics',
                     'statistic': a.statistic,
                     'treat_missing_data': 'notBreaching',
@@ -565,22 +566,25 @@ tf_config = {
                 for a in cis_alarms
             },
             **{
-                'clam_fail': {
-                    'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
+                resource_name: {
+                    'alarm_name': config.qualified_resource_name(resource_name, suffix='.alarm'),
                     'comparison_operator': 'GreaterThanOrEqualToThreshold',
                     'evaluation_periods': 1,
-                    'metric_name': 'clam_fail',
+                    'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                   '%s.metric_transformation[0].name}' % resource_name,
                     'namespace': 'LogMetrics',
                     'statistic': 'Sum',
                     'treat_missing_data': 'notBreaching',
                     'threshold': 1,
+                    'period': period,
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+                } for resource_name, period in [
                     # With ClamScan running twice a day we've got a 12h period,
                     # plus 8h upper bound on running time, minus 2h lower bound
                     # on running time, giving us an 18h evaluation period.
-                    'period': 18 * 60 * 60,
-                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
-                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
-                }
+                    ('clam_fail', 18 * 60 * 60)
+                ]
             },
             **{
                 resource_name: {
@@ -607,7 +611,8 @@ tf_config = {
                         {
                             'id': 'log_count_raw',
                             'metric': {
-                                'metric_name': config.qualified_resource_name(resource_name),
+                                'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                                               '%s.metric_transformation[0].name}' % resource_name,
                                 'namespace': 'LogMetrics',
                                 'period': period,
                                 'stat': 'Sum',

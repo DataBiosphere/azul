@@ -1009,7 +1009,7 @@ dcp35_sources = mkdict(dcp34_sources, 438, mkdelta([
     mksrc('datarepo-36bcfc7a', 'hca_prod_e9f36305d85744a393f0df4e6007dc97__20220519_dcp2_20240202_dcp35', 480)
 ]))
 
-dcp36_sources = mkdict(dcp35_sources, 443, mkdelta([
+dcp36_sources = mkdict(dcp35_sources, 441, mkdelta([
     mksrc('datarepo-e650c603', 'hca_prod_07d5987e7f9e4f34b0fba185a35504f5__20230427_dcp2_20240301_dcp36', 36),
     mksrc('datarepo-bac72cd7', 'hca_prod_116965f3f09447699d28ae675c1b569c__20220107_dcp2_20240301_dcp36', 8),
     mksrc('datarepo-4c496b01', 'hca_prod_28dd14388f4040d08e53ee3301b66218__20240301_dcp2_20240306_dcp36', 8),
@@ -1017,7 +1017,7 @@ dcp36_sources = mkdict(dcp35_sources, 443, mkdelta([
     mksrc('datarepo-9f97463d', 'hca_prod_87f519b4886241f9acff75e823e0e430__20240301_dcp2_20240301_dcp36', 21),
     mksrc('datarepo-383230bf', 'hca_prod_9483c664d5464b309ba3efbdbf9290b4__20240301_dcp2_20240301_dcp36', 13),
     mksrc('datarepo-f0643a05', 'hca_prod_957261f72bd64358a6ed24ee080d5cfc__20220330_dcp2_20240301_dcp36', 625),
-    mksrc('datarepo-4a713d97', 'hca_prod_c0fecf0baf8641b8ba82d5fd81b7542a__20240301_dcp2_20240301_dcp36', 34),
+    mksrc('datarepo-72f08c60', 'hca_prod_c3354786c17c4e53b4d7c7afbed5b208__20230526_dcp2_20230530_dcp28', 142, pop),
     mksrc('datarepo-91076846', 'hca_prod_e090445c69714212bc5fae4ec3914102__20230427_dcp2_20240301_dcp36', 3)
 ]))
 
@@ -1128,6 +1128,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
 
         'GOOGLE_PROJECT': 'platform-hca-prod',
+
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '473200283737-h5e1l7neunbuesrtgjf8b12lb7o3jf1m.apps.googleusercontent.com',
 
         'azul_slack_integration': json.dumps({
             'workspace_id': 'T09P9H91S',  # ucsc-gi.slack.com
