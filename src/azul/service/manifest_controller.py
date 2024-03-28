@@ -1,6 +1,9 @@
 from collections.abc import (
     Mapping,
 )
+from math import (
+    ceil,
+)
 from typing import (
     TypedDict,
     cast,
@@ -240,10 +243,13 @@ class ManifestController(SourceController):
                 assert False, token_or_result
 
         body: dict[str, int | str | FlatJSON]
+        wait = query_params.get('wait')
 
         if manifest is None:
             assert token is not None
-            url = self.manifest_url_func(fetch=fetch, token_or_key=token.encode())
+            url = self.manifest_url_func(fetch=fetch,
+                                         token_or_key=token.encode(),
+                                         **({} if wait is None else {'wait': wait}))
             body = {
                 'Status': 301,
                 'Location': str(url),
@@ -280,6 +286,17 @@ class ManifestController(SourceController):
                 'Location': str(url),
                 'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
+
+        if wait is not None:
+            if wait == '0':
+                pass
+            elif wait == '1':
+                retry_after = body.get('Retry-After')
+                if retry_after is not None:
+                    time_slept = self.server_side_sleep(float(retry_after))
+                    body['Retry-After'] = ceil(retry_after - time_slept)
+            else:
+                assert False, wait
 
         # Note: Response objects returned without a 'Content-Type' header will
         # be given one of type 'application/json' as default by Chalice.

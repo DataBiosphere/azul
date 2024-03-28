@@ -57,6 +57,12 @@ def validate_catalog(catalog):
                                 f'Must be one of {set(config.catalogs)}.')
 
 
+def validate_wait(wait: str | None):
+    valid_values = ['0', '1']
+    if wait not in [None, *valid_values]:
+        raise BRE(f'Invalid wait value `{wait}`. Must be one of {valid_values}')
+
+
 class Mandatory:
     """
     Validation wrapper signifying that a parameter is mandatory.

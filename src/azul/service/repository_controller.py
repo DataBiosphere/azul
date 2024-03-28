@@ -59,6 +59,7 @@ from azul.service.app_controller import (
     Mandatory,
     validate_catalog,
     validate_params,
+    validate_wait,
 )
 from azul.service.elasticsearch_service import (
     IndexNotFoundError,
@@ -221,7 +222,7 @@ class RepositoryController(SourceController):
         validate_params(query_params,
                         catalog=str,
                         requestIndex=int,
-                        wait=self._validate_wait,
+                        wait=validate_wait,
                         replica=self._validate_replica,
                         token=str,
                         **self._file_param_validators(catalog, request_index))
@@ -357,10 +358,6 @@ class RepositoryController(SourceController):
         assert accessible not in result, result
         result[accessible] = pass_thru_bool
         return result
-
-    def _validate_wait(self, wait: str | None):
-        if wait not in ('0', '1', None):
-            raise ValueError
 
     def _validate_replica(self, replica: str):
         if replica not in ('aws', 'gcp'):
