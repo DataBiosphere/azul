@@ -68,6 +68,9 @@ from azul import (
 from azul.collections import (
     adict,
 )
+from azul.indexer import (
+    SourcedBundleFQID,
+)
 from azul.json import (
     copy_json,
 )
@@ -107,6 +110,7 @@ from azul_test_case import (
     AzulUnitTestCase,
 )
 from indexer import (
+    AnvilCannedBundleTestCase,
     DCP1CannedBundleTestCase,
 )
 from pfb_test_case import (
@@ -1619,3 +1623,209 @@ class TestManifestPartitioning(DCP1ManifestTestCase, DocumentCloningTestCase):
         content = requests.get(manifest.location).content
         self.assertGreater(num_partitions, 1)
         self.assertGreater(len(content), (num_partitions - 1) * part_size)
+
+
+class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
+
+    @property
+    def _drs_domain(self) -> str:
+        return self.mock_tdr_service_url.netloc
+
+    #: AnVIL doesn't use versioning and all versions are fixed
+    version = '2022-06-01T00:00:00.000000Z'
+
+
+class TestAnvilManifests(AnvilManifestTestCase):
+
+    @classmethod
+    def bundles(cls) -> list[SourcedBundleFQID]:
+        return [
+            cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
+                            version=cls.version),
+            cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
+                            version=cls.version),
+            cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
+                            version=cls.version)
+        ]
+
+    @manifest_test
+    def test_compact_manifest(self):
+        response = self._get_manifest(ManifestFormat.compact, filters={})
+        self.assertEqual(200, response.status_code)
+        expected = [
+            (
+                'source_id',
+                'cafebabe-feed-4bad-dead-beaf8badf00d',
+                'cafebabe-feed-4bad-dead-beaf8badf00d',
+                'cafebabe-feed-4bad-dead-beaf8badf00d'
+            ),
+            (
+                'source_spec',
+                'tdr:test_project:snapshot/snapshot:/2',
+                'tdr:test_project:snapshot/snapshot:/2',
+                'tdr:test_project:snapshot/snapshot:/2'
+            ),
+            (
+                'bundle_uuid',
+                '6b0f6c0f-5d80-a242-accb-840921351cd5',
+                '826dea02-e274-affe-aabc-eb3db63ad068',
+                '826dea02-e274-affe-aabc-eb3db63ad068'
+            ),
+            (
+                'bundle_version',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z'
+            ),
+            (
+                'activity_document_id',
+                '',
+                '1509ef40-d1ba-440d-b298-16b7c173dcd4',
+                '816e364e-1193-4e5b-a91a-14e4b009157c'
+            ),
+            (
+                'activity_type',
+                '',
+                'Sequencing',
+                'Sequencing'
+            ),
+            (
+                'biosample_document_id',
+                '',
+                '826dea02-e274-4ffe-aabc-eb3db63ad068',
+                '826dea02-e274-4ffe-aabc-eb3db63ad068'
+            ),
+            (
+                'biosample_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'anatomical_site',
+                '',
+                '',
+                ''
+            ),
+            (
+                'dataset_document_id',
+                '677dd55c-3fa3-4b07-8c98-985d94d7577e',
+                '2370f948-2783-4eb6-afea-e022897f4dcf',
+                '2370f948-2783-4eb6-afea-e022897f4dcf'
+            ),
+            (
+                'dataset_id',
+                '385290c3-dff5-fb6d-2501-fa0ba3ad1c35',
+                '52ee7665-7033-63f2-a8d9-ce8e32666739',
+                '52ee7665-7033-63f2-a8d9-ce8e32666739'
+            ),
+            (
+                'dataset_title',
+                'ANVIL_1000G_2019_Dev',
+                'ANVIL_CMG_UWASH_DS_BDIS',
+                'ANVIL_CMG_UWASH_DS_BDIS'
+            ),
+            (
+                'phenotypic_sex',
+                '',
+                'redacted-JfQ0b3xG',
+                'redacted-JfQ0b3xG'
+            ),
+            (
+                'donor_document_id',
+                '',
+                'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
+                'bfd991f2-2797-4083-972a-da7c6d7f1b2e'
+            ),
+            (
+                'species',
+                '',
+                '',
+                ''
+            ),
+            (
+                'file_document_id',
+                '6b0f6c0f-5d80-4242-accb-840921351cd5',
+                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                '3b17377b-16b1-431c-9967-e5d01fc5923f'
+            ),
+            (
+                'file_name',
+                'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt',
+                '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                '307500.merged.matefixed.sorted.markeddups.recal.bam'
+            ),
+            (
+                'file_format',
+                '.txt',
+                '.vcf.gz',
+                '.bam'
+            ),
+            (
+                'file_size',
+                '15079345',
+                '213021639',
+                '3306845592'
+            ),
+            (
+                'file_uuid',
+                '6b0f6c0f-5d80-4242-accb-840921351cd5',
+                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                '3b17377b-16b1-431c-9967-e5d01fc5923f'
+            ),
+            (
+                'file_version',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z'
+            ),
+            (
+                'file_reference_assembly',
+                '',
+                '',
+                ''
+            ),
+            (
+                'file_is_supplementary',
+                'True',
+                'False',
+                'False'
+            ),
+            (
+                'file_data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'file_crc32',
+                '',
+                '',
+                ''
+            ),
+            (
+                'file_sha256',
+                '',
+                '',
+                ''
+            ),
+            (
+                'file_md5',
+                'S/GBrRjzZAQYqh3rdiPYzA==',
+                'vuxgbuCqKZ/fkT9CWTFmIg==',
+                'fNn9e1SovzgOROk3BvH6LQ=='
+            ),
+            (
+                'file_drs_uri',
+                self._drs_uri('v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715'),
+                self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67'),
+                self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37')
+            ),
+            (
+                'file_url',
+                self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
+                self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
+                self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
+            )
+        ]
+        self._assert_tsv(expected, response)
