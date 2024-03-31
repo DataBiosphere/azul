@@ -274,10 +274,13 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                     if new_path == ('entity_id',):
                         pass
                     elif new_path == ('contents', 'files', 'uuid'):
+                        # Request the injection of a file URL …
                         result[path]['file_url'] = 'files.file_url'
-                        result[path][path_element] = 'files.uuid'
+                        # … but suppress the columns for the fields …
+                        result[path][path_element] = None
                     elif new_path == ('contents', 'files', 'version'):
-                        result[path][path_element] = 'files.version'
+                        # … only used by that injection.
+                        result[path][path_element] = None
                     else:
                         result[path][path_element] = name_or_type
                 else:

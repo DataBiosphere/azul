@@ -84,7 +84,7 @@ FieldName = str
 
 FieldMapping = Mapping[FieldName, FieldPath]
 
-ColumnMapping = Mapping[FieldPathElement, FieldName]
+ColumnMapping = Mapping[FieldPathElement, FieldName | None]
 ManifestConfig = Mapping[FieldPath, ColumnMapping]
 MutableColumnMapping = dict[FieldPathElement, FieldName]
 MutableManifestConfig = dict[FieldPath, MutableColumnMapping]

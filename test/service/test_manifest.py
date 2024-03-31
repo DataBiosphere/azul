@@ -2026,22 +2026,10 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37')
             ),
             (
-                'files.version',
-                '2022-06-01T00:00:00.000000Z',
-                '2022-06-01T00:00:00.000000Z',
-                '2022-06-01T00:00:00.000000Z'
-            ),
-            (
                 'files.file_url',
                 self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
                 self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
                 self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
-            ),
-            (
-                'files.uuid',
-                '6b0f6c0f-5d80-4242-accb-840921351cd5',
-                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
-                '3b17377b-16b1-431c-9967-e5d01fc5923f'
             )
         ]
         self._assert_tsv(expected, response)
