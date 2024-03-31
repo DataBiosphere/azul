@@ -327,7 +327,7 @@ class Plugin(MetadataPlugin[HCABundle]):
         ]
 
     @property
-    def manifest(self) -> ManifestConfig:
+    def manifest_config(self) -> ManifestConfig:
         return {
             ('sources',): {
                 'id': 'source_id',

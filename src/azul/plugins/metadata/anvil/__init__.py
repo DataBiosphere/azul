@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 from typing import (
     Iterable,
     Optional,
@@ -12,6 +15,7 @@ from azul import (
 from azul.indexer.document import (
     DocumentType,
     EntityType,
+    FieldPath,
     IndexName,
 )
 from azul.plugins import (
@@ -258,52 +262,29 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         ]
 
     @property
-    def manifest(self) -> ManifestConfig:
-        return {
-            ('sources',): {
-                'id': 'source_id',
-                'spec': 'source_spec',
-            },
-            ('bundles',): {
-                'uuid': 'bundle_uuid',
-                'version': 'bundle_version'
-            },
-            ('contents', 'activities'): {
-                'document_id': 'activity_document_id',
-                'activity_type': 'activity_type',
-            },
-            ('contents', 'biosamples'): {
-                'document_id': 'biosample_document_id',
-                'biosample_type': 'biosample_type',
-                'anatomical_site': 'anatomical_site'
-            },
-            ('contents', 'datasets'): {
-                'document_id': 'dataset_document_id',
-                'dataset_id': 'dataset_id',
-                'title': 'dataset_title'
-            },
-            ('contents', 'donors'): {
-                'phenotypic_sex': 'phenotypic_sex',
-                'document_id': 'donor_document_id',
-                'species': 'species',
-            },
-            ('contents', 'files'): {
-                'document_id': 'file_document_id',
-                'name': 'file_name',
-                'file_format': 'file_format',
-                'size': 'file_size',
-                'uuid': 'file_uuid',
-                'version': 'file_version',
-                'reference_assembly': 'file_reference_assembly',
-                'is_supplementary': 'file_is_supplementary',
-                'data_modality': 'file_data_modality',
-                'crc32': 'file_crc32',
-                'sha256': 'file_sha256',
-                'file_md5sum': 'file_md5',
-                'drs_uri': 'file_drs_uri',
-                'file_url': 'file_url'
-            }
-        }
+    def manifest_config(self) -> ManifestConfig:
+        result = defaultdict(dict)
+
+        def recurse(mapping: MetadataPlugin._FieldMapping, path: FieldPath):
+            for path_element, name_or_type in mapping.items():
+                new_path = (*path, path_element)
+                if isinstance(name_or_type, dict):
+                    recurse(name_or_type, new_path)
+                elif isinstance(name_or_type, str):
+                    if new_path == ('entity_id',):
+                        pass
+                    elif new_path == ('contents', 'files', 'uuid'):
+                        result[path]['file_url'] = 'files.file_url'
+                        result[path][path_element] = 'files.uuid'
+                    elif new_path == ('contents', 'files', 'version'):
+                        result[path][path_element] = 'files.version'
+                    else:
+                        result[path][path_element] = name_or_type
+                else:
+                    assert False, (path, path_element, name_or_type)
+
+        recurse(self._field_mapping, ())
+        return result
 
     def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
         return None

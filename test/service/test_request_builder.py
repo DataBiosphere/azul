@@ -89,7 +89,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
 
         @property
-        def manifest(self) -> ManifestConfig:
+        def manifest_config(self) -> ManifestConfig:
             return {}
 
         @property

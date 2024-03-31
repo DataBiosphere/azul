@@ -1654,178 +1654,394 @@ class TestAnvilManifests(AnvilManifestTestCase):
         self.assertEqual(200, response.status_code)
         expected = [
             (
-                'source_id',
-                'cafebabe-feed-4bad-dead-beaf8badf00d',
-                'cafebabe-feed-4bad-dead-beaf8badf00d',
-                'cafebabe-feed-4bad-dead-beaf8badf00d'
-            ),
-            (
-                'source_spec',
-                'tdr:test_project:snapshot/snapshot:/2',
-                'tdr:test_project:snapshot/snapshot:/2',
-                'tdr:test_project:snapshot/snapshot:/2'
-            ),
-            (
-                'bundle_uuid',
+                'bundleUuid',
                 '6b0f6c0f-5d80-a242-accb-840921351cd5',
                 '826dea02-e274-affe-aabc-eb3db63ad068',
                 '826dea02-e274-affe-aabc-eb3db63ad068'
             ),
             (
-                'bundle_version',
+                'bundleVersion',
                 '2022-06-01T00:00:00.000000Z',
                 '2022-06-01T00:00:00.000000Z',
                 '2022-06-01T00:00:00.000000Z'
             ),
             (
-                'activity_document_id',
+                'sourceId',
+                'cafebabe-feed-4bad-dead-beaf8badf00d',
+                'cafebabe-feed-4bad-dead-beaf8badf00d',
+                'cafebabe-feed-4bad-dead-beaf8badf00d'
+            ),
+            (
+                'sourceSpec',
+                'tdr:test_project:snapshot/snapshot:/2',
+                'tdr:test_project:snapshot/snapshot:/2',
+                'tdr:test_project:snapshot/snapshot:/2'
+            ),
+            (
+                'activities.document_id',
                 '',
                 '1509ef40-d1ba-440d-b298-16b7c173dcd4',
                 '816e364e-1193-4e5b-a91a-14e4b009157c'
             ),
             (
-                'activity_type',
+                'activities.source_datarepo_row_ids',
+                '',
+                'sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051',
+                'sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'
+            ),
+            (
+                'activities.activity_id',
+                '',
+                '18b3be87-e26b-4376-0d8d-c1e370e90e07',
+                'a60c5138-3749-f7cb-8714-52d389ad5231'
+            ),
+            (
+                'activities.activity_table',
+                '',
+                'sequencingactivity',
+                'sequencingactivity'
+            ),
+            (
+                'activities.activity_type',
                 '',
                 'Sequencing',
                 'Sequencing'
             ),
             (
-                'biosample_document_id',
+                'activities.assay_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.reference_assembly',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.date_created',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.document_id',
                 '',
                 '826dea02-e274-4ffe-aabc-eb3db63ad068',
                 '826dea02-e274-4ffe-aabc-eb3db63ad068'
             ),
             (
-                'biosample_type',
+                'biosamples.source_datarepo_row_ids',
+                '',
+                'sample:98048c3b-2525-4090-94fd-477de31f2608',
+                'sample:98048c3b-2525-4090-94fd-477de31f2608'
+            ),
+            (
+                'biosamples.biosample_id',
+                '',
+                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b',
+                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
+            ),
+            (
+                'biosamples.anatomical_site',
                 '',
                 '',
                 ''
             ),
             (
-                'anatomical_site',
+                'biosamples.apriori_cell_type',
                 '',
                 '',
                 ''
             ),
             (
-                'dataset_document_id',
+                'biosamples.biosample_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.disease',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.donor_age_at_collection_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.donor_age_at_collection',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.document_id',
+                '',
+                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461',
+                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461'
+            ),
+            (
+                'diagnoses.source_datarepo_row_ids',
+                '',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
+            ),
+            (
+                'diagnoses.diagnosis_id',
+                '',
+                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6',
+                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6'
+            ),
+            (
+                'diagnoses.disease',
+                '',
+                'redacted-A61iJlLx || redacted-g50ublm/',
+                'redacted-A61iJlLx || redacted-g50ublm/'
+            ),
+            (
+                'diagnoses.diagnosis_age_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.diagnosis_age',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.onset_age_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.onset_age',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.phenotype',
+                '',
+                'redacted-acSYHZUr',
+                'redacted-acSYHZUr'
+            ),
+            (
+                'diagnoses.phenopacket',
+                '',
+                '',
+                ''
+            ),
+            (
+                'datasets.document_id',
                 '677dd55c-3fa3-4b07-8c98-985d94d7577e',
                 '2370f948-2783-4eb6-afea-e022897f4dcf',
                 '2370f948-2783-4eb6-afea-e022897f4dcf'
             ),
             (
-                'dataset_id',
+                'datasets.source_datarepo_row_ids',
+                'workspace_attributes:95684a9c-e0a1-4c05-9f1f-de628a38420c',
+                'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc',
+                'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc'
+            ),
+            (
+                'datasets.dataset_id',
                 '385290c3-dff5-fb6d-2501-fa0ba3ad1c35',
                 '52ee7665-7033-63f2-a8d9-ce8e32666739',
                 '52ee7665-7033-63f2-a8d9-ce8e32666739'
             ),
             (
-                'dataset_title',
+                'datasets.consent_group',
+                '',
+                'DS-BDIS',
+                'DS-BDIS'
+            ),
+            (
+                'datasets.data_use_permission',
+                '',
+                'DS-BDIS',
+                'DS-BDIS'
+            ),
+            (
+                'datasets.owner',
+                '',
+                'Debbie Nickerson',
+                'Debbie Nickerson'
+            ),
+            (
+                'datasets.principal_investigator',
+                '',
+                '',
+                ''
+            ),
+            (
+                'datasets.registered_identifier',
+                '',
+                'phs000693',
+                'phs000693'
+            ),
+            (
+                'datasets.title',
                 'ANVIL_1000G_2019_Dev',
                 'ANVIL_CMG_UWASH_DS_BDIS',
                 'ANVIL_CMG_UWASH_DS_BDIS'
             ),
             (
-                'phenotypic_sex',
+                'datasets.data_modality',
                 '',
-                'redacted-JfQ0b3xG',
-                'redacted-JfQ0b3xG'
+                '',
+                ''
             ),
             (
-                'donor_document_id',
+                'donors.document_id',
                 '',
                 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
                 'bfd991f2-2797-4083-972a-da7c6d7f1b2e'
             ),
             (
-                'species',
+                'donors.source_datarepo_row_ids',
+                '',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
+            ),
+            (
+                'donors.donor_id',
+                '',
+                '1e2bd7e5-f45e-a391-daea-7c060be76acd',
+                '1e2bd7e5-f45e-a391-daea-7c060be76acd'
+            ),
+            (
+                'donors.organism_type',
+                '',
+                'redacted-ACw+6ecI',
+                'redacted-ACw+6ecI'
+            ),
+            (
+                'donors.phenotypic_sex',
+                '',
+                'redacted-JfQ0b3xG',
+                'redacted-JfQ0b3xG'
+            ),
+            (
+                'donors.reported_ethnicity',
+                '',
+                'redacted-NSkwDycK',
+                'redacted-NSkwDycK'
+            ),
+            (
+                'donors.genetic_ancestry',
                 '',
                 '',
                 ''
             ),
             (
-                'file_document_id',
+                'files.document_id',
                 '6b0f6c0f-5d80-4242-accb-840921351cd5',
                 '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                 '3b17377b-16b1-431c-9967-e5d01fc5923f'
             ),
             (
-                'file_name',
-                'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt',
-                '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
-                '307500.merged.matefixed.sorted.markeddups.recal.bam'
+                'files.source_datarepo_row_ids',
+                'file_inventory:04ff3af2-0543-4ea6-830a-d31b957fa2ee',
+                'file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0',
+                'file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2'
             ),
             (
-                'file_format',
+                'files.file_id',
+                '1fab11f5-7eab-4318-9a58-68d8d06e0715',
+                '1e269f04-4347-4188-b060-1dcc69e71d67',
+                '8b722e88-8103-49c1-b351-e64fa7c6ab37'
+            ),
+            (
+                'files.data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.file_format',
                 '.txt',
                 '.vcf.gz',
                 '.bam'
             ),
             (
-                'file_size',
+                'files.file_size',
                 '15079345',
                 '213021639',
                 '3306845592'
             ),
             (
-                'file_uuid',
-                '6b0f6c0f-5d80-4242-accb-840921351cd5',
-                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
-                '3b17377b-16b1-431c-9967-e5d01fc5923f'
-            ),
-            (
-                'file_version',
-                '2022-06-01T00:00:00.000000Z',
-                '2022-06-01T00:00:00.000000Z',
-                '2022-06-01T00:00:00.000000Z'
-            ),
-            (
-                'file_reference_assembly',
-                '',
-                '',
-                ''
-            ),
-            (
-                'file_is_supplementary',
-                'True',
-                'False',
-                'False'
-            ),
-            (
-                'file_data_modality',
-                '',
-                '',
-                ''
-            ),
-            (
-                'file_crc32',
-                '',
-                '',
-                ''
-            ),
-            (
-                'file_sha256',
-                '',
-                '',
-                ''
-            ),
-            (
-                'file_md5',
+                'files.file_md5sum',
                 'S/GBrRjzZAQYqh3rdiPYzA==',
                 'vuxgbuCqKZ/fkT9CWTFmIg==',
                 'fNn9e1SovzgOROk3BvH6LQ=='
             ),
             (
-                'file_drs_uri',
+                'files.reference_assembly',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.file_name',
+                'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt',
+                '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                '307500.merged.matefixed.sorted.markeddups.recal.bam'
+            ),
+            (
+                'files.is_supplementary',
+                'True',
+                'False',
+                'False'
+            ),
+            (
+                'files.crc32',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.sha256',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.drs_uri',
                 self._drs_uri('v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715'),
                 self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67'),
                 self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37')
             ),
             (
-                'file_url',
+                'files.version',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z'
+            ),
+            (
+                'files.file_url',
                 self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
                 self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
                 self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
+            ),
+            (
+                'files.uuid',
+                '6b0f6c0f-5d80-4242-accb-840921351cd5',
+                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                '3b17377b-16b1-431c-9967-e5d01fc5923f'
             )
         ]
         self._assert_tsv(expected, response)

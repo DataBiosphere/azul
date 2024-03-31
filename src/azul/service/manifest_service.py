@@ -873,7 +873,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         The manifest config this generator uses. A manifest config is a mapping
         from document properties to manifest fields.
         """
-        return self.service.metadata_plugin(self.catalog).manifest
+        return self.service.metadata_plugin(self.catalog).manifest_config
 
     @cached_property
     def included_fields(self) -> list[FieldPath] | None:

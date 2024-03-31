@@ -430,7 +430,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def manifest(self) -> ManifestConfig:
+    def manifest_config(self) -> ManifestConfig:
         raise NotImplementedError
 
     @abstractmethod
