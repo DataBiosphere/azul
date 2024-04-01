@@ -134,44 +134,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                 'spec': self.special_fields.source_spec
             },
             'contents': {
-                'activities': {
-                    f: f'activities.{f}' for f in [
-                        *common_fields,
-                        'activity_id',
-                        'activity_table',
-                        'activity_type',
-                        'assay_type',
-                        'data_modality',
-                        'reference_assembly',
-                        # Not in schema
-                        'date_created',
-                    ]
-                },
-                'biosamples': {
-                    f: f'biosamples.{f}' for f in [
-                        *common_fields,
-                        'biosample_id',
-                        'anatomical_site',
-                        'apriori_cell_type',
-                        'biosample_type',
-                        'disease',
-                        'donor_age_at_collection_unit',
-                        'donor_age_at_collection',
-                    ]
-                },
-                'diagnoses': {
-                    f: f'diagnoses.{f}' for f in [
-                        *common_fields,
-                        'diagnosis_id',
-                        'disease',
-                        'diagnosis_age_unit',
-                        'diagnosis_age',
-                        'onset_age_unit',
-                        'onset_age',
-                        'phenotype',
-                        'phenopacket'
-                    ]
-                },
                 'datasets': {
                     f: f'datasets.{f}' for f in [
                         *common_fields,
@@ -193,6 +155,44 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                         'phenotypic_sex',
                         'reported_ethnicity',
                         'genetic_ancestry',
+                    ]
+                },
+                'diagnoses': {
+                    f: f'diagnoses.{f}' for f in [
+                        *common_fields,
+                        'diagnosis_id',
+                        'disease',
+                        'diagnosis_age_unit',
+                        'diagnosis_age',
+                        'onset_age_unit',
+                        'onset_age',
+                        'phenotype',
+                        'phenopacket'
+                    ]
+                },
+                'biosamples': {
+                    f: f'biosamples.{f}' for f in [
+                        *common_fields,
+                        'biosample_id',
+                        'anatomical_site',
+                        'apriori_cell_type',
+                        'biosample_type',
+                        'disease',
+                        'donor_age_at_collection_unit',
+                        'donor_age_at_collection',
+                    ]
+                },
+                'activities': {
+                    f: f'activities.{f}' for f in [
+                        *common_fields,
+                        'activity_id',
+                        'activity_table',
+                        'activity_type',
+                        'assay_type',
+                        'data_modality',
+                        'reference_assembly',
+                        # Not in schema
+                        'date_created',
                     ]
                 },
                 'files': {

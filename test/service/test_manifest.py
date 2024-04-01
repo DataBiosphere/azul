@@ -1678,174 +1678,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 'tdr:test_project:snapshot/snapshot:/2'
             ),
             (
-                'activities.document_id',
-                '',
-                '1509ef40-d1ba-440d-b298-16b7c173dcd4',
-                '816e364e-1193-4e5b-a91a-14e4b009157c'
-            ),
-            (
-                'activities.source_datarepo_row_ids',
-                '',
-                'sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051',
-                'sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'
-            ),
-            (
-                'activities.activity_id',
-                '',
-                '18b3be87-e26b-4376-0d8d-c1e370e90e07',
-                'a60c5138-3749-f7cb-8714-52d389ad5231'
-            ),
-            (
-                'activities.activity_table',
-                '',
-                'sequencingactivity',
-                'sequencingactivity'
-            ),
-            (
-                'activities.activity_type',
-                '',
-                'Sequencing',
-                'Sequencing'
-            ),
-            (
-                'activities.assay_type',
-                '',
-                '',
-                ''
-            ),
-            (
-                'activities.data_modality',
-                '',
-                '',
-                ''
-            ),
-            (
-                'activities.reference_assembly',
-                '',
-                '',
-                ''
-            ),
-            (
-                'activities.date_created',
-                '',
-                '',
-                ''
-            ),
-            (
-                'biosamples.document_id',
-                '',
-                '826dea02-e274-4ffe-aabc-eb3db63ad068',
-                '826dea02-e274-4ffe-aabc-eb3db63ad068'
-            ),
-            (
-                'biosamples.source_datarepo_row_ids',
-                '',
-                'sample:98048c3b-2525-4090-94fd-477de31f2608',
-                'sample:98048c3b-2525-4090-94fd-477de31f2608'
-            ),
-            (
-                'biosamples.biosample_id',
-                '',
-                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b',
-                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
-            ),
-            (
-                'biosamples.anatomical_site',
-                '',
-                '',
-                ''
-            ),
-            (
-                'biosamples.apriori_cell_type',
-                '',
-                '',
-                ''
-            ),
-            (
-                'biosamples.biosample_type',
-                '',
-                '',
-                ''
-            ),
-            (
-                'biosamples.disease',
-                '',
-                '',
-                ''
-            ),
-            (
-                'biosamples.donor_age_at_collection_unit',
-                '',
-                '',
-                ''
-            ),
-            (
-                'biosamples.donor_age_at_collection',
-                '',
-                "{'gte': None, 'lte': None}",
-                "{'gte': None, 'lte': None}"
-            ),
-            (
-                'diagnoses.document_id',
-                '',
-                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461',
-                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461'
-            ),
-            (
-                'diagnoses.source_datarepo_row_ids',
-                '',
-                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef',
-                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
-            ),
-            (
-                'diagnoses.diagnosis_id',
-                '',
-                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6',
-                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6'
-            ),
-            (
-                'diagnoses.disease',
-                '',
-                'redacted-A61iJlLx || redacted-g50ublm/',
-                'redacted-A61iJlLx || redacted-g50ublm/'
-            ),
-            (
-                'diagnoses.diagnosis_age_unit',
-                '',
-                '',
-                ''
-            ),
-            (
-                'diagnoses.diagnosis_age',
-                '',
-                "{'gte': None, 'lte': None}",
-                "{'gte': None, 'lte': None}"
-            ),
-            (
-                'diagnoses.onset_age_unit',
-                '',
-                '',
-                ''
-            ),
-            (
-                'diagnoses.onset_age',
-                '',
-                "{'gte': None, 'lte': None}",
-                "{'gte': None, 'lte': None}"
-            ),
-            (
-                'diagnoses.phenotype',
-                '',
-                'redacted-acSYHZUr',
-                'redacted-acSYHZUr'
-            ),
-            (
-                'diagnoses.phenopacket',
-                '',
-                '',
-                ''
-            ),
-            (
                 'datasets.document_id',
                 '677dd55c-3fa3-4b07-8c98-985d94d7577e',
                 '2370f948-2783-4eb6-afea-e022897f4dcf',
@@ -1943,6 +1775,174 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'donors.genetic_ancestry',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.document_id',
+                '',
+                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461',
+                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461'
+            ),
+            (
+                'diagnoses.source_datarepo_row_ids',
+                '',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
+            ),
+            (
+                'diagnoses.diagnosis_id',
+                '',
+                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6',
+                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6'
+            ),
+            (
+                'diagnoses.disease',
+                '',
+                'redacted-A61iJlLx || redacted-g50ublm/',
+                'redacted-A61iJlLx || redacted-g50ublm/'
+            ),
+            (
+                'diagnoses.diagnosis_age_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.diagnosis_age',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.onset_age_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.onset_age',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.phenotype',
+                '',
+                'redacted-acSYHZUr',
+                'redacted-acSYHZUr'
+            ),
+            (
+                'diagnoses.phenopacket',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.document_id',
+                '',
+                '826dea02-e274-4ffe-aabc-eb3db63ad068',
+                '826dea02-e274-4ffe-aabc-eb3db63ad068'
+            ),
+            (
+                'biosamples.source_datarepo_row_ids',
+                '',
+                'sample:98048c3b-2525-4090-94fd-477de31f2608',
+                'sample:98048c3b-2525-4090-94fd-477de31f2608'
+            ),
+            (
+                'biosamples.biosample_id',
+                '',
+                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b',
+                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
+            ),
+            (
+                'biosamples.anatomical_site',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.apriori_cell_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.biosample_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.disease',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.donor_age_at_collection_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.donor_age_at_collection',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'activities.document_id',
+                '',
+                '1509ef40-d1ba-440d-b298-16b7c173dcd4',
+                '816e364e-1193-4e5b-a91a-14e4b009157c'
+            ),
+            (
+                'activities.source_datarepo_row_ids',
+                '',
+                'sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051',
+                'sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'
+            ),
+            (
+                'activities.activity_id',
+                '',
+                '18b3be87-e26b-4376-0d8d-c1e370e90e07',
+                'a60c5138-3749-f7cb-8714-52d389ad5231'
+            ),
+            (
+                'activities.activity_table',
+                '',
+                'sequencingactivity',
+                'sequencingactivity'
+            ),
+            (
+                'activities.activity_type',
+                '',
+                'Sequencing',
+                'Sequencing'
+            ),
+            (
+                'activities.assay_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.reference_assembly',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.date_created',
                 '',
                 '',
                 ''
