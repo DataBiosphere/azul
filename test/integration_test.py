@@ -1924,3 +1924,30 @@ class DisableAutomaticIndexCreationTest(IntegrationTestCase):
         finally:
             if es.indices.exists(index=index_name):
                 es.indices.delete(index=[index_name])
+
+
+class ResponseHeadersTest(AzulTestCase):
+
+    def test_response_security_headers(self):
+        test_cases = {
+            '/': {'Cache-Control': 'public, max-age=0, must-revalidate'},
+            '/static/swagger-ui.css': {'Cache-Control': 'public, max-age=86400'},
+            '/openapi': {'Cache-Control': 'public, max-age=500'},
+            '/oauth2_redirect': {'Cache-Control': 'no-store'},
+            '/health/basic': {'Cache-Control': 'no-store'}
+        }
+        global_headers = {
+            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+        }
+        for endpoint in (config.service_endpoint, config.indexer_endpoint):
+            for path, expected_headers in test_cases.items():
+                with self.subTest(endpoint=endpoint, path=path):
+                    if path == '/oauth2_redirect' and endpoint == config.indexer_endpoint:
+                        pass  # no oauth2 endpoint on indexer Lambda
+                    else:
+                        response = requests.get(str(endpoint / path))
+                        response.raise_for_status()
+                        expected = expected_headers | global_headers
+                        self.assertIsSubset(expected.items(), response.headers.items())
