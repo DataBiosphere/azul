@@ -20,9 +20,6 @@ from more_itertools import (
     one,
 )
 
-from azul import (
-    CatalogName,
-)
 from azul.plugins.metadata.hca.service.contributor_matrices import (
     make_stratification_tree,
 )
@@ -269,37 +266,9 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def process_response(self, response: ResponseTriple) -> SearchResponse:
         hits, pagination, aggs = response
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=pagination,
-                                        aggs=aggs,
-                                        entity_type=self.entity_type,
-                                        catalog=self.catalog)
-        return factory.make_response()
-
-
-# FIXME: Merge into HCASearchResponseStage
-#        https://github.com/DataBiosphere/azul/issues/4135
-
-class SearchResponseFactory:
-
-    def __init__(self,
-                 *,
-                 hits: JSONs,
-                 pagination: ResponsePagination,
-                 aggs: JSON,
-                 entity_type: str,
-                 catalog: CatalogName):
-        super().__init__()
-        self.hits = hits
-        self.pagination = pagination
-        self.aggs = aggs
-        self.entity_type = entity_type
-        self.catalog = catalog
-
-    def make_response(self) -> SearchResponse:
-        return SearchResponse(pagination=self.pagination,
-                              termFacets=self.make_facets(),
-                              hits=self.make_hits())
+        return SearchResponse(pagination=pagination,
+                              termFacets=self.make_facets(aggs),
+                              hits=self.make_hits(hits))
 
     def make_bundles(self, entry) -> MutableJSONs:
         return [
@@ -511,8 +480,8 @@ class SearchResponseFactory:
             for sample in entry['contents'].get(sample_entity_type, [])
         ]
 
-    def make_hits(self) -> MutableJSONs:
-        return list(map(self.make_hit, self.hits))
+    def make_hits(self, hits: JSONs) -> MutableJSONs:
+        return list(map(self.make_hit, hits))
 
     def make_hit(self, es_hit) -> MutableJSON:
         hit = Hit(protocols=self.make_protocols(es_hit),
@@ -599,9 +568,9 @@ class SearchResponseFactory:
                      #        https://github.com/DataBiosphere/azul/issues/2460
                      type='terms')
 
-    def make_facets(self) -> MutableJSON:
+    def make_facets(self, aggs: JSON) -> MutableJSON:
         facets = {}
-        for facet, agg in self.aggs.items():
+        for facet, agg in aggs.items():
             if facet != '_project_agg':  # Filter out project specific aggs
                 facets[facet] = self.make_terms(agg)
         return facets
