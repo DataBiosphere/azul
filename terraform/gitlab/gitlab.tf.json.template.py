@@ -242,6 +242,8 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.29 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
+    # FIXME: Do not update AMI to v3 until issue with OpenSSH daemon is resolved
+    #        https://github.com/DataBiosphere/azul/issues/6082
     'us-east-1': 'ami-02adfaf34663c8edb'
 }
 
