@@ -1654,25 +1654,25 @@ class TestAnvilManifests(AnvilManifestTestCase):
         self.assertEqual(200, response.status_code)
         expected = [
             (
-                'bundleUuid',
+                'bundle_uuid',
                 '6b0f6c0f-5d80-a242-accb-840921351cd5',
                 '826dea02-e274-affe-aabc-eb3db63ad068',
                 '826dea02-e274-affe-aabc-eb3db63ad068'
             ),
             (
-                'bundleVersion',
+                'bundle_version',
                 '2022-06-01T00:00:00.000000Z',
                 '2022-06-01T00:00:00.000000Z',
                 '2022-06-01T00:00:00.000000Z'
             ),
             (
-                'sourceId',
+                'source_id',
                 'cafebabe-feed-4bad-dead-beaf8badf00d',
                 'cafebabe-feed-4bad-dead-beaf8badf00d',
                 'cafebabe-feed-4bad-dead-beaf8badf00d'
             ),
             (
-                'sourceSpec',
+                'source_spec',
                 'tdr:test_project:snapshot/snapshot:/2',
                 'tdr:test_project:snapshot/snapshot:/2',
                 'tdr:test_project:snapshot/snapshot:/2'

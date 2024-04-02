@@ -226,10 +226,10 @@ class Plugin(MetadataPlugin[AnvilBundle]):
 
     @property
     def special_fields(self) -> SpecialFields:
-        return SpecialFields(source_id='sourceId',
-                             source_spec='sourceSpec',
-                             bundle_uuid='bundleUuid',
-                             bundle_version='bundleVersion')
+        return SpecialFields(source_id='source_id',
+                             source_spec='source_spec',
+                             bundle_uuid='bundle_uuid',
+                             bundle_version='bundle_version')
 
     @property
     def implicit_hub_type(self) -> str:
