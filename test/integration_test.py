@@ -1179,12 +1179,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         hits = self._get_entities(catalog, 'bundles', filters)
         special_fields = self.metadata_plugin(catalog).special_fields
         for hit in hits:
-            source = one(hit['sources'])
-            bundle = one(hit['bundles'])
+            source, bundle = one(hit['sources']), one(hit['bundles'])
+            source = SourceJSON(id=source[special_fields.source_id],
+                                spec=source[special_fields.source_spec])
             bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
                                                 version=bundle['bundleVersion'],
-                                                source=SourceJSON(id=source[special_fields.source_id],
-                                                                  spec=source['sourceSpec']))
+                                                source=source)
             if config.is_anvil_enabled(catalog):
                 # Every primary bundle contains 1 or more biosamples, 1 dataset,
                 # and 0 or more other entities. Biosamples only occur in primary

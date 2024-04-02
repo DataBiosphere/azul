@@ -179,7 +179,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             },
             'sources': {
                 'id': self.special_fields.source_id,
-                'spec': 'sourceSpec'
+                'spec': self.special_fields.source_spec
             },
             'cell_count': 'cellCount',
             'effective_cell_count': 'effectiveCellCount',
@@ -270,7 +270,8 @@ class Plugin(MetadataPlugin[HCABundle]):
 
     @property
     def special_fields(self) -> SpecialFields:
-        return SpecialFields(source_id='sourceId')
+        return SpecialFields(source_id='sourceId',
+                             source_spec='sourceSpec')
 
     @property
     def implicit_hub_type(self) -> str:

@@ -3836,7 +3836,7 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         for hit in response_json['hits']:
             source = one(hit['sources'])
             source = TDRSourceRef(id=source[special_fields.source_id],
-                                  spec=TDRSourceSpec.parse(source['sourceSpec']))
+                                  spec=TDRSourceSpec.parse(source[special_fields.source_spec]))
             self.assertEqual(self.source, source)
 
     def get_file(self, entry_id: str) -> JSON:
