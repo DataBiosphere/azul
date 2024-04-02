@@ -128,6 +128,11 @@ class Sorting:
         return 'desc' if self.descending else 'asc'
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class SpecialFields:
+    source_id: FieldName
+
+
 class ManifestFormat(Enum):
     compact = 'compact'
     terra_bdbag = 'terra.bdbag'
@@ -401,7 +406,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def source_id_field(self) -> str:
+    def special_fields(self) -> SpecialFields:
         raise NotImplementedError
 
     @property
@@ -418,9 +423,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     def facets(self) -> Sequence[str]:
-        return [
-            self.source_id_field
-        ]
+        return [self.special_fields.source_id]
 
     @property
     @abstractmethod

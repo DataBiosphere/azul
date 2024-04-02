@@ -23,6 +23,9 @@ from more_itertools import (
 from azul import (
     cached_property,
 )
+from azul.plugins import (
+    SpecialFields,
+)
 from azul.plugins.metadata.hca.service.contributor_matrices import (
     make_stratification_tree,
 )
@@ -270,15 +273,15 @@ class HCASearchResponseStage(SearchResponseStage):
     def make_sources(self, entry) -> MutableJSONs:
         return [
             {
-                self._source_id_field: s['id'],
+                self._special_fields.source_id: s['id'],
                 'sourceSpec': s['spec']
             }
             for s in entry['sources']
         ]
 
     @cached_property
-    def _source_id_field(self) -> str:
-        return self.plugin.source_id_field
+    def _special_fields(self) -> SpecialFields:
+        return self.plugin.special_fields
 
     def make_protocols(self, entry) -> MutableJSONs:
         return [

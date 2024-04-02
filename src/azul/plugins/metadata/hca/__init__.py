@@ -22,6 +22,7 @@ from azul.plugins import (
     ManifestConfig,
     MetadataPlugin,
     Sorting,
+    SpecialFields,
 )
 from azul.plugins.metadata.hca.bundle import (
     HCABundle,
@@ -177,7 +178,7 @@ class Plugin(MetadataPlugin[HCABundle]):
                 'version': 'bundleVersion'
             },
             'sources': {
-                'id': self.source_id_field,
+                'id': self.special_fields.source_id,
                 'spec': 'sourceSpec'
             },
             'cell_count': 'cellCount',
@@ -268,8 +269,8 @@ class Plugin(MetadataPlugin[HCABundle]):
         }
 
     @property
-    def source_id_field(self) -> str:
-        return 'sourceId'
+    def special_fields(self) -> SpecialFields:
+        return SpecialFields(source_id='sourceId')
 
     @property
     def implicit_hub_type(self) -> str:

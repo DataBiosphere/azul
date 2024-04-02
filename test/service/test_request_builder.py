@@ -16,6 +16,7 @@ from azul.plugins import (
     FieldPath,
     ManifestConfig,
     MetadataPlugin,
+    SpecialFields,
 )
 from azul.plugins.metadata.hca import (
     Plugin,
@@ -56,8 +57,8 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
     class MockPlugin(Plugin):
 
         @property
-        def source_id_field(self) -> str:
-            return 'sourceId'
+        def special_fields(self) -> SpecialFields:
+            return SpecialFields(source_id='sourceId')
 
         @property
         def _field_mapping(self) -> MetadataPlugin._FieldMapping:

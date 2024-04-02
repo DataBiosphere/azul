@@ -631,7 +631,7 @@ def validate_filters(filters):
             raise BRE(f'The `filters` parameter entry for `{field}` '
                       f'must be a single-item dictionary')
         else:
-            if field == app.metadata_plugin.source_id_field:
+            if field == app.metadata_plugin.special_fields.source_id:
                 valid_relations = ('is',)
             else:
                 valid_relations = ('is', 'contains', 'within', 'intersects')

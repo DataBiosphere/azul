@@ -126,10 +126,10 @@ class RepositoryService(ElasticsearchService):
                                 aggregate=item_id is None,
                                 entity_type=entity_type)
 
-        source_id_field = self.metadata_plugin(catalog).source_id_field
+        special_fields = self.metadata_plugin(catalog).special_fields
         for hit in response['hits']:
             entity = one(hit[entity_type])
-            source_id = one(hit['sources'])[source_id_field]
+            source_id = one(hit['sources'])[special_fields.source_id]
             entity['accessible'] = source_id in filters.source_ids
 
         def inject_file_urls(node: AnyMutableJSON, *path: str) -> None:

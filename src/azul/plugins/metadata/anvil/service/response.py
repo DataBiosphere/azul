@@ -17,6 +17,9 @@ from azul import (
 from azul.json import (
     copy_json,
 )
+from azul.plugins import (
+    SpecialFields,
+)
 from azul.service.elasticsearch_service import (
     ResponseTriple,
 )
@@ -144,12 +147,12 @@ class AnvilSearchResponseStage(SearchResponseStage):
     def _make_source(self, es_source: JSON) -> MutableJSON:
         return {
             'sourceSpec': es_source['spec'],
-            self._source_id_field: es_source['id']
+            self._special_fields.source_id: es_source['id']
         }
 
     @cached_property
-    def _source_id_field(self) -> str:
-        return self.plugin.source_id_field
+    def _special_fields(self) -> SpecialFields:
+        return self.plugin.special_fields
 
     def _make_bundle(self, es_bundle: JSON) -> MutableJSON:
         return {

@@ -64,6 +64,7 @@ from azul.logging import (
 )
 from azul.plugins import (
     FieldPath,
+    MetadataPlugin,
 )
 from azul.plugins.metadata.hca import (
     HCABundle,
@@ -3520,9 +3521,9 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
         # the `accessible` term facet, so we must perform the same replacement
         # before the list of facets can be used to verify the contents of the
         # response.
-        plugin = self.app_module.app.metadata_plugin
+        plugin: MetadataPlugin = self.app_module.app.metadata_plugin
         facets = list(plugin.facets)
-        facets[facets.index(plugin.source_id_field)] = 'accessible'
+        facets[facets.index(plugin.special_fields.source_id)] = 'accessible'
         return facets
 
     @property
@@ -3831,9 +3832,10 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         response.raise_for_status()
         response_json = response.json()
         plugin = self.index_service.metadata_plugin(self.catalog)
+        special_fields = plugin.special_fields
         for hit in response_json['hits']:
             source = one(hit['sources'])
-            source = TDRSourceRef(id=source[plugin.source_id_field],
+            source = TDRSourceRef(id=source[special_fields.source_id],
                                   spec=TDRSourceSpec.parse(source['sourceSpec']))
             self.assertEqual(self.source, source)
 
