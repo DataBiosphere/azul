@@ -583,7 +583,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ManifestFormat.compact: self._check_compact_manifest,
             ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
             ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
-            ManifestFormat.curl: self._check_curl_manifest
+            ManifestFormat.curl: self._check_curl_manifest,
+            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest
         }
         for format in [None, *supported_formats]:
             # IT catalogs with just one public source are always indexed
@@ -999,6 +1000,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertTrue(output.startswith('output='))
         log.info(f'Manifest contains {num_files} files.')
         self.assertGreater(num_files, 0)
+
+    def _check_jsonl_manifest(self, _catalog: CatalogName, response: bytes):
+        text = TextIOWrapper(BytesIO(response))
+        num_replicas = 0
+        for line in text:
+            json.loads(line)
+            num_replicas += 1
+        log.info('Manifest contains %d replicas', num_replicas)
+        self.assertGreater(num_replicas, 0)
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):

@@ -133,6 +133,7 @@ class ManifestFormat(Enum):
     terra_bdbag = 'terra.bdbag'
     terra_pfb = 'terra.pfb'
     curl = 'curl'
+    verbatim_jsonl = 'verbatim.jsonl'
 
 
 T = TypeVar('T', bound='Plugin')
@@ -401,6 +402,18 @@ class MetadataPlugin(Plugin[BUNDLE]):
     @property
     @abstractmethod
     def source_id_field(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def implicit_hub_type(self) -> str:
+        """
+        The type of entities that do not explicitly track their hubs in replica
+        documents in order to avoid a large list of hub references in the
+        replica document, and to avoid contention when updating that list during
+        indexing. Note that this is not a type of hub entities, but rather the
+        type of replica entities that have implicit hubs.
+        """
         raise NotImplementedError
 
     @property
