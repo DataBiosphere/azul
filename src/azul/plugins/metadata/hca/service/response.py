@@ -129,6 +129,9 @@ class SummaryResponse(TypedDict):
     projects: JSONs
 
 
+T = TypeVar('T')
+
+
 class HCASummaryResponseStage(SummaryResponseStage):
 
     @property
@@ -156,37 +159,22 @@ class HCASummaryResponseStage(SummaryResponseStage):
         }
 
     def process_response(self, response: JSON) -> SummaryResponse:
-        factory = SummaryResponseFactory(response)
-        response = factory.make_response()
-        self._validate_response(cast(JSON, response))
+        response = self.make_response(response)
+        self._validate_response(response)
         return response
 
-    def _validate_response(self, response: JSON):
-        for field, summary_field in (
-            ('totalFileSize', 'totalSize'),
-            ('fileCount', 'count')
+    def _validate_response(self, response: SummaryResponse):
+        for total, summary_field in (
+            (response['totalFileSize'], 'totalSize'),
+            (response['fileCount'], 'count')
         ):
-            total = response[field]
             summaries = cast(JSONs, response['fileTypeSummaries'])
             summary_total = sum(summary[summary_field] for summary in summaries)
             assert total == summary_total, (total, summary_total)
 
-
-T = TypeVar('T')
-
-
-# FIXME: Merge into HCASummaryResponseStage
-#        https://github.com/DataBiosphere/azul/issues/4135
-
-class SummaryResponseFactory:
-
-    def __init__(self, aggs: JSON):
-        super().__init__()
-        self.aggs = aggs
-
-    def make_response(self) -> SummaryResponse:
+    def make_response(self, aggs: JSON) -> SummaryResponse:
         def agg_value(*path: str) -> AnyJSON:
-            agg = self.aggs
+            agg = aggs
             for name in path:
                 agg = agg[name]
             return agg
