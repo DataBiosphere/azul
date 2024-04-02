@@ -144,8 +144,12 @@ class AnvilSearchResponseStage(SearchResponseStage):
     def _make_source(self, es_source: JSON) -> MutableJSON:
         return {
             'sourceSpec': es_source['spec'],
-            'sourceId': es_source['id']
+            self._source_id_field: es_source['id']
         }
+
+    @cached_property
+    def _source_id_field(self) -> str:
+        return self.plugin.source_id_field
 
     def _make_bundle(self, es_bundle: JSON) -> MutableJSON:
         return {

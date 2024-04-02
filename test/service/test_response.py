@@ -3830,9 +3830,10 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
+        plugin = self.index_service.metadata_plugin(self.catalog)
         for hit in response_json['hits']:
             source = one(hit['sources'])
-            source = TDRSourceRef(id=source['sourceId'],
+            source = TDRSourceRef(id=source[plugin.source_id_field],
                                   spec=TDRSourceSpec.parse(source['sourceSpec']))
             self.assertEqual(self.source, source)
 

@@ -1177,12 +1177,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
         hits = self._get_entities(catalog, 'bundles', filters)
+        source_id_field = self.metadata_plugin(catalog).source_id_field
         for hit in hits:
             source = one(hit['sources'])
             bundle = one(hit['bundles'])
             bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
                                                 version=bundle['bundleVersion'],
-                                                source=SourceJSON(id=source['sourceId'],
+                                                source=SourceJSON(id=source[source_id_field],
                                                                   spec=source['sourceSpec']))
             if config.is_anvil_enabled(catalog):
                 # Every primary bundle contains 1 or more biosamples, 1 dataset,
@@ -1367,9 +1368,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         :return: hits for the managed access bundles
         """
 
+        source_id_field = self.metadata_plugin(catalog).source_id_field
+
         def source_id_from_hit(hit: JSON) -> str:
             sources: JSONs = hit['sources']
-            return one(sources)['sourceId']
+            return one(sources)[source_id_field]
 
         bundle_type = self._bundle_type(catalog)
         project_type = self._project_type(catalog)
@@ -1387,7 +1390,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
-        source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
+        source_filter = {source_id_field: {'is': list(managed_access_source_ids)}}
         params = {
             'filters': json.dumps(source_filter),
             'catalog': catalog
@@ -1410,9 +1413,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         Test the managed access controls for the /repository/files endpoint
         :return: Managed access file hits
         """
+        source_id_field = self.metadata_plugin(catalog).source_id_field
         with self._service_account_credentials:
             files = self._get_entities(catalog, 'files', filters={
-                'sourceId': {
+                source_id_field: {
                     'is': list(managed_access_source_ids)
                 }
             })
@@ -1466,7 +1470,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for file in files
             if len(file['sources']) == 1
         ))
-        filters = {'sourceId': {'is': [source_id]}}
+        source_id_field = self.metadata_plugin(catalog).source_id_field
+        filters = {source_id_field: {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         files_url = furl(url=endpoint, path='index/files', args=params)
         response = self._get_url_json(GET, files_url)
