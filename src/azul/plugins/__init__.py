@@ -132,6 +132,8 @@ class Sorting:
 class SpecialFields:
     source_id: FieldName
     source_spec: FieldName
+    bundle_uuid: FieldName
+    bundle_version: FieldName
 
 
 class ManifestFormat(Enum):

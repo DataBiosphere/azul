@@ -151,9 +151,12 @@ class Plugin(MetadataPlugin[HCABundle]):
     @property
     def exposed_indices(self) -> dict[EntityType, Sorting]:
         return dict(
-            bundles=Sorting(field_name='bundleVersion', descending=True, max_page_size=100),
+            bundles=Sorting(field_name=self.special_fields.bundle_version,
+                            descending=True,
+                            max_page_size=100),
             files=Sorting(field_name='fileName'),
-            projects=Sorting(field_name='projectTitle', max_page_size=100),
+            projects=Sorting(field_name='projectTitle',
+                             max_page_size=100),
             samples=Sorting(field_name='sampleId')
         )
 
@@ -174,8 +177,8 @@ class Plugin(MetadataPlugin[HCABundle]):
         return {
             'entity_id': 'entryId',
             'bundles': {
-                'uuid': 'bundleUuid',
-                'version': 'bundleVersion'
+                'uuid': self.special_fields.bundle_uuid,
+                'version': self.special_fields.bundle_version
             },
             'sources': {
                 'id': self.special_fields.source_id,
@@ -271,7 +274,9 @@ class Plugin(MetadataPlugin[HCABundle]):
     @property
     def special_fields(self) -> SpecialFields:
         return SpecialFields(source_id='sourceId',
-                             source_spec='sourceSpec')
+                             source_spec='sourceSpec',
+                             bundle_uuid='bundleUuid',
+                             bundle_version='bundleVersion')
 
     @property
     def implicit_hub_type(self) -> str:

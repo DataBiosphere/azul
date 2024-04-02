@@ -60,7 +60,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return dict(
             activities=Sorting(field_name='activities.activity_id'),
             biosamples=Sorting(field_name='biosamples.biosample_id'),
-            bundles=Sorting(field_name='bundleUuid'),
+            bundles=Sorting(field_name=self.special_fields.bundle_uuid),
             datasets=Sorting(field_name='datasets.dataset_id'),
             donors=Sorting(field_name='donors.donor_id'),
             files=Sorting(field_name='files.file_id'),
@@ -122,8 +122,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return {
             'entity_id': 'entryId',
             'bundles': {
-                'uuid': 'bundleUuid',
-                'version': 'bundleVersion'
+                'uuid': self.special_fields.bundle_uuid,
+                'version': self.special_fields.bundle_version
             },
             'sources': {
                 'id': self.special_fields.source_id,
@@ -223,7 +223,9 @@ class Plugin(MetadataPlugin[AnvilBundle]):
     @property
     def special_fields(self) -> SpecialFields:
         return SpecialFields(source_id='sourceId',
-                             source_spec='sourceSpec')
+                             source_spec='sourceSpec',
+                             bundle_uuid='bundleUuid',
+                             bundle_version='bundleVersion')
 
     @property
     def implicit_hub_type(self) -> str:

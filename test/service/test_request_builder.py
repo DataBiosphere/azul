@@ -59,7 +59,9 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         @property
         def special_fields(self) -> SpecialFields:
             return SpecialFields(source_id='sourceId',
-                                 source_spec='sourceSpec')
+                                 source_spec='sourceSpec',
+                                 bundle_uuid='bundleUuid',
+                                 bundle_version='bundleVersion')
 
         @property
         def _field_mapping(self) -> MetadataPlugin._FieldMapping:

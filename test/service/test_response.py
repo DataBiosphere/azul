@@ -1147,9 +1147,10 @@ class TestIndexResponse(IndexResponseTestCase):
         response = response.json()
         indexed_bundles = set(self.bundles())
         self.assertEqual(len(self.bundles()), len(indexed_bundles))
+        special_fields = self.index_service.metadata_plugin(self.catalog).special_fields
         actual_bundles = {
-            self.bundle_fqid(uuid=bundle['bundleUuid'],
-                             version=bundle['bundleVersion'])
+            self.bundle_fqid(uuid=bundle[special_fields.bundle_uuid],
+                             version=bundle[special_fields.bundle_version])
             for hit in response['hits']
             for bundle in hit['bundles']
         }

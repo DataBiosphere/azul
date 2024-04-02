@@ -266,7 +266,10 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_bundles(self, entry) -> MutableJSONs:
         return [
-            {'bundleUuid': b['uuid'], 'bundleVersion': b['version']}
+            {
+                self._special_fields.bundle_uuid: b['uuid'],
+                self._special_fields.bundle_version: b['version']
+            }
             for b in entry['bundles']
         ]
 

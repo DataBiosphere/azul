@@ -1182,8 +1182,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             source, bundle = one(hit['sources']), one(hit['bundles'])
             source = SourceJSON(id=source[special_fields.source_id],
                                 spec=source[special_fields.source_spec])
-            bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
-                                                version=bundle['bundleVersion'],
+            bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle[special_fields.bundle_uuid],
+                                                version=bundle[special_fields.bundle_version],
                                                 source=source)
             if config.is_anvil_enabled(catalog):
                 # Every primary bundle contains 1 or more biosamples, 1 dataset,
@@ -1466,15 +1466,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         endpoint = config.service_endpoint
 
+        special_fields = self.metadata_plugin(catalog).special_fields
+
         def bundle_uuids(hit: JSON) -> set[str]:
-            return {bundle['bundleUuid'] for bundle in hit['bundles']}
+            return {
+                bundle[special_fields.bundle_uuid]
+                for bundle in hit['bundles']
+            }
 
         managed_access_bundles = set.union(*(
             bundle_uuids(file)
             for file in files
             if len(file['sources']) == 1
         ))
-        special_fields = self.metadata_plugin(catalog).special_fields
         filters = {special_fields.source_id: {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         files_url = furl(url=endpoint, path='index/files', args=params)
@@ -1482,7 +1486,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
         self.assertNotIn(public_bundle, managed_access_bundles)
 
-        filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
+        filters = {
+            special_fields.bundle_uuid: {
+                'is': [public_bundle, *managed_access_bundles]
+            }
+        }
         params = {'catalog': catalog, 'filters': json.dumps(filters)}
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 

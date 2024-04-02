@@ -156,8 +156,8 @@ class AnvilSearchResponseStage(SearchResponseStage):
 
     def _make_bundle(self, es_bundle: JSON) -> MutableJSON:
         return {
-            'bundleUuid': es_bundle['uuid'],
-            'bundleVersion': es_bundle['version']
+            self._special_fields.bundle_uuid: es_bundle['uuid'],
+            self._special_fields.bundle_version: es_bundle['version']
         }
 
     def _make_contents(self, es_contents: JSON) -> MutableJSON:
