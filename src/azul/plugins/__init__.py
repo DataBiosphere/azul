@@ -84,7 +84,7 @@ FieldName = str
 
 FieldMapping = Mapping[FieldName, FieldPath]
 
-ColumnMapping = Mapping[FieldPathElement, FieldName]
+ColumnMapping = Mapping[FieldPathElement, FieldName | None]
 ManifestConfig = Mapping[FieldPath, ColumnMapping]
 MutableColumnMapping = dict[FieldPathElement, FieldName]
 MutableManifestConfig = dict[FieldPath, MutableColumnMapping]
@@ -126,6 +126,14 @@ class Sorting:
     @property
     def order(self) -> str:
         return 'desc' if self.descending else 'asc'
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class SpecialFields:
+    source_id: FieldName
+    source_spec: FieldName
+    bundle_uuid: FieldName
+    bundle_version: FieldName
 
 
 class ManifestFormat(Enum):
@@ -401,7 +409,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def source_id_field(self) -> str:
+    def special_fields(self) -> SpecialFields:
         raise NotImplementedError
 
     @property
@@ -418,13 +426,11 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     def facets(self) -> Sequence[str]:
-        return [
-            self.source_id_field
-        ]
+        return [self.special_fields.source_id]
 
     @property
     @abstractmethod
-    def manifest(self) -> ManifestConfig:
+    def manifest_config(self) -> ManifestConfig:
         raise NotImplementedError
 
     @abstractmethod

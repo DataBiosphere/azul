@@ -22,6 +22,7 @@ from azul.plugins import (
     ManifestConfig,
     MetadataPlugin,
     Sorting,
+    SpecialFields,
 )
 from azul.plugins.metadata.hca.bundle import (
     HCABundle,
@@ -150,9 +151,12 @@ class Plugin(MetadataPlugin[HCABundle]):
     @property
     def exposed_indices(self) -> dict[EntityType, Sorting]:
         return dict(
-            bundles=Sorting(field_name='bundleVersion', descending=True, max_page_size=100),
+            bundles=Sorting(field_name=self.special_fields.bundle_version,
+                            descending=True,
+                            max_page_size=100),
             files=Sorting(field_name='fileName'),
-            projects=Sorting(field_name='projectTitle', max_page_size=100),
+            projects=Sorting(field_name='projectTitle',
+                             max_page_size=100),
             samples=Sorting(field_name='sampleId')
         )
 
@@ -173,12 +177,12 @@ class Plugin(MetadataPlugin[HCABundle]):
         return {
             'entity_id': 'entryId',
             'bundles': {
-                'uuid': 'bundleUuid',
-                'version': 'bundleVersion'
+                'uuid': self.special_fields.bundle_uuid,
+                'version': self.special_fields.bundle_version
             },
             'sources': {
-                'id': self.source_id_field,
-                'spec': 'sourceSpec'
+                'id': self.special_fields.source_id,
+                'spec': self.special_fields.source_spec
             },
             'cell_count': 'cellCount',
             'effective_cell_count': 'effectiveCellCount',
@@ -268,8 +272,11 @@ class Plugin(MetadataPlugin[HCABundle]):
         }
 
     @property
-    def source_id_field(self) -> str:
-        return 'sourceId'
+    def special_fields(self) -> SpecialFields:
+        return SpecialFields(source_id='sourceId',
+                             source_spec='sourceSpec',
+                             bundle_uuid='bundleUuid',
+                             bundle_version='bundleVersion')
 
     @property
     def implicit_hub_type(self) -> str:
@@ -320,7 +327,7 @@ class Plugin(MetadataPlugin[HCABundle]):
         ]
 
     @property
-    def manifest(self) -> ManifestConfig:
+    def manifest_config(self) -> ManifestConfig:
         return {
             ('sources',): {
                 'id': 'source_id',

@@ -375,7 +375,8 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         # authentication, we have to synthesize the field and its corresponding
         # facet from the `sourceId` field.
         source_ids = self.filter_stage.filters.source_ids
-        agg = aggs.pop(self.service.metadata_plugin(self.catalog).source_id_field)
+        plugin = self.service.metadata_plugin(self.catalog)
+        agg = aggs.pop(plugin.special_fields.source_id)
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
         for bucket in agg['myTerms']['buckets']:
             accessible = bucket['key'] in source_ids

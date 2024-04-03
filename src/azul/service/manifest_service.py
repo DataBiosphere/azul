@@ -873,7 +873,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         The manifest config this generator uses. A manifest config is a mapping
         from document properties to manifest fields.
         """
-        return self.service.metadata_plugin(self.catalog).manifest
+        return self.service.metadata_plugin(self.catalog).manifest_config
 
     @cached_property
     def included_fields(self) -> list[FieldPath] | None:
@@ -887,6 +887,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             (*field_path, field_name)
             for field_path, column_mapping in self.manifest_config.items()
             for field_name in column_mapping.keys()
+            if field_name is not None
         ]
 
     _cls_for_format: dict[ManifestFormat, Type['ManifestGenerator']] = {}
@@ -1112,26 +1113,27 @@ class ManifestGenerator(metaclass=ABCMeta):
             return field_value
 
         for field_name, column_name in column_mapping.items():
-            assert column_name not in row, f'Column mapping defines {column_name} twice'
-            column_value = []
-            for entity in entities:
-                try:
-                    field_value = entity[field_name]
-                except KeyError:
-                    pass
-                else:
-                    if isinstance(field_value, list):
-                        column_value += [
-                            validate(convert(field_name, field_sub_value))
-                            for field_sub_value in field_value
-                            if field_sub_value is not None
-                        ]
+            if column_name is not None:
+                assert column_name not in row, f'Column mapping defines {column_name} twice'
+                column_value = []
+                for entity in entities:
+                    try:
+                        field_value = entity[field_name]
+                    except KeyError:
+                        pass
                     else:
-                        column_value.append(validate(convert(field_name, field_value)))
-            # FIXME: The slice is a hotfix. Reconsider.
-            #        https://github.com/DataBiosphere/azul/issues/2649
-            column_value = self.padded_joiner.join(sorted(set(column_value))[:100])
-            row[column_name] = column_value
+                        if isinstance(field_value, list):
+                            column_value += [
+                                validate(convert(field_name, field_sub_value))
+                                for field_sub_value in field_value
+                                if field_sub_value is not None
+                            ]
+                        else:
+                            column_value.append(validate(convert(field_name, field_value)))
+                # FIXME: The slice is a hotfix. Reconsider.
+                #        https://github.com/DataBiosphere/azul/issues/2649
+                column_value = self.padded_joiner.join(sorted(set(column_value))[:100])
+                row[column_name] = column_value
 
     def _get_entities(self, field_path: FieldPath, doc: JSON) -> JSONs:
         """
@@ -1647,7 +1649,8 @@ class CompactManifestGenerator(PagedManifestGenerator):
                       output: IO[str]
                       ) -> ManifestPartition:
         column_mappings = self.manifest_config.values()
-        column_names = list(chain.from_iterable(d.values() for d in column_mappings))
+        column_mappings = (d.values() for d in column_mappings)
+        column_names = list(filter(None, chain.from_iterable(column_mappings)))
         writer = csv.DictWriter(output, column_names, dialect='excel-tab')
 
         if partition.page_index == 0:
@@ -1800,6 +1803,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             field_path: {
                 field_name: column_name.replace('.', self.column_path_separator)
                 for field_name, column_name in column_mapping.items()
+                if column_name is not None
             }
             for field_path, column_mapping in super().manifest_config.items()
         }
