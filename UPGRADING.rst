@@ -20,6 +20,66 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6046 Fix: VPC CIDR in ``anvildev`` is wrong
+============================================
+
+Operator
+~~~~~~~~
+
+Before deploying ``anvildev.gitlab`` ask team members to checkout ``develop``
+and to run the following commands in every one of their personal deployments
+collocated with ``anvildev``::
+
+    _select …
+    make deploy
+    cd terraform
+    terraform plan -out destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan -destroy -target={aws_lambda_function.{indexer{,{_aggregate,_contribute}{,_retry},_indexercachehealth},service{,_manifest,_servicecachehealth}},aws_security_group.{indexer,service}}
+    terraform apply destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan
+
+This will destroy the VPC-dependent resources in their deployment, and should
+allow for the destruction of the VPC in the next step. Ask team members to
+confirm the completion of this step. After receiving confirmation from every
+team member, checkout the PR branch and run the following commands::
+
+    _select anvilbox
+    CI_COMMIT_REF_NAME=develop make deploy
+    cd terraform
+    terraform plan -out destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan -destroy -target={aws_security_group.{elasticsearch,indexer,service},aws_elasticsearch_domain.index}
+    terraform apply destroy_${AZUL_DEPLOYMENT_STAGE}.tfplan
+    cd ..
+
+Among the resources the above command destroys is the Elasticsearch domain that
+hosts the indices for the ``anvilbox`` deployment and any personal deployments
+sharing the domain with the ``anvilbox`` deployment.
+
+Repeat this for ``anvildev``.
+
+Deploy the ``gitlab`` component::
+
+    _select anvildev.gitlab
+    CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
+
+This will destroy and recreate many more resources. It will most likely fail at
+some point, either because of a missing dependency declaration in our TF config
+or a bug in the Terraform AWS provider or in Terraform core. Manually delete any
+resource mentioned in any error messages and retry the command. Once the command
+completes successfully, ensure that the GitLab web application is functional.
+
+After successfully deploying the ``gitlab`` component, continue with the PR
+checklist. Once the sandbox build succeeds, ask team members to checkout
+``develop`` and to run the following commands in every one of their personal
+deployments collocated with ``anvildev``::
+
+    _select …
+    make deploy
+    make reindex
+
+This will recreate their VPC-dependent resources previously destroyed and
+repopulate their indices on the ``anvilbox`` domain.
+
+Complete the PR checklist.
+
+
 #6047 Fix: VPC CIDR in ``anvilprod`` is wrong
 =============================================
 

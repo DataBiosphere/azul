@@ -1273,6 +1273,32 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                         actual_cd = query.params['response-content-disposition']
                         self.assertEqual(expected_cd, actual_cd)
 
+    @unittest.skipIf(not config.enable_replicas,
+                     'The format is replica-based')
+    @manifest_test
+    def test_verbatim_jsonl_manifest(self):
+        bundle = self._load_canned_bundle(one(self.bundles()))
+        expected = [
+            bundle.metadata_files[d]
+            for d in [
+                'cell_suspension_0.json',
+                'project_0.json',
+                'sequence_file_0.json',
+                'sequence_file_1.json',
+                'specimen_from_organism_0.json'
+            ]
+        ]
+        response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})
+        self.assertEqual(200, response.status_code)
+        response = list(map(json.loads, response.content.decode().splitlines()))
+
+        def sort_key(hca_doc: JSON) -> str:
+            return hca_doc['provenance']['document_id']
+
+        expected.sort(key=sort_key)
+        response.sort(key=sort_key)
+        self.assertEqual(expected, response)
+
 
 class TestManifestCache(ManifestTestCase):
 
