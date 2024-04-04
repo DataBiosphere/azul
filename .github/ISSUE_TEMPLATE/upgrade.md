@@ -10,17 +10,15 @@ _period: 14 days
   - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=bullseye) tag (only same Debian release), if possible
   - [ ] Bump upstream version, if possible
   - [ ] Bump internal version
-  - [ ] Build and test new image locally with Azul's `make format`
   - [ ] Remove unused dependencies with high or critical CVEs
-  - [ ] Push commit to GitHub (directly to master branch, no PR needed)
+  - [ ] Push commit to GitHub (directly to `master` branch, no PR needed)
   - [ ] GH Action workflow succeeded
   - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) 
 - [ ] Update [Elasticsearch image](https://github.com/DataBiosphere/azul-docker-elasticsearch)
   - [ ] Bump [base image](https://hub.docker.com/_/elasticsearch/tags) tag (only minor and patch versions), if possible
   - [ ] Bump internal version 
-  - [ ] Build and test new image locally with Azul's `make test`
   - [ ] Remove unused dependencies with high or critical CVEs
-  - [ ] Push commit to GitHub (directly to master branch, no PR needed)
+  - [ ] Push commit to GitHub (directly to `main` branch, no PR needed)
   - [ ] GH Action workflow succeeded
   - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) 
 - [ ] Create Azul PR, connected to this issue, with … 
