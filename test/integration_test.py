@@ -1538,7 +1538,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         endpoint = config.service_endpoint
 
-        special_fields = self.metadata_plugin(catalog).special_fields
+        metadata_plugin = self.metadata_plugin(catalog)
+        special_fields = metadata_plugin.special_fields
 
         def bundle_uuids(hit: JSON) -> set[str]:
             return {
@@ -1557,16 +1558,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         response = self._get_url_json(GET, files_url)
         public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
         self.assertNotIn(public_bundle, managed_access_bundles)
+        all_bundles = {public_bundle, *managed_access_bundles}
 
         filters = {
             special_fields.bundle_uuid: {
-                'is': [public_bundle, *managed_access_bundles]
+                'is': list(all_bundles)
             }
         }
         params = {'catalog': catalog, 'filters': json.dumps(filters)}
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
-        def assert_manifest(expected_bundles):
+        def test_compact_manifest(expected_bundles):
             manifest = BytesIO(self._get_url_content(PUT, manifest_url))
             manifest_rows = self._read_csv_manifest(manifest)
             all_found_bundles = set()
@@ -1585,12 +1587,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # With authorized credentials, all bundles included in the filters
         # should be represented in the manifest
         with self._service_account_credentials:
-            assert_manifest({public_bundle, *managed_access_bundles})
+            test_compact_manifest(all_bundles)
 
         # Without credentials, only the public bundle should be represented
-        assert_manifest({public_bundle})
+        test_compact_manifest({public_bundle})
 
-        if ManifestFormat.curl in self.metadata_plugin(catalog).manifest_formats:
+        if ManifestFormat.curl in metadata_plugin.manifest_formats:
             # Create a single-file curl manifest and verify that the OAuth2
             # token is present on the command line
             managed_access_file_id = one(self.random.choice(files)['files'])['uuid']
