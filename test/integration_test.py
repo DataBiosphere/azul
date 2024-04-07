@@ -63,6 +63,7 @@ from chalice import (
     UnauthorizedError,
 )
 import chalice.cli
+import elasticsearch
 import fastavro
 from furl import (
     furl,
@@ -1857,3 +1858,18 @@ class DeployedVersionIntegrationTest(AzulTestCase):
             self.assertEqual(response.status_code, 200)
             lambda_status = response.json()['git']
             self.assertEqual(local_status, lambda_status)
+
+
+class DisableAutomaticIndexCreationTest(IntegrationTestCase):
+
+    def test(self):
+        es = ESClientFactory.get()
+        index_name = 'no-auto-create-' + self.random.randbytes(4).hex() + '-it'
+        try:
+            with self.assertRaises(elasticsearch.exceptions.NotFoundError) as cm:
+                es.index(index=index_name, document={'foo': 'bar'})
+            expected = ('no such index [' + index_name + ']')
+            self.assertEqual(expected, cm.exception.args[2]['error']['reason'])
+        finally:
+            if es.indices.exists(index=index_name):
+                es.indices.delete(index=[index_name])
