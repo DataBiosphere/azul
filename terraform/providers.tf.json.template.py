@@ -25,6 +25,10 @@ emit_tf(tag_resources=False, config={
                 'source': 'hashicorp/aws',
                 'version': '5.11.0'
             },
+            'opensearch': {
+                'source': 'opensearch-project/opensearch',
+                'version': '2.2.1'
+            }
         },
     },
     'provider': [
