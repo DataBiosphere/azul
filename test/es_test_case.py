@@ -53,6 +53,19 @@ class ElasticsearchTestCase(DockerContainerTestCase):
             cls._env_patch.start()
             cls.es_client = ESClientFactory.get()
             cls._wait_for_es()
+
+            # Disable the automatic creation of indexes when documents are
+            # indexed. We create indexes explicitly before any documents are
+            # indexed so a missing index would be indicative of some sort of
+            # bug. We want to fail early in that situation. Automatically
+            # created indices have a only a default mapping, resulting in
+            # failure modes that are harder to diagnose.
+            #
+            cls.es_client.cluster.put_settings(body={
+                'persistent': {
+                    'action.auto_create_index': False
+                }
+            })
         except BaseException:  # no coverage
             cls._kill_containers()
             raise

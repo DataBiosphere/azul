@@ -322,6 +322,12 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                 finally:
                     self.index_service.delete_indices(self.catalog)
 
+    def test_disable_automatic_index_creation(self):
+        with self.assertRaises(elasticsearch.exceptions.NotFoundError) as cm:
+            self.es_client.index(index='foo', document={'foo': 'bar'})
+        expected = 'no such index [foo] and [action.auto_create_index] is [false]'
+        self.assertEqual(expected, cm.exception.args[2]['error']['reason'])
+
 
 class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
     """
