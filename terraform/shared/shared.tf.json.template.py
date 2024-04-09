@@ -234,7 +234,11 @@ tf_config = {
                             'Principal': {
                                 'Service': 'config.amazonaws.com'
                             },
-                            'Action': ['s3:GetBucketAcl', 's3:ListBucket'],
+                            'Action': [
+                                's3:GetBucketAcl',
+                                's3:HeadBucket',
+                                's3:ListBucket'
+                            ],
                             'Resource': '${aws_s3_bucket.aws_config.arn}',
                             'Condition': {
                                 'StringEquals': {
