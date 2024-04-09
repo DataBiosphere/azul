@@ -1021,6 +1021,22 @@ dcp36_sources = mkdict(dcp35_sources, 441, mkdelta([
     mksrc('datarepo-91076846', 'hca_prod_e090445c69714212bc5fae4ec3914102__20230427_dcp2_20240301_dcp36', 3)
 ]))
 
+dcp37_sources = mkdict(dcp36_sources, 450, mkdelta([
+    mksrc('datarepo-e57afe2a', 'hca_prod_2079bb2e676e4bbf8c68f9c6459edcbb__20240327_dcp2_20240328_dcp37', 121),
+    mksrc('datarepo-a37f1015', 'hca_prod_46a7e4bf04744a8f8d1843afcde90491__20240327_dcp2_20240328_dcp37', 25),
+    mksrc('datarepo-3bb4aecc', 'hca_prod_4bcc16b57a4745bbb9c0be9d5336df2d__20240327_dcp2_20240328_dcp37', 338),
+    mksrc('datarepo-cad8e8e7', 'hca_prod_581de139461f4875b40856453a9082c7__20231212_dcp2_20240328_dcp37', 1230),
+    mksrc('datarepo-27a37706', 'hca_prod_60109425a6e64be1a3bc15de680317d4__20240327_dcp2_20240328_dcp37', 49),
+    mksrc('datarepo-03e157f1', 'hca_prod_6836c1e4906b4c34a11ccb025167896d__20240327_dcp2_20240328_dcp37', 8),
+    mksrc('datarepo-a1e5fe66', 'hca_prod_69324a96a68a4514bbb4f8f3ea4bd0f1__20240327_dcp2_20240328_dcp37', 46),
+    mksrc('datarepo-f9215b2b', 'hca_prod_750b455ae3cf472195818609a6c9d561__20240327_dcp2_20240328_dcp37', 6),
+    mksrc('datarepo-d8e57f88', 'hca_prod_86fe0a0c88b34a3e94a16f9feadc401e__20240327_dcp2_20240328_dcp37', 122),
+    mksrc('datarepo-f0498b78', 'hca_prod_902dc0437091445c9442d72e163b9879__20240201_dcp2_20240328_dcp37', 2),
+    mksrc('datarepo-28635bac', 'hca_prod_aebc99a33151482a9709da6802617763__20240201_dcp2_20240328_dcp37', 115),
+    mksrc('datarepo-6ac05956', 'hca_prod_c05184453b3b49c6b8fcc41daa4eacba__20220213_dcp2_20240328_dcp37', 7),
+    mksrc('datarepo-86633e77', 'hca_prod_c0fecf0baf8641b8ba82d5fd81b7542a__20240301_dcp2_20240328_dcp37', 34)
+]))
+
 pilot_sources = mkdict({}, 2, mkdelta([
     mksrc('datarepo-3e19670d', 'hca_prod_520afa10f9d24e93ab7a26c4c863ce18__20220117_dcp2_20220120_dcp12', 649),
     mksrc('datarepo-c3aea89c', 'hca_prod_8559a8ed5d8c4fb6bde8ab639cebf03c__20220118_dcp2_20220121_dcp12', 379),
@@ -1095,6 +1111,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=mklist(sources))
             for atlas, catalog, sources in [
                 ('hca', 'dcp36', dcp36_sources),
+                ('hca', 'dcp37', dcp37_sources),
                 ('hca', 'pilot', pilot_sources),
                 ('lungmap', 'lm4', lm4_sources)
             ] for suffix, internal in [
