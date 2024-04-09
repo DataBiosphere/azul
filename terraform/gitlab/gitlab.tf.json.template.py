@@ -345,7 +345,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'edu-ucsc-gi-azul-*',
                                     '*.azul.data.humancellatlas.org',
                                 ]
-                            )
+                            ) + [
+                                f'amazon-ssm-packages-{aws.region_name}',
+                                f'aws-ssm-document-attachments-{aws.region_name}'
+                            ]
                         )
                     },
 
@@ -949,7 +952,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             's3:HeadObject'
                         ],
                         'resources': [
+                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}',
                             f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}/*',
+                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}',
                             f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}/*'
                         ]
                     }
