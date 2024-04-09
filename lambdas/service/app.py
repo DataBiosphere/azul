@@ -1020,16 +1020,23 @@ def repository_search_params_spec():
     ]
 
 
-parameter_hoisting_note = fd('''
-    Any of the query parameters documented below can alternatively be passed as
-    a property of a JSON object in the body of the request. This can be useful
-    in case the value of the `filters` query parameter causes the URL to exceed
-    the maximum length of 8192 characters, resulting in a 413 Request Entity Too
-    Large response.
+def parameter_hoisting_note(method: str,
+                            endpoint: str,
+                            equivalent_method: str
+                            ) -> str:
+    return fd('''
+        Any of the query parameters documented below can alternatively be passed
+        as a property of a JSON object in the body of the request. This can be
+        useful in case the value of the `filters` query parameter causes the URL
+        to exceed the maximum length of 8192 characters, resulting in a 413
+        Request Entity Too Large response.
 
-    The request `GET /index/foo?filters={…}`, for example, is equivalent to a
-    `POST /index/foo` request with the body `{"filters": {…}}`.
-''')
+        The request `%s %s?filters={…}`, for example, is equivalent to  `%s %s`
+        with the body `{"filters": "{…}"}` in which any double quotes or
+        backslash characters inside `…` are escaped with another backslash. That
+        escaping is the requisite procedure for embedding one JSON structure
+        inside another.
+    ''' % (method, endpoint, equivalent_method, endpoint))
 
 
 def repository_search_spec(*, post: bool):
@@ -1040,7 +1047,8 @@ def repository_search_spec(*, post: bool):
             {", with filters provided in the request body" if post else ""}.
         '''),
         'deprecated': post,
-        'description': iif(post, parameter_hoisting_note + fd('''
+        'description':
+            iif(post, parameter_hoisting_note('GET', '/index/files', 'POST') + fd('''
 
             Note that the Swagger UI can't currently be used to pass a body.
 
@@ -1311,7 +1319,9 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
 
                 [1]: #operations-Manifests-put_fetch_manifest_files
-            ''') + parameter_hoisting_note if initiate and not fetch else fd('''
+            ''') + parameter_hoisting_note('PUT', '/manifest/files', 'PUT')
+            if initiate and not fetch else
+            fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning either
 
@@ -1344,7 +1354,9 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 manifest generation job is done.
 
                 [1]: #operations-Manifests-put_manifest_files
-            ''') + parameter_hoisting_note if initiate and fetch else fd('''
+            ''') + parameter_hoisting_note('PUT', '/fetch/manifest/files', 'PUT')
+            if initiate and fetch else
+            fd('''
                 Check on the status of an ongoing manifest preparation job,
                 returning a 200 status response whose JSON body emulates the
                 HTTP headers that would be found in a response to an equivalent
