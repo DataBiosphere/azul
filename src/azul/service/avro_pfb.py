@@ -15,6 +15,7 @@ from operator import (
 from typing import (
     ClassVar,
     MutableSet,
+    Self,
 )
 from uuid import (
     UUID,
@@ -174,7 +175,7 @@ class PFBEntity:
                   name: str,
                   object_: MutableJSON,
                   schema: JSON
-                  ) -> 'PFBEntity':
+                  ) -> Self:
         """
         Derive ID from object in a reproducible way so that we can distinguish
         entities by comparing their IDs.
@@ -207,7 +208,7 @@ class PFBEntity:
                 if isinstance(field_type, list):
                     assert 'null' in field_type, field
                     default_value = None
-                elif field_type['type'] == 'array':
+                elif isinstance(field_type, dict) and field_type['type'] == 'array':
                     if isinstance(field_type['items'], dict):
                         assert field_type['items']['type'] in ('record', 'array'), field
                         default_value = []
@@ -246,11 +247,11 @@ class PFBRelation:
     dst_name: str
 
     @classmethod
-    def to_entity(cls, entity: PFBEntity) -> 'PFBRelation':
+    def to_entity(cls, entity: PFBEntity) -> Self:
         return cls(dst_id=entity.id, dst_name=entity.name)
 
 
-def pfb_metadata_entity(field_types: FieldTypes):
+def pfb_metadata_entity(entity_types: Iterable[str]) -> MutableJSON:
     """
     The Metadata entity encodes the possible relationships between tables.
 
@@ -271,7 +272,7 @@ def pfb_metadata_entity(field_types: FieldTypes):
                         'name': 'files'
                     }],
                     'properties': []
-                } for entity_type in field_types.keys()
+                } for entity_type in entity_types
             ],
             'misc': {}
         }
