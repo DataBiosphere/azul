@@ -130,11 +130,7 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load(self.catalog).create()
 
-    def _num_expected_replicas(self,
-                               *,
-                               num_contribs: int,
-                               num_dups: int = 0
-                               ) -> int:
+    def _num_replicas(self, *, num_contribs: int, num_dups: int = 0) -> int:
         """
         :param num_contribs: Number of contributions written to the indices
 
@@ -168,7 +164,7 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
             # By default, assume 1 aggregate per contribution.
             num_aggs = num_contribs
         if num_replicas is None:
-            num_replicas = self._num_expected_replicas(num_contribs=num_contribs)
+            num_replicas = self._num_replicas(num_contribs=num_contribs)
         expected = {
             DocumentType.contribution: num_contribs,
             DocumentType.aggregate: num_aggs,
@@ -306,7 +302,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                     self._assert_hit_counts(hits,
                                             num_contribs=size * 2,
                                             num_aggs=0,
-                                            num_replicas=self._num_expected_replicas(num_contribs=size))
+                                            num_replicas=self._num_replicas(num_contribs=size))
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         qualifier, doc_type = self._parse_index_name(hit)
@@ -487,9 +483,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 num_aggs=num_expected_aggregates,
                                 # These deletion markers do not affect the number of replicas because we don't
                                 # support deleting replicas.
-                                num_replicas=self._num_expected_replicas(
-                                    num_contribs=num_expected_addition_contributions
-                                ))
+                                num_replicas=self._num_replicas(num_contribs=num_expected_addition_contributions))
 
     def test_bundle_delete_downgrade(self):
         """
@@ -1197,9 +1191,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         # Deletions neither add nor remove replicas from the index because their
         # contents is not updated. New and old replicas for `links.json` are
         # identical.
-        num_replicas = self._num_expected_replicas(num_contribs=max(num_expected_new_deleted_contributions,
-                                                                    num_expected_new_contributions) + num_old_contribs,
-                                                   num_dups=1 if num_new_contribs > 0 and num_old_contribs > 0 else 0)
+        num_replicas = self._num_replicas(num_contribs=max(num_expected_new_deleted_contributions,
+                                                           num_expected_new_contributions) + num_old_contribs,
+                                          num_dups=1 if num_new_contribs > 0 and num_old_contribs > 0 else 0)
         self._assert_hit_counts(hits,
                                 num_contribs=num_old_contribs + num_new_contribs,
                                 num_aggs=num_old_contribs,
@@ -1264,10 +1258,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._assert_hit_counts(hits,
                                 num_contribs=num_total_contribs,
                                 num_aggs=num_new_contribs,
-                                num_replicas=self._num_expected_replicas(
-                                    num_contribs=num_total_contribs,
-                                    # New and old replicas for `links.json` are identical.
-                                    num_dups=1 if num_expected_old_contributions > 0 else 0)
+                                num_replicas=self._num_replicas(num_contribs=num_total_contribs,
+                                                                # New and old replicas for `links.json` are identical.
+                                                                num_dups=1 if num_expected_old_contributions > 0 else 0)
                                 )
 
         def get_version(source, doc_type):
@@ -1368,7 +1361,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 num_aggs=num_contribs - 2,
                                 # The sample contributions from each bundle are identical and yield a single replica,
                                 # but the project contributions have different schema versions and thus yield two.
-                                num_replicas=self._num_expected_replicas(num_contribs=num_contribs, num_dups=1))
+                                num_replicas=self._num_replicas(num_contribs=num_contribs, num_dups=1))
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
