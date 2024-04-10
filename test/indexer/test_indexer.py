@@ -131,6 +131,7 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
         return MetadataPlugin.load(self.catalog).create()
 
     def _num_expected_replicas(self,
+                               *,
                                num_contribs: int,
                                num_bundles: Optional[int] = None
                                ) -> int:
@@ -169,7 +170,8 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
             # By default, assume 1 aggregate per contribution.
             num_aggs = num_contribs
         if num_replicas is None:
-            num_replicas = self._num_expected_replicas(num_contribs, num_bundles)
+            num_replicas = self._num_expected_replicas(num_contribs=num_contribs,
+                                                       num_bundles=num_bundles)
         expected = {
             DocumentType.contribution: num_contribs,
             DocumentType.aggregate: num_aggs,
@@ -304,7 +306,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                     self._assert_hit_counts(hits,
                                             num_contribs=size * 2,
                                             num_aggs=0,
-                                            num_replicas=self._num_expected_replicas(size))
+                                            num_replicas=self._num_expected_replicas(num_contribs=size))
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         qualifier, doc_type = self._parse_index_name(hit)
@@ -485,7 +487,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 num_aggs=num_expected_aggregates,
                                 # These deletion markers do not affect the number of replicas because we don't
                                 # support deleting replicas.
-                                num_replicas=self._num_expected_replicas(num_expected_addition_contributions))
+                                num_replicas=self._num_expected_replicas(
+                                    num_contribs=num_expected_addition_contributions))
 
     def test_bundle_delete_downgrade(self):
         """
@@ -1192,8 +1195,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         num_new_contribs = num_expected_new_contributions + num_expected_new_deleted_contributions * 2
         # Deletions neither add nor remove replicas from the index because their
         # contents is not updated
-        num_replicas = self._num_expected_replicas(max(num_expected_new_deleted_contributions,
-                                                       num_expected_new_contributions) + num_old_contribs,
+        num_replicas = self._num_expected_replicas(num_contribs=max(num_expected_new_deleted_contributions,
+                                                                    num_expected_new_contributions) + num_old_contribs,
                                                    num_bundles=2 if num_new_contribs > 0 else 1)
         self._assert_hit_counts(hits,
                                 num_contribs=num_old_contribs + num_new_contribs,
