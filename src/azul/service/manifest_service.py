@@ -2067,7 +2067,7 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator, metaclass=ABCMeta):
                 replica_id = replica.meta.id
                 if replica_id not in emitted_replica_ids:
                     num_new_replicas += 1
-                    yield replica.contents.to_dict()
+                    yield replica.to_dict()
                     # Note that this will be zero for replicas that use implicit
                     # hubs, in which case there are actually many hubs
                     explicit_hub_count = len(replica.hub_ids)
@@ -2113,6 +2113,10 @@ class JSONLVerbatimManifestGenerator(VerbatimManifestGenerator):
         os.close(fd)
         with open(path, 'w') as f:
             for replica in self._all_replicas():
-                json.dump(replica, f)
+                entry = {
+                    'contents': replica['contents'],
+                    'type': replica['replica_type']
+                }
+                json.dump(entry, f)
                 f.write('\n')
         return path, None

@@ -1317,15 +1317,18 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
     @manifest_test
     def test_verbatim_jsonl_manifest(self):
         expected = [
-            bundle.metadata_files[d]
+            {
+                'type': replica_type,
+                'contents': bundle.metadata_files[key],
+            }
             for bundle in map(self._load_canned_bundle, self.bundles())
-            for d in [
-                'links.json',
-                'cell_suspension_0.json',
-                'project_0.json',
-                'sequence_file_0.json',
-                'sequence_file_1.json',
-                'specimen_from_organism_0.json'
+            for replica_type, key in [
+                ('links', 'links.json'),
+                ('cell_suspension', 'cell_suspension_0.json'),
+                ('project', 'project_0.json'),
+                ('file', 'sequence_file_0.json'),
+                ('file', 'sequence_file_1.json'),
+                ('sample', 'specimen_from_organism_0.json')
             ]
         ]
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})
@@ -2058,8 +2061,11 @@ class TestAnvilManifests(AnvilManifestTestCase):
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
         self.assertEqual(200, response.status_code)
         expected = [
-            entity
+            {
+                'type': 'anvil_' + entity_ref.entity_type,
+                'contents': entity,
+            }
             for bundle in self.bundles()
-            for entity in self._load_canned_bundle(bundle).entities.values()
+            for entity_ref, entity in self._load_canned_bundle(bundle).entities.items()
         ]
         self._assert_jsonl(expected, response)
