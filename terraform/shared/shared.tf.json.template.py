@@ -525,25 +525,23 @@ tf_config = {
                 for a in cis_alarms
             },
             **{
-                resource_name: {
-                    'alarm_name': config.qualified_resource_name(resource_name, suffix='.alarm'),
+                'clam_fail': {
+                    'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
                     'comparison_operator': 'GreaterThanOrEqualToThreshold',
                     'evaluation_periods': 1,
                     'metric_name': '${aws_cloudwatch_log_metric_filter.'
-                                   '%s.metric_transformation[0].name}' % resource_name,
+                                   '%s.metric_transformation[0].name}' % 'clam_fail',
                     'namespace': 'LogMetrics',
                     'statistic': 'Sum',
                     'treat_missing_data': 'notBreaching',
                     'threshold': 1,
-                    'period': period,
-                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
-                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
-                } for resource_name, period in [
                     # With ClamScan running twice a day we've got a 12h period,
                     # plus 8h upper bound on running time, minus 2h lower bound
                     # on running time, giving us an 18h evaluation period.
-                    ('clam_fail', 18 * 60 * 60)
-                ]
+                    'period': 18 * 60 * 60,
+                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
+                }
             },
             **{
                 resource_name: {
