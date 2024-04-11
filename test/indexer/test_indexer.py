@@ -1270,11 +1270,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                            num_expected_old_contributions: int = 0,
                            old_hits_by_id: HitsById | None = None
                            ) -> None:
-        num_actual_old_contributions = 0
-        hits = self._get_all_hits()
         # Two files, one project, one cell suspension, one sample, and one bundle.
         num_new_contribs = 6
         num_total_contribs = num_new_contribs + num_expected_old_contributions
+
+        hits = self._get_all_hits()
         self._assert_hit_counts(hits,
                                 num_contribs=num_total_contribs,
                                 num_aggs=num_new_contribs,
@@ -1291,6 +1291,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
             else:
                 assert False, doc_type
 
+        num_actual_old_contributions = 0
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
