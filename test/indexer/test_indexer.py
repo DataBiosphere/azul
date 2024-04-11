@@ -462,7 +462,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._assert_index_counts(just_deletion=False)
 
     def _assert_index_counts(self, *, just_deletion: bool):
-        # Five entities (two files, one project, one sample and one bundle)
+        # Two files, a project, a cell suspension, a sample, and a bundle
         num_expected_addition_contributions = 0 if just_deletion else 6
         num_expected_deletion_contributions = 6
         num_expected_aggregates = 0
