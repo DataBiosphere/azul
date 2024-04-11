@@ -495,11 +495,13 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         to the previous bundle.
         """
         self._index_canned_bundle(self.old_bundle)
-        old_hits_by_id = self._assert_old_bundle()
+        old_hits_by_id = self._assert_old_bundle(num_expected_new_contributions=0,
+                                                 num_expected_new_deleted_contributions=0)
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
         self._index_canned_bundle(self.new_bundle, delete=True)
-        self._assert_old_bundle(num_expected_new_deleted_contributions=6)
+        self._assert_old_bundle(num_expected_new_contributions=0,
+                                num_expected_new_deleted_contributions=6)
 
     def test_multi_entity_contributing_bundles(self):
         """
@@ -1155,7 +1157,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         Updating a bundle with a future version should overwrite the old version.
         """
         self._index_canned_bundle(self.old_bundle)
-        old_hits_by_id = self._assert_old_bundle()
+        old_hits_by_id = self._assert_old_bundle(num_expected_new_contributions=0,
+                                                 num_expected_new_deleted_contributions=0)
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
 
@@ -1167,12 +1170,15 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=0)
         self._index_canned_bundle(self.old_bundle)
-        self._assert_old_bundle(num_expected_new_contributions=6, ignore_aggregates=True)
+        self._assert_old_bundle(num_expected_new_contributions=6,
+                                num_expected_new_deleted_contributions=0,
+                                ignore_aggregates=True)
         self._assert_new_bundle(num_expected_old_contributions=6)
 
     def _assert_old_bundle(self,
-                           num_expected_new_contributions: int = 0,
-                           num_expected_new_deleted_contributions: int = 0,
+                           *,
+                           num_expected_new_contributions: int,
+                           num_expected_new_deleted_contributions: int,
                            ignore_aggregates: bool = False
                            ) -> Mapping[tuple[str, DocumentType], JSON]:
         """
