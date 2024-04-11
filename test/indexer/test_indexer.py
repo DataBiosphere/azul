@@ -140,9 +140,11 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
         :param num_dups: How many of those contributions had identical contents
                          with another contribution
         """
-        if num_additions > 0:
-            num_additions -= num_dups
-        return num_additions if config.enable_replicas else 0
+        if config.enable_replicas:
+            assert num_dups <= num_additions
+            return num_additions - num_dups
+        else:
+            return 0
 
     def _assert_hit_counts(self,
                            hits: list[JSON],
