@@ -1435,7 +1435,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             source_id = source_id_from_hit(hit)
             sources_found.add(source_id)
             self.assertEqual(source_id not in managed_access_source_ids,
-                             one(hit[project_type])['accessible'])
+                             one(hit[project_type])[special_fields.accessible])
         self.assertIsSubset(managed_access_source_ids, sources_found)
 
         bundle_fqids = self._get_indexed_bundles(catalog)

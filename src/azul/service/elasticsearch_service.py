@@ -381,7 +381,8 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         # facet from the `sourceId` field.
         source_ids = self.filter_stage.filters.source_ids
         plugin = self.service.metadata_plugin(self.catalog)
-        agg = aggs.pop(plugin.special_fields.source_id)
+        special_fields = plugin.special_fields
+        agg = aggs.pop(special_fields.source_id)
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
         for bucket in agg['myTerms']['buckets']:
             accessible = bucket['key'] in source_ids
@@ -390,7 +391,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]
-        aggs['accessible'] = agg
+        aggs[special_fields.accessible] = agg
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)

@@ -130,7 +130,7 @@ class RepositoryService(ElasticsearchService):
         for hit in response['hits']:
             entity = one(hit[entity_type])
             source_id = one(hit['sources'])[special_fields.source_id]
-            entity['accessible'] = source_id in filters.source_ids
+            entity[special_fields.accessible] = source_id in filters.source_ids
 
         def inject_file_urls(node: AnyMutableJSON, *path: str) -> None:
             if node is None:

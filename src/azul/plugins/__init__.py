@@ -130,6 +130,7 @@ class Sorting:
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class SpecialFields:
+    accessible: ClassVar[FieldName] = 'accessible'
     source_id: FieldName
     source_spec: FieldName
     bundle_uuid: FieldName
