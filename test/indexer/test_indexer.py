@@ -495,13 +495,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         to the previous bundle.
         """
         self._index_canned_bundle(self.old_bundle)
-        old_hits_by_id = self._assert_old_bundle(num_expected_new_contributions=0,
-                                                 num_expected_new_deleted_contributions=0)
+        old_hits_by_id = self._assert_old_bundle(expect_new_version=False)
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
         self._index_canned_bundle(self.new_bundle, delete=True)
-        self._assert_old_bundle(num_expected_new_contributions=0,
-                                num_expected_new_deleted_contributions=6)
+        self._assert_old_bundle(expect_new_version=None)
 
     def test_multi_entity_contributing_bundles(self):
         """
@@ -1157,8 +1155,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         Updating a bundle with a future version should overwrite the old version.
         """
         self._index_canned_bundle(self.old_bundle)
-        old_hits_by_id = self._assert_old_bundle(num_expected_new_contributions=0,
-                                                 num_expected_new_deleted_contributions=0)
+        old_hits_by_id = self._assert_old_bundle(expect_new_version=False)
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
 
@@ -1170,28 +1167,22 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=0)
         self._index_canned_bundle(self.old_bundle)
-        self._assert_old_bundle(num_expected_new_contributions=6,
-                                num_expected_new_deleted_contributions=0,
-                                ignore_aggregates=True)
+        self._assert_old_bundle(expect_new_version=True)
         self._assert_new_bundle(num_expected_old_contributions=6)
 
     HitsById = Mapping[tuple[str, DocumentType], JSON]
 
-    def _assert_old_bundle(self,
-                           *,
-                           num_expected_new_contributions: int,
-                           num_expected_new_deleted_contributions: int,
-                           ignore_aggregates: bool = False
-                           ) -> HitsById:
+    def _assert_old_bundle(self, *, expect_new_version: bool | None) -> HitsById:
         """
-        Assert that the old bundle is still indexed correctly
+        Assert that the old bundle is still indexed correctly.
 
-        :param num_expected_new_contributions: Contributions from the new bundle without a corresponding deletion
-        contribution
-        :param num_expected_new_deleted_contributions: Contributions from the new bundle WITH a corresponding deletion
-        contribution
-        :param ignore_aggregates: Don't consider aggregates when counting docs in index
+        :param expect_new_version: Whether to expect effects of indexing a
+                                   newer version of the bundle. If False, expect
+                                   no such effects. If True, expect additions
+                                   by such a bundle. If None, expect deletions.
         """
+        num_expected_new_contributions = 6 if expect_new_version is True else 0
+        num_expected_new_deleted_contributions = 6 if expect_new_version is None else 0
         # Two files, one project, one cell suspension, one sample, and one bundle
         num_old_contribs = 6
         # Deletions add new contributions to the index instead of removing the old ones,
@@ -1219,7 +1210,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
             hits_by_id[source['entity_id'], doc_type] = hit
             if doc_type is DocumentType.replica:
                 pass
-            elif doc_type is DocumentType.aggregate and ignore_aggregates:
+            elif doc_type is DocumentType.aggregate and expect_new_version is True:
                 pass
             else:
                 if doc_type is DocumentType.aggregate:
