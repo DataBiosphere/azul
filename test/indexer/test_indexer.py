@@ -463,31 +463,32 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
     def _assert_index_counts(self, *, just_deletion: bool):
         # Two files, a project, a cell suspension, a sample, and a bundle
-        num_expected_addition_contributions = 0 if just_deletion else 6
-        num_expected_deletion_contributions = 6
-        num_expected_aggregates = 0
+        num_entities = 6
+        num_addition_contribs = 0 if just_deletion else num_entities
+        num_deletion_contribs = num_entities
+
         hits = self._get_all_hits()
-        actual_addition_contributions = [
+        actual_addition_contribs = [
             h
             for h in hits
             if h['_source'].get('bundle_deleted') is False
         ]
-        actual_deletion_contributions = [
+        actual_deletion_contribs = [
             h
             for h in hits
             if h['_source'].get('bundle_deleted') is True
         ]
 
-        self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
-        self.assertEqual(len(actual_deletion_contributions), num_expected_deletion_contributions)
+        self.assertEqual(num_addition_contribs, len(actual_addition_contribs))
+        self.assertEqual(num_deletion_contribs, len(actual_deletion_contribs))
         self._assert_hit_counts(hits,
                                 # Deletion notifications add deletion markers to the contributions index
                                 # instead of removing the existing contributions.
-                                num_contribs=num_expected_addition_contributions + num_expected_deletion_contributions,
-                                num_aggs=num_expected_aggregates,
+                                num_contribs=num_addition_contribs + num_deletion_contribs,
+                                num_aggs=0,
                                 # These deletion markers do not affect the number of replicas because we don't
                                 # support deleting replicas.
-                                num_replicas=self._num_replicas(num_additions=num_expected_addition_contributions))
+                                num_replicas=self._num_replicas(num_additions=num_addition_contribs))
 
     def test_bundle_delete_downgrade(self):
         """
