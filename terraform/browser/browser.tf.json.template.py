@@ -113,7 +113,6 @@ def emit():
                                 },
                                 'Action': [
                                     's3:GetObject',
-                                    's3:HeadObject',
                                     's3:ListBucket'
                                 ],
                                 'Resource': [
