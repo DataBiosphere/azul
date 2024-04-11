@@ -1190,9 +1190,6 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         contribution
         :param ignore_aggregates: Don't consider aggregates when counting docs in index
         """
-        num_actual_new_contributions = 0
-        num_actual_new_deleted_contributions = 0
-        hits = self._get_all_hits()
         # Two files, one project, one cell suspension, one sample, and one bundle
         num_old_contribs = 6
         # Deletions add new contributions to the index instead of removing the old ones,
@@ -1204,10 +1201,15 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         num_replicas = self._num_replicas(num_additions=max(num_expected_new_deleted_contributions,
                                                             num_expected_new_contributions) + num_old_contribs,
                                           num_dups=1 if num_new_contribs > 0 and num_old_contribs > 0 else 0)
+
+        hits = self._get_all_hits()
         self._assert_hit_counts(hits,
                                 num_contribs=num_old_contribs + num_new_contribs,
                                 num_aggs=num_old_contribs,
                                 num_replicas=num_replicas)
+
+        num_actual_new_contributions = 0
+        num_actual_new_deleted_contributions = 0
         hits_by_id = {}
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
