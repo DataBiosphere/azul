@@ -1181,24 +1181,38 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                    no such effects. If True, expect additions
                                    by such a bundle. If None, expect deletions.
         """
-        num_expected_new_contributions = 6 if expect_new_version is True else 0
-        num_expected_new_deleted_contributions = 6 if expect_new_version is None else 0
-        # Two files, one project, one cell suspension, one sample, and one bundle
-        num_old_contribs = 6
-        # Deletions add new contributions to the index instead of removing the old ones,
-        # so they're included in the total
-        num_new_contribs = num_expected_new_contributions + num_expected_new_deleted_contributions * 2
-        # Deletions neither add nor remove replicas from the index because their
-        # contents is not updated. New and old replicas for `links.json` are
-        # identical.
-        num_replicas = self._num_replicas(num_additions=max(num_expected_new_deleted_contributions,
-                                                            num_expected_new_contributions) + num_old_contribs,
-                                          num_dups=1 if num_new_contribs > 0 and num_old_contribs > 0 else 0)
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+
+        # Expect a replica for each entity in the old version
+        num_additions = num_entities
+        if expect_new_version is True:
+            # Expect an updated replica for each entity in the new version
+            num_additions += num_entities
+        elif expect_new_version is None:
+            # Even after the new version is deleted, the updated replicas
+            # remain, since deletion of replicas is not supported
+            num_additions += num_entities
+        # New and old replicas for `links.json` are identical
+        num_dups = 0 if expect_new_version is False else 1
+        num_replicas = self._num_replicas(num_additions=num_additions,
+                                          num_dups=num_dups)
+
+        # Expect the old version's contributions
+        num_contribs = num_entities
+        if expect_new_version is True:
+            # Expect the new version's contributions
+            num_contribs += num_entities
+        elif expect_new_version is None:
+            # Expect the new version's contributions …
+            num_contribs += num_entities
+            # as well as deletion markers for them
+            num_contribs += num_entities
 
         hits = self._get_all_hits()
         self._assert_hit_counts(hits,
-                                num_contribs=num_old_contribs + num_new_contribs,
-                                num_aggs=num_old_contribs,
+                                num_contribs=num_contribs,
+                                num_aggs=num_entities,
                                 num_replicas=num_replicas)
 
         num_actual_new_contributions = 0
@@ -1243,9 +1257,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         # We count the deleted contributions here too since they should have a
         # corresponding addition contribution
-        self.assertEqual(num_expected_new_contributions + num_expected_new_deleted_contributions,
+        self.assertEqual(0 if expect_new_version is False else num_entities,
                          num_actual_new_contributions)
-        self.assertEqual(num_expected_new_deleted_contributions, num_actual_new_deleted_contributions)
+        self.assertEqual(num_entities if expect_new_version is None else 0,
+                         num_actual_new_deleted_contributions)
+
         return hits_by_id
 
     def _assert_new_bundle(self,
