@@ -108,6 +108,13 @@ cis_alarms = [
                                    '$.eventType !="AwsServiceEvent"}')
 ]
 
+# The deployment and/or backup of the GitLab instance requires a reboot, which
+# can interrupt an ongoing ClamAV scan. Since scans are run twice a day, we set
+# the alarm period to 24 hours (maximum allowed by CloudWatch) to allow enough
+# time for the next scan to complete following an interrupted scan.
+#
+clam_alarm_period = 24 * 60 * 60
+
 tf_config = {
     'data': {
         'aws_iam_role': {
@@ -524,24 +531,19 @@ tf_config = {
                 }
                 for a in cis_alarms
             },
-            **{
-                'clam_fail': {
-                    'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
-                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
-                    'evaluation_periods': 1,
-                    'metric_name': '${aws_cloudwatch_log_metric_filter.'
-                                   '%s.metric_transformation[0].name}' % 'clam_fail',
-                    'namespace': 'LogMetrics',
-                    'statistic': 'Sum',
-                    'treat_missing_data': 'notBreaching',
-                    'threshold': 1,
-                    # With ClamScan running twice a day we've got a 12h period,
-                    # plus 8h upper bound on running time, minus 2h lower bound
-                    # on running time, giving us an 18h evaluation period.
-                    'period': 18 * 60 * 60,
-                    'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
-                    'ok_actions': ['${aws_sns_topic.monitoring.arn}']
-                }
+            'clam_fail': {
+                'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
+                'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                'evaluation_periods': 1,
+                'metric_name': '${aws_cloudwatch_log_metric_filter.'
+                               '%s.metric_transformation[0].name}' % 'clam_fail',
+                'namespace': 'LogMetrics',
+                'statistic': 'Sum',
+                'treat_missing_data': 'notBreaching',
+                'threshold': 1,
+                'period': clam_alarm_period,
+                'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
+                'ok_actions': ['${aws_sns_topic.monitoring.arn}']
             },
             **{
                 resource_name: {
@@ -578,8 +580,8 @@ tf_config = {
                     ]
                 } for resource_name, period in [
                     ('trail_logs', 10 * 60),
-                    ('clamscan', 18 * 60 * 60),
-                    ('freshclam', 18 * 60 * 60)
+                    ('clamscan', clam_alarm_period),
+                    ('freshclam', clam_alarm_period)
                 ]
             }
         },
