@@ -1180,6 +1180,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                    newer version of the bundle. If False, expect
                                    no such effects. If True, expect additions
                                    by such a bundle. If None, expect deletions.
+
+        :return: A dictionary with all hits from the old bundle
         """
         # Two files, a project, a cell suspension, a sample, and a bundle
         num_entities = 6
