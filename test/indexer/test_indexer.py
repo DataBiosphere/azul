@@ -1229,12 +1229,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
             elif doc_type is DocumentType.aggregate and expect_new_version is True:
                 pass
             else:
-                if doc_type is DocumentType.aggregate:
-                    version = one(source['bundles'])['version']
-                elif doc_type is DocumentType.contribution:
-                    version = source['bundle_version']
-                else:
-                    assert False, doc_type
+                version = self._extract_bundle_version(doc_type, source)
                 if doc_type is DocumentType.contribution and version == self.new_bundle.version:
                     if source['bundle_deleted']:
                         num_actual_new_deleted_contributions += 1
@@ -1303,14 +1298,6 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 num_aggs=num_entities,
                                 num_replicas=num_replicas)
 
-        def get_version(source, doc_type):
-            if doc_type is DocumentType.aggregate:
-                return one(source['bundles'])['version']
-            elif doc_type is DocumentType.contribution:
-                return source['bundle_version']
-            else:
-                assert False, doc_type
-
         num_actual_old_contributions = 0
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
@@ -1318,7 +1305,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 pass
             else:
                 source = hit['_source']
-                version = get_version(source, doc_type)
+                version = self._extract_bundle_version(doc_type, source)
                 contents = source['contents']
                 project = one(contents['projects'])
 
@@ -1329,7 +1316,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     if old_hits_by_id is not None:
                         old_hit = old_hits_by_id[source['entity_id'], doc_type]
                         old_source = old_hit['_source']
-                        old_version = get_version(old_source, doc_type)
+                        old_version = self._extract_bundle_version(doc_type, old_source)
                         self.assertLess(old_version, version)
                         old_contents = old_source['contents']
                         old_project = one(old_contents['projects'])
@@ -1357,6 +1344,14 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         self.assertEqual(num_entities if expect_old_version else 0,
                          num_actual_old_contributions)
+
+    def _extract_bundle_version(self, doc_type: DocumentType, source: JSON) -> str:
+        if doc_type is DocumentType.aggregate:
+            return one(source['bundles'])['version']
+        elif doc_type is DocumentType.contribution:
+            return source['bundle_version']
+        else:
+            assert False, doc_type
 
     def test_concurrent_specimen_submissions(self):
         """
