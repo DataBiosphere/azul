@@ -1175,12 +1175,14 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                 ignore_aggregates=True)
         self._assert_new_bundle(num_expected_old_contributions=6)
 
+    HitsById = Mapping[tuple[str, DocumentType], JSON]
+
     def _assert_old_bundle(self,
                            *,
                            num_expected_new_contributions: int,
                            num_expected_new_deleted_contributions: int,
                            ignore_aggregates: bool = False
-                           ) -> Mapping[tuple[str, DocumentType], JSON]:
+                           ) -> HitsById:
         """
         Assert that the old bundle is still indexed correctly
 
@@ -1257,7 +1259,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
     def _assert_new_bundle(self,
                            num_expected_old_contributions: int = 0,
-                           old_hits_by_id: Optional[Mapping[tuple[str, DocumentType], JSON]] = None
+                           old_hits_by_id: HitsById | None = None
                            ) -> None:
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
