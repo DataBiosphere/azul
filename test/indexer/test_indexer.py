@@ -1211,44 +1211,41 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         hits_by_id = {}
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
-            if (
-                doc_type is DocumentType.replica
-                or (doc_type is DocumentType.aggregate and ignore_aggregates)
-            ):
-                continue
             source = hit['_source']
             hits_by_id[source['entity_id'], doc_type] = hit
-            if doc_type is DocumentType.aggregate:
-                version = one(source['bundles'])['version']
-            elif doc_type is DocumentType.contribution:
-                version = source['bundle_version']
+            if doc_type is DocumentType.replica:
+                pass
+            elif doc_type is DocumentType.aggregate and ignore_aggregates:
+                pass
             else:
-                assert False, doc_type
-            if (
-                doc_type is DocumentType.aggregate
-                or (doc_type is DocumentType.contribution and self.old_bundle.version == version)
-            ):
-                contents = source['contents']
-                project = one(contents['projects'])
-                self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
-                self.assertEqual('Single of human pancreas', get(project['project_short_name']))
-                self.assertIn('John Dear', get(project['laboratory']))
-                if doc_type is DocumentType.aggregate and qualifier != 'projects':
-                    self.assertIn('Farmers Trucks', project['institutions'])
+                if doc_type is DocumentType.aggregate:
+                    version = one(source['bundles'])['version']
                 elif doc_type is DocumentType.contribution:
-                    self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
-                donor = one(contents['donors'])
-                self.assertIn('Australopithecus', donor['genus_species'])
-                if doc_type is DocumentType.contribution:
-                    self.assertFalse(source['bundle_deleted'])
-            elif doc_type is DocumentType.contribution:
-                if source['bundle_deleted']:
-                    num_actual_new_deleted_contributions += 1
+                    version = source['bundle_version']
                 else:
-                    self.assertLess(self.old_bundle.version, version)
-                    num_actual_new_contributions += 1
-            else:
-                assert False, doc_type
+                    assert False, doc_type
+                if doc_type is DocumentType.contribution and version == self.new_bundle.version:
+                    if source['bundle_deleted']:
+                        num_actual_new_deleted_contributions += 1
+                    else:
+                        self.assertLess(self.old_bundle.version, version)
+                        num_actual_new_contributions += 1
+                else:
+                    self.assertEqual(self.old_bundle.version, version)
+                    contents = source['contents']
+                    project = one(contents['projects'])
+                    self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
+                    self.assertEqual('Single of human pancreas', get(project['project_short_name']))
+                    self.assertIn('John Dear', get(project['laboratory']))
+                    if doc_type is DocumentType.aggregate and qualifier != 'projects':
+                        self.assertIn('Farmers Trucks', project['institutions'])
+                    elif doc_type is DocumentType.contribution:
+                        self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
+                    donor = one(contents['donors'])
+                    self.assertIn('Australopithecus', donor['genus_species'])
+                    if doc_type is DocumentType.contribution:
+                        self.assertFalse(source['bundle_deleted'])
+
         # We count the deleted contributions here too since they should have a
         # corresponding addition contribution
         self.assertEqual(num_expected_new_contributions + num_expected_new_deleted_contributions,
