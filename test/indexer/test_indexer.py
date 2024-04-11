@@ -481,14 +481,17 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         self.assertEqual(num_addition_contribs, len(actual_addition_contribs))
         self.assertEqual(num_deletion_contribs, len(actual_deletion_contribs))
+
+        # Deletion notifications add deletion markers to the contributions index
+        # instead of removing the existing contributions.
+        num_contribs = num_addition_contribs + num_deletion_contribs
+        # These deletion markers do not affect the number of replicas because we
+        # don't support deleting replicas.
+        num_replicas = self._num_replicas(num_additions=num_addition_contribs)
         self._assert_hit_counts(hits,
-                                # Deletion notifications add deletion markers to the contributions index
-                                # instead of removing the existing contributions.
-                                num_contribs=num_addition_contribs + num_deletion_contribs,
+                                num_contribs=num_contribs,
                                 num_aggs=0,
-                                # These deletion markers do not affect the number of replicas because we don't
-                                # support deleting replicas.
-                                num_replicas=self._num_replicas(num_additions=num_addition_contribs))
+                                num_replicas=num_replicas)
 
     def test_bundle_delete_downgrade(self):
         """
