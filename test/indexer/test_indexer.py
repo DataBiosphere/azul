@@ -1295,45 +1295,45 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
-                continue
-            source = hit['_source']
-            version = get_version(source, doc_type)
-            contents = source['contents']
-            project = one(contents['projects'])
+                pass
+            else:
+                source = hit['_source']
+                version = get_version(source, doc_type)
+                contents = source['contents']
+                project = one(contents['projects'])
 
-            if doc_type is DocumentType.contribution and version != self.new_bundle.version:
-                self.assertLess(version, self.new_bundle.version)
-                num_actual_old_contributions += 1
-                continue
+                if doc_type is DocumentType.contribution and version == self.old_bundle.version:
+                    self.assertLess(version, self.new_bundle.version)
+                    num_actual_old_contributions += 1
+                else:
+                    if old_hits_by_id is not None:
+                        old_hit = old_hits_by_id[source['entity_id'], doc_type]
+                        old_source = old_hit['_source']
+                        old_version = get_version(old_source, doc_type)
+                        self.assertLess(old_version, version)
+                        old_contents = old_source['contents']
+                        old_project = one(old_contents['projects'])
+                        self.assertNotEqual(old_project['project_title'], project['project_title'])
+                        self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
+                        self.assertNotEqual(old_project['laboratory'], project['laboratory'])
+                        if doc_type is DocumentType.aggregate and qualifier != 'projects':
+                            self.assertNotEqual(old_project['institutions'], project['institutions'])
+                        elif doc_type is DocumentType.contribution:
+                            self.assertNotEqual(old_project['contributors'], project['contributors'])
+                        self.assertNotEqual(old_contents['donors'][0]['genus_species'],
+                                            contents['donors'][0]['genus_species'])
 
-            if old_hits_by_id is not None:
-                old_hit = old_hits_by_id[source['entity_id'], doc_type]
-                old_source = old_hit['_source']
-                old_version = get_version(old_source, doc_type)
-                self.assertLess(old_version, version)
-                old_contents = old_source['contents']
-                old_project = one(old_contents['projects'])
-                self.assertNotEqual(old_project['project_title'], project['project_title'])
-                self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
-                self.assertNotEqual(old_project['laboratory'], project['laboratory'])
-                if doc_type is DocumentType.aggregate and qualifier != 'projects':
-                    self.assertNotEqual(old_project['institutions'], project['institutions'])
-                elif doc_type is DocumentType.contribution:
-                    self.assertNotEqual(old_project['contributors'], project['contributors'])
-                self.assertNotEqual(old_contents['donors'][0]['genus_species'],
-                                    contents['donors'][0]['genus_species'])
-
-            self.assertEqual('Single cell transcriptome analysis of human pancreas reveals transcriptional '
-                             'signatures of aging and somatic mutation patterns.',
-                             get(project['project_title']))
-            self.assertEqual('Single cell transcriptome analysis of human pancreas',
-                             get(project['project_short_name']))
-            self.assertNotIn('Sarah Teichmann', project['laboratory'])
-            self.assertIn('Molecular Atlas', project['laboratory'])
-            if doc_type is DocumentType.aggregate and qualifier != 'projects':
-                self.assertNotIn('Farmers Trucks', project['institutions'])
-            elif doc_type is DocumentType.contribution:
-                self.assertNotIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
+                    self.assertEqual('Single cell transcriptome analysis of human pancreas reveals transcriptional '
+                                     'signatures of aging and somatic mutation patterns.',
+                                     get(project['project_title']))
+                    self.assertEqual('Single cell transcriptome analysis of human pancreas',
+                                     get(project['project_short_name']))
+                    self.assertNotIn('Sarah Teichmann', project['laboratory'])
+                    self.assertIn('Molecular Atlas', project['laboratory'])
+                    if doc_type is DocumentType.aggregate and qualifier != 'projects':
+                        self.assertNotIn('Farmers Trucks', project['institutions'])
+                    elif doc_type is DocumentType.contribution:
+                        self.assertNotIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
 
         self.assertEqual(num_expected_old_contributions, num_actual_old_contributions)
 
