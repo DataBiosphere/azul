@@ -950,8 +950,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': [
                             's3:GetObject',
-                            's3:HeadBucket',
-                            's3:HeadObject'
+                            's3:HeadBucket'
                         ],
                         'resources': [
                             f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}',
