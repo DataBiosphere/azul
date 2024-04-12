@@ -273,7 +273,11 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
             self.bundle_fqid(uuid='2a87dc5c-0c3c-4d91-a348-5d784ab48b92',
                              version='2018-03-29T10:39:45.437487Z'): 258
         }
-        self.assertTrue(min(bundle_sizes.values()) < IndexWriter.bulk_threshold < max(bundle_sizes.values()))
+        self.assertTrue(
+            min(bundle_sizes.values())
+            < IndexWriter.bulk_threshold
+            < max(bundle_sizes.values())
+        )
 
         field_types = self.index_service.catalogued_field_types()
         aggregate_cls = self.metadata_plugin.aggregate_class()
