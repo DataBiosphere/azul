@@ -1401,15 +1401,22 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         hits = self._get_all_hits()
         file_uuids = set()
-        # Two bundles, each with 1 sample, 1 cell suspension, 1 project, 1 bundle and 2 files.
-        num_contribs = (1 + 1 + 1 + 1 + 2) * 2
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+        # Two bundles
+        num_contribs = num_entities * 2
+        # Both bundles share the same sample and the project, so they get
+        # aggregated only once
+        num_aggs = num_contribs - 2
+        # The sample contributions from each bundle are identical and yield a
+        # single replica, but the project contributions have different schema
+        # versions and thus yield two.
+        num_replicas = self._num_replicas(num_additions=num_contribs,
+                                          num_dups=1)
         self._assert_hit_counts(hits,
                                 num_contribs=num_contribs,
-                                # Both bundles share the same sample and the project, so they get aggregated only once
-                                num_aggs=num_contribs - 2,
-                                # The sample contributions from each bundle are identical and yield a single replica,
-                                # but the project contributions have different schema versions and thus yield two.
-                                num_replicas=self._num_replicas(num_additions=num_contribs, num_dups=1))
+                                num_aggs=num_aggs,
+                                num_replicas=num_replicas)
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
