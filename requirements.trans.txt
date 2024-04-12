@@ -12,7 +12,7 @@ googleapis-common-protos==1.63.0
 grpcio==1.62.1
 grpcio-status==1.62.1
 http_sfv==0.9.9
-idna==3.6
+idna==3.7
 markupsafe==2.1.5
 orderedmultidict==1.0.1
 packaging==24.0
