@@ -426,7 +426,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         # Aggregation should still work despite contributing same bundle twice
         self.index_service.aggregate(tallies)
-        self._assert_new_bundle()
+        self._assert_new_bundle(expect_old_version=False)
 
     def test_zero_tallies(self):
         """
@@ -497,7 +497,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._index_canned_bundle(self.old_bundle)
         old_hits_by_id = self._assert_old_bundle(expect_new_version=False)
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
+        self._assert_new_bundle(expect_old_version=True, old_hits_by_id=old_hits_by_id)
         self._index_canned_bundle(self.new_bundle, delete=True)
         self._assert_old_bundle(expect_new_version=None)
 
@@ -1157,7 +1157,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._index_canned_bundle(self.old_bundle)
         old_hits_by_id = self._assert_old_bundle(expect_new_version=False)
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
+        self._assert_new_bundle(expect_old_version=True, old_hits_by_id=old_hits_by_id)
 
     def test_bundle_downgrade(self):
         """
@@ -1165,10 +1165,10 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         have an effect on aggregates.
         """
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=0)
+        self._assert_new_bundle(expect_old_version=False)
         self._index_canned_bundle(self.old_bundle)
         self._assert_old_bundle(expect_new_version=True)
-        self._assert_new_bundle(num_expected_old_contributions=6)
+        self._assert_new_bundle(expect_old_version=True)
 
     HitsById = Mapping[tuple[str, DocumentType], JSON]
 
@@ -1267,21 +1267,41 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         return hits_by_id
 
     def _assert_new_bundle(self,
-                           num_expected_old_contributions: int = 0,
+                           *,
+                           expect_old_version: bool,
                            old_hits_by_id: HitsById | None = None
                            ) -> None:
-        # Two files, one project, one cell suspension, one sample, and one bundle.
-        num_new_contribs = 6
-        num_total_contribs = num_new_contribs + num_expected_old_contributions
+        """
+        Assert that the new bundle is indexed correctly.
+
+        :param expect_old_version: Whether to expect effects of indexing an
+                                   older version of the bundle.
+
+        :param old_hits_by_id: An optional dictionary with expected hits for
+                               that older version.
+        """
+        if old_hits_by_id is not None:
+            self.assertTrue(expect_old_version)
+
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+
+        # Expect an updaded replica for each entity in the new version
+        num_contribs = num_entities
+        if expect_old_version:
+            # Expect a replica for each entity in the old version
+            num_contribs += num_entities
+
+        # New and old replicas for `links.json` are identical
+        num_dups = 1 if expect_old_version else 0
+        num_replicas = self._num_replicas(num_additions=num_contribs,
+                                          num_dups=num_dups)
 
         hits = self._get_all_hits()
         self._assert_hit_counts(hits,
-                                num_contribs=num_total_contribs,
-                                num_aggs=num_new_contribs,
-                                num_replicas=self._num_replicas(num_additions=num_total_contribs,
-                                                                # New and old replicas for `links.json` are identical.
-                                                                num_dups=1 if num_expected_old_contributions > 0 else 0)
-                                )
+                                num_contribs=num_contribs,
+                                num_aggs=num_entities,
+                                num_replicas=num_replicas)
 
         def get_version(source, doc_type):
             if doc_type is DocumentType.aggregate:
@@ -1335,7 +1355,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     elif doc_type is DocumentType.contribution:
                         self.assertNotIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
 
-        self.assertEqual(num_expected_old_contributions, num_actual_old_contributions)
+        self.assertEqual(num_entities if expect_old_version else 0,
+                         num_actual_old_contributions)
 
     def test_concurrent_specimen_submissions(self):
         """
