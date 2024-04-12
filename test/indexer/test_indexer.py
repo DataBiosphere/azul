@@ -38,6 +38,8 @@ from elasticsearch import (
     Elasticsearch,
 )
 from more_itertools import (
+    bucket,
+    ilen,
     one,
 )
 
@@ -468,19 +470,12 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         num_deletion_contribs = num_entities
 
         hits = self._get_all_hits()
-        actual_addition_contribs = [
-            h
-            for h in hits
-            if h['_source'].get('bundle_deleted') is False
-        ]
-        actual_deletion_contribs = [
-            h
-            for h in hits
-            if h['_source'].get('bundle_deleted') is True
-        ]
 
-        self.assertEqual(num_addition_contribs, len(actual_addition_contribs))
-        self.assertEqual(num_deletion_contribs, len(actual_deletion_contribs))
+        hits_by_deleted = bucket(hits, lambda hit: hit['_source'].get('bundle_deleted'))
+        actual_addition_contribs = hits_by_deleted[False]
+        actual_deletion_contribs = hits_by_deleted[True]
+        self.assertEqual(num_addition_contribs, ilen(actual_addition_contribs))
+        self.assertEqual(num_deletion_contribs, ilen(actual_deletion_contribs))
 
         # Deletion notifications add deletion markers to the contributions index
         # instead of removing the existing contributions.
