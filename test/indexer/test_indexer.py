@@ -310,13 +310,17 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
 
                     hits = self._get_all_hits()
                     # Twice the number of contributions because deletions create
-                    # new documents instead of removing them. The aggregates are
-                    # removed when the deletions cause their contents to become
-                    # emtpy. Deletions do not affect the number of replicas.
+                    # new documents instead of removing them.
+                    num_contribs = size * 2
+                    # The aggregates are removed when the deletions cause their
+                    # contents to become emtpy.
+                    num_aggs = 0
+                    # Deletions do not affect the number of replicas.
+                    num_replicas = self._num_replicas(num_additions=size)
                     self._assert_hit_counts(hits,
-                                            num_contribs=size * 2,
-                                            num_aggs=0,
-                                            num_replicas=self._num_replicas(num_additions=size))
+                                            num_contribs=num_contribs,
+                                            num_aggs=num_aggs,
+                                            num_replicas=num_replicas)
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         qualifier, doc_type = self._parse_index_name(hit)
