@@ -158,13 +158,17 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
         """
         Verify that the indices contain the correct number of hits of each
         document type
-        :param hits: Hits from ElasticSearch
+
+        :param hits: Hits from Elasticsearch
+
         :param num_contribs: Expected number of contributions
-        :param num_aggs: Expected number of aggregates. If unspecified, `num_contribs`
-                         becomes the default.
-        :param num_replicas: Expected number of replicas. If unspecified, `num_contribs`
-                             is used to calculate it, assuming all contributions have
-                             distinct contents.
+
+        :param num_aggs: Expected number of aggregates. If unspecified,
+                         ``num_contribs`` becomes the default.
+
+        :param num_replicas: Expected number of replicas. If unspecified,
+                             ``num_contribs`` is used to calculate it, assuming
+                             all contributions have distinct contents.
         """
         if num_aggs is None:
             # By default, assume 1 aggregate per contribution.
