@@ -1349,6 +1349,15 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         self.assertEqual(200, response.status_code)
         self._assert_jsonl(expected, response)
 
+    def test_verbatim_pfb_manifest(self):
+        response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
+        self.assertEqual(200, response.status_code)
+        with open(self._data_path('service') / 'verbatim/hca/pfb_schema.json') as f:
+            expected_schema = json.load(f)
+        with open(self._data_path('service') / 'verbatim/hca/pfb_entities.json') as f:
+            expected_entities = json.load(f)
+        self._assert_pfb(expected_schema, expected_entities, response)
+
 
 class TestManifestCache(DCP1ManifestTestCase):
 
