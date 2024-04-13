@@ -64,12 +64,13 @@ from azul.logging import (
 )
 from azul.plugins import (
     FieldPath,
+    MetadataPlugin,
 )
 from azul.plugins.metadata.hca import (
     HCABundle,
 )
 from azul.plugins.metadata.hca.service.response import (
-    SearchResponseFactory,
+    HCASearchResponseStage,
 )
 from azul.plugins.repository.tdr import (
     TDRSourceRef,
@@ -187,7 +188,7 @@ class TestIndexResponse(IndexResponseTestCase):
                                                                     search_after_uid='meta%2332'))))
         ]
 
-    def test_response_factory_files(self):
+    def test_response_stage_files(self):
         """
         n=0: Test the SearchResponse object, making sure the functionality works
         as appropriate by asserting the apiResponse attribute is the same as
@@ -349,27 +350,23 @@ class TestIndexResponse(IndexResponseTestCase):
                 # FIXME: Use response from `/index/files` to validate
                 #        https://github.com/DataBiosphere/azul/issues/2970
                 hits = self._get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb')
-                factory = SearchResponseFactory(hits=hits,
-                                                pagination=self.paginations[n],
-                                                aggs={},
-                                                entity_type='files',
-                                                catalog=self.catalog)
-                response = factory.make_response()
+                stage = HCASearchResponseStage(service=self.index_service,
+                                               entity_type='files',
+                                               catalog=self.catalog)
+                response = stage.process_response((hits, self.paginations[n], {}))
                 self.assertElasticEqual(responses[n], response)
 
-    def test_response_factory_files_summaries(self):
+    def test_response_stage_files_summaries(self):
         """
         Test non-'files' entity type passed to SearchResponse will give file summaries
         """
         # FIXME: Use response from `/index/samples` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
         hits = self._get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2')
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=self.paginations[0],
-                                        aggs={},
-                                        entity_type='samples',
-                                        catalog=self.catalog)
-        response = factory.make_response()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='samples',
+                                       catalog=self.catalog)
+        response = stage.process_response((hits, self.paginations[0], {}))
 
         for hit in response['hits']:
             self.assertTrue('fileTypeSummaries' in hit)
@@ -414,7 +411,7 @@ class TestIndexResponse(IndexResponseTestCase):
         }
     }
 
-    def test_response_factory_files_facets(self):
+    def test_response_stage_files_facets(self):
         """
         Test adding facets to SearchResponse with missing values in one facet
         and no missing values in the other
@@ -423,12 +420,10 @@ class TestIndexResponse(IndexResponseTestCase):
         """
         # FIXME: Use response from `/index/files` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        factory = SearchResponseFactory(hits=[],
-                                        pagination=self.paginations[0],
-                                        aggs=self.canned_aggs,
-                                        entity_type='files',
-                                        catalog=self.catalog)
-        facets = factory.make_facets()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='files',
+                                       catalog=self.catalog)
+        facets = stage.make_facets(self.canned_aggs)
         expected_output = {
             "organ": {
                 "terms": [
@@ -461,7 +456,7 @@ class TestIndexResponse(IndexResponseTestCase):
         }
         self.assertElasticEqual(facets, expected_output)
 
-    def test_response_factory_projects(self):
+    def test_response_stage_projects(self):
         """
         Test building response for projects. Response should include project
         detail fields that do not appear for other entity type responses
@@ -469,12 +464,10 @@ class TestIndexResponse(IndexResponseTestCase):
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
         hits = self._get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88')
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=self.paginations[0],
-                                        aggs=self.canned_aggs,
-                                        entity_type='projects',
-                                        catalog=self.catalog)
-        response = factory.make_response()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='projects',
+                                       catalog=self.catalog)
+        response = stage.process_response((hits, self.paginations[0], self.canned_aggs))
 
         expected_response = {
             "hits": [
@@ -695,7 +688,7 @@ class TestIndexResponse(IndexResponseTestCase):
 
         self.assertElasticEqual(expected_response, response)
 
-    def test_response_factory_projects_accessions(self):
+    def test_response_stage_projects_accessions(self):
         """
         This method tests the SearchResponse object for the projects entity type,
         specifically making sure the accessions fields are present in the response.
@@ -703,12 +696,10 @@ class TestIndexResponse(IndexResponseTestCase):
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
         hits = self._get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635')
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=self.paginations[0],
-                                        aggs={},
-                                        entity_type='projects',
-                                        catalog=self.catalog)
-        response = factory.make_response()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='projects',
+                                       catalog=self.catalog)
+        response = stage.process_response((hits, self.paginations[0], {}))
         expected_hits = [
             {
                 "cellLines": [
@@ -921,32 +912,28 @@ class TestIndexResponse(IndexResponseTestCase):
         ]
         self.assertElasticEqual(expected_hits, response['hits'])
 
-    def test_response_factory_projects_celltype(self):
+    def test_response_stage_projects_celltype(self):
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
         hits = self._get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d')
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=self.paginations[0],
-                                        aggs={},
-                                        entity_type='projects',
-                                        catalog=self.catalog)
-        response = factory.make_response()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='projects',
+                                       catalog=self.catalog)
+        response = stage.process_response((hits, self.paginations[0], {}))
         cell_suspension = one(response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
-    def test_response_factory_projects_cell_line(self):
+    def test_response_stage_projects_cell_line(self):
         """
         Test SearchResponse contains the correct cell_line and sample field values
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
         hits = self._get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321')
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=self.paginations[0],
-                                        aggs={},
-                                        entity_type='projects',
-                                        catalog=self.catalog)
-        response = factory.make_response()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='projects',
+                                       catalog=self.catalog)
+        response = stage.process_response((hits, self.paginations[0], {}))
         expected_cell_lines = {
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
@@ -965,19 +952,17 @@ class TestIndexResponse(IndexResponseTestCase):
         samples = one(one(hits)['samples'])
         self.assertElasticEqual(samples, expected_samples)
 
-    def test_response_factory_files_file(self):
+    def test_response_stage_files_file(self):
         """
         Test SearchResponse contains the correct file field values
         """
         # FIXME: Use response from `/index/files` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
         hits = self._get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a')
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=self.paginations[0],
-                                        aggs={},
-                                        entity_type='files',
-                                        catalog=self.catalog)
-        response = factory.make_response()
+        stage = HCASearchResponseStage(service=self.index_service,
+                                       entity_type='files',
+                                       catalog=self.catalog)
+        response = stage.process_response((hits, self.paginations[0], {}))
         expected_file = {
             'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
@@ -1162,9 +1147,10 @@ class TestIndexResponse(IndexResponseTestCase):
         response = response.json()
         indexed_bundles = set(self.bundles())
         self.assertEqual(len(self.bundles()), len(indexed_bundles))
+        special_fields = self.index_service.metadata_plugin(self.catalog).special_fields
         actual_bundles = {
-            self.bundle_fqid(uuid=bundle['bundleUuid'],
-                             version=bundle['bundleVersion'])
+            self.bundle_fqid(uuid=bundle[special_fields.bundle_uuid],
+                             version=bundle[special_fields.bundle_version])
             for hit in response['hits']
             for bundle in hit['bundles']
         }
@@ -3536,9 +3522,9 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
         # the `accessible` term facet, so we must perform the same replacement
         # before the list of facets can be used to verify the contents of the
         # response.
-        plugin = self.app_module.app.metadata_plugin
+        plugin: MetadataPlugin = self.app_module.app.metadata_plugin
         facets = list(plugin.facets)
-        facets[facets.index(plugin.source_id_field)] = 'accessible'
+        facets[facets.index(plugin.special_fields.source_id)] = 'accessible'
         return facets
 
     @property
@@ -3846,10 +3832,12 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
+        plugin = self.index_service.metadata_plugin(self.catalog)
+        special_fields = plugin.special_fields
         for hit in response_json['hits']:
             source = one(hit['sources'])
-            source = TDRSourceRef(id=source['sourceId'],
-                                  spec=TDRSourceSpec.parse(source['sourceSpec']))
+            source = TDRSourceRef(id=source[special_fields.source_id],
+                                  spec=TDRSourceSpec.parse(source[special_fields.source_spec]))
             self.assertEqual(self.source, source)
 
     def get_file(self, entry_id: str) -> JSON:

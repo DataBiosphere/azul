@@ -16,6 +16,7 @@ from azul.plugins import (
     FieldPath,
     ManifestConfig,
     MetadataPlugin,
+    SpecialFields,
 )
 from azul.plugins.metadata.hca import (
     Plugin,
@@ -56,8 +57,11 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
     class MockPlugin(Plugin):
 
         @property
-        def source_id_field(self) -> str:
-            return 'sourceId'
+        def special_fields(self) -> SpecialFields:
+            return SpecialFields(source_id='sourceId',
+                                 source_spec='sourceSpec',
+                                 bundle_uuid='bundleUuid',
+                                 bundle_version='bundleVersion')
 
         @property
         def _field_mapping(self) -> MetadataPlugin._FieldMapping:
@@ -85,7 +89,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
 
         @property
-        def manifest(self) -> ManifestConfig:
+        def manifest_config(self) -> ManifestConfig:
             return {}
 
         @property

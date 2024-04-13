@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 from typing import (
     Iterable,
     Optional,
@@ -12,6 +15,7 @@ from azul import (
 from azul.indexer.document import (
     DocumentType,
     EntityType,
+    FieldPath,
     IndexName,
 )
 from azul.plugins import (
@@ -19,6 +23,7 @@ from azul.plugins import (
     ManifestConfig,
     MetadataPlugin,
     Sorting,
+    SpecialFields,
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
@@ -59,7 +64,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return dict(
             activities=Sorting(field_name='activities.activity_id'),
             biosamples=Sorting(field_name='biosamples.biosample_id'),
-            bundles=Sorting(field_name='bundleUuid'),
+            bundles=Sorting(field_name=self.special_fields.bundle_uuid),
             datasets=Sorting(field_name='datasets.dataset_id'),
             donors=Sorting(field_name='donors.donor_id'),
             files=Sorting(field_name='files.file_id'),
@@ -121,52 +126,14 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return {
             'entity_id': 'entryId',
             'bundles': {
-                'uuid': 'bundleUuid',
-                'version': 'bundleVersion'
+                'uuid': self.special_fields.bundle_uuid,
+                'version': self.special_fields.bundle_version
             },
             'sources': {
-                'id': self.source_id_field,
-                'spec': 'sourceSpec'
+                'id': self.special_fields.source_id,
+                'spec': self.special_fields.source_spec
             },
             'contents': {
-                'activities': {
-                    f: f'activities.{f}' for f in [
-                        *common_fields,
-                        'activity_id',
-                        'activity_table',
-                        'activity_type',
-                        'assay_type',
-                        'data_modality',
-                        'reference_assembly',
-                        # Not in schema
-                        'date_created',
-                    ]
-                },
-                'biosamples': {
-                    f: f'biosamples.{f}' for f in [
-                        *common_fields,
-                        'biosample_id',
-                        'anatomical_site',
-                        'apriori_cell_type',
-                        'biosample_type',
-                        'disease',
-                        'donor_age_at_collection_unit',
-                        'donor_age_at_collection',
-                    ]
-                },
-                'diagnoses': {
-                    f: f'diagnoses.{f}' for f in [
-                        *common_fields,
-                        'diagnosis_id',
-                        'disease',
-                        'diagnosis_age_unit',
-                        'diagnosis_age',
-                        'onset_age_unit',
-                        'onset_age',
-                        'phenotype',
-                        'phenopacket'
-                    ]
-                },
                 'datasets': {
                     f: f'datasets.{f}' for f in [
                         *common_fields,
@@ -188,6 +155,44 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                         'phenotypic_sex',
                         'reported_ethnicity',
                         'genetic_ancestry',
+                    ]
+                },
+                'diagnoses': {
+                    f: f'diagnoses.{f}' for f in [
+                        *common_fields,
+                        'diagnosis_id',
+                        'disease',
+                        'diagnosis_age_unit',
+                        'diagnosis_age',
+                        'onset_age_unit',
+                        'onset_age',
+                        'phenotype',
+                        'phenopacket'
+                    ]
+                },
+                'biosamples': {
+                    f: f'biosamples.{f}' for f in [
+                        *common_fields,
+                        'biosample_id',
+                        'anatomical_site',
+                        'apriori_cell_type',
+                        'biosample_type',
+                        'disease',
+                        'donor_age_at_collection_unit',
+                        'donor_age_at_collection',
+                    ]
+                },
+                'activities': {
+                    f: f'activities.{f}' for f in [
+                        *common_fields,
+                        'activity_id',
+                        'activity_table',
+                        'activity_type',
+                        'assay_type',
+                        'data_modality',
+                        'reference_assembly',
+                        # Not in schema
+                        'date_created',
                     ]
                 },
                 'files': {
@@ -220,8 +225,11 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         }
 
     @property
-    def source_id_field(self) -> str:
-        return 'sourceId'
+    def special_fields(self) -> SpecialFields:
+        return SpecialFields(source_id='source_id',
+                             source_spec='source_spec',
+                             bundle_uuid='bundle_uuid',
+                             bundle_version='bundle_version')
 
     @property
     def implicit_hub_type(self) -> str:
@@ -254,52 +262,32 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         ]
 
     @property
-    def manifest(self) -> ManifestConfig:
-        return {
-            ('sources',): {
-                'id': 'source_id',
-                'spec': 'source_spec',
-            },
-            ('bundles',): {
-                'uuid': 'bundle_uuid',
-                'version': 'bundle_version'
-            },
-            ('contents', 'activities'): {
-                'document_id': 'activity_document_id',
-                'activity_type': 'activity_type',
-            },
-            ('contents', 'biosamples'): {
-                'document_id': 'biosample_document_id',
-                'biosample_type': 'biosample_type',
-                'anatomical_site': 'anatomical_site'
-            },
-            ('contents', 'datasets'): {
-                'document_id': 'dataset_document_id',
-                'dataset_id': 'dataset_id',
-                'title': 'dataset_title'
-            },
-            ('contents', 'donors'): {
-                'phenotypic_sex': 'phenotypic_sex',
-                'document_id': 'donor_document_id',
-                'species': 'species',
-            },
-            ('contents', 'files'): {
-                'document_id': 'file_document_id',
-                'name': 'file_name',
-                'file_format': 'file_format',
-                'size': 'file_size',
-                'uuid': 'file_uuid',
-                'version': 'file_version',
-                'reference_assembly': 'file_reference_assembly',
-                'is_supplementary': 'file_is_supplementary',
-                'data_modality': 'file_data_modality',
-                'crc32': 'file_crc32',
-                'sha256': 'file_sha256',
-                'file_md5sum': 'file_md5',
-                'drs_uri': 'file_drs_uri',
-                'file_url': 'file_url'
-            }
-        }
+    def manifest_config(self) -> ManifestConfig:
+        result = defaultdict(dict)
+
+        def recurse(mapping: MetadataPlugin._FieldMapping, path: FieldPath):
+            for path_element, name_or_type in mapping.items():
+                new_path = (*path, path_element)
+                if isinstance(name_or_type, dict):
+                    recurse(name_or_type, new_path)
+                elif isinstance(name_or_type, str):
+                    if new_path == ('entity_id',):
+                        pass
+                    elif new_path == ('contents', 'files', 'uuid'):
+                        # Request the injection of a file URL …
+                        result[path]['file_url'] = 'files.file_url'
+                        # … but suppress the columns for the fields …
+                        result[path][path_element] = None
+                    elif new_path == ('contents', 'files', 'version'):
+                        # … only used by that injection.
+                        result[path][path_element] = None
+                    else:
+                        result[path][path_element] = name_or_type
+                else:
+                    assert False, (path, path_element, name_or_type)
+
+        recurse(self._field_mapping, ())
+        return result
 
     def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
         return None

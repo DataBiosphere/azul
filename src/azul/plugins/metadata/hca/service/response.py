@@ -21,7 +21,10 @@ from more_itertools import (
 )
 
 from azul import (
-    CatalogName,
+    cached_property,
+)
+from azul.plugins import (
+    SpecialFields,
 )
 from azul.plugins.metadata.hca.service.contributor_matrices import (
     make_stratification_tree,
@@ -132,6 +135,9 @@ class SummaryResponse(TypedDict):
     projects: JSONs
 
 
+T = TypeVar('T')
+
+
 class HCASummaryResponseStage(SummaryResponseStage):
 
     @property
@@ -159,37 +165,22 @@ class HCASummaryResponseStage(SummaryResponseStage):
         }
 
     def process_response(self, response: JSON) -> SummaryResponse:
-        factory = SummaryResponseFactory(response)
-        response = factory.make_response()
-        self._validate_response(cast(JSON, response))
+        response = self.make_response(response)
+        self._validate_response(response)
         return response
 
-    def _validate_response(self, response: JSON):
-        for field, summary_field in (
-            ('totalFileSize', 'totalSize'),
-            ('fileCount', 'count')
+    def _validate_response(self, response: SummaryResponse):
+        for total, summary_field in (
+            (response['totalFileSize'], 'totalSize'),
+            (response['fileCount'], 'count')
         ):
-            total = response[field]
             summaries = cast(JSONs, response['fileTypeSummaries'])
             summary_total = sum(summary[summary_field] for summary in summaries)
             assert total == summary_total, (total, summary_total)
 
-
-T = TypeVar('T')
-
-
-# FIXME: Merge into HCASummaryResponseStage
-#        https://github.com/DataBiosphere/azul/issues/4135
-
-class SummaryResponseFactory:
-
-    def __init__(self, aggs: JSON):
-        super().__init__()
-        self.aggs = aggs
-
-    def make_response(self) -> SummaryResponse:
+    def make_response(self, aggs: JSON) -> SummaryResponse:
         def agg_value(*path: str) -> AnyJSON:
-            agg = self.aggs
+            agg = aggs
             for name in path:
                 agg = agg[name]
             return agg
@@ -269,49 +260,31 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def process_response(self, response: ResponseTriple) -> SearchResponse:
         hits, pagination, aggs = response
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=pagination,
-                                        aggs=aggs,
-                                        entity_type=self.entity_type,
-                                        catalog=self.catalog)
-        return factory.make_response()
-
-
-# FIXME: Merge into HCASearchResponseStage
-#        https://github.com/DataBiosphere/azul/issues/4135
-
-class SearchResponseFactory:
-
-    def __init__(self,
-                 *,
-                 hits: JSONs,
-                 pagination: ResponsePagination,
-                 aggs: JSON,
-                 entity_type: str,
-                 catalog: CatalogName):
-        super().__init__()
-        self.hits = hits
-        self.pagination = pagination
-        self.aggs = aggs
-        self.entity_type = entity_type
-        self.catalog = catalog
-
-    def make_response(self) -> SearchResponse:
-        return SearchResponse(pagination=self.pagination,
-                              termFacets=self.make_facets(),
-                              hits=self.make_hits())
+        return SearchResponse(pagination=pagination,
+                              termFacets=self.make_facets(aggs),
+                              hits=self.make_hits(hits))
 
     def make_bundles(self, entry) -> MutableJSONs:
         return [
-            {'bundleUuid': b['uuid'], 'bundleVersion': b['version']}
+            {
+                self._special_fields.bundle_uuid: b['uuid'],
+                self._special_fields.bundle_version: b['version']
+            }
             for b in entry['bundles']
         ]
 
     def make_sources(self, entry) -> MutableJSONs:
         return [
-            {'sourceId': s['id'], 'sourceSpec': s['spec']}
+            {
+                self._special_fields.source_id: s['id'],
+                self._special_fields.source_spec: s['spec']
+            }
             for s in entry['sources']
         ]
+
+    @cached_property
+    def _special_fields(self) -> SpecialFields:
+        return self.plugin.special_fields
 
     def make_protocols(self, entry) -> MutableJSONs:
         return [
@@ -511,8 +484,8 @@ class SearchResponseFactory:
             for sample in entry['contents'].get(sample_entity_type, [])
         ]
 
-    def make_hits(self) -> MutableJSONs:
-        return list(map(self.make_hit, self.hits))
+    def make_hits(self, hits: JSONs) -> MutableJSONs:
+        return list(map(self.make_hit, hits))
 
     def make_hit(self, es_hit) -> MutableJSON:
         hit = Hit(protocols=self.make_protocols(es_hit),
@@ -599,9 +572,9 @@ class SearchResponseFactory:
                      #        https://github.com/DataBiosphere/azul/issues/2460
                      type='terms')
 
-    def make_facets(self) -> MutableJSON:
+    def make_facets(self, aggs: JSON) -> MutableJSON:
         facets = {}
-        for facet, agg in self.aggs.items():
+        for facet, agg in aggs.items():
             if facet != '_project_agg':  # Filter out project specific aggs
                 facets[facet] = self.make_terms(agg)
         return facets

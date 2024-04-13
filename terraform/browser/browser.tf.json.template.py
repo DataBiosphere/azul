@@ -111,8 +111,14 @@ def emit():
                                 'Principal': {
                                     'Service': 'cloudfront.amazonaws.com'
                                 },
-                                'Action': 's3:GetObject',
-                                'Resource': '${aws_s3_bucket.%s.arn}/*' % bucket,
+                                'Action': [
+                                    's3:GetObject',
+                                    's3:ListBucket'
+                                ],
+                                'Resource': [
+                                    '${aws_s3_bucket.%s.arn}' % bucket,
+                                    '${aws_s3_bucket.%s.arn}/*' % bucket
+                                ],
                                 'Condition': {
                                     'StringEquals': {
                                         'AWS:SourceArn': '${aws_cloudfront_distribution.browser.arn}'

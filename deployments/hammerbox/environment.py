@@ -465,6 +465,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
         'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
+        'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-prod.broadinstitute.org',
 
         **(
             {

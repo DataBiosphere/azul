@@ -82,7 +82,8 @@ class Filters:
         # We can safely ignore the `within`, `contains`, and `intersects`
         # operators since these always return empty results when used with
         # string fields.
-        facet_filter = filters.setdefault(plugin.source_id_field, {})
+        special_fields = plugin.special_fields
+        facet_filter = filters.setdefault(special_fields.source_id, {})
         try:
             requested_source_ids = facet_filter['is']
         except KeyError:
@@ -91,7 +92,7 @@ class Filters:
             inaccessible = set(requested_source_ids) - self.source_ids
             if inaccessible:
                 raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
-        assert set(filters[plugin.source_id_field]['is']) <= self.source_ids
+        assert set(filters[special_fields.source_id]['is']) <= self.source_ids
         return filters
 
 

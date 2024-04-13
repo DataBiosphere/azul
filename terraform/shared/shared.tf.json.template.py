@@ -37,52 +37,11 @@ def conformance_pack(name: str) -> str:
     return body
 
 
-def paren(s: str) -> str:
-    return '(' + s + ')'
-
-
 cis_alarms = [
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Average',
-                    filter_pattern='{' + ' && '.join([
-                        paren(' || '.join([
-                            '$.errorCode = "*UnauthorizedOperation"',
-                            '$.errorCode = "AccessDenied*"',
-                        ])),
-                        # Filtering on the errorCode alone catches too many false
-                        # positives, so we exclude those logs with the additional
-                        # conditions below.
-                        paren(' || '.join([
-                            '$.eventSource != "s3.amazonaws.com"',
-                            '$.eventName != "GetObject"',
-                            '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "s3.amazonaws.com"',
-                            '$.eventName != "HeadBucket"',
-                            '$.userIdentity.invokedBy != "config.amazonaws.com"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "s3.amazonaws.com"',
-                            '$.eventName != "HeadObject"',
-                            '$.userIdentity.invokedBy != "cloudfront.amazonaws.com"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "inspector2.amazonaws.com"',
-                            '$.eventName != "DescribeOrganizationConfiguration"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "elasticloadbalancing.amazonaws.com"',
-                            '$.eventName != "DescribeTargetGroupAttributes"',
-                            '$.userIdentity.invokedBy != "inspector2.amazonaws.com"',
-                        ])),
-                        paren(' || '.join([
-                            '$.eventSource != "ec2.amazonaws.com"',
-                            '$.eventName != "CreateNetworkInterface"',
-                        ]))
-                    ]) + '}'
-                    ),
+                    filter_pattern='{$.errorCode = "*UnauthorizedOperation" || $.errorCode = "AccessDenied*"}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
                     statistic='Sum',

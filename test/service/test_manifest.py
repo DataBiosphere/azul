@@ -1,3 +1,6 @@
+from abc import (
+    ABCMeta,
+)
 from collections import (
     defaultdict,
 )
@@ -62,11 +65,14 @@ from requests import (
 from azul import (
     config,
 )
+from azul.collections import (
+    adict,
+)
+from azul.indexer import (
+    SourcedBundleFQID,
+)
 from azul.json import (
     copy_json,
-)
-from azul.json_freeze import (
-    freeze,
 )
 from azul.logging import (
     configure_test_logging,
@@ -104,6 +110,7 @@ from azul_test_case import (
     AzulUnitTestCase,
 )
 from indexer import (
+    AnvilCannedBundleTestCase,
     DCP1CannedBundleTestCase,
 )
 from pfb_test_case import (
@@ -124,9 +131,9 @@ def setUpModule():
 
 
 @mock_s3
-class ManifestTestCase(DCP1CannedBundleTestCase,
-                       WebServiceTestCase,
-                       StorageServiceTestMixin):
+class ManifestTestCase(WebServiceTestCase,
+                       StorageServiceTestMixin,
+                       metaclass=ABCMeta):
 
     def setUp(self):
         super().setUp()
@@ -185,6 +192,38 @@ class ManifestTestCase(DCP1CannedBundleTestCase,
             partition = ManifestPartition.from_json(partition.to_json())
             num_partitions += 1
 
+    def _assert_tsv(self, expected: list[tuple[str, ...]], actual: Response):
+        """
+        Assert that the body of the given response is the expected TSV,
+        disregarding any row ordering differences.
+
+        :param expected: A transposed TSV, i.e. a list of columns. Each column
+                         is a tuple, and the first element in each tuple is the
+                         column header, or field name.
+
+        :param actual: An HTTP response containing a TSV
+        """
+        expected = list(map(list, zip(*expected)))
+        actual = actual.content.decode().splitlines()
+        actual = list(csv.reader(actual, delimiter='\t'))
+        actual[1:], expected[1:] = sorted(actual[1:]), sorted(expected[1:])
+        self.assertEqual(expected, actual)
+
+    def _file_url(self, file_id, version):
+        return str(self.base_url.set(path='/repository/files/' + file_id,
+                                     args=dict(catalog=self.catalog,
+                                               version=version)))
+
+    def _drs_uri(self, file_id, version=None):
+        return str(furl(scheme='drs',
+                        netloc=self._drs_domain,
+                        path=file_id,
+                        args=adict(version=version)))
+
+    @property
+    def _drs_domain(self) -> str:
+        return config.drs_domain or config.api_lambda_domain('service')
+
 
 def manifest_test(test):
     """
@@ -201,7 +240,11 @@ def manifest_test(test):
     return wrapper
 
 
-class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
+class DCP1ManifestTestCase(ManifestTestCase, DCP1CannedBundleTestCase):
+    pass
+
+
+class TestManifests(DCP1ManifestTestCase, PFBTestCase):
 
     def run(self,
             result: Optional[unittest.result.TestResult] = None
@@ -359,16 +402,16 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
             ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
 
             ('file_drs_uri',
-             f'drs://{self.drs_domain}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T12%3A33%3A47.012715Z',
-             f'drs://{self.drs_domain}/f2b6c6f0-8d25-4aae-b255-1974cc110cfe?version=2018-09-14T12%3A33%3A43.720332Z'),
+             self._drs_uri('5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                           '2018-09-14T12:33:47.012715Z'),
+             self._drs_uri('f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
+                           '2018-09-14T12:33:43.720332Z')),
 
             ('file_url',
-             str(self.base_url.set(path='/repository/files/5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
-                                   args=dict(catalog=self.catalog,
-                                             version='2018-09-14T12:33:47.012715Z'))),
-             str(self.base_url.set(path='/repository/files/f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
-                                   args=dict(catalog=self.catalog,
-                                             version='2018-09-14T12:33:43.720332Z')))),
+             self._file_url('5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                            '2018-09-14T12:33:47.012715Z'),
+             self._file_url('f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
+                            '2018-09-14T12:33:43.720332Z')),
 
             ('cell_suspension.provenance.document_id',
              '',
@@ -497,20 +540,6 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
         self.assertEqual(200, response.status_code)
         self._assert_tsv(expected, response)
 
-    @property
-    def drs_domain(self):
-        return config.drs_domain or config.api_lambda_domain('service')
-
-    def _assert_tsv(self, expected, actual):
-        expected_field_names, *expected_rows = map(list, zip(*expected))
-        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-        lines = actual.content.decode('utf-8').splitlines()
-        tsv_file = csv.reader(lines, delimiter='\t')
-        field_names = next(tsv_file)
-        rows = list(tsv_file)
-        self.assertEqual(expected_field_names, field_names)
-        self.assertEqual(sorted(freeze(expected_rows)), sorted(freeze(rows)))
-
     @manifest_test
     def test_manifest_zarr(self):
         """
@@ -525,10 +554,10 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 'file_crc32c': '4e75003e',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs',
                 'file_uuid': 'c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d',
-                'file_drs_uri': f'drs://{self.drs_domain}/c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d'
-                                f'?version=2018-10-10T03%3A10%3A37.983672Z',
-                'file_url': f'{self.base_url}/repository/files/c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A37.983672Z',
+                'file_drs_uri': self._drs_uri('c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d',
+                                              '2018-10-10T03:10:37.983672Z'),
+                'file_url': self._file_url('c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d',
+                                           '2018-10-10T03:10:37.983672Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             # Related files from zarray store
@@ -536,120 +565,120 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 'file_crc32c': '444a7707',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup',
                 'file_uuid': '54541cc5-9010-425b-9037-22e43948c97c',
-                'file_drs_uri': f'drs://{self.drs_domain}/54541cc5-9010-425b-9037-22e43948c97c'
-                                f'?version=2018-10-10T03%3A10%3A38.239541Z',
-                'file_url': f'{self.base_url}/repository/files/54541cc5-9010-425b-9037-22e43948c97c'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A38.239541Z',
+                'file_drs_uri': self._drs_uri('54541cc5-9010-425b-9037-22e43948c97c',
+                                              '2018-10-10T03:10:38.239541Z'),
+                'file_url': self._file_url('54541cc5-9010-425b-9037-22e43948c97c',
+                                           '2018-10-10T03:10:38.239541Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': '444a7707',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup',
                 'file_uuid': '66b8f976-6f1e-45b3-bd97-069658c3c847',
-                'file_drs_uri': f'drs://{self.drs_domain}/66b8f976-6f1e-45b3-bd97-069658c3c847'
-                                f'?version=2018-10-10T03%3A10%3A38.474167Z',
-                'file_url': f'{self.base_url}/repository/files/66b8f976-6f1e-45b3-bd97-069658c3c847'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A38.474167Z',
+                'file_drs_uri': self._drs_uri('66b8f976-6f1e-45b3-bd97-069658c3c847',
+                                              '2018-10-10T03:10:38.474167Z'),
+                'file_url': self._file_url('66b8f976-6f1e-45b3-bd97-069658c3c847',
+                                           '2018-10-10T03:10:38.474167Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': 'c6ab0701',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray',
                 'file_uuid': 'ac05d7fb-d6b9-4ab1-8c04-6211450dbb62',
-                'file_drs_uri': f'drs://{self.drs_domain}/ac05d7fb-d6b9-4ab1-8c04-6211450dbb62'
-                                f'?version=2018-10-10T03%3A10%3A38.714461Z',
-                'file_url': f'{self.base_url}/repository/files/ac05d7fb-d6b9-4ab1-8c04-6211450dbb62'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A38.714461Z',
+                'file_drs_uri': self._drs_uri('ac05d7fb-d6b9-4ab1-8c04-6211450dbb62',
+                                              '2018-10-10T03:10:38.714461Z'),
+                'file_url': self._file_url('ac05d7fb-d6b9-4ab1-8c04-6211450dbb62',
+                                           '2018-10-10T03:10:38.714461Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': 'cd2fd51f',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0',
                 'file_uuid': '0c518a52-f315-4ea2-beed-1c9d8f2d802b',
-                'file_drs_uri': f'drs://{self.drs_domain}/0c518a52-f315-4ea2-beed-1c9d8f2d802b'
-                                f'?version=2018-10-10T03%3A10%3A39.039270Z',
-                'file_url': f'{self.base_url}/repository/files/0c518a52-f315-4ea2-beed-1c9d8f2d802b'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A39.039270Z',
+                'file_drs_uri': self._drs_uri('0c518a52-f315-4ea2-beed-1c9d8f2d802b',
+                                              '2018-10-10T03:10:39.039270Z'),
+                'file_url': self._file_url('0c518a52-f315-4ea2-beed-1c9d8f2d802b',
+                                           '2018-10-10T03:10:39.039270Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': 'b89e6723',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray',
                 'file_uuid': '136108ab-277e-47a4-acc3-1feed8fb2f25',
-                'file_drs_uri': f'drs://{self.drs_domain}/136108ab-277e-47a4-acc3-1feed8fb2f25'
-                                f'?version=2018-10-10T03%3A10%3A39.426609Z',
-                'file_url': f'{self.base_url}/repository/files/136108ab-277e-47a4-acc3-1feed8fb2f25'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A39.426609Z',
+                'file_drs_uri': self._drs_uri('136108ab-277e-47a4-acc3-1feed8fb2f25',
+                                              '2018-10-10T03:10:39.426609Z'),
+                'file_url': self._file_url('136108ab-277e-47a4-acc3-1feed8fb2f25',
+                                           '2018-10-10T03:10:39.426609Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': 'caaefa77',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0',
                 'file_uuid': '0bef5419-739c-4a2c-aedb-43754d55d51c',
-                'file_drs_uri': f'drs://{self.drs_domain}/0bef5419-739c-4a2c-aedb-43754d55d51c'
-                                f'?version=2018-10-10T03%3A10%3A39.642846Z',
-                'file_url': f'{self.base_url}/repository/files/0bef5419-739c-4a2c-aedb-43754d55d51c'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A39.642846Z',
+                'file_drs_uri': self._drs_uri('0bef5419-739c-4a2c-aedb-43754d55d51c',
+                                              '2018-10-10T03:10:39.642846Z'),
+                'file_url': self._file_url('0bef5419-739c-4a2c-aedb-43754d55d51c',
+                                           '2018-10-10T03:10:39.642846Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': 'f629ec34',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray',
                 'file_uuid': '3a5f7299-1aa1-4060-9631-212c29b4d807',
-                'file_drs_uri': f'drs://{self.drs_domain}/3a5f7299-1aa1-4060-9631-212c29b4d807'
-                                f'?version=2018-10-10T03%3A10%3A39.899615Z',
-                'file_url': f'{self.base_url}/repository/files/3a5f7299-1aa1-4060-9631-212c29b4d807'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A39.899615Z',
+                'file_drs_uri': self._drs_uri('3a5f7299-1aa1-4060-9631-212c29b4d807',
+                                              '2018-10-10T03:10:39.899615Z'),
+                'file_url': self._file_url('3a5f7299-1aa1-4060-9631-212c29b4d807',
+                                           '2018-10-10T03:10:39.899615Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': '59d86b68',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0',
                 'file_uuid': 'a8f0dc39-6019-4fc7-899d-4e34a48d03e5',
-                'file_drs_uri': f'drs://{self.drs_domain}/a8f0dc39-6019-4fc7-899d-4e34a48d03e5'
-                                f'?version=2018-10-10T03%3A10%3A40.113268Z',
-                'file_url': f'{self.base_url}/repository/files/a8f0dc39-6019-4fc7-899d-4e34a48d03e5'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A40.113268Z',
+                'file_drs_uri': self._drs_uri('a8f0dc39-6019-4fc7-899d-4e34a48d03e5',
+                                              '2018-10-10T03:10:40.113268Z'),
+                'file_url': self._file_url('a8f0dc39-6019-4fc7-899d-4e34a48d03e5',
+                                           '2018-10-10T03:10:40.113268Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': '25d193cf',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray',
                 'file_uuid': '68ba4711-1447-42ac-aa40-9c0e4cda1666',
-                'file_drs_uri': f'drs://{self.drs_domain}/68ba4711-1447-42ac-aa40-9c0e4cda1666'
-                                f'?version=2018-10-10T03%3A10%3A40.583439Z',
-                'file_url': f'{self.base_url}/repository/files/68ba4711-1447-42ac-aa40-9c0e4cda1666'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A40.583439Z',
+                'file_drs_uri': self._drs_uri('68ba4711-1447-42ac-aa40-9c0e4cda1666',
+                                              '2018-10-10T03:10:40.583439Z'),
+                'file_url': self._file_url('68ba4711-1447-42ac-aa40-9c0e4cda1666',
+                                           '2018-10-10T03:10:40.583439Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': '17a84191',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0',
                 'file_uuid': '27e66328-e337-4bcd-ba15-7893ecaf841f',
-                'file_drs_uri': f'drs://{self.drs_domain}/27e66328-e337-4bcd-ba15-7893ecaf841f'
-                                f'?version=2018-10-10T03%3A10%3A40.801631Z',
-                'file_url': f'{self.base_url}/repository/files/27e66328-e337-4bcd-ba15-7893ecaf841f'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A40.801631Z',
+                'file_drs_uri': self._drs_uri('27e66328-e337-4bcd-ba15-7893ecaf841f',
+                                              '2018-10-10T03:10:40.801631Z'),
+                'file_url': self._file_url('27e66328-e337-4bcd-ba15-7893ecaf841f',
+                                           '2018-10-10T03:10:40.801631Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': '25d193cf',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray',
                 'file_uuid': '2ab1a516-ef36-41b6-a78f-513361658feb',
-                'file_drs_uri': f'drs://{self.drs_domain}/2ab1a516-ef36-41b6-a78f-513361658feb'
-                                f'?version=2018-10-10T03%3A10%3A40.958708Z',
-                'file_url': f'{self.base_url}/repository/files/2ab1a516-ef36-41b6-a78f-513361658feb'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A40.958708Z',
+                'file_drs_uri': self._drs_uri('2ab1a516-ef36-41b6-a78f-513361658feb',
+                                              '2018-10-10T03:10:40.958708Z'),
+                'file_url': self._file_url('2ab1a516-ef36-41b6-a78f-513361658feb',
+                                           '2018-10-10T03:10:40.958708Z'),
                 'specimen_from_organism.organ': 'brain'
             },
             {
                 'file_crc32c': 'bdc30523',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0',
                 'file_uuid': '351970aa-bc4c-405e-a274-be9e08e42e98',
-                'file_drs_uri': f'drs://{self.drs_domain}/351970aa-bc4c-405e-a274-be9e08e42e98'
-                                f'?version=2018-10-10T03%3A10%3A41.135992Z',
-                'file_url': f'{self.base_url}/repository/files/351970aa-bc4c-405e-a274-be9e08e42e98'
-                            f'?catalog=test&version=2018-10-10T03%3A10%3A41.135992Z',
+                'file_drs_uri': self._drs_uri('351970aa-bc4c-405e-a274-be9e08e42e98',
+                                              '2018-10-10T03:10:41.135992Z'),
+                'file_url': self._file_url('351970aa-bc4c-405e-a274-be9e08e42e98',
+                                           '2018-10-10T03:10:41.135992Z'),
                 'specimen_from_organism.organ': 'brain'
             }
         ]
@@ -714,7 +743,6 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
-        domain = self.drs_domain
 
         bam_b0_0_uuid, bam_b0_0_version = '51c9ad31-5888-47eb-9e0c-02f042373c4e', '2018-10-10T03:10:35.284782Z'
         bam_b0_1_uuid, bam_b0_1_version = 'b1c167da-0825-4c63-9cbc-2aada1ab367c', '2018-10-10T03:10:35.971561Z'
@@ -779,25 +807,21 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 '__bam_0__file_crc32c': '700bd519',
                 '__bam_0__file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
                 '__bam_0__file_content_type': 'application/gzip; dcp-type=data',
-                '__bam_0__file_drs_uri': str(furl(url=f'drs://{domain}/{bam_b0_0_uuid}',
-                                                  args={'version': bam_b0_0_version})),
-                '__bam_0__file_url': str(furl(url=f'{self.base_url}/repository/files/{bam_b0_0_uuid}',
-                                              args={'catalog': 'test', 'version': bam_b0_0_version})),
+                '__bam_0__file_drs_uri': self._drs_uri(bam_b0_0_uuid, bam_b0_0_version),
+                '__bam_0__file_url': self._file_url(bam_b0_0_uuid, bam_b0_0_version),
                 '__bam_1__file_document_id': '14d63962-7cd3-43fc-a4d6-dc8f761c9ebd',
                 '__bam_1__file_type': 'analysis_file',
                 '__bam_1__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
                 '__bam_1__file_format': 'bam',
                 '__bam_1__read_index': '',
                 '__bam_1__file_size': '3752733',
-                '__bam_1__file_uuid': f'{bam_b0_1_uuid}',
+                '__bam_1__file_uuid': bam_b0_1_uuid,
                 '__bam_1__file_version': bam_b0_1_version,
                 '__bam_1__file_crc32c': '3d94b063',
                 '__bam_1__file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
                 '__bam_1__file_content_type': 'application/gzip; dcp-type=data',
-                '__bam_1__file_drs_uri': str(furl(url=f'drs://{domain}/{bam_b0_1_uuid}',
-                                                  args={'version': bam_b0_1_version})),
-                '__bam_1__file_url': str(furl(url=f'{self.base_url}/repository/files/{bam_b0_1_uuid}',
-                                              args={'catalog': 'test', 'version': bam_b0_1_version})),
+                '__bam_1__file_drs_uri': self._drs_uri(bam_b0_1_uuid, bam_b0_1_version),
+                '__bam_1__file_url': self._file_url(bam_b0_1_uuid, bam_b0_1_version),
                 '__fastq_read1__file_document_id': '5f0cdf49-aabe-40f4-8af3-033115805bb0',
                 '__fastq_read1__file_type': 'sequence_file',
                 '__fastq_read1__file_name': 'R1.fastq.gz',
@@ -805,14 +829,12 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 '__fastq_read1__read_index': 'read1',
                 '__fastq_read1__file_size': '125191',
                 '__fastq_read1__file_uuid': fastq_b0_r1_uuid,
-                '__fastq_read1__file_version': f'{fastq_b0_r1_version}',
+                '__fastq_read1__file_version': fastq_b0_r1_version,
                 '__fastq_read1__file_crc32c': '4ef74578',
                 '__fastq_read1__file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
                 '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
-                '__fastq_read1__file_url': str(furl(url=f'{self.base_url}/repository/files/{fastq_b0_r1_uuid}',
-                                                    args={'catalog': 'test', 'version': fastq_b0_r1_version})),
-                '__fastq_read1__file_drs_uri': str(furl(url=f'drs://{domain}/{fastq_b0_r1_uuid}',
-                                                        args={'version': fastq_b0_r1_version})),
+                '__fastq_read1__file_url': self._file_url(fastq_b0_r1_uuid, fastq_b0_r1_version),
+                '__fastq_read1__file_drs_uri': self._drs_uri(fastq_b0_r1_uuid, fastq_b0_r1_version),
                 '__fastq_read2__file_document_id': '74c8c730-139e-40a5-b77e-f46088fa4d95',
                 '__fastq_read2__file_type': 'sequence_file',
                 '__fastq_read2__file_name': 'R2.fastq.gz',
@@ -824,10 +846,8 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 '__fastq_read2__file_crc32c': '69987b3e',
                 '__fastq_read2__file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
                 '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
-                '__fastq_read2__file_url': str(furl(url=f'{self.base_url}/repository/files/{fastq_b0_r2_uuid}',
-                                                    args={'catalog': 'test', 'version': fastq_b0_r2_version})),
-                '__fastq_read2__file_drs_uri': str(furl(url=f'drs://{domain}/{fastq_b0_r2_uuid}',
-                                                        args={'version': fastq_b0_r2_version})),
+                '__fastq_read2__file_url': self._file_url(fastq_b0_r2_uuid, fastq_b0_r2_version),
+                '__fastq_read2__file_drs_uri': self._drs_uri(fastq_b0_r2_uuid, fastq_b0_r2_version),
             },
             {
                 'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
@@ -911,10 +931,8 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 '__fastq_read1__file_crc32c': '1d998e49',
                 '__fastq_read1__file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
                 '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
-                '__fastq_read1__file_drs_uri': str(furl(url=f'drs://{domain}/{fastq_b1_r1_uuid}',
-                                                        args={'version': fastq_b1_r1_version})),
-                '__fastq_read1__file_url': str(furl(url=f'{self.base_url}/repository/files/{fastq_b1_r1_uuid}',
-                                                    args={'catalog': 'test', 'version': fastq_b1_r1_version})),
+                '__fastq_read1__file_drs_uri': self._drs_uri(fastq_b1_r1_uuid, fastq_b1_r1_version),
+                '__fastq_read1__file_url': self._file_url(fastq_b1_r1_uuid, fastq_b1_r1_version),
                 '__fastq_read2__file_document_id': '70d1af4a-82c8-478a-8960-e9028b3616ca',
                 '__fastq_read2__file_type': 'sequence_file',
                 '__fastq_read2__file_name': 'SRR3562915_2.fastq.gz',
@@ -926,10 +944,8 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
                 '__fastq_read2__file_crc32c': '54bb9c82',
                 '__fastq_read2__file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
                 '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
-                '__fastq_read2__file_drs_uri': str(furl(url=f'drs://{domain}/{fastq_b1_r2_uuid}',
-                                                        args={'version': fastq_b1_r2_version})),
-                '__fastq_read2__file_url': str(furl(url=f'{self.base_url}/repository/files/{fastq_b1_r2_uuid}',
-                                                    args={'catalog': 'test', 'version': fastq_b1_r2_version})),
+                '__fastq_read2__file_drs_uri': self._drs_uri(fastq_b1_r2_uuid, fastq_b1_r2_version),
+                '__fastq_read2__file_url': self._file_url(fastq_b1_r2_uuid, fastq_b1_r2_version),
             }
         ]
         filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
@@ -1300,7 +1316,7 @@ class TestManifestEndpoints(ManifestTestCase, PFBTestCase):
         self.assertEqual(expected, response)
 
 
-class TestManifestCache(ManifestTestCase):
+class TestManifestCache(DCP1ManifestTestCase):
 
     @manifest_test
     @patch.object(ManifestService, '_get_seconds_until_expire')
@@ -1470,7 +1486,7 @@ class TestManifestCache(ManifestTestCase):
         self.assertEqual(manifest_key, e.exception.manifest_key)
 
 
-class TestManifestResponse(ManifestTestCase):
+class TestManifestResponse(DCP1ManifestTestCase):
 
     @patch.dict(os.environ, AZUL_PRIVATE_API='0')
     @patch.object(ManifestService, 'get_cached_manifest')
@@ -1590,7 +1606,7 @@ class TestManifestExpiration(AzulUnitTestCase):
                     self.assertIs(expect_error, any('does not match' in log for log in logs.output))
 
 
-class TestManifestPartitioning(ManifestTestCase, DocumentCloningTestCase):
+class TestManifestPartitioning(DCP1ManifestTestCase, DocumentCloningTestCase):
 
     def setUp(self):
         super().setUp()
@@ -1607,3 +1623,413 @@ class TestManifestPartitioning(ManifestTestCase, DocumentCloningTestCase):
         content = requests.get(manifest.location).content
         self.assertGreater(num_partitions, 1)
         self.assertGreater(len(content), (num_partitions - 1) * part_size)
+
+
+class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
+
+    @property
+    def _drs_domain(self) -> str:
+        return self.mock_tdr_service_url.netloc
+
+    #: AnVIL doesn't use versioning and all versions are fixed
+    version = '2022-06-01T00:00:00.000000Z'
+
+
+class TestAnvilManifests(AnvilManifestTestCase):
+
+    @classmethod
+    def bundles(cls) -> list[SourcedBundleFQID]:
+        return [
+            cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
+                            version=cls.version),
+            cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
+                            version=cls.version),
+            cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
+                            version=cls.version)
+        ]
+
+    @manifest_test
+    def test_compact_manifest(self):
+        response = self._get_manifest(ManifestFormat.compact, filters={})
+        self.assertEqual(200, response.status_code)
+        expected = [
+            (
+                'bundle_uuid',
+                '6b0f6c0f-5d80-a242-accb-840921351cd5',
+                '826dea02-e274-affe-aabc-eb3db63ad068',
+                '826dea02-e274-affe-aabc-eb3db63ad068'
+            ),
+            (
+                'bundle_version',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z',
+                '2022-06-01T00:00:00.000000Z'
+            ),
+            (
+                'source_id',
+                'cafebabe-feed-4bad-dead-beaf8badf00d',
+                'cafebabe-feed-4bad-dead-beaf8badf00d',
+                'cafebabe-feed-4bad-dead-beaf8badf00d'
+            ),
+            (
+                'source_spec',
+                'tdr:test_project:snapshot/snapshot:/2',
+                'tdr:test_project:snapshot/snapshot:/2',
+                'tdr:test_project:snapshot/snapshot:/2'
+            ),
+            (
+                'datasets.document_id',
+                '677dd55c-3fa3-4b07-8c98-985d94d7577e',
+                '2370f948-2783-4eb6-afea-e022897f4dcf',
+                '2370f948-2783-4eb6-afea-e022897f4dcf'
+            ),
+            (
+                'datasets.source_datarepo_row_ids',
+                'workspace_attributes:95684a9c-e0a1-4c05-9f1f-de628a38420c',
+                'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc',
+                'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc'
+            ),
+            (
+                'datasets.dataset_id',
+                '385290c3-dff5-fb6d-2501-fa0ba3ad1c35',
+                '52ee7665-7033-63f2-a8d9-ce8e32666739',
+                '52ee7665-7033-63f2-a8d9-ce8e32666739'
+            ),
+            (
+                'datasets.consent_group',
+                '',
+                'DS-BDIS',
+                'DS-BDIS'
+            ),
+            (
+                'datasets.data_use_permission',
+                '',
+                'DS-BDIS',
+                'DS-BDIS'
+            ),
+            (
+                'datasets.owner',
+                '',
+                'Debbie Nickerson',
+                'Debbie Nickerson'
+            ),
+            (
+                'datasets.principal_investigator',
+                '',
+                '',
+                ''
+            ),
+            (
+                'datasets.registered_identifier',
+                '',
+                'phs000693',
+                'phs000693'
+            ),
+            (
+                'datasets.title',
+                'ANVIL_1000G_2019_Dev',
+                'ANVIL_CMG_UWASH_DS_BDIS',
+                'ANVIL_CMG_UWASH_DS_BDIS'
+            ),
+            (
+                'datasets.data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'donors.document_id',
+                '',
+                'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
+                'bfd991f2-2797-4083-972a-da7c6d7f1b2e'
+            ),
+            (
+                'donors.source_datarepo_row_ids',
+                '',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
+            ),
+            (
+                'donors.donor_id',
+                '',
+                '1e2bd7e5-f45e-a391-daea-7c060be76acd',
+                '1e2bd7e5-f45e-a391-daea-7c060be76acd'
+            ),
+            (
+                'donors.organism_type',
+                '',
+                'redacted-ACw+6ecI',
+                'redacted-ACw+6ecI'
+            ),
+            (
+                'donors.phenotypic_sex',
+                '',
+                'redacted-JfQ0b3xG',
+                'redacted-JfQ0b3xG'
+            ),
+            (
+                'donors.reported_ethnicity',
+                '',
+                'redacted-NSkwDycK',
+                'redacted-NSkwDycK'
+            ),
+            (
+                'donors.genetic_ancestry',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.document_id',
+                '',
+                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461',
+                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461'
+            ),
+            (
+                'diagnoses.source_datarepo_row_ids',
+                '',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef',
+                'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
+            ),
+            (
+                'diagnoses.diagnosis_id',
+                '',
+                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6',
+                '25ff8d32-18c9-fc3e-020a-5de20d35d906 || 5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6'
+            ),
+            (
+                'diagnoses.disease',
+                '',
+                'redacted-A61iJlLx || redacted-g50ublm/',
+                'redacted-A61iJlLx || redacted-g50ublm/'
+            ),
+            (
+                'diagnoses.diagnosis_age_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.diagnosis_age',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.onset_age_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'diagnoses.onset_age',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'diagnoses.phenotype',
+                '',
+                'redacted-acSYHZUr',
+                'redacted-acSYHZUr'
+            ),
+            (
+                'diagnoses.phenopacket',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.document_id',
+                '',
+                '826dea02-e274-4ffe-aabc-eb3db63ad068',
+                '826dea02-e274-4ffe-aabc-eb3db63ad068'
+            ),
+            (
+                'biosamples.source_datarepo_row_ids',
+                '',
+                'sample:98048c3b-2525-4090-94fd-477de31f2608',
+                'sample:98048c3b-2525-4090-94fd-477de31f2608'
+            ),
+            (
+                'biosamples.biosample_id',
+                '',
+                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b',
+                'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
+            ),
+            (
+                'biosamples.anatomical_site',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.apriori_cell_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.biosample_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.disease',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.donor_age_at_collection_unit',
+                '',
+                '',
+                ''
+            ),
+            (
+                'biosamples.donor_age_at_collection',
+                '',
+                "{'gte': None, 'lte': None}",
+                "{'gte': None, 'lte': None}"
+            ),
+            (
+                'activities.document_id',
+                '',
+                '1509ef40-d1ba-440d-b298-16b7c173dcd4',
+                '816e364e-1193-4e5b-a91a-14e4b009157c'
+            ),
+            (
+                'activities.source_datarepo_row_ids',
+                '',
+                'sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051',
+                'sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'
+            ),
+            (
+                'activities.activity_id',
+                '',
+                '18b3be87-e26b-4376-0d8d-c1e370e90e07',
+                'a60c5138-3749-f7cb-8714-52d389ad5231'
+            ),
+            (
+                'activities.activity_table',
+                '',
+                'sequencingactivity',
+                'sequencingactivity'
+            ),
+            (
+                'activities.activity_type',
+                '',
+                'Sequencing',
+                'Sequencing'
+            ),
+            (
+                'activities.assay_type',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.reference_assembly',
+                '',
+                '',
+                ''
+            ),
+            (
+                'activities.date_created',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.document_id',
+                '6b0f6c0f-5d80-4242-accb-840921351cd5',
+                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                '3b17377b-16b1-431c-9967-e5d01fc5923f'
+            ),
+            (
+                'files.source_datarepo_row_ids',
+                'file_inventory:04ff3af2-0543-4ea6-830a-d31b957fa2ee',
+                'file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0',
+                'file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2'
+            ),
+            (
+                'files.file_id',
+                '1fab11f5-7eab-4318-9a58-68d8d06e0715',
+                '1e269f04-4347-4188-b060-1dcc69e71d67',
+                '8b722e88-8103-49c1-b351-e64fa7c6ab37'
+            ),
+            (
+                'files.data_modality',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.file_format',
+                '.txt',
+                '.vcf.gz',
+                '.bam'
+            ),
+            (
+                'files.file_size',
+                '15079345',
+                '213021639',
+                '3306845592'
+            ),
+            (
+                'files.file_md5sum',
+                'S/GBrRjzZAQYqh3rdiPYzA==',
+                'vuxgbuCqKZ/fkT9CWTFmIg==',
+                'fNn9e1SovzgOROk3BvH6LQ=='
+            ),
+            (
+                'files.reference_assembly',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.file_name',
+                'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt',
+                '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                '307500.merged.matefixed.sorted.markeddups.recal.bam'
+            ),
+            (
+                'files.is_supplementary',
+                'True',
+                'False',
+                'False'
+            ),
+            (
+                'files.crc32',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.sha256',
+                '',
+                '',
+                ''
+            ),
+            (
+                'files.drs_uri',
+                self._drs_uri('v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715'),
+                self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67'),
+                self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37')
+            ),
+            (
+                'files.file_url',
+                self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
+                self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
+                self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
+            )
+        ]
+        self._assert_tsv(expected, response)

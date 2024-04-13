@@ -63,6 +63,7 @@ from chalice import (
     UnauthorizedError,
 )
 import chalice.cli
+import elasticsearch
 import fastavro
 from furl import (
     furl,
@@ -1177,13 +1178,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
         hits = self._get_entities(catalog, 'bundles', filters)
+        special_fields = self.metadata_plugin(catalog).special_fields
         for hit in hits:
-            source = one(hit['sources'])
-            bundle = one(hit['bundles'])
-            bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle['bundleUuid'],
-                                                version=bundle['bundleVersion'],
-                                                source=SourceJSON(id=source['sourceId'],
-                                                                  spec=source['sourceSpec']))
+            source, bundle = one(hit['sources']), one(hit['bundles'])
+            source = SourceJSON(id=source[special_fields.source_id],
+                                spec=source[special_fields.source_spec])
+            bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle[special_fields.bundle_uuid],
+                                                version=bundle[special_fields.bundle_version],
+                                                source=source)
             if config.is_anvil_enabled(catalog):
                 # Every primary bundle contains 1 or more biosamples, 1 dataset,
                 # and 0 or more other entities. Biosamples only occur in primary
@@ -1367,9 +1369,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         :return: hits for the managed access bundles
         """
 
+        special_fields = self.metadata_plugin(catalog).special_fields
+
         def source_id_from_hit(hit: JSON) -> str:
             sources: JSONs = hit['sources']
-            return one(sources)['sourceId']
+            return one(sources)[special_fields.source_id]
 
         bundle_type = self._bundle_type(catalog)
         project_type = self._project_type(catalog)
@@ -1387,7 +1391,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
-        source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
+        source_filter = {
+            special_fields.source_id: {
+                'is': list(managed_access_source_ids)
+            }
+        }
         params = {
             'filters': json.dumps(source_filter),
             'catalog': catalog
@@ -1410,9 +1418,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         Test the managed access controls for the /repository/files endpoint
         :return: Managed access file hits
         """
+        special_fields = self.metadata_plugin(catalog).special_fields
         with self._service_account_credentials:
             files = self._get_entities(catalog, 'files', filters={
-                'sourceId': {
+                special_fields.source_id: {
                     'is': list(managed_access_source_ids)
                 }
             })
@@ -1458,22 +1467,31 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         endpoint = config.service_endpoint
 
+        special_fields = self.metadata_plugin(catalog).special_fields
+
         def bundle_uuids(hit: JSON) -> set[str]:
-            return {bundle['bundleUuid'] for bundle in hit['bundles']}
+            return {
+                bundle[special_fields.bundle_uuid]
+                for bundle in hit['bundles']
+            }
 
         managed_access_bundles = set.union(*(
             bundle_uuids(file)
             for file in files
             if len(file['sources']) == 1
         ))
-        filters = {'sourceId': {'is': [source_id]}}
+        filters = {special_fields.source_id: {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         files_url = furl(url=endpoint, path='index/files', args=params)
         response = self._get_url_json(GET, files_url)
         public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
         self.assertNotIn(public_bundle, managed_access_bundles)
 
-        filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
+        filters = {
+            special_fields.bundle_uuid: {
+                'is': [public_bundle, *managed_access_bundles]
+            }
+        }
         params = {'catalog': catalog, 'filters': json.dumps(filters)}
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
@@ -1840,3 +1858,18 @@ class DeployedVersionIntegrationTest(AzulTestCase):
             self.assertEqual(response.status_code, 200)
             lambda_status = response.json()['git']
             self.assertEqual(local_status, lambda_status)
+
+
+class DisableAutomaticIndexCreationTest(IntegrationTestCase):
+
+    def test(self):
+        es = ESClientFactory.get()
+        index_name = 'no-auto-create-' + self.random.randbytes(4).hex() + '-it'
+        try:
+            with self.assertRaises(elasticsearch.exceptions.NotFoundError) as cm:
+                es.index(index=index_name, document={'foo': 'bar'})
+            expected = ('no such index [' + index_name + ']')
+            self.assertEqual(expected, cm.exception.args[2]['error']['reason'])
+        finally:
+            if es.indices.exists(index=index_name):
+                es.indices.delete(index=[index_name])
