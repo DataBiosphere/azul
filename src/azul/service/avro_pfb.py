@@ -202,6 +202,8 @@ class PFBEntity:
         # of AnVIL datasets have the same ID as the replica for the dataset
         # itself. Terra appears to combine PFB entities with the same ID
         # into a single row.
+        # FIXME: Improve handling of DUOS replicas
+        #        https://github.com/DataBiosphere/azul/issues/6139
         return cls(id=replica['entity_id'], name=name, object=object_)
 
     @classmethod
