@@ -217,6 +217,13 @@ class AzulChaliceApp(Chalice):
 
         :param path: See https://chalice.readthedocs.io/en/latest/api.html#Chalice.route
 
+        :param enabled: If False, do not route any requests to the decorated
+                        view function. The application will behave as if the
+                        view function wasn't decorated.
+
+        :param interactive: If False, do not show the "Try it out" button in the
+                            Swagger UI.
+
         :param path_spec: Corresponds to an OpenAPI Paths Object. See
                           https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#pathsObject
                           If multiple `@app.route` invocations refer to the same
@@ -228,14 +235,6 @@ class AzulChaliceApp(Chalice):
                             https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#operationObject
                             This should be specified for every `@app.route`
                             invocation.
-
-
-        :param enabled: If False, do not route any requests to the decorated
-                        view function. The application will behave as if the
-                        view function wasn't decorated.
-
-        :param interactive: If False, do not show the "Try it out" button in the
-                            Swagger UI.
         """
         if enabled:
             if not interactive:
