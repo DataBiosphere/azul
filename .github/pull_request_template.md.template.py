@@ -121,8 +121,8 @@ class T(Enum):
         return dirname(self.value)
 
     @property
-    def target_branch(self):
-        return prod if self in (T.promotion, T.hotfix) else develop
+    def target_branches(self) -> AbstractSet[str]:
+        return OrderedSet([prod] if self in (T.promotion, T.hotfix) else [develop])
 
     @property
     def issues(self):
@@ -145,7 +145,7 @@ class T(Enum):
                 # There currently is no sandbox for production deployments
                 prod: None
             }
-            if self.target_branch == prod else
+            if prod in self.target_branches else
             {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
@@ -157,7 +157,7 @@ class T(Enum):
     def downstream_deployments(self) -> AbstractSet[str]:
         return OrderedSet(chain(
             self.target_deployments.keys(),
-            self.promotion.target_deployments if self.target_branch == develop else []
+            self.promotion.target_deployments if develop in self.target_branches else []
         ))
 
     @property
@@ -172,7 +172,7 @@ class T(Enum):
 
     @property
     def deploy_shared_target(self) -> str:
-        return 'apply_keep_unused' if self.target_branch == develop else 'apply'
+        return 'apply_keep_unused' if develop in self.target_branches else 'apply'
 
 
 def bq(s):
@@ -181,6 +181,11 @@ def bq(s):
 
 def main():
     t = one(tt for tt in T if tt.value == sys.argv[1])
+    for target_branch in t.target_branches:
+        emit(t, target_branch)
+
+
+def emit(t: T, target_branch: str):
     emit_checklist(
         [
             {
@@ -217,7 +222,7 @@ def main():
             }),
             {
                 'type': 'cli',
-                'content': f'Target branch is `{t.target_branch}`'
+                'content': f'Target branch is `{target_branch}`'
             },
             {
                 'type': 'cli',
@@ -378,7 +383,7 @@ def main():
                     'type': 'h2',
                     'content': 'Author (upgrading deployments)'
                 },
-                *iif(t.target_branch == develop, [
+                *iif(target_branch == develop, [
                     {
                         'type': 'cli',
                         'content': 'Documented upgrading of deployments in UPGRADING.rst',
@@ -476,8 +481,8 @@ def main():
                 {
                     'type': 'cli',
                     'content': iif(t is T.backport,
-                                   f'Merged `{t.target_branch}` into PR branch to integrate upstream changes',
-                                   f'Rebased PR branch on `{t.target_branch}`, squashed old fixups')
+                                   f'Merged `{target_branch}` into PR branch to integrate upstream changes',
+                                   f'Rebased PR branch on `{target_branch}`, squashed old fixups')
                 },
                 {
                     'type': 'cli',
@@ -613,7 +618,7 @@ def main():
             ]),
             iif(t not in (T.promotion, T.backport), {
                 'type': 'cli',
-                'content': f'Squashed PR branch and rebased onto `{t.target_branch}`'
+                'content': f'Squashed PR branch and rebased onto `{target_branch}`'
             }),
             iif(t is not T.promotion, {
                 'type': 'cli',
@@ -630,7 +635,7 @@ def main():
                             'type': 'cli',
                             'content': 'Ran ' + bq(
                                 f'_select {d}.shared && '
-                                f'CI_COMMIT_REF_NAME={t.target_branch} '
+                                f'CI_COMMIT_REF_NAME={target_branch} '
                                 f'make -C terraform/shared {t.deploy_shared_target}'
                             ),
                             'alt': 'or this PR is not labeled `deploy:shared`'
@@ -639,7 +644,7 @@ def main():
                             'type': 'cli',
                             'content': 'Ran ' + bq(
                                 f'_select {d}.gitlab && '
-                                f'CI_COMMIT_REF_NAME={t.target_branch} '
+                                f'CI_COMMIT_REF_NAME={target_branch} '
                                 f'make -C terraform/gitlab apply'
                             ),
                             'alt': 'or this PR is not labeled `deploy:gitlab`'
@@ -809,7 +814,7 @@ def main():
                 ]
                 for d, s in t.target_deployments.items()
             ),
-            *iif(t.target_branch == develop and t is not T.backport, [
+            *iif(target_branch == develop and t is not T.backport, [
                 {
                     'type': 'cli',
                     'content': 'Ran ' + bq(
@@ -908,7 +913,7 @@ def main():
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
                            'relevant<sup>1</sup> findings as a comment on the connected issue.'
             }),
-            *iif(t.target_branch == develop and t is not T.backport, [
+            *iif(target_branch == develop and t is not T.backport, [
                 {
                     'type': 'cli',
                     'content': 'Propagated the '
