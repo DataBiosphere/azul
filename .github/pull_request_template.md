@@ -71,7 +71,7 @@ title is `Fix: ` followed by the issue title
 ### Author (hotfixes)
 
 - [ ] Added `F` tag to main commit title <sub>or this PR does not include permanent fix for a temporary hotfix</sub>
-- [ ] Reverted the temporary hotfixes for any connected issues <sub>or the `prod` branch has no temporary hotfixes for any connected issues</sub>
+- [ ] Reverted the temporary hotfixes for any connected issues <sub>or the none of the stable branches (`prod`) have temporary hotfixes for any of the issues connected to this PR</sub>
 
 
 ### Author (before every review)

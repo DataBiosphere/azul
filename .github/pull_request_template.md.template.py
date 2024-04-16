@@ -213,7 +213,7 @@ def emit(t: T, target_branch: str):
                 'type': 'comment',
                 'content': {
                     T.default: (
-                        f'This is the PR template for regular PRs against {bq(develop)}. '
+                        f'This is the PR template for regular PRs against {bq(target_branch)}. '
                         "Edit the URL in your browser's location bar, appending either " +
                         join_grammatically(
                             [f'`&template={f}`' for tt in T for f in tt.files if tt is not T.default],
@@ -222,10 +222,10 @@ def emit(t: T, target_branch: str):
                         ) +
                         ' to switch the template.'
                     ),
-                    T.backport: f'This is the PR template for backport PRs against {bq(develop)}.',
+                    T.backport: f'This is the PR template for backport PRs against {bq(target_branch)}.',
                     T.upgrade: 'This is the PR template for upgrading Azul dependencies.',
-                    T.hotfix: f'This is the PR template for hotfix PRs against {bq(prod)}.',
-                    T.promotion: f'This is the PR template for promotion PRs against {bq(prod)}.'
+                    T.hotfix: f'This is the PR template for hotfix PRs against {bq(target_branch)}.',
+                    T.promotion: f'This is the PR template for promotion PRs against {bq(target_branch)}.'
                 }[t]
             },
             iif(t is not T.backport, {
@@ -482,7 +482,9 @@ def emit(t: T, target_branch: str):
                         {
                             'type': 'cli',
                             'content': 'Reverted the temporary hotfixes for any connected issues',
-                            'alt': f'or the {bq(prod)} branch has no temporary hotfixes for any connected issues'
+                            'alt': 'or the none of the stable branches (' +
+                                   join_grammatically(list(map(bq, T.promotion.target_branches))) +
+                                   ') have temporary hotfixes for any of the issues connected to this PR'
                         }
                     ] if t is T.default else [
                         {
@@ -814,7 +816,7 @@ def emit(t: T, target_branch: str):
                         'alt': 'or this PR is not labeled `base`'
                     }
                     for content in [
-                        f'Changed the target branch of the blocked PR to {bq(develop)}',
+                        f'Changed the target branch of the blocked PR to {bq(target_branch)}',
                         'Removed the `chained` label from the blocked PR',
                         'Removed the blocking relationship from the blocked PR',
                         'Removed the `base` label from this PR'
