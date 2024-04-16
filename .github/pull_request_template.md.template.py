@@ -266,7 +266,7 @@ def emit(t: T, target_branch: str):
                 'type': 'cli',
                 'content': 'Name of PR branch matches `' + {
                     T.default: 'issues/<GitHub handle of author>/<issue#>-<slug>',
-                    T.promotion: 'promotions/yyyy-mm-dd',
+                    T.promotion: f'promotions/yyyy-mm-dd-{target_branch}',
                     T.hotfix: 'hotfixes/<GitHub handle of author>/<issue#>-<slug>',
                     T.upgrade: 'upgrades/yyyy-mm-dd',
                     T.backport: 'backports/<7-digit SHA1 of most recent backported commit>'
@@ -288,7 +288,8 @@ def emit(t: T, target_branch: str):
             }),
             iif(t is T.promotion, {
                 'type': 'cli',
-                'content': 'Title of connected issue matches `Promotion yyyy-mm-dd`'
+                'content': f'Title of connected issue matches '
+                           f'`Promotion yyyy-mm-dd {target_branch}`'
             }),
             {
                 'type': 'cli',
