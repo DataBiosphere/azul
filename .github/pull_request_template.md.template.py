@@ -267,7 +267,7 @@ def emit(t: T, target_branch: str):
                 'content': 'Name of PR branch matches `' + {
                     T.default: 'issues/<GitHub handle of author>/<issue#>-<slug>',
                     T.promotion: f'promotions/yyyy-mm-dd-{target_branch}',
-                    T.hotfix: 'hotfixes/<GitHub handle of author>/<issue#>-<slug>',
+                    T.hotfix: f'hotfixes/<GitHub handle of author>/<issue#>-<slug>-{target_branch}',
                     T.upgrade: 'upgrades/yyyy-mm-dd',
                     T.backport: 'backports/<7-digit SHA1 of most recent backported commit>'
                 }[t] + '`'
@@ -296,7 +296,8 @@ def emit(t: T, target_branch: str):
                 'content': {
                     t.default: 'PR title matches<sup>1</sup> that of a connected issue',
                     t.promotion: 'PR title starts with title of connected issue',
-                    t.hotfix: 'PR title is `Hotfix: ` followed by title of connected issue',
+                    t.hotfix: f'PR title is `Hotfix {target_branch}: ` '
+                              f'followed by title of connected issue',
                     t.upgrade: 'PR title matches `Upgrade dependencies yyyy-mm-dd`',
                     t.backport: 'PR title contains the 7-digit SHA1 of the backported commits'
                 }[t],
