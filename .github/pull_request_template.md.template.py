@@ -151,14 +151,14 @@ class T(Enum):
         deployment in which PR branches targeting that branch are tested first.
         """
         return {
-            'prod': {
-                # There currently is no sandbox for production deployments
-                'prod': None
-            },
             'develop': {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
                 'anvilprod': 'hammerbox'
+            },
+            'prod': {
+                # There currently is no sandbox for production deployments
+                'prod': None
             }
         }[target_branch]
 
