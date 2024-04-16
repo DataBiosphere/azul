@@ -184,8 +184,24 @@ class T(Enum):
         )
 
     @property
-    def deploy_shared_target(self) -> str:
-        return 'apply_keep_unused' if 'develop' in self.target_branches else 'apply'
+    def needs_shared_deploy(self):
+        return self not in (T.backport, T.hotfix)
+
+    def shared_deploy_is_two_phase(self, target_branch: str) -> bool:
+        # If there is a sandbox deployment, the `shared` component needs to be
+        # deployed in two-phases. The first phase, prior to the merge and the
+        # sandbox build preceding the merge, mirrors new images to ECR, while
+        # the second phase removes any unused images. This makes it possible to
+        # abandon the merge in case the sandbox build fails. The presence of a
+        # sandbox also (incidentally) suggests the presence of collocated
+        # personal deployments which would break if the old images were to be
+        # deleted immediately. Even with two phases, personal deployments will
+        # break after the second phase but the fix is simply to rebase any
+        # feature branches and redeploy.
+        return {None} != set(self.target_deployments(target_branch).values())
+
+    def shared_deploy_target(self, target_branch: str) -> str:
+        return 'apply' + iif(self.shared_deploy_is_two_phase(target_branch), '_keep_unused')
 
 
 def bq(s):
@@ -661,7 +677,7 @@ def emit(t: T, target_branch: str):
                 'type': 'cli',
                 'content': 'Pushed PR branch to GitHub'
             },
-            *iif(t not in (T.backport, T.hotfix), [
+            *iif(t.needs_shared_deploy, [
                 *flatten([
                     [
                         {
@@ -669,7 +685,7 @@ def emit(t: T, target_branch: str):
                             'content': 'Ran ' + bq(
                                 f'_select {d}.shared && '
                                 f'CI_COMMIT_REF_NAME={target_branch} '
-                                f'make -C terraform/shared {t.deploy_shared_target}'
+                                f'make -C terraform/shared {t.shared_deploy_target(target_branch)}'
                             ),
                             'alt': 'or this PR is not labeled `deploy:shared`'
                         },
@@ -847,7 +863,7 @@ def emit(t: T, target_branch: str):
                 ]
                 for d, s in t.target_deployments(target_branch).items()
             ),
-            *iif(target_branch == 'develop' and t is not T.backport, [
+            *iif(t.needs_shared_deploy and t.shared_deploy_is_two_phase(target_branch), [
                 {
                     'type': 'cli',
                     'content': 'Ran ' + bq(
