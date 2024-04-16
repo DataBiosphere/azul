@@ -23,6 +23,7 @@ import shlex
 from typing import (
     BinaryIO,
     ClassVar,
+    NotRequired,
     Optional,
     TYPE_CHECKING,
     TextIO,
@@ -1474,6 +1475,12 @@ class Config:
         """
         #: Fully qualified image reference, registry/repository/user/name:tag
         ref: str
+
+        #: URL of a human-readable description of the image
+        url: str
+
+        #: True, if we build the image ourselves
+        is_custom: NotRequired[bool]
 
     @property
     def docker_images(self) -> dict[str, ImageSpec]:

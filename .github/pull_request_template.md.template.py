@@ -26,6 +26,7 @@ from more_itertools import (
 )
 
 from azul import (
+    config,
     iif,
 )
 from azul.collections import (
@@ -96,9 +97,10 @@ def emit_checklist(checklist: Iterable[Item | EmptyItem]):
 
 dir = 'PULL_REQUEST_TEMPLATE'
 
-images_we_build_ourselves = {
-    k: f'https://hub.docker.com/repository/docker/ucscgi/azul-{k.lower()}'
-    for k in ['Elasticsearch', 'PyCharm']
+custom_images = {
+    alias: image['url']
+    for alias, image in config.docker_images.items()
+    if image.get('is_custom') is True
 }
 
 prod = 'prod'
@@ -972,7 +974,7 @@ def emit(t: T, target_branch: str):
                         'content': f'Removed unused image tags from [{name} image on DockerHub]({url})',
                         'alt': 'or this promotion does not alter references to that image`'
                     }
-                    for name, url in images_we_build_ourselves.items()
+                    for name, url in custom_images.items()
                     if t is T.promotion
                 ],
                 {
