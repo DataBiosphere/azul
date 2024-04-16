@@ -102,9 +102,6 @@ custom_images = {
     if image.get('is_custom') is True
 }
 
-prod = 'prod'
-develop = 'develop'
-
 
 class T(Enum):
     default = auto()
@@ -119,7 +116,7 @@ class T(Enum):
         for target_branch in self.target_branches:
             name = 'pull_request_template' if self is T.default else self.name
             name += '.md'
-            if target_branch != develop:
+            if target_branch != 'develop':
                 name = target_branch + '-' + name
             path = Path(name)
             if self is not T.default:
@@ -134,7 +131,7 @@ class T(Enum):
 
     @property
     def target_branches(self) -> AbstractSet[str]:
-        return OrderedSet([prod] if self in (T.promotion, T.hotfix) else [develop])
+        return OrderedSet(['prod'] if self in (T.promotion, T.hotfix) else ['develop'])
 
     @property
     def issues(self):
@@ -154,11 +151,11 @@ class T(Enum):
         deployment in which PR branches targeting that branch are tested first.
         """
         return {
-            prod: {
+            'prod': {
                 # There currently is no sandbox for production deployments
-                prod: None
+                'prod': None
             },
-            develop: {
+            'develop': {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
                 'anvilprod': 'hammerbox'
@@ -172,7 +169,7 @@ class T(Enum):
         ))
 
     def downstream_deployments(self, target_branch) -> AbstractSet[str]:
-        return iif(target_branch == develop, OrderedSet(chain.from_iterable(
+        return iif(target_branch == 'develop', OrderedSet(chain.from_iterable(
             self.promotion.target_deployments(b).keys()
             for b in self.promotion.target_branches
         )))
@@ -188,7 +185,7 @@ class T(Enum):
 
     @property
     def deploy_shared_target(self) -> str:
-        return 'apply_keep_unused' if develop in self.target_branches else 'apply'
+        return 'apply_keep_unused' if 'develop' in self.target_branches else 'apply'
 
 
 def bq(s):
@@ -417,7 +414,7 @@ def emit(t: T, target_branch: str):
                     'type': 'h2',
                     'content': 'Author (upgrading deployments)'
                 },
-                *iif(target_branch == develop, [
+                *iif(target_branch == 'develop', [
                     {
                         'type': 'cli',
                         'content': 'Documented upgrading of deployments in UPGRADING.rst',
@@ -850,7 +847,7 @@ def emit(t: T, target_branch: str):
                 ]
                 for d, s in t.target_deployments(target_branch).items()
             ),
-            *iif(target_branch == develop and t is not T.backport, [
+            *iif(target_branch == 'develop' and t is not T.backport, [
                 {
                     'type': 'cli',
                     'content': 'Ran ' + bq(
@@ -949,7 +946,7 @@ def emit(t: T, target_branch: str):
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
                            'relevant<sup>1</sup> findings as a comment on the connected issue.'
             }),
-            *iif(target_branch == develop and t is not T.backport, [
+            *iif(target_branch == 'develop' and t is not T.backport, [
                 {
                     'type': 'cli',
                     'content': (
