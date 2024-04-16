@@ -238,7 +238,7 @@ def emit(t: T, target_branch: str):
                     T.backport: f'This is the PR template for backport PRs against {bq(target_branch)}.',
                     T.upgrade: 'This is the PR template for upgrading Azul dependencies.',
                     T.hotfix: f'This is the PR template for hotfix PRs against {bq(target_branch)}.',
-                    T.promotion: f'This is the PR template for promotion PRs against {bq(target_branch)}.'
+                    T.promotion: f'This is the PR template for a promotion PR against {bq(target_branch)}.'
                 }[t]
             },
             iif(t is not T.backport, {
@@ -970,7 +970,7 @@ def emit(t: T, target_branch: str):
                     'content': (
                         'Propagated the ' +
                         join_grammatically(list(map(bq, t.labels_to_promote(target_branch)))) +
-                        ' labels to the next promotion PR'
+                        ' labels to the next promotion PRs'
                     ),
                     'alt': 'or this PR carries none of these labels'
                 },
@@ -979,7 +979,7 @@ def emit(t: T, target_branch: str):
                     'content': (
                         'Propagated any specific instructions related to the ' +
                         join_grammatically(list(map(bq, t.labels_to_promote(target_branch)))) +
-                        ' labels from the description of this PR to that of the next promotion PR'
+                        ' labels, from the description of this PR to that of the next promotion PRs'
                     ),
                     'alt': 'or this PR carries none of these labels'
                 }

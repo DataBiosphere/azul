@@ -1,5 +1,5 @@
 <!--
-This is the PR template for promotion PRs against `prod`.
+This is the PR template for a promotion PR against `prod`.
 -->
 
 Connected issue: #0000
