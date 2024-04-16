@@ -135,39 +135,43 @@ class T(Enum):
 
         return S('issue' + iif(default, 's'))
 
-    @property
-    def target_deployments(self) -> Mapping[str, str]:
+    def target_deployments(self, target_branch: str) -> Mapping[str, str]:
         """
-        Maps the name of each deployment to that of the respective sandbox.
+        Returns a mapping between 1) the name of each main deployment the given
+        branch can be deployed to and 2) the name of the respective sandbox
+        deployment in which PR branches targeting that branch are tested first.
         """
-        return (
-            {
+        return {
+            prod: {
                 # There currently is no sandbox for production deployments
                 prod: None
-            }
-            if prod in self.target_branches else
-            {
+            },
+            develop: {
                 'dev': 'sandbox',
                 'anvildev': 'anvilbox',
                 'anvilprod': 'hammerbox'
             }
-        )
+        }[target_branch]
 
-    @property
-    def downstream_deployments(self) -> AbstractSet[str]:
+    def affected_deployments(self, target_branch: str) -> AbstractSet[str]:
         return OrderedSet(chain(
-            self.target_deployments.keys(),
-            self.promotion.target_deployments if develop in self.target_branches else []
+            self.target_deployments(target_branch).keys(),
+            self.downstream_deployments(target_branch)
         ))
 
-    @property
-    def labels_to_promote(self) -> tuple[str, ...]:
+    def downstream_deployments(self, target_branch) -> AbstractSet[str]:
+        return iif(target_branch == develop, OrderedSet(chain.from_iterable(
+            self.promotion.target_deployments(b).keys()
+            for b in self.promotion.target_branches
+        )))
+
+    def labels_to_promote(self, target_branch: str) -> tuple[str, ...]:
         return (
             'deploy:shared',
             'deploy:gitlab',
             'deploy:runner',
             'reindex:partial',
-            *('reindex:' + d for d in self.target_deployments)
+            *('reindex:' + d for d in self.downstream_deployments(target_branch))
         )
 
     @property
@@ -347,18 +351,27 @@ def emit(t: T, target_branch: str):
                         'content': f'This PR is labeled `reindex:{d}`',
                         'alt': f'or does not require reindexing `{d}`'
                     }
-                    for d in t.target_deployments
+                    for d in t.target_deployments(target_branch)
                 ],
                 {
                     'type': 'cli',
-                    'content': 'This PR is labeled `reindex:partial` and '
-                               + 'its description documents the specific reindexing procedure for '
-                               + join_grammatically([f'`{d}`' for d in t.downstream_deployments]),
-                    'alt': 'or requires a full reindex '
-                           + iif(len(t.downstream_deployments) == 1,
-                                 'or is not labeled',
-                                 'or carries none of the labels ')
-                           + join_grammatically([f'`reindex:{d}`' for d in t.downstream_deployments])
+                    'content': (
+                        'This PR is labeled `reindex:partial` and ' +
+                        'its description documents the specific reindexing procedure for ' +
+                        join_grammatically([
+                            f'`{d}`' for d in t.affected_deployments(target_branch)
+                        ])
+                    ),
+                    'alt': (
+                        'or requires a full reindex ' +
+                        iif(len(t.affected_deployments(target_branch)) == 1,
+                            'or is not labeled',
+                            'or carries none of the labels ') +
+                        join_grammatically([
+                            f'`reindex:{d}`'
+                            for d in t.affected_deployments(target_branch)
+                        ])
+                    )
                 },
                 {
                     'type': 'cli',
@@ -650,7 +663,7 @@ def emit(t: T, target_branch: str):
                             'alt': 'or this PR is not labeled `deploy:gitlab`'
                         }
                     ]
-                    for d in t.target_deployments
+                    for d in t.target_deployments(target_branch)
                 ]),
                 {
                     'type': 'cli',
@@ -672,7 +685,7 @@ def emit(t: T, target_branch: str):
                         'content': f'Background migrations for `{d}.gitlab` are complete',
                         'alt': 'or this PR is not labeled `deploy:gitlab`'
                     }
-                    for d in t.target_deployments
+                    for d in t.target_deployments(target_branch)
                 ],
                 {
                     'type': 'cli',
@@ -691,10 +704,10 @@ def emit(t: T, target_branch: str):
                         ),
                         'alt': 'or this PR is not labeled `deploy:runner`'
                     }
-                    for d in t.target_deployments
+                    for d in t.target_deployments(target_branch)
                 ],
             ]),
-            iif(any(s is not None for s in t.target_deployments.values()), {
+            iif(any(s is not None for s in t.target_deployments(target_branch).values()), {
                 'type': 'cli',
                 'content': 'Added `sandbox` label',
                 'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
@@ -738,7 +751,7 @@ def emit(t: T, target_branch: str):
                         }
                     ])
                 ]
-                for i, (d, s) in enumerate(t.target_deployments.items())
+                for i, (d, s) in enumerate(t.target_deployments(target_branch).items())
                 if s is not None
             ))),
             {
@@ -797,7 +810,7 @@ def emit(t: T, target_branch: str):
                     'content': f'Pushed merge commit to GitLab `{d}`',
                     'alt': iif(t in (T.hotfix, T.promotion, T.upgrade), None, 'or PR is labeled `no sandbox`')
                 }
-                for d in t.target_deployments
+                for d in t.target_deployments(target_branch)
             ],
             *flatten(
                 [
@@ -812,7 +825,7 @@ def emit(t: T, target_branch: str):
                                    + iif(t in (T.default, T.backport), '<sup>1</sup>')
                     }
                 ]
-                for d, s in t.target_deployments.items()
+                for d, s in t.target_deployments(target_branch).items()
             ),
             *iif(target_branch == develop and t is not T.backport, [
                 {
@@ -823,7 +836,7 @@ def emit(t: T, target_branch: str):
                     ),
                     'alt': 'or this PR is not labeled `deploy:shared`'
                 }
-                for d in t.target_deployments
+                for d in t.target_deployments(target_branch)
             ]),
             {
                 'type': 'cli',
@@ -834,7 +847,7 @@ def emit(t: T, target_branch: str):
                     'type': 'cli',
                     'content': f'Deleted PR branch from GitLab `{d}`'
                 }
-                for d, s in t.target_deployments.items()
+                for d, s in t.target_deployments(target_branch).items()
                 if t is not t.promotion
             ),
             *iif(t is T.promotion, [
@@ -895,7 +908,7 @@ def emit(t: T, target_branch: str):
                             ]
                         ]
                     ]
-                    for d, s in t.target_deployments.items()
+                    for d, s in t.target_deployments(target_branch).items()
                 ))),
                 iif(t is T.hotfix, {
                     'type': 'cli',
@@ -916,16 +929,20 @@ def emit(t: T, target_branch: str):
             *iif(target_branch == develop and t is not T.backport, [
                 {
                     'type': 'cli',
-                    'content': 'Propagated the '
-                               + join_grammatically(list(map(bq, t.promotion.labels_to_promote)))
-                               + ' labels to the next promotion PR',
+                    'content': (
+                        'Propagated the ' +
+                        join_grammatically(list(map(bq, t.labels_to_promote(target_branch)))) +
+                        ' labels to the next promotion PR'
+                    ),
                     'alt': 'or this PR carries none of these labels'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Propagated any specific instructions related to the '
-                               + join_grammatically(list(map(bq, t.promotion.labels_to_promote)))
-                               + ' labels from the description of this PR to that of the next promotion PR',
+                    'content': (
+                        'Propagated any specific instructions related to the ' +
+                        join_grammatically(list(map(bq, t.labels_to_promote(target_branch)))) +
+                        ' labels from the description of this PR to that of the next promotion PR'
+                    ),
                     'alt': 'or this PR carries none of these labels'
                 }
             ]),
