@@ -1,7 +1,7 @@
 <!--
 This is the PR template for regular PRs against `develop`. Edit the URL in your
-browser's location bar, appending either `&template=promotion.md`,
-`&template=hotfix.md`, `&template=backport.md` or `&template=upgrade.md` to
+browser's location bar, appending either `&template=prod-promotion.md`,
+`&template=prod-hotfix.md`, `&template=backport.md` or `&template=upgrade.md` to
 switch the template.
 -->
 

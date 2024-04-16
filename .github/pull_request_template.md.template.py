@@ -1,12 +1,12 @@
 from enum import (
     Enum,
+    auto,
 )
 from itertools import (
     chain,
 )
-from os.path import (
-    basename,
-    dirname,
+from pathlib import (
+    Path,
 )
 import sys
 import textwrap
@@ -21,7 +21,6 @@ from typing import (
 
 from more_itertools import (
     flatten,
-    one,
     stagger,
 )
 
@@ -108,19 +107,30 @@ develop = 'develop'
 
 
 class T(Enum):
-    default = 'pull_request_template.md'
-    promotion = dir + '/promotion.md'
-    hotfix = dir + '/hotfix.md'
-    backport = dir + '/backport.md'
-    upgrade = dir + '/upgrade.md'
+    default = auto()
+    promotion = auto()
+    hotfix = auto()
+    backport = auto()
+    upgrade = auto()
 
     @property
-    def file(self):
-        return basename(self.value)
+    def target_branch_by_path(self) -> dict[Path, str]:
+        result = {}
+        for target_branch in self.target_branches:
+            name = 'pull_request_template' if self is T.default else self.name
+            name += '.md'
+            if target_branch != develop:
+                name = target_branch + '-' + name
+            path = Path(name)
+            if self is not T.default:
+                path = Path(dir) / path
+            assert path not in result, (path, result)
+            result[path] = target_branch
+        return result
 
     @property
-    def dir(self):
-        return dirname(self.value)
+    def files(self) -> AbstractSet[str]:
+        return OrderedSet(p.name for p in self.target_branch_by_path.keys())
 
     @property
     def target_branches(self) -> AbstractSet[str]:
@@ -186,9 +196,14 @@ def bq(s):
 
 
 def main():
-    t = one(tt for tt in T if tt.value == sys.argv[1])
-    for target_branch in t.target_branches:
-        emit(t, target_branch)
+    path = Path(sys.argv[1])
+    for t in T:
+        try:
+            target_branch = t.target_branch_by_path[path]
+        except KeyError:
+            pass
+        else:
+            emit(t, target_branch)
 
 
 def emit(t: T, target_branch: str):
@@ -197,12 +212,16 @@ def emit(t: T, target_branch: str):
             {
                 'type': 'comment',
                 'content': {
-                    T.default: f'This is the PR template for regular PRs against {bq(develop)}. '
-                               "Edit the URL in your browser's location bar, appending either "
-                               + join_grammatically([f'`&template={tt.file}`' for tt in T if tt.dir],
-                                                    joiner=', ',
-                                                    last_joiner=' or ')
-                               + ' to switch the template.',
+                    T.default: (
+                        f'This is the PR template for regular PRs against {bq(develop)}. '
+                        "Edit the URL in your browser's location bar, appending either " +
+                        join_grammatically(
+                            [f'`&template={f}`' for tt in T for f in tt.files if tt is not T.default],
+                            joiner=', ',
+                            last_joiner=' or '
+                        ) +
+                        ' to switch the template.'
+                    ),
                     T.backport: f'This is the PR template for backport PRs against {bq(develop)}.',
                     T.upgrade: 'This is the PR template for upgrading Azul dependencies.',
                     T.hotfix: f'This is the PR template for hotfix PRs against {bq(prod)}.',
