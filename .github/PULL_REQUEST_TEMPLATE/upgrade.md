@@ -19,9 +19,9 @@ Connected issue: #0000
 
 ### Author (upgrading deployments)
 
+- [ ] Ran `make image_manifests.json` and committed the resulting changes <sub>or this PR does not modify `azul_docker_images`, or any other variables referenced in the definition of that variable</sub>
 - [ ] Documented upgrading of deployments in UPGRADING.rst <sub>or this PR does not require upgrading deployments</sub>
 - [ ] Added `u` tag to commit title <sub>or this PR does not require upgrading deployments</sub>
-- [ ] Ran `make image_manifests.json` and committed the resulting changes <sub>or this PR does not modify `azul_docker_images`, or any other variables referenced in the definition of that variable</sub>
 - [ ] This PR is labeled `upgrade` <sub>or does not require upgrading deployments</sub>
 - [ ] This PR is labeled `deploy:shared` <sub>or does not modify `image_manifests.json`, and does not require deploying the `shared` component for any other reason</sub>
 - [ ] This PR is labeled `deploy:gitlab` <sub>or does not require deploying the `gitlab` component</sub>
