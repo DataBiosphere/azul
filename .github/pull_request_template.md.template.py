@@ -183,7 +183,7 @@ class T(Enum):
             'deploy:shared',
             'deploy:gitlab',
             'deploy:runner',
-            *iif(self is not T.upgrade, [
+            *iif(self is T.upgrade, ['backup:gitlab'], [
                 'reindex:partial',
                 *('reindex:' + d for d in self.downstream_deployments(target_branch))
             ])
@@ -473,6 +473,10 @@ def emit(t: T, target_branch: str):
                     'content': 'This PR is labeled `deploy:gitlab`',
                     'alt': 'or does not require deploying the `gitlab` component'
                 },
+                iif(t is T.upgrade, {
+                    'type': 'cli',
+                    'content': 'This PR is labeled `backup:gitlab`',
+                }),
                 {
                     'type': 'cli',
                     'content': 'This PR is labeled `deploy:runner`',
@@ -663,6 +667,12 @@ def emit(t: T, target_branch: str):
                             ),
                             'alt': 'or this PR is not labeled `deploy:shared`'
                         },
+                        iif(t in (t.upgrade, t.promotion), {
+                            'type': 'cli',
+                            'content': f'Made a backup of the GitLab data volume in `{d}` (see [operator manual]'
+                                       f'(../blob/develop/OPERATOR.rst#backup-gitlab-volumes) for details)',
+                            'alt': 'or this PR is not labeled `backup:gitlab`'
+                        }),
                         {
                             'type': 'cli',
                             'content': 'Ran ' + bq(

@@ -326,80 +326,22 @@ the ``--region`` option to ``aws ec2 describe-images``.
 Upgrading GitLab & ClamAV
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Operators must check for updates to the Docker images for GitLab and ClamAV at
-least once a month, and whenever a GitLab security releases requires it. An
-email notification is sent to ``azul-group@ucsc.edu`` when a GitLab security
-release is available. Discuss with the lead the **Table of Fixes** referenced in
-the release blog post to determine the urgency of the update. An email
-notification should also be received when ClamAV releases become available. The
-current version of GitLab installed can be found on the ``/help`` endpoint of
-`GitLab dev`_, and the available releases can be found on the `GitLab Docker
-image`_ page. When updating the GitLab instance, check if there are applicable
-updates to the `GitLab runner image`_. Use the latest runner image whose major
-and minor version match that of the GitLab image. Similarly, check for available
-releases to ClamAV in the `ClamAV image`_. The current version of ClamAV image
-being used can be found by running::
+Operators check for updates to the Docker images for GitLab and ClamAV as part
+of the biweekly upgrade process, and whenever a GitLab security releases
+requires it. An email notification is sent to ``azul-group@ucsc.edu`` when a
+GitLab security release is available. Discuss with the lead the **Table of
+Fixes** referenced in the release blog post to determine the urgency of the
+update. When updating the GitLab version, either as part of the regular update
+or when necessary, check if there are applicable updates to the `GitLab runner
+image`_ as well. Use the latest runner image whose major and minor version match
+that of the GitLab image. When upgrading across multiple GitLab versions, follow
+the prescribed GitLab `upgrade path`_. You will likely only be able to perform
+a step on that path per biweekly upgrade PR.
 
-    cat $project_root/terraform/gitlab/gitlab.tf.json.template.py | grep 'clamav_image ='
-
-Before starting the update process, check the `GitLab release notes`_ and
-`ClamAV release notes`_ for any additional upgrading instructions. When
-upgrading across multiple GitLab versions, follow the prescribed GitLab
-`upgrade path`_.
-
-.. _GitLab dev: https://gitlab.dev.singlecell.gi.ucsc.edu/help
-.. _GitLab Docker image: https://hub.docker.com/r/gitlab/gitlab-ce/tags
-.. _GitLab runner image: https://hub.docker.com/r/gitlab/gitlab-runner/tags
-.. _ClamAV image: https://hub.docker.com/r/clamav/clamav/tags
-.. _GitLab release notes: https://about.gitlab.com/releases/categories/releases/
-.. _ClamAV release notes: https://blog.clamav.net/search/label/release
 .. _upgrade path: https://docs.gitlab.com/ee/update/index.html#upgrade-paths
 
-Before any changes are applied, run::
-
-	git fetch --all
-	git checkout -b gitlab/yyyy-mm-dd/<GitLab version> github/develop
-	_select dev.gitlab
-
-Create a backup of the GitLab volume, see `Backup GitLab volumes`_ for help.
-
-Edit the `GitLab Terraform`_ file, updating the version of the Docker images for
-``gitlab-ce``, ``gitlab-runner`` and ``clamav``. The same images are also
-mentioned in ``azul_docker_images`` in ``environment.py``. Update those entries,
-too. Then run
-… ::
-
-    _select dev.shared
-    CI_COMMIT_REF_NAME=develop make -C terraform/shared
-
-… to mirror the new Docker images to the private registry in AWS. Depending on
-your uplink bandwith and the size of the images to be mirrored, this could take
-one or two hours. Be sure to run these two commands in quick succession, so as
-to minimize the chance of credentials expiring mid-operation.
-
-.. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py
-
-To then actually update GitLab, run::
-
-    _select dev.gitlab
-    CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
-
-The new GitLab instance should be online again in 10 minutes. If it takes
-longer, contact the lead.
-
-Once the ``dev`` GitLab instance has been successfully updated, the same changes
-need to be applied to the ``anvildev`` and ``anvilprod`` instances. Use the same
-branch to update those deployments, but select the respective ``.gitlab``
-component. Once both instances have been successfully updated, file a PR (using
-``&template=gitlab.md``) with the changes against the ``develop`` branch.
-
-The PR checklist must include an entry for adding checklist entries to the next
-promotion PR to deploy ``prod.shared`` and ``prod.gitlab`` in that order. There
-are checklist items for the lead to confirm that any background migrations
-triggered by the upgrade have finished successfully. Background migrations can
-be found under *Admin Area — Monitoring — Background Migrations*.
-
-Request review of the PR from the lead.
+Before upgrading the GitLab version, create a backup of the GitLab volume. See
+`Backup GitLab volumes`_ for help.
 
 Increase GitLab data volume size
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
