@@ -680,7 +680,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'cli',
-                    'content': 'Assigned system administrator',
+                    'content': 'PR is assigned to only the system administrator',
                     'alt': 'or this PR is not labeled `deploy:gitlab`'
                 },
                 {
