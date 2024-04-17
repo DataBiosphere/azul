@@ -21,7 +21,7 @@ Connected issue: #0000
 
 ### Author (reindex, API changes)
 
-- [ ] This PR is labeled `reindex:anvilprod` <sub>or does not require reindexing `anvilprod`</sub>
+- [ ] This PR is labeled `reindex:anvilprod` <sub>or the changes introduced by it will not require reindexing of `anvilprod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `anvilprod` <sub>or requires a full reindex or is not labeled`reindex:anvilprod`</sub>
 - [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 

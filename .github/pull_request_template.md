@@ -43,9 +43,11 @@ title is `Fix: ` followed by the issue title
 
 ### Author (reindex, API changes)
 
-- [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
-- [ ] This PR is labeled `reindex:dev` <sub>or does not require reindexing `dev`</sub>
-- [ ] This PR is labeled `reindex:anvildev` <sub>or does not require reindexing `anvildev`</sub>
+- [ ] Added `r` tag to commit title <sub>or the changes introduced by this PR will not require reindexing of any deployment</sub>
+- [ ] This PR is labeled `reindex:dev` <sub>or the changes introduced by it will not require reindexing of `dev`</sub>
+- [ ] This PR is labeled `reindex:anvildev` <sub>or the changes introduced by it will not require reindexing of `anvildev`</sub>
+- [ ] This PR is labeled `reindex:anvilprod` <sub>or the changes introduced by it will not require reindexing of `anvilprod`</sub>
+- [ ] This PR is labeled `reindex:prod` <sub>or the changes introduced by it will not require reindexing of `prod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `dev`, `anvildev`, `anvilprod` and `prod` <sub>or requires a full reindex or carries none of the labels `reindex:dev`, `reindex:anvildev`, `reindex:anvilprod` and `reindex:prod`</sub>
 - [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 - [ ] Added `a` (`A`) tag to commit title for backwards (in)compatible changes <sub>or this PR does not modify a REST API</sub>

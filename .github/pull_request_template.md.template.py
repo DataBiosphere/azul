@@ -384,15 +384,15 @@ def emit(t: T, target_branch: str):
                 iif(t is T.default, {
                     'type': 'cli',
                     'content': 'Added `r` tag to commit title',
-                    'alt': 'or this PR does not require reindexing'
+                    'alt': 'or the changes introduced by this PR will not require reindexing of any deployment'
                 }),
                 *[
                     {
                         'type': 'cli',
                         'content': f'This PR is labeled `reindex:{d}`',
-                        'alt': f'or does not require reindexing `{d}`'
+                        'alt': f'or the changes introduced by it will not require reindexing of `{d}`'
                     }
-                    for d in t.target_deployments(target_branch)
+                    for d in t.affected_deployments(target_branch)
                 ],
                 {
                     'type': 'cli',
