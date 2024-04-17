@@ -976,9 +976,12 @@ class Config:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
+        deployments = json.loads(self.environ['azul_shared_deployments'])
+        require(all(isinstance(v, list) and v for v in deployments.values()),
+                'Invalid value for azul_shared_deployments')
         return freeze({
             k if k else None: v
-            for k, v in json.loads(self.environ['azul_shared_deployments']).items()
+            for k, v in deployments.items()
         })
 
     def shared_deployments_for_branch(self,
