@@ -65,11 +65,6 @@ title is `Fix: ` followed by the issue title
 - [ ] This PR is labeled `deploy:runner` <sub>or does not require deploying the `runner` image</sub>
 
 
-### Author (operator tasks)
-
-- [ ] Added checklist items for additional operator tasks <sub>or this PR does not require additional tasks</sub>
-
-
 ### Author (hotfixes)
 
 - [ ] Added `F` tag to main commit title <sub>or this PR does not include permanent fix for a temporary hotfix</sub>

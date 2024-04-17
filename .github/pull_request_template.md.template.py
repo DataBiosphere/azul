@@ -477,16 +477,6 @@ def emit(t: T, target_branch: str):
                     'alt': 'or does not require deploying the `runner` image'
                 }
             ]),
-            *iif(t is T.default, [
-                {
-                    'type': 'h2',
-                    'content': 'Author (operator tasks)'
-                },
-                {
-                    'type': 'cli',
-                    'content': 'Added checklist items for additional operator tasks',
-                    'alt': 'or this PR does not require additional tasks'
-                }]),
             *iif(t in (T.default, T.hotfix), [
                 {
                     'type': 'h2',
