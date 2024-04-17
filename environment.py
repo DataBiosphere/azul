@@ -742,7 +742,9 @@ def env() -> Mapping[str, Optional[str]]:
         # deployed to. When building a given branch, a GitLab instance uses this
         # variable to automatically determine the target deployment by using the
         # first item of the value for that branch. An empty key signifies any
-        # other branch not mentioned explicitly, or a detached HEAD.
+        # other branch not mentioned explicitly, or a detached HEAD. Note that
+        # this variable is likely being overridden on a GitLab instance so that
+        # feature branches are deployed to the sandbox deployment.
         #
         # Only shared deployments are mentioned here. A shared deployment is one
         # that is not personal. A personal deployment is owned and maintained by

@@ -969,9 +969,9 @@ class Config:
     @property
     def _shared_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
         """
-        Maps a branch name to a sequence of names of main deployments the branch
-        can be deployed to. The key of None signifies any other branch not
-        mapped explicitly, or a detached head.
+        Maps a branch name to a sequence of names of shared deployments the
+        branch can be deployed to. The key of None signifies any other branch
+        not mapped explicitly, or a detached head.
         """
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
@@ -985,9 +985,12 @@ class Config:
                                       branch: Optional[str]
                                       ) -> Optional[Sequence[str]]:
         """
-        The list of names of main deployments the given branch can be deployed
+        The list of names of shared deployments the given branch can be deployed
         to or `None` of no such deployments exist. An argument of `None`
-        indicates a detached head.
+        indicates a detached head. If a list is returned, it will not be empty
+        and the first element denotes the default deployment. The default
+        deployment is the one that GitLab deploys a branch to when it builds a
+        commit on that branch.
         """
         deployments = self._shared_deployments
         try:
