@@ -325,11 +325,17 @@ def emit(t: T, target_branch: str):
                 if t is T.backport else
                 []
             ),
-            iif(t is T.default, {
-                'type': 'cli',
-                'content': 'For each connected issue, there is at least one commit whose title references that issue'
-            }),
             *iif(t is T.default, [
+                {
+                    'type': 'cli',
+                    'content': 'For each connected issue, there is at least one commit whose title '
+                               'references that issue'
+                },
+                {
+                    'type': 'p',
+                    'content': '<sup>1</sup> when the issue title describes a problem, the '
+                               'corresponding PR title is `Fix: ` followed by the issue title'
+                },
                 {
                     'type': 'h2',
                     'content': 'Author (partiality)'
@@ -349,11 +355,6 @@ def emit(t: T, target_branch: str):
                     'alt': 'or does not have the `partial` label'
                 }
             ]),
-            iif(t is T.default, {
-                'type': 'p',
-                'content': '<sup>1</sup> when the issue title describes a problem, the corresponding PR title is '
-                           '`Fix: ` followed by the issue title'
-            }),
             *iif(t is T.default, [
                 {
                     'type': 'h2',

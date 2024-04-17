@@ -23,15 +23,15 @@ Connected issues: #0000
 - [ ] PR title references all connected issues
 - [ ] For each connected issue, there is at least one commit whose title references that issue
 
+<sup>1</sup> when the issue title describes a problem, the corresponding PR
+title is `Fix: ` followed by the issue title
+
 
 ### Author (partiality)
 
 - [ ] Added `p` tag to titles of partial commits
 - [ ] This PR is labeled `partial` <sub>or completely resolves all connected issues</sub>
 - [ ] This PR partially resolves each of the connected issues <sub>or does not have the `partial` label</sub>
-
-<sup>1</sup> when the issue title describes a problem, the corresponding PR
-title is `Fix: ` followed by the issue title
 
 
 ### Author (chains)
