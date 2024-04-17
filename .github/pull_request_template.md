@@ -94,7 +94,7 @@ title is `Fix: ` followed by the issue title
 - [ ] Labeled connected issues as `demo` or `no demo`
 - [ ] Commented on connected issues about demo expectations <sub>or all connected issues are labeled `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
-- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
+- [ ] A comment to this PR details the completed security design review
 - [ ] PR title is appropriate as title of merge commit
 - [ ] `N reviews` label is accurate
 - [ ] Moved ticket to *Approved* column

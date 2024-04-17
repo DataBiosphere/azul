@@ -602,11 +602,10 @@ def emit(t: T, target_branch: str):
                     'Labeled PR as `no sandbox`'
                 )
             }),
-            {
+            iif(t not in (T.backport, T.promotion), {
                 'type': 'cli',
                 'content': 'A comment to this PR details the completed security design review',
-                'alt': 'or this PR is a promotion or a backport'
-            },
+            }),
             iif(t is not T.promotion, {
                 'type': 'cli',
                 'content': 'PR title is appropriate as title of merge commit'
