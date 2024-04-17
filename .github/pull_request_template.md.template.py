@@ -568,7 +568,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'cli',
-                    'content': 'Requested review from system administrator'
+                    'content': 'PR is awaiting requested review from system administrator'
                 },
                 {
                     'type': 'cli',

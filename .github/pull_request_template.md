@@ -84,7 +84,7 @@ title is `Fix: ` followed by the issue title
 
 - [ ] PR is not a draft
 - [ ] Ticket is in *Review requested* column
-- [ ] Requested review from system administrator
+- [ ] PR is awaiting requested review from system administrator
 - [ ] PR is assigned to only the system administrator
 
 
