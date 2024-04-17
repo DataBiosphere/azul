@@ -178,14 +178,16 @@ class T(Enum):
             for b in self.promotion.target_branches
         )))
 
-    def labels_to_promote(self, target_branch: str) -> tuple[str, ...]:
-        return (
+    def labels_to_promote(self, target_branch: str) -> AbstractSet[str]:
+        return OrderedSet([
             'deploy:shared',
             'deploy:gitlab',
             'deploy:runner',
-            'reindex:partial',
-            *('reindex:' + d for d in self.downstream_deployments(target_branch))
-        )
+            *iif(self is not T.upgrade, [
+                'reindex:partial',
+                *('reindex:' + d for d in self.downstream_deployments(target_branch))
+            ])
+        ])
 
     @property
     def needs_shared_deploy(self):
