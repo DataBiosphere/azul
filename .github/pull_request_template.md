@@ -80,22 +80,12 @@ title is `Fix: ` followed by the issue title
 - [ ] `make integration_test` passes in personal deployment <sub>or this PR does not modify functionality that could affect the IT outcome</sub>
 
 
-### Peer reviewer (after requesting changes)
-
-Uncheck the *Author (before every review)* checklists.
-
-
 ### Peer reviewer (after approval)
 
 - [ ] PR is not a draft
 - [ ] Ticket is in *Review requested* column
 - [ ] Requested review from system administrator
 - [ ] PR is assigned to only the system administrator
-
-
-### System administrator (after requesting changes)
-
-Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 
 ### System administrator (after approval)

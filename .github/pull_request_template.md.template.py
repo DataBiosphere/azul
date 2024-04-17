@@ -554,14 +554,6 @@ def emit(t: T, target_branch: str):
             *iif(t is T.default, [
                 {
                     'type': 'h2',
-                    'content': 'Peer reviewer (after requesting changes)'
-                },
-                {
-                    'type': 'p',
-                    'content': 'Uncheck the *Author (before every review)* checklists.'
-                },
-                {
-                    'type': 'h2',
                     'content': 'Peer reviewer (after approval)'
                 },
                 {
@@ -579,17 +571,6 @@ def emit(t: T, target_branch: str):
                 {
                     'type': 'cli',
                     'content': 'PR is assigned to only the system administrator'
-                }
-            ]),
-            *iif(t in (T.default, T.backport), [
-                {
-                    'type': 'h2',
-                    'content': 'System administrator (after requesting changes)'
-                },
-                {
-                    'type': 'p',
-                    'content': 'Uncheck the *before every review* checklists. '
-                               'Update the `N reviews` label.'
                 }
             ]),
             {

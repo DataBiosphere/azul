@@ -23,11 +23,6 @@ This is the PR template for backport PRs against `develop`.
 - [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
 
 
-### System administrator (after requesting changes)
-
-Uncheck the *before every review* checklists. Update the `N reviews` label.
-
-
 ### System administrator (after approval)
 
 - [ ] Actually approved the PR
