@@ -105,7 +105,6 @@ title is `Fix: ` followed by the issue title
 
 - [ ] Checked `reindex:…` labels and `r` commit title tag
 - [ ] Checked that demo expectations are clear <sub>or all connected issues are labeled `no demo`</sub>
-- [ ] PR has checklist items for upgrading instructions <sub>or PR is not labeled `upgrade`</sub>
 - [ ] Squashed PR branch and rebased onto `develop`
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
