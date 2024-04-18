@@ -242,7 +242,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make image_manifests.json`
         # and redeploying the `shared` component.
         #
-        'azul_python_version': '3.11.8',
+        'azul_python_version': '3.11.9',
 
         # The version of Terraform used throughout the system.
         #
