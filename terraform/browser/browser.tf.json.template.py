@@ -191,6 +191,20 @@ def emit():
                 script.stem: cloudfront_function(script)
                 for script in Path(__file__).parent.glob('*.js')
             },
+            'aws_cloudfront_response_headers_policy': {
+                'browser': {
+                    'name': 'browser',
+                    'security_headers_config': {
+                        'strict_transport_security': {
+                            'override': False,
+                            'access_control_max_age_sec': 63072000,
+                            'include_subdomains': True,
+                            'preload': True
+
+                        }
+                    }
+                }
+            },
             'aws_acm_certificate': {
                 'browser': {
                     'domain_name': config.domain_name,
@@ -399,6 +413,9 @@ def bucket_behaviour(origin, *, path_pattern: str = None, **functions: bool) -> 
         allowed_methods=['GET', 'HEAD'],
         cached_methods=['GET', 'HEAD'],
         cache_policy_id='${data.aws_cloudfront_cache_policy.caching_optimized.id}',
+        response_headers_policy_id=(
+            '${aws_cloudfront_response_headers_policy.browser.id}'
+        ),
         viewer_protocol_policy='redirect-to-https',
         target_origin_id=bucket_origin_id(origin),
         compress=True,

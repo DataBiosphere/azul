@@ -6,7 +6,6 @@ function handler(event) {
 
     // Set HTTP security headers
     // Since JavaScript doesn't allow for hyphens in variable names, we use the dict["key"] notation 
-    headers['strict-transport-security'] = { value: 'max-age=63072000; includeSubdomains; preload'};
 
     // Set cache control header …
     if (uri.startsWith('/_next/static/')) {
