@@ -195,6 +195,10 @@ def emit():
                 'browser': {
                     'name': 'browser',
                     'security_headers_config': {
+                        'content_security_policy': {
+                            'override': True,
+                            'content_security_policy': content_security_policy()
+                        },
                         'content_type_options': {
                             'override': True
                         },
@@ -484,6 +488,64 @@ def cloudfront_function(script: Path):
                 # publish=False would update the function so that it can be used
                 # with the TestFunction API but wouldn't affect what's live.
                 publish=True)
+
+
+def content_security_policy() -> str:
+    def q(s: str) -> str:
+        return f"'{s}'"
+
+    def s(*args: str) -> str:
+        return ' '.join(args)
+
+    self = q('self')
+    none = q('none')
+    unsafe_inline = q('unsafe-inline')
+    unsafe_eval = q('unsafe-eval')
+
+    return ';'.join([
+        s('default-src', self),
+        s('object-src', none),
+        s('frame-src', none),
+        s('frame-ancestors', none),
+        s('child-src', none),
+        s('img-src',
+          self,
+          'data:',
+          'https://lh3.googleusercontent.com',
+          'https://www.google-analytics.com',
+          'https://www.googletagmanager.com'),
+        s('script-src',
+          self,
+          unsafe_inline,
+          unsafe_eval,
+          'https://accounts.google.com/gsi/client',
+          'https://www.google-analytics.com',
+          'https://www.googletagmanager.com'),
+        s('style-src',
+          self,
+          unsafe_inline,
+          'https://fonts.googleapis.com',
+          'https://p.typekit.net',
+          'https://use.typekit.net'),
+        s('font-src',
+          self,
+          'data:',
+          'https://fonts.gstatic.com',
+          'https://use.typekit.net/af/'),
+        s('connect-src',
+          self,
+          'https://www.google-analytics.com',
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          'https://www.googletagmanager.com',
+          'https://support.terra.bio/api/v2/',
+          str(furl(config.sam_service_url,
+                   path='/register/user/v1')),
+          str(furl(config.sam_service_url,
+                   path='/register/user/v2/self/termsOfServiceDetails')),
+          str(furl(config.terra_service_url,
+                   path='/api/nih/status')),
+          str(config.service_endpoint))
+    ])
 
 
 def google_search_origin():
