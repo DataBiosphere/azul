@@ -2050,3 +2050,16 @@ class TestAnvilManifests(AnvilManifestTestCase):
             )
         ]
         self._assert_tsv(expected, response)
+
+    @unittest.skipIf(not config.enable_replicas,
+                     'The format is replica-based')
+    @manifest_test
+    def test_verbatim_jsonl_manifest(self):
+        response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
+        self.assertEqual(200, response.status_code)
+        expected = [
+            entity
+            for bundle in self.bundles()
+            for entity in self._load_canned_bundle(bundle).entities.values()
+        ]
+        self._assert_jsonl(expected, response)
