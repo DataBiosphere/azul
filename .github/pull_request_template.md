@@ -157,21 +157,17 @@ title is `Fix: ` followed by the issue title
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Pushed merge commit to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed merge commit to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes on GitLab `dev`<sup>1</sup>
-- [ ] Reviewed build logs for anomalies on GitLab `dev`<sup>1</sup>
-- [ ] Build passes on GitLab `anvildev`<sup>1</sup>
-- [ ] Reviewed build logs for anomalies on GitLab `anvildev`<sup>1</sup>
+- [ ] Pushed merge commit to GitLab `dev`
+- [ ] Pushed merge commit to GitLab `anvildev`
+- [ ] Build passes on GitLab `dev`
+- [ ] Reviewed build logs for anomalies on GitLab `dev`
+- [ ] Build passes on GitLab `anvildev`
+- [ ] Reviewed build logs for anomalies on GitLab `anvildev`
 - [ ] Ran `_select dev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Ran `_select anvildev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
-
-<sup>1</sup> When pushing the merge commit is skipped due to the PR being
-labelled `no sandbox`, the next build triggered by a PR whose merge commit *is*
-pushed determines this checklist item.
 
 
 ### Operator (reindex)

@@ -827,8 +827,7 @@ def emit(t: T, target_branch: str):
             *[
                 {
                     'type': 'cli',
-                    'content': f'Pushed merge commit to GitLab `{d}`',
-                    'alt': iif(t in (T.hotfix, T.promotion, T.upgrade), None, 'or PR is labeled `no sandbox`')
+                    'content': f'Pushed merge commit to GitLab `{d}`'
                 }
                 for d in t.target_deployments(target_branch)
             ],
@@ -837,12 +836,10 @@ def emit(t: T, target_branch: str):
                     {
                         'type': 'cli',
                         'content': f'Build passes on GitLab `{d}`'
-                                   + iif(t in (T.default, T.backport), '<sup>1</sup>')
                     },
                     {
                         'type': 'cli',
                         'content': f'Reviewed build logs for anomalies on GitLab `{d}`'
-                                   + iif(t in (T.default, T.backport), '<sup>1</sup>')
                     }
                 ]
                 for d, s in t.target_deployments(target_branch).items()
@@ -884,12 +881,6 @@ def emit(t: T, target_branch: str):
                     'content': 'Moved promoted issues from *dev* to *prod* column on ZenHub'
                 }
             ]),
-            iif(t in (T.default, T.backport), {
-                'type': 'p',
-                'content': '<sup>1</sup> When pushing the merge commit is skipped due to the PR being labelled '
-                           '`no sandbox`, the next build triggered by a PR whose merge commit *is* pushed determines '
-                           'this checklist item.'
-            }),
             *iif(t in (T.default, T.hotfix, T.promotion), [
                 {
                     'type': 'h2',
