@@ -8,6 +8,7 @@ from itertools import (
 from pathlib import (
     Path,
 )
+import re
 import sys
 import textwrap
 from typing import (
@@ -67,14 +68,14 @@ def emit_checklist(checklist: Iterable[Item | EmptyItem]):
         return '', *wrap(i)
 
     def h1(i: Item, _) -> Iterable[str]:
-        return '', '', '## ' + i['content']
+        return '', '', '## ' + text(i['content'])
 
     def h2(i: Item, _) -> Iterable[str]:
-        return '', '', '### ' + i['content']
+        return '', '', '### ' + text(i['content'])
 
     def cli(i: Item, j: Item | None) -> Iterable[str]:
         alt = '' if i.get('alt') is None else ' <sub>' + i['alt'] + '</sub>'
-        return *margin(i, j), '- [ ] ' + i['content'] + alt
+        return *margin(i, j), '- [ ] ' + text(i['content']) + alt
 
     def li(i: Item, j: Item | None) -> Iterable[str]:
         return *margin(i, j), '- ' + i['content']
@@ -85,7 +86,17 @@ def emit_checklist(checklist: Iterable[Item | EmptyItem]):
         return [] if j and j['type'] == i['type'] else ['']
 
     def wrap(i: Item) -> Iterable[str]:
-        return textwrap.wrap(i['content'], 80)
+        return textwrap.wrap(text(i['content']), 80)
+
+    footnotes = {}
+    footnote_re = re.compile(r'<footnote ([^/]+)/>')
+
+    def text(content: str) -> str:
+        return footnote_re.sub(sup, content)
+
+    def sup(m: re.Match) -> str:
+        s = footnotes.setdefault(m.group(1), str(len(footnotes) + 1))
+        return '<sup>' + s + '</sup>'
 
     with emit_text() as f:
         non_empty_items: Iterable[Item] = filter(bool, checklist)
@@ -300,7 +311,7 @@ def emit(t: T, target_branch: str):
             {
                 'type': 'cli',
                 'content': {
-                    t.default: 'PR title matches<sup>1</sup> that of a connected issue',
+                    t.default: 'PR title matches<footnote title/> that of a connected issue',
                     t.promotion: 'PR title starts with title of connected issue',
                     t.hotfix: f'PR title is `Hotfix {target_branch}: ` '
                               f'followed by title of connected issue',
@@ -335,7 +346,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'p',
-                    'content': '<sup>1</sup> when the issue title describes a problem, the '
+                    'content': '<footnote title/> when the issue title describes a problem, the '
                                'corresponding PR title is `Fix: ` followed by the issue title'
                 },
                 {
@@ -935,7 +946,7 @@ def emit(t: T, target_branch: str):
                 'content': 'Ran `script/export_inspector_findings.py` against `anvildev`, imported results '
                            'to [Google Sheet](https://docs.google.com/spreadsheets/d/'
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
-                           'relevant<sup>1</sup> findings as a comment on the connected issue.'
+                           'relevant<footnote relevant/> findings as a comment on the connected issue.'
             }),
             *iif(target_branch == 'develop' and t is not T.backport, [
                 {
@@ -964,7 +975,7 @@ def emit(t: T, target_branch: str):
             },
             iif(t is T.upgrade, {
                 'type': 'p',
-                'content': '<sup>1</sup>A relevant finding is a high or critical vulnerability in an image '
+                'content': '<footnote relevant/>A relevant finding is a high or critical vulnerability in an image '
                            'that is used within the security boundary. Images not used within the boundary '
                            'are tracked in `azul.docker_images` under a key starting with `_`.'
             }),
