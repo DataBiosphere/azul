@@ -210,6 +210,28 @@ class ManifestTestCase(WebServiceTestCase,
         actual[1:], expected[1:] = sorted(actual[1:]), sorted(expected[1:])
         self.assertEqual(expected, actual)
 
+    def _assert_jsonl(self, expected: list[JSON], actual: Response):
+        """
+        Assert that the body of the given response is the expected JSON array,
+        disregarding any row ordering differences.
+
+        :param expected: a list of JSON objects.
+
+        :param actual: an HTTP response containing JSON objects separated by
+                       newlines
+        """
+        manifest = [
+            json.loads(row)
+            for row in actual.content.decode().splitlines()
+        ]
+
+        def sort_key(row: JSON) -> bytes:
+            return json_hash(row).digest()
+
+        manifest.sort(key=sort_key)
+        expected.sort(key=sort_key)
+        self.assertEqual(expected, manifest)
+
     def _file_url(self, file_id, version):
         return str(self.base_url.set(path='/repository/files/' + file_id,
                                      args=dict(catalog=self.catalog,
@@ -1294,9 +1316,9 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                      'The format is replica-based')
     @manifest_test
     def test_verbatim_jsonl_manifest(self):
-        bundle = self._load_canned_bundle(one(self.bundles()))
         expected = [
             bundle.metadata_files[d]
+            for bundle in map(self._load_canned_bundle, self.bundles())
             for d in [
                 'links.json',
                 'cell_suspension_0.json',
@@ -1308,14 +1330,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         ]
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})
         self.assertEqual(200, response.status_code)
-        response = list(map(json.loads, response.content.decode().splitlines()))
-
-        def sort_key(row: JSON) -> bytes:
-            return json_hash(row).digest()
-
-        expected.sort(key=sort_key)
-        response.sort(key=sort_key)
-        self.assertEqual(expected, response)
+        self._assert_jsonl(expected, response)
 
 
 class TestManifestCache(DCP1ManifestTestCase):
