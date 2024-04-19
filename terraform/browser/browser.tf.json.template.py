@@ -195,12 +195,28 @@ def emit():
                 'browser': {
                     'name': 'browser',
                     'security_headers_config': {
+                        'content_type_options': {
+                            'override': True
+                        },
+                        'frame_options': {
+                            'override': False,
+                            'frame_option': 'DENY'
+                        },
+                        'referrer_policy': {
+                            'override': False,
+                            'referrer_policy': 'strict-origin-when-cross-origin'
+                        },
                         'strict_transport_security': {
                             'override': False,
                             'access_control_max_age_sec': 63072000,
                             'include_subdomains': True,
                             'preload': True
 
+                        },
+                        'xss_protection': {
+                            'override': False,
+                            'protection': True,
+                            'mode_block': True
                         }
                     }
                 }
