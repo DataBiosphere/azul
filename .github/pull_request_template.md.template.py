@@ -941,13 +941,19 @@ def emit(t: T, target_branch: str):
                 'type': 'h2',
                 'content': 'Operator'
             },
-            iif(t is T.upgrade, {
-                'type': 'cli',
-                'content': 'Ran `script/export_inspector_findings.py` against `anvildev`, imported results '
-                           'to [Google Sheet](https://docs.google.com/spreadsheets/d/'
-                           '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
-                           'relevant<footnote relevant/> findings as a comment on the connected issue.'
-            }),
+            *iif(t is T.upgrade, [
+                {
+                    'type': 'cli',
+                    'content': 'At least one hour has passed since `anvildev.shared` was last deployed'
+                },
+                {
+                    'type': 'cli',
+                    'content': 'Ran `script/export_inspector_findings.py` against `anvildev`, imported results '
+                               'to [Google Sheet](https://docs.google.com/spreadsheets/d/'
+                               '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
+                               'relevant<footnote relevant/> findings as a comment on the connected issue.'
+                }
+            ]),
             *iif(target_branch == 'develop' and t is not T.backport, [
                 {
                     'type': 'cli',

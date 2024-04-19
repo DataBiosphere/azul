@@ -105,6 +105,7 @@ Connected issue: #0000
 
 ### Operator
 
+- [ ] At least one hour has passed since `anvildev.shared` was last deployed
 - [ ] Ran `script/export_inspector_findings.py` against `anvildev`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
 - [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner` and `backup:gitlab` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
 - [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner` and `backup:gitlab` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
