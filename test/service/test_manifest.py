@@ -73,6 +73,7 @@ from azul.indexer import (
 )
 from azul.json import (
     copy_json,
+    json_hash,
 )
 from azul.logging import (
     configure_test_logging,
@@ -1309,12 +1310,8 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         self.assertEqual(200, response.status_code)
         response = list(map(json.loads, response.content.decode().splitlines()))
 
-        def sort_key(hca_doc: JSON) -> str:
-            try:
-                return hca_doc['provenance']['document_id']
-            except KeyError:
-                assert hca_doc['schema_type'] == 'link_bundle'
-                return ''
+        def sort_key(row: JSON) -> bytes:
+            return json_hash(row).digest()
 
         expected.sort(key=sort_key)
         response.sort(key=sort_key)
