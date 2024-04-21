@@ -790,8 +790,9 @@ def env() -> Mapping[str, Optional[str]]:
         # ╚════════════╝ ╚══════════════════════════════════════════════════╝
         #
         'azul_shared_deployments': json.dumps({
-            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod', 'hammerbox'],
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
             'prod': ['prod'],
+            'anvilprod': ['anvilprod', 'hammerbox']
         }),
 
         # A dictionary with one entry per browser or portal site that is to be

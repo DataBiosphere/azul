@@ -56,8 +56,6 @@ Connected issue: #0000
 - [ ] Ran `_select dev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Ran `_select anvildev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Ran `_select anvildev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] Ran `_select anvilprod.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvilprod.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
 - [ ] Assigned system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
 
@@ -66,7 +64,6 @@ Connected issue: #0000
 
 - [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] PR is assigned to only the operator
 
 
@@ -74,17 +71,13 @@ Connected issue: #0000
 
 - [ ] Ran `_select dev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Ran `_select anvildev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
-- [ ] Ran `_select anvilprod.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Added `sandbox` label
 - [ ] Pushed PR branch to GitLab `dev`
 - [ ] Pushed PR branch to GitLab `anvildev`
-- [ ] Pushed PR branch to GitLab `anvilprod`
 - [ ] Build passes in `sandbox` deployment
 - [ ] Build passes in `anvilbox` deployment
-- [ ] Build passes in `hammerbox` deployment
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment
-- [ ] Reviewed build logs for anomalies in `hammerbox` deployment
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
@@ -96,27 +89,22 @@ Connected issue: #0000
 
 - [ ] Pushed merge commit to GitLab `dev`
 - [ ] Pushed merge commit to GitLab `anvildev`
-- [ ] Pushed merge commit to GitLab `anvilprod`
 - [ ] Build passes on GitLab `dev`
 - [ ] Reviewed build logs for anomalies on GitLab `dev`
 - [ ] Build passes on GitLab `anvildev`
 - [ ] Reviewed build logs for anomalies on GitLab `anvildev`
-- [ ] Build passes on GitLab `anvilprod`
-- [ ] Reviewed build logs for anomalies on GitLab `anvilprod`
 - [ ] Ran `_select dev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Ran `_select anvildev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvilprod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
-- [ ] Deleted PR branch from GitLab `anvilprod`
 
 
 ### Operator
 
-- [ ] Ran `script/export_inspector_findings.py` against `anvilprod`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
-- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
-- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Ran `script/export_inspector_findings.py` against `anvildev`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
+- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to only the system administrator
 
 <sup>1</sup>A relevant finding is a high or critical vulnerability in an image

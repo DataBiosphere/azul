@@ -1,8 +1,9 @@
 <!--
 This is the PR template for regular PRs against `develop`. Edit the URL in your
-browser's location bar, appending either `&template=prod-promotion.md`,
-`&template=prod-hotfix.md`, `&template=backport.md` or `&template=upgrade.md` to
-switch the template.
+browser's location bar, appending either `&template=anvilprod-promotion.md`,
+`&template=prod-promotion.md`, `&template=anvilprod-hotfix.md`, `&template=prod-
+hotfix.md`, `&template=backport.md` or `&template=upgrade.md` to switch the
+template.
 -->
 
 Connected issues: #0000
@@ -45,7 +46,6 @@ title is `Fix: ` followed by the issue title
 - [ ] Added `r` tag to commit title <sub>or this PR does not require reindexing</sub>
 - [ ] This PR is labeled `reindex:dev` <sub>or does not require reindexing `dev`</sub>
 - [ ] This PR is labeled `reindex:anvildev` <sub>or does not require reindexing `anvildev`</sub>
-- [ ] This PR is labeled `reindex:anvilprod` <sub>or does not require reindexing `anvilprod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `dev`, `anvildev`, `anvilprod` and `prod` <sub>or requires a full reindex or carries none of the labels `reindex:dev`, `reindex:anvildev`, `reindex:anvilprod` and `reindex:prod`</sub>
 - [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 - [ ] Added `a` (`A`) tag to commit title for backwards (in)compatible changes <sub>or this PR does not modify a REST API</sub>
@@ -71,7 +71,7 @@ title is `Fix: ` followed by the issue title
 ### Author (hotfixes)
 
 - [ ] Added `F` tag to main commit title <sub>or this PR does not include permanent fix for a temporary hotfix</sub>
-- [ ] Reverted the temporary hotfixes for any connected issues <sub>or the none of the stable branches (`prod`) have temporary hotfixes for any of the issues connected to this PR</sub>
+- [ ] Reverted the temporary hotfixes for any connected issues <sub>or the none of the stable branches (`anvilprod` and `prod`) have temporary hotfixes for any of the issues connected to this PR</sub>
 
 
 ### Author (before every review)
@@ -126,8 +126,6 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Ran `_select dev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Ran `_select anvildev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Ran `_select anvildev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] Ran `_select anvilprod.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvilprod.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
 - [ ] Assigned system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
 
@@ -136,7 +134,6 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 - [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] PR is assigned to only the operator
 
 
@@ -144,26 +141,19 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 - [ ] Ran `_select dev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Ran `_select anvildev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
-- [ ] Ran `_select anvilprod.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Deleted unreferenced indices in `sandbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `dev`</sub>
 - [ ] Deleted unreferenced indices in `anvilbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvildev`</sub>
-- [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilprod`</sub>
 - [ ] Started reindex in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
 - [ ] Started reindex in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
-- [ ] Started reindex in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] Checked for failures in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
 - [ ] Checked for failures in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
-- [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but only included `p` if the PR is also labeled `partial`</sub>
@@ -183,20 +173,15 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 - [ ] Pushed merge commit to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed merge commit to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed merge commit to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes on GitLab `dev`<sup>1</sup>
 - [ ] Reviewed build logs for anomalies on GitLab `dev`<sup>1</sup>
 - [ ] Build passes on GitLab `anvildev`<sup>1</sup>
 - [ ] Reviewed build logs for anomalies on GitLab `anvildev`<sup>1</sup>
-- [ ] Build passes on GitLab `anvilprod`<sup>1</sup>
-- [ ] Reviewed build logs for anomalies on GitLab `anvilprod`<sup>1</sup>
 - [ ] Ran `_select dev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Ran `_select anvildev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvilprod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
-- [ ] Deleted PR branch from GitLab `anvilprod`
 
 <sup>1</sup> When pushing the merge commit is skipped due to the PR being
 labelled `no sandbox`, the next build triggered by a PR whose merge commit *is*
@@ -207,28 +192,22 @@ pushed determines this checklist item.
 
 - [ ] Deindexed all unreferenced catalogs in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
 - [ ] Deindexed all unreferenced catalogs in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
-- [ ] Deindexed all unreferenced catalogs in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
 - [ ] Deindexed specific sources in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
 - [ ] Deindexed specific sources in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
-- [ ] Deindexed specific sources in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
 - [ ] Indexed specific sources in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
 - [ ] Indexed specific sources in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
-- [ ] Indexed specific sources in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
 - [ ] Started reindex in `dev` <sub>or this PR does not require reindexing `dev`</sub>
 - [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Started reindex in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
 - [ ] Checked for, triaged and possibly requeued messages in both fail queues in `dev` <sub>or this PR does not require reindexing `dev`</sub>
 - [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
 - [ ] Emptied fail queues in `dev` <sub>or this PR does not require reindexing `dev`</sub>
 - [ ] Emptied fail queues in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Emptied fail queues in `anvilprod` <sub>or this PR does not require reindexing `anvilprod`</sub>
 
 
 ### Operator
 
-- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
-- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to no one
 
 

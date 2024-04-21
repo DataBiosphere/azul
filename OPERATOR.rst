@@ -16,12 +16,14 @@ Getting started as operator
   - give you Maintainer access to the GitLab ``dev``, ``anvildev``,
     ``anvilprod`` and ``prod`` instances
 
-  - assign you the ``Editor`` role on the ``platform-hca-prod`` Google Cloud
-    project
+  - assign to you the ``Editor`` role on the Google Cloud
+    projects ``platform-hca-prod`` and ``platform-hca-anvilprod``
+
+  - remove the ``Editor`` role in those projects from the previous operator
 
 * Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Ben and Hannes) to:
 
-  - grant you developer access to the ``platform-hca-prod`` AWS account
+  - grant you developer access to AWS accounts ``platform-hca-prod`` and ``platform-anvil-prod`
 
   - revoke that access from the previous operator (mention them by name)
 

@@ -131,7 +131,9 @@ class T(Enum):
 
     @property
     def target_branches(self) -> AbstractSet[str]:
-        return OrderedSet(['prod'] if self in (T.promotion, T.hotfix) else ['develop'])
+        return OrderedSet(['anvilprod', 'prod']
+                          if self in (T.promotion, T.hotfix) else
+                          ['develop'])
 
     @property
     def issues(self):
@@ -153,7 +155,9 @@ class T(Enum):
         return {
             'develop': {
                 'dev': 'sandbox',
-                'anvildev': 'anvilbox',
+                'anvildev': 'anvilbox'
+            },
+            'anvilprod': {
                 'anvilprod': 'hammerbox'
             },
             'prod': {
@@ -959,7 +963,7 @@ def emit(t: T, target_branch: str):
             },
             iif(t is T.upgrade, {
                 'type': 'cli',
-                'content': 'Ran `script/export_inspector_findings.py` against `anvilprod`, imported results '
+                'content': 'Ran `script/export_inspector_findings.py` against `anvildev`, imported results '
                            'to [Google Sheet](https://docs.google.com/spreadsheets/d/'
                            '1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of '
                            'relevant<sup>1</sup> findings as a comment on the connected issue.'

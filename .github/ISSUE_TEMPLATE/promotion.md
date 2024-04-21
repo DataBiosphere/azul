@@ -7,5 +7,9 @@ _start: 2024-02-27T09:00
 _period: 7 days
 ---
 - [ ] The title of this issue maches `Promotion yyyy-mm-dd`
-- [ ] System admistrator and operator determined the commit to be promoted
-- [ ] Operator created the promotion PR
+- [ ] For `prod`
+  - [ ] System admistrator and operator determined the commit to be promoted
+  - [ ] Operator created the promotion PR
+- [ ] For `anvilprod`
+  - [ ] System admistrator and operator determined the commit to be promoted
+  - [ ] Operator created the promotion PR
