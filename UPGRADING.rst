@@ -20,6 +20,23 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#133 Disable split tunneling for GitLab VPN in prod and anvilprod
+===========================================================================================
+
+This change requires an update to your existing VPN connections for `prod` and
+`anvilprod`.
+
+Run the following commands::
+
+    _select prod.gitlab  # or anvilprod.gitlab
+    cd terraform/gitlab/vpn
+    make config > ~/azul-gitlab-prod.ovpn  # or azul-gitlab-anvilprod.ovpn
+
+Then, remove the existing VPN connection and import the generated `.ovpn` file
+to recreate it. Finally, delete the `.ovpn` file to prevent proliferation of the
+private key.
+
+
 #6046 Fix: VPC CIDR in ``anvildev`` is wrong
 ============================================
 
