@@ -331,6 +331,10 @@ class Config:
         return None if url is None else furl(url)
 
     @property
+    def terra_service_url(self) -> mutable_furl:
+        return furl(self.environ['AZUL_TERRA_SERVICE_URL'])
+
+    @property
     def dss_query_prefix(self) -> str:
         return self.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 

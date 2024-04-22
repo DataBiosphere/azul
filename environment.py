@@ -748,6 +748,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DUOS_SERVICE_URL': None,
 
+        # The URL of an instance of Broad Institute's orchestration service for
+        # Terra.
+        #
+        'AZUL_TERRA_SERVICE_URL': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         #
