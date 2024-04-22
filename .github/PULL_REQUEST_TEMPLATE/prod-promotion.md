@@ -1,5 +1,5 @@
 <!--
-This is the PR template for promotion PRs against `prod`.
+This is the PR template for a promotion PR against `prod`.
 -->
 
 Connected issue: #0000
@@ -11,17 +11,17 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `prod`
-- [ ] Name of PR branch matches `promotions/yyyy-mm-dd`
+- [ ] Name of PR branch matches `promotions/yyyy-mm-dd-prod`
 - [ ] On ZenHub, PR is connected to the promotion issue it resolves
 - [ ] PR description links to connected issue
-- [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
+- [ ] Title of connected issue matches `Promotion yyyy-mm-dd prod`
 - [ ] PR title starts with title of connected issue
 - [ ] PR title references the connected issue
 
 
 ### Author (reindex, API changes)
 
-- [ ] This PR is labeled `reindex:prod` <sub>or does not require reindexing `prod`</sub>
+- [ ] This PR is labeled `reindex:prod` <sub>or the changes introduced by it will not require reindexing of `prod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `prod` <sub>or requires a full reindex or is not labeled`reindex:prod`</sub>
 - [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 
@@ -38,7 +38,6 @@ Connected issue: #0000
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
-- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to only the operator
 
@@ -47,9 +46,10 @@ Connected issue: #0000
 
 - [ ] Pushed PR branch to GitHub
 - [ ] Ran `_select prod.shared && CI_COMMIT_REF_NAME=prod make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Made a backup of the GitLab data volume in `prod` (see [operator manual](../blob/develop/OPERATOR.rst#backup-gitlab-volumes) for details) <sub>or this PR is not labeled `backup:gitlab`</sub>
 - [ ] Ran `_select prod.gitlab && CI_COMMIT_REF_NAME=prod make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
-- [ ] Assigned system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] PR is assigned to only the system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
 
 
 ### System administrator
@@ -95,8 +95,8 @@ Connected issue: #0000
 
 ### System administrator
 
-- [ ] Removed unused image tags from [Elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not alter references to that image`</sub>
-- [ ] Removed unused image tags from [PyCharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not alter references to that image`</sub>
+- [ ] Removed unused image tags from [pycharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not alter references to that image`</sub>
+- [ ] Removed unused image tags from [elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not alter references to that image`</sub>
 - [ ] PR is assigned to no one
 
 

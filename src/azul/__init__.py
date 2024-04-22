@@ -23,6 +23,7 @@ import shlex
 from typing import (
     BinaryIO,
     ClassVar,
+    NotRequired,
     Optional,
     TYPE_CHECKING,
     TextIO,
@@ -969,25 +970,31 @@ class Config:
     @property
     def _shared_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
         """
-        Maps a branch name to a sequence of names of main deployments the branch
-        can be deployed to. The key of None signifies any other branch not
-        mapped explicitly, or a detached head.
+        Maps a branch name to a sequence of names of shared deployments the
+        branch can be deployed to. The key of None signifies any other branch
+        not mapped explicitly, or a detached head.
         """
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
+        deployments = json.loads(self.environ['azul_shared_deployments'])
+        require(all(isinstance(v, list) and v for v in deployments.values()),
+                'Invalid value for azul_shared_deployments')
         return freeze({
             k if k else None: v
-            for k, v in json.loads(self.environ['azul_shared_deployments']).items()
+            for k, v in deployments.items()
         })
 
     def shared_deployments_for_branch(self,
                                       branch: Optional[str]
                                       ) -> Optional[Sequence[str]]:
         """
-        The list of names of main deployments the given branch can be deployed
+        The list of names of shared deployments the given branch can be deployed
         to or `None` of no such deployments exist. An argument of `None`
-        indicates a detached head.
+        indicates a detached head. If a list is returned, it will not be empty
+        and the first element denotes the default deployment. The default
+        deployment is the one that GitLab deploys a branch to when it builds a
+        commit on that branch.
         """
         deployments = self._shared_deployments
         try:
@@ -1468,6 +1475,12 @@ class Config:
         """
         #: Fully qualified image reference, registry/repository/user/name:tag
         ref: str
+
+        #: URL of a human-readable description of the image
+        url: str
+
+        #: True, if we build the image ourselves
+        is_custom: NotRequired[bool]
 
     @property
     def docker_images(self) -> dict[str, ImageSpec]:

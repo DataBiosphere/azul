@@ -11,10 +11,10 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `prod`
-- [ ] Name of PR branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>`
+- [ ] Name of PR branch matches `hotfixes/<GitHub handle of author>/<issue#>-<slug>-prod`
 - [ ] On ZenHub, PR is connected to the issue it hotfixes
 - [ ] PR description links to connected issue
-- [ ] PR title is `Hotfix: ` followed by title of connected issue
+- [ ] PR title is `Hotfix prod: ` followed by title of connected issue
 - [ ] PR title references the connected issue
 
 
@@ -38,7 +38,7 @@ Connected issue: #0000
 
 - [ ] Actually approved the PR
 - [ ] Labeled PR as `no sandbox`
-- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
+- [ ] A comment to this PR details the completed security design review
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to only the operator

@@ -23,16 +23,10 @@ This is the PR template for backport PRs against `develop`.
 - [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
 
 
-### System administrator (after requesting changes)
-
-Uncheck the *before every review* checklists. Update the `N reviews` label.
-
-
 ### System administrator (after approval)
 
 - [ ] Actually approved the PR
 - [ ] Decided if PR can be labeled `no sandbox`
-- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to only the operator
@@ -45,13 +39,10 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 - [ ] Added `sandbox` label <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Pushed PR branch to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference (to this PR) to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
@@ -60,23 +51,15 @@ Uncheck the *before every review* checklists. Update the `N reviews` label.
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Pushed merge commit to GitLab `dev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed merge commit to GitLab `anvildev` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Pushed merge commit to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes on GitLab `dev`<sup>1</sup>
-- [ ] Reviewed build logs for anomalies on GitLab `dev`<sup>1</sup>
-- [ ] Build passes on GitLab `anvildev`<sup>1</sup>
-- [ ] Reviewed build logs for anomalies on GitLab `anvildev`<sup>1</sup>
-- [ ] Build passes on GitLab `anvilprod`<sup>1</sup>
-- [ ] Reviewed build logs for anomalies on GitLab `anvilprod`<sup>1</sup>
+- [ ] Pushed merge commit to GitLab `dev`
+- [ ] Pushed merge commit to GitLab `anvildev`
+- [ ] Build passes on GitLab `dev`
+- [ ] Reviewed build logs for anomalies on GitLab `dev`
+- [ ] Build passes on GitLab `anvildev`
+- [ ] Reviewed build logs for anomalies on GitLab `anvildev`
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
-- [ ] Deleted PR branch from GitLab `anvilprod`
-
-<sup>1</sup> When pushing the merge commit is skipped due to the PR being
-labelled `no sandbox`, the next build triggered by a PR whose merge commit *is*
-pushed determines this checklist item.
 
 
 ### Operator
