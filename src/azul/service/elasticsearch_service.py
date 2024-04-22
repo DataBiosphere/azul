@@ -319,6 +319,9 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
         agg = A('filter', query)
 
+        field_type = self.service.field_type(self.catalog, facet_path)
+        if isinstance(field_type, Nested):
+            facet_path = dotted(facet_path, field_type.agg_property)
         # Make an inner agg that will contain the terms in question
         path = dotted(facet_path, 'keyword')
         # FIXME: Approximation errors for terms aggregation are unchecked
