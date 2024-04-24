@@ -6,10 +6,10 @@ labels: -,infra,no demo,operator,orange,task
 _start: 2024-02-27T09:00
 _period: 7 days
 ---
-- [ ] The title of this issue maches `Promotion yyyy-mm-dd`
+- [ ] The title of this issue matches `Promotion yyyy-mm-dd`
 - [ ] For `prod`
-  - [ ] System admistrator and operator determined the commit to be promoted
+  - [ ] System administrator and operator determined the commit to be promoted
   - [ ] Operator created the promotion PR
 - [ ] For `anvilprod`
-  - [ ] System admistrator and operator determined the commit to be promoted
+  - [ ] System administrator and operator determined the commit to be promoted
   - [ ] Operator created the promotion PR
