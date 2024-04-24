@@ -2012,19 +2012,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             bundle_tsv_writer.writerow(row)
 
 
-class VerbatimManifestGenerator(FileBasedManifestGenerator):
-
-    @property
-    def content_type(self) -> str:
-        return 'application/jsonl'
-
-    @classmethod
-    def file_name_extension(cls) -> str:
-        return 'jsonl'
-
-    @classmethod
-    def format(cls) -> ManifestFormat:
-        return ManifestFormat.verbatim_jsonl
+class VerbatimManifestGenerator(FileBasedManifestGenerator, metaclass=ABCMeta):
 
     @property
     def entity_type(self) -> str:
@@ -2079,7 +2067,7 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator):
                 replica_id = replica.meta.id
                 if replica_id not in emitted_replica_ids:
                     num_new_replicas += 1
-                    yield replica.contents.to_dict()
+                    yield replica.to_dict()
                     # Note that this will be zero for replicas that use implicit
                     # hubs, in which case there are actually many hubs
                     explicit_hub_count = len(replica.hub_ids)
@@ -2105,11 +2093,60 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator):
         ]))
         return request.scan()
 
+
+class JSONLVerbatimManifestGenerator(VerbatimManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'application/jsonl'
+
+    @classmethod
+    def file_name_extension(cls) -> str:
+        return 'jsonl'
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.verbatim_jsonl
+
     def create_file(self) -> tuple[str, Optional[str]]:
         fd, path = mkstemp(suffix=f'.{self.file_name_extension()}')
         os.close(fd)
         with open(path, 'w') as f:
             for replica in self._all_replicas():
-                json.dump(replica, f)
+                entry = {
+                    'contents': replica['contents'],
+                    'type': replica['replica_type']
+                }
+                json.dump(entry, f)
                 f.write('\n')
+        return path, None
+
+
+class PFBVerbatimManifestGenerator(VerbatimManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'application/octet-stream'
+
+    @classmethod
+    def file_name_extension(cls):
+        return 'avro'
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.verbatim_pfb
+
+    def create_file(self) -> tuple[str, Optional[str]]:
+        replicas = list(self._all_replicas())
+        replica_types, pfb_schema = avro_pfb.pfb_schema_from_replicas(replicas)
+        pfb_metadata_entity = avro_pfb.pfb_metadata_entity(replica_types, links=False)
+
+        def pfb_entities():
+            yield pfb_metadata_entity
+            for replica in replicas:
+                yield avro_pfb.PFBEntity.for_replica(dict(replica), pfb_schema).to_json(())
+
+        fd, path = mkstemp(suffix=f'.{self.file_name_extension()}')
+        os.close(fd)
+        avro_pfb.write_pfb_entities(pfb_entities(), pfb_schema, path)
         return path, None

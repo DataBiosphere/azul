@@ -10,6 +10,7 @@ from typing import (
 
 from azul import (
     config,
+    iif,
 )
 from azul.indexer.document import (
     Aggregate,
@@ -167,7 +168,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             ManifestFormat.terra_bdbag,
             ManifestFormat.terra_pfb,
             ManifestFormat.curl,
-            *([ManifestFormat.verbatim_jsonl] if config.enable_replicas else [])
+            *iif(config.enable_replicas, [ManifestFormat.verbatim_jsonl])
         ]
 
     @property

@@ -142,6 +142,7 @@ class ManifestFormat(Enum):
     terra_pfb = 'terra.pfb'
     curl = 'curl'
     verbatim_jsonl = 'verbatim.jsonl'
+    verbatim_pfb = 'verbatim.pfb'
 
 
 T = TypeVar('T', bound='Plugin')
