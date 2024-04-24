@@ -426,7 +426,6 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr_anvil')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('anvil', 'anvil4', anvil4_sources),
                 ('anvil', 'anvil5', anvil5_sources),
             ]
             for suffix, internal in [
