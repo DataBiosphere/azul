@@ -805,8 +805,8 @@ def emit(t: T, target_branch: str):
             iif(t in (T.default, T.upgrade, T.hotfix), {
                 'type': 'cli',
                 'content': iif(t is t.hotfix,
-                               'Moved connected issue to *Merged prod* column in ZenHub',
-                               f'Moved connected {t.issues} to Merged column in ZenHub')
+                               'Moved connected issue to *Merged stable* column in ZenHub',
+                               f'Moved connected {t.issues} to *Merged lower* column in ZenHub')
             }),
             {
                 'type': 'cli',
@@ -881,15 +881,15 @@ def emit(t: T, target_branch: str):
             *iif(t is T.promotion, [
                 {
                     'type': 'cli',
-                    'content': 'Moved connected issue to *Merged prod* column on ZenHub'
+                    'content': 'Moved connected issue to *Merged stable* column on ZenHub'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Moved promoted issues from *Merged* to *Merged prod* column on ZenHub'
+                    'content': 'Moved promoted issues from *Merged lower* to *Merged stable* column on ZenHub'
                 },
                 {
                     'type': 'cli',
-                    'content': 'Moved promoted issues from *dev* to *prod* column on ZenHub'
+                    'content': 'Moved promoted issues from *Lower* to *Stable* column on ZenHub'
                 }
             ]),
             *iif(t in (T.default, T.hotfix, T.promotion), [

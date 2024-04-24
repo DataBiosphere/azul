@@ -52,7 +52,7 @@ Connected issue: #0000
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
-- [ ] Moved connected issue to *Merged prod* column in ZenHub
+- [ ] Moved connected issue to *Merged stable* column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
 

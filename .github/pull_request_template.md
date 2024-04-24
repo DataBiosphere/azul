@@ -143,7 +143,7 @@ title is `Fix: ` followed by the issue title
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but only included `p` if the PR is also labeled `partial`</sub>
-- [ ] Moved connected issues to Merged column in ZenHub
+- [ ] Moved connected issues to *Merged lower* column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
 
