@@ -38,6 +38,8 @@ from elasticsearch import (
     Elasticsearch,
 )
 from more_itertools import (
+    bucket,
+    ilen,
     one,
 )
 
@@ -130,46 +132,49 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load(self.catalog).create()
 
-    def _num_expected_replicas(self,
-                               num_contribs: int,
-                               num_bundles: Optional[int] = None
-                               ) -> int:
+    def _num_replicas(self, *, num_additions: int, num_dups: int = 0) -> int:
         """
-        :param num_contribs: Number of contributions with distinct contents
-                             written to the indices
-        :param num_bundles: How many of those contributions were for bundle
-                            entities
-        :return: How many replicas the indices are expected to contain
+        The number of replicas the index is expected to contain.
+
+        :param num_additions: Number of addition contributions written to the
+                              indices
+
+        :param num_dups: How many of those contributions had identical contents
+                         with another contribution
         """
-        if num_bundles is None:
-            num_bundles = 0 if num_contribs == 0 else 1
-        # Bundle entities are not replicated.
-        return num_contribs - num_bundles if config.enable_replicas else 0
+        if config.enable_replicas:
+            assert num_dups <= num_additions
+            return num_additions - num_dups
+        else:
+            return 0
 
     def _assert_hit_counts(self,
                            hits: list[JSON],
                            num_contribs: int,
                            *,
                            num_aggs: Optional[int] = None,
-                           num_replicas: Optional[int] = None,
-                           num_bundles: int = 1
+                           num_replicas: Optional[int] = None
                            ):
         """
         Verify that the indices contain the correct number of hits of each
         document type
-        :param hits: Hits from ElasticSearch
+
+        :param hits: Hits from Elasticsearch
+
         :param num_contribs: Expected number of contributions
-        :param num_aggs: Expected number of aggregates. If unspecified, `num_contribs`
-                         becomes the default.
-        :param num_replicas: Expected number of replicas. If unspecified, `num_contribs`
-                             and `num_bundles` are used to calculate it,
-                             assuming all contributions have distinct contents.
+
+        :param num_aggs: Expected number of aggregates. If unspecified,
+                         ``num_contribs`` becomes the default.
+
+        :param num_replicas: Expected number of replicas. If unspecified,
+                             ``num_contribs`` is used to calculate it, assuming
+                             all contributions have distinct contents.
         """
         if num_aggs is None:
             # By default, assume 1 aggregate per contribution.
             num_aggs = num_contribs
         if num_replicas is None:
-            num_replicas = self._num_expected_replicas(num_contribs, num_bundles)
+            num_replicas = self._num_replicas(num_additions=num_contribs)
         expected = {
             DocumentType.contribution: num_contribs,
             DocumentType.aggregate: num_aggs,
@@ -231,25 +236,28 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                             if doc_type is DocumentType.replica:
                                                 entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
                                                 replicas.append(entity_id)
-                                                expected = one(
-                                                    m
-                                                    for m in bundle.metadata_files.values()
-                                                    if (
-                                                        m['schema_type'] != 'link_bundle'
-                                                        and m['provenance']['document_id'] == entity_id
+                                                if entity_id == bundle.uuid:
+                                                    expected = bundle.metadata_files['links.json']
+                                                else:
+                                                    expected = one(
+                                                        m
+                                                        for m in bundle.metadata_files.values()
+                                                        if (
+                                                            m['schema_type'] != 'link_bundle'
+                                                            and m['provenance']['document_id'] == entity_id
+                                                        )
                                                     )
-                                                )
                                                 # Replica contents should match the entity
                                                 # metadata as supplied by the repository
                                                 # plugin, verbatim
                                                 actual = hit['_source']['contents']
                                                 self.assertEqual(expected, actual)
-                                            elif doc_type is DocumentType.contribution and qualifier != 'bundles':
+                                            elif doc_type is DocumentType.contribution:
                                                 entity_id = ContributionCoordinates.from_hit(hit).entity.entity_id
                                                 contributions.append(entity_id)
                                         contributions.sort()
                                         replicas.sort()
-                                        # Every contribution (except for bundle entities) should be replicated
+                                        # Every contribution should be replicated
                                         self.assertEqual(contributions if enable_replicas else [], replicas)
                                     finally:
                                         self.index_service.delete_indices(self.catalog)
@@ -265,7 +273,11 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
             self.bundle_fqid(uuid='2a87dc5c-0c3c-4d91-a348-5d784ab48b92',
                              version='2018-03-29T10:39:45.437487Z'): 258
         }
-        self.assertTrue(min(bundle_sizes.values()) < IndexWriter.bulk_threshold < max(bundle_sizes.values()))
+        self.assertTrue(
+            min(bundle_sizes.values())
+            < IndexWriter.bulk_threshold
+            < max(bundle_sizes.values())
+        )
 
         field_types = self.index_service.catalogued_field_types()
         aggregate_cls = self.metadata_plugin.aggregate_class()
@@ -298,13 +310,17 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
 
                     hits = self._get_all_hits()
                     # Twice the number of contributions because deletions create
-                    # new documents instead of removing them. The aggregates are
-                    # removed when the deletions cause their contents to become
-                    # emtpy. Deletions do not affect the number of replicas.
+                    # new documents instead of removing them.
+                    num_contribs = size * 2
+                    # The aggregates are removed when the deletions cause their
+                    # contents to become emtpy.
+                    num_aggs = 0
+                    # Deletions do not affect the number of replicas.
+                    num_replicas = self._num_replicas(num_additions=size)
                     self._assert_hit_counts(hits,
-                                            num_contribs=size * 2,
-                                            num_aggs=0,
-                                            num_replicas=self._num_expected_replicas(size))
+                                            num_contribs=num_contribs,
+                                            num_aggs=num_aggs,
+                                            num_replicas=num_replicas)
                     docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         qualifier, doc_type = self._parse_index_name(hit)
@@ -424,7 +440,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         # Aggregation should still work despite contributing same bundle twice
         self.index_service.aggregate(tallies)
-        self._assert_new_bundle()
+        self._assert_new_bundle(expect_old_version=False)
 
     def test_zero_tallies(self):
         """
@@ -460,32 +476,29 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self._assert_index_counts(just_deletion=False)
 
     def _assert_index_counts(self, *, just_deletion: bool):
-        # Five entities (two files, one project, one sample and one bundle)
-        num_expected_addition_contributions = 0 if just_deletion else 6
-        num_expected_deletion_contributions = 6
-        num_expected_aggregates = 0
-        hits = self._get_all_hits()
-        actual_addition_contributions = [
-            h
-            for h in hits
-            if h['_source'].get('bundle_deleted') is False
-        ]
-        actual_deletion_contributions = [
-            h
-            for h in hits
-            if h['_source'].get('bundle_deleted') is True
-        ]
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+        num_addition_contribs = 0 if just_deletion else num_entities
+        num_deletion_contribs = num_entities
 
-        self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
-        self.assertEqual(len(actual_deletion_contributions), num_expected_deletion_contributions)
+        hits = self._get_all_hits()
+
+        hits_by_deleted = bucket(hits, lambda hit: hit['_source'].get('bundle_deleted'))
+        actual_addition_contribs = hits_by_deleted[False]
+        actual_deletion_contribs = hits_by_deleted[True]
+        self.assertEqual(num_addition_contribs, ilen(actual_addition_contribs))
+        self.assertEqual(num_deletion_contribs, ilen(actual_deletion_contribs))
+
+        # Deletion notifications add deletion markers to the contributions index
+        # instead of removing the existing contributions.
+        num_contribs = num_addition_contribs + num_deletion_contribs
+        # These deletion markers do not affect the number of replicas because we
+        # don't support deleting replicas.
+        num_replicas = self._num_replicas(num_additions=num_addition_contribs)
         self._assert_hit_counts(hits,
-                                # Deletion notifications add deletion markers to the contributions index
-                                # instead of removing the existing contributions.
-                                num_contribs=num_expected_addition_contributions + num_expected_deletion_contributions,
-                                num_aggs=num_expected_aggregates,
-                                # These deletion markers do not affect the number of replicas because we don't
-                                # support deleting replicas.
-                                num_replicas=self._num_expected_replicas(num_expected_addition_contributions))
+                                num_contribs=num_contribs,
+                                num_aggs=0,
+                                num_replicas=num_replicas)
 
     def test_bundle_delete_downgrade(self):
         """
@@ -493,11 +506,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         to the previous bundle.
         """
         self._index_canned_bundle(self.old_bundle)
-        old_hits_by_id = self._assert_old_bundle()
+        old_hits_by_id = self._assert_old_bundle(expect_new_version=False)
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
+        self._assert_new_bundle(expect_old_version=True, old_hits_by_id=old_hits_by_id)
         self._index_canned_bundle(self.new_bundle, delete=True)
-        self._assert_old_bundle(num_expected_new_deleted_contributions=6)
+        self._assert_old_bundle(expect_new_version=None)
 
     def test_multi_entity_contributing_bundles(self):
         """
@@ -1153,9 +1166,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         Updating a bundle with a future version should overwrite the old version.
         """
         self._index_canned_bundle(self.old_bundle)
-        old_hits_by_id = self._assert_old_bundle()
+        old_hits_by_id = self._assert_old_bundle(expect_new_version=False)
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
+        self._assert_new_bundle(expect_old_version=True, old_hits_by_id=old_hits_by_id)
 
     def test_bundle_downgrade(self):
         """
@@ -1163,155 +1176,193 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         have an effect on aggregates.
         """
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=0)
+        self._assert_new_bundle(expect_old_version=False)
         self._index_canned_bundle(self.old_bundle)
-        self._assert_old_bundle(num_expected_new_contributions=6, ignore_aggregates=True)
-        self._assert_new_bundle(num_expected_old_contributions=6)
+        self._assert_old_bundle(expect_new_version=True)
+        self._assert_new_bundle(expect_old_version=True)
 
-    def _assert_old_bundle(self,
-                           num_expected_new_contributions: int = 0,
-                           num_expected_new_deleted_contributions: int = 0,
-                           ignore_aggregates: bool = False
-                           ) -> Mapping[tuple[str, DocumentType], JSON]:
-        """
-        Assert that the old bundle is still indexed correctly
+    HitsById = Mapping[tuple[str, DocumentType], JSON]
 
-        :param num_expected_new_contributions: Contributions from the new bundle without a corresponding deletion
-        contribution
-        :param num_expected_new_deleted_contributions: Contributions from the new bundle WITH a corresponding deletion
-        contribution
-        :param ignore_aggregates: Don't consider aggregates when counting docs in index
+    def _assert_old_bundle(self, *, expect_new_version: bool | None) -> HitsById:
         """
+        Assert that the old bundle is still indexed correctly.
+
+        :param expect_new_version: Whether to expect effects of indexing a
+                                   newer version of the bundle. If False, expect
+                                   no such effects. If True, expect additions
+                                   by such a bundle. If None, expect deletions.
+
+        :return: A dictionary with all hits from the old bundle
+        """
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+
+        # Expect a replica for each entity in the old version
+        num_additions = num_entities
+        if expect_new_version is True:
+            # Expect an updated replica for each entity in the new version
+            num_additions += num_entities
+        elif expect_new_version is None:
+            # Even after the new version is deleted, the updated replicas
+            # remain, since deletion of replicas is not supported
+            num_additions += num_entities
+        # New and old replicas for `links.json` are identical
+        num_dups = 0 if expect_new_version is False else 1
+        num_replicas = self._num_replicas(num_additions=num_additions,
+                                          num_dups=num_dups)
+
+        # Expect the old version's contributions
+        num_contribs = num_entities
+        if expect_new_version is True:
+            # Expect the new version's contributions
+            num_contribs += num_entities
+        elif expect_new_version is None:
+            # Expect the new version's contributions …
+            num_contribs += num_entities
+            # as well as deletion markers for them
+            num_contribs += num_entities
+
+        hits = self._get_all_hits()
+        self._assert_hit_counts(hits,
+                                num_contribs=num_contribs,
+                                num_aggs=num_entities,
+                                num_replicas=num_replicas)
+
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
-        hits = self._get_all_hits()
-        # Two files, one project, one cell suspension, one sample, and one bundle
-        num_old_contribs = 6
-        # Deletions add new contributions to the index instead of removing the old ones,
-        # so they're included in the total
-        num_new_contribs = num_expected_new_contributions + num_expected_new_deleted_contributions * 2
-        # Deletions neither add nor remove replicas from the index because their
-        # contents is not updated
-        num_replicas = self._num_expected_replicas(max(num_expected_new_deleted_contributions,
-                                                       num_expected_new_contributions) + num_old_contribs,
-                                                   num_bundles=2 if num_new_contribs > 0 else 1)
-        self._assert_hit_counts(hits,
-                                num_contribs=num_old_contribs + num_new_contribs,
-                                num_aggs=num_old_contribs,
-                                num_replicas=num_replicas)
         hits_by_id = {}
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
-            if (
-                doc_type is DocumentType.replica
-                or (doc_type is DocumentType.aggregate and ignore_aggregates)
-            ):
-                continue
             source = hit['_source']
             hits_by_id[source['entity_id'], doc_type] = hit
-            if doc_type is DocumentType.aggregate:
-                version = one(source['bundles'])['version']
-            elif doc_type is DocumentType.contribution:
-                version = source['bundle_version']
+            if doc_type is DocumentType.replica:
+                pass
+            elif doc_type is DocumentType.aggregate and expect_new_version is True:
+                pass
             else:
-                assert False, doc_type
-            if (
-                doc_type is DocumentType.aggregate
-                or (doc_type is DocumentType.contribution and self.old_bundle.version == version)
-            ):
-                contents = source['contents']
-                project = one(contents['projects'])
-                self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
-                self.assertEqual('Single of human pancreas', get(project['project_short_name']))
-                self.assertIn('John Dear', get(project['laboratory']))
-                if doc_type is DocumentType.aggregate and qualifier != 'projects':
-                    self.assertIn('Farmers Trucks', project['institutions'])
-                elif doc_type is DocumentType.contribution:
-                    self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
-                donor = one(contents['donors'])
-                self.assertIn('Australopithecus', donor['genus_species'])
-                if doc_type is DocumentType.contribution:
-                    self.assertFalse(source['bundle_deleted'])
-            elif doc_type is DocumentType.contribution:
-                if source['bundle_deleted']:
-                    num_actual_new_deleted_contributions += 1
+                version = self._extract_bundle_version(doc_type, source)
+                if doc_type is DocumentType.contribution and version == self.new_bundle.version:
+                    if source['bundle_deleted']:
+                        num_actual_new_deleted_contributions += 1
+                    else:
+                        self.assertLess(self.old_bundle.version, version)
+                        num_actual_new_contributions += 1
                 else:
-                    self.assertLess(self.old_bundle.version, version)
-                    num_actual_new_contributions += 1
-            else:
-                assert False, doc_type
+                    self.assertEqual(self.old_bundle.version, version)
+                    contents = source['contents']
+                    project = one(contents['projects'])
+                    self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
+                    self.assertEqual('Single of human pancreas', get(project['project_short_name']))
+                    self.assertIn('John Dear', get(project['laboratory']))
+                    if doc_type is DocumentType.aggregate and qualifier != 'projects':
+                        self.assertIn('Farmers Trucks', project['institutions'])
+                    elif doc_type is DocumentType.contribution:
+                        self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
+                    donor = one(contents['donors'])
+                    self.assertIn('Australopithecus', donor['genus_species'])
+                    if doc_type is DocumentType.contribution:
+                        self.assertFalse(source['bundle_deleted'])
+
         # We count the deleted contributions here too since they should have a
         # corresponding addition contribution
-        self.assertEqual(num_expected_new_contributions + num_expected_new_deleted_contributions,
+        self.assertEqual(0 if expect_new_version is False else num_entities,
                          num_actual_new_contributions)
-        self.assertEqual(num_expected_new_deleted_contributions, num_actual_new_deleted_contributions)
+        self.assertEqual(num_entities if expect_new_version is None else 0,
+                         num_actual_new_deleted_contributions)
+
         return hits_by_id
 
     def _assert_new_bundle(self,
-                           num_expected_old_contributions: int = 0,
-                           old_hits_by_id: Optional[Mapping[tuple[str, DocumentType], JSON]] = None
+                           *,
+                           expect_old_version: bool,
+                           old_hits_by_id: HitsById | None = None
                            ) -> None:
-        num_actual_old_contributions = 0
+        """
+        Assert that the new bundle is indexed correctly.
+
+        :param expect_old_version: Whether to expect effects of indexing an
+                                   older version of the bundle.
+
+        :param old_hits_by_id: An optional dictionary with expected hits for
+                               that older version.
+        """
+        if old_hits_by_id is not None:
+            self.assertTrue(expect_old_version)
+
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+
+        # Expect an updaded replica for each entity in the new version
+        num_contribs = num_entities
+        if expect_old_version:
+            # Expect a replica for each entity in the old version
+            num_contribs += num_entities
+
+        # New and old replicas for `links.json` are identical
+        num_dups = 1 if expect_old_version else 0
+        num_replicas = self._num_replicas(num_additions=num_contribs,
+                                          num_dups=num_dups)
+
         hits = self._get_all_hits()
-        # Two files, one project, one cell suspension, one sample, and one bundle.
-        num_new_contribs = 6
         self._assert_hit_counts(hits,
-                                num_contribs=num_new_contribs + num_expected_old_contributions,
-                                num_aggs=num_new_contribs,
-                                num_bundles=2 if num_expected_old_contributions else 1)
+                                num_contribs=num_contribs,
+                                num_aggs=num_entities,
+                                num_replicas=num_replicas)
 
-        def get_version(source, doc_type):
-            if doc_type is DocumentType.aggregate:
-                return one(source['bundles'])['version']
-            elif doc_type is DocumentType.contribution:
-                return source['bundle_version']
-            else:
-                assert False, doc_type
-
+        num_actual_old_contributions = 0
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
-                continue
-            source = hit['_source']
-            version = get_version(source, doc_type)
-            contents = source['contents']
-            project = one(contents['projects'])
+                pass
+            else:
+                source = hit['_source']
+                version = self._extract_bundle_version(doc_type, source)
+                contents = source['contents']
+                project = one(contents['projects'])
 
-            if doc_type is DocumentType.contribution and version != self.new_bundle.version:
-                self.assertLess(version, self.new_bundle.version)
-                num_actual_old_contributions += 1
-                continue
+                if doc_type is DocumentType.contribution and version == self.old_bundle.version:
+                    self.assertLess(version, self.new_bundle.version)
+                    num_actual_old_contributions += 1
+                else:
+                    if old_hits_by_id is not None:
+                        old_hit = old_hits_by_id[source['entity_id'], doc_type]
+                        old_source = old_hit['_source']
+                        old_version = self._extract_bundle_version(doc_type, old_source)
+                        self.assertLess(old_version, version)
+                        old_contents = old_source['contents']
+                        old_project = one(old_contents['projects'])
+                        self.assertNotEqual(old_project['project_title'], project['project_title'])
+                        self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
+                        self.assertNotEqual(old_project['laboratory'], project['laboratory'])
+                        if doc_type is DocumentType.aggregate and qualifier != 'projects':
+                            self.assertNotEqual(old_project['institutions'], project['institutions'])
+                        elif doc_type is DocumentType.contribution:
+                            self.assertNotEqual(old_project['contributors'], project['contributors'])
+                        self.assertNotEqual(old_contents['donors'][0]['genus_species'],
+                                            contents['donors'][0]['genus_species'])
 
-            if old_hits_by_id is not None:
-                old_hit = old_hits_by_id[source['entity_id'], doc_type]
-                old_source = old_hit['_source']
-                old_version = get_version(old_source, doc_type)
-                self.assertLess(old_version, version)
-                old_contents = old_source['contents']
-                old_project = one(old_contents['projects'])
-                self.assertNotEqual(old_project['project_title'], project['project_title'])
-                self.assertNotEqual(old_project['project_short_name'], project['project_short_name'])
-                self.assertNotEqual(old_project['laboratory'], project['laboratory'])
-                if doc_type is DocumentType.aggregate and qualifier != 'projects':
-                    self.assertNotEqual(old_project['institutions'], project['institutions'])
-                elif doc_type is DocumentType.contribution:
-                    self.assertNotEqual(old_project['contributors'], project['contributors'])
-                self.assertNotEqual(old_contents['donors'][0]['genus_species'],
-                                    contents['donors'][0]['genus_species'])
+                    self.assertEqual('Single cell transcriptome analysis of human pancreas reveals transcriptional '
+                                     'signatures of aging and somatic mutation patterns.',
+                                     get(project['project_title']))
+                    self.assertEqual('Single cell transcriptome analysis of human pancreas',
+                                     get(project['project_short_name']))
+                    self.assertNotIn('Sarah Teichmann', project['laboratory'])
+                    self.assertIn('Molecular Atlas', project['laboratory'])
+                    if doc_type is DocumentType.aggregate and qualifier != 'projects':
+                        self.assertNotIn('Farmers Trucks', project['institutions'])
+                    elif doc_type is DocumentType.contribution:
+                        self.assertNotIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
 
-            self.assertEqual('Single cell transcriptome analysis of human pancreas reveals transcriptional '
-                             'signatures of aging and somatic mutation patterns.',
-                             get(project['project_title']))
-            self.assertEqual('Single cell transcriptome analysis of human pancreas',
-                             get(project['project_short_name']))
-            self.assertNotIn('Sarah Teichmann', project['laboratory'])
-            self.assertIn('Molecular Atlas', project['laboratory'])
-            if doc_type is DocumentType.aggregate and qualifier != 'projects':
-                self.assertNotIn('Farmers Trucks', project['institutions'])
-            elif doc_type is DocumentType.contribution:
-                self.assertNotIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
+        self.assertEqual(num_entities if expect_old_version else 0,
+                         num_actual_old_contributions)
 
-        self.assertEqual(num_expected_old_contributions, num_actual_old_contributions)
+    def _extract_bundle_version(self, doc_type: DocumentType, source: JSON) -> str:
+        if doc_type is DocumentType.aggregate:
+            return one(source['bundles'])['version']
+        elif doc_type is DocumentType.contribution:
+            return source['bundle_version']
+        else:
+            assert False, doc_type
 
     def test_concurrent_specimen_submissions(self):
         """
@@ -1350,16 +1401,22 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         hits = self._get_all_hits()
         file_uuids = set()
-        # Two bundles, each with 1 sample, 1 cell suspension, 1 project, 1 bundle and 2 files.
-        num_contribs = (1 + 1 + 1 + 1 + 2) * 2
+        # Two files, a project, a cell suspension, a sample, and a bundle
+        num_entities = 6
+        # Two bundles
+        num_contribs = num_entities * 2
+        # Both bundles share the same sample and the project, so they get
+        # aggregated only once
+        num_aggs = num_contribs - 2
+        # The sample contributions from each bundle are identical and yield a
+        # single replica, but the project contributions have different schema
+        # versions and thus yield two.
+        num_replicas = self._num_replicas(num_additions=num_contribs,
+                                          num_dups=1)
         self._assert_hit_counts(hits,
                                 num_contribs=num_contribs,
-                                # Both bundles share the same sample and the project, so they get aggregated only once
-                                num_aggs=num_contribs - 2,
-                                # The sample contributions from each bundle are identical and yield a single replica,
-                                # but the project contributions have different schema versions and thus yield two.
-                                num_replicas=self._num_expected_replicas(num_contribs=num_contribs - 1,
-                                                                         num_bundles=2))
+                                num_aggs=num_aggs,
+                                num_replicas=num_replicas)
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
             if doc_type is DocumentType.replica:
@@ -2103,7 +2160,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     self._index_canned_bundle(bundle_fqid)
 
                 hits = self._get_all_hits()
-                self._assert_hit_counts(hits, 21, num_bundles=len(bundle_fqids))
+                self._assert_hit_counts(hits, 21)
 
     def test_disallow_manifest_column_joiner(self):
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',

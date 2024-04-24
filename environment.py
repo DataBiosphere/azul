@@ -265,18 +265,24 @@ def env() -> Mapping[str, Optional[str]]:
             # Updating the Docker image also requires building and pushing the
             # executor image (see terraform/gitlab/runner/Dockerfile for how).
             'docker': {
-                'ref': 'docker.io/library/docker:{azul_docker_version}'
+                'ref': 'docker.io/library/docker:{azul_docker_version}',
+                'url': 'https://hub.docker.com/_/docker'
             },
             # Run `_refresh && make environment.boot` after modifying the Python
             # image reference.
             'python': {
-                'ref': 'docker.io/library/python:{azul_python_version}-bullseye'
+                'ref': 'docker.io/library/python:{azul_python_version}-bullseye',
+                'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-17'
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-19',
+                'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
+                'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.18-14'
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.19-15',
+                'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
+                'is_custom': True
             },
             'bigquery_emulator': {
                 'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
@@ -286,26 +292,33 @@ def env() -> Mapping[str, Optional[str]]:
             'clamav': {
                 # FIXME: https://github.com/DataBiosphere/azul/issues/6022
                 #        Keep ClamAV at 1.2.1 until 1.3.x failure is resolved
-                'ref': 'docker.io/clamav/clamav:1.2.1-27'
+                'ref': 'docker.io/clamav/clamav:1.2.1-27',
+                'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.10.0-ce.0'
+                'ref': 'docker.io/gitlab/gitlab-ce:16.10.2-ce.0',
+                'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.10.0'
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.10.0',
+                'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
-                'ref': 'docker.io/library/docker:{azul_docker_version}-dind'
+                'ref': 'docker.io/library/docker:{azul_docker_version}-dind',
+                'url': 'https://hub.docker.com/_/docker'
             },
             # The images below are not used within the security boundary:
             '_signing_proxy': {
-                'ref': 'docker.io/cllunsford/aws-signing-proxy:0.2.2'
+                'ref': 'docker.io/cllunsford/aws-signing-proxy:0.2.2',
+                'url': 'https://hub.docker.com/r/cllunsford/aws-signing-proxy'
             },
             '_cerebro': {
-                'ref': 'docker.io/lmenezes/cerebro:0.9.4'
+                'ref': 'docker.io/lmenezes/cerebro:0.9.4',
+                'url': 'https://hub.docker.com/r/lmenezes/cerebro'
             },
             '_kibana': {
-                'ref': 'docker.io/bitnami/kibana:7.10.2'
+                'ref': 'docker.io/bitnami/kibana:7.10.2',
+                'url': 'https://hub.docker.com/r/bitnami/kibana'
             }
         }),
 
@@ -742,7 +755,9 @@ def env() -> Mapping[str, Optional[str]]:
         # deployed to. When building a given branch, a GitLab instance uses this
         # variable to automatically determine the target deployment by using the
         # first item of the value for that branch. An empty key signifies any
-        # other branch not mentioned explicitly, or a detached HEAD.
+        # other branch not mentioned explicitly, or a detached HEAD. Note that
+        # this variable is likely being overridden on a GitLab instance so that
+        # feature branches are deployed to the sandbox deployment.
         #
         # Only shared deployments are mentioned here. A shared deployment is one
         # that is not personal. A personal deployment is owned and maintained by
@@ -775,8 +790,9 @@ def env() -> Mapping[str, Optional[str]]:
         # ╚════════════╝ ╚══════════════════════════════════════════════════╝
         #
         'azul_shared_deployments': json.dumps({
-            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'anvilprod', 'hammerbox'],
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
             'prod': ['prod'],
+            'anvilprod': ['anvilprod', 'hammerbox']
         }),
 
         # A dictionary with one entry per browser or portal site that is to be

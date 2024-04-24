@@ -242,10 +242,23 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.29 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
+    # FIXME: Do not update AMI to v3 until issue with OpenSSH daemon is resolved
+    #        https://github.com/DataBiosphere/azul/issues/6082
     'us-east-1': 'ami-02adfaf34663c8edb'
 }
 
 gitlab_mount = '/mnt/gitlab'
+
+aws_managed_buckets_for_ssm_agent = [
+    f'{aws.region_name}-birdwatcher-prod',
+    f'amazon-ssm-{aws.region_name}',
+    f'amazon-ssm-packages-{aws.region_name}',
+    f'aws-patchmanager-macos-{aws.region_name}',
+    f'aws-ssm-{aws.region_name}',
+    f'aws-ssm-document-attachments-{aws.region_name}',
+    f'aws-windows-downloads-{aws.region_name}',
+    f'patch-baseline-snapshot-{aws.region_name}'
+]
 
 
 def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
@@ -262,6 +275,10 @@ def jl(*lines):
 
 def qq(*words):
     return '"' + jw(*words) + '"'
+
+
+def sq(*words):
+    return "'" + jw(*words) + "'"
 
 
 emit_tf({} if config.terraform_component != 'gitlab' else {
@@ -319,7 +336,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'actions': [
                             's3:ListAllMyBuckets',
                             's3:GetAccountPublicAccessBlock',
-                            's3:HeadBucket'
+                            's3:ListBucket'
                         ],
                         'resources': [
                             '*'
@@ -345,10 +362,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'edu-ucsc-gi-azul-*',
                                     '*.azul.data.humancellatlas.org',
                                 ]
-                            ) + [
-                                f'amazon-ssm-packages-{aws.region_name}',
-                                f'aws-ssm-document-attachments-{aws.region_name}'
-                            ]
+                            ) + aws_managed_buckets_for_ssm_agent
                         )
                     },
 
@@ -948,15 +962,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': [
                             's3:GetObject',
-                            's3:HeadBucket',
-                            's3:HeadObject'
+                            's3:ListBucket'
                         ],
-                        'resources': [
-                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}',
-                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}/*',
-                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}',
-                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}/*'
-                        ]
+                        'resources': merge(
+                            [
+                                f'arn:aws:s3:::{bucket_name}',
+                                f'arn:aws:s3:::{bucket_name}/*'
+                            ] for bucket_name in aws_managed_buckets_for_ssm_agent
+                        )
                     }
                 ]
             }
@@ -1848,12 +1861,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab-dind.service',
                                 'Requires=docker.service gitlab-dind.service',
                                 '[Service]',
-                                # We omit the StandardOutput and StandardError
-                                # directives for `docker exec` commands since,
-                                # although we explicitly configure Docker to log
-                                # to journald, it only does so for `docker run`
-                                # commands. Omitting these directives here, the
-                                # service uses systemd's default (journal).
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'Type=oneshot',  # oneshot to allow multiple ExecStart
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop prune-images',
@@ -1863,12 +1874,20 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'ExecStart=/usr/bin/docker',
                                     'exec',  # Execute (as in `docker exec`) …
                                     'gitlab-dind',  # … inside the gitlab-dind container …
-                                    'docker',  # … the docker …
-                                    'image',  # … image command …
-                                    'prune',  # … to delete, …
-                                    '--force',  # … without prompting for confirmation, …
-                                    '--all',  # … all images …
-                                    f'--filter "until={90 * 24}h"',  # … except those from more recent builds.
+                                    'sh -c',  # … via the shell so we can redirect stdout
+                                    sq(
+                                        # Normally, output from a `docker exec` command isn't processed by docker's
+                                        # logging mechanism, however with a redirect to /proc/1/fd/1 we can send the
+                                        # output of the command being exec'd to the docker container's STDOUT.
+                                        # https://github.com/moby/moby/issues/8662#issuecomment-277396232
+                                        'docker',  # The docker …
+                                        'image',  # … image command …
+                                        'prune',  # … to delete, …
+                                        '--force',  # … without prompting for confirmation, …
+                                        '--all',  # … all images …
+                                        f'--filter "until={90 * 24}h"',  # … except those from more recent builds …
+                                        '> /proc/1/fd/1',  # … with output sent to the container's STDOUT.
+                                    ),
                                     #
                                     # If we deleted more recent images, we
                                     # would risk failing the requirements
@@ -1882,12 +1901,20 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'ExecStart=/usr/bin/docker',
                                     'exec',  # Execute (as in `docker exec`) …
                                     'gitlab-dind',  # … inside the gitlab-dind container …
-                                    'docker',  # … the docker …
-                                    'buildx',  # … buildx command …
-                                    'prune',  # … to delete, …
-                                    '--force',  # … without prompting for confirmation, …
-                                    '--all',  # … all images …
-                                    f'--filter "until={90 * 24}h"',  # … except those from more recent builds.
+                                    'sh -c',  # … via the shell so we can redirect stdout
+                                    sq(
+                                        # Normally, output from a `docker exec` command isn't processed by docker's
+                                        # logging mechanism, however with a redirect to /proc/1/fd/1 we can send the
+                                        # output of the command being exec'd to the docker container's STDOUT.
+                                        # https://github.com/moby/moby/issues/8662#issuecomment-277396232
+                                        'docker',  # The docker …
+                                        'buildx',  # … buildx command …
+                                        'prune',  # … to delete, …
+                                        '--force',  # … without prompting for confirmation, …
+                                        '--all',  # … all images …
+                                        f'--filter "until={90 * 24}h"',  # … except those from more recent builds …
+                                        '> /proc/1/fd/1',  # … with output sent to the container's STDOUT.
+                                    ),
                                     #
                                     # If we deleted more recent images, we
                                     # would risk failing the requirements
@@ -1924,12 +1951,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'After=docker.service gitlab.service',
                                 'Requires=docker.service gitlab.service',
                                 '[Service]',
-                                # We omit the StandardOutput and StandardError
-                                # directives for `docker exec` commands since,
-                                # although we explicitly configure Docker to log
-                                # to journald, it only does so for `docker run`
-                                # commands. Omitting these directives here, the
-                                # service uses systemd's default (journal).
+                                # We explicitly configure Docker (see /etc/docker/daemon.json) to log to
+                                # journald, so we don't need systemd to capture process output.
+                                'StandardOutput=null',
+                                'StandardError=null',
                                 'Type=simple',
                                 'TimeoutStartSec=5min',  # `docker pull` may take a long time
                                 'ExecStartPre=-/usr/bin/docker stop registry-garbage-collect',
@@ -1939,9 +1964,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'ExecStart=/usr/bin/docker',
                                     'exec',  # Execute (as in `docker exec`) …
                                     'gitlab',  # … inside the gitlab container …
-                                    '/opt/gitlab/bin/gitlab-ctl',  # … the gitlab-ctl …
-                                    'registry-garbage-collect',  # … garbage collect command
-                                    '-m'  # … and delete untagged images
+                                    'sh -c',  # … via the shell so we can redirect stdout
+                                    sq(
+                                        # Normally, output from a `docker exec` command isn't processed by docker's
+                                        # logging mechanism, however with a redirect to /proc/1/fd/1 we can send the
+                                        # output of the command being exec'd to the docker container's STDOUT.
+                                        # https://github.com/moby/moby/issues/8662#issuecomment-277396232
+                                        '/opt/gitlab/bin/gitlab-ctl',  # The gitlab-ctl …
+                                        'registry-garbage-collect',  # … garbage collect command …
+                                        '-m',  # … deleting untagged images …
+                                        '> /proc/1/fd/1',  # … with output sent to the container's STDOUT.
+                                    ),
                                 ),
                                 '[Install]',
                                 'WantedBy='
