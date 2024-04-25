@@ -1013,13 +1013,13 @@ class Config:
             deployment = self.deployment_stage
         return deployment in set(chain.from_iterable(self._shared_deployments.values()))
 
-    def is_stable_deployment(self, deployment: Optional[str] = None) -> bool:
+    @property
+    def is_stable_deployment(self) -> bool:
         """
-        Returns `True` if the deployment of the specified name must be kept
-        functional for public use at all times.
+        Returns `True` if the current deployment must be kept functional for
+        public use at all times.
         """
-        if deployment is None:
-            deployment = self.deployment_stage
+        deployment = self.deployment_stage
         if deployment in {'prod'}:
             assert self.is_shared_deployment(deployment)
             return True
