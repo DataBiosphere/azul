@@ -98,8 +98,10 @@ class TooManyRequestsException(Exception):
         super().__init__(f'Maximum request rate exceeded for {url}')
 
 
-class LimitedRetry(urllib3.Retry):
+class _LimitedRetry(urllib3.Retry):
     """
+    Implementation of urllib3's retry strategy for LimitedRetryHttpClient.
+
     First, set up the fixtures:
 
     >>> from urllib3.exceptions import ReadTimeoutError
@@ -111,7 +113,7 @@ class LimitedRetry(urllib3.Retry):
 
     With zero retries …
 
-    >>> r = LimitedRetry.create(retries=0)
+    >>> r = _LimitedRetry.create(retries=0)
 
     … there still is one tentative retry on read:
 
@@ -196,7 +198,7 @@ class LimitedRetryHttpClient(HttpClientDecorator):
 
     def urlopen(self, method, url, **kwargs):
         timeout, retries = self.timeout, self.retries
-        retry = LimitedRetry.create(retries=retries)
+        retry = _LimitedRetry.create(retries=retries)
         try:
             return super().urlopen(method, url, retries=retry, timeout=timeout, **kwargs)
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.MaxRetryError):
