@@ -184,7 +184,9 @@ class IdentifiersDotOrgClient(HasCachedHttpClient):
 
     def _create_http_client(self) -> urllib3.request.RequestMethods:
         return Propagate429HttpClient(
-            LimitedRetryHttpClient(super()._create_http_client())
+            LimitedRetryHttpClient(
+                super()._create_http_client()
+            )
         )
 
     def resolve(self, prefix: str, accession: str) -> mutable_furl:
