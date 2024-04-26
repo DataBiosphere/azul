@@ -340,7 +340,8 @@ class HCASearchResponseStage(SearchResponseStage):
                 'estimatedCellCount': project['estimated_cell_count'],
                 'isTissueAtlasProject': project['is_tissue_atlas_project'],
                 'tissueAtlas': project.get('tissue_atlas'),
-                'bionetworkName': project['bionetwork_name']
+                'bionetworkName': project['bionetwork_name'],
+                'dataUseRestriction': project.get('data_use_restriction')
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])

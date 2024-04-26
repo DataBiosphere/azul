@@ -686,7 +686,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'is_tissue_atlas_project': null_bool,
             'tissue_atlas': [tissue_atlas],
             'bionetwork_name': [null_str],
-            'estimated_cell_count': null_int
+            'estimated_cell_count': null_int,
+            'data_use_restriction': null_str
         }
 
     def _project(self, project: api.Project) -> MutableJSON:
@@ -733,7 +734,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                                            for bionetwork in project.bionetworks),
             'tissue_atlas': list(map(self._tissue_atlas, project.bionetworks)),
             'bionetwork_name': sorted(bionetwork.name for bionetwork in project.bionetworks),
-            'estimated_cell_count': project.estimated_cell_count
+            'estimated_cell_count': project.estimated_cell_count,
+            'data_use_restriction': project.data_use_restriction
         }
 
     @classmethod

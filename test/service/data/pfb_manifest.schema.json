@@ -1976,6 +1976,14 @@
                                 "null",
                                 "long"
                             ]
+                        },
+                        {
+                            "name": "data_use_restriction",
+                            "namespace": "projects",
+                            "type": {
+                                "items": ["null", "string"],
+                                "type": "array"
+                            }
                         }
                     ],
                     "name": "projects",
