@@ -396,7 +396,7 @@ anvil5_sources = mkdict(anvil4_sources, 262, mkdelta([
     # @formatter:on
 ]))
 
-anvil6_sources = mkdict(anvil5_sources, 256, mkdelta([
+anvil6_sources = mkdict(anvil5_sources, 255, mkdelta([
     # @formatter:off
     mksrc('datarepo-38af6304', 'ANVIL_1000G_PRIMED_data_model_20240410_ANV5_202404101419', 14695),
     mksrc('datarepo-ed4892b5', 'ANVIL_ALSCompute_Collection_GRU_20231016_ANV5_202404081553', 14593),
@@ -629,7 +629,6 @@ anvil6_sources = mkdict(anvil5_sources, 256, mkdelta([
     mksrc('datarepo-4a4eec27', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202403040445', 234, pop),
     mksrc('datarepo-a1f917db', 'ANVIL_PAGE_Stanford_Global_Reference_Panel_GRU_WGS_20221128_ANV5_202403040453', 78, pop), # noqa E501
     mksrc('datarepo-6264931f', 'ANVIL_PAGE_WHI_HMB_IRB_WGS_20221019_ANV5_202403040500', 235, pop),
-    mksrc('datarepo-e5b16a5a', 'ANVIL_T2T_CHRY_20240301_ANV5_202403040508', 309979),
     mksrc('datarepo-f3817357', 'ANVIL_ccdg_asc_ndd_daly_talkowski_AGRE_asd_exome_20221102_ANV5_202403040528', 850),
     mksrc('datarepo-23635d1c', 'ANVIL_ccdg_asc_ndd_daly_talkowski_IBIS_asd_exome_20221024_ANV5_202403040537', 241),
     mksrc('datarepo-ecf311e7', 'ANVIL_ccdg_asc_ndd_daly_talkowski_TASC_asd_exome_20221117_ANV5_202403040544', 3175),
