@@ -143,7 +143,9 @@ class AzulClient(SignatureHelper):
         path = (catalog, 'delete' if delete else 'add')
         indexer_url = config.indexer_endpoint.set(path=path)
 
-        def attempt(notification, i):
+        def attempt(notification: JSON,
+                    i: int
+                    ) -> tuple[JSON, None | Future | requests.HTTPError | requests.ConnectionError]:
             log_args = (indexer_url, notification, i)
             try:
                 log.info('Notifying %s about %s, attempt %i.', *log_args)
@@ -159,7 +161,7 @@ class AzulClient(SignatureHelper):
                 log.info('Success notifying %s about %s, attempt %i.', *log_args)
                 return notification, None
 
-        def handle_future(future):
+        def handle_future(future: Future) -> None:
             nonlocal indexed
             bundle_fqid, result = future.result()
             if result is None:
