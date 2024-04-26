@@ -162,9 +162,7 @@ class AzulClient(SignatureHelper):
                     return notification, None
 
             def handle_future(future):
-                # @formatter:off
                 nonlocal indexed
-                # @formatter:on
                 bundle_fqid, result = future.result()
                 if result is None:
                     indexed += 1
