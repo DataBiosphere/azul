@@ -1297,6 +1297,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         expected = [
             bundle.metadata_files[d]
             for d in [
+                'links.json',
                 'cell_suspension_0.json',
                 'project_0.json',
                 'sequence_file_0.json',
@@ -1309,7 +1310,11 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         response = list(map(json.loads, response.content.decode().splitlines()))
 
         def sort_key(hca_doc: JSON) -> str:
-            return hca_doc['provenance']['document_id']
+            try:
+                return hca_doc['provenance']['document_id']
+            except KeyError:
+                assert hca_doc['schema_type'] == 'link_bundle'
+                return ''
 
         expected.sort(key=sort_key)
         response.sort(key=sort_key)

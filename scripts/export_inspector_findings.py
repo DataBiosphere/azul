@@ -168,9 +168,10 @@ class ParseInspectorFindings:
 
     def findings_sort(self, item: tuple[str, list[SummaryType]]) -> tuple[int, str]:
         score = 0
+        weights = {'HIGH': 1, 'CRITICAL': 10}
         for summary in item[1]:
-            score += 10 if summary['severity'] == 'CRITICAL' else 0
-            score += 1 if summary['severity'] == 'HIGH' else 0
+            count = len(summary['resources'])
+            score += count * weights.get(summary['severity'], 0)
         return score, item[0]
 
     def write_to_csv(self, findings: dict[str, list[SummaryType]]) -> None:

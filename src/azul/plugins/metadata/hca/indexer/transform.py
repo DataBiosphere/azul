@@ -508,8 +508,11 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                      ) -> Transform:
         entity_ref = EntityReference(entity_id=str(entity.document_id),
                                      entity_type=self.entity_type())
-        if not config.enable_replicas or self.entity_type() == 'bundles':
+        if not config.enable_replicas:
             replica = None
+        elif self.entity_type() == 'bundles':
+            links = self.bundle.metadata_files['links.json']
+            replica = self._replica(links, entity_ref, hub_ids)
         else:
             assert isinstance(entity, api.Entity), entity
             replica = self._replica(entity.json, entity_ref, hub_ids)
@@ -1739,6 +1742,10 @@ class BundleTransformer(SingletonTransformer):
 
     def _singleton_entity(self) -> DatedEntity:
         return BundleAsEntity(self.api_bundle)
+
+    def replica_type(self, entity: EntityReference) -> str:
+        assert entity.entity_type == self.entity_type(), entity
+        return 'links'
 
     @classmethod
     def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:

@@ -33,9 +33,6 @@ _period: 14 days
   - [ ] … update to [GitLab](https://hub.docker.com/r/gitlab/gitlab-ce/tags) & [GitLab runner images](https://hub.docker.com/r/gitlab/gitlab-runner/tags) <sub>or no update available</sub>
   - [ ] … update to [ClamAV image](https://hub.docker.com/r/clamav/clamav/tags) <sub>or no update available</sub>
   - [ ] … update to [GitLab AMI](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#updating-the-ami-for-gitlab-instances) <sub>or no update available</sub>
-- [ ] Delete obsolete image tags from DockerHub (but consider that `prod` may not use the latest image) … 
-  - [ ] … for [PyCharm image](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm)
-  - [ ] … for [Elasticsearch image](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch)
 - [ ] Created tickets for any deferred updates to …
   - [ ] … to next major or minor Python version <sub>or such ticket already exists</sub>
   - [ ] … to next major Docker version <sub>or such ticket already exists</sub>

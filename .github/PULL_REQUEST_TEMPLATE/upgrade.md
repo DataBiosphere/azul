@@ -19,12 +19,13 @@ Connected issue: #0000
 
 ### Author (upgrading deployments)
 
+- [ ] Ran `make image_manifests.json` and committed the resulting changes <sub>or this PR does not modify `azul_docker_images`, or any other variables referenced in the definition of that variable</sub>
 - [ ] Documented upgrading of deployments in UPGRADING.rst <sub>or this PR does not require upgrading deployments</sub>
 - [ ] Added `u` tag to commit title <sub>or this PR does not require upgrading deployments</sub>
-- [ ] Ran `make image_manifests.json` and committed the resulting changes <sub>or this PR does not modify `azul_docker_images`, or any other variables referenced in the definition of that variable</sub>
 - [ ] This PR is labeled `upgrade` <sub>or does not require upgrading deployments</sub>
 - [ ] This PR is labeled `deploy:shared` <sub>or does not modify `image_manifests.json`, and does not require deploying the `shared` component for any other reason</sub>
 - [ ] This PR is labeled `deploy:gitlab` <sub>or does not require deploying the `gitlab` component</sub>
+- [ ] This PR is labeled `backup:gitlab`
 - [ ] This PR is labeled `deploy:runner` <sub>or does not require deploying the `runner` image</sub>
 
 
@@ -41,7 +42,7 @@ Connected issue: #0000
 
 - [ ] Actually approved the PR
 - [ ] Labeled connected issue as `no demo`
-- [ ] A comment to this PR details the completed security design review <sub>or this PR is a promotion or a backport</sub>
+- [ ] A comment to this PR details the completed security design review
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to only the operator
@@ -53,20 +54,19 @@ Connected issue: #0000
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to GitHub
 - [ ] Ran `_select dev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Made a backup of the GitLab data volume in `dev` (see [operator manual](../blob/develop/OPERATOR.rst#backup-gitlab-volumes) for details) <sub>or this PR is not labeled `backup:gitlab`</sub>
 - [ ] Ran `_select dev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Ran `_select anvildev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
+- [ ] Made a backup of the GitLab data volume in `anvildev` (see [operator manual](../blob/develop/OPERATOR.rst#backup-gitlab-volumes) for details) <sub>or this PR is not labeled `backup:gitlab`</sub>
 - [ ] Ran `_select anvildev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] Ran `_select anvilprod.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvilprod.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
-- [ ] Assigned system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] PR is assigned to only the system administrator <sub>or this PR is not labeled `deploy:gitlab`</sub>
 
 
 ### System administrator
 
 - [ ] Background migrations for `dev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Background migrations for `anvildev.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
-- [ ] Background migrations for `anvilprod.gitlab` are complete <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] PR is assigned to only the operator
 
 
@@ -74,21 +74,17 @@ Connected issue: #0000
 
 - [ ] Ran `_select dev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Ran `_select anvildev.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
-- [ ] Ran `_select anvilprod.gitlab && make -C terraform/gitlab/runner` <sub>or this PR is not labeled `deploy:runner`</sub>
 - [ ] Added `sandbox` label
 - [ ] Pushed PR branch to GitLab `dev`
 - [ ] Pushed PR branch to GitLab `anvildev`
-- [ ] Pushed PR branch to GitLab `anvilprod`
 - [ ] Build passes in `sandbox` deployment
 - [ ] Build passes in `anvilbox` deployment
-- [ ] Build passes in `hammerbox` deployment
 - [ ] Reviewed build logs for anomalies in `sandbox` deployment
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment
-- [ ] Reviewed build logs for anomalies in `hammerbox` deployment
 - [ ] The title of the merge commit starts with the title of this PR
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
-- [ ] Moved connected issue to Merged column in ZenHub
+- [ ] Moved connected issue to *Merged lower* column in ZenHub
 - [ ] Pushed merge commit to GitHub
 
 
@@ -96,27 +92,23 @@ Connected issue: #0000
 
 - [ ] Pushed merge commit to GitLab `dev`
 - [ ] Pushed merge commit to GitLab `anvildev`
-- [ ] Pushed merge commit to GitLab `anvilprod`
 - [ ] Build passes on GitLab `dev`
 - [ ] Reviewed build logs for anomalies on GitLab `dev`
 - [ ] Build passes on GitLab `anvildev`
 - [ ] Reviewed build logs for anomalies on GitLab `anvildev`
-- [ ] Build passes on GitLab `anvilprod`
-- [ ] Reviewed build logs for anomalies on GitLab `anvilprod`
 - [ ] Ran `_select dev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Ran `_select anvildev.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvilprod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
-- [ ] Deleted PR branch from GitLab `anvilprod`
 
 
 ### Operator
 
-- [ ] Ran `script/export_inspector_findings.py` against `anvilprod`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
-- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels to the next promotion PR <sub>or this PR carries none of these labels</sub>
-- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial` and `reindex:prod` labels from the description of this PR to that of the next promotion PR <sub>or this PR carries none of these labels</sub>
+- [ ] At least one hour has passed since `anvildev.shared` was last deployed
+- [ ] Ran `script/export_inspector_findings.py` against `anvildev`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the connected issue.
+- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner` and `backup:gitlab` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner` and `backup:gitlab` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to only the system administrator
 
 <sup>1</sup>A relevant finding is a high or critical vulnerability in an image
