@@ -183,7 +183,7 @@ class AzulClient(SignatureHelper):
             for future in futures:
                 handle_future(future)
 
-        printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
+        printer = PrettyPrinter(compact=False)
         log.info('Sent notifications for %i of %i bundles for catalog %r.',
                  indexed, total, catalog)
         if errors:
