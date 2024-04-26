@@ -148,17 +148,21 @@ class AzulClient(SignatureHelper):
                     ) -> tuple[JSON, None | Future | requests.HTTPError | requests.ConnectionError]:
             log_args = (indexer_url, notification, i)
             try:
-                log.info('Notifying %s about %s, attempt %i.', *log_args)
+                log.info('Notifying %s about %s, attempt %i.',
+                         *log_args)
                 self.post_bundle(indexer_url, notification)
             except (requests.HTTPError, requests.ConnectionError) as e:
                 if i < 3:
-                    log.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
+                    log.warning('Retrying to notify %s about %s, attempt %i, after error %s.',
+                                *log_args, e)
                     return notification, tpe.submit(partial(attempt, notification, i + 1))
                 else:
-                    log.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
+                    log.warning('Failed to notify %s about %s, attempt %i: after error %s.',
+                                *log_args, e)
                     return notification, e
             else:
-                log.info('Success notifying %s about %s, attempt %i.', *log_args)
+                log.info('Success notifying %s about %s, attempt %i.',
+                         *log_args)
                 return notification, None
 
         def handle_future(future: Future) -> None:
@@ -171,12 +175,14 @@ class AzulClient(SignatureHelper):
                 errors[status_code] += 1
                 missing.append((notification, status_code))
             elif isinstance(result, Future):
-                # The task scheduled a follow-on task, presumably a retry. Follow that new task.
+                # The task scheduled a follow-on task, presumably a retry.
+                # Follow that new task.
                 handle_future(result)
             else:
                 assert False
 
-        with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
+        with ThreadPoolExecutor(max_workers=self.num_workers,
+                                thread_name_prefix='pool') as tpe:
             futures = []
             for notification in notifications:
                 total += 1
