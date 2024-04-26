@@ -26,7 +26,7 @@ from typing import (
 )
 import uuid
 
-import attr
+import attrs
 from furl import (
     furl,
 )
@@ -71,7 +71,7 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class AzulClient(SignatureHelper):
     num_workers: int = 16
 
