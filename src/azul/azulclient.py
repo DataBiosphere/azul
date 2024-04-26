@@ -122,7 +122,7 @@ class AzulClient(SignatureHelper):
             'prefix': prefix
         }
 
-    def reindex(self, catalog: CatalogName, prefix: str) -> int:
+    def local_reindex(self, catalog: CatalogName, prefix: str) -> int:
         notifications = [
             self.notification(bundle_fqid)
             for source in self.catalog_sources(catalog)
