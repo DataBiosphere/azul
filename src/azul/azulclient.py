@@ -88,7 +88,7 @@ class AzulClient(SignatureHelper):
         response.raise_for_status()
         return response.content
 
-    def synthesize_notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
+    def notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
         Generate an indexer notification for the given bundle.
         """
@@ -106,7 +106,7 @@ class AzulClient(SignatureHelper):
                        ) -> JSON:
         return {
             'action': 'add',
-            'notification': self.synthesize_notification(bundle_fqid),
+            'notification': self.notification(bundle_fqid),
             'catalog': catalog
         }
 
@@ -124,7 +124,7 @@ class AzulClient(SignatureHelper):
 
     def reindex(self, catalog: CatalogName, prefix: str) -> int:
         notifications = [
-            self.synthesize_notification(bundle_fqid)
+            self.notification(bundle_fqid)
             for source in self.catalog_sources(catalog)
             for bundle_fqid in self.list_bundles(catalog, source, prefix)
         ]

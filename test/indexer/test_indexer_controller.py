@@ -203,7 +203,7 @@ class TestIndexController(DCP1IndexerTestCase, SqsTestCase):
         notifications = [
             dict(action='add',
                  catalog=self.catalog,
-                 notification=self.client.synthesize_notification(fqid))
+                 notification=self.client.notification(fqid))
             for fqid in fqids
         ]
 
