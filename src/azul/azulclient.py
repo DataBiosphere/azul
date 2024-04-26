@@ -143,39 +143,38 @@ class AzulClient(SignatureHelper):
         path = (catalog, 'delete' if delete else 'add')
         indexer_url = config.indexer_endpoint.set(path=path)
 
+        def attempt(notification, i):
+            log_args = (indexer_url, notification, i)
+            try:
+                log.info('Notifying %s about %s, attempt %i.', *log_args)
+                self.post_bundle(indexer_url, notification)
+            except (requests.HTTPError, requests.ConnectionError) as e:
+                if i < 3:
+                    log.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
+                    return notification, tpe.submit(partial(attempt, notification, i + 1))
+                else:
+                    log.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
+                    return notification, e
+            else:
+                log.info('Success notifying %s about %s, attempt %i.', *log_args)
+                return notification, None
+
+        def handle_future(future):
+            nonlocal indexed
+            bundle_fqid, result = future.result()
+            if result is None:
+                indexed += 1
+            elif isinstance(result, (requests.HTTPError, requests.ConnectionError)):
+                status_code = result.response.status_code
+                errors[status_code] += 1
+                missing.append((notification, status_code))
+            elif isinstance(result, Future):
+                # The task scheduled a follow-on task, presumably a retry. Follow that new task.
+                handle_future(result)
+            else:
+                assert False
+
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
-
-            def attempt(notification, i):
-                log_args = (indexer_url, notification, i)
-                try:
-                    log.info('Notifying %s about %s, attempt %i.', *log_args)
-                    self.post_bundle(indexer_url, notification)
-                except (requests.HTTPError, requests.ConnectionError) as e:
-                    if i < 3:
-                        log.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
-                        return notification, tpe.submit(partial(attempt, notification, i + 1))
-                    else:
-                        log.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
-                        return notification, e
-                else:
-                    log.info('Success notifying %s about %s, attempt %i.', *log_args)
-                    return notification, None
-
-            def handle_future(future):
-                nonlocal indexed
-                bundle_fqid, result = future.result()
-                if result is None:
-                    indexed += 1
-                elif isinstance(result, (requests.HTTPError, requests.ConnectionError)):
-                    status_code = result.response.status_code
-                    errors[status_code] += 1
-                    missing.append((notification, status_code))
-                elif isinstance(result, Future):
-                    # The task scheduled a follow-on task, presumably a retry. Follow that new task.
-                    handle_future(result)
-                else:
-                    assert False
-
             futures = []
             for notification in notifications:
                 total += 1
