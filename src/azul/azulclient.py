@@ -27,9 +27,6 @@ from typing import (
 import uuid
 
 import attrs
-from furl import (
-    furl,
-)
 from more_itertools import (
     chunked,
 )
@@ -78,15 +75,6 @@ class AzulClient(SignatureHelper):
     @cache
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
-
-    def post_bundle(self, indexer_url: furl, notification):
-        """
-        Send a mock DSS notification to the indexer
-        """
-        request = requests.Request('POST', str(indexer_url), json=notification)
-        response = self.sign_and_send(request)
-        response.raise_for_status()
-        return response.content
 
     def notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
@@ -150,7 +138,9 @@ class AzulClient(SignatureHelper):
             try:
                 log.info('Notifying %s about %s, attempt %i.',
                          *log_args)
-                self.post_bundle(indexer_url, notification)
+                request = requests.Request('POST', str(indexer_url), json=notification)
+                response = self.sign_and_send(request)
+                response.raise_for_status()
             except (requests.HTTPError, requests.ConnectionError) as e:
                 if i < 3:
                     log.warning('Retrying to notify %s about %s, attempt %i, after error %s.',
