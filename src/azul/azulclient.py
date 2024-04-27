@@ -31,6 +31,12 @@ from more_itertools import (
     chunked,
 )
 import requests
+from urllib3 import (
+    HTTPResponse,
+)
+from urllib3.exceptions import (
+    HTTPError,
+)
 
 from azul import (
     CatalogName,
@@ -43,6 +49,9 @@ from azul.es import (
 )
 from azul.hmac import (
     SignatureHelper,
+)
+from azul.http import (
+    HasCachedHttpClient,
 )
 from azul.indexer import (
     SourceJSON,
@@ -69,7 +78,7 @@ log = logging.getLogger(__name__)
 
 
 @attrs.frozen(kw_only=True)
-class AzulClient(SignatureHelper):
+class AzulClient(SignatureHelper, HasCachedHttpClient):
     num_workers: int = 16
 
     @cache
@@ -133,37 +142,47 @@ class AzulClient(SignatureHelper):
 
         def attempt(notification: JSON,
                     i: int
-                    ) -> tuple[JSON, None | Future | requests.HTTPError | requests.ConnectionError]:
+                    ) -> tuple[JSON, None | Future | HTTPResponse | HTTPError]:
             log_args = (indexer_url, notification, i)
+            log.info('Notifying %s about %s, attempt %i.',
+                     *log_args)
+            # We want to send the request with urllib3 directly but HMAC
+            # signing is only available for Requests, so we need to prepare a
+            # request, sign it and then unpack it again before calling urllib3.
+            request = requests.Request('POST', str(indexer_url), json=notification)
+            request = request.prepare()
+            self.sign(request)
             try:
-                log.info('Notifying %s about %s, attempt %i.',
-                         *log_args)
-                request = requests.Request('POST', str(indexer_url), json=notification)
-                response = self.sign_and_send(request)
-                response.raise_for_status()
-            except (requests.HTTPError, requests.ConnectionError) as e:
-                if i < 3:
-                    log.warning('Retrying to notify %s about %s, attempt %i, after error %s.',
-                                *log_args, e)
-                    return notification, tpe.submit(partial(attempt, notification, i + 1))
-                else:
-                    log.warning('Failed to notify %s about %s, attempt %i: after error %s.',
-                                *log_args, e)
-                    return notification, e
-            else:
+                result = self._http_client.request(url=request.url,
+                                                   method=request.method,
+                                                   headers=request.headers,
+                                                   body=request.body)
+            except HTTPError as e:
+                result = e
+
+            if isinstance(result, HTTPResponse) and result.status == 202:
                 log.info('Success notifying %s about %s, attempt %i.',
                          *log_args)
                 return notification, None
+            else:
+                assert isinstance(result, (HTTPResponse, HTTPError)), result
+                if i < 3:
+                    log.warning('Retrying to notify %s about %s, attempt %i, after error %s.',
+                                *log_args, result)
+                    return notification, tpe.submit(partial(attempt, notification, i + 1))
+                else:
+                    log.warning('Failed to notify %s about %s, attempt %i: after error %s.',
+                                *log_args, result)
+                    return notification, result
 
         def handle_future(future: Future) -> None:
             nonlocal indexed
             bundle_fqid, result = future.result()
             if result is None:
                 indexed += 1
-            elif isinstance(result, (requests.HTTPError, requests.ConnectionError)):
-                status_code = result.response.status_code
-                errors[status_code] += 1
-                missing.append((notification, status_code))
+            elif isinstance(result, HTTPResponse):
+                errors[result.status] += 1
+                missing.append((notification, result.status))
             elif isinstance(result, Future):
                 # The task scheduled a follow-on task, presumably a retry.
                 # Follow that new task.
