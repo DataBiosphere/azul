@@ -26,7 +26,7 @@ from azul import (
 )
 
 
-def github_urls(urls: Sequence[str]) -> list[str]:
+def github_urls(urls: Sequence[str]) -> set[str]:
     """
     Return the GitHub URLs from the list of URLs given.
     """
