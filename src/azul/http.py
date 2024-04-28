@@ -38,7 +38,7 @@ class HttpClientDecorator(urllib3.request.RequestMethods):
         super().__init__(headers)
         self._inner = inner
 
-    def urlopen(self, *args, **kwargs):
+    def urlopen(self, *args, **kwargs) -> urllib3.HTTPResponse:
         return self._inner.urlopen(*args, **kwargs)
 
 
@@ -157,7 +157,11 @@ class _LimitedRetry(urllib3.Retry):
                    redirect=0,
                    status=retries,
                    other=retries,
-                   status_forcelist={500, 502, 503})
+                   status_forcelist={500, 502, 503},
+                   # After exhausting status retries, return the most recent
+                   # response instead of raising MaxRetryError. This enables any
+                   # decorating LoggingHttpClient instance to log that response.
+                   raise_on_status=False)
         self.start = time()
         self.retries = retries
         return self
@@ -196,18 +200,27 @@ class LimitedRetryHttpClient(HttpClientDecorator):
     def retries(self) -> int:
         return 0 if self._timing_is_restricted else 2
 
-    def urlopen(self, method, url, **kwargs):
+    def urlopen(self, method, url, **kwargs) -> urllib3.HTTPResponse:
         timeout, retries = self.timeout, self.retries
         retry = _LimitedRetry.create(retries=retries)
         try:
-            return super().urlopen(method, url, retries=retry, timeout=timeout, **kwargs)
-        except (urllib3.exceptions.TimeoutError, urllib3.exceptions.MaxRetryError):
+            response = super().urlopen(method,
+                                       url,
+                                       retries=retry,
+                                       timeout=timeout,
+                                       **kwargs)
+        except urllib3.exceptions.TimeoutError:
             raise LimitedTimeoutException(url, timeout)
+        else:
+            if response.status in retry.status_forcelist:
+                raise LimitedTimeoutException(url, timeout)
+            else:
+                return response
 
 
 class Propagate429HttpClient(HttpClientDecorator):
 
-    def urlopen(self, method, url, **kwargs):
+    def urlopen(self, method, url, **kwargs) -> urllib3.HTTPResponse:
         response = super().urlopen(method, url, **kwargs)
         if response.status == 429:
             raise TooManyRequestsException(url)
