@@ -14,4 +14,3 @@ Copyright (C) 2008-2011 INADA Naoki <songofacandy@gmail.com>
    See the License for the specific language governing permissions and
    limitations under the License.
 
-
