@@ -191,5 +191,5 @@ class ProductAgnosticTransport(Transport):
     OpenSearch.
     """
 
-    def _do_verify_elasticsearch(self, headers, timeout):
+    def _do_verify_elasticsearch(self, *_args, **__kwargs):
         self._verified_elasticsearch = True
