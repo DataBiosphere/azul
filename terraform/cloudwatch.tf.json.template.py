@@ -256,23 +256,23 @@ emit_tf({
                             ]
                         },
                         **{
-                            alarm_resource_name(threshold): {
+                            alarm_resource_name(metric_alarm): {
                                 'alarm_name': config.qualified_resource_name(
-                                    alarm_resource_name(threshold),
+                                    alarm_resource_name(metric_alarm),
                                     suffix='.alarm'
                                 ),
                                 'namespace': 'AWS/Lambda',
                                 'dimensions': {
                                     'FunctionName': '${' + '.'.join((
                                         'aws_lambda_function',
-                                        lambda_resource_name(threshold),
+                                        lambda_resource_name(metric_alarm),
                                         'function_name'
                                     )) + '}'
                                 },
-                                'metric_name': threshold.metric.aws_name,
+                                'metric_name': metric_alarm.metric.aws_name,
                                 'comparison_operator': 'GreaterThanThreshold',
                                 'statistic': 'Sum',
-                                'threshold': threshold.value,
+                                'threshold': metric_alarm.value,
                                 'period': 5 * 60,
                                 'datapoints_to_alarm': 1,
                                 'evaluation_periods': 1,
@@ -281,7 +281,7 @@ emit_tf({
                                 'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                             }
                             for lambda_name in config.lambda_names()
-                            for threshold in load_app_module(lambda_name).app.metric_thresholds
+                            for metric_alarm in load_app_module(lambda_name).app.metric_alarms
                         },
                         'waf_blocked': {
                             'alarm_name': config.qualified_resource_name('waf_blocked'),

@@ -504,7 +504,7 @@ class AzulChaliceApp(Chalice):
                                 headers={'Content-Type': content_type},
                                 body=body)
 
-    def threshold(self, *, errors: int, throttles: int):
+    def metric_alarm(self, *, errors: int, throttles: int):
         def wrapper(f):
             assert isinstance(f, chalice.app.EventSourceHandler), f
             f.errors_threshold = errors
@@ -514,7 +514,7 @@ class AzulChaliceApp(Chalice):
         return wrapper
 
     @property
-    def metric_thresholds(self) -> list[MetricThreshold]:
+    def metric_alarms(self) -> list[MetricThreshold]:
         default_threshold = 0
         thresholds = []
         lambda_name, _ = config.unqualified_resource_name(self.app_name)
