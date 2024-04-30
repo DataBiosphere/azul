@@ -998,7 +998,7 @@ def emit(t: T, target_branch: str):
                     {
                         'type': 'cli',
                         'content': f'Removed unused image tags from [{name} image on DockerHub]({url})',
-                        'alt': 'or this promotion does not alter references to that image`'
+                        'alt': 'or this promotion does not alter references to that image'
                     }
                     for name, url in custom_images.items()
                     if t is T.promotion
