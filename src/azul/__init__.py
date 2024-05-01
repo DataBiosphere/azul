@@ -1013,18 +1013,28 @@ class Config:
             deployment = self.deployment_stage
         return deployment in set(chain.from_iterable(self._shared_deployments.values()))
 
-    def is_stable_deployment(self, deployment: Optional[str] = None) -> bool:
+    #: The set of branches that are used for development and that are usually
+    #: deployed to personal, lower and main deployments, but never stable ones.
+    #: The set member ``None`` represents a feature branch or detached HEAD.
+    #:
+    unstable_branches = {'develop', None}
+
+    @property
+    def is_stable_deployment(self) -> bool:
         """
-        Returns `True` if the deployment of the specified name must be kept
-        functional for public use at all times.
+        Returns `True` if the current deployment must be kept functional for
+        public use at all times.
         """
-        if deployment is None:
-            deployment = self.deployment_stage
-        if deployment in {'prod'}:
-            assert self.is_shared_deployment(deployment)
-            return True
-        else:
+        if self.is_sandbox_deployment:
             return False
+        else:
+            deployment = self.deployment_stage
+            branches = set(
+                branch
+                for branch, deployments in self._shared_deployments.items()
+                if deployment in deployments
+            )
+            return bool(branches) and branches.isdisjoint(self.unstable_branches)
 
     @property
     def is_sandbox_deployment(self) -> bool:
