@@ -97,9 +97,10 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
                                             prefix=prefix)
             error_decorator = self.metric_alarm(metric=LambdaMetric.errors)
             throttle_decorator = self.metric_alarm(metric=LambdaMetric.throttles)
+            retry_decorator = self.retry(num_retries=0)
 
             def decorator(f):
-                return throttle_decorator(error_decorator(s3_decorator(f)))
+                return retry_decorator(throttle_decorator(error_decorator(s3_decorator(f))))
 
             return decorator
         else:
@@ -213,6 +214,7 @@ def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+@app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
 @app.schedule(

@@ -576,6 +576,35 @@ class AzulChaliceApp(Chalice):
                 for metric_alarm in metric_alarms:
                     yield metric_alarm.bind(self, handler_name)
 
+    # noinspection PyPep8Naming
+    @attrs.frozen
+    class retry(HandlerDecorator):
+        """
+        Use this decorator to specify the number of times a Lambda invocation of
+        the decorated event handler function should be retried. This decorator
+        cannot be used to decorate view functions, i.e. functions also decorated
+        with ``@app.route``.
+
+        https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html
+        """
+        num_retries: int
+
+        def __call__(self, f):
+            assert isinstance(f, chalice.app.EventSourceHandler), f
+            f.retry = self
+            return f
+
+    @property
+    def retries(self) -> Iterator[retry]:
+        for handler_name, handler in self.handler_map.items():
+            if isinstance(handler, chalice.app.EventSourceHandler):
+                try:
+                    retry = getattr(handler, 'retry')
+                except AttributeError:
+                    pass
+                else:
+                    yield retry.bind(self, handler_name)
+
 
 @attrs.frozen(kw_only=True)
 class AppController:
