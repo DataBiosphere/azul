@@ -37,7 +37,7 @@ Connected issue: #0000
 ### System administrator (after approval)
 
 - [ ] Actually approved the PR
-- [ ] Labeled PR as `no sandbox`
+- [ ] Decided if PR can be labeled `no sandbox`
 - [ ] Moved ticket to *Approved* column
 - [ ] PR is assigned to only the operator
 

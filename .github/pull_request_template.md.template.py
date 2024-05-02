@@ -189,6 +189,9 @@ class T(Enum):
             for b in self.promotion.target_branches
         )))
 
+    def has_sandbox_for(self, target_branch: str) -> bool:
+        return {None} != set(self.target_deployments(target_branch).values())
+
     def labels_to_promote(self, target_branch: str) -> AbstractSet[str]:
         return OrderedSet([
             'deploy:shared',
@@ -215,7 +218,7 @@ class T(Enum):
         # deleted immediately. Even with two phases, personal deployments will
         # break after the second phase but the fix is simply to rebase any
         # feature branches and redeploy.
-        return {None} != set(self.target_deployments(target_branch).values())
+        return self.has_sandbox_for(target_branch)
 
     def shared_deploy_target(self, target_branch: str) -> str:
         return 'apply' + iif(self.shared_deploy_is_two_phase(target_branch), '_keep_unused')
@@ -615,7 +618,7 @@ def emit(t: T, target_branch: str):
                 'type': 'cli',
                 'content': (
                     'Decided if PR can be labeled `no sandbox`'
-                    if t in (T.default, T.backport) else
+                    if t.has_sandbox_for(target_branch) else
                     'Labeled PR as `no sandbox`'
                 )
             }),
@@ -738,7 +741,7 @@ def emit(t: T, target_branch: str):
                     for d in t.target_deployments(target_branch)
                 ],
             ]),
-            iif(any(s is not None for s in t.target_deployments(target_branch).values()), {
+            iif(t.has_sandbox_for(target_branch), {
                 'type': 'cli',
                 'content': 'Added `sandbox` label',
                 'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
