@@ -325,7 +325,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                         # across all partitions simultaneously, we can check
                         # whether the chosen partition is an outlier by
                         # determining the *average* partition size.
-                        num_bundles = sum(counts.values()) / len(counts)
+                        num_bundles = sum(counts.values()) / prefix.num_partitions
             else:
                 # Sources too small to be split into more than one partition may
                 # have as few as one bundle in total

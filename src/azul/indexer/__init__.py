@@ -79,6 +79,8 @@ class Prefix:
     partition: int
     of_everything: ClassVar['Prefix']
 
+    digits = '0123456789abcdef'
+
     def __attrs_post_init__(self):
         validate_uuid_prefix(self.common)
         assert ':' not in self.common, self.common
@@ -152,11 +154,25 @@ class Prefix:
         >>> len(list(Prefix.parse('/2').partition_prefixes()))
         256
         """
-        partition_prefixes = map(''.join, product('0123456789abcdef',
+        partition_prefixes = map(''.join, product(self.digits,
                                                   repeat=self.partition))
         for partition_prefix in partition_prefixes:
             validate_uuid_prefix(self.common + partition_prefix)
             yield partition_prefix
+
+    @property
+    def num_partitions(self) -> int:
+        """
+        Equivalent to `len(self.partition_prefixes())`, but more efficient.
+
+        >>> Prefix.parse('aa/0').num_partitions
+        1
+        >>> Prefix.parse('/3').num_partitions
+        4096
+        >>> Prefix.parse('aa/3').num_partitions
+        4096
+        """
+        return len(self.digits) ** self.partition
 
     def __str__(self):
         """
@@ -165,6 +181,17 @@ class Prefix:
         True
         """
         return f'{self.common}/{self.partition}'
+
+    def __len__(self):
+        """
+        >>> len(Prefix.parse('aa/0'))
+        2
+        >>> len(Prefix.parse('/3'))
+        3
+        >>> len(Prefix.parse('aa/3'))
+        5
+        """
+        return len(self.common) + self.partition
 
 
 Prefix.of_everything = Prefix.parse('/0')

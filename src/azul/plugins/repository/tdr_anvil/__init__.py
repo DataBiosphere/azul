@@ -242,25 +242,25 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                         source: TDRSourceRef
                         ) -> Mapping[str, int]:
         prefix = source.spec.prefix
-        prefixes = [
-            prefix.common + partition_prefix
-            for partition_prefix in prefix.partition_prefixes()
-        ]
-        assert prefixes, prefix
         primary = BundleEntityType.primary.value
         supplementary = BundleEntityType.supplementary.value
         rows = self._run_sql(f'''
-            SELECT prefix, COUNT(datarepo_row_id) AS subgraph_count
+            SELECT prefix, COUNT(*) AS subgraph_count
             FROM (
-                SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, primary))}
-                UNION ALL
-                SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, supplementary))}
-                WHERE is_supplementary
+                SELECT SUBSTR(datarepo_row_id, 1, {len(prefix)}) AS prefix
+                FROM (
+                    SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, primary))}
+                    UNION ALL
+                    SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, supplementary))}
+                    WHERE is_supplementary
+                )
             )
-            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH(datarepo_row_id, prefix)
+            WHERE STARTS_WITH(prefix, {prefix.common!r})
             GROUP BY prefix
         ''')
-        return {row['prefix']: row['subgraph_count'] for row in rows}
+        partitions = {row['prefix']: row['subgraph_count'] for row in rows}
+        assert all(v > 0 for v in partitions.values())
+        return partitions
 
     def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
         if 'entity_type' not in fqid:
