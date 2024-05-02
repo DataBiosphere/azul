@@ -20,6 +20,25 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6218 Delete hammerbox ES domain
+================================
+
+Operator
+~~~~~~~~
+
+Due to an open issue with the `Terraform provider opensearch`_, the ``deploy``
+job will fail on ``hammerbox`` when building the feature branch. After this
+occurs, run the following commands::
+
+    _select hammerbox
+    cd $project_root/terraform
+    terraform state rm opensearch_cluster_settings.index
+
+Then, retry the ``deploy`` job on GitLab. It should now succeed.
+
+.. _Terraform provider opensearch: https://github.com/opensearch-project/terraform-provider-opensearch/issues/60
+
+
 DataBiosphere/azul-private#6 data-browser: Content Security Policy (CSP) Not Implemented
 ========================================================================================
 
