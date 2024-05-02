@@ -305,14 +305,14 @@ def emit(t: T, target_branch: str):
             }),
             iif(t is T.promotion, {
                 'type': 'cli',
-                'content': f'Title of connected issue matches '
-                           f'`Promotion yyyy-mm-dd {target_branch}`'
+                'content': 'Title of connected issue matches `Promotion yyyy-mm-dd`'
             }),
             {
                 'type': 'cli',
                 'content': {
                     t.default: 'PR title matches<footnote title/> that of a connected issue',
-                    t.promotion: 'PR title starts with title of connected issue',
+                    t.promotion: f'PR title starts with title of connected issue '
+                                 f'followed by ` {target_branch}`',
                     t.hotfix: f'PR title is `Hotfix {target_branch}: ` '
                               f'followed by title of connected issue',
                     t.upgrade: 'PR title matches `Upgrade dependencies yyyy-mm-dd`',

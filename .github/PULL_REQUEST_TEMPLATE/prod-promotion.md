@@ -14,8 +14,8 @@ Connected issue: #0000
 - [ ] Name of PR branch matches `promotions/yyyy-mm-dd-prod`
 - [ ] On ZenHub, PR is connected to the promotion issue it resolves
 - [ ] PR description links to connected issue
-- [ ] Title of connected issue matches `Promotion yyyy-mm-dd prod`
-- [ ] PR title starts with title of connected issue
+- [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
+- [ ] PR title starts with title of connected issue followed by ` prod`
 - [ ] PR title references the connected issue
 
 
