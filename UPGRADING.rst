@@ -20,6 +20,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+DataBiosphere/azul-private#6 data-browser: Content Security Policy (CSP) Not Implemented
+========================================================================================
+
+The new environment variable ``AZUL_TERRA_SERVICE_URL`` has been added. As
+always, use the sandbox deployment's ``environment.py`` as a model when
+upgrading personal deployments.
+
+
 DataBiosphere/azul-private#133 Disable split tunneling for GitLab VPN in prod and anvilprod
 ===========================================================================================
 
