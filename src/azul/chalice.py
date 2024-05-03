@@ -201,12 +201,16 @@ class AzulChaliceApp(Chalice):
         response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
+        view_function = self.routes[event.path][event.method].view_function
+        cache_control = getattr(view_function, 'cache_control')
+        response.headers['Cache-Control'] = cache_control
         return response
 
     def route(self,
               path: str,
               enabled: bool = True,
               interactive: bool = True,
+              cache_control: str = 'no-store',
               path_spec: Optional[JSON] = None,
               method_spec: Optional[JSON] = None,
               **kwargs):
@@ -216,6 +220,16 @@ class AzulChaliceApp(Chalice):
         See https://chalice.readthedocs.io/en/latest/api.html#Chalice.route.
 
         :param path: See https://chalice.readthedocs.io/en/latest/api.html#Chalice.route
+
+        :param enabled: If False, do not route any requests to the decorated
+                        view function. The application will behave as if the
+                        view function wasn't decorated.
+
+        :param interactive: If False, do not show the "Try it out" button in the
+                            Swagger UI.
+
+        :param cache_control: The value to set in the 'Cache-Control' response
+                              header.
 
         :param path_spec: Corresponds to an OpenAPI Paths Object. See
                           https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#pathsObject
@@ -228,14 +242,6 @@ class AzulChaliceApp(Chalice):
                             https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#operationObject
                             This should be specified for every `@app.route`
                             invocation.
-
-
-        :param enabled: If False, do not route any requests to the decorated
-                        view function. The application will behave as if the
-                        view function wasn't decorated.
-
-        :param interactive: If False, do not show the "Try it out" button in the
-                            Swagger UI.
         """
         if enabled:
             if not interactive:
@@ -245,6 +251,7 @@ class AzulChaliceApp(Chalice):
             chalice_decorator = super().route(path, **kwargs)
 
             def decorator(view_func):
+                view_func.cache_control = cache_control
                 self._register_spec(path, path_spec, method_spec, methods)
                 return chalice_decorator(view_func)
 

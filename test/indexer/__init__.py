@@ -3,9 +3,12 @@ from abc import (
     abstractmethod,
 )
 import json
-import os
+from pathlib import (
+    Path,
+)
 from typing import (
     Generic,
+    Literal,
     Optional,
     Type,
     Union,
@@ -90,6 +93,10 @@ class CannedFileTestCase(AzulUnitTestCase):
     """
 
     @classmethod
+    def _data_path(cls, module: Literal['service', 'indexer']) -> Path:
+        return Path(config.project_root) / 'test' / module / 'data'
+
+    @classmethod
     def _load_canned_file(cls,
                           bundle: BundleFQID,
                           extension: str
@@ -111,10 +118,9 @@ class CannedFileTestCase(AzulUnitTestCase):
                                   version: Optional[str],
                                   extension: str
                                   ) -> Union[MutableJSONs, MutableJSON]:
-        data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         suffix = '' if version is None else '.' + version
         file_name = f'{uuid}{suffix}.{extension}.json'
-        with open(os.path.join(data_prefix, file_name), 'r') as infile:
+        with open(cls._data_path('indexer') / file_name, 'r') as infile:
             return json.load(infile)
 
 

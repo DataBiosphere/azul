@@ -41,7 +41,7 @@ cis_alarms = [
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Average',
-                    filter_pattern='{$.errorCode = "*UnauthorizedOperation" || $.errorCode = "AccessDenied*"}'),
+                    filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
                     statistic='Sum',

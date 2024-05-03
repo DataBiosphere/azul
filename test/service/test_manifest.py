@@ -20,6 +20,9 @@ from io import (
     BytesIO,
 )
 import json
+from operator import (
+    itemgetter,
+)
 import os
 from pathlib import (
     Path,
@@ -67,12 +70,15 @@ from azul import (
 )
 from azul.collections import (
     adict,
+    compose_keys,
+    none_safe_key,
 )
 from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.json import (
     copy_json,
+    json_hash,
 )
 from azul.logging import (
     configure_test_logging,
@@ -208,6 +214,28 @@ class ManifestTestCase(WebServiceTestCase,
         actual = list(csv.reader(actual, delimiter='\t'))
         actual[1:], expected[1:] = sorted(actual[1:]), sorted(expected[1:])
         self.assertEqual(expected, actual)
+
+    def _assert_jsonl(self, expected: list[JSON], actual: Response):
+        """
+        Assert that the body of the given response is the expected JSON array,
+        disregarding any row ordering differences.
+
+        :param expected: a list of JSON objects.
+
+        :param actual: an HTTP response containing JSON objects separated by
+                       newlines
+        """
+        manifest = [
+            json.loads(row)
+            for row in actual.content.decode().splitlines()
+        ]
+
+        def sort_key(row: JSON) -> bytes:
+            return json_hash(row).digest()
+
+        manifest.sort(key=sort_key)
+        expected.sort(key=sort_key)
+        self.assertEqual(expected, manifest)
 
     def _file_url(self, file_id, version):
         return str(self.base_url.set(path='/repository/files/' + file_id,
@@ -1293,32 +1321,24 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                      'The format is replica-based')
     @manifest_test
     def test_verbatim_jsonl_manifest(self):
-        bundle = self._load_canned_bundle(one(self.bundles()))
         expected = [
-            bundle.metadata_files[d]
-            for d in [
-                'links.json',
-                'cell_suspension_0.json',
-                'project_0.json',
-                'sequence_file_0.json',
-                'sequence_file_1.json',
-                'specimen_from_organism_0.json'
+            {
+                'type': replica_type,
+                'contents': bundle.metadata_files[key],
+            }
+            for bundle in map(self._load_canned_bundle, self.bundles())
+            for replica_type, key in [
+                ('links', 'links.json'),
+                ('cell_suspension', 'cell_suspension_0.json'),
+                ('project', 'project_0.json'),
+                ('file', 'sequence_file_0.json'),
+                ('file', 'sequence_file_1.json'),
+                ('sample', 'specimen_from_organism_0.json')
             ]
         ]
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})
         self.assertEqual(200, response.status_code)
-        response = list(map(json.loads, response.content.decode().splitlines()))
-
-        def sort_key(hca_doc: JSON) -> str:
-            try:
-                return hca_doc['provenance']['document_id']
-            except KeyError:
-                assert hca_doc['schema_type'] == 'link_bundle'
-                return ''
-
-        expected.sort(key=sort_key)
-        response.sort(key=sort_key)
-        self.assertEqual(expected, response)
+        self._assert_jsonl(expected, response)
 
 
 class TestManifestCache(DCP1ManifestTestCase):
@@ -2038,3 +2058,38 @@ class TestAnvilManifests(AnvilManifestTestCase):
             )
         ]
         self._assert_tsv(expected, response)
+
+    @unittest.skipIf(not config.enable_replicas,
+                     'The format is replica-based')
+    @manifest_test
+    def test_verbatim_jsonl_manifest(self):
+        response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
+        self.assertEqual(200, response.status_code)
+        expected = [
+            {
+                'type': 'anvil_' + entity_ref.entity_type,
+                'contents': entity,
+            }
+            for bundle in self.bundles()
+            for entity_ref, entity in self._load_canned_bundle(bundle).entities.items()
+        ]
+        self._assert_jsonl(expected, response)
+
+    @unittest.skipIf(not config.enable_replicas,
+                     'The format is replica-based')
+    @manifest_test
+    def test_verbatim_pfb_manifest(self):
+        response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
+        self.assertEqual(200, response.status_code)
+        manifest = fastavro.reader(BytesIO(response.content))
+        schema = manifest.writer_schema
+        entities = list(manifest)
+        with open(self._data_path('service') / 'verbatim/pfb_schema.json') as f:
+            expected_schema = json.load(f)
+        with open(self._data_path('service') / 'verbatim/pfb_entities.json') as f:
+            expected_entities = json.load(f)
+        sort_key = compose_keys(none_safe_key(), itemgetter('id'))
+        entities.sort(key=sort_key)
+        expected_entities.sort(key=sort_key)
+        self.assertEqual(expected_schema, schema)
+        self.assertEqual(expected_entities, entities)

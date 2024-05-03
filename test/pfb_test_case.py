@@ -1,17 +1,13 @@
 import json
-from pathlib import (
-    Path,
-)
-import sys
 
 import fastavro
 
-from azul_test_case import (
-    AzulUnitTestCase,
+from indexer import (
+    CannedFileTestCase,
 )
 
 
-class PFBTestCase(AzulUnitTestCase):
+class PFBTestCase(CannedFileTestCase):
 
     def _assert_pfb_schema(self, schema):
         fastavro.parse_schema(schema)
@@ -22,9 +18,7 @@ class PFBTestCase(AzulUnitTestCase):
         def to_json(records):
             return json.dumps(records, indent=4, sort_keys=True)
 
-        cls = type(self)
-        module = sys.modules[cls.__module__]
-        results_file = Path(module.__file__).parent / 'data' / 'pfb_manifest.schema.json'
+        results_file = self._data_path('service') / 'pfb_manifest.schema.json'
         if results_file.exists():
             with open(results_file, 'r') as f:
                 expected_records = json.load(f)
