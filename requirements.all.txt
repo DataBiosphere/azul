@@ -126,7 +126,7 @@ six==1.16.0
 smmap==5.0.1
 strict-rfc3339==0.7
 toml==0.10.2
-tqdm==4.66.2
+tqdm==4.66.3
 types-awscrt==0.20.9
 types-s3transfer==0.10.1
 types-toml==0.10.8.20240310
