@@ -192,10 +192,16 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        return self._translate_filters(self._reify_filters())
+        filters_json = self.filters.reify(self.plugin, limit_access=self._limit_access())
+        return self._translate_filters(filters_json)
 
-    def _reify_filters(self):
-        return self.filters.reify(self.plugin)
+    @abstractmethod
+    def _limit_access(self) -> bool:
+        """
+        Whether to enforce the managed access controls during filter
+        reification.
+        """
+        raise NotImplementedError
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
@@ -222,7 +228,9 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         for field_path, relation_and_values in self.prepared_filters.items():
             if field_path not in skip_field_paths:
                 relation, values = one(relation_and_values.items())
-                if relation == 'is':
+                # Note that `is_not` is only used internally (for filtering by
+                # inaccessible sources)
+                if relation in ('is', 'is_not'):
                     field_type = self.service.field_type(self.catalog, field_path)
                     if isinstance(field_type, Nested):
                         term_queries = []
@@ -240,6 +248,8 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                             # as absent fields
                             absent_query = Q('bool', must_not=[Q('exists', field=dotted(field_path))])
                             query = Q('bool', should=[query, absent_query])
+                    if relation == 'is_not':
+                        query = Q('bool', must_not=[query])
                     filter_list.append(query)
                 elif relation in ('contains', 'within', 'intersects'):
                     for value in values:
@@ -376,7 +386,8 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         # facet from the `sourceId` field.
         source_ids = self.filter_stage.filters.source_ids
         plugin = self.service.metadata_plugin(self.catalog)
-        agg = aggs.pop(plugin.special_fields.source_id)
+        special_fields = plugin.special_fields
+        agg = aggs.pop(special_fields.source_id)
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
         for bucket in agg['myTerms']['buckets']:
             accessible = bucket['key'] in source_ids
@@ -385,7 +396,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]
-        aggs['accessible'] = agg
+        aggs[special_fields.accessible] = agg
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)

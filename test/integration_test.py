@@ -1415,9 +1415,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                      managed_access_source_ids: Set[str]
                                      ) -> JSONs:
         """
-        Test the managed access controls for the /index/bundles and
+        Test the managed-access controls for the /index/bundles and
         /index/projects endpoints
-        :return: hits for the managed access bundles
+
+        :return: hits for the managed-access bundles
         """
 
         special_fields = self.metadata_plugin(catalog).special_fields
@@ -1429,14 +1430,32 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         bundle_type = self._bundle_type(catalog)
         project_type = self._project_type(catalog)
 
-        hits = self._get_entities(catalog, project_type)
-        sources_found = set()
-        for hit in hits:
-            source_id = source_id_from_hit(hit)
-            sources_found.add(source_id)
-            self.assertEqual(source_id not in managed_access_source_ids,
-                             one(hit[project_type])['accessible'])
-        self.assertIsSubset(managed_access_source_ids, sources_found)
+        unfiltered_hits = None
+        for accessible in None, False, True:
+            with self.subTest(accessible=accessible):
+                filters = None if accessible is None else {
+                    special_fields.accessible: {'is': [accessible]}
+                }
+                hits = self._get_entities(catalog, project_type, filters=filters)
+                if accessible is None:
+                    unfiltered_hits = hits
+                accessible_sources, inaccessible_sources = set(), set()
+                for hit in hits:
+                    source_id = source_id_from_hit(hit)
+                    source_accessible = source_id not in managed_access_source_ids
+                    hit_accessible = one(hit[project_type])[special_fields.accessible]
+                    self.assertEqual(source_accessible, hit_accessible, hit['entryId'])
+                    if accessible is not None:
+                        self.assertEqual(accessible, hit_accessible)
+                    if source_accessible:
+                        accessible_sources.add(source_id)
+                    else:
+                        inaccessible_sources.add(source_id)
+                self.assertIsDisjoint(accessible_sources, inaccessible_sources)
+                self.assertIsDisjoint(managed_access_source_ids, accessible_sources)
+                self.assertEqual(set() if accessible else managed_access_source_ids,
+                                 inaccessible_sources)
+        self.assertIsNotNone(unfiltered_hits, 'Cannot recover from subtest failure')
 
         bundle_fqids = self._get_indexed_bundles(catalog)
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
@@ -1459,7 +1478,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             bundle_fqids = self._get_indexed_bundles(catalog, filters=source_filter)
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
         self.assertEqual(managed_access_source_ids, hit_source_ids)
-        return hits
+
+        return unfiltered_hits
 
     def _test_managed_access_repository_files(self,
                                               catalog: CatalogName,
