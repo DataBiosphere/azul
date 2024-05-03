@@ -300,7 +300,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         partition_prefix = self.random.choice(partition_prefixes)
         effective_prefix = prefix.common + partition_prefix
         fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
-        bundle_count = len(fqids)
+        num_bundles = len(fqids)
         partition = f'Partition {effective_prefix!r} of source {source.spec}'
         if not config.is_sandbox_or_personal_deployment:
             # For sources that use partitioning, 512 is the desired partition
@@ -325,7 +325,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                         # across all partitions simultaneously, we can check
                         # whether the chosen partition is an outlier by
                         # determining the *average* partition size.
-                        bundle_count = sum(counts.values()) / len(counts)
+                        num_bundles = sum(counts.values()) / prefix.num_partitions
             else:
                 # Sources too small to be split into more than one partition may
                 # have as few as one bundle in total
@@ -340,8 +340,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
             upper = 64
             lower = 1
 
-        self.assertLessEqual(bundle_count, upper, partition + ' is too large')
-        self.assertGreaterEqual(bundle_count, lower, partition + ' is too small')
+        self.assertLessEqual(num_bundles, upper, partition + ' is too large')
+        self.assertGreaterEqual(num_bundles, lower, partition + ' is too small')
 
         return source, partition_prefix, fqids
 
