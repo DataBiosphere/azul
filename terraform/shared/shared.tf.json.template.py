@@ -24,6 +24,8 @@ class CloudTrailAlarm(NamedTuple):
     name: str
     statistic: str
     filter_pattern: str
+    threshold: int = 1
+    period: int = 5 * 60
 
     @property
     def metric_name(self) -> str:
@@ -522,10 +524,10 @@ tf_config = {
                     'namespace': 'LogMetrics',
                     'statistic': a.statistic,
                     'treat_missing_data': 'notBreaching',
-                    'threshold': 1,
+                    'threshold': a.threshold,
                     # The CIS documentation does not specify a period. 5 minutes is
                     # the default value when creating the alarm via the console UI.
-                    'period': 5 * 60,
+                    'period': a.period,
                     'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
                     'ok_actions': ['${aws_sns_topic.monitoring.arn}']
                 }
