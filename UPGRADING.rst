@@ -20,6 +20,22 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4655 All bucket names should default to qualified_bucket_name()
+================================================================
+
+Check the value of ``AZUL_S3_BUCKET`` in every personal deployments. If the
+value is either
+
+``edu-ucsc-gi-platform-anvil-dev-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}``
+
+or
+
+``edu-ucsc-gi-platform-hca-dev-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}``
+
+remove the variable from ``environment.py`` for that deployment and redeploy.
+Otherwise, consult with the system administrator.
+
+
 #6218 Delete hammerbox ES domain
 ================================
 

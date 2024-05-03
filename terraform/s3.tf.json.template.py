@@ -21,8 +21,8 @@ tf_config = {
     },
     'resource': {
         'aws_s3_bucket': {
-            'storage': {
-                'bucket': config.s3_bucket,
+            config.storage_term: {
+                'bucket': aws.storage_bucket,
                 'force_destroy': True
             }
         },

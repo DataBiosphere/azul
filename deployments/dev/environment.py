@@ -217,8 +217,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu',
         'AZUL_DRS_DOMAIN_NAME': 'drs.dev.singlecell.gi.ucsc.edu',
 
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-hca-dev-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
-
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
                                        internal=internal,

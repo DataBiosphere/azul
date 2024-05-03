@@ -590,11 +590,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CONTRIBUTION_CONCURRENCY': '64',
         'AZUL_AGGREGATION_CONCURRENCY': '64',
 
-        # The name of the S3 bucket where the manifest API stores the downloadable
-        # content requested by client.
-        #
-        'AZUL_S3_BUCKET': None,
-
         # Collect and monitor important health metrics of the deployment (1 yes, 0 no).
         # Typically only enabled on main deployments.
         #
