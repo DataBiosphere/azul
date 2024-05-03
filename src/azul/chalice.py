@@ -67,8 +67,8 @@ log = logging.getLogger(__name__)
 
 class AzulRequest(Request):
     """
-    Use only for type hints. The actual requests will be instances of the super
-    class but they will have the attributes defined here.
+    Use only for type hints. The actual requests will be instances of the parent
+    class, but they will have the attributes defined here.
     """
     authentication: Optional[Authentication]
 
