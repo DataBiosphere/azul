@@ -54,6 +54,7 @@ from azul.auth import (
 from azul.chalice import (
     AzulChaliceApp,
     C,
+    LambdaMetric,
 )
 from azul.collections import (
     OrderedSet,
@@ -559,6 +560,10 @@ def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=1,
+                  period=24 * 60 * 60)
+@app.metric_alarm(metric=LambdaMetric.throttles)
 @app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
