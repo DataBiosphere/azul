@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     )
     from mypy_boto3_s3.service_resource import (
         MultipartUpload,
-        S3ServiceResource,
     )
 
 log = getLogger(__name__)
@@ -66,10 +65,6 @@ class StorageService:
     @property
     def _s3(self) -> S3Client:
         return aws.s3
-
-    @property
-    def resource(self) -> S3ServiceResource:
-        return aws.resource('s3')
 
     def head(self, object_key: str) -> dict:
         try:
@@ -118,7 +113,8 @@ class StorageService:
         return self.load_multipart_upload(object_key, upload_id)
 
     def load_multipart_upload(self, object_key, upload_id) -> MultipartUpload:
-        return self.resource.MultipartUpload(self.bucket_name, object_key, upload_id)
+        s3 = aws.resource('s3')
+        return s3.MultipartUpload(self.bucket_name, object_key, upload_id)
 
     def upload_multipart_part(self,
                               buffer: IO[bytes],
