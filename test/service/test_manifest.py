@@ -124,7 +124,7 @@ from pfb_test_case import (
 )
 from service import (
     DocumentCloningTestCase,
-    StorageServiceTestMixin,
+    StorageServiceTestCase,
     WebServiceTestCase,
 )
 
@@ -138,7 +138,7 @@ def setUpModule():
 
 @mock_s3
 class ManifestTestCase(WebServiceTestCase,
-                       StorageServiceTestMixin,
+                       StorageServiceTestCase,
                        metaclass=ABCMeta):
 
     def setUp(self):

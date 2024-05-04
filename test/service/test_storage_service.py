@@ -17,7 +17,7 @@ from azul_test_case import (
     AzulUnitTestCase,
 )
 from service import (
-    StorageServiceTestMixin,
+    StorageServiceTestCase,
 )
 
 
@@ -28,7 +28,7 @@ def setUpModule():
 
 @mock_s3
 @mock_sts
-class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
+class StorageServiceTest(AzulUnitTestCase, StorageServiceTestCase):
     """
     Functional Test for Storage Service
     """

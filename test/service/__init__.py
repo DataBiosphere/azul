@@ -189,7 +189,7 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
                                     doc_type=DocumentType.aggregate))
 
 
-class StorageServiceTestMixin:
+class StorageServiceTestCase:
     """
     A mixin for test cases that utilize StorageService.
     """
