@@ -26,16 +26,18 @@ def setUpModule():
     configure_test_logging()
 
 
+@mock_s3
+@mock_sts
 class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
     """
     Functional Test for Storage Service
     """
 
-    @mock_s3
-    @mock_sts
-    def test_upload_tags(self):
+    def setUp(self) -> None:
+        super().setUp()
         self.storage_service.create_bucket()
 
+    def test_upload_tags(self):
         object_key = 'test_file'
         with tempfile.NamedTemporaryFile('w') as f:
             f.write('some contents')
@@ -51,13 +53,9 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
                     self.assertEqual(tags,
                                      upload_tags)
 
-    @mock_s3
-    @mock_sts
     def test_simple_get_put(self):
         sample_key = 'foo-simple'
         sample_content = b'bar'
-
-        self.storage_service.create_bucket()
 
         # NOTE: Ensure that the key does not exist before writing.
         with self.assertRaises(StorageObjectNotFound):
@@ -67,23 +65,16 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
 
         self.assertEqual(sample_content, self.storage_service.get(sample_key))
 
-    @mock_s3
-    @mock_sts
     def test_simple_get_unknown_item(self):
         sample_key = 'foo-simple'
-
-        self.storage_service.create_bucket()
 
         with self.assertRaises(StorageObjectNotFound):
             self.storage_service.get(sample_key)
 
-    @mock_s3
-    @mock_sts
     def test_presigned_url(self):
         sample_key = 'foo-presigned-url'
         sample_content = json.dumps({'a': 1})
 
-        self.storage_service.create_bucket()
         self.storage_service.put(sample_key, sample_content.encode())
 
         for file_name in None, 'foo.json':
