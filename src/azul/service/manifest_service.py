@@ -144,6 +144,7 @@ from azul.service.elasticsearch_service import (
 )
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
+    StorageObjectNotFound,
     StorageService,
 )
 from azul.types import (
@@ -737,12 +738,9 @@ class ManifestService(ElasticsearchService):
         object_key = generator_cls.s3_object_key(manifest_key)
         try:
             response = self.storage_service.head(object_key)
-        except self.storage_service.client.exceptions.ClientError as e:
-            if int(e.response['Error']['Code']) == 404:
-                log.info('Cached manifest not found: %s', manifest_key)
-                return None
-            else:
-                raise e
+        except StorageObjectNotFound:
+            log.info('Cached manifest not found: %s', manifest_key)
+            return None
         else:
             seconds_until_expire = self._get_seconds_until_expire(response)
             if seconds_until_expire > config.manifest_expiration_margin:

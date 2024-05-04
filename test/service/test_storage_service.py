@@ -10,6 +10,9 @@ import requests
 from azul.logging import (
     configure_test_logging,
 )
+from azul.service.storage_service import (
+    StorageObjectNotFound,
+)
 from azul_test_case import (
     AzulUnitTestCase,
 )
@@ -57,7 +60,7 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
         self.storage_service.create_bucket()
 
         # NOTE: Ensure that the key does not exist before writing.
-        with self.assertRaises(self.storage_service.client.exceptions.NoSuchKey):
+        with self.assertRaises(StorageObjectNotFound):
             self.storage_service.get(sample_key)
 
         self.storage_service.put(sample_key, sample_content)
@@ -71,7 +74,7 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
 
         self.storage_service.create_bucket()
 
-        with self.assertRaises(self.storage_service.client.exceptions.NoSuchKey):
+        with self.assertRaises(StorageObjectNotFound):
             self.storage_service.get(sample_key)
 
     @mock_s3

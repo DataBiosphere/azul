@@ -51,6 +51,7 @@ from azul.plugins import (
     MetadataPlugin,
 )
 from azul.service.storage_service import (
+    StorageObjectNotFound,
     StorageService,
 )
 from azul.types import (
@@ -124,7 +125,7 @@ class HealthController(AppController):
         else:
             try:
                 cache = json.loads(self.storage_service.get(f'health/{self.lambda_name}'))
-            except self.storage_service.client.exceptions.NoSuchKey:
+            except StorageObjectNotFound:
                 raise NotFoundError('Cached health object does not exist')
             else:
                 max_age = 2 * 60

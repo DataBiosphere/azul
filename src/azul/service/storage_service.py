@@ -52,6 +52,10 @@ MULTIPART_UPLOAD_MAX_PENDING_PARTS = 4
 Tagging = Mapping[str, str]
 
 
+class StorageObjectNotFound(Exception):
+    pass
+
+
 class StorageService:
 
     def __init__(self, bucket_name: str | None = None):
@@ -68,10 +72,23 @@ class StorageService:
         return aws.resource('s3')
 
     def head(self, object_key: str) -> dict:
-        return self.client.head_object(Bucket=self.bucket_name, Key=object_key)
+        try:
+            return self.client.head_object(Bucket=self.bucket_name,
+                                           Key=object_key)
+        except self.client.exceptions.ClientError as e:
+            if int(e.response['Error']['Code']) == 404:
+                raise StorageObjectNotFound
+            else:
+                raise e
 
     def get(self, object_key: str) -> bytes:
-        return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
+        try:
+            response = self.client.get_object(Bucket=self.bucket_name,
+                                              Key=object_key)
+        except self.client.exceptions.NoSuchKey:
+            raise StorageObjectNotFound
+        else:
+            return response['Body'].read()
 
     def put(self,
             object_key: str,
