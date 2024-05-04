@@ -176,8 +176,8 @@ class StorageService:
                 **({} if file_name is None else {'ResponseContentDisposition': f'attachment;filename="{file_name}"'})
             })
 
-    def create_bucket(self, bucket_name: Optional[str] = None):
-        self._s3.create_bucket(Bucket=(bucket_name or self.bucket_name),
+    def create_bucket(self):
+        self._s3.create_bucket(Bucket=self.bucket_name,
                                CreateBucketConfiguration={
                                    'LocationConstraint': config.region
                                })
