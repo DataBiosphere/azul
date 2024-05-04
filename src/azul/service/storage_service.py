@@ -57,10 +57,9 @@ class StorageObjectNotFound(Exception):
 
 class StorageService:
 
-    def __init__(self, bucket_name: str | None = None):
-        if bucket_name is None:
-            bucket_name = aws.storage_bucket
-        self.bucket_name = bucket_name
+    @property
+    def bucket_name(self):
+        return aws.storage_bucket
 
     @property
     def _s3(self) -> S3Client:
