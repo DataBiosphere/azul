@@ -56,10 +56,6 @@ from more_itertools import (
     first,
     one,
 )
-from moto import (
-    mock_s3,
-    mock_sts,
-)
 import requests
 from requests import (
     Response,
@@ -142,10 +138,7 @@ class ManifestTestCase(WebServiceTestCase,
 
     def setUp(self):
         super().setUp()
-        self.addPatch(mock_sts())
-        self.addPatch(mock_s3())
         self.addPatch(patch.object(PagedManifestGenerator, 'page_size', 1))
-        self.storage_service.create_bucket()
         self._setup_indices()
         self._setup_git_commit()
 

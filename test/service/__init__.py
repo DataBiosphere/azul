@@ -26,6 +26,10 @@ from more_itertools import (
     flatten,
     one,
 )
+from moto import (
+    mock_s3,
+    mock_sts,
+)
 
 from app_test_case import (
     LocalAppTestCase,
@@ -57,6 +61,9 @@ from azul.service.storage_service import (
 from azul.types import (
     AnyJSON,
     JSONs,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
 )
 from indexer import (
     IndexerTestCase,
@@ -189,7 +196,7 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
                                     doc_type=DocumentType.aggregate))
 
 
-class StorageServiceTestCase:
+class StorageServiceTestCase(AzulUnitTestCase):
     """
     A mixin for test cases that utilize StorageService.
     """
@@ -197,6 +204,12 @@ class StorageServiceTestCase:
     @cached_property
     def storage_service(self) -> StorageService:
         return StorageService()
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.addPatch(mock_sts())
+        self.addPatch(mock_s3())
+        self.storage_service.create_bucket()
 
 
 @deprecated('Instead of decorating your test case, or its test methods in it, '

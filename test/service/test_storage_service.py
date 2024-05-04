@@ -1,10 +1,6 @@
 import json
 import tempfile
 
-from moto import (
-    mock_s3,
-    mock_sts,
-)
 import requests
 
 from azul.logging import (
@@ -12,9 +8,6 @@ from azul.logging import (
 )
 from azul.service.storage_service import (
     StorageObjectNotFound,
-)
-from azul_test_case import (
-    AzulUnitTestCase,
 )
 from service import (
     StorageServiceTestCase,
@@ -26,16 +19,10 @@ def setUpModule():
     configure_test_logging()
 
 
-@mock_s3
-@mock_sts
-class StorageServiceTest(AzulUnitTestCase, StorageServiceTestCase):
+class StorageServiceTest(StorageServiceTestCase):
     """
     Functional Test for Storage Service
     """
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.storage_service.create_bucket()
 
     def test_upload_tags(self):
         object_key = 'test_file'

@@ -23,7 +23,6 @@ from furl import (
     furl,
 )
 from moto import (
-    mock_s3,
     mock_sqs,
     mock_sts,
 )
@@ -127,11 +126,9 @@ class HealthCheckTestCase(LocalAppTestCase,
                 self.assertEqual(200, response.status_code)
                 self.assertEqual(expected_response, response.json())
 
-    @mock_s3
     @mock_sts
     @mock_sqs
     def test_cached_health(self):
-        self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
         with self._mock():
             response = self._test('/health/cached')
