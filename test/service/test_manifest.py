@@ -136,13 +136,16 @@ def setUpModule():
     configure_test_logging(log)
 
 
-@mock_s3
 class ManifestTestCase(WebServiceTestCase,
                        StorageServiceTestCase,
                        metaclass=ABCMeta):
 
     def setUp(self):
         super().setUp()
+        self.addPatch(mock_sts())
+        self.addPatch(mock_s3())
+        self.addPatch(patch.object(PagedManifestGenerator, 'page_size', 1))
+        self.storage_service.create_bucket()
         self._setup_indices()
         self._setup_git_commit()
 
@@ -253,21 +256,6 @@ class ManifestTestCase(WebServiceTestCase,
         return config.drs_domain or config.api_lambda_domain('service')
 
 
-def manifest_test(test):
-    """
-    A decorator for test methods that test manifest functionality
-    """
-
-    @mock_sts
-    @mock_s3
-    def wrapper(self, *args, **kwargs):
-        self.storage_service.create_bucket()
-        with patch.object(PagedManifestGenerator, 'page_size', 1):
-            return test(self, *args, **kwargs)
-
-    return wrapper
-
-
 class DCP1ManifestTestCase(ManifestTestCase, DCP1CannedBundleTestCase):
     pass
 
@@ -285,7 +273,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
 
     _drs_domain_name = 'drs-test.lan'  # see canned PFB results
 
-    @manifest_test
     def test_pfb_manifest(self):
         # This test uses canned expectations. It might be difficult to manually
         # update the can after changes to the indexer. If that is the case,
@@ -391,7 +378,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         donor_link['inputs'].append(new_donor_reference)
         return bundle
 
-    @manifest_test
     def test_manifest_not_cached(self):
         """
         Assert that the patch to disable caching is effective.
@@ -402,7 +388,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                 self.assertFalse(manifest.was_cached)
                 self.assertEqual(1, num_partitions)
 
-    @manifest_test
     def test_compact_manifest(self):
         expected = [
             ('source_id', self.source.id, self.source.id),
@@ -568,7 +553,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         self.assertEqual(200, response.status_code)
         self._assert_tsv(expected, response)
 
-    @manifest_test
     def test_manifest_zarr(self):
         """
         Test that when downloading a manifest with a zarr, all of the files are
@@ -765,7 +749,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             for url in related_urls:
                 self.assertSetEqual(expected_args - set(url.args.keys()), set())
 
-    @manifest_test
     def test_terra_bdbag_manifest(self):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
@@ -1180,7 +1163,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         # Removed for having a subset of files as another entry
         self.assertNotIn(fqids['superset'][1], bundles)
 
-    @manifest_test
     def test_bdbag_manifest_for_redundant_entries(self):
         """
         Test that redundant bundles are removed from the terra.bdbag manifest response
@@ -1218,7 +1200,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             bundle_uuids = {row['bundle_uuid'] for row in rows}
             self.assertEqual(bundle_uuids, expected_bundle_uuids)
 
-    @manifest_test
     def test_curl_manifest(self):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
@@ -1281,7 +1262,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         response = requests.put(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
-    @manifest_test
     def test_manifest_content_disposition_header(self):
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T13:33:14.453337Z')
@@ -1317,7 +1297,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                         actual_cd = query.params['response-content-disposition']
                         self.assertEqual(expected_cd, actual_cd)
 
-    @manifest_test
     def test_verbatim_jsonl_manifest(self):
         expected = [
             {
@@ -1341,7 +1320,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
 
 class TestManifestCache(DCP1ManifestTestCase):
 
-    @manifest_test
     @patch.object(ManifestService, '_get_seconds_until_expire')
     def test_metadata_cache_expiration(self, _get_seconds_until_expire):
         self.maxDiff = None
@@ -1377,7 +1355,6 @@ class TestManifestCache(DCP1ManifestTestCase):
         self.assertTrue(any('Cached manifest is about to expire' in message
                             for message in logs))
 
-    @manifest_test
     @patch.object(ManifestService, '_get_seconds_until_expire')
     def test_compact_metadata_cache(self, _get_seconds_until_expire):
         self.maxDiff = None
@@ -1413,7 +1390,6 @@ class TestManifestCache(DCP1ManifestTestCase):
                 self.assertEqual([2, 2], list(map(len, file_names.values())))
                 self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
-    @manifest_test
     def test_hash_validity(self):
         self.maxDiff = None
         bundle_uuid = 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
@@ -1464,7 +1440,6 @@ class TestManifestCache(DCP1ManifestTestCase):
                 latest_bundle_key = generator.manifest_key()
                 self.assertEqual(latest_bundle_key, new_keys[format])
 
-    @manifest_test
     @patch.object(ManifestService, '_get_seconds_until_expire')
     def test_get_cached_manifest(self, _get_seconds_until_expire):
         format = ManifestFormat.curl
@@ -1636,7 +1611,6 @@ class TestManifestPartitioning(DCP1ManifestTestCase, DocumentCloningTestCase):
         self._setup_document_templates()
         self._add_docs(5000)
 
-    @manifest_test
     def test(self):
         # This is the smallest valid S3 part size
         part_size = 5 * 1024 * 1024
@@ -1668,7 +1642,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
                             version=cls.version)
         ]
 
-    @manifest_test
     def test_compact_manifest(self):
         response = self._get_manifest(ManifestFormat.compact, filters={})
         self.assertEqual(200, response.status_code)
@@ -2054,7 +2027,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
         ]
         self._assert_tsv(expected, response)
 
-    @manifest_test
     def test_verbatim_jsonl_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
         self.assertEqual(200, response.status_code)
@@ -2069,7 +2041,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
         }.values()
         self._assert_jsonl(list(expected), response)
 
-    @manifest_test
     def test_verbatim_pfb_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
         self.assertEqual(200, response.status_code)
