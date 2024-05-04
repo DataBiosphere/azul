@@ -64,7 +64,7 @@ class StorageService:
         self.bucket_name = bucket_name
 
     @property
-    def client(self) -> S3Client:
+    def _s3(self) -> S3Client:
         return aws.s3
 
     @property
@@ -73,9 +73,9 @@ class StorageService:
 
     def head(self, object_key: str) -> dict:
         try:
-            return self.client.head_object(Bucket=self.bucket_name,
-                                           Key=object_key)
-        except self.client.exceptions.ClientError as e:
+            return self._s3.head_object(Bucket=self.bucket_name,
+                                        Key=object_key)
+        except self._s3.exceptions.ClientError as e:
             if int(e.response['Error']['Code']) == 404:
                 raise StorageObjectNotFound
             else:
@@ -83,9 +83,9 @@ class StorageService:
 
     def get(self, object_key: str) -> bytes:
         try:
-            response = self.client.get_object(Bucket=self.bucket_name,
-                                              Key=object_key)
-        except self.client.exceptions.NoSuchKey:
+            response = self._s3.get_object(Bucket=self.bucket_name,
+                                           Key=object_key)
+        except self._s3.exceptions.NoSuchKey:
             raise StorageObjectNotFound
         else:
             return response['Body'].read()
@@ -96,11 +96,11 @@ class StorageService:
             content_type: Optional[str] = None,
             tagging: Optional[Tagging] = None,
             **kwargs):
-        self.client.put_object(Bucket=self.bucket_name,
-                               Key=object_key,
-                               Body=data,
-                               **self._object_creation_kwargs(content_type=content_type, tagging=tagging),
-                               **kwargs)
+        self._s3.put_object(Bucket=self.bucket_name,
+                            Key=object_key,
+                            Body=data,
+                            **self._object_creation_kwargs(content_type=content_type, tagging=tagging),
+                            **kwargs)
 
     def create_multipart_upload(self,
                                 object_key: str,
@@ -111,9 +111,9 @@ class StorageService:
         return self._create_multipart_upload(object_key=object_key, **kwargs)
 
     def _create_multipart_upload(self, *, object_key, **kwargs) -> MultipartUpload:
-        api_response = self.client.create_multipart_upload(Bucket=self.bucket_name,
-                                                           Key=object_key,
-                                                           **kwargs)
+        api_response = self._s3.create_multipart_upload(Bucket=self.bucket_name,
+                                                        Key=object_key,
+                                                        **kwargs)
         upload_id = api_response['UploadId']
         return self.load_multipart_upload(object_key, upload_id)
 
@@ -143,10 +143,10 @@ class StorageService:
                object_key: str,
                content_type: Optional[str] = None,
                tagging: Optional[Tagging] = None):
-        self.client.upload_file(Filename=file_path,
-                                Bucket=self.bucket_name,
-                                Key=object_key,
-                                ExtraArgs=self._object_creation_kwargs(content_type=content_type))
+        self._s3.upload_file(Filename=file_path,
+                             Bucket=self.bucket_name,
+                             Key=object_key,
+                             ExtraArgs=self._object_creation_kwargs(content_type=content_type))
         # upload_file doesn't support tags so we need to make a separate request
         # https://stackoverflow.com/a/56351011/7830612
         if tagging:
@@ -172,8 +172,8 @@ class StorageService:
                           request to the signed URL. If None, no such header will be present in the response.
         """
         assert file_name is None or '"' not in file_name
-        return self.client.generate_presigned_url(
-            ClientMethod=self.client.get_object.__name__,
+        return self._s3.generate_presigned_url(
+            ClientMethod=self._s3.get_object.__name__,
             Params={
                 'Bucket': self.bucket_name,
                 'Key': key,
@@ -181,10 +181,10 @@ class StorageService:
             })
 
     def create_bucket(self, bucket_name: Optional[str] = None):
-        self.client.create_bucket(Bucket=(bucket_name or self.bucket_name),
-                                  CreateBucketConfiguration={
-                                      'LocationConstraint': config.region
-                                  })
+        self._s3.create_bucket(Bucket=(bucket_name or self.bucket_name),
+                               CreateBucketConfiguration={
+                                   'LocationConstraint': config.region
+                               })
 
     def put_object_tagging(self, object_key: str, tagging: Tagging = None):
         deadline = time.time() + 60
@@ -192,10 +192,10 @@ class StorageService:
         log.info('Tagging object %r with %r', object_key, tagging)
         while True:
             try:
-                self.client.put_object_tagging(Bucket=self.bucket_name,
-                                               Key=object_key,
-                                               Tagging=tagging)
-            except self.client.exceptions.NoSuchKey:
+                self._s3.put_object_tagging(Bucket=self.bucket_name,
+                                            Key=object_key,
+                                            Tagging=tagging)
+            except self._s3.exceptions.NoSuchKey:
                 if time.time() > deadline:
                     log.error('Unable to tag %s on object.', tagging)
                     raise
@@ -206,7 +206,7 @@ class StorageService:
                 break
 
     def get_object_tagging(self, object_key: str) -> Tagging:
-        response = self.client.get_object_tagging(Bucket=self.bucket_name, Key=object_key)
+        response = self._s3.get_object_tagging(Bucket=self.bucket_name, Key=object_key)
         tagging = {tag['Key']: tag['Value'] for tag in response['TagSet']}
         return tagging
 
