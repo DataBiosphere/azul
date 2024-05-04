@@ -55,6 +55,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -183,11 +184,11 @@ class Health:
         return json
 
     @health_property
-    def other_lambdas(self):
+    def other_lambdas(self) -> JSON:
         """
         Indicates whether the companion REST API responds to HTTP requests.
         """
-        response = {
+        response: MutableJSON = {
             lambda_name: self._lambda(lambda_name)
             for lambda_name in config.lambda_names()
             if lambda_name != self.lambda_name
