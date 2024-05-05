@@ -22,9 +22,6 @@ from urllib.parse import (
     urlencode,
 )
 
-from azul import (
-    config,
-)
 from azul.deployment import (
     aws,
 )
@@ -174,12 +171,6 @@ class StorageService:
                 'Key': key,
                 **({} if file_name is None else {'ResponseContentDisposition': f'attachment;filename="{file_name}"'})
             })
-
-    def create_bucket(self):
-        self._s3.create_bucket(Bucket=self.bucket_name,
-                               CreateBucketConfiguration={
-                                   'LocationConstraint': config.region
-                               })
 
     def put_object_tagging(self, object_key: str, tagging: Tagging = None):
         deadline = time.time() + 60
