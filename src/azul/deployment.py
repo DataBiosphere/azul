@@ -56,6 +56,9 @@ from azul.types import (
 )
 
 if TYPE_CHECKING:
+    from mypy_boto3_dynamodb import (
+        DynamoDBClient,
+    )
     from mypy_boto3_ecr import (
         ECRClient,
     )
@@ -209,7 +212,7 @@ class AWS:
         return self.client('ec2')
 
     @property
-    def dynamodb(self):
+    def dynamodb(self) -> 'DynamoDBClient':
         return self.client('dynamodb', azul_logging=True)
 
     @property
