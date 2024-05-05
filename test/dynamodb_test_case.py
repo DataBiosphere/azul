@@ -24,11 +24,7 @@ from azul_test_case import (
 )
 
 
-@mock_dynamodb
 class DynamoDBTestCase(AzulUnitTestCase, metaclass=ABCMeta):
-    """
-    Don't forget to decorate concrete subclasses with @mock_dynamodb as well!
-    """
     # Moto's dynamodb backend doesn't support government regions.
     _aws_test_region = 'ap-south-1'
 
@@ -50,6 +46,7 @@ class DynamoDBTestCase(AzulUnitTestCase, metaclass=ABCMeta):
 
     def setUp(self):
         super().setUp()
+        self.addPatch(mock_dynamodb())
         self.dynamodb.create_table(TableName=self._dynamodb_table_name(),
                                    BillingMode='PAY_PER_REQUEST',
                                    AttributeDefinitions=[
