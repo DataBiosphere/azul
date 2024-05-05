@@ -45,11 +45,14 @@ def setUpModule():
 @mock_sts
 @mock_dynamodb
 class TestPortalService(VersionTableTestCase):
-    dummy_db = [
-        {
-            "spam": "eggs"
-        }
-    ]
+
+    @property
+    def dummy_db(self) -> JSONs:
+        return [
+            {
+                "spam": "eggs"
+            }
+        ]
 
     @cached_property
     def plugin_db(self) -> JSONs:
@@ -83,14 +86,16 @@ class TestPortalService(VersionTableTestCase):
             ]
         }]
 
-    demultiplex_db = [
-        {
-            'integrations': [
-                {'entity_ids': ['good']},
-                {}
-            ]
-        }
-    ]
+    @property
+    def demultiplex_db(self) -> JSONs:
+        return [
+            {
+                'integrations': [
+                    {'entity_ids': ['good']},
+                    {}
+                ]
+            }
+        ]
 
     def setUp(self):
         super().setUp()
