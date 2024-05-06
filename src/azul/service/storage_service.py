@@ -9,6 +9,14 @@ from collections.abc import (
 from dataclasses import (
     dataclass,
 )
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
+from email.utils import (
+    parsedate_to_datetime,
+)
 from logging import (
     getLogger,
 )
@@ -22,6 +30,10 @@ from urllib.parse import (
     urlencode,
 )
 
+from werkzeug.http import (
+    parse_dict_header,
+)
+
 from azul.deployment import (
     aws,
 )
@@ -32,6 +44,9 @@ if TYPE_CHECKING:
     )
     from mypy_boto3_s3.service_resource import (
         MultipartUpload,
+    )
+    from mypy_boto3_s3.type_defs import (
+        HeadObjectOutputTypeDef,
     )
 
 log = getLogger(__name__)
@@ -62,7 +77,7 @@ class StorageService:
     def _s3(self) -> S3Client:
         return aws.s3
 
-    def head(self, object_key: str) -> dict:
+    def head(self, object_key: str) -> HeadObjectOutputTypeDef:
         try:
             return self._s3.head_object(Bucket=self.bucket_name,
                                         Key=object_key)
@@ -195,6 +210,49 @@ class StorageService:
         response = self._s3.get_object_tagging(Bucket=self.bucket_name, Key=object_key)
         tagging = {tag['Key']: tag['Value'] for tag in response['TagSet']}
         return tagging
+
+    def time_until_object_expires(self, object_key: str, expiration: int) -> float:
+        """
+        The time, in seconds, before the object at the given key will expire.
+
+        :param object_key: The key of the object
+
+        :param expiration: the number of days between the last write of an
+                           object and its expected expiration by a bucket
+                           lifecycle rule. This parameter is solely used to
+                           verify the return value.
+        """
+        response = self.head(object_key)
+        return self._time_until_object_expires(response, expiration)
+
+    def _time_until_object_expires(self,
+                                   head_response: HeadObjectOutputTypeDef,
+                                   expiration: int
+                                   ) -> float:
+        now = datetime.now(timezone.utc)
+        # Example header value
+        # expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"
+        expiration_header = parse_dict_header(head_response['Expiration'])
+        expiry = parsedate_to_datetime(expiration_header['expiry-date'])
+        time_left = (expiry - now).total_seconds()
+        # Verify the 'Expiration' value is what is expected given the
+        # 'LastModified' value, the number of days before expiration, and that
+        # AWS rounds the expiration up to midnight UTC.
+        last_modified = head_response['LastModified']
+        last_modified_floor = last_modified.replace(hour=0,
+                                                    minute=0,
+                                                    second=0,
+                                                    microsecond=0)
+        if last_modified != last_modified_floor:
+            expiration += 1
+        expected_expiry = last_modified_floor + timedelta(days=expiration)
+        if expiry == expected_expiry:
+            log.debug('Object expires in %s seconds, on %s',
+                      time_left, expiry)
+        else:
+            log.error('Actual object expiration (%s) does not match expected value (%s)',
+                      expiration_header, expected_expiry)
+        return time_left
 
 
 @dataclass

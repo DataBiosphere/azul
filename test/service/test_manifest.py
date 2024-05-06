@@ -14,7 +14,6 @@ import csv
 from datetime import (
     datetime,
     timedelta,
-    timezone,
 )
 from io import (
     BytesIO,
@@ -35,6 +34,7 @@ from typing import (
     cast,
 )
 from unittest.mock import (
+    MagicMock,
     patch,
 )
 import unittest.result
@@ -103,13 +103,13 @@ from azul.service.manifest_service import (
     PagedManifestGenerator,
     SignedManifestKey,
 )
+from azul.service.storage_service import (
+    StorageService,
+)
 from azul.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
-)
-from azul_test_case import (
-    AzulUnitTestCase,
 )
 from indexer import (
     AnvilCannedBundleTestCase,
@@ -1313,15 +1313,16 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
 
 class TestManifestCache(DCP1ManifestTestCase):
 
-    @patch.object(ManifestService, '_get_seconds_until_expire')
-    def test_metadata_cache_expiration(self, _get_seconds_until_expire):
+    @patch.object(StorageService, '_time_until_object_expires')
+    def test_metadata_cache_expiration(self, _time_until_object_expires: MagicMock):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        def test(expiration: int) -> list[str]:
-            _get_seconds_until_expire.return_value = expiration
+        def test(expiration: int | None) -> list[str]:
+            if expiration is not None:
+                _time_until_object_expires.return_value = expiration
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
             from azul.service.manifest_service import (
                 log as service_log,
@@ -1329,10 +1330,13 @@ class TestManifestCache(DCP1ManifestTestCase):
             with self.assertLogs(logger=service_log, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.compact, filters)
                 self.assertEqual(200, response.status_code)
-                return logs.output
+            if expiration is None:
+                _time_until_object_expires.assert_not_called()
+            _time_until_object_expires.reset_mock()
+            return logs.output
 
         # On the first request the cached manifest doesn't exist yet
-        logs = test(expiration=30)
+        logs = test(expiration=None)
         self.assertTrue(any('Cached manifest not found' in message
                             for message in logs))
 
@@ -1348,38 +1352,50 @@ class TestManifestCache(DCP1ManifestTestCase):
         self.assertTrue(any('Cached manifest is about to expire' in message
                             for message in logs))
 
-    @patch.object(ManifestService, '_get_seconds_until_expire')
-    def test_compact_metadata_cache(self, _get_seconds_until_expire):
+    @patch.object(StorageService, '_time_until_object_expires')
+    def test_compact_metadata_cache(self, _time_until_object_expires: MagicMock):
         self.maxDiff = None
-        _get_seconds_until_expire.return_value = 3600
-        bundle_fqids = [
-            self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                             version='2018-09-14T13:33:14.453337Z'),
-            self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                             version='2018-09-14T13:33:14.453337Z')
-        ]
-        for bundle_fqid in bundle_fqids:
-            with self.subTest(bundle_fqid=bundle_fqid):
-                self._index_canned_bundle(bundle_fqid)
-
-                project_ids = [
-                    '67bc798b-a34a-4104-8cab-cad648471f69',
-                    '6615efae-fca8-4dd2-a223-9cfcf30fe94d'
-                ]
-
-                # Run the generation of manifests twice to verify generated file
-                # names are the same when re-run
-                file_names = defaultdict(list)
-                for i, project_id in enumerate(project_ids * 2):
-                    with self.subTest(project_id=project_id, i=i):
-                        filters = {'projectId': {'is': [project_id]}}
-                        response = self._get_manifest(ManifestFormat.compact,
-                                                      filters=filters)
+        bundle_fqids = {
+            '67bc798b-a34a-4104-8cab-cad648471f69':
+                self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
+                                 version='2018-09-14T13:33:14.453337Z'),
+            '6615efae-fca8-4dd2-a223-9cfcf30fe94d':
+                self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                                 version='2018-09-14T13:33:14.453337Z')
+        }
+        for i, (project_id, bundle_fqid) in enumerate(bundle_fqids.items()):
+            self._index_canned_bundle(bundle_fqid)
+            file_names = defaultdict(list)
+            for j in range(2):
+                for filter_project_id in bundle_fqids.keys():
+                    # We can only get a cache miss for the first of two the
+                    # requests using the same filter (j==2). After indexing the
+                    # first bundle, the first request for either filter will
+                    # produce a miss. After indexing the second bundle, only the
+                    # filter for the project of that second bundle will produce
+                    # a miss. That's because indexing the second bundle won't
+                    # affect the content hash of the manifest filtered by
+                    # project of the first bundle. That manifest is empty.
+                    cache_miss = j == 0 and (
+                        i == 0
+                        or i == 1 and project_id == filter_project_id
+                    )
+                    _time_until_object_expires.return_value = None if cache_miss else 3600
+                    with self.subTest(bundle_fqid=bundle_fqid.uuid[0:8],
+                                      cache_miss=cache_miss,
+                                      filter_project_id=filter_project_id[0:8]):
+                        filters = {'projectId': {'is': [filter_project_id]}}
+                        response = self._get_manifest(ManifestFormat.compact, filters=filters)
                         self.assertEqual(200, response.status_code)
+                        if cache_miss:
+                            _time_until_object_expires.assert_not_called()
+                        else:
+                            _time_until_object_expires.assert_called_once()
+                        _time_until_object_expires.reset_mock()
                         file_name = str(furl(response.url).path)
-                        file_names[project_id].append(file_name)
-
-                self.assertEqual(file_names.keys(), set(project_ids))
+                        file_names[filter_project_id].append(file_name)
+            with self.subTest(bundle_fqid=bundle_fqid.uuid[0:8]):
+                self.assertEqual(file_names.keys(), bundle_fqids.keys())
                 self.assertEqual([2, 2], list(map(len, file_names.values())))
                 self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
@@ -1433,22 +1449,26 @@ class TestManifestCache(DCP1ManifestTestCase):
                 latest_bundle_key = generator.manifest_key()
                 self.assertEqual(latest_bundle_key, new_keys[format])
 
-    @patch.object(ManifestService, '_get_seconds_until_expire')
-    def test_get_cached_manifest(self, _get_seconds_until_expire):
+    @patch.object(StorageService, '_time_until_object_expires')
+    def test_get_cached_manifest(self, _time_until_object_expires: MagicMock):
         format = ManifestFormat.curl
         filters = {}
 
+        # Prime the cache
         manifest, _ = self._get_manifest_object(format=format, filters=filters)
         self.assertFalse(manifest.was_cached)
         manifest_key = manifest.manifest_key
+        _time_until_object_expires.assert_not_called()
 
-        # Ensure manifest is considered fresh
-        _get_seconds_until_expire.return_value = 3000
+        # Simulate a valid cached manifest
+        _time_until_object_expires.return_value = 3000
         filters = self._filters(filters)
         cached_manifest_1 = self._service.get_cached_manifest(format=format,
                                                               catalog=manifest_key.catalog,
                                                               filters=filters)
         self.assertTrue(cached_manifest_1.was_cached)
+        _time_until_object_expires.assert_called_once()
+        _time_until_object_expires.reset_mock()
         # The `was_cached` and `location` properties should be the only
         # differences. The `location` is a signed S3 URL that depends on
         # the current time. If both manifest where created in different
@@ -1457,24 +1477,27 @@ class TestManifestCache(DCP1ManifestTestCase):
                                 was_cached=True,
                                 location=cached_manifest_1.location)
         self.assertEqual(manifest, cached_manifest_1)
-
         cached_manifest_2 = self._service.get_cached_manifest_with_key(manifest_key)
         cached_manifest_1 = attrs.evolve(cached_manifest_1,
                                          location=cached_manifest_2.location)
         self.assertEqual(cached_manifest_1, cached_manifest_2)
+        _time_until_object_expires.assert_called_once()
+        _time_until_object_expires.reset_mock()
 
-        # Ensure manifest is considered stale
-        _get_seconds_until_expire.return_value = 30
-
+        # Simulate an expired cached manifest
+        _time_until_object_expires.return_value = 30
         with self.assertRaises(CachedManifestNotFound) as e:
             self._service.get_cached_manifest(format=format,
                                               catalog=manifest_key.catalog,
                                               filters=filters)
         self.assertEqual(manifest_key, e.exception.manifest_key)
-
-        with self.assertRaises(CachedManifestNotFound):
+        _time_until_object_expires.assert_called_once()
+        _time_until_object_expires.reset_mock()
+        with self.assertRaises(CachedManifestNotFound) as e:
             self._service.get_cached_manifest_with_key(manifest_key)
         self.assertEqual(manifest_key, e.exception.manifest_key)
+        _time_until_object_expires.assert_called_once()
+        _time_until_object_expires.reset_mock()
 
 
 class TestManifestResponse(DCP1ManifestTestCase):
@@ -1572,29 +1595,6 @@ class TestManifestResponse(DCP1ManifestTestCase):
             for fetch in True, False:
                 with self.subTest(format=format, fetch=fetch):
                     test(format=format, fetch=fetch)
-
-
-class TestManifestExpiration(AzulUnitTestCase):
-
-    def test_get_seconds_until_expire(self):
-        """
-        Verify a header with valid Expiration and LastModified values returns
-        the correct expiration value.
-        """
-        test_data = [(1, False), (0, False), (-1, True)]
-        for object_age, expect_error in test_data:
-            with self.subTest(object_age=object_age, expect_error=expect_error):
-                with patch.object(manifest_service, 'datetime') as mock_datetime:
-                    now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-                    mock_datetime.now.return_value = now
-                    with self.assertLogs(logger=manifest_service.log, level='DEBUG') as logs:
-                        headers = {
-                            'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
-                            'LastModified': now - timedelta(days=float(config.manifest_expiration),
-                                                            seconds=object_age)
-                        }
-                        self.assertEqual(0, ManifestService._get_seconds_until_expire(headers))
-                    self.assertIs(expect_error, any('does not match' in log for log in logs.output))
 
 
 class TestManifestPartitioning(DCP1ManifestTestCase, DocumentCloningTestCase):
