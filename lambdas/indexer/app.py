@@ -95,9 +95,11 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
             s3_decorator = self.on_s3_event(bucket=aws.logs_bucket,
                                             events=['s3:ObjectCreated:*'],
                                             prefix=prefix)
-            error_decorator = self.metric_alarm(metric=LambdaMetric.errors)
+            error_decorator = self.metric_alarm(metric=LambdaMetric.errors,
+                                                threshold=1,  # One alarm …
+                                                period=24 * 60 * 60)  # … per day.
             throttle_decorator = self.metric_alarm(metric=LambdaMetric.throttles)
-            retry_decorator = self.retry(num_retries=0)
+            retry_decorator = self.retry(num_retries=2)
 
             def decorator(f):
                 return retry_decorator(throttle_decorator(error_decorator(s3_decorator(f))))
