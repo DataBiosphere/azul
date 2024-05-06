@@ -1317,8 +1317,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                         actual_cd = query.params['response-content-disposition']
                         self.assertEqual(expected_cd, actual_cd)
 
-    @unittest.skipIf(not config.enable_replicas,
-                     'The format is replica-based')
     @manifest_test
     def test_verbatim_jsonl_manifest(self):
         expected = [
@@ -2059,8 +2057,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
         ]
         self._assert_tsv(expected, response)
 
-    @unittest.skipIf(not config.enable_replicas,
-                     'The format is replica-based')
     @manifest_test
     def test_verbatim_jsonl_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
@@ -2075,8 +2071,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
         ]
         self._assert_jsonl(expected, response)
 
-    @unittest.skipIf(not config.enable_replicas,
-                     'The format is replica-based')
     @manifest_test
     def test_verbatim_pfb_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
