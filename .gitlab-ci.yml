@@ -77,7 +77,6 @@ test:
   timeout: 1h 30m
   script:
     - make format
-    - test "$AZUL_IS_SANDBOX" = 1 && make requirements_update
     - make -C lambdas openapi
     - make environment.boot
     - make -C .github
