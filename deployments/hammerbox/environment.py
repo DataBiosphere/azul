@@ -396,10 +396,9 @@ anvil5_sources = mkdict(anvil4_sources, 262, mkdelta([
     # @formatter:on
 ]))
 
-anvil6_sources = mkdict(anvil5_sources, 255, mkdelta([
+anvil6_sources = mkdict(anvil5_sources, 252, mkdelta([
     # @formatter:off
     mksrc('datarepo-38af6304', 'ANVIL_1000G_PRIMED_data_model_20240410_ANV5_202404101419', 14695),
-    mksrc('datarepo-ed4892b5', 'ANVIL_ALSCompute_Collection_GRU_20231016_ANV5_202404081553', 14593),
     mksrc('datarepo-1a86e7ca', 'ANVIL_CCDG_Baylor_CVD_AFib_Groningen_WGS_20221122_ANV5_202304242224', 639, pop),
     mksrc('datarepo-92716a90', 'ANVIL_CCDG_Baylor_CVD_AFib_VAFAR_HMB_IRB_WGS_20221020_ANV5_202304211525', 253, pop),
     mksrc('datarepo-e8fc4258', 'ANVIL_CCDG_Baylor_CVD_ARIC_20231008_ANV5_202403030358', 10012),
@@ -481,7 +480,6 @@ anvil6_sources = mkdict(anvil5_sources, 255, mkdelta([
     mksrc('datarepo-844a1ecf', 'ANVIL_CCDG_Broad_NP_Epilepsy_FINUVH_HMB_NPU_MDS_WES_20221114_ANV5_202403031331', 102),
     mksrc('datarepo-1cbd28a5', 'ANVIL_CCDG_Broad_NP_Epilepsy_FRALYU_HMB_WES_20230621_ANV5_202403031340', 1042),
     mksrc('datarepo-b8b0b663', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRSWU_CARDI_NEURO_WES_20221026_ANV5_202403031348', 319),
-    mksrc('datarepo-47221e9e', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUCL_DS_EARET_MDS_WES_20221026_ANV5_202404081606', 686),
     mksrc('datarepo-2686a76a', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUNL_EP_ETIOLOGY_MDS_WES_20221027_ANV5_202403031405', 460), # noqa E501
     mksrc('datarepo-05e028a4', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUNL_GRU_WES_20221108_ANV5_202403031413', 57),
     mksrc('datarepo-4a6228be', 'ANVIL_CCDG_Broad_NP_Epilepsy_GHAKNT_GRU_WES_20221122_ANV5_202403031421', 646),
@@ -612,7 +610,6 @@ anvil6_sources = mkdict(anvil5_sources, 255, mkdelta([
     mksrc('datarepo-5227851b', 'ANVIL_CSER_ClinSeq_GRU_20240401_ANV5_202404081541', 23),
     mksrc('datarepo-1a706b0c', 'ANVIL_GTEx_Somatic_WGS_20240116_ANV5_202401170147', 708, pop),
     mksrc('datarepo-6cff3240', 'ANVIL_HPRC_20240401_ANV5_202404122012', 63201),
-    mksrc('datarepo-52aaeb56', 'ANVIL_MAS_ISO_seq_20240113_ANV5_202404081635', 205),
     mksrc('datarepo-8a98bcb4', 'ANVIL_NIMH_Broad_ConvNeuro_McCarroll_Nehme_Levy_CIRM_DS_Village_20240405_ANV5_202404081511', 495), # noqa E501
     mksrc('datarepo-c02a5efb', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_VillageData_20230109_ANV5_202402292203', 1357), # noqa E501
     mksrc('datarepo-817f27aa', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_WGS_20240206_ANV5_202402081755', 678), # noqa E501
@@ -645,7 +642,6 @@ anvil6_sources = mkdict(anvil5_sources, 255, mkdelta([
     mksrc('datarepo-cfe20662', 'ANVIL_ccdg_asc_ndd_daly_talkowski_renieri_asd_exome_20230327_ANV5_202403040909', 777),
     mksrc('datarepo-7c668a5c', 'ANVIL_ccdg_asc_ndd_daly_talkowski_schloesser_asd_exome_20230324_ANV5_202403040917', 156), # noqa E501
     mksrc('datarepo-0b4c3cfb', 'ANVIL_ccdg_asc_ndd_daly_talkowski_schloesser_asd_gsa_md_20221025_ANV5_202402291202', 158, pop), # noqa E501
-    mksrc('datarepo-dd5a1c65', 'ANVIL_ccdg_broad_ai_ibd_daly_brant_burnstein_utsw_wes_20240103_ANV5_202402062132', 66),
     mksrc('datarepo-2571477f', 'ANVIL_ccdg_broad_ai_ibd_daly_burnstein_gsa_20240103_ANV5_202401112154', 396),
     mksrc('datarepo-c0abacf6', 'ANVIL_ccdg_broad_ai_ibd_daly_chen_gsa_20240103_ANV5_202401112202', 96),
     mksrc('datarepo-c7473b33', 'ANVIL_ccdg_broad_ai_ibd_daly_chen_wes_20240103_ANV5_202403040940', 84),
