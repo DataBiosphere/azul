@@ -1,6 +1,7 @@
 from abc import (
     ABCMeta,
 )
+import cgi
 from collections import (
     defaultdict,
 )
@@ -174,7 +175,14 @@ class ManifestTestCase(WebServiceTestCase,
                       ) -> Response:
         manifest, num_partitions = self._get_manifest_object(format, filters)
         self.assertEqual(1, num_partitions)
-        return requests.get(manifest.location, stream=stream)
+        response = requests.get(manifest.location, stream=stream)
+        # Moto doesn't support signed S3 URLs with Content-Disposition baked in,
+        # so we'll retroactively inject it into the response header.
+        location = furl(manifest.location)
+        content_disposition = location.args.get('response-content-disposition')
+        if content_disposition is not None:
+            response.headers['content-disposition'] = content_disposition
+        return response
 
     def _get_manifest_object(self,
                              format: ManifestFormat,
@@ -1392,10 +1400,23 @@ class TestManifestCache(DCP1ManifestTestCase):
                         else:
                             _time_until_object_expires.assert_called_once()
                         _time_until_object_expires.reset_mock()
-                        file_name = str(furl(response.url).path)
-                        file_names[filter_project_id].append(file_name)
+                        header = response.headers['Content-Disposition']
+                        value, params = cgi.parse_header(header)
+                        self.assertEqual('attachment', value)
+                        file_names[filter_project_id].append(params['filename'])
             with self.subTest(bundle_fqid=bundle_fqid.uuid[0:8]):
                 self.assertEqual(file_names.keys(), bundle_fqids.keys())
+                # The manifest for the current project should have a custom file
+                # name instead of the generic one. The manifest for the other
+                # project will have a generic name, if its empty because its
+                # bundle hasn't been indexed yet.
+                self.assertFalse(any(f.startswith('hca-') for f in file_names[project_id]))
+                other_project_id = one(p for p in bundle_fqids.keys() if p != project_id)
+                generic_names = (f.startswith('hca-') for f in file_names[other_project_id])
+                if i == 0:
+                    self.assertTrue(all(generic_names))
+                else:
+                    self.assertFalse(any(generic_names))
                 self.assertEqual([2, 2], list(map(len, file_names.values())))
                 self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
