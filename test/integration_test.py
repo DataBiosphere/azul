@@ -1609,6 +1609,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             manifest_content = {
                 # We can't assert the full contents of each entity because the
                 # schema changes depending on the filters used.
+                # FIXME: Generate Avro schema from AnVIL schema
+                #        https://github.com/DataBiosphere/azul/issues/6109
                 entity['id']
                 for entity in entities
                 # The special "Metadata" entity is always present. Dropping it
