@@ -242,7 +242,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make image_manifests.json`
         # and redeploying the `shared` component.
         #
-        'azul_python_version': '3.11.8',
+        'azul_python_version': '3.11.9',
 
         # The version of Terraform used throughout the system.
         #
@@ -275,12 +275,12 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-19',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-21',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.19-15',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.20-16',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
@@ -296,11 +296,11 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.10.2-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:16.11.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.10.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.11.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {

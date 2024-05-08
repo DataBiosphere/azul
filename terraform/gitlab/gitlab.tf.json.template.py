@@ -249,6 +249,17 @@ ami_id = {
 
 gitlab_mount = '/mnt/gitlab'
 
+aws_managed_buckets_for_ssm_agent = [
+    f'{aws.region_name}-birdwatcher-prod',
+    f'amazon-ssm-{aws.region_name}',
+    f'amazon-ssm-packages-{aws.region_name}',
+    f'aws-patchmanager-macos-{aws.region_name}',
+    f'aws-ssm-{aws.region_name}',
+    f'aws-ssm-document-attachments-{aws.region_name}',
+    f'aws-windows-downloads-{aws.region_name}',
+    f'patch-baseline-snapshot-{aws.region_name}'
+]
+
 
 def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
     return sorted(set(chain(*sets)))
@@ -351,10 +362,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'edu-ucsc-gi-azul-*',
                                     '*.azul.data.humancellatlas.org',
                                 ]
-                            ) + [
-                                f'amazon-ssm-packages-{aws.region_name}',
-                                f'aws-ssm-document-attachments-{aws.region_name}'
-                            ]
+                            ) + aws_managed_buckets_for_ssm_agent
                         )
                     },
 
@@ -956,12 +964,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             's3:GetObject',
                             's3:ListBucket'
                         ],
-                        'resources': [
-                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}',
-                            f'arn:aws:s3:::amazon-ssm-packages-{aws.region_name}/*',
-                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}',
-                            f'arn:aws:s3:::aws-ssm-document-attachments-{aws.region_name}/*'
-                        ]
+                        'resources': merge(
+                            [
+                                f'arn:aws:s3:::{bucket_name}',
+                                f'arn:aws:s3:::{bucket_name}/*'
+                            ] for bucket_name in aws_managed_buckets_for_ssm_agent
+                        )
                     }
                 ]
             }

@@ -78,9 +78,9 @@ Connected issue: #0000
 - [ ] Reviewed build logs for anomalies on GitLab `anvilprod`
 - [ ] Ran `_select anvilprod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
-- [ ] Moved connected issue to *Merged prod* column on ZenHub
-- [ ] Moved promoted issues from *Merged* to *Merged prod* column on ZenHub
-- [ ] Moved promoted issues from *dev* to *prod* column on ZenHub
+- [ ] Moved connected issue to *Merged stable* column on ZenHub
+- [ ] Moved promoted issues from *Merged lower* to *Merged stable* column on ZenHub
+- [ ] Moved promoted issues from *Lower* to *Stable* column on ZenHub
 
 
 ### Operator (reindex)

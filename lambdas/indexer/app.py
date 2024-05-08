@@ -107,6 +107,7 @@ configure_app_logging(app, log)
 
 @app.route(
     '/',
+    cache_control='public, max-age=0, must-revalidate',
     cors=True
 )
 def swagger_ui():
@@ -115,6 +116,7 @@ def swagger_ui():
 
 @app.route(
     '/static/{file}',
+    cache_control='public, max-age=86400',
     cors=True
 )
 def static_resource(file):
@@ -127,6 +129,7 @@ common_specs = CommonEndpointSpecs(app_name='indexer')
 @app.route(
     '/openapi',
     methods=['GET'],
+    cache_control='public, max-age=500',
     cors=True,
     **common_specs.openapi
 )
@@ -297,7 +300,7 @@ def contribute(event: chalice.app.SQSEvent):
 
 @app.threshold(
     errors=int(config.aggregation_concurrency(retry=False) * 3),
-    throttles=int(28800 / config.aggregation_concurrency(retry=False))
+    throttles=int(37760 / config.aggregation_concurrency(retry=False))
 )
 @app.on_sqs_message(
     queue=config.tallies_queue_name(),

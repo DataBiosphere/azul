@@ -228,7 +228,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '7.2'
+        'version': '7.3'
     },
     'tags': [
         {
@@ -450,6 +450,7 @@ configure_app_logging(app, log)
 
 @app.route(
     '/',
+    cache_control='public, max-age=0, must-revalidate',
     cors=True
 )
 def swagger_ui():
@@ -458,6 +459,7 @@ def swagger_ui():
 
 @app.route(
     '/static/{file}',
+    cache_control='public, max-age=86400',
     cors=True
 )
 def static_resource(file):
@@ -466,7 +468,8 @@ def static_resource(file):
 
 @app.route(
     '/oauth2_redirect',
-    enabled=config.google_oauth2_client_id is not None
+    enabled=config.google_oauth2_client_id is not None,
+    cache_control='no-store'
 )
 def oauth2_redirect():
     oauth2_redirect_html = app.load_static_resource('swagger', 'oauth2-redirect.html')
@@ -481,6 +484,7 @@ common_specs = CommonEndpointSpecs(app_name='service')
 @app.route(
     '/openapi',
     methods=['GET'],
+    cache_control='public, max-age=500',
     cors=True,
     **common_specs.openapi
 )
@@ -1413,6 +1417,10 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         - `{ManifestFormat.verbatim_jsonl.value}` for a verbatim
                           manifest in [JSONL][5] format. Each line contains an
                           unaltered metadata entity from the underlying repository.
+
+                        - `{ManifestFormat.verbatim_pfb.value}` for a verbatim
+                          manifest in the [PFB format][3]. This format is mainly
+                          used for exporting data to Terra.
 
                         [1]: https://bd2k.ini.usc.edu/tools/bdbag/
 
