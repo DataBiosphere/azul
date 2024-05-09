@@ -203,137 +203,134 @@ emit_tf({
                         'allow': {}
                     },
                     'rule': [
-                        {
-                            'priority': 0,
-                            'name': 'BlockedIPs',
-                            'action': {
-                                'block': {}
-                            },
-                            'statement': {
-                                'ip_set_reference_statement': {
+                        {**rule, 'priority': i}
+                        for i, rule in enumerate([
+                            {
+                                'name': 'BlockedIPs',
+                                'action': {
+                                    'block': {}
+                                },
+                                'statement': {
+                                    'ip_set_reference_statement': {
                                     'arn': '${data.aws_wafv2_ip_set.%s.arn}' % config.blocked_v4_ips_term
+                                    }
+                                },
+                                'visibility_config': {
+                                    'metric_name': 'BlockedIPs',
+                                    'sampled_requests_enabled': True,
+                                    'cloudwatch_metrics_enabled': True
                                 }
                             },
-                            'visibility_config': {
-                                'metric_name': 'BlockedIPs',
-                                'sampled_requests_enabled': True,
-                                'cloudwatch_metrics_enabled': True
-                            }
-                        },
-                        {
-                            'priority': 1,
-                            'name': config.waf_rate_rule_name,
-                            'action': {
-                                'block': {
-                                    'custom_response': {
-                                        'response_code': 429,
-                                        'response_header': [
+                            {
+                                'name': config.waf_rate_rule_name,
+                                'action': {
+                                    'block': {
+                                        'custom_response': {
+                                            'response_code': 429,
+                                            'response_header': [
+                                                {
+                                                    'name': 'Retry-After',
+                                                    'value': str(config.waf_rate_rule_retry_after)
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                'statement': {
+                                    'rate_based_statement': {
+                                        'limit': 1000,  # limit must be between 100 and 20,000,000
+                                        'aggregate_key_type': 'IP'
+                                    }
+                                },
+                                'visibility_config': {
+                                    'metric_name': config.waf_rate_rule_name,
+                                    'sampled_requests_enabled': True,
+                                    'cloudwatch_metrics_enabled': True
+                                }
+                            },
+                            {
+                                'name': 'AWS-CommonRuleSet',
+                                'override_action': {
+                                    'none': {}
+                                },
+                                'statement': {
+                                    'managed_rule_group_statement': {
+                                        'name': 'AWSManagedRulesCommonRuleSet',
+                                        'vendor_name': 'AWS',
+                                        'rule_action_override': [
                                             {
-                                                'name': 'Retry-After',
-                                                'value': str(config.waf_rate_rule_retry_after)
+                                                # This rule would limit the query
+                                                # string to 2048 bytes, which would
+                                                # block valid requests made during
+                                                # the integration tests. We disarm
+                                                # it by setting the action to
+                                                # `count`. API Gateway protects us
+                                                # from over-sized query strings by
+                                                # limiting the total combined size
+                                                # of the request line and header
+                                                # values to 10240 bytes.
+                                                'name': 'SizeRestrictions_QUERYSTRING',
+                                                'action_to_use': {
+                                                    'count': {}
+                                                }
+                                            },
+                                            # FIXME: https://github.com/DataBiosphere/azul-private/issues/128
+                                            {
+                                                # This rule aims to limit bodies to
+                                                # 8192 bytes. We need to be able to
+                                                # handle larger bodies with hoisted
+                                                # parameters, so we demote the rule
+                                                # action to be counting instead of
+                                                # blocking.
+                                                'name': 'SizeRestrictions_BODY',
+                                                'action_to_use': {
+                                                    'count': {}
+                                                }
                                             }
                                         ]
                                     }
+                                },
+                                'visibility_config': {
+                                    'metric_name': 'AWS-CommonRuleSet',
+                                    'sampled_requests_enabled': True,
+                                    'cloudwatch_metrics_enabled': True
                                 }
                             },
-                            'statement': {
-                                'rate_based_statement': {
-                                    'limit': 1000,  # limit must be between 100 and 20,000,000
-                                    'aggregate_key_type': 'IP'
+                            {
+                                'name': 'AWS-AmazonIpReputationList',
+                                'override_action': {
+                                    'none': {}
+                                },
+                                'statement': {
+                                    'managed_rule_group_statement': {
+                                        'name': 'AWSManagedRulesAmazonIpReputationList',
+                                        'vendor_name': 'AWS'
+                                    }
+                                },
+                                'visibility_config': {
+                                    'metric_name': 'AWS-AmazonIpReputationList',
+                                    'sampled_requests_enabled': True,
+                                    'cloudwatch_metrics_enabled': True
                                 }
                             },
-                            'visibility_config': {
-                                'metric_name': config.waf_rate_rule_name,
-                                'sampled_requests_enabled': True,
-                                'cloudwatch_metrics_enabled': True
-                            }
-                        },
-                        {
-                            'priority': 2,
-                            'name': 'AWS-CommonRuleSet',
-                            'override_action': {
-                                'none': {}
-                            },
-                            'statement': {
-                                'managed_rule_group_statement': {
-                                    'name': 'AWSManagedRulesCommonRuleSet',
-                                    'vendor_name': 'AWS',
-                                    'rule_action_override': [
-                                        {
-                                            # This rule would limit the query
-                                            # string to 2048 bytes, which would
-                                            # block valid requests made during
-                                            # the integration tests. We disarm
-                                            # it by setting the action to
-                                            # `count`. API Gateway protects us
-                                            # from over-sized query strings by
-                                            # limiting the total combined size
-                                            # of the request line and header
-                                            # values to 10240 bytes.
-                                            'name': 'SizeRestrictions_QUERYSTRING',
-                                            'action_to_use': {
-                                                'count': {}
-                                            }
-                                        },
-                                        # FIXME: https://github.com/DataBiosphere/azul-private/issues/128
-                                        {
-                                            # This rule aims to limit bodies to
-                                            # 8192 bytes. We need to be able to
-                                            # handle larger bodies with hoisted
-                                            # parameters, so we demote the rule
-                                            # action to be counting instead of
-                                            # blocking.
-                                            'name': 'SizeRestrictions_BODY',
-                                            'action_to_use': {
-                                                'count': {}
-                                            }
-                                        }
-                                    ]
+                            {
+                                'name': 'AWS-UnixRuleSet',
+                                'override_action': {
+                                    'none': {}
+                                },
+                                'statement': {
+                                    'managed_rule_group_statement': {
+                                        'name': 'AWSManagedRulesUnixRuleSet',
+                                        'vendor_name': 'AWS'
+                                    }
+                                },
+                                'visibility_config': {
+                                    'metric_name': 'AWS-UnixRuleSet',
+                                    'sampled_requests_enabled': True,
+                                    'cloudwatch_metrics_enabled': True
                                 }
                             },
-                            'visibility_config': {
-                                'metric_name': 'AWS-CommonRuleSet',
-                                'sampled_requests_enabled': True,
-                                'cloudwatch_metrics_enabled': True
-                            }
-                        },
-                        {
-                            'priority': 3,
-                            'name': 'AWS-AmazonIpReputationList',
-                            'override_action': {
-                                'none': {}
-                            },
-                            'statement': {
-                                'managed_rule_group_statement': {
-                                    'name': 'AWSManagedRulesAmazonIpReputationList',
-                                    'vendor_name': 'AWS'
-                                }
-                            },
-                            'visibility_config': {
-                                'metric_name': 'AWS-AmazonIpReputationList',
-                                'sampled_requests_enabled': True,
-                                'cloudwatch_metrics_enabled': True
-                            }
-                        },
-                        {
-                            'priority': 4,
-                            'name': 'AWS-UnixRuleSet',
-                            'override_action': {
-                                'none': {}
-                            },
-                            'statement': {
-                                'managed_rule_group_statement': {
-                                    'name': 'AWSManagedRulesUnixRuleSet',
-                                    'vendor_name': 'AWS'
-                                }
-                            },
-                            'visibility_config': {
-                                'metric_name': 'AWS-UnixRuleSet',
-                                'sampled_requests_enabled': True,
-                                'cloudwatch_metrics_enabled': True
-                            }
-                        },
-                    ],
+                        ])],
                     'scope': 'REGIONAL',
                     'visibility_config': {
                         'cloudwatch_metrics_enabled': True,
