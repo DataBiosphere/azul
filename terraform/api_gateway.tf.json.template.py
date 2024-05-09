@@ -161,11 +161,15 @@ emit_tf({
                 for zone in range(vpc.num_zones)
             },
             'aws_wafv2_ip_set': {
-                config.blocked_v4_ips_term: {
-                    'name': config.qualified_resource_name(resource_name=config.blocked_v4_ips_term,
+                name: {
+                    'name': config.qualified_resource_name(resource_name=name,
                                                            stage=config.main_deployment_stage),
                     'scope': 'REGIONAL'
                 }
+                for name in [
+                    config.blocked_v4_ips_term,
+                    config.allowed_v4_ips_term
+                ]
             }
         },
         *(
@@ -205,22 +209,28 @@ emit_tf({
                     'rule': [
                         {**rule, 'priority': i}
                         for i, rule in enumerate([
-                            {
-                                'name': 'BlockedIPs',
-                                'action': {
-                                    'block': {}
-                                },
-                                'statement': {
-                                    'ip_set_reference_statement': {
-                                    'arn': '${data.aws_wafv2_ip_set.%s.arn}' % config.blocked_v4_ips_term
+                            *[
+                                {
+                                    'name': name,
+                                    'action': {
+                                        action: {}
+                                    },
+                                    'statement': {
+                                        'ip_set_reference_statement': {
+                                            'arn': '${data.aws_wafv2_ip_set.%s.arn}' % ip_set_term
+                                        }
+                                    },
+                                    'visibility_config': {
+                                        'metric_name': name,
+                                        'sampled_requests_enabled': True,
+                                        'cloudwatch_metrics_enabled': True
                                     }
-                                },
-                                'visibility_config': {
-                                    'metric_name': 'BlockedIPs',
-                                    'sampled_requests_enabled': True,
-                                    'cloudwatch_metrics_enabled': True
                                 }
-                            },
+                                for name, action, ip_set_term in [
+                                    ('BlockedIPs', 'block', config.blocked_v4_ips_term),
+                                    ('AllowedIPs', 'allow', config.allowed_v4_ips_term)
+                                ]
+                            ],
                             {
                                 'name': config.waf_rate_rule_name,
                                 'action': {

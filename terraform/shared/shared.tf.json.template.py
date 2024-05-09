@@ -996,16 +996,22 @@ tf_config = {
                     ]
                 }
             },
-            config.blocked_v4_ips_term: {
-                'name': config.qualified_resource_name(config.blocked_v4_ips_term),
-                'scope': 'REGIONAL',
-                'ip_address_version': 'IPV4',
-                'addresses': [],
-                'lifecycle': {
-                    'ignore_changes': [
-                        'addresses'
-                    ]
+            **{
+                name: {
+                    'name': config.qualified_resource_name(name),
+                    'scope': 'REGIONAL',
+                    'ip_address_version': 'IPV4',
+                    'addresses': [],
+                    'lifecycle': {
+                        'ignore_changes': [
+                            'addresses'
+                        ]
+                    }
                 }
+                for name in [
+                    config.blocked_v4_ips_term,
+                    config.allowed_v4_ips_term
+                ]
             }
         },
         'aws_ecr_repository': {
