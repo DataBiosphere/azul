@@ -292,9 +292,7 @@ def env() -> Mapping[str, Optional[str]]:
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                # FIXME: https://github.com/DataBiosphere/azul/issues/6022
-                #        Keep ClamAV at 1.2.1 until 1.3.x failure is resolved
-                'ref': 'docker.io/clamav/clamav:1.2.1-27',
+                'ref': 'docker.io/clamav/clamav:1.3.1-50',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
