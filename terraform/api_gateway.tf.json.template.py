@@ -161,8 +161,9 @@ emit_tf({
                 for zone in range(vpc.num_zones)
             },
             'aws_wafv2_ip_set': {
-                'blocked': {
-                    'name': 'blocked',
+                config.blocked_v4_ips_term: {
+                    'name': config.qualified_resource_name(resource_name=config.blocked_v4_ips_term,
+                                                           stage=config.main_deployment_stage),
                     'scope': 'REGIONAL'
                 }
             }
@@ -210,7 +211,7 @@ emit_tf({
                             },
                             'statement': {
                                 'ip_set_reference_statement': {
-                                    'arn': '${data.aws_wafv2_ip_set.blocked.arn}'
+                                    'arn': '${data.aws_wafv2_ip_set.%s.arn}' % config.blocked_v4_ips_term
                                 }
                             },
                             'visibility_config': {

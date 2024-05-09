@@ -983,8 +983,21 @@ tf_config = {
             }
         },
         'aws_wafv2_ip_set': {
+            # FIXME: Remove once no deployments reference this
+            #        https://github.com/DataBiosphere/azul/issues/6244
             'blocked': {
                 'name': 'blocked',
+                'scope': 'REGIONAL',
+                'ip_address_version': 'IPV4',
+                'addresses': [],
+                'lifecycle': {
+                    'ignore_changes': [
+                        'addresses'
+                    ]
+                }
+            },
+            config.blocked_v4_ips_term: {
+                'name': config.qualified_resource_name(config.blocked_v4_ips_term),
                 'scope': 'REGIONAL',
                 'ip_address_version': 'IPV4',
                 'addresses': [],
