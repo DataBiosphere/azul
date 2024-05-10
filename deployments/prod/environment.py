@@ -1037,6 +1037,15 @@ dcp37_sources = mkdict(dcp36_sources, 450, mkdelta([
     mksrc('datarepo-86633e77', 'hca_prod_c0fecf0baf8641b8ba82d5fd81b7542a__20240301_dcp2_20240328_dcp37', 34)
 ]))
 
+dcp38_sources = mkdict(dcp37_sources, 455, mkdelta([
+    mksrc('datarepo-316d4b45', 'hca_prod_1662accf0e0c48c493145aba063f2220__20240503_dcp2_20240508_dcp38', 27),
+    mksrc('datarepo-126c9c22', 'hca_prod_bcdf233f92464c0c98430514120b7e3a__20240503_dcp2_20240508_dcp38', 116),
+    mksrc('datarepo-cc6b2b4f', 'hca_prod_c05184453b3b49c6b8fcc41daa4eacba__20220213_dcp2_20240508_dcp38', 7),
+    mksrc('datarepo-5292bdb6', 'hca_prod_ccc3b7861da0427fa45f76306d6143b6__20240503_dcp2_20240508_dcp38', 6),
+    mksrc('datarepo-37460143', 'hca_prod_d5c91e922e7f473d8cf3ab03bbae21c2__20240503_dcp2_20240508_dcp38', 41),
+    mksrc('datarepo-39884574', 'hca_prod_daef3fda262045aea3f71613814a35bf__20240503_dcp2_20240508_dcp38', 47)
+]))
+
 pilot1_sources = mkdict({}, 4, mkdelta([
     mksrc('datarepo-11e4dc06', 'hca_prod_59b3bfd9cf454d538c8ee240273cba71__20240410_dcp2_20240410_dcpPilot', 3),
     mksrc('datarepo-9ebf5be4', 'hca_prod_5bbd9f925bf447cb91999a9750d3fbcd__20240410_dcp2_20240410_dcpPilot', 3),
@@ -1122,6 +1131,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=mklist(sources))
             for atlas, catalog, sources in [
                 ('hca', 'dcp37', dcp37_sources),
+                ('hca', 'dcp38', dcp38_sources),
                 ('hca', 'pilot1', pilot1_sources),
                 ('lungmap', 'lm6', lm6_sources),
                 ('lungmap', 'lm7', lm7_sources)
