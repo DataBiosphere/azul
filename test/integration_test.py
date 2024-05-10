@@ -126,6 +126,9 @@ from azul.indexer.index_service import (
     IndexExistsAndDiffersException,
     IndexService,
 )
+from azul.json_freeze import (
+    freeze,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -1538,7 +1541,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         endpoint = config.service_endpoint
 
-        special_fields = self.metadata_plugin(catalog).special_fields
+        metadata_plugin = self.metadata_plugin(catalog)
+        special_fields = metadata_plugin.special_fields
 
         def bundle_uuids(hit: JSON) -> set[str]:
             return {
@@ -1557,16 +1561,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         response = self._get_url_json(GET, files_url)
         public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
         self.assertNotIn(public_bundle, managed_access_bundles)
+        all_bundles = {public_bundle, *managed_access_bundles}
 
         filters = {
             special_fields.bundle_uuid: {
-                'is': [public_bundle, *managed_access_bundles]
+                'is': list(all_bundles)
             }
         }
         params = {'catalog': catalog, 'filters': json.dumps(filters)}
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
-        def assert_manifest(expected_bundles):
+        def test_compact_manifest(expected_bundles):
             manifest = BytesIO(self._get_url_content(PUT, manifest_url))
             manifest_rows = self._read_csv_manifest(manifest)
             all_found_bundles = set()
@@ -1585,12 +1590,60 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # With authorized credentials, all bundles included in the filters
         # should be represented in the manifest
         with self._service_account_credentials:
-            assert_manifest({public_bundle, *managed_access_bundles})
+            test_compact_manifest(all_bundles)
 
         # Without credentials, only the public bundle should be represented
-        assert_manifest({public_bundle})
+        test_compact_manifest({public_bundle})
 
-        if ManifestFormat.curl in self.metadata_plugin(catalog).manifest_formats:
+        def read_verbatim_jsonl_manifest(manifest: IO) -> set[JSON]:
+            manifest_lines = manifest.readlines()
+            manifest_content = {
+                freeze(json.loads(replica))
+                for replica in manifest_lines
+            }
+            self.assertEqual(len(manifest_lines), len(manifest_content))
+            return manifest_content
+
+        def read_verbatim_pfb_manifest(manifest: IO) -> set[str]:
+            entities = list(fastavro.reader(manifest))
+            manifest_content = {
+                # We can't assert the full contents of each entity because the
+                # schema changes depending on the filters used.
+                # FIXME: Generate Avro schema from AnVIL schema
+                #        https://github.com/DataBiosphere/azul/issues/6109
+                entity['id']
+                for entity in entities
+                # The special "Metadata" entity is always present. Dropping it
+                # from the result streamlines the set logic used in the
+                # assertion below.
+                if entity['name'] != 'Metadata'
+            }
+            return manifest_content
+
+        def get_verbatim_manifest(format: ManifestFormat,
+                                  bundles: Iterable[str],
+                                  ) -> set:
+            manifest_url = furl(url=endpoint, path='/manifest/files', args={
+                'catalog': catalog,
+                'format': format.value,
+                'filters': json.dumps({special_fields.bundle_uuid: {'is': list(bundles)}})
+            })
+            content = BytesIO(self._get_url_content(PUT, manifest_url))
+            return {
+                ManifestFormat.verbatim_jsonl: read_verbatim_jsonl_manifest,
+                ManifestFormat.verbatim_pfb: read_verbatim_pfb_manifest
+            }[format](content)
+
+        for format in ManifestFormat.verbatim_jsonl, ManifestFormat.verbatim_pfb:
+            if format in metadata_plugin.manifest_formats:
+                with self.subTest(format=format):
+                    unauthorized = get_verbatim_manifest(format, all_bundles)
+                    with self._service_account_credentials:
+                        authorized = get_verbatim_manifest(format, all_bundles)
+                        private_only = get_verbatim_manifest(format, managed_access_bundles)
+                    self.assertSetEqual(private_only, authorized - unauthorized)
+
+        if ManifestFormat.curl in metadata_plugin.manifest_formats:
             # Create a single-file curl manifest and verify that the OAuth2
             # token is present on the command line
             managed_access_file_id = one(self.random.choice(files)['files'])['uuid']
