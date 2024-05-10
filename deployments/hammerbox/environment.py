@@ -786,15 +786,13 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-prod.broadinstitute.org',
         'AZUL_TERRA_SERVICE_URL': 'https://firecloud-orchestration.dsde-prod.broadinstitute.org',
 
+        # Personal deployments & `hammerbox` share an ES domain with `anvilprod`
+        'AZUL_SHARE_ES_DOMAIN': '1',
+        'AZUL_ES_DOMAIN': 'azul-index-anvilprod',
+
         **(
             {
-                # $0.382/h × 2 × 24h/d × 30d/mo = $550.08/mo
-                'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-                'AZUL_ES_INSTANCE_COUNT': '4',
             } if is_sandbox else {
-                # Personal deployments share an ES domain with `hammerbox`
-                'AZUL_SHARE_ES_DOMAIN': '1',
-                'AZUL_ES_DOMAIN': 'azul-index-hammerbox',
                 # Personal deployments use fewer Lambda invocations in parallel.
                 'AZUL_CONTRIBUTION_CONCURRENCY': '8',
                 'AZUL_AGGREGATION_CONCURRENCY': '8',
