@@ -275,34 +275,32 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-21',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-22',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.20-16',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.20-17',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-1',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-2',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                # FIXME: https://github.com/DataBiosphere/azul/issues/6022
-                #        Keep ClamAV at 1.2.1 until 1.3.x failure is resolved
-                'ref': 'docker.io/clamav/clamav:1.2.1-27',
+                'ref': 'docker.io/clamav/clamav:1.3.1-50',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.11.1-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:16.11.2-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.11.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.11.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
