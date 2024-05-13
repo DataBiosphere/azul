@@ -557,8 +557,7 @@ and protects access to that infrastructure through a VPN. That same VPN is also
 used to access to Azul deployments with private APIs (see AZUL_PRIVATE_API in 
 [environment.py]). Like the `shared` component, the `gitlab` component belongs 
 to one main deployment in an AWS account (typically `dev` or `prod`) and is 
-shared by the other deployments colocated with that deployment. Unlike the 
-`shared` component, the `gitlab` component is optional.    
+shared by the other deployments colocated with that deployment.
 
 [environment.py]: /environment.py
 
