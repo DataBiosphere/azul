@@ -201,3 +201,18 @@ class Lambdas:
                             time.sleep(1)
                         else:
                             break
+
+    def delete_published_function_versions(self):
+        """
+        Delete all but the latest published version of every AWS Lambda function
+        in the current deployment.
+        """
+        log.info('Deleting stale versions of AWS Lambda functions')
+        for function in self.list_lambdas(deployment=config.deployment_stage,
+                                          all_versions=True):
+            if function.version == '$LATEST':
+                log.info('Skipping latest version %r', function.name)
+            else:
+                log.info('Deleting version %r of %r', function.version, function.name)
+                self._lambda.delete_function(FunctionName=function.name,
+                                             Qualifier=function.version)

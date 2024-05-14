@@ -43,8 +43,12 @@ import_resources: rename_resources
 plan: import_resources
 	terraform plan
 
+.PHONY: delete_published_function_versions
+delete_published_function_versions: import_resources check_python
+	python $(project_root)/scripts/delete_published_function_versions.py
+
 .PHONY: apply
-apply: import_resources
+apply: delete_published_function_versions
 ifeq ($(AZUL_PRIVATE_API),1)
 	# For private API we need the VPC endpoints to be created first so that the
 	# aws_lb_target_group_attachment can iterate over the network_interface_ids.
@@ -53,7 +57,7 @@ endif
 	terraform apply
 
 .PHONY: auto_apply
-auto_apply: import_resources
+auto_apply: delete_published_function_versions
 ifeq ($(AZUL_PRIVATE_API),1)
 	# See `apply` above
 	terraform apply -auto-approve -target aws_vpc_endpoint.indexer -target aws_vpc_endpoint.service
