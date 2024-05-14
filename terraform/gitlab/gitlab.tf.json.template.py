@@ -367,7 +367,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             ] for bucket_name in (
                                 [
                                     'edu-ucsc-gi-platform-hca-dev-*',
-                                    'edu-ucsc-gi-singlecell-azul-*',
                                 ] if 'singlecell' in config.domain_name else [
                                     'edu-ucsc-gi-platform-anvil-*',
                                 ] if 'anvil' in config.domain_name else [
