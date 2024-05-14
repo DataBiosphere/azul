@@ -371,8 +371,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'edu-ucsc-gi-platform-anvil-*',
                                 ] if 'anvil' in config.domain_name else [
                                     'edu-ucsc-gi-platform-hca-prod-*',
-                                    'edu-ucsc-gi-azul-*',
-                                    '*.azul.data.humancellatlas.org',
                                 ]
                             ) + aws_managed_buckets_for_ssm_agent
                         )
