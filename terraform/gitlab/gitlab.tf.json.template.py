@@ -375,7 +375,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             ) + aws_managed_buckets_for_ssm_agent
                         )
                     },
-
                     {
                         'actions': [
                             'kms:ListAliases',
