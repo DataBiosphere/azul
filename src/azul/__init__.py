@@ -331,6 +331,10 @@ class Config:
         return None if url is None else furl(url)
 
     @property
+    def terra_service_url(self) -> mutable_furl:
+        return furl(self.environ['AZUL_TERRA_SERVICE_URL'])
+
+    @property
     def dss_query_prefix(self) -> str:
         return self.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 
@@ -1013,18 +1017,28 @@ class Config:
             deployment = self.deployment_stage
         return deployment in set(chain.from_iterable(self._shared_deployments.values()))
 
-    def is_stable_deployment(self, deployment: Optional[str] = None) -> bool:
+    #: The set of branches that are used for development and that are usually
+    #: deployed to personal, lower and main deployments, but never stable ones.
+    #: The set member ``None`` represents a feature branch or detached HEAD.
+    #:
+    unstable_branches = {'develop', None}
+
+    @property
+    def is_stable_deployment(self) -> bool:
         """
-        Returns `True` if the deployment of the specified name must be kept
-        functional for public use at all times.
+        Returns `True` if the current deployment must be kept functional for
+        public use at all times.
         """
-        if deployment is None:
-            deployment = self.deployment_stage
-        if deployment in {'prod'}:
-            assert self.is_shared_deployment(deployment)
-            return True
-        else:
+        if self.is_sandbox_deployment:
             return False
+        else:
+            deployment = self.deployment_stage
+            branches = set(
+                branch
+                for branch, deployments in self._shared_deployments.items()
+                if deployment in deployments
+            )
+            return bool(branches) and branches.isdisjoint(self.unstable_branches)
 
     @property
     def is_sandbox_deployment(self) -> bool:
@@ -1496,11 +1510,19 @@ class Config:
     def docker_image_manifests_path(self) -> Path:
         return Path(config.project_root) / 'image_manifests.json'
 
+    blocked_v4_ips_term = 'blocked_v4_ips'
+
+    allowed_v4_ips_term = 'allowed_v4_ips'
+
     waf_rate_rule_name = 'RateRule'
 
     waf_rate_rule_period = 300  # seconds; this value is fixed by AWS
 
     waf_rate_rule_retry_after = 30  # seconds
+
+    waf_rate_rule_limit = 1000
+
+    assert 100 <= waf_rate_rule_limit <= 2_000_000_000  # mandated by AWS
 
     @property
     def vpc_cidr(self) -> str:

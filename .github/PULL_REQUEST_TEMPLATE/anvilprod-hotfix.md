@@ -37,7 +37,7 @@ Connected issue: #0000
 ### System administrator (after approval)
 
 - [ ] Actually approved the PR
-- [ ] Labeled PR as `no sandbox`
+- [ ] Decided if PR can be labeled `no sandbox`
 - [ ] A comment to this PR details the completed security design review
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to *Approved* column

@@ -5,9 +5,5 @@ from azul.service.elasticsearch_service import (
 
 class HCAFilterStage(FilterStage):
 
-    def _reify_filters(self):
-        if self.entity_type == 'projects':
-            filters = self.filters.explicit
-        else:
-            filters = super()._reify_filters()
-        return filters
+    def _limit_access(self) -> bool:
+        return self.entity_type != 'projects'

@@ -126,6 +126,9 @@ from azul.indexer.index_service import (
     IndexExistsAndDiffersException,
     IndexService,
 )
+from azul.json_freeze import (
+    freeze,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -300,7 +303,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         partition_prefix = self.random.choice(partition_prefixes)
         effective_prefix = prefix.common + partition_prefix
         fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
-        bundle_count = len(fqids)
+        num_bundles = len(fqids)
         partition = f'Partition {effective_prefix!r} of source {source.spec}'
         if not config.is_sandbox_or_personal_deployment:
             # For sources that use partitioning, 512 is the desired partition
@@ -325,7 +328,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                         # across all partitions simultaneously, we can check
                         # whether the chosen partition is an outlier by
                         # determining the *average* partition size.
-                        bundle_count = sum(counts.values()) / len(counts)
+                        num_bundles = sum(counts.values()) / prefix.num_partitions
             else:
                 # Sources too small to be split into more than one partition may
                 # have as few as one bundle in total
@@ -340,8 +343,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
             upper = 64
             lower = 1
 
-        self.assertLessEqual(bundle_count, upper, partition + ' is too large')
-        self.assertGreaterEqual(bundle_count, lower, partition + ' is too small')
+        self.assertLessEqual(num_bundles, upper, partition + ' is too large')
+        self.assertGreaterEqual(num_bundles, lower, partition + ' is too small')
 
         return source, partition_prefix, fqids
 
@@ -501,6 +504,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
+            self._test_manifest_tagging_race(catalog.name)
             self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
             if index:
@@ -528,7 +532,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.azul_client.reset_indexer(catalogs=config.integration_test_catalogs,
                                        # Can't purge the queues in stable deployment as
                                        # they may contain work for non-IT catalogs.
-                                       purge_queues=not config.is_stable_deployment(),
+                                       purge_queues=not config.is_stable_deployment,
                                        delete_indices=True,
                                        create_indices=True)
 
@@ -581,36 +585,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
         assert supported_formats
-        validators: dict[ManifestFormat, Callable[[str, bytes], None]] = {
-            ManifestFormat.compact: self._check_compact_manifest,
-            ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
-            ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
-            ManifestFormat.curl: self._check_curl_manifest,
-            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest,
-            ManifestFormat.verbatim_pfb: self._check_terra_pfb_manifest
-        }
         for format in [None, *supported_formats]:
-            # IT catalogs with just one public source are always indexed
-            # completely if that source contains less than the minimum number of
-            # bundles required. So regardless of any randomness employed by this
-            # test, manifests derived from these catalogs will always be based
-            # on the same content hash. Since the resulting reuse of cached
-            # manifests interferes with this test, we need another means of
-            # randomizing the manifest key: a random but all-inclusive filter.
-            tibi_byte = 1024 ** 4
-            filters = {
-                self._file_size_facet(catalog): {
-                    'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
-                }
-            }
+            filters = self._manifest_filters(catalog)
             first_fetch = bool(self.random.getrandbits(1))
             for fetch in [first_fetch, not first_fetch]:
                 with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
                     args = dict(catalog=catalog, filters=json.dumps(filters))
                     if format is None:
-                        validator = validators[first(supported_formats)]
+                        format = first(supported_formats)
                     else:
-                        validator = validators[format]
                         args['format'] = format.value
 
                     # Wrap self._get_url to collect all HTTP responses
@@ -630,7 +613,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
                         def worker(_):
                             response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
-                            validator(catalog, response)
+                            self._manifest_validators[format](catalog, response)
 
                         num_workers = 3
                         with ThreadPoolExecutor(max_workers=num_workers) as tpe:
@@ -644,6 +627,78 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     # function execution is expected to have been started.
                     expect_execution = fetch == first_fetch
                     self.assertEqual(1 if expect_execution else 0, len(execution_ids))
+
+    def _manifest_filters(self, catalog: CatalogName) -> JSON:
+        # IT catalogs with just one public source are always indexed completely
+        # if that source contains less than the minimum number of bundles
+        # required. So regardless of any randomness employed by this test,
+        # manifests derived from these catalogs will always be based on the same
+        # content hash. Since the resulting reuse of cached manifests interferes
+        # with this test, we need another means of randomizing the manifest key:
+        # a random but all-inclusive filter.
+        tibi_byte = 1024 ** 4
+        return {
+            self._file_size_facet(catalog): {
+                'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
+            }
+        }
+
+    @cached_property
+    def _manifest_validators(self) -> dict[ManifestFormat, Callable[[str, bytes], None]]:
+        return {
+            ManifestFormat.compact: self._check_compact_manifest,
+            ManifestFormat.terra_bdbag: self._check_terra_bdbag_manifest,
+            ManifestFormat.terra_pfb: self._check_terra_pfb_manifest,
+            ManifestFormat.curl: self._check_curl_manifest,
+            ManifestFormat.verbatim_jsonl: self._check_jsonl_manifest,
+            ManifestFormat.verbatim_pfb: self._check_terra_pfb_manifest
+        }
+
+    def _manifest_formats(self, catalog: CatalogName) -> Sequence[ManifestFormat]:
+        supported_formats = self.metadata_plugin(catalog).manifest_formats
+        assert supported_formats
+        return supported_formats
+
+    def _test_manifest_tagging_race(self, catalog: CatalogName):
+        supported_formats = self._manifest_formats(catalog)
+        for format in [ManifestFormat.compact, ManifestFormat.curl]:
+            if format in supported_formats:
+                with self.subTest('manifest_tagging_race', catalog=catalog, format=format):
+                    filters = self._manifest_filters(catalog)
+                    manifest_url = config.service_endpoint.set(path='/manifest/files',
+                                                               args=dict(catalog=catalog,
+                                                                         filters=json.dumps(filters),
+                                                                         format=format.value))
+                    method = PUT
+                    responses = []
+                    while True:
+                        response = self._get_url(method, manifest_url)
+                        if response.status == 301:
+                            responses.append(response)
+                            # Request the same manifest without following the
+                            # redirect in order to expose a potential race
+                            # condition that causes an untagged manifest object.
+                            # The race condition could happen when a step
+                            # function execution has finished generating a
+                            # manifest object but is still in the process of
+                            # tagging it.
+                            #
+                            # The more often we make these requests, the more
+                            # likely it is that we catch the execution in this
+                            # racy state. However, we still have to throttle the
+                            # requests in order to prevent tripping the WAF rate
+                            # limit.
+                            time.sleep(config.waf_rate_rule_period / config.waf_rate_rule_limit)
+                        elif response.status == 302:
+                            responses.append(response)
+                            method, manifest_url = GET, furl(response.headers['Location'])
+                        else:
+                            assert response.status == 200, response
+                            self._manifest_validators[format](catalog, response.data)
+                            break
+
+                execution_ids = self._manifest_execution_ids(responses, fetch=False)
+                self.assertEqual(1, len(execution_ids))
 
     def _manifest_execution_ids(self,
                                 responses: list[urllib3.HTTPResponse],
@@ -1415,9 +1470,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                      managed_access_source_ids: Set[str]
                                      ) -> JSONs:
         """
-        Test the managed access controls for the /index/bundles and
+        Test the managed-access controls for the /index/bundles and
         /index/projects endpoints
-        :return: hits for the managed access bundles
+
+        :return: hits for the managed-access bundles
         """
 
         special_fields = self.metadata_plugin(catalog).special_fields
@@ -1429,14 +1485,32 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         bundle_type = self._bundle_type(catalog)
         project_type = self._project_type(catalog)
 
-        hits = self._get_entities(catalog, project_type)
-        sources_found = set()
-        for hit in hits:
-            source_id = source_id_from_hit(hit)
-            sources_found.add(source_id)
-            self.assertEqual(source_id not in managed_access_source_ids,
-                             one(hit[project_type])['accessible'])
-        self.assertIsSubset(managed_access_source_ids, sources_found)
+        unfiltered_hits = None
+        for accessible in None, False, True:
+            with self.subTest(accessible=accessible):
+                filters = None if accessible is None else {
+                    special_fields.accessible: {'is': [accessible]}
+                }
+                hits = self._get_entities(catalog, project_type, filters=filters)
+                if accessible is None:
+                    unfiltered_hits = hits
+                accessible_sources, inaccessible_sources = set(), set()
+                for hit in hits:
+                    source_id = source_id_from_hit(hit)
+                    source_accessible = source_id not in managed_access_source_ids
+                    hit_accessible = one(hit[project_type])[special_fields.accessible]
+                    self.assertEqual(source_accessible, hit_accessible, hit['entryId'])
+                    if accessible is not None:
+                        self.assertEqual(accessible, hit_accessible)
+                    if source_accessible:
+                        accessible_sources.add(source_id)
+                    else:
+                        inaccessible_sources.add(source_id)
+                self.assertIsDisjoint(accessible_sources, inaccessible_sources)
+                self.assertIsDisjoint(managed_access_source_ids, accessible_sources)
+                self.assertEqual(set() if accessible else managed_access_source_ids,
+                                 inaccessible_sources)
+        self.assertIsNotNone(unfiltered_hits, 'Cannot recover from subtest failure')
 
         bundle_fqids = self._get_indexed_bundles(catalog)
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
@@ -1459,7 +1533,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             bundle_fqids = self._get_indexed_bundles(catalog, filters=source_filter)
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
         self.assertEqual(managed_access_source_ids, hit_source_ids)
-        return hits
+
+        return unfiltered_hits
 
     def _test_managed_access_repository_files(self,
                                               catalog: CatalogName,
@@ -1518,7 +1593,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         endpoint = config.service_endpoint
 
-        special_fields = self.metadata_plugin(catalog).special_fields
+        metadata_plugin = self.metadata_plugin(catalog)
+        special_fields = metadata_plugin.special_fields
 
         def bundle_uuids(hit: JSON) -> set[str]:
             return {
@@ -1537,16 +1613,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         response = self._get_url_json(GET, files_url)
         public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
         self.assertNotIn(public_bundle, managed_access_bundles)
+        all_bundles = {public_bundle, *managed_access_bundles}
 
         filters = {
             special_fields.bundle_uuid: {
-                'is': [public_bundle, *managed_access_bundles]
+                'is': list(all_bundles)
             }
         }
         params = {'catalog': catalog, 'filters': json.dumps(filters)}
         manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
-        def assert_manifest(expected_bundles):
+        def test_compact_manifest(expected_bundles):
             manifest = BytesIO(self._get_url_content(PUT, manifest_url))
             manifest_rows = self._read_csv_manifest(manifest)
             all_found_bundles = set()
@@ -1565,12 +1642,60 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # With authorized credentials, all bundles included in the filters
         # should be represented in the manifest
         with self._service_account_credentials:
-            assert_manifest({public_bundle, *managed_access_bundles})
+            test_compact_manifest(all_bundles)
 
         # Without credentials, only the public bundle should be represented
-        assert_manifest({public_bundle})
+        test_compact_manifest({public_bundle})
 
-        if ManifestFormat.curl in self.metadata_plugin(catalog).manifest_formats:
+        def read_verbatim_jsonl_manifest(manifest: IO) -> set[JSON]:
+            manifest_lines = manifest.readlines()
+            manifest_content = {
+                freeze(json.loads(replica))
+                for replica in manifest_lines
+            }
+            self.assertEqual(len(manifest_lines), len(manifest_content))
+            return manifest_content
+
+        def read_verbatim_pfb_manifest(manifest: IO) -> set[str]:
+            entities = list(fastavro.reader(manifest))
+            manifest_content = {
+                # We can't assert the full contents of each entity because the
+                # schema changes depending on the filters used.
+                # FIXME: Generate Avro schema from AnVIL schema
+                #        https://github.com/DataBiosphere/azul/issues/6109
+                entity['id']
+                for entity in entities
+                # The special "Metadata" entity is always present. Dropping it
+                # from the result streamlines the set logic used in the
+                # assertion below.
+                if entity['name'] != 'Metadata'
+            }
+            return manifest_content
+
+        def get_verbatim_manifest(format: ManifestFormat,
+                                  bundles: Iterable[str],
+                                  ) -> set:
+            manifest_url = furl(url=endpoint, path='/manifest/files', args={
+                'catalog': catalog,
+                'format': format.value,
+                'filters': json.dumps({special_fields.bundle_uuid: {'is': list(bundles)}})
+            })
+            content = BytesIO(self._get_url_content(PUT, manifest_url))
+            return {
+                ManifestFormat.verbatim_jsonl: read_verbatim_jsonl_manifest,
+                ManifestFormat.verbatim_pfb: read_verbatim_pfb_manifest
+            }[format](content)
+
+        for format in ManifestFormat.verbatim_jsonl, ManifestFormat.verbatim_pfb:
+            if format in metadata_plugin.manifest_formats:
+                with self.subTest(format=format):
+                    unauthorized = get_verbatim_manifest(format, all_bundles)
+                    with self._service_account_credentials:
+                        authorized = get_verbatim_manifest(format, all_bundles)
+                        private_only = get_verbatim_manifest(format, managed_access_bundles)
+                    self.assertSetEqual(private_only, authorized - unauthorized)
+
+        if ManifestFormat.curl in metadata_plugin.manifest_formats:
             # Create a single-file curl manifest and verify that the OAuth2
             # token is present on the command line
             managed_access_file_id = one(self.random.choice(files)['files'])['uuid']

@@ -207,60 +207,66 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
         for max_partition_size in [BundlePartition.max_partition_size, 1]:
             for page_size in (config.contribution_page_size, 1):
                 for enable_replicas in True, False:
-                    with self.subTest(page_size=page_size,
-                                      max_partition_size=max_partition_size,
-                                      enable_replicas=enable_replicas):
-                        with patch.object(target=type(config),
-                                          attribute='enable_replicas',
-                                          new_callable=PropertyMock,
-                                          return_value=enable_replicas):
-                            with patch.object(BundlePartition, 'max_partition_size', new=max_partition_size):
-                                with patch.object(type(config), 'contribution_page_size', new=page_size):
-                                    self.index_service.create_indices(self.catalog)
-                                    try:
-                                        self._index_bundle(bundle, delete=False)
-                                        hits = self._get_all_hits()
-                                        if enable_replicas:
-                                            expected_hits = canned_hits
-                                        else:
-                                            expected_hits = [
-                                                h
-                                                for h in canned_hits
-                                                if self._parse_index_name(h)[1] is not DocumentType.replica
-                                            ]
-                                        self.assertElasticEqual(expected_hits, hits)
-                                        contributions = []
-                                        replicas = []
-                                        for hit in hits:
-                                            qualifier, doc_type = self._parse_index_name(hit)
-                                            if doc_type is DocumentType.replica:
-                                                entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
-                                                replicas.append(entity_id)
-                                                if entity_id == bundle.uuid:
-                                                    expected = bundle.metadata_files['links.json']
-                                                else:
-                                                    expected = one(
-                                                        m
-                                                        for m in bundle.metadata_files.values()
-                                                        if (
-                                                            m['schema_type'] != 'link_bundle'
-                                                            and m['provenance']['document_id'] == entity_id
-                                                        )
-                                                    )
-                                                # Replica contents should match the entity
-                                                # metadata as supplied by the repository
-                                                # plugin, verbatim
-                                                actual = hit['_source']['contents']
-                                                self.assertEqual(expected, actual)
-                                            elif doc_type is DocumentType.contribution:
-                                                entity_id = ContributionCoordinates.from_hit(hit).entity.entity_id
-                                                contributions.append(entity_id)
-                                        contributions.sort()
-                                        replicas.sort()
-                                        # Every contribution should be replicated
-                                        self.assertEqual(contributions if enable_replicas else [], replicas)
-                                    finally:
-                                        self.index_service.delete_indices(self.catalog)
+                    with (
+                        self.subTest(page_size=page_size,
+                                     max_partition_size=max_partition_size,
+                                     enable_replicas=enable_replicas),
+                        patch.object(target=type(config),
+                                     attribute='enable_replicas',
+                                     new_callable=PropertyMock,
+                                     return_value=enable_replicas),
+                        patch.object(BundlePartition,
+                                     'max_partition_size',
+                                     new=max_partition_size),
+                        patch.object(type(config),
+                                     'contribution_page_size',
+                                     new=page_size)
+                    ):
+                        self.index_service.create_indices(self.catalog)
+                        try:
+                            self._index_bundle(bundle, delete=False)
+                            hits = self._get_all_hits()
+                            if enable_replicas:
+                                expected_hits = canned_hits
+                            else:
+                                expected_hits = [
+                                    h
+                                    for h in canned_hits
+                                    if self._parse_index_name(h)[1] is not DocumentType.replica
+                                ]
+                            self.assertElasticEqual(expected_hits, hits)
+                            contributions = []
+                            replicas = []
+                            for hit in hits:
+                                qualifier, doc_type = self._parse_index_name(hit)
+                                if doc_type is DocumentType.replica:
+                                    entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
+                                    replicas.append(entity_id)
+                                    if entity_id == bundle.uuid:
+                                        expected = bundle.metadata_files['links.json']
+                                    else:
+                                        expected = one(
+                                            m
+                                            for m in bundle.metadata_files.values()
+                                            if (
+                                                m['schema_type'] != 'link_bundle'
+                                                and m['provenance']['document_id'] == entity_id
+                                            )
+                                        )
+                                    # Replica contents should match the entity
+                                    # metadata as supplied by the repository
+                                    # plugin, verbatim
+                                    actual = hit['_source']['contents']
+                                    self.assertEqual(expected, actual)
+                                elif doc_type is DocumentType.contribution:
+                                    entity_id = ContributionCoordinates.from_hit(hit).entity.entity_id
+                                    contributions.append(entity_id)
+                            contributions.sort()
+                            replicas.sort()
+                            # Every contribution should be replicated
+                            self.assertEqual(contributions if enable_replicas else [], replicas)
+                        finally:
+                            self.index_service.delete_indices(self.catalog)
 
     def test_deletion(self):
         """

@@ -96,7 +96,8 @@ class SubgraphCounter:
         best_prefix, best_count = first(self.partition_sizes.items())
         ideal_size = 16
         for prefix, count in sorted(self.partition_sizes.items()):
-            if count > 0 and abs(count - ideal_size) < abs(best_count - ideal_size):
+            assert count > 0, self.partition_sizes
+            if abs(count - ideal_size) < abs(best_count - ideal_size):
                 best_prefix, best_count = prefix, count
         return best_prefix
 
@@ -137,7 +138,7 @@ def generate_sources(catalog: CatalogName,
         if len(default_prefix) > 0:
             counter_prefix = Prefix(common='', partition=len(default_prefix))
             prefixed_counter = SubgraphCounter.for_source(plugin, source, counter_prefix)
-            if prefixed_counter.partition_sizes.get(default_prefix, 0) == 0:
+            if default_prefix not in prefixed_counter.partition_sizes:
                 explicit_prefix = prefixed_counter.ideal_common_prefix()
         return SourceSpecArgs(project=source.spec.project,
                               snapshot=source.spec.name,

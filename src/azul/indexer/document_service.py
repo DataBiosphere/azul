@@ -24,6 +24,7 @@ from azul.indexer.document import (
     Document,
     FieldType,
     FieldTypes,
+    Nested,
 )
 from azul.indexer.transform import (
     Transformer,
@@ -75,7 +76,12 @@ class DocumentService:
             try:
                 field_types = field_types[element]
             except (KeyError, TypeError) as e:
-                raise type(e)('Path not represented in field_types', path)
+                if isinstance(field_types, list):
+                    field_types = one(field_types)
+                if isinstance(field_types, Nested) and element == field_types.agg_property:
+                    field_types = field_types.properties[element]
+                else:
+                    raise type(e)('Path not represented in field_types', path)
         if isinstance(field_types, list):
             field_types = one(field_types)
         return field_types
