@@ -4,7 +4,6 @@ from collections.abc import (
 )
 import json
 import logging
-import time
 from typing import (
     Any,
     Callable,
@@ -297,14 +296,8 @@ class RepositoryController(SourceController):
                 if wait == '0':
                     pass
                 elif wait == '1':
-                    # Sleep in the lambda but ensure that we wake up before it
-                    # runs out of execution time (and before API Gateway times
-                    # out) so we get a chance to return a response to the client
-                    remaining_time = self.lambda_context.get_remaining_time_in_millis() / 1000
-                    server_side_sleep = min(float(retry_after),
-                                            remaining_time - config.api_gateway_timeout_padding - 3)
-                    time.sleep(server_side_sleep)
-                    retry_after = round(retry_after - server_side_sleep)
+                    time_slept = self.server_side_sleep(float(retry_after))
+                    retry_after = round(retry_after - time_slept)
                 else:
                     assert False, wait
             query_params = self._file_to_request(download.file) | adict(
