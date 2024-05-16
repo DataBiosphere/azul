@@ -1654,9 +1654,6 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
     def _drs_domain(self) -> str:
         return self.mock_tdr_service_url.netloc
 
-    #: AnVIL doesn't use versioning and all versions are fixed
-    version = '2022-06-01T00:00:00.000000Z'
-
 
 class TestAnvilManifests(AnvilManifestTestCase):
 

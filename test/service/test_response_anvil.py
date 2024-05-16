@@ -55,7 +55,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
@@ -177,7 +177,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
@@ -533,7 +533,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
@@ -907,7 +907,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             {
                                 'accessible': True,
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'datasets': [
@@ -1097,7 +1097,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
@@ -1478,7 +1478,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
@@ -1854,7 +1854,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
@@ -1983,7 +1983,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
-                                'bundle_version': ''
+                                'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [

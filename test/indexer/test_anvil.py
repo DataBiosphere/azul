@@ -104,12 +104,13 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     def bundle_fqid(cls,
                     *,
                     uuid,
-                    version='',
+                    version=None,
                     entity_type=BundleEntityType.primary
                     ) -> TDRAnvilBundleFQID:
+        assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
-                                  version=version,
+                                  version=cls.version,
                                   entity_type=entity_type)
 
     @classmethod
