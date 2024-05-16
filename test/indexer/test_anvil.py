@@ -169,7 +169,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         canned_bundle = self._load_canned_bundle(bundle_fqid)
         assert isinstance(canned_bundle, TDRAnvilBundle)
         if load_tables:
-            self._make_mock_tdr_tables(bundle_fqid)
+            self._make_mock_tdr_tables(bundle_fqid.source)
         plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
         bundle = plugin.fetch_bundle(bundle_fqid)
         assert isinstance(bundle, TDRAnvilBundle)
