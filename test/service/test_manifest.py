@@ -1687,49 +1687,49 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'source_id',
-                'cafebabe-feed-4bad-dead-beaf8badf00d',
-                'cafebabe-feed-4bad-dead-beaf8badf00d',
-                'cafebabe-feed-4bad-dead-beaf8badf00d'
+                '6c87f0e1-509d-46a4-b845-7584df39263b',
+                '6c87f0e1-509d-46a4-b845-7584df39263b',
+                '6c87f0e1-509d-46a4-b845-7584df39263b'
             ),
             (
                 'source_spec',
-                'tdr:test_project:snapshot/snapshot:/2',
-                'tdr:test_project:snapshot/snapshot:/2',
-                'tdr:test_project:snapshot/snapshot:/2'
+                'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                'tdr:test_anvil_project:snapshot/anvil_snapshot:/2'
             ),
             (
                 'datasets.document_id',
-                '677dd55c-3fa3-4b07-8c98-985d94d7577e',
+                '2370f948-2783-4eb6-afea-e022897f4dcf',
                 '2370f948-2783-4eb6-afea-e022897f4dcf',
                 '2370f948-2783-4eb6-afea-e022897f4dcf'
             ),
             (
                 'datasets.source_datarepo_row_ids',
-                'workspace_attributes:95684a9c-e0a1-4c05-9f1f-de628a38420c',
+                'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc',
                 'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc',
                 'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc'
             ),
             (
                 'datasets.dataset_id',
-                '385290c3-dff5-fb6d-2501-fa0ba3ad1c35',
+                '52ee7665-7033-63f2-a8d9-ce8e32666739',
                 '52ee7665-7033-63f2-a8d9-ce8e32666739',
                 '52ee7665-7033-63f2-a8d9-ce8e32666739'
             ),
             (
                 'datasets.consent_group',
-                '',
+                'DS-BDIS',
                 'DS-BDIS',
                 'DS-BDIS'
             ),
             (
                 'datasets.data_use_permission',
-                '',
+                'DS-BDIS',
                 'DS-BDIS',
                 'DS-BDIS'
             ),
             (
                 'datasets.owner',
-                '',
+                'Debbie Nickerson',
                 'Debbie Nickerson',
                 'Debbie Nickerson'
             ),
@@ -1741,13 +1741,13 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'datasets.registered_identifier',
-                '',
+                'phs000693',
                 'phs000693',
                 'phs000693'
             ),
             (
                 'datasets.title',
-                'ANVIL_1000G_2019_Dev',
+                'ANVIL_CMG_UWASH_DS_BDIS',
                 'ANVIL_CMG_UWASH_DS_BDIS',
                 'ANVIL_CMG_UWASH_DS_BDIS'
             ),
@@ -2041,9 +2041,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.drs_uri',
-                self._drs_uri('v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715'),
-                self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67'),
-                self._drs_uri('v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37')
+                self._drs_uri('v1_6c87f0e1-509d-46a4-b845-7584df39263b_1fab11f5-7eab-4318-9a58-68d8d06e0715'),
+                self._drs_uri('v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67'),
+                self._drs_uri('v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37')
             ),
             (
                 'files.file_url',
@@ -2058,15 +2058,16 @@ class TestAnvilManifests(AnvilManifestTestCase):
     def test_verbatim_jsonl_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
         self.assertEqual(200, response.status_code)
-        expected = [
-            {
+        expected = {
+            # Consolidate entities with the same replica (i.e. datasets)
+            json_hash(entity).digest(): {
                 'type': 'anvil_' + entity_ref.entity_type,
                 'contents': entity,
             }
             for bundle in self.bundles()
             for entity_ref, entity in self._load_canned_bundle(bundle).entities.items()
-        ]
-        self._assert_jsonl(expected, response)
+        }.values()
+        self._assert_jsonl(list(expected), response)
 
     @manifest_test
     def test_verbatim_pfb_manifest(self):

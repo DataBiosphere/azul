@@ -48,8 +48,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': '1509ef40-d1ba-440d-b298-16b7c173dcd4',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -170,8 +170,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': '816e364e-1193-4e5b-a91a-14e4b009157c',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -526,8 +526,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': '826dea02-e274-4ffe-aabc-eb3db63ad068',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -954,8 +954,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'reference_assembly': [None]}],
                         'sources': [
                             {
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2'
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b',
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2'
                             }
                         ]
                     }
@@ -1090,8 +1090,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': '2370f948-2783-4eb6-afea-e022897f4dcf',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -1471,8 +1471,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -1847,8 +1847,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -1963,7 +1963,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'crc32': '',
                                 'sha256': '',
                                 'accessible': True,
-                                'drs_uri': f'drs://{self._drs_domain_name}/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_'
+                                'drs_uri': f'drs://{self._drs_domain_name}/v1_6c87f0e1-509d-46a4-b845-7584df39263b_'
                                            f'1e269f04-4347-4188-b060-1dcc69e71d67',
                                 'url': str(self.base_url.set(
                                     path='/repository/files/15b76f9c-6b46-433f-851d-34e89f1b9ba6',
@@ -1976,8 +1976,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'entryId': '3b17377b-16b1-431c-9967-e5d01fc5923f',
                         'sources': [
                             {
-                                'source_spec': 'tdr:test_project:snapshot/snapshot:/2',
-                                'source_id': 'cafebabe-feed-4bad-dead-beaf8badf00d'
+                                'source_spec': 'tdr:test_anvil_project:snapshot/anvil_snapshot:/2',
+                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
                         'bundles': [
@@ -2092,7 +2092,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'crc32': '',
                                 'sha256': '',
                                 'accessible': True,
-                                'drs_uri': f'drs://{self._drs_domain_name}/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_'
+                                'drs_uri': f'drs://{self._drs_domain_name}/v1_6c87f0e1-509d-46a4-b845-7584df39263b_'
                                            f'8b722e88-8103-49c1-b351-e64fa7c6ab37',
                                 'url': str(self.base_url.set(
                                     path='/repository/files/3b17377b-16b1-431c-9967-e5d01fc5923f',

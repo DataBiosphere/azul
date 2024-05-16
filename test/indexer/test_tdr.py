@@ -263,7 +263,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
     def _plugin_cls(cls) -> Type[tdr_hca.Plugin]:
         return tdr_hca.Plugin
 
-    bundle_fqid = SourcedBundleFQID(source=TDRPluginTestCase.source,
+    bundle_fqid = SourcedBundleFQID(source=DCP2CannedBundleTestCase.source,
                                     uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
                                     version='2019-09-24T09:35:06.958773Z')
 

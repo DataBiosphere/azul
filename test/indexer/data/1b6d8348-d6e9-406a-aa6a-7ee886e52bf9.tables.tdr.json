@@ -239,7 +239,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_c82292d3-61d1-5785-b8dc-24b9365df5bd",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_c82292d3-61d1-5785-b8dc-24b9365df5bd",
                     "descriptor": {
                         "crc32c": "f222c2e3",
                         "sha1": "82599ed6a9e0beb47fd5bd87e718959dbbecb0bd",
@@ -282,7 +282,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_93ce1f3e-a963-5463-948f-44751a37f48d",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_93ce1f3e-a963-5463-948f-44751a37f48d",
                     "descriptor": {
                         "crc32c": "39eefc54",
                         "sha1": "4cf46e3cc2f8bc7fb019920ef0ff88c8d4541ef2",
@@ -325,7 +325,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_83e89c54-4fc6-58b0-800c-3788539c41e7",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_83e89c54-4fc6-58b0-800c-3788539c41e7",
                     "descriptor": {
                         "crc32c": "89a6b7e3",
                         "sha1": "73ce5b30e5c71e0ed538d67cf13e2bd638a86243",
@@ -368,7 +368,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_b644bacb-5e69-5f73-baaf-f32178b0d0fd",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_b644bacb-5e69-5f73-baaf-f32178b0d0fd",
                     "descriptor": {
                         "crc32c": "d90b80a2",
                         "sha1": "9a51a048fa73b59aa84f2a6b300bf3c57fb70346",
@@ -411,7 +411,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_dba31e1c-1b9c-56ae-af74-16b00b8144d2",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_dba31e1c-1b9c-56ae-af74-16b00b8144d2",
                     "descriptor": {
                         "crc32c": "bd8aacef",
                         "sha1": "b46f3cda41226009ad7b0caeefd76cccb4f7b7bc",
@@ -454,7 +454,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_f140bd59-16c2-5082-aaf6-1c929e7063c6",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_f140bd59-16c2-5082-aaf6-1c929e7063c6",
                     "descriptor": {
                         "crc32c": "340ea243",
                         "sha1": "5d0217eedef4e8b60f0730de08c845b50890a2f9",
@@ -497,7 +497,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb455f5a-a70f-5155-85a0-46f475856e9f",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_bb455f5a-a70f-5155-85a0-46f475856e9f",
                     "descriptor": {
                         "crc32c": "7aaeea0b",
                         "sha1": "7e0667acc57bba6e57022d6e9e31dfa86f401ac1",
@@ -540,7 +540,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8",
                     "descriptor": {
                         "crc32c": "47d49222",
                         "sha1": "a2493797f5cd1a2e644a08a0a81bc329c78ab950",
@@ -583,7 +583,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_e6c1d2ce-d6ad-500e-8682-626a555992ab",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_e6c1d2ce-d6ad-500e-8682-626a555992ab",
                     "descriptor": {
                         "crc32c": "8644e13b",
                         "sha1": "b851d8660a9dc81813f6d31d75e7b248241b575f",
@@ -626,7 +626,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a694f8a4-424d-56db-9329-d449667416ea",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_a694f8a4-424d-56db-9329-d449667416ea",
                     "descriptor": {
                         "crc32c": "ee474d23",
                         "sha1": "9a726b1fcd446ad3777e5537d4ee809fa393b8b5",
@@ -669,7 +669,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_385feda5-d1e3-5a51-8e55-f4f491a4e7bf",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_385feda5-d1e3-5a51-8e55-f4f491a4e7bf",
                     "descriptor": {
                         "crc32c": "99cb5894",
                         "sha1": "8e36f67ce2f1ac6771a42c6b7b6053786d39c356",
@@ -712,7 +712,7 @@
                             "schema_minor_version": 2
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_065dad63-3e05-5738-8ba5-9925d5d73d5e",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_065dad63-3e05-5738-8ba5-9925d5d73d5e",
                     "descriptor": {
                         "crc32c": "0b83b575",
                         "sha1": "9ee5c924eb8cce21b2544b92cea7df0ac84e6e2f",
@@ -1321,7 +1321,7 @@
                             "format": "unknown"
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c",
                     "descriptor": {
                         "crc32c": "",
                         "sha256": "",
@@ -1347,7 +1347,7 @@
                             "format": "unknown"
                         }
                     },
-                    "file_id": "drs://mock_tdr.lan/v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961",
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_9d6f268f-f484-5381-9095-f0998fa0c961",
                     "descriptor": {
                         "crc32c": "",
                         "sha256": "",
