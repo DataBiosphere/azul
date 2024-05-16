@@ -100,7 +100,7 @@ deploy:
 deploy_browser:
   extends: .base_on_push
   stage: deploy
-  timeout: 5m
+  timeout: 20m  # initial deploys can take a while
   needs:
     - build_image
     - deploy
