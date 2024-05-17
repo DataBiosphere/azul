@@ -396,7 +396,7 @@ anvil5_sources = mkdict(anvil4_sources, 262, mkdelta([
     # @formatter:on
 ]))
 
-anvil6_sources = mkdict(anvil5_sources, 252, mkdelta([
+anvil6_sources = mkdict(anvil5_sources, 253, mkdelta([
     # @formatter:off
     mksrc('datarepo-38af6304', 'ANVIL_1000G_PRIMED_data_model_20240410_ANV5_202404101419', 14695),
     mksrc('datarepo-1a86e7ca', 'ANVIL_CCDG_Baylor_CVD_AFib_Groningen_WGS_20221122_ANV5_202304242224', 639, pop),
@@ -626,6 +626,7 @@ anvil6_sources = mkdict(anvil5_sources, 252, mkdelta([
     mksrc('datarepo-4a4eec27', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202403040445', 234, pop),
     mksrc('datarepo-a1f917db', 'ANVIL_PAGE_Stanford_Global_Reference_Panel_GRU_WGS_20221128_ANV5_202403040453', 78, pop), # noqa E501
     mksrc('datarepo-6264931f', 'ANVIL_PAGE_WHI_HMB_IRB_WGS_20221019_ANV5_202403040500', 235, pop),
+    mksrc('datarepo-e5b16a5a', 'ANVIL_T2T_CHRY_20240301_ANV5_202403040508', 309979),
     mksrc('datarepo-f3817357', 'ANVIL_ccdg_asc_ndd_daly_talkowski_AGRE_asd_exome_20221102_ANV5_202403040528', 850),
     mksrc('datarepo-23635d1c', 'ANVIL_ccdg_asc_ndd_daly_talkowski_IBIS_asd_exome_20221024_ANV5_202403040537', 241),
     mksrc('datarepo-ecf311e7', 'ANVIL_ccdg_asc_ndd_daly_talkowski_TASC_asd_exome_20221117_ANV5_202403040544', 3175),
@@ -779,16 +780,15 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SERVICE_URL': 'https://data.terra.bio',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
         'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-prod.broadinstitute.org',
+        'AZUL_TERRA_SERVICE_URL': 'https://firecloud-orchestration.dsde-prod.broadinstitute.org',
+
+        # Personal deployments & `hammerbox` share an ES domain with `anvilprod`
+        'AZUL_SHARE_ES_DOMAIN': '1',
+        'AZUL_ES_DOMAIN': 'azul-index-anvilprod',
 
         **(
             {
-                # $0.382/h × 2 × 24h/d × 30d/mo = $550.08/mo
-                'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-                'AZUL_ES_INSTANCE_COUNT': '4',
             } if is_sandbox else {
-                # Personal deployments share an ES domain with `hammerbox`
-                'AZUL_SHARE_ES_DOMAIN': '1',
-                'AZUL_ES_DOMAIN': 'azul-index-hammerbox',
                 # Personal deployments use fewer Lambda invocations in parallel.
                 'AZUL_CONTRIBUTION_CONCURRENCY': '8',
                 'AZUL_AGGREGATION_CONCURRENCY': '8',

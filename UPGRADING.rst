@@ -20,6 +20,50 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6218 Delete hammerbox ES domain
+================================
+
+Operator
+~~~~~~~~
+
+Due to an open issue with the `Terraform provider opensearch`_, the ``deploy``
+job will fail on ``hammerbox`` when building the feature branch. After this
+occurs, run the following commands::
+
+    _select hammerbox
+    cd $project_root/terraform
+    terraform state rm opensearch_cluster_settings.index
+
+Then, retry the ``deploy`` job on GitLab. It should now succeed.
+
+.. _Terraform provider opensearch: https://github.com/opensearch-project/terraform-provider-opensearch/issues/60
+
+
+DataBiosphere/azul-private#6 data-browser: Content Security Policy (CSP) Not Implemented
+========================================================================================
+
+The new environment variable ``AZUL_TERRA_SERVICE_URL`` has been added. As
+always, use the sandbox deployment's ``environment.py`` as a model when
+upgrading personal deployments.
+
+
+DataBiosphere/azul-private#133 Disable split tunneling for GitLab VPN in prod and anvilprod
+===========================================================================================
+
+This change requires an update to your existing VPN connections for `prod` and
+`anvilprod`.
+
+Run the following commands::
+
+    _select prod.gitlab  # or anvilprod.gitlab
+    cd terraform/gitlab/vpn
+    make config > ~/azul-gitlab-prod.ovpn  # or azul-gitlab-anvilprod.ovpn
+
+Then, remove the existing VPN connection and import the generated `.ovpn` file
+to recreate it. Finally, delete the `.ovpn` file to prevent proliferation of the
+private key.
+
+
 #6046 Fix: VPC CIDR in ``anvildev`` is wrong
 ============================================
 

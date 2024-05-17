@@ -14,8 +14,8 @@ Connected issue: #0000
 - [ ] Name of PR branch matches `promotions/yyyy-mm-dd-prod`
 - [ ] On ZenHub, PR is connected to the promotion issue it resolves
 - [ ] PR description links to connected issue
-- [ ] Title of connected issue matches `Promotion yyyy-mm-dd prod`
-- [ ] PR title starts with title of connected issue
+- [ ] Title of connected issue matches `Promotion yyyy-mm-dd`
+- [ ] PR title starts with title of connected issue followed by ` prod`
 - [ ] PR title references the connected issue
 
 
@@ -95,8 +95,9 @@ Connected issue: #0000
 
 ### System administrator
 
-- [ ] Removed unused image tags from [pycharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not alter references to that image`</sub>
-- [ ] Removed unused image tags from [elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not alter references to that image`</sub>
+- [ ] Removed unused image tags from [pycharm image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm) <sub>or this promotion does not alter references to that image</sub>
+- [ ] Removed unused image tags from [elasticsearch image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch) <sub>or this promotion does not alter references to that image</sub>
+- [ ] Removed unused image tags from [bigquery_emulator image on DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator) <sub>or this promotion does not alter references to that image</sub>
 - [ ] PR is assigned to no one
 
 

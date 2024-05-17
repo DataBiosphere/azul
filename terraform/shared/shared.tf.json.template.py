@@ -24,6 +24,8 @@ class CloudTrailAlarm(NamedTuple):
     name: str
     statistic: str
     filter_pattern: str
+    threshold: int = 1
+    period: int = 5 * 60
 
     @property
     def metric_name(self) -> str:
@@ -41,7 +43,9 @@ cis_alarms = [
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Average',
-                    filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'),
+                    filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
+                    threshold=12,
+                    period=24 * 60 * 60),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
                     statistic='Sum',
@@ -522,10 +526,10 @@ tf_config = {
                     'namespace': 'LogMetrics',
                     'statistic': a.statistic,
                     'treat_missing_data': 'notBreaching',
-                    'threshold': 1,
+                    'threshold': a.threshold,
                     # The CIS documentation does not specify a period. 5 minutes is
                     # the default value when creating the alarm via the console UI.
-                    'period': 5 * 60,
+                    'period': a.period,
                     'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
                     'ok_actions': ['${aws_sns_topic.monitoring.arn}']
                 }
@@ -979,6 +983,8 @@ tf_config = {
             }
         },
         'aws_wafv2_ip_set': {
+            # FIXME: Remove once no deployments reference this
+            #        https://github.com/DataBiosphere/azul/issues/6244
             'blocked': {
                 'name': 'blocked',
                 'scope': 'REGIONAL',
@@ -989,6 +995,23 @@ tf_config = {
                         'addresses'
                     ]
                 }
+            },
+            **{
+                name: {
+                    'name': config.qualified_resource_name(name),
+                    'scope': 'REGIONAL',
+                    'ip_address_version': 'IPV4',
+                    'addresses': [],
+                    'lifecycle': {
+                        'ignore_changes': [
+                            'addresses'
+                        ]
+                    }
+                }
+                for name in [
+                    config.blocked_v4_ips_term,
+                    config.allowed_v4_ips_term
+                ]
             }
         },
         'aws_ecr_repository': {

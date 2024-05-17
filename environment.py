@@ -275,32 +275,32 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-21',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-22',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.20-16',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.20-17',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'ghcr.io/hannes-ucsc/bigquery-emulator:azul'
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-2',
+                'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
+                'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                # FIXME: https://github.com/DataBiosphere/azul/issues/6022
-                #        Keep ClamAV at 1.2.1 until 1.3.x failure is resolved
-                'ref': 'docker.io/clamav/clamav:1.2.1-27',
+                'ref': 'docker.io/clamav/clamav:1.3.1-50',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.11.1-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:16.11.2-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.11.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v16.11.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
@@ -746,6 +746,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DUOS_SERVICE_URL': None,
 
+        # The URL of an instance of Broad Institute's orchestration service for
+        # Terra.
+        #
+        'AZUL_TERRA_SERVICE_URL': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         #
@@ -770,24 +775,24 @@ def env() -> Mapping[str, Optional[str]]:
         # purposes. A lower (aka unstable) deployment is a main deployment that
         # is not stable.
         #
-        # ╔════════════╗ ╔══════════════════════════════════════════════════╗
-        # ║  Personal  ║ ║                      Shared                      ║
-        # ║            ║ ║ ╔═════════════╗ ╔══════════════════════════════╗ ║
-        # ║            ║ ║ ║   Sandbox   ║ ║             Main             ║ ║
-        # ║            ║ ║ ║             ║ ║ ╔═════════════╗ ╔══════════╗ ║ ║
-        # ║            ║ ║ ║             ║ ║ ║    Lower    ║ ║  Stable  ║ ║ ║
-        # ║ ┌────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ┌──────┐ ║ ║ ║
-        # ║ │ hannes │ ║ ║ ║ │ sandbox │ ║ ║ ║ │   dev   │ ║ ║ │ prod │ ║ ║ ║
-        # ║ └────────┘ ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║ └──────┘ ║ ║ ║
-        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║          ║ ║ ║
-        # ║            ║ ║ ║ │anvilbox │ ║ ║ ║ │anvildev │ ║ ║          ║ ║ ║
-        # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║          ║ ║ ║
-        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║          ║ ║ ║
-        # ║            ║ ║ ║ │hammerbox│ ║ ║ ║ │anvilprod│ ║ ║          ║ ║ ║
-        # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║          ║ ║ ║
-        # ║            ║ ║ ║             ║ ║ ╚═════════════╝ ╚══════════╝ ║ ║
-        # ║            ║ ║ ╚═════════════╝ ╚══════════════════════════════╝ ║
-        # ╚════════════╝ ╚══════════════════════════════════════════════════╝
+        # ╔════════════╗ ╔═════════════════════════════════════════════════════╗
+        # ║  Personal  ║ ║                       Shared                        ║
+        # ║            ║ ║ ╔═════════════╗ ╔═════════════════════════════════╗ ║
+        # ║            ║ ║ ║   Sandbox   ║ ║              Main               ║ ║
+        # ║            ║ ║ ║             ║ ║ ╔═════════════╗ ╔═════════════╗ ║ ║
+        # ║            ║ ║ ║             ║ ║ ║    Lower    ║ ║   Stable    ║ ║ ║
+        # ║ ┌────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ┌─────────┐ ║ ║ ║
+        # ║ │ hannes │ ║ ║ ║ │ sandbox │ ║ ║ ║ │   dev   │ ║ ║ │  prod   │ ║ ║ ║
+        # ║ └────────┘ ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║ └─────────┘ ║ ║ ║
+        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║             ║ ║ ║
+        # ║            ║ ║ ║ │anvilbox │ ║ ║ ║ │anvildev │ ║ ║             ║ ║ ║
+        # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║             ║ ║ ║
+        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║             ║ ║ ┌─────────┐ ║ ║ ║
+        # ║            ║ ║ ║ │hammerbox│ ║ ║ ║             ║ ║ │anvilprod│ ║ ║ ║
+        # ║            ║ ║ ║ └─────────┘ ║ ║ ║             ║ ║ └─────────┘ ║ ║ ║
+        # ║            ║ ║ ║             ║ ║ ╚═════════════╝ ╚═════════════╝ ║ ║
+        # ║            ║ ║ ╚═════════════╝ ╚═════════════════════════════════╝ ║
+        # ╚════════════╝ ╚═════════════════════════════════════════════════════╝
         #
         'azul_shared_deployments': json.dumps({
             'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],

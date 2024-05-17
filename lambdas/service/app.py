@@ -55,6 +55,9 @@ from azul.chalice import (
     AzulChaliceApp,
     C,
 )
+from azul.collections import (
+    OrderedSet,
+)
 from azul.drs import (
     AccessMethod,
 )
@@ -228,7 +231,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '7.3'
+        'version': '7.4'
     },
     'tags': [
         {
@@ -348,7 +351,19 @@ class ServiceApp(AzulChaliceApp):
 
     @property
     def fields(self) -> Sequence[str]:
+        organic, synthetic = self.organic_fields, self.synthetic_fields
+        all = OrderedSet(organic)
+        all.update(synthetic)
+        assert len(all) == len(organic) + len(synthetic)
+        return tuple(all)
+
+    @property
+    def organic_fields(self) -> Sequence[str]:
         return sorted(self.metadata_plugin.field_mapping.keys())
+
+    @property
+    def synthetic_fields(self) -> Sequence[str]:
+        return self.metadata_plugin.special_fields.accessible,
 
     def __init__(self):
         super().__init__(app_name=config.service_name,
@@ -628,7 +643,7 @@ def validate_filters(filters):
         raise BRE('The `filters` parameter must be a dictionary')
     field_types = app.repository_controller.field_types(app.catalog)
     for field, filter_ in filters.items():
-        validate_field(field)
+        validate_field(field, include_synthetic=True)
         try:
             relation, values = one(filter_.items())
         except Exception:
@@ -681,8 +696,9 @@ def validate_organism_age_filter(values):
             raise BRE(e)
 
 
-def validate_field(field: str):
-    if field not in app.metadata_plugin.field_mapping:
+def validate_field(field: str, *, include_synthetic: bool = False):
+    fields = app.fields if include_synthetic else app.organic_fields
+    if field not in fields:
         raise BRE(f'Unknown field `{field}`')
 
 
@@ -991,7 +1007,7 @@ def repository_search_params_spec():
         ),
         params.query(
             'sort',
-            schema.optional(schema.enum(*app.fields)),
+            schema.optional(schema.enum(*app.organic_fields)),
             description=fd('''
                 The field to sort the hits by. The default value depends on the
                 entity type.

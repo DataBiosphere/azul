@@ -1,11 +1,15 @@
 from collections.abc import (
     Iterable,
 )
+import ipaddress
 from itertools import (
     chain,
 )
 import json
 
+from more_itertools import (
+    nth,
+)
 import yaml
 
 from azul import (
@@ -177,9 +181,13 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 # https://github.com/docker/libnetwork/blob/a79d3687931697244b8e03485bf7b2042f8ec6b6/ipamutils/utils.go#L10
 #
 
+all_ipv4 = '0.0.0.0/0'
+
 vpc_cidr = config.vpc_cidr
 
 vpn_subnet = config.vpn_subnet
+
+split_tunnel = not config.is_stable_deployment
 
 # The public key of that keypair
 #
@@ -999,7 +1007,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_route': {
             'gitlab': {
-                'destination_cidr_block': '0.0.0.0/0',
+                'destination_cidr_block': all_ipv4,
                 'gateway_id': '${aws_internet_gateway.gitlab.id}',
                 'route_table_id': '${aws_vpc.gitlab.main_route_table_id}'
             }
@@ -1024,7 +1032,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             f'gitlab_{zone}': {
                 'route': [
                     {
-                        'cidr_block': '0.0.0.0/0',
+                        'cidr_block': all_ipv4,
                         'nat_gateway_id': f'${{aws_nat_gateway.gitlab_{zone}.id}}',
                         'egress_only_gateway_id': None,
                         'gateway_id': None,
@@ -1074,25 +1082,35 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-vpn',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    vpc.security_rule(description='Any traffic to the VPC',
-                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    vpc.security_rule(description='Any traffic to the '
+                                                  f"{'VPC' if split_tunnel else 'internet'}",
+                                      cidr_blocks=[
+                                          '${aws_vpc.gitlab.cidr_block}'
+                                          if split_tunnel else
+                                          all_ipv4
+                                      ],
                                       protocol=-1,
                                       from_port=0,
                                       to_port=0),
                     vpc.security_rule(description='ICMP for PMTUD',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    vpc.security_rule(description='Any traffic from the VPC',
-                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                    vpc.security_rule(description='Any traffic from the '
+                                                  f"{'VPC' if split_tunnel else 'internet'}",
+                                      cidr_blocks=[
+                                          '${aws_vpc.gitlab.cidr_block}'
+                                          if split_tunnel else
+                                          all_ipv4
+                                      ],
                                       protocol=-1,
                                       from_port=0,
                                       to_port=0),
                     vpc.security_rule(description='ICMP for PMTUD',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
@@ -1108,7 +1126,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       from_port=0,
                                       to_port=0),
                     vpc.security_rule(description='ICMP for PMTUD',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
@@ -1120,7 +1138,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       from_port=443,
                                       to_port=443),
                     vpc.security_rule(description='ICMP for PMTUD',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
@@ -1132,7 +1150,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
                     vpc.security_rule(description='Any traffic to anywhere (to be routed by NAT Gateway)',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol=-1,
                                       from_port=0,
                                       to_port=0),
@@ -1153,7 +1171,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       from_port=4789,
                                       to_port=4789),
                     vpc.security_rule(description='ICMP for PMTUD',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
@@ -1178,7 +1196,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       from_port=4789,
                                       to_port=4789),
                     vpc.security_rule(description='ICMP for PMTUD',
-                                      cidr_blocks=['0.0.0.0/0'],
+                                      cidr_blocks=[all_ipv4],
                                       protocol='icmp',
                                       from_port=3,  # Destination Unreachable
                                       to_port=4)  # Fragmentation required DF-flag set
@@ -1214,7 +1232,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'security_group_ids': ['${aws_security_group.gitlab_vpn.id}'],
                 'server_certificate_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}',
                 'transport_protocol': 'udp',
-                'split_tunnel': True,
+                'split_tunnel': split_tunnel,
+                'dns_servers': [] if split_tunnel else [
+                    # https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#AmazonDNS
+                    str(nth(ipaddress.ip_network(vpc_cidr).hosts(), 1)),
+                    '169.254.169.253'
+                ],
                 'authentication_options': {
                     'type': 'certificate-authentication',
                     'root_certificate_chain_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}'
@@ -1234,10 +1257,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
             for zone in range(num_zones)
         },
+        'aws_ec2_client_vpn_route': {
+            f'gitlab_{zone}': {
+                'client_vpn_endpoint_id': '${aws_ec2_client_vpn_endpoint.gitlab.id}',
+                'target_vpc_subnet_id': '${aws_subnet.gitlab_public_%s.id}' % zone,
+                'destination_cidr_block': all_ipv4
+            }
+            for zone in range(num_zones)
+            if not split_tunnel
+        },
         'aws_ec2_client_vpn_authorization_rule': {
             'gitlab': {
                 'client_vpn_endpoint_id': '${aws_ec2_client_vpn_endpoint.gitlab.id}',
-                'target_network_cidr': '${aws_vpc.gitlab.cidr_block}',
+                'target_network_cidr': (
+                    '${aws_vpc.gitlab.cidr_block}'
+                    if split_tunnel else
+                    all_ipv4
+                ),
                 'authorize_all_groups': True
             }
         },
