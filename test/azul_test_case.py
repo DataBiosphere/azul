@@ -191,6 +191,13 @@ class AzulTestCase(TestCase):
         """
         self.assertEqual(set(), subset - superset)
 
+    def assertIsDisjoint(self, set1: Set, set2: Set):
+        """
+        More useful than using :meth:`assertTrue` and :meth:`set.isdisjoint`
+        because the offending elements are shown.
+        """
+        self.assertEqual(set(), set1 & set2)
+
     @classmethod
     def addClassPatch(cls, instance: patch) -> None:
         instance.start()
@@ -352,6 +359,7 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls._patch_catalogs()
+        cls._patch_replicas_enabled()
 
     @classmethod
     def _patch_catalogs(cls):
@@ -380,6 +388,12 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         # Ensure that derived cached properties are affected
         assert config.default_catalog == cls.catalog
         assert config.integration_test_catalogs == {}
+
+    @classmethod
+    def _patch_replicas_enabled(cls):
+        cls.addClassPatch(patch.object(type(config),
+                                       'enable_replicas',
+                                       return_value=True))
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):

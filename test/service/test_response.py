@@ -65,6 +65,7 @@ from azul.logging import (
 from azul.plugins import (
     FieldPath,
     MetadataPlugin,
+    SpecialFields,
 )
 from azul.plugins.metadata.hca import (
     HCABundle,
@@ -1131,7 +1132,7 @@ class TestIndexResponse(IndexResponseTestCase):
                                 if key not in [
                                     'sampleEntityType',
                                     'effectiveOrgan',
-                                    'accessible',
+                                    SpecialFields.accessible,
                                 ]:
                                     if isinstance(val, list):
                                         for one_val in val:
@@ -2164,7 +2165,7 @@ class TestIndexResponse(IndexResponseTestCase):
                     self.assertGreater(len(hits), 0)
                     for hit in hits:
                         entity = one(hit[entity_type])
-                        self.assertEqual(expect_accessible, entity['accessible'])
+                        self.assertEqual(expect_accessible, entity[SpecialFields.accessible])
 
         for entity_type in filtered_entity_types:
             _test(entity_type, expect_empty=False, expect_accessible=True)
@@ -3497,6 +3498,12 @@ class TestResponseFields(IndexResponseTestCase):
         self.assertEqual(expected_bionetwork_name, project['bionetworkName'])
         self.assertTrue(project['isTissueAtlasProject'])
 
+        tissue_atlas = {
+            entry['term']: entry['count']
+            for entry in response_json['termFacets']['tissueAtlas']['terms']
+        }
+        self.assertEqual({'Lung': 1, 'Retina': 1, 'Blood': 1}, tissue_atlas)
+
 
 class TestUnpopulatedIndexResponse(IndexResponseTestCase):
 
@@ -3524,7 +3531,8 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
         # response.
         plugin: MetadataPlugin = self.app_module.app.metadata_plugin
         facets = list(plugin.facets)
-        facets[facets.index(plugin.special_fields.source_id)] = 'accessible'
+        special_fields = plugin.special_fields
+        facets[facets.index(special_fields.source_id)] = special_fields.accessible
         return facets
 
     @property

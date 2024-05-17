@@ -9,6 +9,10 @@ import attr
 from azul import (
     CatalogName,
 )
+from azul.indexer.document import (
+    FieldTypes,
+    null_str,
+)
 from azul.logging import (
     configure_test_logging,
 )
@@ -373,6 +377,14 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
         }
 
+        class Service(self.Service):
+
+            def field_types(self, catalog: CatalogName) -> FieldTypes:
+                return {
+                    **super().field_types(catalog),
+                    'path': {'to': {'foo': null_str}}
+                }
+
         class MockPlugin(self.MockPlugin):
 
             @property
@@ -386,7 +398,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             def facets(self) -> Sequence[str]:
                 return ['foo']
 
-        service = self.Service(MockPlugin())
+        service = Service(MockPlugin())
 
         filters = Filters(explicit={}, source_ids=set())
         post_filter = True

@@ -29,6 +29,7 @@ from typing import (
 
 import attr
 from more_itertools import (
+    first,
     one,
 )
 
@@ -990,9 +991,11 @@ null_datetime: NullableDateTime = NullableDateTime(str, str)
 
 class Nested(PassThrough[JSON]):
     properties: Mapping[str, FieldType]
+    agg_property: str
 
     def __init__(self, **properties):
         super().__init__(JSON, es_type='nested')
+        self.agg_property = first(properties.keys())
         self.properties = properties
 
     def api_filter_schema(self, relation: str) -> JSON:

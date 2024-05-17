@@ -305,18 +305,18 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                         source: TDRSourceRef
                         ) -> Mapping[str, int]:
         prefix = source.spec.prefix
-        prefixes = [
-            prefix.common + partition_prefix
-            for partition_prefix in prefix.partition_prefixes()
-        ]
-        assert prefixes, prefix
         rows = self._run_sql(f'''
-            SELECT prefix, COUNT(links_id) AS subgraph_count
-            FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH(links_id, prefix)
+            SELECT prefix, COUNT(*) AS subgraph_count
+            FROM (
+                SELECT SUBSTR(links_id, 1, {len(prefix)}) AS prefix
+                FROM {backtick(self._full_table_name(source.spec, 'links'))}
+            )
+            WHERE STARTS_WITH(prefix, {prefix.common!r})
             GROUP BY prefix
         ''')
-        return {row['prefix']: row['subgraph_count'] for row in rows}
+        partitions = {row['prefix']: row['subgraph_count'] for row in rows}
+        assert all(v > 0 for v in partitions.values())
+        return partitions
 
     def _list_bundles(self,
                       source: TDRSourceRef,

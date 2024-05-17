@@ -36,6 +36,7 @@ from azul.http import (
 )
 from azul.indexer.document import (
     FieldType,
+    pass_thru_bool,
 )
 from azul.plugins import (
     RepositoryFileDownload,
@@ -311,8 +312,14 @@ class RepositoryController(SourceController):
         the name of the field as provided by clients.
         """
         result = {}
-        for field, path in self.service.metadata_plugin(catalog).field_mapping.items():
+        plugin = self.service.metadata_plugin(catalog)
+        for field, path in plugin.field_mapping.items():
             field_type = self.service.field_type(catalog, path)
             if isinstance(field_type, FieldType):
                 result[field] = field_type
+        # This field is a synthetic element of the response and will never be
+        # null. Including it here helps to streamline request validation.
+        accessible = plugin.special_fields.accessible
+        assert accessible not in result, result
+        result[accessible] = pass_thru_bool
         return result
