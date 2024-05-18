@@ -118,15 +118,290 @@
                 {
                     "fields": [
                         {
+                            "name": "activity_id",
+                            "namespace": "anvil_activity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "activity_type",
+                            "namespace": "anvil_activity",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "datarepo_row_id",
+                            "namespace": "anvil_activity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "generated_file_id",
+                            "namespace": "anvil_activity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_activity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "used_biosample_id",
+                            "namespace": "anvil_activity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "used_file_id",
+                            "namespace": "anvil_activity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "anvil_activity",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "activity_type",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "alignmentactivity_id",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "data_modality",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "datarepo_row_id",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "generated_file_id",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "reference_assembly",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "used_file_id",
+                            "namespace": "anvil_alignmentactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "anvil_alignmentactivity",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "antibody_id",
+                            "namespace": "anvil_antibody",
+                            "type": "string"
+                        },
+                        {
+                            "name": "datarepo_row_id",
+                            "namespace": "anvil_antibody",
+                            "type": "string"
+                        },
+                        {
+                            "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_antibody",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "target",
+                            "namespace": "anvil_antibody",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        }
+                    ],
+                    "name": "anvil_antibody",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "activity_type",
+                            "namespace": "anvil_assayactivity",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "antibody_id",
+                            "namespace": "anvil_assayactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "assay_type",
+                            "namespace": "anvil_assayactivity",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "assayactivity_id",
+                            "namespace": "anvil_assayactivity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "data_modality",
+                            "namespace": "anvil_assayactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "datarepo_row_id",
+                            "namespace": "anvil_assayactivity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "generated_file_id",
+                            "namespace": "anvil_assayactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_assayactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "used_biosample_id",
+                            "namespace": "anvil_assayactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "anvil_assayactivity",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
                             "name": "anatomical_site",
                             "namespace": "anvil_biosample",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "apriori_cell_type",
                             "namespace": "anvil_biosample",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -138,7 +413,10 @@
                         {
                             "name": "biosample_type",
                             "namespace": "anvil_biosample",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "datarepo_row_id",
@@ -148,28 +426,43 @@
                         {
                             "name": "disease",
                             "namespace": "anvil_biosample",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "donor_age_at_collection_lower_bound",
                             "namespace": "anvil_biosample",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "double"
+                            ]
                         },
                         {
                             "name": "donor_age_at_collection_unit",
                             "namespace": "anvil_biosample",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "donor_age_at_collection_upper_bound",
                             "namespace": "anvil_biosample",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "double"
+                            ]
                         },
                         {
                             "name": "donor_id",
                             "namespace": "anvil_biosample",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -177,7 +470,10 @@
                             "name": "part_of_dataset_id",
                             "namespace": "anvil_biosample",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -185,14 +481,12 @@
                             "name": "source_datarepo_row_ids",
                             "namespace": "anvil_biosample",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
-                        },
-                        {
-                            "name": "version",
-                            "namespace": "anvil_biosample",
-                            "type": "string"
                         }
                     ],
                     "name": "anvil_biosample",
@@ -206,7 +500,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": "string",
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -217,7 +514,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": [],
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -228,7 +528,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": "string",
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -263,7 +566,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": "string",
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -274,7 +580,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": [],
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -285,7 +594,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": "string",
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -296,7 +608,10 @@
                             "type": [
                                 "null",
                                 {
-                                    "items": "string",
+                                    "items": [
+                                        "null",
+                                        "string"
+                                    ],
                                     "type": "array"
                                 }
                             ]
@@ -308,11 +623,6 @@
                                 "null",
                                 "string"
                             ]
-                        },
-                        {
-                            "name": "version",
-                            "namespace": "anvil_dataset",
-                            "type": "string"
                         }
                     ],
                     "name": "anvil_dataset",
@@ -328,17 +638,26 @@
                         {
                             "name": "diagnosis_age_lower_bound",
                             "namespace": "anvil_diagnosis",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "double"
+                            ]
                         },
                         {
                             "name": "diagnosis_age_unit",
                             "namespace": "anvil_diagnosis",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "diagnosis_age_upper_bound",
                             "namespace": "anvil_diagnosis",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "double"
+                            ]
                         },
                         {
                             "name": "diagnosis_id",
@@ -349,35 +668,53 @@
                             "name": "disease",
                             "namespace": "anvil_diagnosis",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
                         {
                             "name": "donor_id",
                             "namespace": "anvil_diagnosis",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "onset_age_lower_bound",
                             "namespace": "anvil_diagnosis",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "double"
+                            ]
                         },
                         {
                             "name": "onset_age_unit",
                             "namespace": "anvil_diagnosis",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "onset_age_upper_bound",
                             "namespace": "anvil_diagnosis",
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "double"
+                            ]
                         },
                         {
                             "name": "phenopacket",
                             "namespace": "anvil_diagnosis",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -385,7 +722,10 @@
                             "name": "phenotype",
                             "namespace": "anvil_diagnosis",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -393,14 +733,12 @@
                             "name": "source_datarepo_row_ids",
                             "namespace": "anvil_diagnosis",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
-                        },
-                        {
-                            "name": "version",
-                            "namespace": "anvil_diagnosis",
-                            "type": "string"
                         }
                     ],
                     "name": "anvil_diagnosis",
@@ -422,30 +760,45 @@
                             "name": "genetic_ancestry",
                             "namespace": "anvil_donor",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
                         {
                             "name": "organism_type",
                             "namespace": "anvil_donor",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "part_of_dataset_id",
                             "namespace": "anvil_donor",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "phenotypic_sex",
                             "namespace": "anvil_donor",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "reported_ethnicity",
                             "namespace": "anvil_donor",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -453,14 +806,12 @@
                             "name": "source_datarepo_row_ids",
                             "namespace": "anvil_donor",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
-                        },
-                        {
-                            "name": "version",
-                            "namespace": "anvil_donor",
-                            "type": "string"
                         }
                     ],
                     "name": "anvil_donor",
@@ -469,15 +820,13 @@
                 {
                     "fields": [
                         {
-                            "name": "crc32",
-                            "namespace": "anvil_file",
-                            "type": "string"
-                        },
-                        {
                             "name": "data_modality",
                             "namespace": "anvil_file",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -489,12 +838,18 @@
                         {
                             "name": "drs_uri",
                             "namespace": "anvil_file",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "file_format",
                             "namespace": "anvil_file",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "file_id",
@@ -504,53 +859,64 @@
                         {
                             "name": "file_md5sum",
                             "namespace": "anvil_file",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "file_name",
                             "namespace": "anvil_file",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "file_ref",
                             "namespace": "anvil_file",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "file_size",
                             "namespace": "anvil_file",
-                            "type": "long"
+                            "type": [
+                                "null",
+                                "long"
+                            ]
                         },
                         {
                             "name": "is_supplementary",
                             "namespace": "anvil_file",
-                            "type": "boolean"
+                            "type": [
+                                "null",
+                                "boolean"
+                            ]
                         },
                         {
                             "name": "reference_assembly",
                             "namespace": "anvil_file",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
-                        },
-                        {
-                            "name": "sha256",
-                            "namespace": "anvil_file",
-                            "type": "string"
                         },
                         {
                             "name": "source_datarepo_row_ids",
                             "namespace": "anvil_file",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
-                        },
-                        {
-                            "name": "version",
-                            "namespace": "anvil_file",
-                            "type": "string"
                         }
                     ],
                     "name": "anvil_file",
@@ -559,15 +925,100 @@
                 {
                     "fields": [
                         {
+                            "name": "datarepo_row_id",
+                            "namespace": "anvil_project",
+                            "type": "string"
+                        },
+                        {
+                            "name": "funded_by",
+                            "namespace": "anvil_project",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "generated_dataset_id",
+                            "namespace": "anvil_project",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "principal_investigator",
+                            "namespace": "anvil_project",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "project_id",
+                            "namespace": "anvil_project",
+                            "type": "string"
+                        },
+                        {
+                            "name": "registered_identifier",
+                            "namespace": "anvil_project",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_project",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "title",
+                            "namespace": "anvil_project",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        }
+                    ],
+                    "name": "anvil_project",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
                             "name": "activity_type",
                             "namespace": "anvil_sequencingactivity",
-                            "type": "string"
+                            "type": [
+                                "null",
+                                "string"
+                            ]
                         },
                         {
                             "name": "assay_type",
                             "namespace": "anvil_sequencingactivity",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -575,7 +1026,10 @@
                             "name": "data_modality",
                             "namespace": "anvil_sequencingactivity",
                             "type": {
-                                "items": [],
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -588,7 +1042,10 @@
                             "name": "generated_file_id",
                             "namespace": "anvil_sequencingactivity",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -601,7 +1058,10 @@
                             "name": "source_datarepo_row_ids",
                             "namespace": "anvil_sequencingactivity",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
@@ -609,17 +1069,94 @@
                             "name": "used_biosample_id",
                             "namespace": "anvil_sequencingactivity",
                             "type": {
-                                "items": "string",
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "anvil_sequencingactivity",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "activity_type",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "data_modality",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
                                 "type": "array"
                             }
                         },
                         {
-                            "name": "version",
-                            "namespace": "anvil_sequencingactivity",
+                            "name": "datarepo_row_id",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": "string"
+                        },
+                        {
+                            "name": "generated_file_id",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "reference_assembly",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "used_file_id",
+                            "namespace": "anvil_variantcallingactivity",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "variantcallingactivity_id",
+                            "namespace": "anvil_variantcallingactivity",
                             "type": "string"
                         }
                     ],
-                    "name": "anvil_sequencingactivity",
+                    "name": "anvil_variantcallingactivity",
                     "type": "record"
                 }
             ]
