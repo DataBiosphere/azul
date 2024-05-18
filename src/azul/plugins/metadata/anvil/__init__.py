@@ -308,6 +308,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         entity_types = []
         for table_schema in sorted(anvil_schema['tables'], key=itemgetter('name')):
             table_name = table_schema['name']
+            # FIXME: Improve handling of DUOS replicas
+            #        https://github.com/DataBiosphere/azul/issues/6139
             is_duos_type = table_name == 'anvil_dataset'
             entity_types.append(table_name)
             field_schemas = [
