@@ -6,6 +6,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 from urllib.parse import (
     urlencode,
@@ -23,6 +24,9 @@ from elasticsearch import (
 from elasticsearch.transport import (
     Transport,
 )
+import requests
+import requests.auth
+import urllib3.request
 
 from azul import (
     config,
@@ -144,8 +148,74 @@ class AzulRequestsHttpConnection(AzulConnection, RequestsHttpConnection):
     pass
 
 
+class AWSAuthHttpClient(urllib3.request.RequestMethods):
+    """
+    Decorates a urllib3 HTTPConnectionPool instance so that requests are
+    signed with AWS's Signature Version 4 flavor of HMAC.
+    """
+
+    def __init__(self,
+                 pool: urllib3.HTTPConnectionPool,
+                 http_auth: BotoAWSRequestsAuth):
+        super().__init__()
+        self._inner = pool
+        self._http_auth = http_auth
+
+    def urlopen(self,
+                method: str,
+                url: str,
+                body: bytes | None = None,
+                headers: Mapping[str, str] | None = None,
+                **kwargs
+                ) -> urllib3.HTTPResponse:
+        # self._http_auth is an instance of BotoAWSRequestsAuth, a subclass of
+        # AuthBase from the Requests library. To use that instance with urllib3
+        # directly, we need to prepare a Requests request object, sign it with
+        # self._http_auth and pass the resulting signature header to urllib3's
+        # urlopen() method.
+        request = requests.PreparedRequest()
+        request.method = method
+        # Because urllib3 connection pools are host-specific, URLs passed to a
+        # connection pool's urlencode() must be relative and path-absolute. And
+        # while PreparedRequest.prepare() requires an absolute URL, we can sneak
+        # a relative one in by setting the attribute directly. This neatly
+        # avoids having to compose an absolute URL and the URL-encoding
+        # ambiguities that entails. The Elasticsearch client, for example,
+        # encodes colons in absolute paths even though the leading slash in such
+        # a path makes that unnecessary. These ambiguities could lead to an
+        # invalid signature. The AWS signature algorithm only looks at path and
+        # query of URLs.
+        assert url.startswith('/'), url
+        request.url = url
+        request.headers = headers
+        request.body = body
+        request = self._http_auth(request)
+        # Note that the various urlopen() implementations in urllib3 declare the
+        # `body` argument with a default value, making it a keyword argument,
+        # the ES client passes it as a positional. If this were ever to change,
+        # this method would get a duplicate of the `body` argument as part of
+        # `kwargs`, resulting in a TypeError.
+        return self._inner.urlopen(method, url, body, headers=request.headers, **kwargs)
+
+    def close(self):
+        self._inner.close()
+
+
 class AzulUrllib3HttpConnection(AzulConnection, Urllib3HttpConnection):
-    pass
+
+    def __init__(self, *args, http_auth: BotoAWSRequestsAuth = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if http_auth is not None:
+            # We can't extend the pool class because we don't control the
+            # instantiation. We therefore have to decorate the pool instance.
+            # Looking at the source of Urllib3HttpConnection we notice that only
+            # the methods `urlopen()` and `close()` are called. This means that
+            # the decorating class doesn't need to implement (or extend) a full
+            # HTTPConnectionPool, only the much slimmer RequestMethods.
+            client = AWSAuthHttpClient(self.pool, http_auth)
+            # We still need the cast because the stub declares `self.pool` to be
+            # an instance of HTTPConnectionPool.
+            self.pool = cast(urllib3.HTTPConnectionPool, client)
 
 
 class ESClientFactory:
@@ -177,7 +247,7 @@ class ESClientFactory:
             return Elasticsearch(http_auth=aws_auth,
                                  use_ssl=True,
                                  verify_certs=True,
-                                 connection_class=AzulRequestsHttpConnection,
+                                 connection_class=AzulUrllib3HttpConnection,
                                  **common_params)
         else:
             return Elasticsearch(connection_class=AzulUrllib3HttpConnection,
@@ -191,5 +261,5 @@ class ProductAgnosticTransport(Transport):
     OpenSearch.
     """
 
-    def _do_verify_elasticsearch(self, headers, timeout):
+    def _do_verify_elasticsearch(self, *_args, **__kwargs):
         self._verified_elasticsearch = True

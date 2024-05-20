@@ -11,7 +11,7 @@ Recommended usage when updating the current set of license files:
    for the python packages that this script failed to locate.
 4) Delete the old license files.
 """
-
+import json
 from typing import (
     Sequence,
 )
@@ -19,14 +19,20 @@ from typing import (
 from furl import (
     furl,
 )
-import requests
+from urllib3 import (
+    HTTPResponse,
+)
 
 from azul import (
     config,
+    require,
+)
+from azul.http import (
+    http_client,
 )
 
 
-def github_urls(urls: Sequence[str]) -> list[str]:
+def github_urls(urls: Sequence[str]) -> set[str]:
     """
     Return the GitHub URLs from the list of URLs given.
     """
@@ -59,6 +65,8 @@ license_file_names = [
     'LICENCE.md'
 ]
 
+http = http_client()
+
 with open(f'{config.project_root}/requirements.all.txt', 'r') as f:
     lines = f.readlines()
 
@@ -67,18 +75,20 @@ for line in lines:
     if line:
         package, version = line.split('==')
         pypi_url = f'https://pypi.org/pypi/{package}'
-        response = requests.get(f'{pypi_url}/json')
-        response.raise_for_status()
-        urls = response.json()['info']['project_urls']
+        response = http.request('GET', f'{pypi_url}/json')
+        assert isinstance(response, HTTPResponse)
+        require(response.status == 200, response)
+        urls = json.loads(response.data)['info']['project_urls']
         found = False
         for url in github_urls(urls.values()):
             for filename in license_file_names:
-                response = requests.get(f'{url}/raw/HEAD/{filename}')
-                if response.status_code == 200:
+                response = http.request('GET', f'{url}/raw/HEAD/{filename}')
+                assert isinstance(response, HTTPResponse)
+                if response.status == 200:
                     file_path = f'{destination_path}{package}.txt'
-                    with open(file_path, 'w') as f:
-                        f.write(f'{url}/{filename}\n\n')
-                        f.write(f'{response.text}\n')
+                    with open(file_path, 'wb') as f:
+                        f.write(f'{url}/{filename}\n\n'.encode('ascii'))
+                        f.write(response.data)
                     print(package, '... done.')
                     found = True
                     break

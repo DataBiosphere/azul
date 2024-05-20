@@ -502,10 +502,7 @@ class IndexService(DocumentService):
                 break
         writer.raise_on_errors()
 
-    def replicate(self,
-                  catalog: CatalogName,
-                  replicas: list[Replica]
-                  ) -> tuple[int, int]:
+    def replicate(self, catalog: CatalogName, replicas: list[Replica]) -> int:
         writer = self._create_writer(DocumentType.replica, catalog)
         num_replicas = len(replicas)
         num_written = 0
@@ -520,9 +517,7 @@ class IndexService(DocumentService):
             replicas = retry_replicas
 
         writer.raise_on_errors()
-        assert num_written == num_replicas, (
-            num_written, num_replicas
-        )
+        assert num_written == num_replicas, (num_written, num_replicas)
         return num_written
 
     def _read_aggregates(self,

@@ -26,14 +26,17 @@ from typing import (
 )
 import uuid
 
-import attr
-from furl import (
-    furl,
-)
+import attrs
 from more_itertools import (
     chunked,
 )
 import requests
+from urllib3 import (
+    HTTPResponse,
+)
+from urllib3.exceptions import (
+    HTTPError,
+)
 
 from azul import (
     CatalogName,
@@ -46,6 +49,9 @@ from azul.es import (
 )
 from azul.hmac import (
     SignatureHelper,
+)
+from azul.http import (
+    HasCachedHttpClient,
 )
 from azul.indexer import (
     SourceJSON,
@@ -71,24 +77,15 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class AzulClient(SignatureHelper):
+@attrs.frozen(kw_only=True)
+class AzulClient(SignatureHelper, HasCachedHttpClient):
     num_workers: int = 16
 
     @cache
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def post_bundle(self, indexer_url: furl, notification):
-        """
-        Send a mock DSS notification to the indexer
-        """
-        request = requests.Request('POST', str(indexer_url), json=notification)
-        response = self.sign_and_send(request)
-        response.raise_for_status()
-        return response.content
-
-    def synthesize_notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
+    def notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
         Generate an indexer notification for the given bundle.
         """
@@ -106,7 +103,7 @@ class AzulClient(SignatureHelper):
                        ) -> JSON:
         return {
             'action': 'add',
-            'notification': self.synthesize_notification(bundle_fqid),
+            'notification': self.notification(bundle_fqid),
             'catalog': catalog
         }
 
@@ -122,9 +119,9 @@ class AzulClient(SignatureHelper):
             'prefix': prefix
         }
 
-    def reindex(self, catalog: CatalogName, prefix: str) -> int:
+    def local_reindex(self, catalog: CatalogName, prefix: str) -> int:
         notifications = [
-            self.synthesize_notification(bundle_fqid)
+            self.notification(bundle_fqid)
             for source in self.catalog_sources(catalog)
             for bundle_fqid in self.list_bundles(catalog, source, prefix)
         ]
@@ -143,41 +140,58 @@ class AzulClient(SignatureHelper):
         path = (catalog, 'delete' if delete else 'add')
         indexer_url = config.indexer_endpoint.set(path=path)
 
-        with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
+        def attempt(notification: JSON,
+                    i: int
+                    ) -> tuple[JSON, None | Future | HTTPResponse | HTTPError]:
+            log_args = (indexer_url, notification, i)
+            log.info('Notifying %s about %s, attempt %i.',
+                     *log_args)
+            # We want to send the request with urllib3 directly but HMAC
+            # signing is only available for Requests, so we need to prepare a
+            # request, sign it and then unpack it again before calling urllib3.
+            request = requests.Request('POST', str(indexer_url), json=notification)
+            request = request.prepare()
+            self.sign(request)
+            try:
+                result = self._http_client.request(url=request.url,
+                                                   method=request.method,
+                                                   headers=request.headers,
+                                                   body=request.body)
+            except HTTPError as e:
+                result = e
 
-            def attempt(notification, i):
-                log_args = (indexer_url, notification, i)
-                try:
-                    log.info('Notifying %s about %s, attempt %i.', *log_args)
-                    self.post_bundle(indexer_url, notification)
-                except (requests.HTTPError, requests.ConnectionError) as e:
-                    if i < 3:
-                        log.warning('Retrying to notify %s about %s, attempt %i, after error %s.', *log_args, e)
-                        return notification, tpe.submit(partial(attempt, notification, i + 1))
-                    else:
-                        log.warning('Failed to notify %s about %s, attempt %i: after error %s.', *log_args, e)
-                        return notification, e
+            if isinstance(result, HTTPResponse) and result.status == 202:
+                log.info('Success notifying %s about %s, attempt %i.',
+                         *log_args)
+                return notification, None
+            else:
+                assert isinstance(result, (HTTPResponse, HTTPError)), result
+                if i < 3:
+                    log.warning('Retrying to notify %s about %s, attempt %i, after error %s.',
+                                *log_args, result)
+                    return notification, tpe.submit(partial(attempt, notification, i + 1))
                 else:
-                    log.info('Success notifying %s about %s, attempt %i.', *log_args)
-                    return notification, None
+                    log.warning('Failed to notify %s about %s, attempt %i: after error %s.',
+                                *log_args, result)
+                    return notification, result
 
-            def handle_future(future):
-                # @formatter:off
-                nonlocal indexed
-                # @formatter:on
-                bundle_fqid, result = future.result()
-                if result is None:
-                    indexed += 1
-                elif isinstance(result, (requests.HTTPError, requests.ConnectionError)):
-                    status_code = result.response.status_code
-                    errors[status_code] += 1
-                    missing.append((notification, status_code))
-                elif isinstance(result, Future):
-                    # The task scheduled a follow-on task, presumably a retry. Follow that new task.
-                    handle_future(result)
-                else:
-                    assert False
+        def handle_future(future: Future) -> None:
+            nonlocal indexed
+            bundle_fqid, result = future.result()
+            if result is None:
+                indexed += 1
+            elif isinstance(result, HTTPResponse):
+                errors[result.status] += 1
+                missing.append((notification, result.status))
+            elif isinstance(result, Future):
+                # The task scheduled a follow-on task, presumably a retry.
+                # Follow that new task.
+                handle_future(result)
+            else:
+                assert False
 
+        with ThreadPoolExecutor(max_workers=self.num_workers,
+                                thread_name_prefix='pool') as tpe:
             futures = []
             for notification in notifications:
                 total += 1
@@ -185,7 +199,7 @@ class AzulClient(SignatureHelper):
             for future in futures:
                 handle_future(future)
 
-        printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
+        printer = PrettyPrinter(compact=False)
         log.info('Sent notifications for %i of %i bundles for catalog %r.',
                  indexed, total, catalog)
         if errors:

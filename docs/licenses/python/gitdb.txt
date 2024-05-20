@@ -42,4 +42,3 @@ see http://en.wikipedia.org/wiki/Git_%28software%29 for more information.
 
 They are not required for the actual operation, which is why they are not found 
 in the distribution package.
-
