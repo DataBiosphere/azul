@@ -235,8 +235,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
-        'AZUL_IS_SANDBOX': str(int(is_sandbox)),
-
         # This deployment uses a subdomain of the `dev` deployment's domain.
         #
         'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',

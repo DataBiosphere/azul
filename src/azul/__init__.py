@@ -1049,7 +1049,7 @@ class Config:
         Returns True if the current deployment is a shared deployment primarily
         used for testing feature branches.
         """
-        return self._boolean(self.environ['AZUL_IS_SANDBOX'])
+        return 'box' in self.deployment_stage
 
     @property
     def is_sandbox_or_personal_deployment(self) -> bool:

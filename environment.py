@@ -840,12 +840,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_browser_sites': json.dumps({}),
 
-        # 1 if current deployment is a main deployment with the sole purpose of
-        # testing feature branches in GitLab before they are merged to the
-        # develop branch, 0 otherwise. Personal deployments have this set to 0.
-        #
-        'AZUL_IS_SANDBOX': '0',
-
         # A list of names of AWS IAM roles that should be given permission to
         # manage incidents with AWS support as defined in CIS rule 1.20:
         #
