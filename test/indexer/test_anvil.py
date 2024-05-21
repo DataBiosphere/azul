@@ -104,12 +104,13 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     def bundle_fqid(cls,
                     *,
                     uuid,
-                    version='',
+                    version=None,
                     entity_type=BundleEntityType.primary
                     ) -> TDRAnvilBundleFQID:
+        assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
-                                  version=version,
+                                  version=cls.version,
                                   entity_type=entity_type)
 
     @classmethod
@@ -162,28 +163,26 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     finally:
                         self.index_service.delete_indices(self.catalog)
 
-    def _test_fetch_bundle(self,
-                           bundle_fqid: TDRAnvilBundleFQID,
-                           load_tables: bool = True):
-        canned_bundle = self._load_canned_bundle(bundle_fqid)
-        assert isinstance(canned_bundle, TDRAnvilBundle)
-        if load_tables:
-            self._make_mock_tdr_tables(bundle_fqid)
-        plugin = self.plugin_for_source_spec(canned_bundle.fqid.source.spec)
-        bundle = plugin.fetch_bundle(bundle_fqid)
-        assert isinstance(bundle, TDRAnvilBundle)
-        self.assertEqual(canned_bundle.fqid, bundle.fqid)
-        self.assertEqual(canned_bundle.entities, bundle.entities)
-        self.assertEqual(canned_bundle.links, bundle.links)
-
-    def test_fetch_primary_bundle(self):
-        self._test_fetch_bundle(self.primary_bundle())
-
-    def test_fetch_supplementary_bundle(self):
-        self._test_fetch_bundle(self.supplementary_bundle())
-
-    def test_fetch_duos_bundle(self):
-        self._test_fetch_bundle(self.duos_bundle(), load_tables=False)
+    def test_list_and_fetch_bundles(self):
+        source_ref = self.source
+        self._make_mock_tdr_tables(source_ref)
+        expected_bundle_fqids = sorted([
+            self.primary_bundle(),
+            self.supplementary_bundle(),
+            self.duos_bundle()
+        ])
+        plugin = self.plugin_for_source_spec(source_ref.spec)
+        bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
+        self.assertEqual(expected_bundle_fqids, bundle_fqids)
+        for bundle_fqid in bundle_fqids:
+            with self.subTest(bundle_fqid=bundle_fqid):
+                canned_bundle = self._load_canned_bundle(bundle_fqid)
+                assert isinstance(canned_bundle, TDRAnvilBundle)
+                bundle = plugin.fetch_bundle(bundle_fqid)
+                assert isinstance(bundle, TDRAnvilBundle)
+                self.assertEqual(canned_bundle.fqid, bundle.fqid)
+                self.assertEqual(canned_bundle.entities, bundle.entities)
+                self.assertEqual(canned_bundle.links, bundle.links)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):

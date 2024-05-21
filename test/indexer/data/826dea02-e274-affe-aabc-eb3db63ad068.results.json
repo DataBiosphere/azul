@@ -221,7 +221,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     }
@@ -230,14 +230,14 @@
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -245,7 +245,7 @@
     {
         "_index": "azul_v2_nadove4_test_activities",
         "_type": "_doc",
-        "_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
@@ -416,17 +416,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
-            "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
@@ -655,21 +655,21 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -677,7 +677,7 @@
     {
         "_index": "azul_v2_nadove4_test_files",
         "_type": "_doc",
-        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
@@ -848,24 +848,24 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     }
                 ]
             },
-            "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "file_15b76f9c-6b46-433f-851d-34e89f1b9ba6_ed0a841f18d24d3955ace40a353ad640e1da60f1",
+        "_id": "file_15b76f9c-6b46-433f-851d-34e89f1b9ba6_aec7ac65991cc6ea974a7a86fc30ec96c081cfcf",
         "_score": 1.0,
         "_source": {
             "entity_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
@@ -880,7 +880,7 @@
                 "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
                 "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
                 "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-                "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+                "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67",
                 "file_size": 213021639,
                 "is_supplementary": false,
                 "reference_assembly": [],
@@ -888,7 +888,7 @@
                     "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                 ],
                 "version": "2022-06-01T00:00:00.000000Z",
-                "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+                "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67",
                 "sha256": "",
                 "crc32": ""
             }
@@ -1158,7 +1158,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -1218,7 +1218,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -1227,14 +1227,14 @@
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -1242,7 +1242,7 @@
     {
         "_index": "azul_v2_nadove4_test_datasets",
         "_type": "_doc",
-        "_id": "2370f948-2783-4eb6-afea-e022897f4dcf_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "2370f948-2783-4eb6-afea-e022897f4dcf_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
@@ -1432,7 +1432,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -1459,17 +1459,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "2370f948-2783-4eb6-afea-e022897f4dcf_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
@@ -1708,21 +1708,21 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -1730,7 +1730,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "file_3b17377b-16b1-431c-9967-e5d01fc5923f_33d8fab596f5af223936ba8f7ef6d218e4932cde",
+        "_id": "file_3b17377b-16b1-431c-9967-e5d01fc5923f_669b7664f4b6865a0604285f923995acaf84b4ab",
         "_score": 1.0,
         "_source": {
             "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -1741,7 +1741,7 @@
                 "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
                 "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
                 "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-                "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37",
                 "file_size": 3306845592,
                 "is_supplementary": false,
                 "reference_assembly": [],
@@ -1749,7 +1749,7 @@
                     "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
                 ],
                 "version": "2022-06-01T00:00:00.000000Z",
-                "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37",
                 "sha256": "",
                 "crc32": ""
             },
@@ -1762,7 +1762,7 @@
     {
         "_index": "azul_v2_nadove4_test_files",
         "_type": "_doc",
-        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -1933,17 +1933,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
@@ -2169,7 +2169,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -2178,14 +2178,14 @@
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -2217,7 +2217,7 @@
     {
         "_index": "azul_v2_nadove4_test_activities",
         "_type": "_doc",
-        "_id": "816e364e-1193-4e5b-a91a-14e4b009157c_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "816e364e-1193-4e5b-a91a-14e4b009157c_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -2388,17 +2388,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
@@ -2623,7 +2623,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -2683,7 +2683,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -2692,14 +2692,14 @@
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -2707,7 +2707,7 @@
     {
         "_index": "azul_v2_nadove4_test_biosamples",
         "_type": "_doc",
-        "_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
@@ -2897,7 +2897,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -2924,17 +2924,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "826dea02-e274-4ffe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
@@ -3202,7 +3202,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -3262,7 +3262,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -3271,14 +3271,14 @@
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -3286,7 +3286,7 @@
     {
         "_index": "azul_v2_nadove4_test_bundles",
         "_type": "_doc",
-        "_id": "826dea02-e274-affe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "826dea02-e274-affe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "826dea02-e274-affe-aabc-eb3db63ad068",
@@ -3476,7 +3476,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -3503,17 +3503,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "826dea02-e274-affe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "826dea02-e274-affe-aabc-eb3db63ad068_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },
@@ -3779,7 +3779,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                         ],
                         "count": 1
                     },
@@ -3839,7 +3839,7 @@
                             ""
                         ],
                         "drs_uri": [
-                            "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                            "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "count": 1
                     }
@@ -3848,14 +3848,14 @@
             "num_contributions": 1,
             "sources": [
                 {
-                    "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                    "spec": "tdr:test_project:snapshot/snapshot:/2"
+                    "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                    "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
                 }
             ],
             "bundles": [
                 {
                     "uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-                    "version": ""
+                    "version": "2022-06-01T00:00:00.000000Z"
                 }
             ]
         }
@@ -3863,7 +3863,7 @@
     {
         "_index": "azul_v2_nadove4_test_donors",
         "_type": "_doc",
-        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+        "_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
         "_score": 1.0,
         "_source": {
             "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
@@ -4053,7 +4053,7 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
                     },
                     {
                         "document_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
@@ -4080,17 +4080,17 @@
                         "name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "crc32": "",
                         "sha256": "",
-                        "drs_uri": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                        "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
                     }
                 ]
             },
-            "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068__exists",
+            "document_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e_826dea02-e274-affe-aabc-eb3db63ad068_2022-06-01T00:00:00.000000Z_exists",
             "source": {
-                "id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-                "spec": "tdr:test_project:snapshot/snapshot:/2"
+                "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
+                "spec": "tdr:test_anvil_project:snapshot/anvil_snapshot:/2"
             },
             "bundle_uuid": "826dea02-e274-affe-aabc-eb3db63ad068",
-            "bundle_version": "",
+            "bundle_version": "2022-06-01T00:00:00.000000Z",
             "bundle_deleted": false
         }
     },

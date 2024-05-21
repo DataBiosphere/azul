@@ -79,6 +79,7 @@ from azul.plugins.repository.tdr import (
 from azul.plugins.repository.tdr_hca import (
     TDRBundleFQID,
     TDRHCABundle,
+    TDRSourceRef,
     log as plugin_log,
 )
 from azul.terra import (
@@ -197,12 +198,12 @@ class TDRPluginTestCase(TDRTestCase,
                                            ])
 
     def _make_mock_tdr_tables(self,
-                              bundle_fqid: SourcedBundleFQID) -> None:
-        tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
+                              source: TDRSourceRef) -> None:
+        tables = self._load_canned_file_version(uuid=source.id,
                                                 version=None,
                                                 extension='tables.tdr')['tables']
         for table_name, table_rows in tables.items():
-            self._make_mock_entity_table(bundle_fqid.source.spec,
+            self._make_mock_entity_table(source.spec,
                                          table_name,
                                          table_rows['rows'])
 
@@ -263,7 +264,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
     def _plugin_cls(cls) -> Type[tdr_hca.Plugin]:
         return tdr_hca.Plugin
 
-    bundle_fqid = SourcedBundleFQID(source=TDRPluginTestCase.source,
+    bundle_fqid = SourcedBundleFQID(source=DCP2CannedBundleTestCase.source,
                                     uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
                                     version='2019-09-24T09:35:06.958773Z')
 
@@ -295,11 +296,13 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         # Test invalid links by modifying the canned bundle
         spec = self.source.spec
         plugin = self.plugin_for_source_spec(spec)
+        links_id = bundle.uuid
         links = one(plugin.tdr.run_sql(f'''
             SELECT links_id, content
             FROM {plugin._full_table_name(spec, 'links')}
+            WHERE links_id = {links_id!r}
         '''))
-        links_id, links_content = links['links_id'], json.loads(links['content'])
+        links_content = json.loads(links['content'])
         link = first(
             link
             for link in links_content['links']
@@ -345,7 +348,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
                            *,
                            load_tables: bool):
         if load_tables:
-            self._make_mock_tdr_tables(test_bundle.fqid)
+            self._make_mock_tdr_tables(test_bundle.fqid.source)
         plugin = self.plugin_for_source_spec(test_bundle.fqid.source.spec)
         emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
 
