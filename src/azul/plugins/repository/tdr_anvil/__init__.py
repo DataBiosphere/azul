@@ -46,6 +46,9 @@ from azul.plugins.metadata.anvil.bundle import (
     KeyReference,
     Link,
 )
+from azul.plugins.metadata.anvil.schema import (
+    anvil_schema,
+)
 from azul.plugins.repository.tdr import (
     TDRBundle,
     TDRBundleFQID,
@@ -336,7 +339,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 # array for biosamples, but not for donors.
                 dataset_id: Key = one(keys_by_type['dataset'])
                 for row in rows:
-                    donor_dataset_id = row.pop('part_of_dataset_id')
+                    donor_dataset_id = row['part_of_dataset_id']
                     require(donor_dataset_id == dataset_id, donor_dataset_id, dataset_id)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
@@ -417,7 +420,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         return super()._full_table_name(source, table_name)
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
-        result = {entity_type: set() for entity_type in self.indexed_columns_by_entity_type}
+        result = {
+            table['name'].removeprefix('anvil_'): set()
+            for table in anvil_schema['tables']
+        }
         for e in entities:
             result[e.entity_type].add(e.key)
         return result
@@ -727,95 +733,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             return []
 
     def _columns(self, entity_type: EntityType) -> set[str]:
-        entity_columns = self.indexed_columns_by_entity_type[entity_type]
-        return self.common_indexed_columns | entity_columns
-
-    common_indexed_columns = {
-        'datarepo_row_id',
-        'source_datarepo_row_ids'
-    }
-
-    # This could be consolidated with similar info from the metadata plugin?
-    indexed_columns_by_entity_type = {
-        'biosample': {
-            'biosample_id',
-            'anatomical_site',
-            'apriori_cell_type',
-            'biosample_type',
-            'disease',
-            'donor_age_at_collection_unit',
-            'donor_age_at_collection_lower_bound',
-            'donor_age_at_collection_upper_bound',
-        },
-        'dataset': {
-            'dataset_id',
-            'consent_group',
-            'data_use_permission',
-            'owner',
-            'principal_investigator',
-            'registered_identifier',
-            'title',
-            'data_modality'
-        },
-        'diagnosis': {
-            'diagnosis_id',
-            'disease',
-            'diagnosis_age_unit',
-            'diagnosis_age_lower_bound',
-            'diagnosis_age_upper_bound',
-            'onset_age_unit',
-            'onset_age_lower_bound',
-            'onset_age_upper_bound',
-            'phenotype',
-            'phenopacket'
-        },
-        'donor': {
-            'donor_id',
-            'organism_type',
-            'phenotypic_sex',
-            'reported_ethnicity',
-            'genetic_ancestry',
-            # Not stored in index; only retrieved to verify redundancy with
-            # biosample.part_of_dataset_id
-            'part_of_dataset_id'
-        },
-        'file': {
-            'file_id',
-            'data_modality',
-            'file_format',
-            'file_size',
-            'file_md5sum',
-            'reference_assembly',
-            'file_name',
-            'file_ref',
-            'is_supplementary',
-        },
-        'activity': {
-            'activity_id',
-            'activity_type',
-        },
-        'alignmentactivity': {
-            'alignmentactivity_id',
-            'activity_type',
-            'data_modality',
-            'reference_assembly',
-        },
-        'assayactivity': {
-            'assayactivity_id',
-            'activity_type',
-            'assay_type',
-            'data_modality',
-        },
-        'sequencingactivity': {
-            'sequencingactivity_id',
-            'activity_type',
-            'assay_type',
-            'data_modality',
-        },
-        'variantcallingactivity': {
-            'variatncallingactivity_id',
-            'activity_type',
-            'reference_assembly',
-            'data_modality'
-        }
-    }
+        table = one(
+            table for table in anvil_schema['tables']
+            if table['name'] == f'anvil_{entity_type}'
+        )
+        entity_columns = {column['name'] for column in table['columns']}
+        entity_columns.add('datarepo_row_id')
+        return entity_columns

@@ -10,6 +10,12 @@
             "donor_age_at_collection_lower_bound": null,
             "donor_age_at_collection_unit": null,
             "donor_age_at_collection_upper_bound": null,
+            "donor_id": [
+                "1e2bd7e5-f45e-a391-daea-7c060be76acd"
+            ],
+            "part_of_dataset_id": [
+                "52ee7665-7033-63f2-a8d9-ce8e32666739"
+            ],
             "source_datarepo_row_ids": [
                 "sample:98048c3b-2525-4090-94fd-477de31f2608"
             ],
@@ -47,6 +53,7 @@
             "disease": [
                 "redacted-A61iJlLx"
             ],
+            "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
             "onset_age_lower_bound": null,
             "onset_age_unit": null,
             "onset_age_upper_bound": null,
@@ -68,6 +75,7 @@
             "disease": [
                 "redacted-g50ublm/"
             ],
+            "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
             "onset_age_lower_bound": null,
             "onset_age_unit": null,
             "onset_age_upper_bound": null,
@@ -85,6 +93,7 @@
             "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
             "genetic_ancestry": [],
             "organism_type": "redacted-ACw+6ecI",
+            "part_of_dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
             "phenotypic_sex": "redacted-JfQ0b3xG",
             "reported_ethnicity": [
                 "redacted-NSkwDycK"
@@ -137,9 +146,15 @@
             "assay_type": [],
             "data_modality": [],
             "datarepo_row_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+            "generated_file_id": [
+                "1e269f04-4347-4188-b060-1dcc69e71d67"
+            ],
             "sequencingactivity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
             "source_datarepo_row_ids": [
                 "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+            ],
+            "used_biosample_id": [
+                "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
             ],
             "version": "2022-06-01T00:00:00.000000Z"
         },
@@ -148,9 +163,15 @@
             "assay_type": [],
             "data_modality": [],
             "datarepo_row_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
+            "generated_file_id": [
+                "8b722e88-8103-49c1-b351-e64fa7c6ab37"
+            ],
             "sequencingactivity_id": "a60c5138-3749-f7cb-8714-52d389ad5231",
             "source_datarepo_row_ids": [
                 "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b"
+            ],
+            "used_biosample_id": [
+                "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
             ],
             "version": "2022-06-01T00:00:00.000000Z"
         }

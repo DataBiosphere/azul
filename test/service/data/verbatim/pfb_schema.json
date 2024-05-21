@@ -166,6 +166,22 @@
                             "type": "null"
                         },
                         {
+                            "name": "donor_id",
+                            "namespace": "anvil_biosample",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "part_of_dataset_id",
+                            "namespace": "anvil_biosample",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "source_datarepo_row_ids",
                             "namespace": "anvil_biosample",
                             "type": {
@@ -338,6 +354,11 @@
                             }
                         },
                         {
+                            "name": "donor_id",
+                            "namespace": "anvil_diagnosis",
+                            "type": "string"
+                        },
+                        {
                             "name": "onset_age_lower_bound",
                             "namespace": "anvil_diagnosis",
                             "type": "null"
@@ -407,6 +428,11 @@
                         },
                         {
                             "name": "organism_type",
+                            "namespace": "anvil_donor",
+                            "type": "string"
+                        },
+                        {
+                            "name": "part_of_dataset_id",
                             "namespace": "anvil_donor",
                             "type": "string"
                         },
@@ -559,12 +585,28 @@
                             "type": "string"
                         },
                         {
+                            "name": "generated_file_id",
+                            "namespace": "anvil_sequencingactivity",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "sequencingactivity_id",
                             "namespace": "anvil_sequencingactivity",
                             "type": "string"
                         },
                         {
                             "name": "source_datarepo_row_ids",
+                            "namespace": "anvil_sequencingactivity",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "used_biosample_id",
                             "namespace": "anvil_sequencingactivity",
                             "type": {
                                 "items": "string",
