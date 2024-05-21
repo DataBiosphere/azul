@@ -231,7 +231,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '7.4'
+        'version': '8.0'
     },
     'tags': [
         {
@@ -650,14 +650,19 @@ def validate_filters(filters):
             raise BRE(f'The `filters` parameter entry for `{field}` '
                       f'must be a single-item dictionary')
         else:
-            if field == app.metadata_plugin.special_fields.source_id:
+            special_fields = app.metadata_plugin.special_fields
+            if field in (special_fields.source_id, special_fields.accessible):
                 valid_relations = ('is',)
+                disallow_null = True
             else:
                 valid_relations = ('is', 'contains', 'within', 'intersects')
+                disallow_null = False
             if relation in valid_relations:
                 if not isinstance(values, list):
                     raise BRE(f'The value of the `{relation}` relation in the `filters` '
                               f'parameter entry for `{field}` is not a list')
+                if disallow_null and None in values:
+                    raise BRE(f'The `{field}` field does not support null values')
             else:
                 raise BRE(f'The relation in the `filters` parameter entry '
                           f'for `{field}` must be one of {valid_relations}')
