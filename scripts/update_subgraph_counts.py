@@ -82,7 +82,7 @@ class SubgraphCounter:
         try:
             func = getattr(environment, 'common_prefix')
         except AttributeError:
-            assert not config.is_sandbox_or_personal_deployment, environment.__path__
+            assert not config.is_sandbox_or_personal_deployment(), environment.__path__
             return ''
         else:
             return func(self.count)

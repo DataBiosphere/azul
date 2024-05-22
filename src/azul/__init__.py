@@ -1009,7 +1009,7 @@ class Config:
         except KeyError:
             return None if branch is None else deployments.get(None)
 
-    def is_shared_deployment(self, deployment: Optional[str] = None) -> bool:
+    def is_shared_deployment(self, deployment: str | None = None) -> bool:
         """
         Returns `True` if the deployment of the specified name is a shared
         deployment, or `False` if it is a personal deployment. If no argument is
@@ -1026,16 +1026,17 @@ class Config:
     #:
     unstable_branches = {'develop', None}
 
-    @property
-    def is_stable_deployment(self) -> bool:
+    def is_stable_deployment(self, deployment: str | None = None) -> bool:
         """
-        Returns `True` if the current deployment must be kept functional for
-        public use at all times.
+        Returns `True` if the deployment of the specified name must be kept
+        functional for public use at all times. If no argument is passed, or if
+        the argument is `None`, the current deployment's name is used instead.
         """
-        if self.is_sandbox_deployment:
+        if deployment is None:
+            deployment = self.deployment_stage
+        if self.is_sandbox_deployment(deployment):
             return False
         else:
-            deployment = self.deployment_stage
             branches = set(
                 branch
                 for branch, deployments in self._shared_deployments.items()
@@ -1043,17 +1044,72 @@ class Config:
             )
             return bool(branches) and branches.isdisjoint(self.unstable_branches)
 
-    @property
-    def is_sandbox_deployment(self) -> bool:
+    def is_sandbox_deployment(self, deployment: str | None = None) -> bool:
         """
-        Returns True if the current deployment is a shared deployment primarily
-        used for testing feature branches.
+        Returns `True` if the deployment of the specified name is a shared
+        deployment primarily used for testing branches prior to merging. If no
+        argument is passed, or if the argument is `None`, the current
+        deployment's name is used instead.
         """
-        return 'box' in self.deployment_stage
+        if deployment is None:
+            deployment = self.deployment_stage
+        return 'box' in deployment
+
+    def is_personal_deployment(self, deployment: str | None = None) -> bool:
+        """
+        Returns `True` if the deployment of the specified name is a deployment
+        managed by an individual developer. If no argument is passed, or if the
+        argument is `None`, the current deployment's name is used instead.
+        """
+        return not self.is_shared_deployment(deployment)
+
+    def is_sandbox_or_personal_deployment(self,
+                                          deployment: str | None = None
+                                          ) -> bool:
+        """
+        Returns `True` if the deployment of the specified name is managed by an
+        individual developer or if it is a shared deployment primarily used for
+        testing branches prior to merging. If no argument is passed, or if the
+        argument is `None`, the current deployment's name is used instead.
+        """
+        return (
+            self.is_sandbox_deployment(deployment)
+            or self.is_personal_deployment(deployment)
+        )
+
+    def is_main_deployment(self, deployment: str | None = None) -> bool:
+        """
+        Returns `True` if the deployment of the specified name is a main
+        deployment. If no argument is passed, or if the argument is `None`, the
+        current deployment's name is used instead. Main deployments are deployed
+        from long-lived (as opposed to feature) branches and serve some
+        public-facing purpose, be that testing (a lower deployment) or
+        production (a stable deployment).
+        """
+        return not self.is_sandbox_or_personal_deployment(deployment)
+
+    def is_lower_deployment(self, deployment: str | None = None) -> bool:
+        """
+        Returns `True` if the current deployment is a main deployment that is
+        not stable.
+        """
+        if deployment is None:
+            deployment = self.deployment_stage
+        return (
+            self.is_main_deployment(deployment)
+            and not self.is_stable_deployment(deployment)
+        )
 
     @property
-    def is_sandbox_or_personal_deployment(self) -> bool:
-        return self.is_sandbox_deployment or not self.is_shared_deployment()
+    def is_lower_sandbox_deployment(self) -> bool:
+        """
+        Returns `True` if the current deployment is a sandbox for a lower
+        deployment.
+        """
+        return (
+            self.is_sandbox_deployment()
+            and self.is_lower_deployment(self.main_deployment_stage)
+        )
 
     class BrowserSite(TypedDict):
         domain: str

@@ -187,7 +187,7 @@ vpc_cidr = config.vpc_cidr
 
 vpn_subnet = config.vpn_subnet
 
-split_tunnel = not config.is_stable_deployment
+split_tunnel = not config.is_stable_deployment()
 
 # The public key of that keypair
 #
