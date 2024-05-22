@@ -187,26 +187,29 @@ class Config:
     def share_es_domain(self) -> bool:
         return self._boolean(self.environ['AZUL_SHARE_ES_DOMAIN'])
 
-    @property
-    def s3_bucket(self) -> str:
-        return self.environ['AZUL_S3_BUCKET']
-
     def qualified_bucket_name(self,
                               *,
                               account_name: str,
                               region_name: str,
-                              bucket_name: str
+                              bucket_name: str,
+                              deployment_name: str | None = None
                               ) -> str:
         # Allow wildcard for use in ARN patterns
         if bucket_name != '*':
             self._validate_term(bucket_name, name='bucket_name')
-        return f'edu-ucsc-gi-{account_name}-{bucket_name}.{region_name}'
+        components = ['edu', 'ucsc', 'gi', account_name, bucket_name]
+        if deployment_name is not None:
+            self.validate_deployment_name(deployment_name)
+            components.append(deployment_name)
+        return '-'.join(components) + '.' + region_name
 
     aws_config_term = 'awsconfig'
 
     logs_term = 'logs'
 
     shared_term = 'shared'
+
+    storage_term = 'storage'
 
     current = object()
 

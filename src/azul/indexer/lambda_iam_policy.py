@@ -120,7 +120,7 @@ policy = {
                 "s3:PutObject"
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.s3_bucket}/health/*",
+                "${aws_s3_bucket.%s.arn}/health/*" % config.storage_term,
             ]
         },
         {

@@ -56,6 +56,9 @@ from azul.types import (
 )
 
 if TYPE_CHECKING:
+    from mypy_boto3_dynamodb import (
+        DynamoDBClient,
+    )
     from mypy_boto3_ecr import (
         ECRClient,
     )
@@ -209,7 +212,7 @@ class AWS:
         return self.client('ec2')
 
     @property
-    def dynamodb(self):
+    def dynamodb(self) -> 'DynamoDBClient':
         return self.client('dynamodb', azul_logging=True)
 
     @property
@@ -525,10 +528,15 @@ class AWS:
             events.register_first(self._response_event_name, self._log_client_response)
         return resource
 
-    def qualified_bucket_name(self, bucket_name: str) -> str:
+    def qualified_bucket_name(self,
+                              bucket_name: str,
+                              *,
+                              deployment_name: str | None = None
+                              ) -> str:
         return config.qualified_bucket_name(account_name=config.aws_account_name,
                                             region_name=self.region_name,
-                                            bucket_name=bucket_name)
+                                            bucket_name=bucket_name,
+                                            deployment_name=deployment_name)
 
     @property
     def shared_bucket(self):
@@ -537,6 +545,11 @@ class AWS:
     @property
     def logs_bucket(self):
         return self.qualified_bucket_name(config.logs_term)
+
+    @property
+    def storage_bucket(self):
+        return self.qualified_bucket_name(config.storage_term,
+                                          deployment_name=config.deployment_stage)
 
     # An ELB account ID, which varies depending on region, is needed to specify
     # the principal in bucket policies for buckets storing LB access logs.

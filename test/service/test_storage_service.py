@@ -1,20 +1,27 @@
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 import json
 import tempfile
-
-from moto import (
-    mock_s3,
-    mock_sts,
+from unittest.mock import (
+    patch,
 )
+
 import requests
 
 from azul.logging import (
     configure_test_logging,
 )
-from azul_test_case import (
-    AzulUnitTestCase,
+from azul.service import (
+    storage_service,
+)
+from azul.service.storage_service import (
+    StorageObjectNotFound,
 )
 from service import (
-    StorageServiceTestMixin,
+    StorageServiceTestCase,
 )
 
 
@@ -23,16 +30,12 @@ def setUpModule():
     configure_test_logging()
 
 
-class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
+class StorageServiceTest(StorageServiceTestCase):
     """
     Functional Test for Storage Service
     """
 
-    @mock_s3
-    @mock_sts
     def test_upload_tags(self):
-        self.storage_service.create_bucket()
-
         object_key = 'test_file'
         with tempfile.NamedTemporaryFile('w') as f:
             f.write('some contents')
@@ -48,39 +51,28 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
                     self.assertEqual(tags,
                                      upload_tags)
 
-    @mock_s3
-    @mock_sts
     def test_simple_get_put(self):
         sample_key = 'foo-simple'
         sample_content = b'bar'
 
-        self.storage_service.create_bucket()
-
         # NOTE: Ensure that the key does not exist before writing.
-        with self.assertRaises(self.storage_service.client.exceptions.NoSuchKey):
+        with self.assertRaises(StorageObjectNotFound):
             self.storage_service.get(sample_key)
 
         self.storage_service.put(sample_key, sample_content)
 
         self.assertEqual(sample_content, self.storage_service.get(sample_key))
 
-    @mock_s3
-    @mock_sts
     def test_simple_get_unknown_item(self):
         sample_key = 'foo-simple'
 
-        self.storage_service.create_bucket()
-
-        with self.assertRaises(self.storage_service.client.exceptions.NoSuchKey):
+        with self.assertRaises(StorageObjectNotFound):
             self.storage_service.get(sample_key)
 
-    @mock_s3
-    @mock_sts
     def test_presigned_url(self):
         sample_key = 'foo-presigned-url'
         sample_content = json.dumps({'a': 1})
 
-        self.storage_service.create_bucket()
         self.storage_service.put(sample_key, sample_content.encode())
 
         for file_name in None, 'foo.json':
@@ -99,3 +91,22 @@ class StorageServiceTest(AzulUnitTestCase, StorageServiceTestMixin):
                         # section Request Parameters).
                         self.assertEqual(response.headers['Content-Disposition'], f'attachment;filename="{file_name}"')
                 self.assertEqual(sample_content, response.text)
+
+    def test_time_until_object_expires(self):
+        test_data = [(1, False), (0, False), (-1, True)]
+        for object_age, expect_error in test_data:
+            with self.subTest(object_age=object_age, expect_error=expect_error):
+                with patch.object(storage_service, 'datetime') as mock_datetime:
+                    now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+                    mock_datetime.now.return_value = now
+                    expiration = 7
+                    headers = {
+                        'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
+                        'LastModified': now - timedelta(days=float(expiration), seconds=object_age)
+                    }
+                    with patch.object(self.storage_service, 'head', return_value=headers):
+                        with self.assertLogs(logger=storage_service.log, level='DEBUG') as logs:
+                            actual = self.storage_service.time_until_object_expires('foo', expiration)
+                            self.assertEqual(0, actual)
+                        got_error = any('does not match' in log for log in logs.output)
+                        self.assertIs(expect_error, got_error)
