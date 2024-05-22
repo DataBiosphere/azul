@@ -16,9 +16,6 @@ _period: 14 days
 - [ ] Team members confirmed personal deployments collocated with `anvildev` are idle <sub>or `azul-index-anvilbox` is on the latest version</sub>
 - [ ] Update `azul-index-anvilbox` <sub>or `azul-index-anvilbox` is on the latest version</sub>
 - [ ] There are no outstanding notifications in `azul-index-anvilbox`
-- [ ] Team members confirmed personal deployments collocated with `anvilprod` are idle <sub>or `azul-index-hammerbox` is on the latest version</sub>
-- [ ] Update `azul-index-hammerbox` <sub>or `azul-index-hammerbox` is on the latest version</sub>
-- [ ] There are no outstanding notifications in `azul-index-hammerbox`
 - [ ] Update `azul-index-anvilprod` <sub>or `azul-index-anvilprod` is on the latest version</sub>
 - [ ] There are no outstanding notifications in `azul-index-anvilprod`
 - [ ] Update `azul-index-prod` <sub>or `azul-index-prod` is on the latest version</sub>
