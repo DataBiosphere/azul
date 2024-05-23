@@ -24,34 +24,34 @@ emit_tf(None if config.share_es_domain else {
             }
         }
     ],
-    "resource": [
+    'resource': [
         *({
-            "aws_cloudwatch_log_group": {
-                f"{log}_log": {
-                    "name": f"/aws/aes/domains/{domain}/{log}-logs",
-                    "retention_in_days": config.audit_log_retention_days
+            'aws_cloudwatch_log_group': {
+                f'{log}_log': {
+                    'name': f'/aws/aes/domains/{domain}/{log}-logs',
+                    'retention_in_days': config.audit_log_retention_days
                 }
             }
         } for log in logs.keys()),
         {
-            "aws_cloudwatch_log_resource_policy": {
-                "index": {
-                    "policy_name": domain,
-                    "policy_document": json.dumps(
+            'aws_cloudwatch_log_resource_policy': {
+                'index': {
+                    'policy_name': domain,
+                    'policy_document': json.dumps(
                         {
-                            "Version": "2012-10-17",
-                            "Statement": [
+                            'Version': '2012-10-17',
+                            'Statement': [
                                 {
-                                    "Effect": "Allow",
-                                    "Principal": {
-                                        "Service": "es.amazonaws.com"
+                                    'Effect': 'Allow',
+                                    'Principal': {
+                                        'Service': 'es.amazonaws.com'
                                     },
-                                    "Action": [
-                                        "logs:PutLogEvents",
-                                        "logs:CreateLogStream"
+                                    'Action': [
+                                        'logs:PutLogEvents',
+                                        'logs:CreateLogStream'
                                     ],
-                                    "Resource": [
-                                        "${aws_cloudwatch_log_group." + log + "_log.arn}:*" for log in logs.keys()
+                                    'Resource': [
+                                        '${aws_cloudwatch_log_group.' + log + '_log.arn}:*' for log in logs.keys()
                                     ]
                                 }
                             ]
@@ -61,62 +61,62 @@ emit_tf(None if config.share_es_domain else {
             }
         },
         {
-            "aws_elasticsearch_domain": {
-                "index": {
-                    "access_policies": json.dumps({
-                        "Version": "2012-10-17",
-                        "Statement": [
+            'aws_elasticsearch_domain': {
+                'index': {
+                    'access_policies': json.dumps({
+                        'Version': '2012-10-17',
+                        'Statement': [
                             {
-                                "Effect": "Allow",
-                                "Principal": {
-                                    "AWS": "arn:aws:iam::${local.account_id}:root"
+                                'Effect': 'Allow',
+                                'Principal': {
+                                    'AWS': 'arn:aws:iam::${local.account_id}:root'
                                 },
-                                "Action": "es:*",
-                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + domain + "/*"
+                                'Action': 'es:*',
+                                'Resource': 'arn:aws:es:${local.region}:${local.account_id}:domain/' + domain + '/*'
                             }
                         ]
                     }),
-                    "advanced_options": {
-                        "rest.action.multi.allow_explicit_index": "true",
-                        "override_main_response_version": "false"
+                    'advanced_options': {
+                        'rest.action.multi.allow_explicit_index': 'true',
+                        'override_main_response_version': 'false'
                     },
-                    "cluster_config": {
-                        "instance_count": config.es_instance_count,
-                        "instance_type": config.es_instance_type,
+                    'cluster_config': {
+                        'instance_count': config.es_instance_count,
+                        'instance_type': config.es_instance_type,
                         # Needed for using multiple subnets (1 per zone) in the VPC
-                        "zone_awareness_enabled": True
+                        'zone_awareness_enabled': True
                     },
-                    "domain_name": domain,
-                    "ebs_options": {
-                        "ebs_enabled": "true",
-                        "volume_size": config.es_volume_size,
-                        "volume_type": "gp2"
+                    'domain_name': domain,
+                    'ebs_options': {
+                        'ebs_enabled': 'true',
+                        'volume_size': config.es_volume_size,
+                        'volume_type': 'gp2'
                     } if config.es_volume_size else {
-                        "ebs_enabled": "false",
+                        'ebs_enabled': 'false',
                     },
-                    "vpc_options": {
-                        "subnet_ids": [
-                            f"${{data.aws_subnet.gitlab_private_{zone}.id}}"
+                    'vpc_options': {
+                        'subnet_ids': [
+                            f'${{data.aws_subnet.gitlab_private_{zone}.id}}'
                             for zone in range(vpc.num_zones)
                         ],
-                        "security_group_ids": ["${aws_security_group.elasticsearch.id}"]
+                        'security_group_ids': ['${aws_security_group.elasticsearch.id}']
                     },
-                    "elasticsearch_version": "7.10",
-                    "log_publishing_options": [
+                    'elasticsearch_version': '7.10',
+                    'log_publishing_options': [
                         {
-                            "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group." + log + "_log.arn}",
-                            "enabled": "true" if enabled else "false",
-                            "log_type": log_type
+                            'cloudwatch_log_group_arn': '${aws_cloudwatch_log_group.' + log + '_log.arn}',
+                            'enabled': 'true' if enabled else 'false',
+                            'log_type': log_type
                         } for log, (log_type, enabled) in logs.items()
                     ],
-                    "lifecycle": {
-                        "ignore_changes": [
+                    'lifecycle': {
+                        'ignore_changes': [
                             # Quoting AWS support:
                             #
                             # > Please note that with automated snapshots
-                            # > disabled, the "automatedSnapshotStartHour"
+                            # > disabled, the 'automatedSnapshotStartHour'
                             # > parameter of the domain configuration is set
-                            # > to "-1" from the service end (this can only
+                            # > to '-1' from the service end (this can only
                             # > be done from the service side). Please ensure
                             # > that this parameter is not overriden to a
                             # > different value from your end, else the
@@ -134,19 +134,19 @@ emit_tf(None if config.share_es_domain else {
                             # safer to me. The property is deprecated
                             # anyways.
                             #
-                            "snapshot_options"
+                            'snapshot_options'
                         ]
                     },
-                    "encrypt_at_rest": {
-                        "enabled": True
+                    'encrypt_at_rest': {
+                        'enabled': True
                     },
-                    "node_to_node_encryption": {
-                        "enabled": True
+                    'node_to_node_encryption': {
+                        'enabled': True
                     }
                 }
             },
-            "opensearch_cluster_settings": {
-                "index": {
+            'opensearch_cluster_settings': {
+                'index': {
                     # Disable the automatic creation of indexes when documents
                     # are indexed. We create indexes explicitly before any
                     # documents are indexed so a missing index would be
@@ -164,22 +164,22 @@ emit_tf(None if config.share_es_domain else {
                     #
                     # https://github.com/opensearch-project/terraform-provider-opensearch/issues/60#issuecomment-2041280397
                     #
-                    "action_auto_create_index": False,
-                    "lifecycle": {
-                        "ignore_changes": [
-                            "cluster_routing_allocation_disk_watermark_low",
-                            "cluster_routing_allocation_disk_watermark_high"
+                    'action_auto_create_index': False,
+                    'lifecycle': {
+                        'ignore_changes': [
+                            'cluster_routing_allocation_disk_watermark_low',
+                            'cluster_routing_allocation_disk_watermark_high'
                         ]
                     }
                 }
             },
-            "aws_security_group": {
-                "elasticsearch": {
-                    "name": config.qualified_resource_name("elasticsearch"),
-                    "vpc_id": "${data.aws_vpc.gitlab.id}",
-                    "ingress": [
-                        vpc.security_rule(cidr_blocks=["${data.aws_vpc.gitlab.cidr_block}"],
-                                          protocol="tcp",
+            'aws_security_group': {
+                'elasticsearch': {
+                    'name': config.qualified_resource_name('elasticsearch'),
+                    'vpc_id': '${data.aws_vpc.gitlab.id}',
+                    'ingress': [
+                        vpc.security_rule(cidr_blocks=['${data.aws_vpc.gitlab.cidr_block}'],
+                                          protocol='tcp',
                                           from_port=443,
                                           to_port=443)
                     ],
