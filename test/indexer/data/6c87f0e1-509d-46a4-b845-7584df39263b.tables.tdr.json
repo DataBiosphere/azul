@@ -162,7 +162,7 @@
                     "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
                     "file_md5sum": "vuxgbuCqKZ/fkT9CWTFmIg==",
                     "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
-                    "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_1e269f04-4347-4188-b060-1dcc69e71d67",
+                    "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67",
                     "file_size": 213021639,
                     "is_supplementary": false,
                     "reference_assembly": [],
@@ -177,12 +177,27 @@
                     "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
                     "file_md5sum": "fNn9e1SovzgOROk3BvH6LQ==",
                     "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
-                    "file_ref": "drs://mock_tdr.lan/v1_2ae00e5c-4aef-4a1e-9eca-d8d0747b5348_8b722e88-8103-49c1-b351-e64fa7c6ab37",
+                    "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37",
                     "file_size": 3306845592,
                     "is_supplementary": false,
                     "reference_assembly": [],
                     "source_datarepo_row_ids": [
                         "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "6b0f6c0f-5d80-4242-accb-840921351cd5",
+                    "file_id": "1fab11f5-7eab-4318-9a58-68d8d06e0715",
+                    "data_modality": [],
+                    "file_format": ".txt",
+                    "file_size": 15079345,
+                    "file_md5sum": "S/GBrRjzZAQYqh3rdiPYzA\u003d\u003d",
+                    "reference_assembly": [],
+                    "file_name": "CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt",
+                    "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1fab11f5-7eab-4318-9a58-68d8d06e0715",
+                    "is_supplementary": true,
+                    "source_datarepo_row_ids": [
+                        "file_inventory:04ff3af2-0543-4ea6-830a-d31b957fa2ee"
                     ]
                 }
             ]

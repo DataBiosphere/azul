@@ -1,18 +1,26 @@
 {
     "entities": {
-        "dataset/677dd55c-3fa3-4b07-8c98-985d94d7577e": {
-            "consent_group": [],
-            "data_modality": [],
-            "data_use_permission": [],
-            "datarepo_row_id": "677dd55c-3fa3-4b07-8c98-985d94d7577e",
-            "dataset_id": "385290c3-dff5-fb6d-2501-fa0ba3ad1c35",
-            "owner": [],
-            "principal_investigator": [],
-            "registered_identifier": [],
-            "source_datarepo_row_ids": [
-                "workspace_attributes:95684a9c-e0a1-4c05-9f1f-de628a38420c"
+        "dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
+            "consent_group": [
+                "DS-BDIS"
             ],
-            "title": "ANVIL_1000G_2019_Dev",
+            "data_modality": [],
+            "data_use_permission": [
+                "DS-BDIS"
+            ],
+            "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+            "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+            "owner": [
+                "Debbie Nickerson"
+            ],
+            "principal_investigator": [],
+            "registered_identifier": [
+                "phs000693"
+            ],
+            "source_datarepo_row_ids": [
+                "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+            ],
+            "title": "ANVIL_CMG_UWASH_DS_BDIS",
             "version": "2022-06-01T00:00:00.000000Z"
         },
         "file/6b0f6c0f-5d80-4242-accb-840921351cd5": {
@@ -22,7 +30,7 @@
             "file_id": "1fab11f5-7eab-4318-9a58-68d8d06e0715",
             "file_md5sum": "S/GBrRjzZAQYqh3rdiPYzA==",
             "file_name": "CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt",
-            "file_ref": "drs://mock_tdr.lan/v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715",
+            "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1fab11f5-7eab-4318-9a58-68d8d06e0715",
             "file_size": 15079345,
             "is_supplementary": true,
             "reference_assembly": [],
@@ -30,7 +38,7 @@
                 "file_inventory:04ff3af2-0543-4ea6-830a-d31b957fa2ee"
             ],
             "version": "2022-06-01T00:00:00.000000Z",
-            "drs_uri": "drs://mock_tdr.lan/v1_790795c4-49b1-4ac8-a060-207b92ea08c5_1fab11f5-7eab-4318-9a58-68d8d06e0715",
+            "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1fab11f5-7eab-4318-9a58-68d8d06e0715",
             "sha256": "",
             "crc32": ""
         }
@@ -38,7 +46,7 @@
     "links": [
         {
             "inputs": [
-                "dataset/677dd55c-3fa3-4b07-8c98-985d94d7577e"
+                "dataset/2370f948-2783-4eb6-afea-e022897f4dcf"
             ],
             "activity": null,
             "outputs": [

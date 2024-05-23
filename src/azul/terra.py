@@ -324,7 +324,9 @@ class TerraClient(OAuth2Client):
 
     def _create_http_client(self) -> urllib3.request.RequestMethods:
         return Propagate429HttpClient(
-            LimitedRetryHttpClient(super()._create_http_client())
+            LimitedRetryHttpClient(
+                super()._create_http_client()
+            )
         )
 
     def _request(self,

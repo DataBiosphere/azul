@@ -187,11 +187,11 @@ def main(argv: list[str]):
                 ):
                     reservation = BigQueryReservation()
                     reservation.activate()
-                if not args.local:
+                if args.local:
+                    num_notifications += azul.local_reindex(catalog, args.prefix)
+                else:
                     azul.remote_reindex(catalog, sources)
                     num_notifications = None
-                else:
-                    num_notifications += azul.reindex(catalog, args.prefix)
             else:
                 log.info('Skipping catalog %r (no matching sources)', catalog)
         if args.wait:

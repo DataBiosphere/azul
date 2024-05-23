@@ -159,6 +159,18 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
         url = self.base_url.set(path='/index/files', args=params)
         self.assertBadField(url)
 
+    def test_source_filter(self):
+        special_fields = self.app_module.app.metadata_plugin.special_fields
+        for field in special_fields.source_id, special_fields.accessible:
+            with self.subTest(field=field):
+                params = {
+                    'catalog': self.catalog,
+                    'size': 1,
+                    'filters': json.dumps({field: {'is': [None]}})
+                }
+                url = self.base_url.set(path='/index/projects', args=params)
+                self.assertBadRequest(url, f'The `{field}` field does not support null values')
+
     def test_bad_sort_field_of_file(self):
         params = {
             'size': 15,

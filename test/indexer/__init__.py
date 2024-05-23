@@ -158,6 +158,8 @@ class DCP2CannedBundleTestCase(DCP2TestCase, CannedBundleTestCase[TDRHCABundle])
 
 
 class AnvilCannedBundleTestCase(AnvilTestCase, CannedBundleTestCase[TDRAnvilBundle]):
+    #: AnVIL doesn't use versioning and all versions are fixed
+    version = '2022-06-01T00:00:00.000000Z'
 
     @classmethod
     def _bundle_cls(cls) -> Type[TDRAnvilBundle]:
