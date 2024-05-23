@@ -17,13 +17,6 @@ logs = {
 domain = config.es_domain
 
 emit_tf(None if config.share_es_domain else {
-    'provider': [
-        {
-            'opensearch': {
-                'url': 'https://${aws_elasticsearch_domain.index.endpoint}'
-            }
-        }
-    ],
     'resource': [
         *(
             {
@@ -151,31 +144,26 @@ emit_tf(None if config.share_es_domain else {
                     }
                 }
             },
-            'opensearch_cluster_settings': {
-                'index': {
-                    # Disable the automatic creation of indexes when documents
-                    # are indexed. We create indexes explicitly before any
-                    # documents are indexed so a missing index would be
-                    # indicative of some sort of bug. We want to fail early in
-                    # that situation. Automatically created indices have a only
-                    # a default mapping, resulting in failure modes that are
-                    # harder to diagnose.
-                    #
-                    # The default of this setting is True. Due to a bug in the
-                    # TF provider, modifying this setting, or any cluster
-                    # setting for that matter, requires removing the state for
-                    # the resource prior to applying the modified
-                    # configuration. The ignore_changes property below is also
-                    # part of the workaround for the bug.
-                    #
-                    # https://github.com/opensearch-project/terraform-provider-opensearch/issues/60#issuecomment-2041280397
-                    #
-                    'action_auto_create_index': False,
+            'null_resource': {
+                'cluster_settings': {
+                    'depends_on': [
+                        'aws_elasticsearch_domain.index'
+                    ],
+                    'triggers': {
+                        'script_hash': '${filesha256("%s/scripts/manage_cluster_settings.py")}' % config.project_root
+                    },
                     'lifecycle': {
-                        'ignore_changes': [
-                            'cluster_routing_allocation_disk_watermark_low',
-                            'cluster_routing_allocation_disk_watermark_high'
+                        'replace_triggered_by': [
+                            'aws_elasticsearch_domain.index'
                         ]
+                    },
+                    'provisioner': {
+                        'local-exec': {
+                            'command': ' '.join([
+                                'python',
+                                f'{config.project_root}/scripts/manage_cluster_settings.py'
+                            ]),
+                        }
                     }
                 }
             },

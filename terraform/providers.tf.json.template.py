@@ -25,6 +25,8 @@ emit_tf(tag_resources=False, config={
                 'source': 'hashicorp/aws',
                 'version': '5.11.0'
             },
+            # FIXME: Remove the provider
+            #        https://github.com/DataBiosphere/azul/pull/6285
             'opensearch': {
                 'source': 'opensearch-project/opensearch',
                 'version': '2.2.1'
