@@ -14,8 +14,7 @@ initable: clean state providers.tf.json backend.tf.json
 
 .PHONY: init
 init: initable
-	terraform init -reconfigure
-	$(MAKE) check_providers_clean
+	terraform init -reconfigure -lockfile=readonly
 
 .PHONY: check_schema
 check_schema: init
@@ -79,8 +78,3 @@ provider_update: initable
 	                         -platform=linux_arm64 \
 	                         -platform=darwin_amd64 \
 	                         -platform=darwin_arm64
-
-.PHONY: check_providers_clean
-check_providers_clean:
-	git diff --exit-code --name-only .terraform.lock.hcl \
-	&& git diff --cached --exit-code --name-only .terraform.lock.hcl
