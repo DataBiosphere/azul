@@ -4,10 +4,10 @@ all: apply
 include ../common.mk
 
 .PHONY: clean
-clean: check_env git_clean
+clean: check_env check_branch git_clean
 
 .PHONY: state
-state: check_terraform check_branch check_aws
+state: check_terraform check_aws
 
 .PHONY: initable
 initable: clean state providers.tf.json backend.tf.json
