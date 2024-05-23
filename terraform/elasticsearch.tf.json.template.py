@@ -191,6 +191,6 @@ emit_tf(None if config.share_es_domain else {
                     ],
                 }
             }
-        } if domain else {}
+        }
     ]
 })
