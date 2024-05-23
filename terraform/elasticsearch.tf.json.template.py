@@ -25,14 +25,17 @@ emit_tf(None if config.share_es_domain else {
         }
     ],
     'resource': [
-        *({
-            'aws_cloudwatch_log_group': {
-                f'{log}_log': {
-                    'name': f'/aws/aes/domains/{domain}/{log}-logs',
-                    'retention_in_days': config.audit_log_retention_days
+        *(
+            {
+                'aws_cloudwatch_log_group': {
+                    f'{log}_log': {
+                        'name': f'/aws/aes/domains/{domain}/{log}-logs',
+                        'retention_in_days': config.audit_log_retention_days
+                    }
                 }
             }
-        } for log in logs.keys()),
+            for log in logs.keys()
+        ),
         {
             'aws_cloudwatch_log_resource_policy': {
                 'index': {
@@ -91,7 +94,9 @@ emit_tf(None if config.share_es_domain else {
                         'ebs_enabled': 'true',
                         'volume_size': config.es_volume_size,
                         'volume_type': 'gp2'
-                    } if config.es_volume_size else {
+                    }
+                    if config.es_volume_size else
+                    {
                         'ebs_enabled': 'false',
                     },
                     'vpc_options': {
@@ -107,7 +112,8 @@ emit_tf(None if config.share_es_domain else {
                             'cloudwatch_log_group_arn': '${aws_cloudwatch_log_group.' + log + '_log.arn}',
                             'enabled': 'true' if enabled else 'false',
                             'log_type': log_type
-                        } for log, (log_type, enabled) in logs.items()
+                        }
+                        for log, (log_type, enabled) in logs.items()
                     ],
                     'lifecycle': {
                         'ignore_changes': [
