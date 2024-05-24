@@ -55,6 +55,8 @@ def write_schema(schema: JSON) -> None:
             """
         '''))
         f.write('\nanvil_schema = ')
+        # FIXME: Format AnVIL schema using reprlib #6292
+        #        https://github.com/DataBiosphere/azul/issues/6292
         f.write(json.dumps(schema, indent=4)
                 .replace('null', 'None')
                 .replace('true', 'True')
