@@ -176,4 +176,3 @@ https://github.com/elasticsearch/elasticsearch-dsl-py/LICENSE
       incurred by, or claims asserted against, such Contributor by reason
       of your accepting any such warranty or additional liability.
 
-
