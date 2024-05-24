@@ -285,4 +285,4 @@ class PortalService:
 
     @property
     def _expiration_tag(self) -> tuple[str, str]:
-        return 'expires', str(config.is_sandbox_or_personal_deployment()).lower()
+        return 'expires', str(config.deployment.is_sandbox_or_personal).lower()
