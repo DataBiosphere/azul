@@ -466,7 +466,7 @@ configure_app_logging(app, log)
 @app.route(
     '/',
     cache_control='public, max-age=0, must-revalidate',
-    cors=True
+    cors=False
 )
 def swagger_ui():
     return app.swagger_ui()
