@@ -974,45 +974,6 @@ class Config:
     def private_api(self) -> bool:
         return self._boolean(self.environ['AZUL_PRIVATE_API'])
 
-    @property
-    def _shared_deployments(self) -> Mapping[Optional[str], Sequence['Deployment']]:
-        """
-        Maps a branch name to a sequence of names of shared deployments the
-        branch can be deployed to. The key of None signifies any other branch
-        not mapped explicitly, or a detached head.
-        """
-        # FIXME: Eliminate local import
-        #        https://github.com/DataBiosphere/azul/issues/3133
-        import json
-        deployments = json.loads(self.environ['azul_shared_deployments'])
-        require(all(isinstance(v, list) and v for v in deployments.values()),
-                'Invalid value for azul_shared_deployments')
-        return frozendict(
-            (k if k else None, tuple(self.Deployment(n) for n in v))
-            for k, v in deployments.items()
-        )
-
-    def shared_deployments_for_branch(self,
-                                      branch: str | None,
-                                      ) -> Sequence['Deployment'] | None:
-        """
-        The list of names of shared deployments the given branch can be deployed
-        to or `None` of no such deployments exist. An argument of `None`
-        indicates a detached head. If a list is returned, it will not be empty
-        and the first element denotes the default deployment. The default
-        deployment is the one that GitLab deploys a branch to when it builds a
-        commit on that branch.
-        """
-        deployments = self._shared_deployments
-        try:
-            return deployments[branch]
-        except KeyError:
-            return None if branch is None else deployments.get(None)
-
-    @property
-    def deployment(self) -> 'Deployment':
-        return self.Deployment(self.deployment_stage)
-
     @attr.s(frozen=True, kw_only=False, auto_attribs=True)
     class Deployment:
         name: str
@@ -1103,6 +1064,45 @@ class Config:
                 self.is_sandbox
                 and config.Deployment(config.main_deployment_stage).is_lower
             )
+
+    @property
+    def deployment(self) -> Deployment:
+        return self.Deployment(self.deployment_stage)
+
+    @property
+    def _shared_deployments(self) -> Mapping[Optional[str], Sequence[Deployment]]:
+        """
+        Maps a branch name to a sequence of names of shared deployments the
+        branch can be deployed to. The key of None signifies any other branch
+        not mapped explicitly, or a detached head.
+        """
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        deployments = json.loads(self.environ['azul_shared_deployments'])
+        require(all(isinstance(v, list) and v for v in deployments.values()),
+                'Invalid value for azul_shared_deployments')
+        return frozendict(
+            (k if k else None, tuple(self.Deployment(n) for n in v))
+            for k, v in deployments.items()
+        )
+
+    def shared_deployments_for_branch(self,
+                                      branch: str | None,
+                                      ) -> Sequence[Deployment] | None:
+        """
+        The list of names of shared deployments the given branch can be deployed
+        to or `None` of no such deployments exist. An argument of `None`
+        indicates a detached head. If a list is returned, it will not be empty
+        and the first element denotes the default deployment. The default
+        deployment is the one that GitLab deploys a branch to when it builds a
+        commit on that branch.
+        """
+        deployments = self._shared_deployments
+        try:
+            return deployments[branch]
+        except KeyError:
+            return None if branch is None else deployments.get(None)
 
     class BrowserSite(TypedDict):
         domain: str
