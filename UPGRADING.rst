@@ -20,6 +20,12 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6239 Promotions fail in hammerbox with dirty requirements
+==========================================================
+
+Remove the variable ``AZUL_IS_SANDBOX`` from all personal deployments.
+
+
 #4655 All bucket names should default to qualified_bucket_name()
 ================================================================
 

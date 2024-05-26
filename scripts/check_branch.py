@@ -18,24 +18,28 @@ Ensure that the currently checked out branch matches the selected deployment
 
 def default_deployment(branch: Optional[str]) -> Optional[str]:
     deployments = config.shared_deployments_for_branch(branch)
-    return None if deployments is None else deployments[0]
+    return None if deployments is None else deployments[0].name
 
 
 class BranchDeploymentMismatch(Exception):
 
     def __init__(self,
                  branch: Optional[str],
-                 deployment: str,
-                 allowed: Optional[Sequence[str]]
+                 deployment: config.Deployment,
+                 allowed: Optional[Sequence[config.Deployment]]
                  ) -> None:
         branch = 'Detached head' if branch is None else f'Branch {branch!r}'
-        allowed = '' if allowed is None else f'one of {set(allowed)!r} or '
-        super().__init__(f'{branch} cannot be deployed to {deployment!r}, '
+        if allowed is None:
+            allowed = ''
+        else:
+            allowed = f'one of {set(d.name for d in allowed)!r} or '
+        super().__init__(f'{branch} cannot be deployed to {deployment.name!r}, '
                          f'only {allowed}personal deployments.')
 
 
 def check_branch(branch: Optional[str], deployment: str) -> None:
-    if config.is_shared_deployment(deployment):
+    deployment = config.Deployment(deployment)
+    if deployment.is_shared:
         deployments = config.shared_deployments_for_branch(branch)
         if deployments is None or deployment not in deployments:
             raise BranchDeploymentMismatch(branch, deployment, deployments)

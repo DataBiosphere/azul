@@ -879,7 +879,7 @@ def emit(t: T, target_branch: str):
                     'content': f'Deleted PR branch from GitLab `{d}`'
                 }
                 for d, s in t.target_deployments(target_branch).items()
-                if t is not t.promotion
+                if s is not None
             ),
             *iif(t is T.promotion, [
                 {

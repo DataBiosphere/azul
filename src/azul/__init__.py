@@ -47,11 +47,11 @@ from azul.caching import (
 from azul.collections import (
     atuple,
 )
-from azul.json_freeze import (
-    freeze,
-)
 from azul.types import (
     JSON,
+)
+from azul.vendored.frozendict import (
+    frozendict,
 )
 
 log = logging.getLogger(__name__)
@@ -974,8 +974,103 @@ class Config:
     def private_api(self) -> bool:
         return self._boolean(self.environ['AZUL_PRIVATE_API'])
 
+    @attr.s(frozen=True, kw_only=False, auto_attribs=True)
+    class Deployment:
+        name: str
+
+        @property
+        def is_shared(self) -> bool:
+            """
+            ``True`` if this deployment is a shared deployment, or ``False`` if
+            it is a personal deployment.
+            """
+            return self in set(chain.from_iterable(config._shared_deployments.values()))
+
+        #: The set of branches that are used for development and that are
+        #: usually deployed to personal, lower and main deployments, but never
+        #: stable ones. The set member ``None`` represents a feature branch or
+        #: detached HEAD.
+        #:
+        unstable_branches = {'develop', None}
+
+        @property
+        def is_stable(self) -> bool:
+            """
+            ``True`` if this deployment must be kept functional for public use
+            at all times.
+            """
+            if self.is_sandbox:
+                return False
+            else:
+                branches = set(
+                    branch
+                    for branch, deployments in config._shared_deployments.items()
+                    if self in deployments
+                )
+                return bool(branches) and branches.isdisjoint(self.unstable_branches)
+
+        @property
+        def is_sandbox(self) -> bool:
+            """
+            ``True`` if this deployment is a shared deployment primarily used
+            for testing branches prior to merging.
+            """
+            return 'box' in self.name
+
+        @property
+        def is_personal(self) -> bool:
+            """
+            ``True`` if this deployment is managed by an individual developer.
+            """
+            return not self.is_shared
+
+        @property
+        def is_sandbox_or_personal(self) -> bool:
+            """
+            ``True`` if this deployment is managed by an individual developer or
+            is a shared deployment primarily used for testing branches prior to
+            merging.
+            """
+            return self.is_sandbox or self.is_personal
+
+        @property
+        def is_main(self) -> bool:
+            """
+            ``True`` if this deployment is a main deployment.
+
+            Main deployments are deployed from long-lived (as opposed to
+            feature) branches and serve some public-facing purpose, be that
+            testing (a lower deployment) or production (a stable deployment).
+            """
+            return not self.is_sandbox_or_personal
+
+        @property
+        def is_lower(self) -> bool:
+            """
+            ``True`` if this deployment is an unstable main deployment.
+            """
+            return self.is_main and not self.is_stable
+
+        @property
+        def is_lower_sandbox(self) -> bool:
+            """
+            ``True`` if this deployment is a sandbox for a lower deployment.
+
+            Note: This method currently only works for the current deployment,
+                  i.e., the one created obtained from ``config.deployment``
+            """
+            require(self.name == config.deployment_stage, exception=NotImplementedError)
+            return (
+                self.is_sandbox
+                and config.Deployment(config.main_deployment_stage).is_lower
+            )
+
     @property
-    def _shared_deployments(self) -> Mapping[Optional[str], Sequence[str]]:
+    def deployment(self) -> Deployment:
+        return self.Deployment(self.deployment_stage)
+
+    @property
+    def _shared_deployments(self) -> Mapping[Optional[str], Sequence[Deployment]]:
         """
         Maps a branch name to a sequence of names of shared deployments the
         branch can be deployed to. The key of None signifies any other branch
@@ -987,14 +1082,14 @@ class Config:
         deployments = json.loads(self.environ['azul_shared_deployments'])
         require(all(isinstance(v, list) and v for v in deployments.values()),
                 'Invalid value for azul_shared_deployments')
-        return freeze({
-            k if k else None: v
+        return frozendict(
+            (k if k else None, tuple(self.Deployment(n) for n in v))
             for k, v in deployments.items()
-        })
+        )
 
     def shared_deployments_for_branch(self,
-                                      branch: Optional[str]
-                                      ) -> Optional[Sequence[str]]:
+                                      branch: str | None,
+                                      ) -> Sequence[Deployment] | None:
         """
         The list of names of shared deployments the given branch can be deployed
         to or `None` of no such deployments exist. An argument of `None`
@@ -1008,52 +1103,6 @@ class Config:
             return deployments[branch]
         except KeyError:
             return None if branch is None else deployments.get(None)
-
-    def is_shared_deployment(self, deployment: Optional[str] = None) -> bool:
-        """
-        Returns `True` if the deployment of the specified name is a shared
-        deployment, or `False` if it is a personal deployment. If no argument is
-        passed, or if the argument is `None`, the current deployment's name is
-        used instead.
-        """
-        if deployment is None:
-            deployment = self.deployment_stage
-        return deployment in set(chain.from_iterable(self._shared_deployments.values()))
-
-    #: The set of branches that are used for development and that are usually
-    #: deployed to personal, lower and main deployments, but never stable ones.
-    #: The set member ``None`` represents a feature branch or detached HEAD.
-    #:
-    unstable_branches = {'develop', None}
-
-    @property
-    def is_stable_deployment(self) -> bool:
-        """
-        Returns `True` if the current deployment must be kept functional for
-        public use at all times.
-        """
-        if self.is_sandbox_deployment:
-            return False
-        else:
-            deployment = self.deployment_stage
-            branches = set(
-                branch
-                for branch, deployments in self._shared_deployments.items()
-                if deployment in deployments
-            )
-            return bool(branches) and branches.isdisjoint(self.unstable_branches)
-
-    @property
-    def is_sandbox_deployment(self) -> bool:
-        """
-        Returns True if the current deployment is a shared deployment primarily
-        used for testing feature branches.
-        """
-        return self._boolean(self.environ['AZUL_IS_SANDBOX'])
-
-    @property
-    def is_sandbox_or_personal_deployment(self) -> bool:
-        return self.is_sandbox_deployment or not self.is_shared_deployment()
 
     class BrowserSite(TypedDict):
         domain: str

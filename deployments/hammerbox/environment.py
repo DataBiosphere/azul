@@ -749,8 +749,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEPLOYMENT_STAGE': 'hammerbox' if is_sandbox else None,
 
-        'AZUL_IS_SANDBOX': str(int(is_sandbox)),
-
         # This deployment uses a subdomain of the `anvilprod` deployment's
         # domain.
         #
