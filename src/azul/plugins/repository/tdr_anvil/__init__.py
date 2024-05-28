@@ -799,16 +799,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             'activity_type',
             'data_modality',
             'reference_assembly',
-            # Not in schema
-            'date_created',
         },
         'assayactivity': {
             'assayactivity_id',
             'activity_type',
             'assay_type',
             'data_modality',
-            # Not in schema
-            'date_created',
         },
         'sequencingactivity': {
             'sequencingactivity_id',
