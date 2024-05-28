@@ -312,7 +312,7 @@ def pfb_schema_from_field_types(field_types: FieldTypes) -> JSON:
         # We skip primitive top-level fields like total_estimated_cells
         if isinstance(field_type, dict)
     )
-    return _avro_pfb_schema(entity_schemas)
+    return avro_pfb_schema(entity_schemas)
 
 
 def pfb_schema_from_replicas(replicas: Iterable[JSON]
@@ -326,10 +326,10 @@ def pfb_schema_from_replicas(replicas: Iterable[JSON]
                                value=replica_contents)
     schemas_by_replica_type = sorted(schemas_by_replica_type.items())
     keys, values = zip(*schemas_by_replica_type)
-    return keys, _avro_pfb_schema(values)
+    return keys, avro_pfb_schema(values)
 
 
-def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
+def avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
     """
     The boilerplate Avro schema that comprises a PFB's schema is returned in
     this JSON literal below. This schema was copied from
