@@ -121,6 +121,8 @@ class IssueTemplate:
         ...
         AssertionError: ('Invalid time unit in period', 'hour')
         """
+        if period == 'every time':
+            return True
         start = datetime.fromisoformat(start)
         assert start.tzinfo is None, 'Start time must not specify a timezone'
         start = start.replace(tzinfo=tz)
