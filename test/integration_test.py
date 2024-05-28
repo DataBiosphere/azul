@@ -413,8 +413,6 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
-    num_fastq_bytes = 1024 * 1024
-
     _http: urllib3.request.RequestMethods
     _plain_http: urllib3.request.RequestMethods
 
@@ -1229,6 +1227,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         content = BytesIO()
         storage_client.download_blob_to_file(str(url), content, start=0, end=size)
         return content
+
+    num_fastq_bytes = 1024 * 1024
 
     def _validate_fastq_content(self, content: ReadableFileObject):
         # Check signature of FASTQ file.
