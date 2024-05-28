@@ -113,7 +113,7 @@ pytz==2024.1
 pyyaml==6.0.1
 pyzmq==26.0.3
 readchar==4.0.6
-requests==2.31.0
+requests==2.32.2
 requests-toolbelt==1.0.0
 requirements-parser==0.2.0+1
 responses==0.22.0
