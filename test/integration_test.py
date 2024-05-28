@@ -413,13 +413,30 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
-    _http: urllib3.request.RequestMethods
+    """
+    An integration test case that tests indexing of public and managed-access
+    metadata from a random selection of bundles, and the expected effects on the
+    service API. This is our main integration test case.
+    """
+
+    #: A vanilla urllib3 HTTP client without authentication or any of the
+    #: special retry behaviour that we employ for Terra services. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
     _plain_http: urllib3.request.RequestMethods
+
+    #: Depending on the authorization context, this is either the same client as
+    #: the one refered to by the attribute above, or a client that sends an
+    #: access token — whose access token also depends on the context. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
+    _http: urllib3.request.RequestMethods
 
     def setUp(self) -> None:
         super().setUp()
         self._plain_http = http_client(log)
-        # Note that this attribute is swizzled in self._authorization_context
         self._http = self._plain_http
 
     @contextmanager
