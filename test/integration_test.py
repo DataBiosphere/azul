@@ -413,15 +413,30 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
-    num_fastq_bytes = 1024 * 1024
+    """
+    An integration test case that tests indexing of public and managed-access
+    metadata from a random selection of bundles, and the expected effects on the
+    service API. This is our main integration test case.
+    """
 
-    _http: urllib3.request.RequestMethods
+    #: A vanilla urllib3 HTTP client without authentication or any of the
+    #: special retry behaviour that we employ for Terra services. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
     _plain_http: urllib3.request.RequestMethods
+
+    #: Depending on the authorization context, this is either the same client as
+    #: the one refered to by the attribute above, or a client that sends an
+    #: access token — whose access token also depends on the context. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
+    _http: urllib3.request.RequestMethods
 
     def setUp(self) -> None:
         super().setUp()
         self._plain_http = http_client(log)
-        # Note that this attribute is swizzled in self._authorization_context
         self._http = self._plain_http
 
     @contextmanager
@@ -910,7 +925,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                 timeout=float(config.api_gateway_lambda_timeout + 1),
                                 retries=urllib3.Retry(total=5,
                                                       redirect=0,
-                                                      status_forcelist={429, 500, 502, 503}),
+                                                      status_forcelist={429, 500, 502, 503, 504}),
                                 redirect=False,
                                 preload_content=not stream)
         assert isinstance(response, urllib3.HTTPResponse)
@@ -1229,6 +1244,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         content = BytesIO()
         storage_client.download_blob_to_file(str(url), content, start=0, end=size)
         return content
+
+    num_fastq_bytes = 1024 * 1024
 
     def _validate_fastq_content(self, content: ReadableFileObject):
         # Check signature of FASTQ file.
