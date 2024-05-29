@@ -383,7 +383,7 @@ anvil5_sources = mkdict(anvil4_sources, 262, mkdelta([
     # @formatter:on
 ]))
 
-anvil6_sources = mkdict(anvil5_sources, 253, mkdelta([
+anvil6_sources = mkdict(anvil5_sources, 250, mkdelta([
     # @formatter:off
     mksrc('datarepo-38af6304', 'ANVIL_1000G_PRIMED_data_model_20240410_ANV5_202404101419', 14695),
     mksrc('datarepo-1a86e7ca', 'ANVIL_CCDG_Baylor_CVD_AFib_Groningen_WGS_20221122_ANV5_202304242224', 639, pop),
@@ -596,7 +596,6 @@ anvil6_sources = mkdict(anvil5_sources, 253, mkdelta([
     mksrc('datarepo-db73a316', 'ANVIL_CMH_GAFK_WGS_20240113_ANV5_202402062123', 23848),
     mksrc('datarepo-5227851b', 'ANVIL_CSER_ClinSeq_GRU_20240401_ANV5_202404081541', 23),
     mksrc('datarepo-1a706b0c', 'ANVIL_GTEx_Somatic_WGS_20240116_ANV5_202401170147', 708, pop),
-    mksrc('datarepo-6cff3240', 'ANVIL_HPRC_20240401_ANV5_202404122012', 63201),
     mksrc('datarepo-8a98bcb4', 'ANVIL_NIMH_Broad_ConvNeuro_McCarroll_Nehme_Levy_CIRM_DS_Village_20240405_ANV5_202404081511', 495), # noqa E501
     mksrc('datarepo-c02a5efb', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_VillageData_20230109_ANV5_202402292203', 1357), # noqa E501
     mksrc('datarepo-817f27aa', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_WGS_20240206_ANV5_202402081755', 678), # noqa E501
@@ -604,7 +603,6 @@ anvil6_sources = mkdict(anvil5_sources, 253, mkdelta([
     mksrc('datarepo-14f5afa3', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Braff_DS_10XLRGenomes_20221115_ANV5_202310101713', 561, pop), # noqa E501
     mksrc('datarepo-69e4bc19', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_COGS_DS_WGS_20240113_ANV5_202401152215', 611),
     mksrc('datarepo-da595e23', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Escamilla_DS_WGS_20240112_ANV5_202401141541', 340),
-    mksrc('datarepo-55fb8d04', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Light_DS_WGS_20240102_ANV5_202402070117', 60),
     mksrc('datarepo-94091a22', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Pato_GRU_10XLRGenomes_20230331_ANV5_202310101715', 368, pop), # noqa E501
     mksrc('datarepo-df20901c', 'ANVIL_NIMH_Broad_WGSPD_1_McCarroll_Braff_DS_WGS_20240304_ANV5_202403071610', 213),
     mksrc('datarepo-75e17b99', 'ANVIL_NIMH_CIRM_FCDI_ConvergentNeuro_McCarroll_Eggan_GRU_Arrays_20230109_ANV5_202402292215', 6510), # noqa E501
@@ -613,7 +611,6 @@ anvil6_sources = mkdict(anvil5_sources, 253, mkdelta([
     mksrc('datarepo-4a4eec27', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202403040445', 234, pop),
     mksrc('datarepo-a1f917db', 'ANVIL_PAGE_Stanford_Global_Reference_Panel_GRU_WGS_20221128_ANV5_202403040453', 78, pop), # noqa E501
     mksrc('datarepo-6264931f', 'ANVIL_PAGE_WHI_HMB_IRB_WGS_20221019_ANV5_202403040500', 235, pop),
-    mksrc('datarepo-e5b16a5a', 'ANVIL_T2T_CHRY_20240301_ANV5_202403040508', 309979),
     mksrc('datarepo-f3817357', 'ANVIL_ccdg_asc_ndd_daly_talkowski_AGRE_asd_exome_20221102_ANV5_202403040528', 850),
     mksrc('datarepo-23635d1c', 'ANVIL_ccdg_asc_ndd_daly_talkowski_IBIS_asd_exome_20221024_ANV5_202403040537', 241),
     mksrc('datarepo-ecf311e7', 'ANVIL_ccdg_asc_ndd_daly_talkowski_TASC_asd_exome_20221117_ANV5_202403040544', 3175),
