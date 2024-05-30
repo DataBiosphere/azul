@@ -269,7 +269,7 @@ For an example of how to document failures within a PR `click here`_.
 Reindexing a specific catalog in GitLab
 """""""""""""""""""""""""""""""""""""""
 
-From the GitLab web app, select the ``reindex`` or ``reindex_early`` job for
+From the GitLab web app, select the ``reindex`` or ``early_reindex`` job for
 the pipeline that needs reindexing of a specific catalog. From there, you
 should see an option for defining the key and value of additional variables to
 parameterize the job with.
