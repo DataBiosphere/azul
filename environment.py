@@ -142,6 +142,12 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_current_catalog': None,
 
+        # A space-separated list of shell globs to match the sources in the
+        # current catalog against, or "*" for all sources in the catalog. Only
+        # matching sources will be operated on. If no sources match, an error
+        # will be raised.
+        'azul_current_sources': '*',
+
         # The Account ID number for AWS
         #
         'AZUL_AWS_ACCOUNT_ID': None,
