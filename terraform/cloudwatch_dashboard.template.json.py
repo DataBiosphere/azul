@@ -1,6 +1,9 @@
 from textwrap import (
     dedent,
 )
+from azul import (
+    config,
+)
 
 dashboard_body = {
     'widgets': [
@@ -11,9 +14,9 @@ dashboard_body = {
             'x': 12,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-aggregate'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate')}'
                     | filter @message like /Attempt \\d+ of handling \\d+ contribution\\(s\\) for entity/
                           or @message like /Deferring aggregation of \\d+ contribution\\(s\\) to entity/
                           or @message like /Successfully aggregated \\d+ contribution\\(s\\) to entity/
@@ -25,7 +28,7 @@ dashboard_body = {
                             sum(deferrals) as Deferrals
                             by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': True,
                 'title': 'Aggregation outcomes in # of contributions',
                 'view': 'timeSeries'
@@ -44,14 +47,14 @@ dashboard_body = {
                             'expression': 'nv+ni+nd',
                             'label': 'notifications',
                             'id': 'n',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications-prod',
+                        config.notifications_queue_name(),
                         {
                             'id': 'nv',
                             'visible': False
@@ -82,7 +85,7 @@ dashboard_body = {
                             'expression': 'nrv+nri+nrd',
                             'label': 'notifications_retry',
                             'id': 'nr',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#ff7f0e'
                         }
                     ],
@@ -90,7 +93,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications_retry-prod',
+                        config.notifications_queue_name(retry=True),
                         {
                             'id': 'nrv',
                             'visible': False
@@ -121,7 +124,7 @@ dashboard_body = {
                             'expression': 'nfv+nfi+nfd',
                             'label': 'notifications_fail',
                             'id': 'nf',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#9467bd'
                         }
                     ],
@@ -129,7 +132,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications_fail-prod',
+                        config.notifications_queue_name(fail=True),
                         {
                             'id': 'nfv',
                             'visible': False
@@ -160,7 +163,7 @@ dashboard_body = {
                             'expression': 'tv+ti+td',
                             'label': 'tallies',
                             'id': 't',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#2ca02c'
                         }
                     ],
@@ -168,7 +171,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies-prod.fifo',
+                        config.tallies_queue_name(),
                         {
                             'id': 'tv',
                             'visible': False
@@ -199,7 +202,7 @@ dashboard_body = {
                             'expression': 'trv+tri+trd',
                             'label': 'tallies_retry',
                             'id': 'tr',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#d62728'
                         }
                     ],
@@ -207,7 +210,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies_retry-prod.fifo',
+                        config.tallies_queue_name(retry=True),
                         {
                             'id': 'trv',
                             'visible': False
@@ -238,7 +241,7 @@ dashboard_body = {
                             'expression': 'tfv+tfi+tfd',
                             'label': 'tallies_fail',
                             'id': 'tf',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#f7b6d2'
                         }
                     ],
@@ -246,7 +249,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies_fail-prod.fifo',
+                        config.tallies_queue_name(fail=True),
                         {
                             'id': 'tfv',
                             'visible': False
@@ -275,7 +278,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'title': 'Queue lengths',
                 'period': 300,
                 'stat': 'Maximum'
@@ -288,9 +291,9 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | fields strcontains(@message, 'Worker successfully handled') as success,
                              strcontains(@message,'Worker failed to handle message') as failure,
                              strcontains(@message,'Task timed out after') as timeout
@@ -299,7 +302,7 @@ dashboard_body = {
                             sum(failure + timeout) as Failures
                             by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': True,
                 'title': 'Contribution outcomes in # of notifications',
                 'view': 'timeSeries'
@@ -318,7 +321,7 @@ dashboard_body = {
                             'expression': 'm2 + m4 + m6 + m8',
                             'label': 'Primary',
                             'id': 'e1',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#2ca02c'
                         }
                     ],
@@ -327,7 +330,7 @@ dashboard_body = {
                             'expression': 'm3 + m5 + m7 + m9',
                             'label': 'Replica',
                             'id': 'e2',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#1f77b4'
                         }
                     ],
@@ -335,9 +338,9 @@ dashboard_body = {
                         'AWS/ES',
                         'Shards.unassigned',
                         'DomainName',
-                        'azul-index-prod',
+                        config.es_domain,
                         'ClientId',
-                        '542754589326',
+                        config.aws_account_id,
                         {
                             'id': 'm1',
                             'label': 'Unassigned',
@@ -350,11 +353,11 @@ dashboard_body = {
                         'ShardRole',
                         'Primary',
                         'DomainName',
-                        'azul-index-prod',
+                        config.es_domain,
                         'NodeId',
                         '${local.nodes[0]}',
                         'ClientId',
-                        '542754589326',
+                        config.aws_account_id,
                         {
                             'id': 'm2',
                             'visible': False
@@ -461,7 +464,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'period': 300,
                 'stat': 'Maximum',
                 'title': 'ES shards'
@@ -474,16 +477,16 @@ dashboard_body = {
             'x': 12,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-aggregate'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('aggregate')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | filter @message like 'TransportError'
                     | fields strcontains(@log, 'contribute') as contribute, 1 - contribute as aggregate
                     | stats sum(contribute) as Contribution, sum(aggregate) as Aggregation by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'ES TransportErrors',
                 'view': 'timeSeries'
@@ -503,11 +506,11 @@ dashboard_body = {
                         'AWS/ES',
                         'JVMMemoryPressure',
                         'DomainName',
-                        'azul-index-prod',
+                        config.es_domain,
                         'NodeId',
                         '${local.nodes[0]}',
                         'ClientId',
-                        '542754589326'
+                        config.aws_account_id
                     ],
                     [
                         '...',
@@ -528,7 +531,7 @@ dashboard_body = {
                         '.'
                     ]
                 ],
-                'region': 'us-east-1',
+                'region': config.region,
                 'title': 'ES JVM memory pressure [%]',
                 'period': 300
             }
@@ -546,7 +549,7 @@ dashboard_body = {
                             'expression': 'DIFF(m1+m2+m3+m4)/4/1000/60/5*100',
                             'label': 'Old generation',
                             'id': 'e2',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'stat': 'Maximum'
                         }
                     ],
@@ -555,7 +558,7 @@ dashboard_body = {
                             'expression': 'DIFF(m5+m6+m7+m8)/4/1000/60/5*100',
                             'label': 'Young generation',
                             'id': 'e1',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'stat': 'Maximum',
                             'yAxis': 'left'
                         }
@@ -564,11 +567,11 @@ dashboard_body = {
                         'AWS/ES',
                         'JVMGCOldCollectionTime',
                         'DomainName',
-                        'azul-index-prod',
+                        config.es_domain,
                         'NodeId',
                         '${local.nodes[0]}',
                         'ClientId',
-                        '542754589326',
+                        config.aws_account_id,
                         {
                             'id': 'm1',
                             'visible': False
@@ -651,7 +654,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': True,
-                'region': 'us-east-1',
+                'region': config.region,
                 'period': 300,
                 'stat': 'Maximum',
                 'title': 'ES JVM garbage collection time',
@@ -673,9 +676,9 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | fields @log
                     | parse 'It took *s to download' as duration
                     | filter ispresent(duration)
@@ -684,7 +687,7 @@ dashboard_body = {
                             avg(duration * is_retry) as Retry
                             by bin(5m)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'Subgraph download time, average [s]',
                 'view': 'timeSeries'
@@ -702,28 +705,28 @@ dashboard_body = {
                         'AWS/Lambda',
                         'Throttles',
                         'FunctionName',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'label': 'contribute'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'label': 'contribute_retry'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'label': 'aggregate'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'label': 'aggregate_retry'
                         }
@@ -731,7 +734,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'stat': 'Sum',
                 'period': 300,
                 'title': 'Lambda throttles'
@@ -749,46 +752,46 @@ dashboard_body = {
                         'AWS/Lambda',
                         'Errors',
                         'FunctionName',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'label': 'contribute',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/Lambda',
                         'Errors',
                         'FunctionName',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'label': 'contribute_retry',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/Lambda',
                         'Errors',
                         'FunctionName',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'label': 'aggregate',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/Lambda',
                         'Errors',
                         'FunctionName',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'label': 'aggregate_retry',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ]
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'stat': 'Sum',
                 'period': 300,
                 'title': 'Lambda errors'
@@ -806,28 +809,28 @@ dashboard_body = {
                         'AWS/Lambda',
                         'Invocations',
                         'FunctionName',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'label': 'contribute'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'label': 'contribute_retry'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'label': 'aggregate'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'label': 'aggregate_retry'
                         }
@@ -835,7 +838,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'stat': 'Sum',
                 'period': 300,
                 'title': 'Lambda invocations'
@@ -853,28 +856,28 @@ dashboard_body = {
                         'AWS/Lambda',
                         'ConcurrentExecutions',
                         'FunctionName',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'label': 'contribute'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'label': 'contribute_retry'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'label': 'aggregate'
                         }
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'label': 'aggregate_retry'
                         }
@@ -882,7 +885,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'stat': 'Maximum',
                 'period': 300,
                 'title': 'Concurrent Lambda executions'
@@ -902,7 +905,7 @@ dashboard_body = {
                             'label': 'contribute',
                             'id': 'e1',
                             'stat': 'Average',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
@@ -911,7 +914,7 @@ dashboard_body = {
                             'label': 'contribute_retry',
                             'id': 'e2',
                             'stat': 'Average',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
@@ -920,7 +923,7 @@ dashboard_body = {
                             'label': 'aggregate',
                             'id': 'e3',
                             'stat': 'Average',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
@@ -929,14 +932,14 @@ dashboard_body = {
                             'label': 'aggregate_retry',
                             'id': 'e4',
                             'stat': 'Average',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/Lambda',
                         'Duration',
                         'FunctionName',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'id': 'm1',
                             'visible': False
@@ -944,7 +947,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'id': 'm2',
                             'visible': False
@@ -952,7 +955,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'id': 'm3',
                             'visible': False
@@ -960,7 +963,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'id': 'm4',
                             'visible': False
@@ -969,7 +972,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'stat': 'Average',
                 'period': 300,
                 'title': 'Lambda duration [s]',
@@ -987,14 +990,14 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | filter @message like 'Exceeded rate limits'
                     | sort @timestamp desc
                     | stats count(@requestId) as trips by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'BQ rate limit trips',
                 'view': 'timeSeries'
@@ -1007,13 +1010,13 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | filter ispresent(stats.totalSlotMs)
                     | stats sum(stats.totalSlotMs) / 1000 / 3600 * 12 as `slot hours` by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'BQ slot-hours (pro-rated)',
                 'view': 'timeSeries'
@@ -1026,15 +1029,15 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | filter @message like 'Exceeded rate limits'
                     | parse 'BigQuery job error during attempt *. Retrying in *s.' as a, d
                     | filter ispresent(d)
                     | stats avg(d) as Delay by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'BQ rate limit back-off, average [s]',
                 'view': 'timeSeries'
@@ -1053,14 +1056,14 @@ dashboard_body = {
                             'expression': 'DIFF(nv+ni+nd)',
                             'label': 'notifications',
                             'id': 'n',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications-prod',
+                        config.notifications_queue_name(),
                         {
                             'id': 'nv',
                             'visible': False
@@ -1091,7 +1094,7 @@ dashboard_body = {
                             'expression': 'DIFF(nrv+nri+nrd)',
                             'label': 'notifications_retry',
                             'id': 'nr',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#ff7f0e'
                         }
                     ],
@@ -1099,7 +1102,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications_retry-prod',
+                        config.notifications_queue_name(retry=True),
                         {
                             'id': 'nrv',
                             'visible': False
@@ -1130,7 +1133,7 @@ dashboard_body = {
                             'expression': 'DIFF(nfv+nfi+nfd)',
                             'label': 'notifications_fail',
                             'id': 'nf',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#9467bd'
                         }
                     ],
@@ -1138,7 +1141,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications_fail-prod',
+                        config.notifications_queue_name(fail=True),
                         {
                             'id': 'nfv',
                             'visible': False
@@ -1169,7 +1172,7 @@ dashboard_body = {
                             'expression': 'DIFF(tv+ti+td)',
                             'label': 'tallies',
                             'id': 't',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#2ca02c'
                         }
                     ],
@@ -1177,7 +1180,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies-prod.fifo',
+                        config.tallies_queue_name(),
                         {
                             'id': 'tv',
                             'visible': False
@@ -1208,7 +1211,7 @@ dashboard_body = {
                             'expression': 'DIFF(trv+tri+trd)',
                             'label': 'tallies_retry',
                             'id': 'tr',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#d62728'
                         }
                     ],
@@ -1216,7 +1219,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies_retry-prod.fifo',
+                        config.tallies_queue_name(retry=True),
                         {
                             'id': 'trv',
                             'visible': False
@@ -1247,7 +1250,7 @@ dashboard_body = {
                             'expression': 'DIFF(tfv+tfi+tfd)',
                             'label': 'tallies_fail',
                             'id': 'tf',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#f7b6d2'
                         }
                     ],
@@ -1255,7 +1258,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies_fail-prod.fifo',
+                        config.tallies_queue_name(fail=True),
                         {
                             'id': 'tfv',
                             'visible': False
@@ -1284,7 +1287,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'title': 'Queue length Δ',
                 'period': 300,
                 'stat': 'Maximum',
@@ -1311,7 +1314,7 @@ dashboard_body = {
                             'expression': 'CEIL(m1 * 20 / PERIOD(m1))',
                             'label': 'notifications',
                             'id': 'e1',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
@@ -1319,7 +1322,7 @@ dashboard_body = {
                             'expression': 'CEIL(m2 * 20 / PERIOD(m2))',
                             'label': 'notifications_retry',
                             'id': 'e2',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
@@ -1327,7 +1330,7 @@ dashboard_body = {
                             'expression': 'CEIL(m3 * 20 / PERIOD(m3))',
                             'label': 'tallies.fifo',
                             'id': 'e3',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
@@ -1335,57 +1338,57 @@ dashboard_body = {
                             'expression': 'CEIL(m4 * 20 / PERIOD(m4))',
                             'label': 'tallies_retry.fifo',
                             'id': 'e4',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'NumberOfEmptyReceives',
                         'QueueName',
-                        'azul-notifications-prod',
+                        config.notifications_queue_name(),
                         {
                             'id': 'm1',
                             'visible': False,
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'NumberOfEmptyReceives',
                         'QueueName',
-                        'azul-notifications_retry-prod',
+                        config.notifications_queue_name(retry=True),
                         {
                             'id': 'm2',
                             'visible': False,
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'NumberOfEmptyReceives',
                         'QueueName',
-                        'azul-tallies-prod.fifo',
+                        config.tallies_queue_name(),
                         {
                             'id': 'm3',
                             'visible': False,
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'NumberOfEmptyReceives',
                         'QueueName',
-                        'azul-tallies_retry-prod.fifo',
+                        config.tallies_queue_name(retry=True),
                         {
                             'id': 'm4',
                             'visible': False,
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ]
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'title': 'Idle queue polling threads',
                 'period': 300,
                 'stat': 'Sum'
@@ -1398,9 +1401,9 @@ dashboard_body = {
             'x': 12,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-aggregate'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate')}'
                     | filter @message like /Attempt \\d+ of handling \\d+ contribution\\(s\\) for entity/
                           or @message like /Deferring \\d+ tallies/
                           or @message like /Successfully referred \\d+ tallies/
@@ -1412,7 +1415,7 @@ dashboard_body = {
                             sum(deferrals) as Deferrals
                             by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': True,
                 'title': 'Aggregation outcomes in # of tallies',
                 'view': 'timeSeries'
@@ -1425,9 +1428,9 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | fields stats.cacheHit, strcontains(@log, 'retry') as is_retry
                     | filter @message like 'Job info: '
                     | sort @timestamp desc
@@ -1435,7 +1438,7 @@ dashboard_body = {
                             sum(stats.cacheHit * is_retry ) / sum(is_retry) * 100 as Retry
                             by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'BQ cache utilization [%]',
                 'view': 'timeSeries'
@@ -1454,14 +1457,14 @@ dashboard_body = {
                             'expression': '(nv+ni+nd+nrv+nri+nrd) / IF(0<DIFF(nv+ni+nd+nrv+nri+nrd),0,-DIFF(nv+ni+nd+nrv+nri+nrd)) * DIFF_TIME(nv+ni+nd+nrv+nri+nrd) / 3600',
                             'label': 'notifications',
                             'id': 'n',
-                            'region': 'us-east-1'
+                            'region': config.region
                         }
                     ],
                     [
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-notifications-prod',
+                        config.notifications_queue_name(),
                         {
                             'id': 'nv',
                             'visible': False
@@ -1491,7 +1494,7 @@ dashboard_body = {
                         '.',
                         'ApproximateNumberOfMessagesVisible',
                         '.',
-                        'azul-notifications_retry-prod',
+                        config.notifications_queue_name(retry=True),
                         {
                             'id': 'nrv',
                             'visible': False
@@ -1522,7 +1525,7 @@ dashboard_body = {
                             'expression': '(tv+ti+td+trv+tri+trd) / IF(0<DIFF(tv+ti+td+trv+tri+trd),0,-DIFF(tv+ti+td+trv+tri+trd)) * DIFF_TIME(tv+ti+td+trv+tri+trd) / 3600',
                             'label': 'tallies',
                             'id': 't',
-                            'region': 'us-east-1',
+                            'region': config.region,
                             'color': '#2ca02c'
                         }
                     ],
@@ -1530,7 +1533,7 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesVisible',
                         'QueueName',
-                        'azul-tallies-prod.fifo',
+                        config.tallies_queue_name(),
                         {
                             'id': 'tv',
                             'visible': False
@@ -1560,7 +1563,7 @@ dashboard_body = {
                         '.',
                         'ApproximateNumberOfMessagesVisible',
                         '.',
-                        'azul-tallies_retry-prod.fifo',
+                        config.tallies_queue_name(retry=True),
                         {
                             'id': 'trv',
                             'visible': False
@@ -1589,7 +1592,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'title': 'ETA [h]',
                 'period': 300,
                 'stat': 'Maximum'
@@ -1602,11 +1605,11 @@ dashboard_body = {
             'x': 12,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-aggregate'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('aggregate')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | filter @message like 'Task timed out'
                     | fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 0 as c
                     | fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 1 as cr
@@ -1618,7 +1621,7 @@ dashboard_body = {
                             sum(ar) as aggregate_retry
                             by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'Lambda timeouts',
                 'view': 'timeSeries'
@@ -1636,28 +1639,28 @@ dashboard_body = {
                         'AWS/SQS',
                         'ApproximateNumberOfMessagesNotVisible',
                         'QueueName',
-                        'azul-notifications-prod',
+                        config.notifications_queue_name(),
                         {
                             'label': 'notifications'
                         }
                     ],
                     [
                         '...',
-                        'azul-notifications_retry-prod',
+                        config.notifications_queue_name(retry=True),
                         {
                             'label': 'notifications_retry'
                         }
                     ],
                     [
                         '...',
-                        'azul-tallies-prod.fifo',
+                        config.tallies_queue_name(),
                         {
                             'label': 'tallies'
                         }
                     ],
                     [
                         '...',
-                        'azul-tallies_retry-prod.fifo',
+                        config.tallies_queue_name(retry=True),
                         {
                             'label': 'tallies_retry'
                         }
@@ -1665,7 +1668,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'title': 'In-flight messages',
                 'period': 300,
                 'stat': 'Average'
@@ -1711,7 +1714,7 @@ dashboard_body = {
                         'AWS/Lambda',
                         'Errors',
                         'FunctionName',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'label': 'contribute',
                             'id': 'm1',
@@ -1720,7 +1723,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'label': 'contribute_retry',
                             'id': 'm2',
@@ -1729,7 +1732,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'label': 'aggregate',
                             'id': 'm3',
@@ -1738,7 +1741,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'label': 'aggregate_retry',
                             'id': 'm4',
@@ -1749,7 +1752,7 @@ dashboard_body = {
                         '.',
                         'Invocations',
                         '.',
-                        'azul-indexer-prod-contribute',
+                        config.indexer_function_name('contribute'),
                         {
                             'id': 'm5',
                             'visible': False
@@ -1757,7 +1760,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-contribute_retry',
+                        config.indexer_function_name('contribute_retry'),
                         {
                             'id': 'm6',
                             'visible': False
@@ -1765,7 +1768,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate',
+                        config.indexer_function_name('aggregate'),
                         {
                             'id': 'm7',
                             'visible': False
@@ -1773,7 +1776,7 @@ dashboard_body = {
                     ],
                     [
                         '...',
-                        'azul-indexer-prod-aggregate_retry',
+                        config.indexer_function_name('aggregate_retry'),
                         {
                             'id': 'm8',
                             'visible': False
@@ -1782,7 +1785,7 @@ dashboard_body = {
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
-                'region': 'us-east-1',
+                'region': config.region,
                 'stat': 'Sum',
                 'period': 300,
                 'title': 'Lambda error rate [%]'
@@ -1795,11 +1798,11 @@ dashboard_body = {
             'x': 0,
             'type': 'log',
             'properties': {
-                'query': dedent('''\
-                    SOURCE '/aws/lambda/azul-indexer-prod-aggregate'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute'
-                    | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry'
+                'query': dedent(f'''\
+                    SOURCE '/aws/lambda/{config.indexer_function_name('aggregate')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
+                    | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
                     | filter @message like 'Task timed out' or @message like 'START'
                     | fields strcontains(@message, 'Task timed out') == 1 as timeout
                     | fields strcontains(@message, 'START') == 1 as attempt
@@ -1813,7 +1816,7 @@ dashboard_body = {
                             sum(ar*timeout) * 100 / sum(ar*attempt) as aggregate_retry
                             by bin(5min)
                 '''),
-                'region': 'us-east-1',
+                'region': config.region,
                 'stacked': False,
                 'title': 'Lambda timeout rate [%]',
                 'view': 'timeSeries'
