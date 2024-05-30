@@ -1,8 +1,16 @@
 from textwrap import (
     dedent,
 )
+
+from more_itertools import (
+    flatten,
+)
+
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 
 dashboard_body = {
@@ -318,7 +326,7 @@ dashboard_body = {
                 'metrics': [
                     [
                         {
-                            'expression': 'm2 + m4 + m6 + m8',
+                            'expression': ' + '.join(f'm{2 + i * 2}' for i in range(aws.es_instance_count)),
                             'label': 'Primary',
                             'id': 'e1',
                             'region': config.region,
@@ -327,7 +335,7 @@ dashboard_body = {
                     ],
                     [
                         {
-                            'expression': 'm3 + m5 + m7 + m9',
+                            'expression': ' + '.join(f'm{3 + i * 2}' for i in range(aws.es_instance_count)),
                             'label': 'Replica',
                             'id': 'e2',
                             'region': config.region,
@@ -377,90 +385,39 @@ dashboard_body = {
                             'visible': False
                         }
                     ],
-                    [
-                        '...',
-                        'Primary',
-                        '.',
-                        '.',
-                        '.',
-                        '${local.nodes[1]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm4',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        'Replica',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm5',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        'Primary',
-                        '.',
-                        '.',
-                        '.',
-                        '${local.nodes[2]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm6',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        'Replica',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm7',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        'Primary',
-                        '.',
-                        '.',
-                        '.',
-                        '${local.nodes[3]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm8',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        'Replica',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm9',
-                            'visible': False
-                        }
-                    ]
+                    *flatten((
+                        [
+                            [
+                                '...',
+                                'Primary',
+                                '.',
+                                '.',
+                                '.',
+                                '${local.nodes[%d]}' % i,
+                                '.',
+                                '.',
+                                {
+                                    'id': f'm{2 + i * 2}',
+                                    'visible': False
+                                }
+                            ],
+                            [
+                                '...',
+                                'Replica',
+                                '.',
+                                '.',
+                                '.',
+                                '.',
+                                '.',
+                                '.',
+                                {
+                                    'id': f'm{3 + i * 2}',
+                                    'visible': False
+                                }
+                            ]
+                        ]
+                        for i in range(1, aws.es_instance_count)
+                    ))
                 ],
                 'view': 'timeSeries',
                 'stacked': False,
@@ -512,24 +469,15 @@ dashboard_body = {
                         'ClientId',
                         config.aws_account_id
                     ],
-                    [
-                        '...',
-                        '${local.nodes[1]}',
-                        '.',
-                        '.'
-                    ],
-                    [
-                        '...',
-                        '${local.nodes[2]}',
-                        '.',
-                        '.'
-                    ],
-                    [
-                        '...',
-                        '${local.nodes[3]}',
-                        '.',
-                        '.'
-                    ]
+                    *(
+                        [
+                            '...',
+                            '${local.nodes[%d]}' % i,
+                            '.',
+                            '.'
+                        ]
+                        for i in range(1, aws.es_instance_count)
+                    )
                 ],
                 'region': config.region,
                 'title': 'ES JVM memory pressure [%]',
@@ -546,7 +494,8 @@ dashboard_body = {
                 'metrics': [
                     [
                         {
-                            'expression': 'DIFF(m1+m2+m3+m4)/4/1000/60/5*100',
+                            'expression': 'DIFF(%s)/4/1000/60/5*100' %
+                                          '+'.join(f'm{i + 1}' for i in range(aws.es_instance_count)),
                             'label': 'Old generation',
                             'id': 'e2',
                             'region': config.region,
@@ -555,7 +504,10 @@ dashboard_body = {
                     ],
                     [
                         {
-                            'expression': 'DIFF(m5+m6+m7+m8)/4/1000/60/5*100',
+                            'expression': 'DIFF(%s)/4/1000/60/5*100' % '+'.join(
+                                f'm{i + aws.es_instance_count + 1}'
+                                for i in range(aws.es_instance_count)
+                            ),
                             'label': 'Young generation',
                             'id': 'e1',
                             'region': config.region,
@@ -577,36 +529,19 @@ dashboard_body = {
                             'visible': False
                         }
                     ],
-                    [
-                        '...',
-                        '${local.nodes[1]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm2',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        '${local.nodes[2]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm3',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        '${local.nodes[3]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm4',
-                            'visible': False
-                        }
-                    ],
+                    *(
+                        [
+                            '...',
+                            '${local.nodes[%d]}' % i,
+                            '.',
+                            '.',
+                            {
+                                'id': f'm{i + 1}',
+                                'visible': False
+                            }
+                        ]
+                        for i in range(1, aws.es_instance_count)
+                    ),
                     [
                         '.',
                         'JVMGCYoungCollectionTime',
@@ -617,40 +552,23 @@ dashboard_body = {
                         '.',
                         '.',
                         {
-                            'id': 'm5',
+                            'id': f'm{aws.es_instance_count + 1}',
                             'visible': False
                         }
                     ],
-                    [
-                        '...',
-                        '${local.nodes[1]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm6',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        '${local.nodes[2]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm7',
-                            'visible': False
-                        }
-                    ],
-                    [
-                        '...',
-                        '${local.nodes[3]}',
-                        '.',
-                        '.',
-                        {
-                            'id': 'm8',
-                            'visible': False
-                        }
-                    ]
+                    *(
+                        [
+                            '...',
+                            '${local.nodes[%d]}' % i,
+                            '.',
+                            '.',
+                            {
+                                'id': f'm{i + aws.es_instance_count + 1}',
+                                'visible': False
+                            }
+                        ]
+                        for i in range(1, aws.es_instance_count)
+                    )
                 ],
                 'view': 'timeSeries',
                 'stacked': True,
