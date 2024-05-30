@@ -1,4 +1,4 @@
-{
+dashboard_body = {
     "widgets": [
         {
             "height": 6,
@@ -9,7 +9,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry' | SOURCE '/aws/lambda/azul-indexer-prod-aggregate' | filter @message like /Attempt \\d+ of handling \\d+ contribution\\(s\\) for entity/\n       or @message like /Deferring aggregation of \\d+ contribution\\(s\\) to entity/\n       or @message like /Successfully aggregated \\d+ contribution\\(s\\) to entity/\n| parse 'of handling * contribution(s) for entity' as attempts\n| parse 'Deferring aggregation of * contribution(s) to entity' as deferrals\n| parse 'Successfully aggregated * contribution(s) to entity' as successes\n| stats sum(successes) as Successes, \n        sum(attempts) - sum(successes) - sum(deferrals) as Failures, \n        sum(deferrals) as Deferrals \n        by bin(5min)\n",
                 "region": "us-east-1",
-                "stacked": true,
+                "stacked": True,
                 "title": "Aggregation outcomes in # of contributions",
                 "view": "timeSeries"
             }
@@ -37,7 +37,7 @@
                         "azul-notifications-prod",
                         {
                             "id": "nv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -47,7 +47,7 @@
                         ".",
                         {
                             "id": "ni",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -57,7 +57,7 @@
                         ".",
                         {
                             "id": "nd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -76,7 +76,7 @@
                         "azul-notifications_retry-prod",
                         {
                             "id": "nrv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -86,7 +86,7 @@
                         ".",
                         {
                             "id": "nri",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -96,7 +96,7 @@
                         ".",
                         {
                             "id": "nrd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -115,7 +115,7 @@
                         "azul-notifications_fail-prod",
                         {
                             "id": "nfv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -125,7 +125,7 @@
                         ".",
                         {
                             "id": "nfi",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -135,7 +135,7 @@
                         ".",
                         {
                             "id": "nfd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -154,7 +154,7 @@
                         "azul-tallies-prod.fifo",
                         {
                             "id": "tv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -164,7 +164,7 @@
                         ".",
                         {
                             "id": "ti",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -174,7 +174,7 @@
                         ".",
                         {
                             "id": "td",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -193,7 +193,7 @@
                         "azul-tallies_retry-prod.fifo",
                         {
                             "id": "trv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -203,7 +203,7 @@
                         ".",
                         {
                             "id": "tri",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -213,7 +213,7 @@
                         ".",
                         {
                             "id": "trd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -232,7 +232,7 @@
                         "azul-tallies_fail-prod.fifo",
                         {
                             "id": "tfv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -242,7 +242,7 @@
                         ".",
                         {
                             "id": "tfi",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -252,12 +252,12 @@
                         ".",
                         {
                             "id": "tfd",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "title": "Queue lengths",
                 "period": 300,
@@ -273,7 +273,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | fields strcontains(@message, 'Worker successfully handled') as success,\n\n       strcontains(@message,'Worker failed to handle message') as failure,\n\n       strcontains(@message,'Task timed out after') as timeout\n\n| filter failure > 0 or success > 0 or timeout > 0\n| stats sum(success) as Successes, sum(failure + timeout) as Failures by bin(5min)",
                 "region": "us-east-1",
-                "stacked": true,
+                "stacked": True,
                 "title": "Contribution outcomes in # of notifications",
                 "view": "timeSeries"
             }
@@ -330,7 +330,7 @@
                         "542754589326",
                         {
                             "id": "m2",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -344,7 +344,7 @@
                         ".",
                         {
                             "id": "m3",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -358,7 +358,7 @@
                         ".",
                         {
                             "id": "m4",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -372,7 +372,7 @@
                         ".",
                         {
                             "id": "m5",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -386,7 +386,7 @@
                         ".",
                         {
                             "id": "m6",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -400,7 +400,7 @@
                         ".",
                         {
                             "id": "m7",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -414,7 +414,7 @@
                         ".",
                         {
                             "id": "m8",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -428,12 +428,12 @@
                         ".",
                         {
                             "id": "m9",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "period": 300,
                 "stat": "Maximum",
@@ -449,7 +449,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-aggregate' | SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry' | SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter @message like 'TransportError'\n| fields strcontains(@log, 'contribute') as contribute, 1 - contribute as aggregate\n| stats sum(contribute) as Contribution, sum(aggregate) as Aggregation by bin(5min)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "ES TransportErrors",
                 "view": "timeSeries"
             }
@@ -462,7 +462,7 @@
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
-                "stacked": true,
+                "stacked": True,
                 "metrics": [
                     [
                         "AWS/ES",
@@ -536,7 +536,7 @@
                         "542754589326",
                         {
                             "id": "m1",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -546,7 +546,7 @@
                         ".",
                         {
                             "id": "m2",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -556,7 +556,7 @@
                         ".",
                         {
                             "id": "m3",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -566,7 +566,7 @@
                         ".",
                         {
                             "id": "m4",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -580,7 +580,7 @@
                         ".",
                         {
                             "id": "m5",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -590,7 +590,7 @@
                         ".",
                         {
                             "id": "m6",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -600,7 +600,7 @@
                         ".",
                         {
                             "id": "m7",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -610,12 +610,12 @@
                         ".",
                         {
                             "id": "m8",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": true,
+                "stacked": True,
                 "region": "us-east-1",
                 "period": 300,
                 "stat": "Maximum",
@@ -623,10 +623,10 @@
                 "yAxis": {
                     "left": {
                         "label": "% of wall clock time",
-                        "showUnits": false
+                        "showUnits": False
                     },
                     "right": {
-                        "showUnits": false
+                        "showUnits": False
                     }
                 }
             }
@@ -640,7 +640,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | fields @log\n| parse 'It took *s to download' as duration\n| filter ispresent(duration)\n| fields strcontains(@log, '_retry') as is_retry\n| stats avg(duration * (1 - is_retry)) as Initial, avg(duration * is_retry) as Retry by bin(5m)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "Subgraph download time, average [s]",
                 "view": "timeSeries"
             }
@@ -685,7 +685,7 @@
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "stat": "Sum",
                 "period": 300,
@@ -742,7 +742,7 @@
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "stat": "Sum",
                 "period": 300,
@@ -789,7 +789,7 @@
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "stat": "Sum",
                 "period": 300,
@@ -836,7 +836,7 @@
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "stat": "Maximum",
                 "period": 300,
@@ -894,7 +894,7 @@
                         "azul-indexer-prod-aggregate",
                         {
                             "id": "m1",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -902,7 +902,7 @@
                         "azul-indexer-prod-aggregate_retry",
                         {
                             "id": "m2",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -910,7 +910,7 @@
                         "azul-indexer-prod-contribute",
                         {
                             "id": "m3",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -918,19 +918,19 @@
                         "azul-indexer-prod-contribute_retry",
                         {
                             "id": "m4",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "stat": "Average",
                 "period": 300,
                 "title": "Lambda duration [s]",
                 "yAxis": {
                     "left": {
-                        "showUnits": false
+                        "showUnits": False
                     }
                 }
             }
@@ -944,7 +944,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter @message like 'Exceeded rate limits'\n| sort @timestamp desc\n| stats count(@requestId) as trips by bin(5min)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "BQ rate limit trips",
                 "view": "timeSeries"
             }
@@ -958,7 +958,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter ispresent(stats.totalSlotMs)\n| stats sum(stats.totalSlotMs) / 1000 / 3600 * 12 as `slot hours` by bin(5min)\n",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "BQ slot-hours (pro-rated)",
                 "view": "timeSeries"
             }
@@ -972,7 +972,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter @message like 'Exceeded rate limits'\n| parse 'BigQuery job error during attempt *. Retrying in *s.' as a, d\n| filter ispresent(d)\n| stats avg(d) as Delay by bin(5min)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "BQ rate limit back-off, average [s]",
                 "view": "timeSeries"
             }
@@ -1000,7 +1000,7 @@
                         "azul-notifications-prod",
                         {
                             "id": "nv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1010,7 +1010,7 @@
                         ".",
                         {
                             "id": "ni",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1020,7 +1020,7 @@
                         ".",
                         {
                             "id": "nd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1039,7 +1039,7 @@
                         "azul-notifications_retry-prod",
                         {
                             "id": "nrv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1049,7 +1049,7 @@
                         ".",
                         {
                             "id": "nri",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1059,7 +1059,7 @@
                         ".",
                         {
                             "id": "nrd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1078,7 +1078,7 @@
                         "azul-notifications_fail-prod",
                         {
                             "id": "nfv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1088,7 +1088,7 @@
                         ".",
                         {
                             "id": "nfi",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1098,7 +1098,7 @@
                         ".",
                         {
                             "id": "nfd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1117,7 +1117,7 @@
                         "azul-tallies-prod.fifo",
                         {
                             "id": "tv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1127,7 +1127,7 @@
                         ".",
                         {
                             "id": "ti",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1137,7 +1137,7 @@
                         ".",
                         {
                             "id": "td",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1156,7 +1156,7 @@
                         "azul-tallies_retry-prod.fifo",
                         {
                             "id": "trv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1166,7 +1166,7 @@
                         ".",
                         {
                             "id": "tri",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1176,7 +1176,7 @@
                         ".",
                         {
                             "id": "trd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1195,7 +1195,7 @@
                         "azul-tallies_fail-prod.fifo",
                         {
                             "id": "tfv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1205,7 +1205,7 @@
                         ".",
                         {
                             "id": "tfi",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1215,12 +1215,12 @@
                         ".",
                         {
                             "id": "tfd",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "title": "Queue length Δ",
                 "period": 300,
@@ -1282,7 +1282,7 @@
                         "azul-notifications-prod",
                         {
                             "id": "m1",
-                            "visible": false,
+                            "visible": False,
                             "region": "us-east-1"
                         }
                     ],
@@ -1293,7 +1293,7 @@
                         "azul-notifications_retry-prod",
                         {
                             "id": "m2",
-                            "visible": false,
+                            "visible": False,
                             "region": "us-east-1"
                         }
                     ],
@@ -1304,7 +1304,7 @@
                         "azul-tallies-prod.fifo",
                         {
                             "id": "m3",
-                            "visible": false,
+                            "visible": False,
                             "region": "us-east-1"
                         }
                     ],
@@ -1315,13 +1315,13 @@
                         "azul-tallies_retry-prod.fifo",
                         {
                             "id": "m4",
-                            "visible": false,
+                            "visible": False,
                             "region": "us-east-1"
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "title": "Idle queue polling threads",
                 "period": 300,
@@ -1337,7 +1337,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry' | SOURCE '/aws/lambda/azul-indexer-prod-aggregate' | filter @message like /Attempt \\d+ of handling \\d+ contribution\\(s\\) for entity/\n       or @message like /Deferring \\d+ tallies/\n       or @message like /Successfully referred \\d+ tallies/\n| field strcontains(@message,'Attempt') and strcontains(@message,'contribution(s) for entity') as attempts\n| parse 'Deferring * tallies' as deferrals\n| parse 'Successfully referred * tallies' as successes\n| stats sum(successes) as Successes,\n        sum(attempts) - sum(successes) - sum(deferrals) as Failures,\n        sum(deferrals) as Deferrals\n        by bin(5min)\n",
                 "region": "us-east-1",
-                "stacked": true,
+                "stacked": True,
                 "title": "Aggregation outcomes in # of tallies",
                 "view": "timeSeries"
             }
@@ -1351,7 +1351,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | fields stats.cacheHit, strcontains(@log, 'retry') as is_retry\n| filter @message like 'Job info: '\n| sort @timestamp desc\n| stats sum(stats.cacheHit * (1 - is_retry)) / sum(1 - is_retry) * 100 as Initial, \n        sum(stats.cacheHit * is_retry ) / sum(is_retry) * 100 as Retry by bin(5min)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "BQ cache utilization [%]",
                 "view": "timeSeries"
             }
@@ -1379,7 +1379,7 @@
                         "azul-notifications-prod",
                         {
                             "id": "nv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1389,7 +1389,7 @@
                         ".",
                         {
                             "id": "ni",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1399,7 +1399,7 @@
                         ".",
                         {
                             "id": "nd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1409,7 +1409,7 @@
                         "azul-notifications_retry-prod",
                         {
                             "id": "nrv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1419,7 +1419,7 @@
                         ".",
                         {
                             "id": "nri",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1429,7 +1429,7 @@
                         ".",
                         {
                             "id": "nrd",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1448,7 +1448,7 @@
                         "azul-tallies-prod.fifo",
                         {
                             "id": "tv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1458,7 +1458,7 @@
                         ".",
                         {
                             "id": "ti",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1468,7 +1468,7 @@
                         ".",
                         {
                             "id": "td",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1478,7 +1478,7 @@
                         "azul-tallies_retry-prod.fifo",
                         {
                             "id": "trv",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1488,7 +1488,7 @@
                         ".",
                         {
                             "id": "tri",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1498,12 +1498,12 @@
                         ".",
                         {
                             "id": "trd",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "title": "ETA [h]",
                 "period": 300,
@@ -1519,7 +1519,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-aggregate' | SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry' | SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter @message like 'Task timed out'\n| fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 0 as c\n| fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 1 as cr\n| fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 0 as a\n| fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 1 as ar\n| stats sum(c) as contribute, \n        sum(cr) as contribute_retry,\n        sum(a) as aggregate,\n        sum(ar) as aggregate_retry\n        by bin(5min)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "Lambda timeouts",
                 "view": "timeSeries"
             }
@@ -1564,7 +1564,7 @@
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "title": "In-flight messages",
                 "period": 300,
@@ -1615,7 +1615,7 @@
                         {
                             "label": "contribute",
                             "id": "m1",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1624,7 +1624,7 @@
                         {
                             "label": "contribute_retry",
                             "id": "m2",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1633,7 +1633,7 @@
                         {
                             "label": "aggregate",
                             "id": "m3",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1642,7 +1642,7 @@
                         {
                             "label": "aggregate_retry",
                             "id": "m4",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1652,7 +1652,7 @@
                         "azul-indexer-prod-contribute",
                         {
                             "id": "m5",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1660,7 +1660,7 @@
                         "azul-indexer-prod-contribute_retry",
                         {
                             "id": "m6",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1668,7 +1668,7 @@
                         "azul-indexer-prod-aggregate",
                         {
                             "id": "m7",
-                            "visible": false
+                            "visible": False
                         }
                     ],
                     [
@@ -1676,12 +1676,12 @@
                         "azul-indexer-prod-aggregate_retry",
                         {
                             "id": "m8",
-                            "visible": false
+                            "visible": False
                         }
                     ]
                 ],
                 "view": "timeSeries",
-                "stacked": false,
+                "stacked": False,
                 "region": "us-east-1",
                 "stat": "Sum",
                 "period": 300,
@@ -1697,7 +1697,7 @@
             "properties": {
                 "query": "SOURCE '/aws/lambda/azul-indexer-prod-aggregate' | SOURCE '/aws/lambda/azul-indexer-prod-aggregate_retry' | SOURCE '/aws/lambda/azul-indexer-prod-contribute' | SOURCE '/aws/lambda/azul-indexer-prod-contribute_retry' | filter @message like 'Task timed out' or @message like 'START' \n| fields strcontains(@message, 'Task timed out') == 1 as timeout\n| fields strcontains(@message, 'START') == 1 as attempt\n| fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 0 as c\n| fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 1 as cr\n| fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 0 as a\n| fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 1 as ar\n| stats sum(c*timeout) * 100 / sum(c*attempt) as contribute, \n        sum(cr*timeout) * 100 / sum(cr*attempt) as contribute_retry,\n        sum(a*timeout) * 100 / sum(a*attempt) as aggregate,\n        sum(ar*timeout) * 100 / sum(ar*attempt) as aggregate_retry\n        by bin(5min)",
                 "region": "us-east-1",
-                "stacked": false,
+                "stacked": False,
                 "title": "Lambda timeout rate [%]",
                 "view": "timeSeries"
             }

@@ -1489,7 +1489,7 @@ class Config:
 
     @property
     def cloudwatch_dashboard_template(self) -> str:
-        return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
+        return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json.py'
 
     class SecurityContact(TypedDict):
         name: str

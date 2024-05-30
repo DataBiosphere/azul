@@ -12,6 +12,7 @@ from azul.deployment import (
 )
 from azul.modules import (
     load_app_module,
+    load_module,
 )
 from azul.queues import (
     Queues,
@@ -37,9 +38,9 @@ def alarm_resource_name(threshold: MetricThreshold) -> str:
 def dashboard_body() -> str:
     # To minify the template and confirm it is valid JSON before deployment we
     # parse the template file as JSON and then convert it back to a string.
-    with open(config.cloudwatch_dashboard_template) as f:
-        body = json.load(f)
-    body = json.dumps(body)
+    module = load_module(config.cloudwatch_dashboard_template,
+                         'cloudwatch_dashboard_template')
+    body = json.dumps(module.dashboard_body)
 
     def prod_qualified_resource_name(name: str) -> str:
         resource, _, suffix = config.unqualified_resource_name_and_suffix(name)
