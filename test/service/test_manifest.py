@@ -1949,12 +1949,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 ''
             ),
             (
-                'activities.date_created',
-                '',
-                '',
-                ''
-            ),
-            (
                 'files.document_id',
                 '6b0f6c0f-5d80-4242-accb-840921351cd5',
                 '15b76f9c-6b46-433f-851d-34e89f1b9ba6',

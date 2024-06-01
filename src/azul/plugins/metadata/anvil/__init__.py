@@ -194,8 +194,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                         'assay_type',
                         'data_modality',
                         'reference_assembly',
-                        # Not in schema
-                        'date_created',
                     ]
                 },
                 'files': {
