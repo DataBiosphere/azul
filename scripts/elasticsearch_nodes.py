@@ -29,6 +29,9 @@ from azul.es import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.modules import (
+    load_module,
+)
 
 log = logging.getLogger(__name__)
 
@@ -77,8 +80,9 @@ def node_placeholder_count() -> int:
     Return the number of unique ES node ID placeholders found in the Cloudwatch
     dashboard template file.
     """
-    with open(config.cloudwatch_dashboard_template) as f:
-        body = json.load(f)
+    module = load_module(config.cloudwatch_dashboard_template,
+                         'cloudwatch_dashboard_template')
+    body = module.dashboard_body
     filters = [
         # Indexing from end so we don't have to deal with the `...` placeholder.
         # The last three elements are the `Client ID` dimension name, its value
