@@ -22,7 +22,7 @@ from urllib.parse import (
     unquote,
 )
 
-import attr
+import attrs
 import chalice
 from chalice import (
     Chalice,
@@ -100,10 +100,10 @@ class LambdaMetric(Enum):
         return self.name.capitalize()
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class MetricThreshold:
     lambda_name: str
-    handler_name: Optional[str] = attr.ib(default=None)
+    handler_name: Optional[str] = attrs.field(default=None)
     metric: LambdaMetric
     value: int
 
@@ -534,7 +534,7 @@ class AzulChaliceApp(Chalice):
         return thresholds
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class AppController:
     app: AzulChaliceApp
 
