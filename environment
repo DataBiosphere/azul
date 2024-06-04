@@ -102,8 +102,8 @@ _logout() {
 }
 
 _logout_completely() {
-  # We don't use `&&` between function invocations because failing to log out of
-  # one realm shouldn't prevent us from attempting to log out of the others.
+	# We don't use `&&` between function invocations because failing to log out of
+	# one realm shouldn't prevent us from attempting to log out of the others.
 	_logout_google
 	_logout
 	_logout_docker_ecr
@@ -256,6 +256,64 @@ _revenv() {
 		echo >&2 "_revenv failed"
 		return 1
 	fi
+}
+
+_clone() {
+	if [[ -z "$1" || -z "$2" ]]; then
+		echo "Need two arguments: the name of the deployment to select in the"
+		echo "project clone and the name of the branch to check out in it."
+		return 1
+	fi
+  if [ -n "$VIRTUAL_ENV" ]; then
+    echo "Run 'deactivate' first"
+    return 2
+  fi
+  if [ "$(basename "$PWD")" != azul ]; then
+    echo "The name of the current project directory must be 'azul'"
+    return 3
+  fi
+  deployment="$1"
+  branch="$2"
+  (
+    set -e
+    git worktree add "../azul.${deployment}" "${branch}"
+    cd "../azul.${deployment}"
+    (cd terraform/gitlab/vpn && git submodule update --init easy-rsa)
+    rsync -rvlm \
+      -f '+ */' \
+      -f '+ environment.local.py' \
+      -f '+ /deployments/*.local/environment*.py' \
+      -f '- *' \
+      ../azul/ \
+      .
+    source environment
+    _link "${deployment}"
+    _refresh
+    make virtualenv
+    source .venv/bin/activate
+    make requirements envhook
+    deactivate
+    rsync -av ../azul/.idea .
+    mv .idea/azul.iml ".idea/azul.${deployment}.iml"
+    sed -e '/<component name="ProjectId".*/d' \
+        -e s#\<module\ name=\"azul\"#\<module\ name=\""azul.${deployment}"\"#g \
+        -i '' \
+        .idea/workspace.xml
+    sed -e s#.idea/azul.iml#.idea/azul."${deployment}".iml#g \
+        -i '' \
+        .idea/modules.xml
+    echo ""
+    echo "You can now open the directory"
+    echo ""
+    pwd
+    echo ""
+    echo "as a project in PyCharm. Be sure to verify that the right .venv "
+    echo "is configured as the Python interpreter in the project settings."
+    echo ""
+    echo "To remove the clone, close the project in PyCharm, delete the"
+    echo "project directory, and run 'git worktree prune'"
+    echo ""
+  )
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports

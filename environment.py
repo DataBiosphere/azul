@@ -275,28 +275,28 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-22',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-23',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.20-17',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.21-18',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-2',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-3',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.3.1-50',
+                'ref': 'docker.io/clamav/clamav:1.3.1-52',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:16.11.2-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:16.11.3-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
@@ -590,11 +590,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CONTRIBUTION_CONCURRENCY': '64',
         'AZUL_AGGREGATION_CONCURRENCY': '64',
 
-        # The name of the S3 bucket where the manifest API stores the downloadable
-        # content requested by client.
-        #
-        'AZUL_S3_BUCKET': None,
-
         # Collect and monitor important health metrics of the deployment (1 yes, 0 no).
         # Typically only enabled on main deployments.
         #
@@ -844,12 +839,6 @@ def env() -> Mapping[str, Optional[str]]:
         # tarballs should always contain a single root directory.
         #
         'azul_browser_sites': json.dumps({}),
-
-        # 1 if current deployment is a main deployment with the sole purpose of
-        # testing feature branches in GitLab before they are merged to the
-        # develop branch, 0 otherwise. Personal deployments have this set to 0.
-        #
-        'AZUL_IS_SANDBOX': '0',
 
         # A list of names of AWS IAM roles that should be given permission to
         # manage incidents with AWS support as defined in CIS rule 1.20:

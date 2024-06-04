@@ -3,18 +3,10 @@ import json
 from botocore.exceptions import (
     ClientError,
 )
-from moto import (
-    mock_dynamodb,
-    mock_s3,
-    mock_sts,
-)
 
 from azul import (
     cached_property,
     config,
-)
-from azul.deployment import (
-    aws,
 )
 from azul.logging import (
     configure_test_logging,
@@ -31,6 +23,9 @@ from azul.types import (
 from azul.version_service import (
     NoSuchObjectVersion,
 )
+from service import (
+    S3TestCase,
+)
 from version_table_test_case import (
     VersionTableTestCase,
 )
@@ -41,15 +36,15 @@ def setUpModule():
     configure_test_logging()
 
 
-@mock_s3
-@mock_sts
-@mock_dynamodb
-class TestPortalService(VersionTableTestCase):
-    dummy_db = [
-        {
-            "spam": "eggs"
-        }
-    ]
+class TestPortalService(VersionTableTestCase, S3TestCase):
+
+    @property
+    def dummy_db(self) -> JSONs:
+        return [
+            {
+                "spam": "eggs"
+            }
+        ]
 
     @cached_property
     def plugin_db(self) -> JSONs:
@@ -83,33 +78,30 @@ class TestPortalService(VersionTableTestCase):
             ]
         }]
 
-    demultiplex_db = [
-        {
-            'integrations': [
-                {'entity_ids': ['good']},
-                {}
-            ]
-        }
-    ]
+    @property
+    def demultiplex_db(self) -> JSONs:
+        return [
+            {
+                'integrations': [
+                    {'entity_ids': ['good']},
+                    {}
+                ]
+            }
+        ]
 
     def setUp(self):
         super().setUp()
-
         self.portal_service = PortalService()
-        self.s3_client = aws.s3
-        self.s3_client.create_bucket(Bucket=self.portal_service.bucket,
-                                     CreateBucketConfiguration={
-                                         'LocationConstraint': config.region
-                                     })
-        self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
-                                             VersioningConfiguration={
-                                                 'Status': 'Enabled',
-                                                 'MFADelete': 'Disabled'
-                                             })
+        self._create_test_bucket(self.portal_service.bucket)
+        self._s3.put_bucket_versioning(Bucket=self.portal_service.bucket,
+                                       VersioningConfiguration={
+                                           'Status': 'Enabled',
+                                           'MFADelete': 'Disabled'
+                                       })
 
     def download_db(self) -> JSONs:
-        response = self.s3_client.get_object(Bucket=self.portal_service.bucket,
-                                             Key=self.portal_service.object_key)
+        response = self._s3.get_object(Bucket=self.portal_service.bucket,
+                                       Key=self.portal_service.object_key)
         return json.loads(response['Body'].read().decode())
 
     def test_demultiplex(self):

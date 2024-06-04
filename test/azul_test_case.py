@@ -8,6 +8,9 @@ from collections.abc import (
 from contextlib import (
     AbstractContextManager,
 )
+from functools import (
+    partial,
+)
 import os
 from re import (
     escape,
@@ -202,6 +205,17 @@ class AzulTestCase(TestCase):
     def addClassPatch(cls, instance: patch) -> None:
         instance.start()
         cls.addClassCleanup(instance.stop)
+
+    def addPatch(self, instance: patch) -> None:
+        # Moto mock's stop() method has the drastic effect of resetting the
+        # model class attributes that are used to track model instances so that
+        # they can later be cleaned up when the backend is reset.
+        if isinstance(instance, moto.BaseMockAWS):
+            cleanup = partial(instance.stop, remove_data=False)
+        else:
+            cleanup = instance.stop
+        instance.start()
+        self.addCleanup(cleanup)
 
 
 class AlwaysTearDownTestCase(TestCase):

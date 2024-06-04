@@ -75,7 +75,7 @@ policy = {
                 "s3:GetObjectTagging"
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.s3_bucket}/*",
+                "${aws_s3_bucket.%s.arn}/*" % config.storage_term,
                 f"arn:aws:s3:::{aws.shared_bucket}/*"
             ]
         },
@@ -95,7 +95,7 @@ policy = {
                 "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.s3_bucket}",
+                "${aws_s3_bucket.%s.arn}" % config.storage_term,
                 f"arn:aws:s3:::{aws.shared_bucket}"
             ]
         },

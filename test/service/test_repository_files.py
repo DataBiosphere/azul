@@ -25,9 +25,6 @@ from furl import (
 from google.auth.transport.urllib3 import (
     AuthorizedHttp,
 )
-from moto import (
-    mock_s3,
-)
 import requests
 import responses
 import urllib3
@@ -71,6 +68,9 @@ from azul.types import (
 from azul_test_case import (
     DCP1TestCase,
     DCP2TestCase,
+)
+from service import (
+    S3TestCase,
 )
 
 log = get_test_logger(__name__)
@@ -234,7 +234,9 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
             _test(authenticate=False, cache=False)
 
 
-class TestRepositoryFilesWithDSS(DCP1TestCase, RepositoryFilesTestCase):
+class TestRepositoryFilesWithDSS(DCP1TestCase,
+                                 RepositoryFilesTestCase,
+                                 S3TestCase):
     # These are the credentials defined in
     #
     # moto.instance_metadata.responses.InstanceMetadataResponse
@@ -256,7 +258,6 @@ class TestRepositoryFilesWithDSS(DCP1TestCase, RepositoryFilesTestCase):
                      AWS_SECRET_ACCESS_KEY=mock_secret_access_key,
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
-    @mock_s3
     def test_repository_files(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None
@@ -265,12 +266,10 @@ class TestRepositoryFilesWithDSS(DCP1TestCase, RepositoryFilesTestCase):
                '.7e892bf8f6aa489ccb08a995c7f017e1.'
                '847325b6')
         bucket_name = 'org-humancellatlas-dss-checkout-staging'
-        s3 = aws.s3
-        s3.create_bucket(Bucket=bucket_name,
-                         CreateBucketConfiguration={
-                             'LocationConstraint': config.region
-                         })
-        s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
+        self._create_test_bucket(bucket_name)
+        self._s3.upload_fileobj(Bucket=bucket_name,
+                                Fileobj=io.BytesIO(b'foo'),
+                                Key=key)
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
         file_version = '2018-09-12T12:11:54.054628Z'
         organic_file_name = 'foo.txt'

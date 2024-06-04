@@ -235,15 +235,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
-        'AZUL_IS_SANDBOX': str(int(is_sandbox)),
-
         # This deployment uses a subdomain of the `dev` deployment's domain.
         #
         'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
         'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
         'AZUL_DRS_DOMAIN_NAME': 'drs.{AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu',
-
-        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-hca-dev-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,

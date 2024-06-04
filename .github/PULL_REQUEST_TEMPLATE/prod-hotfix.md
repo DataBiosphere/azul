@@ -62,7 +62,6 @@ Connected issue: #0000
 - [ ] Build passes on GitLab `prod`
 - [ ] Reviewed build logs for anomalies on GitLab `prod`
 - [ ] Deleted PR branch from GitHub
-- [ ] Deleted PR branch from GitLab `prod`
 
 
 ### Operator (reindex)

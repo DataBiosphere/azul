@@ -12,6 +12,8 @@ from typing import (
     ClassVar,
     Optional,
     Union,
+    cast,
+    get_args,
 )
 from unittest.mock import (
     MagicMock,
@@ -26,6 +28,16 @@ from more_itertools import (
     flatten,
     one,
 )
+from moto import (
+    mock_s3,
+    mock_sts,
+)
+from mypy_boto3_s3.client import (
+    S3Client,
+)
+from mypy_boto3_s3.literals import (
+    BucketLocationConstraintType,
+)
 
 from app_test_case import (
     LocalAppTestCase,
@@ -33,6 +45,10 @@ from app_test_case import (
 from azul import (
     JSON,
     cached_property,
+    config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.indexer import (
     Bundle,
@@ -57,6 +73,9 @@ from azul.service.storage_service import (
 from azul.types import (
     AnyJSON,
     JSONs,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
 )
 from indexer import (
     IndexerTestCase,
@@ -189,7 +208,25 @@ class DocumentCloningTestCase(WebServiceTestCase, metaclass=ABCMeta):
                                     doc_type=DocumentType.aggregate))
 
 
-class StorageServiceTestMixin:
+class S3TestCase(AzulUnitTestCase):
+
+    @property
+    def _s3(self) -> S3Client:
+        return aws.s3
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.addPatch(mock_sts())
+        self.addPatch(mock_s3())
+
+    def _create_test_bucket(self, bucket_name: str):
+        assert config.region in get_args(BucketLocationConstraintType)
+        location = cast(BucketLocationConstraintType, config.region)
+        self._s3.create_bucket(Bucket=bucket_name,
+                               CreateBucketConfiguration={'LocationConstraint': location})
+
+
+class StorageServiceTestCase(S3TestCase):
     """
     A mixin for test cases that utilize StorageService.
     """
@@ -197,6 +234,10 @@ class StorageServiceTestMixin:
     @cached_property
     def storage_service(self) -> StorageService:
         return StorageService()
+
+    def setUp(self) -> None:
+        super().setUp()
+        self._create_test_bucket(self.storage_service.bucket_name)
 
 
 @deprecated('Instead of decorating your test case, or its test methods in it, '
