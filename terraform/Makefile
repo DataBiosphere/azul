@@ -4,18 +4,17 @@ all: apply
 include ../common.mk
 
 .PHONY: clean
-clean: check_env git_clean
+clean: check_env check_branch git_clean
 
 .PHONY: state
-state: check_terraform check_branch check_aws
+state: check_terraform check_aws
 
 .PHONY: initable
 initable: clean state providers.tf.json backend.tf.json
 
 .PHONY: init
 init: initable
-	terraform init -reconfigure
-	$(MAKE) check_providers_clean
+	terraform init -reconfigure -lockfile=readonly
 
 .PHONY: check_schema
 check_schema: init
@@ -34,18 +33,18 @@ validate: config
 	terraform validate
 
 .PHONY: rename_resources
-rename_resources: config
+rename_resources: validate
 	python $(project_root)/scripts/rename_resources.py
 
 .PHONY: import_resources
 import_resources: rename_resources
 
 .PHONY: plan
-plan: validate import_resources
+plan: import_resources
 	terraform plan
 
 .PHONY: apply
-apply: validate import_resources
+apply: import_resources
 ifeq ($(AZUL_PRIVATE_API),1)
 	# For private API we need the VPC endpoints to be created first so that the
 	# aws_lb_target_group_attachment can iterate over the network_interface_ids.
@@ -54,7 +53,7 @@ endif
 	terraform apply
 
 .PHONY: auto_apply
-auto_apply: validate import_resources
+auto_apply: import_resources
 ifeq ($(AZUL_PRIVATE_API),1)
 	# See `apply` above
 	terraform apply -auto-approve -target aws_vpc_endpoint.indexer -target aws_vpc_endpoint.service
@@ -64,11 +63,11 @@ endif
 	terraform apply -auto-approve plan.bin
 
 .PHONY: destroy
-destroy: validate import_resources
+destroy: import_resources
 	terraform destroy
 
 .PHONY: auto_destroy
-auto_destroy: validate import_resources
+auto_destroy: import_resources
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
 
@@ -79,8 +78,3 @@ provider_update: initable
 	                         -platform=linux_arm64 \
 	                         -platform=darwin_amd64 \
 	                         -platform=darwin_arm64
-
-.PHONY: check_providers_clean
-check_providers_clean:
-	git diff --exit-code --name-only .terraform.lock.hcl \
-	&& git diff --cached --exit-code --name-only .terraform.lock.hcl

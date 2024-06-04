@@ -38,8 +38,8 @@ class TestCheckBranch(AzulUnitTestCase):
                              "Detached head cannot be deployed to 'prod', "
                              "only personal deployments.")
 
-            check_branch('prod', 'hannes.local')
-            check_branch('develop', 'hannes.local')
+            check_branch('prod', 'hannes')
+            check_branch('develop', 'hannes')
 
             expect_exception('prod', 'dev',
                              "Branch 'prod' cannot be deployed to 'dev', "

@@ -45,7 +45,6 @@ from azul import (
     CatalogName,
     cache,
     config,
-    freeze,
 )
 from azul.deployment import (
     aws,
@@ -88,6 +87,9 @@ from azul.indexer.document_service import (
 )
 from azul.indexer.transform import (
     Transformer,
+)
+from azul.json_freeze import (
+    freeze,
 )
 from azul.logging import (
     silenced_es_logger,

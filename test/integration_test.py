@@ -305,7 +305,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
         num_bundles = len(fqids)
         partition = f'Partition {effective_prefix!r} of source {source.spec}'
-        if not config.is_sandbox_or_personal_deployment:
+        if not config.deployment.is_sandbox_or_personal:
             # For sources that use partitioning, 512 is the desired partition
             # size. In practice, we observe the reindex succeeding with sizes
             # >700 without the partition size becoming a limiting factor. From
@@ -413,15 +413,30 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
-    num_fastq_bytes = 1024 * 1024
+    """
+    An integration test case that tests indexing of public and managed-access
+    metadata from a random selection of bundles, and the expected effects on the
+    service API. This is our main integration test case.
+    """
 
-    _http: urllib3.request.RequestMethods
+    #: A vanilla urllib3 HTTP client without authentication or any of the
+    #: special retry behaviour that we employ for Terra services. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
     _plain_http: urllib3.request.RequestMethods
+
+    #: Depending on the authorization context, this is either the same client as
+    #: the one refered to by the attribute above, or a client that sends an
+    #: access token — whose access token also depends on the context. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
+    _http: urllib3.request.RequestMethods
 
     def setUp(self) -> None:
         super().setUp()
         self._plain_http = http_client(log)
-        # Note that this attribute is swizzled in self._authorization_context
         self._http = self._plain_http
 
     @contextmanager
@@ -532,7 +547,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.azul_client.reset_indexer(catalogs=config.integration_test_catalogs,
                                        # Can't purge the queues in stable deployment as
                                        # they may contain work for non-IT catalogs.
-                                       purge_queues=not config.is_stable_deployment,
+                                       purge_queues=not config.deployment.is_stable,
                                        delete_indices=True,
                                        create_indices=True)
 
@@ -910,7 +925,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                 timeout=float(config.api_gateway_lambda_timeout + 1),
                                 retries=urllib3.Retry(total=5,
                                                       redirect=0,
-                                                      status_forcelist={429, 500, 502, 503}),
+                                                      status_forcelist={429, 500, 502, 503, 504}),
                                 redirect=False,
                                 preload_content=not stream)
         assert isinstance(response, urllib3.HTTPResponse)
@@ -1229,6 +1244,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         content = BytesIO()
         storage_client.download_blob_to_file(str(url), content, start=0, end=size)
         return content
+
+    num_fastq_bytes = 1024 * 1024
 
     def _validate_fastq_content(self, content: ReadableFileObject):
         # Check signature of FASTQ file.
@@ -1754,7 +1771,7 @@ class PortalExpirationIntegrationTest(PortalTestCase):
 # FIXME: Re-enable when SlowDown error can be avoided
 #        https://github.com/DataBiosphere/azul/issues/4285
 @unittest.skip('Test disabled. FIXME #4285')
-@unittest.skipUnless(config.is_sandbox_or_personal_deployment,
+@unittest.skipUnless(config.deployment.is_sandbox_or_personal,
                      'Test would pollute portal DB')
 class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 

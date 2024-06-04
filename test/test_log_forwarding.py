@@ -12,9 +12,6 @@ from unittest.mock import (
 )
 
 import chalice.app
-from moto import (
-    mock_s3,
-)
 
 from azul import (
     cached_property,
@@ -26,18 +23,15 @@ from azul.deployment import (
 from azul.indexer.log_forwarding_controller import (
     LogForwardingController,
 )
-from azul.service.storage_service import (
-    StorageService,
-)
 from azul.types import (
     JSONs,
 )
-from azul_test_case import (
-    AzulUnitTestCase,
+from service import (
+    S3TestCase,
 )
 
 
-class TestLogForwarding(AzulUnitTestCase):
+class TestLogForwarding(S3TestCase):
     maxDiff = None
 
     @property
@@ -50,16 +44,14 @@ class TestLogForwarding(AzulUnitTestCase):
         return '/'.join([prefix, 'AWSLogs', '123123123123', 'elasticloadbalancing', '2023', '01', '01', 'test.log.gz'])
 
     @cached_property
-    def storage_service(self) -> StorageService:
-        return StorageService(bucket_name=self.log_bucket)
-
-    @cached_property
     def controller(self) -> LogForwardingController:
         return LogForwardingController(app=MagicMock())
 
-    @mock_s3
+    def setUp(self) -> None:
+        super().setUp()
+        self._create_test_bucket(self.log_bucket)
+
     def test_alb(self):
-        self.storage_service.create_bucket()
         log_escape_sequences_by_input = {
             # Quotation marks are escaped because they are used wrap fields that
             # may contain spaces
@@ -140,9 +132,7 @@ class TestLogForwarding(AzulUnitTestCase):
                 input = gzip.compress('\n'.join(input).encode('ascii'))
                 self._test(self.controller.forward_alb_logs, input, expected_output)
 
-    @mock_s3
     def test_s3(self):
-        self.storage_service.create_bucket()
         input = ' '.join([
             'b30e3bcf6032455643443203384c72722f50257ae46d68aa0cb9624f59b08944',
             'edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1',
@@ -210,8 +200,9 @@ class TestLogForwarding(AzulUnitTestCase):
               forward_method: Callable[[chalice.app.S3Event], None],
               log_file_contents: bytes,
               expected_output: JSONs):
-        self.storage_service.put(self.log_file_key, log_file_contents)
-
+        self._s3.put_object(Bucket=self.log_bucket,
+                            Key=self.log_file_key,
+                            Body=log_file_contents)
         event = chalice.app.S3Event(context={}, event_dict={
             'Records': [{
                 's3': {

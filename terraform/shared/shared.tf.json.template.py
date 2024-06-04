@@ -42,7 +42,7 @@ def conformance_pack(name: str) -> str:
 cis_alarms = [
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
     CloudTrailAlarm(name='api_unauthorized',
-                    statistic='Average',
+                    statistic='Sum',
                     filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
                     threshold=12,
                     period=24 * 60 * 60),
@@ -59,7 +59,7 @@ cis_alarms = [
                                    '!="AwsServiceEvent"}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.4
     CloudTrailAlarm(name='iam_policy_change',
-                    statistic='Average',
+                    statistic='Sum',
                     filter_pattern='{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || '
                                    '($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || '
                                    '($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || '
@@ -76,7 +76,7 @@ cis_alarms = [
                                    '($.eventName=StopLogging)}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.8
     CloudTrailAlarm(name='s3_policy_change',
-                    statistic='Average',
+                    statistic='Sum',
                     filter_pattern='{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || '
                                    '($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || '
                                    '($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || '
@@ -90,14 +90,14 @@ cis_alarms = [
                                    '($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.13
     CloudTrailAlarm(name='route_table_change',
-                    statistic='Average',
+                    statistic='Sum',
                     filter_pattern='{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || '
                                    '($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || '
                                    '($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || '
                                    '($.eventName=DisassociateRouteTable)}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.14
     CloudTrailAlarm(name='vpc_change',
-                    statistic='Average',
+                    statistic='Sum',
                     filter_pattern='{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || '
                                    '($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || '
                                    '($.eventName=CreateVpcPeeringConnection) || '
@@ -107,7 +107,7 @@ cis_alarms = [
                                    '($.eventName=EnableVpcClassicLink)}'),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.1
     CloudTrailAlarm(name='root_user',
-                    statistic='Average',
+                    statistic='Sum',
                     filter_pattern='{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && '
                                    '$.eventType !="AwsServiceEvent"}')
 ]

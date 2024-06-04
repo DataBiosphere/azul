@@ -16,10 +16,7 @@ from copy import (
 import csv
 from datetime import (
     datetime,
-    timedelta,
-    timezone,
 )
-import email.utils
 from hashlib import (
     sha256,
 )
@@ -51,7 +48,6 @@ from tempfile import (
 )
 import time
 from typing import (
-    Any,
     IO,
     Optional,
     Protocol,
@@ -84,9 +80,6 @@ from more_itertools import (
     one,
 )
 import msgpack
-from werkzeug.http import (
-    parse_dict_header,
-)
 
 from azul import (
     CatalogName,
@@ -144,6 +137,7 @@ from azul.service.elasticsearch_service import (
 )
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
+    StorageObjectNotFound,
     StorageService,
 )
 from azul.types import (
@@ -736,16 +730,13 @@ class ManifestService(ElasticsearchService):
         """
         object_key = generator_cls.s3_object_key(manifest_key)
         try:
-            response = self.storage_service.head(object_key)
-        except self.storage_service.client.exceptions.ClientError as e:
-            if int(e.response['Error']['Code']) == 404:
-                log.info('Cached manifest not found: %s', manifest_key)
-                return None
-            else:
-                raise e
+            time_left = self.storage_service.time_until_object_expires(object_key,
+                                                                       expiration=config.manifest_expiration)
+        except StorageObjectNotFound:
+            log.info('Cached manifest not found: %s', manifest_key)
+            return None
         else:
-            seconds_until_expire = self._get_seconds_until_expire(response)
-            if seconds_until_expire > config.manifest_expiration_margin:
+            if time_left > config.manifest_expiration_margin:
                 tagging = self.storage_service.get_object_tagging(object_key)
                 try:
                     encoded_file_name = tagging[self.file_name_tag]
@@ -767,39 +758,6 @@ class ManifestService(ElasticsearchService):
             else:
                 log.info('Cached manifest is about to expire: %s', object_key)
                 return None
-
-    @classmethod
-    def _get_seconds_until_expire(cls, head_response: Mapping[str, Any]) -> float:
-        """
-        Get the number of seconds before a cached manifest is past its expiration.
-
-        :param head_response: A storage service object header dict
-
-        :return: time to expiration in seconds
-        """
-        # example Expiration: 'expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"'
-        now = datetime.now(timezone.utc)
-        expiration = parse_dict_header(head_response['Expiration'])
-        expiry_datetime = email.utils.parsedate_to_datetime(expiration['expiry-date'])
-        expiry_seconds = (expiry_datetime - now).total_seconds()
-        # Verify the 'Expiration' value is what is expected given the
-        # 'LastModified' value, the number of days before expiration, and that
-        # AWS rounds the expiration up to midnight UTC.
-        last_modified = head_response['LastModified']
-        last_modified_floor = last_modified.replace(hour=0,
-                                                    minute=0,
-                                                    second=0,
-                                                    microsecond=0)
-        expiration_in_days = config.manifest_expiration
-        if not last_modified == last_modified_floor:
-            expiration_in_days += 1
-        expected_date = last_modified_floor + timedelta(days=expiration_in_days)
-        if expiry_datetime == expected_date:
-            log.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
-        else:
-            log.error('The actual object expiration (%s) does not match expected value (%s)',
-                      expiration, expected_date)
-        return expiry_seconds
 
     def command_lines(self,
                       manifest: Optional[Manifest],

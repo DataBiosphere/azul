@@ -784,11 +784,13 @@ class Chalice:
         # and less intrusive fix.
         #
         deployment = resources['aws_api_gateway_deployment'][app_name]
+        stage_name = deployment.pop('stage_name')
+        require(stage_name == config.deployment_stage,
+                'The TF config from Chalice does not match the selected deployment',
+                stage_name, config.deployment_stage)
         del deployment['lifecycle']['create_before_destroy']
         assert not deployment['lifecycle'], deployment
         del deployment['lifecycle']
-        stage_name = deployment.pop('stage_name')
-        assert stage_name == config.deployment_stage, stage_name
         deployment['triggers'] = {'redeployment': deployment.pop('stage_description')}
 
         return {
