@@ -3502,7 +3502,7 @@ class TestResponseFields(IndexResponseTestCase):
             entry['term']: entry['count']
             for entry in response_json['termFacets']['tissueAtlas']['terms']
         }
-        self.assertEqual({'Lung': 1, 'Retina': 1, 'Blood': 1}, tissue_atlas)
+        self.assertEqual({None: 1, 'Lung': 1, 'Retina': 1, 'Blood': 1}, tissue_atlas)
 
 
 class TestUnpopulatedIndexResponse(IndexResponseTestCase):
