@@ -24,8 +24,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -267,8 +266,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -487,9 +485,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -699,8 +694,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -965,9 +959,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -1264,8 +1255,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -1283,8 +1273,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -1540,9 +1529,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -1784,8 +1770,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -1972,8 +1957,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -2239,8 +2223,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -2438,9 +2421,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -2729,8 +2709,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -2748,8 +2727,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -3003,9 +2981,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -3308,8 +3283,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -3327,8 +3301,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -3588,9 +3561,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -3885,8 +3855,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -3904,8 +3873,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [

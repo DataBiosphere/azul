@@ -231,7 +231,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '8.0'
+        'version': '9.0'
     },
     'tags': [
         {
@@ -466,7 +466,7 @@ configure_app_logging(app, log)
 @app.route(
     '/',
     cache_control='public, max-age=0, must-revalidate',
-    cors=True
+    cors=False
 )
 def swagger_ui():
     return app.swagger_ui()
