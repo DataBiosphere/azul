@@ -257,7 +257,7 @@ class TestIndexResponse(IndexResponseTestCase):
                         "projectTitle": ["Single cell transcriptome patterns."],
                         "bionetworkName": [None],
                         "isTissueAtlasProject": [False],
-                        "tissueAtlas": None,
+                        "tissueAtlas": [],
                         "estimatedCellCount": None,
                     }
                 ],
