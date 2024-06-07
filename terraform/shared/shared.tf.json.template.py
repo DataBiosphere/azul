@@ -39,25 +39,29 @@ def conformance_pack(name: str) -> str:
     return body
 
 
-cis_alarms = [
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.1
+trail_alarms = [
+    # [CloudWatch.2] Ensure a log metric filter and alarm exist for unauthorized API calls
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-2
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Sum',
                     filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
                     threshold=12,
                     period=24 * 60 * 60),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
+    # [CloudWatch.3] Ensure a log metric filter and alarm exist for Management Console sign-in without MFA
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-3
     CloudTrailAlarm(name='console_no_mfa',
                     statistic='Sum',
                     filter_pattern='{ ($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && '
                                    '($.userIdentity.type = "IAMUser") && '
                                    '($.responseElements.ConsoleLogin = "Success") }'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.3
+    # [CloudWatch.1] A log metric filter and alarm should exist for usage of the "root" user
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-1
     CloudTrailAlarm(name='root_usage',
                     statistic='Sum',
                     filter_pattern='{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType '
                                    '!="AwsServiceEvent"}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.4
+    # [CloudWatch.4] Ensure a log metric filter and alarm exist for IAM policy changes
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-4
     CloudTrailAlarm(name='iam_policy_change',
                     statistic='Sum',
                     filter_pattern='{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || '
@@ -68,13 +72,15 @@ cis_alarms = [
                                    '($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || '
                                    '($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || '
                                    '($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.5
+    # [CloudWatch.5] Ensure a log metric filter and alarm exist for CloudTrail AWS Configuration changes
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-5
     CloudTrailAlarm(name='cloudtrail_config_change',
                     statistic='Sum',
                     filter_pattern='{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || '
                                    '($.eventName=DeleteTrail) || ($.eventName=StartLogging) || '
                                    '($.eventName=StopLogging)}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.8
+    # [CloudWatch.8] Ensure a log metric filter and alarm exist for S3 bucket policy changes
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-8
     CloudTrailAlarm(name='s3_policy_change',
                     statistic='Sum',
                     filter_pattern='{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || '
@@ -82,20 +88,23 @@ cis_alarms = [
                                    '($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || '
                                    '($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || '
                                    '($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.12
+    # [CloudWatch.12] Ensure a log metric filter and alarm exist for changes to network gateways
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-12
     CloudTrailAlarm(name='network_gateway_change',
                     statistic='Sum',
                     filter_pattern='{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || '
                                    '($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || '
                                    '($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.13
+    # [CloudWatch.13] Ensure a log metric filter and alarm exist for route table changes
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-13
     CloudTrailAlarm(name='route_table_change',
                     statistic='Sum',
                     filter_pattern='{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || '
                                    '($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || '
                                    '($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || '
                                    '($.eventName=DisassociateRouteTable)}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.14
+    # [CloudWatch.14] Ensure a log metric filter and alarm exist for VPC changes
+    # https://docs.aws.amazon.com/securityhub/latest/userguide/cloudwatch-controls.html#cloudwatch-14
     CloudTrailAlarm(name='vpc_change',
                     statistic='Sum',
                     filter_pattern='{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || '
@@ -477,7 +486,7 @@ tf_config = {
                         'value': 1
                     }
                 }
-                for a in cis_alarms
+                for a in trail_alarms
             },
             'trail_logs': {
                 'name': config.qualified_resource_name('trail_logs', suffix='.filter'),
@@ -538,7 +547,7 @@ tf_config = {
                     'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
                     'ok_actions': ['${aws_sns_topic.monitoring.arn}']
                 }
-                for a in cis_alarms
+                for a in trail_alarms
             },
             'clam_fail': {
                 'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
