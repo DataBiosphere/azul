@@ -105,11 +105,6 @@ cis_alarms = [
                                    '($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || '
                                    '($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || '
                                    '($.eventName=EnableVpcClassicLink)}'),
-    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-1.1
-    CloudTrailAlarm(name='root_user',
-                    statistic='Sum',
-                    filter_pattern='{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && '
-                                   '$.eventType !="AwsServiceEvent"}')
 ]
 
 # The deployment and/or backup of the GitLab instance requires a reboot, which
