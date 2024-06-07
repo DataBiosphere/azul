@@ -1084,8 +1084,7 @@ lm6_sources = mkdict(lm4_sources, 8, mkdelta([
     mksrc('datarepo-c3ad47d2', 'lungmap_prod_6511b041b11e4ccf85932b40148c437e__20240326_20240326_lm6', 1),
 ]))
 
-lm7_sources = mkdict(lm6_sources, 10, mkdelta([
-    mksrc('datarepo-fc122208', 'lungmap_prod_1977dc4784144263a8706b0f207d8ab3__20240206_20240524_lm7', 1),
+lm7_sources = mkdict(lm6_sources, 9, mkdelta([
     mksrc('datarepo-cd54e055', 'lungmap_prod_fdadee7e209745d5bf81cc280bd8348e__20240206_20240524_lm7', 1)
 ]))
 
