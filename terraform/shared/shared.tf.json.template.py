@@ -895,16 +895,9 @@ tf_config = {
             }
         },
         'aws_securityhub_standards_subscription': {
-            'best_practices': {
+            'nist_800_53': {
                 'standards_arn': 'arn:aws:securityhub:us-east-1::standards'
-                                 '/aws-foundational-security-best-practices/v/1.0.0',
-                'depends_on': [
-                    'aws_securityhub_account.shared'
-                ]
-            },
-            'cis': {
-                'standards_arn': 'arn:aws:securityhub:::ruleset'
-                                 '/cis-aws-foundations-benchmark/v/1.2.0',
+                                 '/nist-800-53/v/5.0.0',
                 'depends_on': [
                     'aws_securityhub_account.shared'
                 ]
@@ -916,11 +909,11 @@ tf_config = {
             **{
                 'nist_control_' + control.lower().replace('.', '_'): {
                     'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
-                                             f'/aws-foundational-security-best-practices/v/1.0.0/{control}',
+                                             f'/nist-800-53/v/5.0.0/{control}',
                     'control_status': 'DISABLED',
                     'disabled_reason': 'Generates alarm noise; tracked independently as follow-up work',
                     'depends_on': [
-                        'aws_securityhub_standards_subscription.best_practices'
+                        'aws_securityhub_standards_subscription.nist_800_53'
                     ]
                 }
                 for control in ['Macie.1', 'Macie.2']
