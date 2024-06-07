@@ -559,6 +559,7 @@ def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+@app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
 @app.schedule(

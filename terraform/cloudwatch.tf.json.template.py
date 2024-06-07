@@ -3,9 +3,6 @@ import json
 from azul import (
     config,
 )
-from azul.chalice import (
-    MetricThreshold,
-)
 from azul.deployment import (
     aws,
 )
@@ -17,18 +14,6 @@ from azul.terraform import (
     emit_tf,
     vpc,
 )
-
-
-def lambda_resource_name(threshold: MetricThreshold) -> str:
-    if threshold.handler_name is None:
-        return threshold.lambda_name
-    else:
-        assert threshold.handler_name != ''
-        return threshold.lambda_name + '_' + threshold.handler_name
-
-
-def alarm_resource_name(threshold: MetricThreshold) -> str:
-    return lambda_resource_name(threshold) + '_' + threshold.metric.name
 
 
 def dashboard_body() -> str:
@@ -256,24 +241,23 @@ emit_tf({
                             ]
                         },
                         **{
-                            alarm_resource_name(threshold): {
+                            metric_alarm.tf_resource_name: {
                                 'alarm_name': config.qualified_resource_name(
-                                    alarm_resource_name(threshold),
+                                    metric_alarm.tf_resource_name,
                                     suffix='.alarm'
                                 ),
                                 'namespace': 'AWS/Lambda',
                                 'dimensions': {
                                     'FunctionName': '${' + '.'.join((
-                                        'aws_lambda_function',
-                                        lambda_resource_name(threshold),
+                                        'aws_lambda_function', metric_alarm.tf_function_resource_name,
                                         'function_name'
                                     )) + '}'
                                 },
-                                'metric_name': threshold.metric.aws_name,
+                                'metric_name': metric_alarm.metric.aws_name,
                                 'comparison_operator': 'GreaterThanThreshold',
                                 'statistic': 'Sum',
-                                'threshold': threshold.value,
-                                'period': 5 * 60,
+                                'threshold': metric_alarm.threshold,
+                                'period': metric_alarm.period,
                                 'datapoints_to_alarm': 1,
                                 'evaluation_periods': 1,
                                 'treat_missing_data': 'notBreaching',
@@ -281,7 +265,7 @@ emit_tf({
                                 'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                             }
                             for lambda_name in config.lambda_names()
-                            for threshold in load_app_module(lambda_name).app.metric_thresholds
+                            for metric_alarm in load_app_module(lambda_name).app.metric_alarms
                         },
                         'waf_blocked': {
                             'alarm_name': config.qualified_resource_name('waf_blocked'),
