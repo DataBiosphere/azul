@@ -57,8 +57,8 @@ config: _client
 		&& aws ec2 export-client-vpn-client-configuration \
 			--client-vpn-endpoint-id $$endpoint \
 			--output=text
-	@if [ "$$(AZUL_DEBUG=0 python -m azul config.is_stable_deployment)" != True ]; then \
-		echo "pull-filter ignore redirect-gateway"; \
+	@if [ "$$(AZUL_DEBUG=0 python -m azul config.deployment.is_stable)" != True ] ; then \
+		echo "pull-filter ignore redirect-gateway" ; \
 	fi
 	@echo "<cert>"
 	@cat $(EASYRSA_PKI)/issued/$(client_cn).crt | openssl x509 -inform pem
