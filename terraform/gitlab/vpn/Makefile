@@ -71,11 +71,13 @@ config: _client
 	@echo "On Ubuntu, this is done with" \
 	      "'nmcli connection import type openvpn file ~/azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn).ovpn'" >&2
 	@echo >&2
-	@echo "Please make sure that other Internet traffic isn't routed through the VPN connection." >&2
-	@echo "On Ubuntu, this is done with" \
-	      "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn) ipv4.never-default true'" >&2
-	@echo "For other Operating systems please refer to README.md section 9.1" >&2
-	@echo >&2
+	@if [ "$$(AZUL_DEBUG=0 python -m azul config.deployment.is_stable)" != True ] ; then \
+		echo "Please make sure that other Internet traffic isn't routed through the VPN connection." >&2 ; \
+		echo "On Ubuntu, this is done with" \
+			  "'nmcli connection modify azul-gitlab-$(AZUL_DEPLOYMENT_STAGE)-$(client_cn) ipv4.never-default true'" >&2 ; \
+		echo "For other operating systems please refer to README.md section 9.1" >&2 ; \
+		echo >&2 ; \
+	fi
 
 .PHONY: ca
 ca: _admin
