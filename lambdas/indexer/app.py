@@ -216,6 +216,10 @@ def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=1,
+                  period=24 * 60 * 60)
+@app.metric_alarm(metric=LambdaMetric.throttles)
 @app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
