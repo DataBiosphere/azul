@@ -93,9 +93,9 @@ class TerraValidator:
                       ) -> None:
         source = self.tdr.lookup_source(source_spec)
         log.info('TDR client is authorized for API access to %s.', source_spec)
-        require(source.project == source_spec.project,
+        require(source_spec.project in (source.project, config.google_project()),
                 'Actual Google project of TDR source differs from configured one',
-                source.project, source_spec.project)
+                source.project, source_spec.project, config.google_project())
         # Uppercase is standard for multi-regions in the documentation but TDR
         # returns 'us' in lowercase
         require(source.location.lower() == config.tdr_source_location.lower(),

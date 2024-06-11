@@ -7,6 +7,7 @@ from collections.abc import (
 )
 import json
 import logging
+import time
 from time import (
     sleep,
 )
@@ -35,9 +36,15 @@ from google.cloud import (
     bigquery,
 )
 from google.cloud.bigquery import (
+    Dataset,
+    DatasetReference,
+    LoadJobConfig,
+    ParquetOptions,
     QueryJob,
     QueryJobConfig,
     QueryPriority,
+    SourceFormat,
+    WriteDisposition,
 )
 from more_itertools import (
     one,
@@ -237,7 +244,7 @@ class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
         # Minimum scopes required for SAM registration
         return [
             'https://www.googleapis.com/auth/userinfo.email',
-            'openid'
+            'openid',
         ]
 
     @cache
@@ -263,7 +270,7 @@ class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider
         return [
             *super().oauth2_scopes(),
             'https://www.googleapis.com/auth/devstorage.read_only',
-            'https://www.googleapis.com/auth/bigquery.readonly'
+            'https://www.googleapis.com/auth/bigquery',
         ]
 
 
@@ -418,15 +425,19 @@ class TDRClient(SAMClient):
     @cache
     def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
         source = self._lookup_source(source_spec)
+        region = self._get_region(source, 'bigquery')
+        return self.TDRSource(project=source['dataProject'],
+                              id=source['id'],
+                              location=region)
+
+    def _get_region(self, source: JSON, resource: str) -> str:
         storage = one(
             storage
             for dataset in (s['dataset'] for s in source['source'])
             for storage in dataset['storage']
-            if storage['cloudResource'] == 'bigquery'
+            if storage['cloudResource'] == resource
         )
-        return self.TDRSource(project=source['dataProject'],
-                              id=source['id'],
-                              location=storage['region'])
+        return storage['region']
 
     def _retrieve_source(self, source: SourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint(source.spec.type_name + 's', source.id)
@@ -538,7 +549,7 @@ class TDRClient(SAMClient):
                         endpoint: furl,
                         response: urllib3.HTTPResponse
                         ) -> MutableJSON:
-        if response.status == 200:
+        if response.status in (200, 202):
             return json.loads(response.data)
         # FIXME: Azul sometimes conflates 401 and 403
         #        https://github.com/DataBiosphere/azul/issues/4463
@@ -655,3 +666,48 @@ class TDRClient(SAMClient):
                 return None
             else:
                 return self._check_response(url, response)
+
+    def export_parquet_urls(self,
+                            snapshot_id: str
+                            ) -> Optional[dict[str, list[mutable_furl]]]:
+        """
+        Obtain URLs of parquet files for the data tables of the specified
+        snapshot. This is an time-consuming operation that usually takes on the
+        order of 1 minute to complete.
+
+        :param snapshot_id: The UUID of the snapshot.
+
+        :return: A mapping of table names to lists of parquet file download
+                 URLs, or `None` if if no parquet downloads are available for
+                 the specified snapshot. The URLs are typically expiring signed
+                 URLs pointing to a cloud storage service such as GCS or Azure.
+        """
+        url = self._repository_endpoint('snapshots', snapshot_id, 'export')
+        # Required for Azure-backed snapshots
+        url.args.add('validatePrimaryKeyUniqueness', False)
+        while True:
+            response = self._request('GET', url)
+            response_body = self._check_response(url, response)
+            jobs_status = response_body['job_status']
+            job_id = response_body['id']
+            if jobs_status == 'running':
+                url = self._repository_endpoint('jobs', job_id)
+                log.info('Waiting for job %r ...', job_id)
+                time.sleep(2)
+            elif jobs_status == 'succeeded':
+                break
+            else:
+                raise TerraStatusException(url, response)
+        url = self._repository_endpoint('jobs', job_id, 'result')
+        response = self._request('GET', url)
+        response_body = self._check_response(url, response)
+        parquet = response_body['format'].get('parquet')
+        if parquet is not None:
+            region = self._get_region(response_body['snapshot'], 'bucket')
+            require(config.tdr_source_location == region,
+                    config.tdr_source_location, region)
+            parquet = {
+                table['name']: list(map(furl, table['paths']))
+                for table in parquet['location']['tables']
+            }
+        return parquet
