@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from operator import (
+    itemgetter,
+)
 from typing import (
     Iterable,
     Optional,
@@ -9,6 +12,7 @@ from typing import (
 )
 
 from azul import (
+    JSON,
     config,
     iif,
 )
@@ -38,6 +42,9 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     DonorTransformer,
     FileTransformer,
 )
+from azul.plugins.metadata.anvil.schema import (
+    anvil_schema,
+)
 from azul.plugins.metadata.anvil.service.aggregation import (
     AnvilAggregationStage,
     AnvilSummaryAggregationStage,
@@ -49,10 +56,14 @@ from azul.plugins.metadata.anvil.service.response import (
     AnvilSearchResponseStage,
     AnvilSummaryResponseStage,
 )
+from azul.service.avro_pfb import (
+    avro_pfb_schema,
+)
 from azul.service.manifest_service import (
     ManifestFormat,
 )
 from azul.types import (
+    AnyMutableJSON,
     MutableJSON,
 )
 
@@ -289,6 +300,83 @@ class Plugin(MetadataPlugin[AnvilBundle]):
 
         recurse(self._field_mapping, ())
         return result
+
+    def verbatim_pfb_schema(self,
+                            replicas: Iterable[JSON]
+                            ) -> tuple[Iterable[JSON], Sequence[str], JSON]:
+        entity_schemas = []
+        entity_types = []
+        for table_schema in sorted(anvil_schema['tables'], key=itemgetter('name')):
+            table_name = table_schema['name']
+            # FIXME: Improve handling of DUOS replicas
+            #        https://github.com/DataBiosphere/azul/issues/6139
+            is_duos_type = table_name == 'anvil_dataset'
+            entity_types.append(table_name)
+            field_schemas = [
+                self._pfb_schema_from_anvil_column(table_name=table_name,
+                                                   column_name='datarepo_row_id',
+                                                   anvil_datatype='string',
+                                                   is_optional=False,
+                                                   is_polymorphic=is_duos_type)
+            ]
+            if is_duos_type:
+                field_schemas.append(self._pfb_schema_from_anvil_column(table_name=table_name,
+                                                                        column_name='description',
+                                                                        anvil_datatype='string',
+                                                                        is_polymorphic=True))
+            elif table_name == 'anvil_file':
+                field_schemas.append(self._pfb_schema_from_anvil_column(table_name=table_name,
+                                                                        column_name='drs_uri',
+                                                                        anvil_datatype='string'))
+            for column_schema in table_schema['columns']:
+                field_schemas.append(
+                    self._pfb_schema_from_anvil_column(table_name=table_name,
+                                                       column_name=column_schema['name'],
+                                                       anvil_datatype=column_schema['datatype'],
+                                                       is_array=column_schema['array_of'],
+                                                       is_optional=not column_schema['required'],
+                                                       is_polymorphic=is_duos_type)
+                )
+
+            field_schemas.sort(key=itemgetter('name'))
+            entity_schemas.append({
+                'name': table_name,
+                'type': 'record',
+                'fields': field_schemas
+            })
+        return replicas, entity_types, avro_pfb_schema(entity_schemas)
+
+    def _pfb_schema_from_anvil_column(self,
+                                      *,
+                                      table_name: str,
+                                      column_name: str,
+                                      anvil_datatype: str,
+                                      is_array: bool = False,
+                                      is_optional: bool = True,
+                                      is_polymorphic: bool = False
+                                      ) -> AnyMutableJSON:
+        _anvil_to_pfb_types = {
+            'boolean': 'boolean',
+            'float': 'double',
+            'integer': 'long',
+            'string': 'string',
+            'fileref': 'string'
+        }
+        type_ = _anvil_to_pfb_types[anvil_datatype]
+        if is_optional:
+            type_ = ['null', type_]
+        if is_array:
+            type_ = {
+                'type': 'array',
+                'items': type_
+            }
+        if is_polymorphic and (is_array or not is_optional):
+            type_ = ['null', type_]
+        return {
+            'name': column_name,
+            'namespace': table_name,
+            'type': type_,
+        }
 
     def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
         return None

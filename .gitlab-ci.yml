@@ -81,6 +81,7 @@ test:
     - make -C lambdas openapi
     - make environment.boot
     - make -C .github
+    - make anvil_schema
     - make check_clean
     - make pep8
     - AZUL_DEBUG=0 make test

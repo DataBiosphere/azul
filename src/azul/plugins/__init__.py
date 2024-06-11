@@ -63,6 +63,7 @@ from azul.indexer.transform import (
     Transformer,
 )
 from azul.types import (
+    JSON,
     JSONs,
     MutableJSON,
     get_generic_type_params,
@@ -434,6 +435,31 @@ class MetadataPlugin(Plugin[BUNDLE]):
     @abstractmethod
     def manifest_config(self) -> ManifestConfig:
         raise NotImplementedError
+
+    def verbatim_pfb_schema(self,
+                            replicas: Iterable[JSON]
+                            ) -> tuple[Iterable[JSON], Sequence[str], JSON]:
+        """
+        Generate a PFB schema for the verbatim manifest. The default,
+        metadata-agnostic implementation loads all replica documents into memory
+        and dynamically generates a schema based on their observed shapes. This
+        results in inconsistencies in the schema depending on the manifest
+        contents, so subclasses should override this method if their metadata
+        adheres to an authoritative schema that can be known in advance.
+
+        :param replicas: The replica documents to be described by the PFB schema
+
+        :return: a triple of
+            1. the same set of replicas passed to this method
+            2. the set of entity types defined by the PFB schema
+            3. a PFB schema describing the provided replicas
+        """
+        from azul.service import (
+            avro_pfb,
+        )
+        replicas = list(replicas)
+        replica_types, pfb_schema = avro_pfb.pfb_schema_from_replicas(replicas)
+        return replicas, replica_types, pfb_schema
 
     @abstractmethod
     def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
