@@ -113,6 +113,8 @@ class SetAccumulator(Accumulator):
         """
         if self.max_size is None or len(self.value) < self.max_size:
             before = len(self.value)
+            # Tuples are treated as scalars. We rely on this behavior when
+            # aggregating `ValueAndUnit` fields.
             if isinstance(value, (list, set)):
                 self.value.update(value)
             else:
@@ -177,7 +179,16 @@ class SetOfDictAccumulator(SetAccumulator):
     """
 
     def accumulate(self, value) -> bool:
-        return super().accumulate(freeze(value))
+        if isinstance(value, list):
+            # `freeze` converts lists to tuples, which the superclass treats as
+            # scalars instead of sequences. Passing a list as a tuple would
+            # therefore introduce an extraneous level of nesting, as every
+            # element in `value` would end up in a single element of the
+            # accumulated result.
+            frozen_value = list(map(freeze, value))
+        else:
+            frozen_value = freeze(value)
+        return super().accumulate(frozen_value)
 
     def get(self):
         return thaw(super().get())
