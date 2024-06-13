@@ -247,15 +247,21 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark v2.0.0.29 - Level 1-4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Kernel 4.14 Benchmark - Level 1 - v05 -4c096026-c6b0-440c-bd2f-6d34904e4fc6
 #
 ami_id = {
-    # FIXME: Do not update AMI to v3 until issue with OpenSSH daemon is resolved
-    #        https://github.com/DataBiosphere/azul/issues/6082
-    'us-east-1': 'ami-02adfaf34663c8edb'
+    'us-east-1': 'ami-0889b6cfe6c5e001e'
 }
 
 gitlab_mount = '/mnt/gitlab'
+
+vpc_dns_servers = [
+    # https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#AmazonDNS
+    str(nth(ipaddress.ip_network(vpc_cidr).hosts(), 1)),
+    '169.254.169.253'
+]
+
+vpc_dns_docker_flags = [f'--dns {s}' for s in vpc_dns_servers]
 
 aws_managed_buckets_for_ssm_agent = [
     f'{aws.region_name}-birdwatcher-prod',
@@ -1233,11 +1239,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'server_certificate_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}',
                 'transport_protocol': 'udp',
                 'split_tunnel': split_tunnel,
-                'dns_servers': [] if split_tunnel else [
-                    # https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#AmazonDNS
-                    str(nth(ipaddress.ip_network(vpc_cidr).hosts(), 1)),
-                    '169.254.169.253'
-                ],
+                'dns_servers': [] if split_tunnel else vpc_dns_servers,
                 'authentication_options': {
                     'type': 'certificate-authentication',
                     'root_certificate_chain_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}'
@@ -1741,10 +1743,34 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     # container have a functional non-localhost
                                     # DNS server and don't fall back to the
                                     # Google ones.
+                                    #
+                                    # It is unclear if mounting resolv.conf is
+                                    # needed in conjunction with the --dns flags
+                                    # passed below. Then again, providing a
+                                    # functional resolv.conf to the DinD
+                                    # container can't hurt either.
+                                    #
                                     '--volume /etc/resolv.conf:/etc/resolv.conf',
                                     f'--volume {gitlab_mount}/docker:/var/lib/docker',
                                     f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
-                                    str(dind_image)
+
+                                    # These instances of the `--dns` option are
+                                    # passed to the docker client. They affect
+                                    # DNS lookups made by the dockerd daemon
+                                    # running inside the container.
+                                    #
+                                    *vpc_dns_docker_flags,
+
+                                    str(dind_image),
+
+                                    # These instances of the `--dns` option are
+                                    # passed to the dockerd daemon running in
+                                    # the container. They affect DNS lookups
+                                    # made by containers managed by that daemon,
+                                    # not those managed by the daemon running on
+                                    # the host.
+                                    #
+                                    *vpc_dns_docker_flags
                                 ),
                                 '[Install]',
                                 'WantedBy=multi-user.target',
@@ -1769,6 +1795,31 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 'ExecStartPre=-/usr/bin/docker stop gitlab',
                                 'ExecStartPre=-/usr/bin/docker rm gitlab',
                                 'ExecStartPre=/usr/bin/docker pull ' + str(gitlab_image),
+                                # The hardened AMI contains some code that
+                                # creates a default nftables ruleset at boot
+                                # time, in order to satisfy some CIS control, I
+                                # believe. Also at boot time, Docker creates a
+                                # competing iptables ruleset using the
+                                # `iptables` command, which is symlinked to the
+                                # `iptables-legacy` alternative. The result was
+                                # that the GitLab web app provided by this
+                                # container was not reachable from outside the
+                                # host. I tried switching to the `iptables-nft`
+                                # alternative and that prevented the creation of
+                                # a competing iptables ruleset, with only the
+                                # nftables ruleset present, but the webapp
+                                # remained unreachable. I assume this is because
+                                # the nftables ruleset had both the rules from
+                                # the hardened AMI code and those created by
+                                # Docker, still contradicting each other. For
+                                # the time being, we will simply delete the
+                                # default nftables ruleset. This is acceptable
+                                # because even without any firewall rules, the
+                                # the EC2 instance has no public IP and is
+                                # protected by EC2 security groups, which serve
+                                # the same purpose as firewall rules in the
+                                # guest OS.
+                                'ExecStartPre=/sbin/nft flush ruleset',
                                 jw(
                                     'ExecStart=/usr/bin/docker',
                                     'run',
@@ -1781,6 +1832,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     f'--volume {gitlab_mount}/config:/etc/gitlab',
                                     f'--volume {gitlab_mount}/logs:/var/log/gitlab',
                                     f'--volume {gitlab_mount}/data:/var/opt/gitlab',
+                                    *vpc_dns_docker_flags,
                                     str(gitlab_image)
                                 ),
                                 '[Install]',
@@ -1814,6 +1866,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     f'--volume {gitlab_mount}/runner/config:/etc/gitlab-runner',
                                     '--network gitlab-runner-net',
                                     '--env DOCKER_HOST=tcp://gitlab-dind:2375',
+                                    *vpc_dns_docker_flags,
                                     str(runner_image)
                                 ),
                                 '[Install]',
@@ -1847,6 +1900,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     '--volume /var/run/docker.sock:/var/run/docker.sock',
                                     '--volume /:/scan:ro',
                                     f'--volume {gitlab_mount}/clamav:/var/lib/clamav:rw',
+                                    *vpc_dns_docker_flags,
                                     str(clamav_image),
                                     '/bin/sh',
                                     '-c',
@@ -2180,10 +2234,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ['dracut', '-f'],
                         ['/sbin/grubby', '--update-kernel=ALL', '--args="fips=1"'],
                         [
-                            # Key exchange algorithm curve25519 is not FIPS-compliant
                             'sed',
                             '--in-place',
-                            's/curve25519[^,]*,//g',
+                            # Key exchange algorithm curve25519 is not FIPS-compliant
+                            '--expression=s/curve25519[^,]*,//g',
+                            # OpenSSH fails to start with the chacha20 cipher enabled
+                            '--expression=s/chacha20-poly1305@openssh.com,//g',
                             '/etc/ssh/sshd_config'
                         ],
                         [
