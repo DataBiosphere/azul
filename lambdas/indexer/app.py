@@ -16,6 +16,7 @@ from azul import (
 )
 from azul.chalice import (
     AzulChaliceApp,
+    LambdaMetric,
 )
 from azul.deployment import (
     aws,
@@ -91,9 +92,19 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
 
     def log_forwarder(self, prefix: str):
         if config.enable_log_forwarding:
-            return self.on_s3_event(bucket=aws.logs_bucket,
-                                    events=['s3:ObjectCreated:*'],
-                                    prefix=prefix)
+            s3_decorator = self.on_s3_event(bucket=aws.logs_bucket,
+                                            events=['s3:ObjectCreated:*'],
+                                            prefix=prefix)
+            error_decorator = self.metric_alarm(metric=LambdaMetric.errors,
+                                                threshold=1,  # One alarm …
+                                                period=24 * 60 * 60)  # … per day.
+            throttle_decorator = self.metric_alarm(metric=LambdaMetric.throttles)
+            retry_decorator = self.retry(num_retries=2)
+
+            def decorator(f):
+                return retry_decorator(throttle_decorator(error_decorator(s3_decorator(f))))
+
+            return decorator
         else:
             return lambda func: func
 
@@ -108,7 +119,7 @@ configure_app_logging(app, log)
 @app.route(
     '/',
     cache_control='public, max-age=0, must-revalidate',
-    cors=True
+    cors=False
 )
 def swagger_ui():
     return app.swagger_ui()
@@ -205,6 +216,11 @@ def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=1,
+                  period=24 * 60 * 60)
+@app.metric_alarm(metric=LambdaMetric.throttles)
+@app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
 @app.schedule(
@@ -286,10 +302,10 @@ def post_notification(catalog: CatalogName, action: str):
     return app.index_controller.handle_notification(catalog, action)
 
 
-@app.threshold(
-    errors=int(config.contribution_concurrency(retry=False) * 2 / 3),
-    throttles=int(96000 / config.contribution_concurrency(retry=False))
-)
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=int(config.contribution_concurrency(retry=False) * 2 / 3))
+@app.metric_alarm(metric=LambdaMetric.throttles,
+                  threshold=int(96000 / config.contribution_concurrency(retry=False)))
 @app.on_sqs_message(
     queue=config.notifications_queue_name(),
     batch_size=1
@@ -298,10 +314,10 @@ def contribute(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event)
 
 
-@app.threshold(
-    errors=int(config.aggregation_concurrency(retry=False) * 3),
-    throttles=int(37760 / config.aggregation_concurrency(retry=False))
-)
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=int(config.aggregation_concurrency(retry=False) * 3))
+@app.metric_alarm(metric=LambdaMetric.throttles,
+                  threshold=int(37760 / config.aggregation_concurrency(retry=False)))
 @app.on_sqs_message(
     queue=config.tallies_queue_name(),
     batch_size=IndexController.document_batch_size
@@ -313,10 +329,9 @@ def aggregate(event: chalice.app.SQSEvent):
 # Any messages in the tallies queue that fail being processed will be retried
 # with more RAM in the tallies_retry queue.
 
-@app.threshold(
-    errors=int(config.aggregation_concurrency(retry=True) * 1 / 16),
-    throttles=0
-)
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=int(config.aggregation_concurrency(retry=True) * 1 / 16))
+@app.metric_alarm(metric=LambdaMetric.throttles)
 @app.on_sqs_message(
     queue=config.tallies_queue_name(retry=True),
     batch_size=IndexController.document_batch_size
@@ -328,10 +343,10 @@ def aggregate_retry(event: chalice.app.SQSEvent):
 # Any messages in the notifications queue that fail being processed will be
 # retried with more RAM and a longer timeout in the notifications_retry queue.
 
-@app.threshold(
-    errors=int(config.contribution_concurrency(retry=True) * 1 / 4),
-    throttles=int(31760 / config.contribution_concurrency(retry=True))
-)
+@app.metric_alarm(metric=LambdaMetric.errors,
+                  threshold=int(config.contribution_concurrency(retry=True) * 1 / 4))
+@app.metric_alarm(metric=LambdaMetric.throttles,
+                  threshold=int(31760 / config.contribution_concurrency(retry=True)))
 @app.on_sqs_message(
     queue=config.notifications_queue_name(retry=True),
     batch_size=1

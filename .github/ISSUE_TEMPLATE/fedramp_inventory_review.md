@@ -2,7 +2,7 @@
 name: Review FedRAMP inventory
 about: 'Issue template for the current operator to perform a Port and Protocol review with system administrator'
 title: Monthly inventory review
-labels: +,compliance,infra,no demo,operator,orange,task,
+labels: +,compliance,infra,no demo,operator,orange,task
 assignees: hannes-ucsc
 _repository: DataBiosphere/azul-private
 _start: 2024-03-01T09:00

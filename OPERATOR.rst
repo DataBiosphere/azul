@@ -266,18 +266,21 @@ For an example of how to document failures within a PR `click here`_.
 
 .. _click here: https://github.com/DataBiosphere/azul/pull/3050#issuecomment-840033931
 
-Reindexing a specific catalog in GitLab
-"""""""""""""""""""""""""""""""""""""""
+Reindexing a specific catalog or sources in GitLab
+""""""""""""""""""""""""""""""""""""""""""""""""""
 
-From the GitLab web app, select the ``reindex`` or ``reindex_early`` job for
+From the GitLab web app, select the ``reindex`` or ``early_reindex`` job for
 the pipeline that needs reindexing of a specific catalog. From there, you
 should see an option for defining the key and value of additional variables to
 parameterize the job with.
 
-Set ``Key`` to ``azul_current_catalog``, and ``Value`` to the name of the
-catalog to be reindexed, for example, ``dcp3``. Check the inputs you just made.
-Start the ``reindex`` job by clicking on ``Run job``. Wait until the job has
-completed.
+To specify a catalog to be reindexed, set ``Key`` to ``azul_current_catalog``
+and ``Value`` to the name of the catalog, for example, ``dcp3``. To specify the
+sources to be reindexed, set ``Key`` to ``azul_current_sources`` and
+``Value`` to a space-separated list of sources globs, e.g.
+``*:snapshot/hca_dev_* *:snapshot/lungmap_dev_*``. Check the inputs you just
+made. Start the ``reindex`` job by clicking on ``Run job``. Wait until the job
+has completed.
 
 Repeat these steps to reindex any additional catalogs.
 

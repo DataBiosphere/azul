@@ -55,7 +55,6 @@ from azul.indexer.document import (
     EntityType,
     FieldTypes,
     null_bool,
-    null_datetime,
     null_int,
     null_str,
     pass_thru_int,
@@ -238,8 +237,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'assay_type': null_str,
             'data_modality': null_str,
             'reference_assembly': [null_str],
-            # Not in schema
-            'date_created': null_datetime,
         }
 
     @classmethod

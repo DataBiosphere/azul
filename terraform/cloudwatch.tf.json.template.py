@@ -2,19 +2,13 @@ import json
 
 from azul import (
     config,
-    require,
-)
-from azul.chalice import (
-    MetricThreshold,
 )
 from azul.deployment import (
     aws,
 )
 from azul.modules import (
     load_app_module,
-)
-from azul.queues import (
-    Queues,
+    load_module,
 )
 from azul.terraform import (
     emit_tf,
@@ -22,51 +16,10 @@ from azul.terraform import (
 )
 
 
-def lambda_resource_name(threshold: MetricThreshold) -> str:
-    if threshold.handler_name is None:
-        return threshold.lambda_name
-    else:
-        assert threshold.handler_name != ''
-        return threshold.lambda_name + '_' + threshold.handler_name
-
-
-def alarm_resource_name(threshold: MetricThreshold) -> str:
-    return lambda_resource_name(threshold) + '_' + threshold.metric.name
-
-
 def dashboard_body() -> str:
-    # To minify the template and confirm it is valid JSON before deployment we
-    # parse the template file as JSON and then convert it back to a string.
-    with open(config.cloudwatch_dashboard_template) as f:
-        body = json.load(f)
-    body = json.dumps(body)
-
-    def prod_qualified_resource_name(name: str) -> str:
-        resource, _, suffix = config.unqualified_resource_name_and_suffix(name)
-        return config.qualified_resource_name(resource, suffix=suffix, stage='prod')
-
-    queues = Queues()
-    qualified_resource_names = [
-        *config.all_queue_names,
-        *queues.functions_by_queue().values()
-    ]
-    replacements = {
-        '542754589326': config.aws_account_id,
-        'us-east-1': config.region,
-        'azul-index-prod': config.es_domain,
-        **{
-            prod_qualified_resource_name(name): name
-            for name in qualified_resource_names
-        }
-    }
-    # Reverse sorted so that if any keys are substrings of other keys (e.g.
-    # 'foo' and 'foo_bar'), the longer string is processed before the substring.
-    replacements = dict(reversed(sorted(replacements.items())))
-
-    for old, new in replacements.items():
-        require(old in body,
-                'Missing placeholder', old, config.cloudwatch_dashboard_template)
-        body = body.replace(old, new)
+    module = load_module(config.cloudwatch_dashboard_template,
+                         'cloudwatch_dashboard_template')
+    body = json.dumps(module.dashboard_body)
     return body
 
 
@@ -288,24 +241,23 @@ emit_tf({
                             ]
                         },
                         **{
-                            alarm_resource_name(threshold): {
+                            metric_alarm.tf_resource_name: {
                                 'alarm_name': config.qualified_resource_name(
-                                    alarm_resource_name(threshold),
+                                    metric_alarm.tf_resource_name,
                                     suffix='.alarm'
                                 ),
                                 'namespace': 'AWS/Lambda',
                                 'dimensions': {
                                     'FunctionName': '${' + '.'.join((
-                                        'aws_lambda_function',
-                                        lambda_resource_name(threshold),
+                                        'aws_lambda_function', metric_alarm.tf_function_resource_name,
                                         'function_name'
                                     )) + '}'
                                 },
-                                'metric_name': threshold.metric.aws_name,
+                                'metric_name': metric_alarm.metric.aws_name,
                                 'comparison_operator': 'GreaterThanThreshold',
                                 'statistic': 'Sum',
-                                'threshold': threshold.value,
-                                'period': 5 * 60,
+                                'threshold': metric_alarm.threshold,
+                                'period': metric_alarm.period,
                                 'datapoints_to_alarm': 1,
                                 'evaluation_periods': 1,
                                 'treat_missing_data': 'notBreaching',
@@ -313,7 +265,7 @@ emit_tf({
                                 'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                             }
                             for lambda_name in config.lambda_names()
-                            for threshold in load_app_module(lambda_name).app.metric_thresholds
+                            for metric_alarm in load_app_module(lambda_name).app.metric_alarms
                         },
                         'waf_blocked': {
                             'alarm_name': config.qualified_resource_name('waf_blocked'),

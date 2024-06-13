@@ -74,7 +74,7 @@ parser.add_argument('--catalogs',
                     choices=config.catalogs,
                     help='The names of the catalogs to reindex.')
 parser.add_argument('--sources',
-                    default=config.reindex_sources,
+                    default=config.current_sources,
                     nargs='+',
                     help='Limit reindexing to a subset of the configured sources. '
                          'Supports shell-style wildcards to match multiple sources per argument. '
