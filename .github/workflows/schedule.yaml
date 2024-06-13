@@ -22,7 +22,11 @@ jobs:
     permissions:
       issues: 'write'
     env:
-      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      # This must be a classic access token with `repo` scope so that it can
+      # create issues in the private `azul-private` repo. A fine-grained token
+      # didn't work at the time this comment was written.
+      #
+      GITHUB_TOKEN: '${{ secrets.AZUL_GITHUB_ACCESS_TOKEN_SCHEDULE_ACTION }}'
     steps:
       - uses: 'actions/checkout@v3'
         with:

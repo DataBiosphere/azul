@@ -24,8 +24,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -267,8 +266,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -433,7 +431,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "sequencingactivity_1509ef40-d1ba-440d-b298-16b7c173dcd4_e7a2881e67a92734fcf2f98e7f2c215a5b6c0a6d",
+        "_id": "sequencingactivity_1509ef40-d1ba-440d-b298-16b7c173dcd4_deaef50719859a3e58b9696a0ca061cf9750e7bb",
         "_score": 1.0,
         "_source": {
             "entity_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
@@ -446,9 +444,15 @@
                 "assay_type": [],
                 "data_modality": [],
                 "datarepo_row_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+                "generated_file_id": [
+                    "1e269f04-4347-4188-b060-1dcc69e71d67"
+                ],
                 "sequencingactivity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
                 "source_datarepo_row_ids": [
                     "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+                ],
+                "used_biosample_id": [
+                    "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
                 ],
                 "version": "2022-06-01T00:00:00.000000Z"
             }
@@ -487,9 +491,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -699,8 +700,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -897,7 +897,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "diagnosis_15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_92347daeeff2cbb94cd3bf9f73bb40e8c52a1e40",
+        "_id": "diagnosis_15d85d30-ad4a-4f50-87a8-a27f59dd1b5f_fc4d805825bb627c93588467d22caac1b76f4a17",
         "_score": 1.0,
         "_source": {
             "entity_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
@@ -915,6 +915,7 @@
                 "disease": [
                     "redacted-A61iJlLx"
                 ],
+                "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
                 "onset_age_lower_bound": null,
                 "onset_age_unit": null,
                 "onset_age_upper_bound": null,
@@ -965,9 +966,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -1264,8 +1262,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -1283,8 +1280,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -1540,9 +1536,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -1784,8 +1777,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -1972,8 +1964,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -2193,7 +2184,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "sequencingactivity_816e364e-1193-4e5b-a91a-14e4b009157c_5eabdcb475879b310467a4d8c31cab38deff5e6f",
+        "_id": "sequencingactivity_816e364e-1193-4e5b-a91a-14e4b009157c_a9ad806d7904ac133ff713446e13e525dc37e263",
         "_score": 1.0,
         "_source": {
             "entity_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -2206,9 +2197,15 @@
                 "assay_type": [],
                 "data_modality": [],
                 "datarepo_row_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
+                "generated_file_id": [
+                    "8b722e88-8103-49c1-b351-e64fa7c6ab37"
+                ],
                 "sequencingactivity_id": "a60c5138-3749-f7cb-8714-52d389ad5231",
                 "source_datarepo_row_ids": [
                     "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b"
+                ],
+                "used_biosample_id": [
+                    "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
                 ],
                 "version": "2022-06-01T00:00:00.000000Z"
             }
@@ -2239,8 +2236,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -2438,9 +2434,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -2729,8 +2722,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -2748,8 +2740,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -2941,7 +2932,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "biosample_826dea02-e274-4ffe-aabc-eb3db63ad068_a990d631b61245811f3401dfa59a2d47edac01a5",
+        "_id": "biosample_826dea02-e274-4ffe-aabc-eb3db63ad068_52f78e49c9a6e761dfd87e0d5e719d4e0099b80c",
         "_score": 1.0,
         "_source": {
             "entity_id": "826dea02-e274-4ffe-aabc-eb3db63ad068",
@@ -2960,6 +2951,12 @@
                 "donor_age_at_collection_lower_bound": null,
                 "donor_age_at_collection_unit": null,
                 "donor_age_at_collection_upper_bound": null,
+                "donor_id": [
+                    "1e2bd7e5-f45e-a391-daea-7c060be76acd"
+                ],
+                "part_of_dataset_id": [
+                    "52ee7665-7033-63f2-a8d9-ce8e32666739"
+                ],
                 "source_datarepo_row_ids": [
                     "sample:98048c3b-2525-4090-94fd-477de31f2608"
                 ],
@@ -3003,9 +3000,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -3308,8 +3302,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -3327,8 +3320,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -3520,7 +3512,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "diagnosis_939a4bd3-86ed-4a8a-81f4-fbe0ee673461_0a85e766a03e5aedfa1bbcf0932e376dba5cd431",
+        "_id": "diagnosis_939a4bd3-86ed-4a8a-81f4-fbe0ee673461_f0733af0a2ffd8001c329588ac51db1d72ad33b7",
         "_score": 1.0,
         "_source": {
             "entity_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
@@ -3538,6 +3530,7 @@
                 "disease": [
                     "redacted-g50ublm/"
                 ],
+                "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
                 "onset_age_lower_bound": null,
                 "onset_age_unit": null,
                 "onset_age_upper_bound": null,
@@ -3588,9 +3581,6 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": [
-                            "9999-01-01T00:00:00.000000Z"
                         ]
                     }
                 ],
@@ -3885,8 +3875,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     },
                     {
                         "document_id": "816e364e-1193-4e5b-a91a-14e4b009157c",
@@ -3904,8 +3893,7 @@
                         ],
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "date_created": "9999-01-01T00:00:00.000000Z"
+                        ]
                     }
                 ],
                 "biosamples": [
@@ -4097,7 +4085,7 @@
     {
         "_index": "azul_v2_nadove4_test_replica",
         "_type": "_doc",
-        "_id": "donor_bfd991f2-2797-4083-972a-da7c6d7f1b2e_ef7dbf88444d1f5f24e887821dbae7d1dc182e55",
+        "_id": "donor_bfd991f2-2797-4083-972a-da7c6d7f1b2e_4ac20193963c27e42be696a6006a071f6cee4472",
         "_score": 1.0,
         "_source": {
             "entity_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
@@ -4106,6 +4094,7 @@
                 "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
                 "genetic_ancestry": [],
                 "organism_type": "redacted-ACw+6ecI",
+                "part_of_dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
                 "phenotypic_sex": "redacted-JfQ0b3xG",
                 "reported_ethnicity": [
                     "redacted-NSkwDycK"

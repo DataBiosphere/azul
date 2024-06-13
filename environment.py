@@ -142,6 +142,12 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'azul_current_catalog': None,
 
+        # A space-separated list of shell globs to match the sources in the
+        # current catalog against, or "*" for all sources in the catalog. Only
+        # matching sources will be operated on. If no sources match, an error
+        # will be raised.
+        'azul_current_sources': '*',
+
         # The Account ID number for AWS
         #
         'AZUL_AWS_ACCOUNT_ID': None,
@@ -275,24 +281,24 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2023.3.5-23',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.2-24',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.21-18',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.21-19',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-3',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-4',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.3.1-52',
+                'ref': 'docker.io/clamav/clamav:1.3.1-53',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {

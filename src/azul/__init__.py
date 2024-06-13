@@ -1468,8 +1468,8 @@ class Config:
         return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
-    def reindex_sources(self) -> list[str]:
-        sources = shlex.split(self.environ.get('azul_reindex_sources', '*'))
+    def current_sources(self) -> list[str]:
+        sources = shlex.split(self.environ['azul_current_sources'])
         require(bool(sources), 'Sources cannot be empty', sources)
         return sources
 
@@ -1489,7 +1489,7 @@ class Config:
 
     @property
     def cloudwatch_dashboard_template(self) -> str:
-        return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json'
+        return f'{config.project_root}/terraform/cloudwatch_dashboard.template.json.py'
 
     class SecurityContact(TypedDict):
         name: str

@@ -5,10 +5,17 @@ import importlib
 import json
 
 from azul import (
+    cached_property,
     config,
+)
+from azul.chalice import (
+    AzulChaliceApp,
 )
 from azul.deployment import (
     aws,
+)
+from azul.modules import (
+    load_app_module,
 )
 from azul.objects import (
     InternMeta,
@@ -40,6 +47,10 @@ class Application:
                        *config.api_lambda_domain_aliases(name)
                    ],
                    policy=json.dumps(getattr(policy_module, 'policy')))
+
+    @cached_property
+    def chalice(self) -> AzulChaliceApp:
+        return load_app_module(self.name).app
 
 
 apps = [
@@ -378,18 +389,13 @@ emit_tf({
                 }
             },
             'aws_lambda_function_event_invoke_config': {
-                function_name: {
-                    'function_name': '${aws_lambda_function.%s.function_name}' % function_name,
-                    'maximum_retry_attempts': 0
+                retry.tf_function_resource_name: {
+                    'function_name': '${aws_lambda_function.%s.function_name}'
+                                     % retry.tf_function_resource_name,
+                    'maximum_retry_attempts': retry.num_retries
                 }
-                for function_name in
-                [
-                    f'indexer_{lm}'
-                    for lm in ['forward_alb_logs', 'forward_s3_logs']
-                    if config.enable_log_forwarding
-                ] + [
-                    f'{lm}_{lm}cachehealth' for lm in ['indexer', 'service']
-                ]
+                for app in apps
+                for retry in app.chalice.retries
             }
         },
         *(

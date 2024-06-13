@@ -92,6 +92,9 @@ environment.boot: check_python
 lambdas: check_env
 	$(MAKE) -C lambdas
 
+anvil_schema: check_python
+	python3 scripts/download_anvil_schema.py
+
 define deploy
 .PHONY: $(1)terraform
 $(1)terraform: lambdas

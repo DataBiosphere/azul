@@ -76,7 +76,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'reference_assembly': [
                                     None
                                 ],
-                                'date_created': None,
                                 'accessible': True
                             }
                         ],
@@ -198,7 +197,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'reference_assembly': [
                                     None
                                 ],
-                                'date_created': None,
                                 'accessible': True
                             }
                         ],

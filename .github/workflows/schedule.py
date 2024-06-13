@@ -198,9 +198,9 @@ def main(args):
         self = IssueTemplate(path=template, dry_run=options.dry_run)
         match self.is_eligible(now):
             case None:
-                log.info('Issue template %s is ineligible', self.path)
-            case False:
                 log.info('Ignoring issue template %s since it defines no schedule.', self.path)
+            case False:
+                log.info('Issue template %s is ineligible', self.path)
             case True:
                 self.create_issue(now.date())
 

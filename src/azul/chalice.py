@@ -1,3 +1,6 @@
+from abc import (
+    ABCMeta,
+)
 from collections.abc import (
     Iterable,
 )
@@ -14,7 +17,9 @@ import os
 import pathlib
 from typing import (
     Any,
+    Iterator,
     Optional,
+    Self,
     Type,
     TypeVar,
 )
@@ -22,7 +27,7 @@ from urllib.parse import (
     unquote,
 )
 
-import attr
+import attrs
 import chalice
 from chalice import (
     Chalice,
@@ -67,8 +72,8 @@ log = logging.getLogger(__name__)
 
 class AzulRequest(Request):
     """
-    Use only for type hints. The actual requests will be instances of the super
-    class but they will have the attributes defined here.
+    Use only for type hints. The actual requests will be instances of the parent
+    class, but they will have the attributes defined here.
     """
     authentication: Optional[Authentication]
 
@@ -98,14 +103,6 @@ class LambdaMetric(Enum):
     @property
     def aws_name(self) -> str:
         return self.name.capitalize()
-
-
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
-class MetricThreshold:
-    lambda_name: str
-    handler_name: Optional[str] = attr.ib(default=None)
-    metric: LambdaMetric
-    value: int
 
 
 C = TypeVar('C', bound='AppController')
@@ -504,37 +501,112 @@ class AzulChaliceApp(Chalice):
                                 headers={'Content-Type': content_type},
                                 body=body)
 
-    def threshold(self, *, errors: int, throttles: int):
-        def wrapper(f):
+    @attrs.frozen(kw_only=True)
+    class HandlerDecorator(metaclass=ABCMeta):
+        """
+        A base class for decorators of handler functions.
+        """
+
+        #: The unqualified name of the app the handler is part of or None for an
+        #: unbound decorator.
+        app_name: str | None = attrs.field(default=None)
+
+        #: The name of the handler, or None for the main handler, or for an
+        #: unbound decorator.
+        handler_name: str | None = attrs.field(default=None)
+
+        def bind(self, app: Chalice, handler_name: str | None = None) -> Self:
+            app_name, _ = config.unqualified_resource_name(app.app_name)
+            return attrs.evolve(self, app_name=app_name, handler_name=handler_name)
+
+        @property
+        def tf_function_resource_name(self) -> str:
+            if self.handler_name is None:
+                return self.app_name
+            else:
+                assert self.handler_name != ''
+                return f'{self.app_name}_{self.handler_name}'
+
+    # noinspection PyPep8Naming
+    @attrs.frozen(kw_only=True)
+    class metric_alarm(HandlerDecorator):
+        """
+        Use this decorator on a Chalice handler function to configure a metric
+        alarm for the corresponding Lambda function. This decorator cannot be
+        used to decorate view functions, i.e. functions also decorated with
+        ``@app.route``.
+        """
+        #: The CloudWatch metric to configure the alarm for
+        metric: LambdaMetric
+
+        #: The number of failed or throttled lambda invocations that, when
+        #: exceeded, will trigger the alarm.
+        threshold: int = attrs.field(default=0)
+
+        #: The interval (in seconds) at which the alarm threshold is evaluated,
+        #: ranging from 1 minute to 1 day. The default is 5 minutes.
+        period: int = attrs.field(default=5 * 60)
+
+        def __call__(self, f):
             assert isinstance(f, chalice.app.EventSourceHandler), f
-            f.errors_threshold = errors
-            f.throttles_threshold = throttles
+            try:
+                metric_alarms = getattr(f, 'metric_alarms')
+            except AttributeError:
+                metric_alarms = f.metric_alarms = []
+            metric_alarms.append(self)
             return f
 
-        return wrapper
+        @property
+        def tf_resource_name(self) -> str:
+            return f'{self.tf_function_resource_name}_{self.metric.name}'
 
     @property
-    def metric_thresholds(self) -> list[MetricThreshold]:
-        default_threshold = 0
-        thresholds = []
-        lambda_name, _ = config.unqualified_resource_name(self.app_name)
+    def metric_alarms(self) -> Iterator[metric_alarm]:
         for metric in LambdaMetric:
-            # The api_handler lambda functions (indexer & service) aren't included
-            # in the app_module's handler_map, so we account for those first.
-            thresholds.append(MetricThreshold(lambda_name=lambda_name,
-                                              metric=metric,
-                                              value=default_threshold))
-            for handler_name, handler in self.handler_map.items():
-                if isinstance(handler, chalice.app.EventSourceHandler):
-                    threshold = getattr(handler, f'{metric.name}_threshold', default_threshold)
-                    thresholds.append(MetricThreshold(lambda_name=lambda_name,
-                                                      handler_name=handler_name,
-                                                      metric=metric,
-                                                      value=threshold))
-        return thresholds
+            # The api_handler lambda functions (indexer & service) aren't
+            # included in the app_module's handler_map, so we account for those
+            # first.
+            yield self.metric_alarm(metric=metric).bind(self)
+        for handler_name, handler in self.handler_map.items():
+            if isinstance(handler, chalice.app.EventSourceHandler):
+                try:
+                    metric_alarms = getattr(handler, 'metric_alarms')
+                except AttributeError:
+                    metric_alarms = (self.metric_alarm(metric=metric) for metric in LambdaMetric)
+                for metric_alarm in metric_alarms:
+                    yield metric_alarm.bind(self, handler_name)
+
+    # noinspection PyPep8Naming
+    @attrs.frozen
+    class retry(HandlerDecorator):
+        """
+        Use this decorator to specify the number of times a Lambda invocation of
+        the decorated event handler function should be retried. This decorator
+        cannot be used to decorate view functions, i.e. functions also decorated
+        with ``@app.route``.
+
+        https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html
+        """
+        num_retries: int
+
+        def __call__(self, f):
+            assert isinstance(f, chalice.app.EventSourceHandler), f
+            f.retry = self
+            return f
+
+    @property
+    def retries(self) -> Iterator[retry]:
+        for handler_name, handler in self.handler_map.items():
+            if isinstance(handler, chalice.app.EventSourceHandler):
+                try:
+                    retry = getattr(handler, 'retry')
+                except AttributeError:
+                    pass
+                else:
+                    yield retry.bind(self, handler_name)
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class AppController:
     app: AzulChaliceApp
 
