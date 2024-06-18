@@ -17,12 +17,12 @@ init: initable
 	terraform init -reconfigure -lockfile=readonly
 
 .PHONY: check_schema
-check_schema: init
+check_schema: init check_python
 	python $(project_root)/scripts/terraform_schema.py check \
 	|| (echo "Schema is stale. Run 'make update_schema' and commit." ; false)
 
 .PHONY: update_schema
-update_schema: init
+update_schema: init check_python
 	python $(project_root)/scripts/terraform_schema.py update
 
 .PHONY: config
@@ -33,7 +33,7 @@ validate: config
 	terraform validate
 
 .PHONY: rename_resources
-rename_resources: validate
+rename_resources: validate check_python
 	python $(project_root)/scripts/rename_resources.py
 
 .PHONY: import_resources
