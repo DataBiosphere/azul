@@ -15,7 +15,7 @@ from typing import (
     Optional,
 )
 
-import attr
+import attrs
 from botocore.exceptions import (
     ClientError,
 )
@@ -83,7 +83,7 @@ class health_property(cached_property):
         return self.fget.__doc__
 
 
-@attr.s(frozen=True, kw_only=True, auto_attribs=True)
+@attrs.frozen(kw_only=True, slots=False)
 class HealthController(AppController):
     lambda_name: str
 
@@ -158,7 +158,7 @@ class HealthController(AppController):
         return Response(body=json.dumps(body), status_code=status)
 
 
-@attr.s(frozen=True, kw_only=True, auto_attribs=True)
+@attrs.frozen(kw_only=True, slots=False)
 class Health:
     """
     Encapsulates information about the health status of an Azul deployment. All

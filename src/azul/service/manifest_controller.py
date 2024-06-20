@@ -8,7 +8,7 @@ from typing import (
     get_type_hints,
 )
 
-import attr
+import attrs
 from chalice import (
     BadRequestError,
     ChaliceViewError,
@@ -76,7 +76,7 @@ class ManifestGenerationState(TypedDict, total=False):
 assert manifest_state_key in get_type_hints(ManifestGenerationState)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ManifestController(SourceController):
     manifest_url_func: ManifestUrlFunc
 

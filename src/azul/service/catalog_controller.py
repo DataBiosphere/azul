@@ -1,4 +1,4 @@
-import attr
+import attrs
 
 from azul import (
     CatalogName,
@@ -53,7 +53,7 @@ class CatalogController(ServiceAppController):
                     'atlas': catalog.atlas,
                     'plugins': {
                         plugin_type: {
-                            **attr.asdict(plugin),
+                            **attrs.asdict(plugin),
                             **self._plugin_config(plugin_type, catalog.name)
                         }
                         for plugin_type, plugin in catalog.plugins.items()
