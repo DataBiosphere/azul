@@ -11,7 +11,6 @@ from typing import (
     cast,
 )
 
-import attr
 import attrs
 from chalice import (
     BadRequestError,
@@ -240,7 +239,7 @@ class RepositoryController(SourceController):
             if file is None:
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')
-            file = attr.evolve(file, **adict(name=file_name, drs_uri=drs_uri))
+            file = attrs.evolve(file, **adict(name=file_name, drs_uri=drs_uri))
         else:
             file = self._file_from_request(catalog, file_uuid, query_params)
 

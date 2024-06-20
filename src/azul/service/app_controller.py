@@ -4,7 +4,7 @@ from typing import (
     Mapping,
 )
 
-import attr
+import attrs
 from chalice import (
     BadRequestError as BRE,
     BadRequestError,
@@ -29,7 +29,7 @@ from azul.strings import (
 )
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ServiceAppController(AppController):
     file_url_func: FileUrlFunc
 
