@@ -133,6 +133,7 @@ class Mapper(metaclass=ABCMeta):
             location=resource.region,
             software_vendor='AWS',
             system_owner=config.owner,
+            application_owner=config.owner,
             unique_id=resource.id + ('' if id_suffix is None else f'/{id_suffix}')
         )
 
@@ -536,6 +537,7 @@ class FedRAMPInventoryService:
             purpose='UI for external users',
             software_vendor='UCSC',
             system_owner=config.owner,
+            application_owner=config.owner,
             unique_id='Data Browser UI',
         )
         yield InventoryRow(
@@ -545,6 +547,7 @@ class FedRAMPInventoryService:
             purpose='Service API (backend for Data Browser UI, programmatic use by external users)',
             software_vendor='UCSC',
             system_owner=config.owner,
+            application_owner=config.owner,
             unique_id='Service REST API',
         )
         yield InventoryRow(
@@ -554,6 +557,7 @@ class FedRAMPInventoryService:
             purpose='Indexer API (primarily for internal users)',
             software_vendor='UCSC',
             system_owner=config.owner,
+            application_owner=config.owner,
             unique_id='Indexer API',
         )
 
@@ -571,6 +575,7 @@ class FedRAMPInventoryService:
                 is_public=YesNo.no,
                 software_vendor='GitLab',
                 system_owner=config.owner,
+                application_owner=config.owner,
                 purpose=purpose,
                 unique_id=unique_id,
             )
