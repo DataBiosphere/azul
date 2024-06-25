@@ -815,7 +815,11 @@ def env() -> Mapping[str, Optional[str]]:
         #                    // which the site's content tarball was built
         #
         #             'anvil': {  // The site name. Typically corresponds to an
-        #                         // Azul atlas as defined in the AZUL_CATALOGS.
+        #                         // Azul atlas as defined in the AZUL_CATALOGS
+        #                         // and a child directory of
+        #                         // .gitlab/sites/$AZUL_DEPLOYMENT_STAGE in the
+        #                         // source of the project referenced by the
+        #                         // top-level key in this structure.
         #
         #                 'domain': '{AZUL_DOMAIN_NAME}',  // The domain name of
         #                                                  // the site
