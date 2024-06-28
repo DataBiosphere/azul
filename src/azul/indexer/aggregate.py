@@ -156,6 +156,24 @@ class ListAccumulator(Accumulator):
 class SetOfDictAccumulator(SetAccumulator):
     """
     A set accumulator that supports mutable mappings as values.
+
+    >>> acc = SetOfDictAccumulator(key=lambda d: d['foo'])
+    >>> d = {'foo': 2}
+    >>> acc.accumulate(d)
+    True
+
+    >>> acc.accumulate(d)
+    False
+
+    >>> d = {'foo': 1, 'bar': 1}
+    >>> acc.accumulate(d)
+    True
+
+    >>> acc.accumulate([d, d])
+    False
+
+    >>> acc.get()
+    [{'foo': 1, 'bar': 1}, {'foo': 2}]
     """
 
     def accumulate(self, value) -> bool:
