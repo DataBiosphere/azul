@@ -1067,6 +1067,10 @@ class Config:
                 and config.Deployment(config.main_deployment_stage).is_lower
             )
 
+        @property
+        def is_unit_test(self):
+            return self.name == self.test_name
+
     @property
     def deployment(self) -> Deployment:
         return self.Deployment(self.deployment_stage)
