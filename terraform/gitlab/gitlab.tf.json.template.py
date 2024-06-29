@@ -229,13 +229,6 @@ operator_keys = [
     )
 ]
 
-other_public_keys = {
-    'dev': operator_keys,
-    'anvildev': operator_keys,
-    'anvilprod': operator_keys,
-    'prod': []
-}
-
 # FIXME: Launch GitLab, DinD & runner images using image ID
 #        https://github.com/DataBiosphere/azul/issues/5960
 
@@ -1639,7 +1632,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'amazon-ecr-credential-helper',
                         'dracut-fips'
                     ],
-                    'ssh_authorized_keys': other_public_keys.get(config.deployment_stage, []),
+                    'ssh_authorized_keys': [] if config.deployment.is_stable else operator_keys,
                     'bootcmd': [
                         [
                             'cloud-init-per',
