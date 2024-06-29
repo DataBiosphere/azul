@@ -978,6 +978,8 @@ class Config:
     class Deployment:
         name: str
 
+        test_name = 'dummy'
+
         @property
         def is_shared(self) -> bool:
             """

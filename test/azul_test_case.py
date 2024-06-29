@@ -374,6 +374,7 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         super().setUpClass()
         cls._patch_catalogs()
         cls._patch_replicas_enabled()
+        cls._patch_deployment()
 
     @classmethod
     def _patch_catalogs(cls):
@@ -408,6 +409,13 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         cls.addClassPatch(patch.object(type(config),
                                        'enable_replicas',
                                        return_value=True))
+
+    @classmethod
+    def _patch_deployment(cls):
+        cls.addClassPatch(patch.object(type(config),
+                                       'deployment_stage',
+                                       new_callable=PropertyMock,
+                                       return_value=config.deployment.test_name))
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
