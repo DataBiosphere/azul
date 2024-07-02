@@ -24,7 +24,7 @@ class CloudTrailAlarm(NamedTuple):
     name: str
     statistic: str
     filter_pattern: str
-    threshold: int = 1
+    threshold: int = 0
     period: int = 5 * 60
 
     @property
@@ -44,7 +44,7 @@ cis_alarms = [
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Sum',
                     filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
-                    threshold=12,
+                    threshold=11,
                     period=24 * 60 * 60),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
@@ -519,7 +519,7 @@ tf_config = {
             **{
                 a.name: {
                     'alarm_name': config.qualified_resource_name(a.name, suffix='.alarm'),
-                    'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                    'comparison_operator': 'GreaterThanThreshold',
                     'evaluation_periods': 1,
                     'metric_name': '${aws_cloudwatch_log_metric_filter.'
                                    '%s.metric_transformation[0].name}' % a.name,
@@ -537,14 +537,14 @@ tf_config = {
             },
             'clam_fail': {
                 'alarm_name': config.qualified_resource_name('clam_fail', suffix='.alarm'),
-                'comparison_operator': 'GreaterThanOrEqualToThreshold',
+                'comparison_operator': 'GreaterThanThreshold',
                 'evaluation_periods': 1,
                 'metric_name': '${aws_cloudwatch_log_metric_filter.'
                                '%s.metric_transformation[0].name}' % 'clam_fail',
                 'namespace': 'LogMetrics',
                 'statistic': 'Sum',
                 'treat_missing_data': 'notBreaching',
-                'threshold': 1,
+                'threshold': 0,
                 'period': clam_alarm_period,
                 'alarm_actions': ['${aws_sns_topic.monitoring.arn}'],
                 'ok_actions': ['${aws_sns_topic.monitoring.arn}']
