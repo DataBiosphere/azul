@@ -44,7 +44,7 @@ cis_alarms = [
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Sum',
                     filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
-                    threshold=11,
+                    threshold=12,
                     period=24 * 60 * 60),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
