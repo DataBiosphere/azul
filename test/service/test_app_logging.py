@@ -55,6 +55,11 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                                                         'X-Amz-Date,'
                                                         'X-Amz-Security-Token,'
                                                         'X-Api-Key',
+                        'Content-Security-Policy': "default-src 'self';"
+                                                   "img-src 'self' data:;"
+                                                   "script-src 'self';"
+                                                   "style-src 'self';"
+                                                   "frame-ancestors 'none'",
                         'Strict-Transport-Security': 'max-age=31536000;'
                                                      ' includeSubDomains',
                         'X-Content-Type-Options': 'nosniff',

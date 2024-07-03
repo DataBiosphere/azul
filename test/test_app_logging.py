@@ -104,6 +104,11 @@ class TestAppLogging(AzulUnitTestCase):
                         # … and the response is logged.
                         headers = {
                             'Content-Type': 'text/plain',
+                            'Content-Security-Policy': "default-src 'self';"
+                                                       "img-src 'self' data:;"
+                                                       "script-src 'self';"
+                                                       "style-src 'self';"
+                                                       "frame-ancestors 'none'",
                             'Strict-Transport-Security': 'max-age=31536000;'
                                                          ' includeSubDomains',
                             'X-Content-Type-Options': 'nosniff',
