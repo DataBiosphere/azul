@@ -1,5 +1,4 @@
 import logging
-import time
 from typing import (
     Optional,
     Union,
@@ -48,7 +47,6 @@ class BigQueryReservation:
         'assignment': '/reservations/-'
     }
 
-    capacity_commitment: Optional[CapacityCommitment]
     reservation: Optional[Reservation]
     assignment: Optional[Assignment]
     location: str
@@ -99,7 +97,6 @@ class BigQueryReservation:
     @property
     def is_active(self) -> Optional[bool]:
         resource_statuses = {
-            self.capacity_commitment is not None,
             self.reservation is not None,
             self.assignment is not None
         }
@@ -120,116 +117,16 @@ class BigQueryReservation:
             return self.reservation.update_time.timestamp()
 
     def activate(self) -> None:
-        self._ensure_capacity_commitment()
         self._create_reservation()
         self._assign_slots()
         self.refresh()
         if not self.dry_run:
             if not self.is_active:
                 raise RuntimeError('Failed to activate slots')
-            if self.capacity_commitment.slot_count < self.slots:
+            if self.reservation.slot_capacity < self.slots:
                 raise RuntimeError('Failed to acquire enough slots',
-                                   self.capacity_commitment.slot_count,
+                                   self.reservation.slot_capacity,
                                    self.slots)
-
-    def _ensure_capacity_commitment(self) -> None:
-        """
-        Idempotently purchase capacity commitment, ensuring that the number of
-        reserved slots is sufficient for the current configuration.
-        """
-        self._refresh('capacity_commitment')
-        if self.capacity_commitment is None:
-            self._create_capacity_commitment(self.slots)
-        else:
-            current_capacity = self.capacity_commitment.slot_count
-            log.info('Slot commitment with %d slots already purchased in location %r',
-                     current_capacity, self.location)
-            if current_capacity < self.slots:
-                deficit = self.slots - current_capacity
-                log.info('Slot deficit is %d', deficit)
-                # To increase the capacity of an existing commitment, we must
-                # create a new commitment and then merge it with the old one.
-                old_commitment = self.capacity_commitment
-                self._create_capacity_commitment(deficit)
-                new_commitment = self.capacity_commitment
-                if self.dry_run:
-                    assert old_commitment is new_commitment
-                    log.info('Would merge capacity commitments in location %r', self.location)
-                else:
-                    assert old_commitment.name != new_commitment.name
-                    log.info('Merging capacity commitments {%r, %r}',
-                             old_commitment.name, new_commitment.name)
-
-                    def extract_id(commitment: CapacityCommitment) -> str:
-                        parent, resource_type, id = commitment.name.rsplit('/', 2)
-                        assert parent == self._reservation_parent_path
-                        assert resource_type == 'capacityCommitments'
-                        return id
-
-                    self.capacity_commitment = self._client.merge_capacity_commitments(
-                        parent=self._reservation_parent_path,
-                        capacity_commitment_ids=list(map(extract_id, [old_commitment, new_commitment]))
-                    )
-                    log.info('Merged capacity commitments {%r, %r} to create %r with %d total slots',
-                             old_commitment.name, new_commitment.name, self.capacity_commitment.name,
-                             self.capacity_commitment.slot_count)
-            elif current_capacity > self.slots:
-                log.warning('Existing slot commitment has more slots than requested; '
-                            'excessive costs may be incurred. If a smaller capacity '
-                            'is desired, it must be reduced manually.')
-            else:
-                log.info('No purchase necessary')
-
-    def _create_capacity_commitment(self, slots: int) -> None:
-        commitment = CapacityCommitment(dict(slot_count=slots,
-                                             plan=CapacityCommitment.CommitmentPlan.FLEX))
-        if self.dry_run:
-            log.info('Would purchase %d BigQuery slots in location %r',
-                     commitment.slot_count, self.location)
-        else:
-            log.info('Purchasing %d BigQuery slots in location %r',
-                     commitment.slot_count, self.location)
-            commitment = self._client.create_capacity_commitment(capacity_commitment=commitment,
-                                                                 parent=self._reservation_parent_path)
-            log.info('Purchased %d BigQuery slots in location %r, commitment name: %r',
-                     commitment.slot_count, self.location, commitment.name)
-            # Record state before waiting for activation so that we can delete it on failure
-            self.capacity_commitment = commitment
-            self.capacity_commitment = self._await_active_commitment(commitment)
-
-    def _await_active_commitment(self,
-                                 commitment: CapacityCommitment
-                                 ) -> CapacityCommitment:
-        """
-        Poll for a minute or until commitment is active. Fail gracefully if we
-        are unable to get commitment. See Google's docs for more info:
-        https://cloud.google.com/bigquery/docs/reservations-tasks#purchased_slots_are_pending
-        """
-        start = time.time()
-        deadline = start + 60
-        now = start
-        while commitment.state != commitment.State.ACTIVE:
-            if now > deadline:
-                self.deactivate()
-                log.error('Commitment %r in state %r after %.3fs seconds. '
-                          'Commitment was deleted. Try again later.',
-                          commitment.name, commitment.state.name, now - start)
-                raise RuntimeError('Slot commitment not active in time')
-            elif commitment.state == commitment.State.FAILED:
-                self.deactivate()
-                raise RuntimeError('Slot commitment failed to activate',
-                                   commitment.failure_status)
-            elif commitment.state == commitment.State.PENDING:
-                log.info('Commitment %r pending. Trying again in 10 seconds...',
-                         commitment.name)
-                time.sleep(10)
-                commitment = self._client.get_capacity_commitment(name=commitment.name)
-                now = time.time()
-            else:
-                assert False, commitment.state
-        log.info('Commitment %r is active after %.3fs seconds',
-                 commitment.name, now - start)
-        return commitment
 
     def _create_reservation(self) -> None:
         """
