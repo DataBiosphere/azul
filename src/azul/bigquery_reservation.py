@@ -7,6 +7,7 @@ from typing import (
 from google.cloud.bigquery_reservation_v1 import (
     Assignment,
     CapacityCommitment,
+    Edition,
     Reservation,
     ReservationServiceClient,
 )
@@ -123,9 +124,9 @@ class BigQueryReservation:
         if not self.dry_run:
             if not self.is_active:
                 raise RuntimeError('Failed to activate slots')
-            if self.reservation.slot_capacity < self.slots:
+            if self.reservation.autoscale.max_slots < self.slots:
                 raise RuntimeError('Failed to acquire enough slots',
-                                   self.reservation.slot_capacity,
+                                   self.reservation.autoscale.max_slots,
                                    self.slots)
 
     def _create_reservation(self) -> None:
@@ -134,22 +135,23 @@ class BigQueryReservation:
         """
         self._refresh('reservation')
         if self.reservation is None:
-            reservation = Reservation(dict(slot_capacity=self.slots,
-                                           ignore_idle_slots=False))
+            reservation = Reservation(dict(edition=Edition.STANDARD,
+                                           autoscale=Reservation.Autoscale(dict(max_slots=self.slots)),
+                                           ignore_idle_slots=True))
             if self.dry_run:
                 log.info('Would reserve %d BigQuery slots in location %r, reservation ID: %r',
-                         reservation.slot_capacity, self.location, self._reservation_id)
+                         reservation.autoscale.max_slots, self.location, self._reservation_id)
             else:
                 log.info('Reserving %d BigQuery slots in location %r, reservation ID: %r',
-                         reservation.slot_capacity, self.location, self._reservation_id)
+                         reservation.autoscale.max_slots, self.location, self._reservation_id)
                 reservation = self._client.create_reservation(reservation=reservation,
                                                               reservation_id=self._reservation_id,
                                                               parent=self._reservation_parent_path)
                 log.info('Reserved %d BigQuery slots in location %r, reservation name: %r',
-                         reservation.slot_capacity, self.location, reservation.name)
+                         reservation.autoscale.max_slots, self.location, reservation.name)
                 self.reservation = reservation
         else:
-            current_capacity = self.reservation.slot_capacity
+            current_capacity = self.reservation.autoscale.max_slots
             log.info('Reservation with capacity %d already created in location %r',
                      current_capacity, self.location)
             if current_capacity < self.slots:
@@ -158,12 +160,12 @@ class BigQueryReservation:
                     log.info('Would increase reservation capacity to %d', self.slots)
                 else:
                     log.info('Increasing reservation capacity to %d', self.slots)
-                    self.reservation.slot_capacity = self.slots
+                    self.reservation.autoscale.max_slots = self.slots
                     self.reservation = self._client.update_reservation(
                         reservation=self.reservation,
-                        update_mask='slotCapacity'
+                        update_mask='autoscale'
                     )
-                    log.info('Reservation now has capacity %d', self.reservation.slot_capacity)
+                    log.info('Reservation now has capacity %d', self.reservation.autoscale.max_slots)
 
     def _assign_slots(self) -> None:
         """
