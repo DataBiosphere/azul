@@ -195,8 +195,9 @@ class AzulChaliceApp(Chalice):
 
     hsts_max_age = 60 * 60 * 24 * 365 * 2
 
-    # Headers added to every response from the app. Use of these headers
-    # addresses known security vulnerabilities.
+    # Headers added to every response from the app, as well as canned 4XX and
+    # 5XX responses from API Gateway. Use of these headers addresses known
+    # security vulnerabilities.
     #
     security_headers = {
         'Content-Security-Policy': jw('default-src', sq('self')),

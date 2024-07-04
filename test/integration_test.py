@@ -2059,3 +2059,11 @@ class ResponseHeadersTest(AzulTestCase):
                         if path in ['/', '/oauth2_redirect']:
                             del expected['Content-Security-Policy']
                         self.assertIsSubset(expected.items(), response.headers.items())
+
+    def test_default_4xx_response_headers(self):
+        for endpoint in (config.service_endpoint, config.indexer_endpoint):
+            with self.subTest(endpoint=endpoint):
+                response = requests.get(str(endpoint / 'does-not-exist'))
+                self.assertEqual(403, response.status_code)
+                self.assertIsSubset(AzulChaliceApp.security_headers.items(),
+                                    response.headers.items())
