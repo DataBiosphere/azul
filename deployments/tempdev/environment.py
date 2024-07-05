@@ -6,43 +6,30 @@ from typing import (
     Optional,
 )
 
-is_sandbox = True
 
-
-def common_prefix(n: int) -> str:
+def partition_prefix_length(n: int) -> int:
     """
-    For a given number of subgraphs, return a common prefix that yields around
-    16 subgraphs.
+    For a given number of subgraphs, return a partition prefix length that is
+    expected to rarely exceed 512 subgraphs per partition.
 
-    >>> [common_prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
-    ['', '', '', '', '1', 'f', '01', '11']
+    >>> [partition_prefix_length(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
+    [0, 0, 0, 1, 1, 2]
     """
-    hex_digits = '0123456789abcdef'
-    m = len(hex_digits)
-    # Double threshold to lower probability that no subgraphs match the prefix
-    return hex_digits[n % m] + common_prefix(n // m) if n > 2 * m else ''
+    return 1 + partition_prefix_length(n // 16) if n > 512 else 0
 
 
 ma = 1  # managed access
 pop = 2  # remove snapshot
 
 
-def mksrc(google_project,
-          snapshot,
-          subgraphs,
-          flags: int = 0,
-          /,
-          prefix: Optional[str] = None
-          ) -> tuple[str, str]:
+def mksrc(google_project, snapshot, subgraphs, flags: int = 0) -> tuple[str, str]:
     project = '_'.join(snapshot.split('_')[1:-3])
     assert flags <= ma | pop
-    if prefix is None:
-        prefix = common_prefix(subgraphs)
     source = None if flags & pop else ':'.join([
         'tdr',
         google_project,
         'snapshot/' + snapshot,
-        prefix + '/0'
+        '/' + str(partition_prefix_length(subgraphs))
     ])
     return project, source
 
@@ -94,30 +81,21 @@ def env() -> Mapping[str, Optional[str]]:
     provide the value.
     """
     return {
-        # Set variables for the `anvilbox` deployment here. The anvilbox is used
-        # to run integration tests against PRs and to perform CI/CD experiments.
+        # Set variables for the `anvildev` (short for AnVIL development)
+        # deployment here.
         #
-        # You can use this file as a template for a personal deployment. Look
-        # for conditionals using the `is_sandbox` variable and adjust the `else`
-        # branch accordingly.
-        #
-        # Only modify this file if you intend to commit those changes. To apply
-        # a setting that's specific to you AND the deployment, create an
-        # `environment.local.py` file right next to this one and apply that
-        # setting there. Settings that are applicable to all environments but
-        # specific to you go into `environment.local.py` at the project root.
+        # Only modify this file if you intend to commit those changes. To change the
+        # environment with a setting that's specific to you AND the deployment, create
+        # a environment.local.py right next to this file and make your changes there.
+        # Settings applicable to all environments but specific to you go into
+        # environment.local.py at the project root.
 
-        # When using this file as a template for a personal deployment, replace
-        # `None` with a short string that is specific to YOU.
-        #
-        'AZUL_DEPLOYMENT_STAGE': 'anvilbox' if is_sandbox else None,
+        'AZUL_DEPLOYMENT_STAGE': 'tempdev',
 
-        # This deployment uses a subdomain of the `anvildev` deployment's
-        # domain.
-        #
-        'AZUL_DOMAIN_NAME': 'anvil.gi.ucsc.edu',
-        'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_DOMAIN_NAME': 'temp.gi.ucsc.edu',
         'AZUL_PRIVATE_API': '0',
+
+        'AZUL_S3_BUCKET': 'edu-ucsc-gi-platform-temp-dev-storage-{AZUL_DEPLOYMENT_STAGE}.{AWS_DEFAULT_REGION}',
 
         'AZUL_CATALOGS': json.dumps({
             f'{catalog}{suffix}': dict(atlas=atlas,
@@ -140,38 +118,26 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-dev.broadinstitute.org',
         'AZUL_TERRA_SERVICE_URL': 'https://firecloud-orchestration.dsde-dev.broadinstitute.org',
 
-        **(
-            {
-                # $0.382/h × 2 × 24h/d × 30d/mo = $550.08/mo
-                'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
-                'AZUL_ES_INSTANCE_COUNT': '2',
-            } if is_sandbox else {
-                # Personal deployments share an ES domain with `anvilbox`
-                'AZUL_SHARE_ES_DOMAIN': '1',
-                'AZUL_ES_DOMAIN': 'azul-index-anvilbox',
-                # Personal deployments use fewer Lambda invocations in parallel.
-                'AZUL_CONTRIBUTION_CONCURRENCY': '8',
-                'AZUL_AGGREGATION_CONCURRENCY': '8',
-            }
-        ),
+        'AZUL_ENABLE_MONITORING': '1',
+
+        # $0.191/h × 2 × 24h/d × 30d/mo = $275.08/mo
+        'AZUL_ES_INSTANCE_TYPE': 'r6gd.large.elasticsearch',
+        'AZUL_ES_INSTANCE_COUNT': '2',
 
         'AZUL_DEBUG': '1',
 
         'AZUL_BILLING': 'anvil',
 
-        # When using this file as a template for a personal deployment, change
-        # `None` to a string containing YOUR email address.
-        #
-        'AZUL_OWNER': 'hannes@ucsc.edu' if is_sandbox else None,
+        'AZUL_OWNER': 'hannes@ucsc.edu',
 
-        'AZUL_MONITORING_EMAIL': '{AZUL_OWNER}',
+        'AZUL_MONITORING_EMAIL': 'azul-group@ucsc.edu',
 
-        'AZUL_AWS_ACCOUNT_ID': '289950828509',
+        'AZUL_AWS_ACCOUNT_ID': '654654270592',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        'GOOGLE_PROJECT': 'platform-anvil-dev',
+        'GOOGLE_PROJECT': 'platform-temp-dev',
 
-        'AZUL_DEPLOYMENT_INCARNATION': '2',
+        'AZUL_DEPLOYMENT_INCARNATION': '0',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-cpo2avhomdh6t7fetp91js78cdhm9p47.apps.googleusercontent.com',
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '807674395527-erth0gf1m7qme5pe6bu384vpdfjh06dg.apps.googleusercontent.com',
     }

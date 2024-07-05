@@ -13,6 +13,12 @@ from azul.deployment import (
     aws,
 )
 
+es_instance_count = (
+    aws.es_instance_count
+    if config.share_es_domain else
+    config.es_instance_count
+)
+
 dashboard_body = {
     'widgets': [
         {
@@ -326,7 +332,7 @@ dashboard_body = {
                 'metrics': [
                     [
                         {
-                            'expression': ' + '.join(f'm{2 + i * 2}' for i in range(aws.es_instance_count)),
+                            'expression': ' + '.join(f'm{2 + i * 2}' for i in range(es_instance_count)),
                             'label': 'Primary',
                             'id': 'e1',
                             'region': config.region,
@@ -335,7 +341,7 @@ dashboard_body = {
                     ],
                     [
                         {
-                            'expression': ' + '.join(f'm{3 + i * 2}' for i in range(aws.es_instance_count)),
+                            'expression': ' + '.join(f'm{3 + i * 2}' for i in range(es_instance_count)),
                             'label': 'Replica',
                             'id': 'e2',
                             'region': config.region,
@@ -416,7 +422,7 @@ dashboard_body = {
                                 }
                             ]
                         ]
-                        for i in range(1, aws.es_instance_count)
+                        for i in range(1, es_instance_count)
                     ))
                 ],
                 'view': 'timeSeries',
@@ -476,7 +482,7 @@ dashboard_body = {
                             '.',
                             '.'
                         ]
-                        for i in range(1, aws.es_instance_count)
+                        for i in range(1, es_instance_count)
                     )
                 ],
                 'region': config.region,
@@ -495,7 +501,7 @@ dashboard_body = {
                     [
                         {
                             'expression': 'DIFF(%s)/4/1000/60/5*100' %
-                                          '+'.join(f'm{i + 1}' for i in range(aws.es_instance_count)),
+                                          '+'.join(f'm{i + 1}' for i in range(es_instance_count)),
                             'label': 'Old generation',
                             'id': 'e2',
                             'region': config.region,
@@ -505,8 +511,8 @@ dashboard_body = {
                     [
                         {
                             'expression': 'DIFF(%s)/4/1000/60/5*100' % '+'.join(
-                                f'm{i + aws.es_instance_count + 1}'
-                                for i in range(aws.es_instance_count)
+                                f'm{i + es_instance_count + 1}'
+                                for i in range(es_instance_count)
                             ),
                             'label': 'Young generation',
                             'id': 'e1',
@@ -540,7 +546,7 @@ dashboard_body = {
                                 'visible': False
                             }
                         ]
-                        for i in range(1, aws.es_instance_count)
+                        for i in range(1, es_instance_count)
                     ),
                     [
                         '.',
@@ -552,7 +558,7 @@ dashboard_body = {
                         '.',
                         '.',
                         {
-                            'id': f'm{aws.es_instance_count + 1}',
+                            'id': f'm{es_instance_count + 1}',
                             'visible': False
                         }
                     ],
@@ -563,11 +569,11 @@ dashboard_body = {
                             '.',
                             '.',
                             {
-                                'id': f'm{i + aws.es_instance_count + 1}',
+                                'id': f'm{i + es_instance_count + 1}',
                                 'visible': False
                             }
                         ]
-                        for i in range(1, aws.es_instance_count)
+                        for i in range(1, es_instance_count)
                     )
                 ],
                 'view': 'timeSeries',
@@ -1742,4 +1748,3 @@ dashboard_body = {
         }
     ]
 }
-

@@ -557,8 +557,7 @@ and protects access to that infrastructure through a VPN. That same VPN is also
 used to access to Azul deployments with private APIs (see AZUL_PRIVATE_API in 
 [environment.py]). Like the `shared` component, the `gitlab` component belongs 
 to one main deployment in an AWS account (typically `dev` or `prod`) and is 
-shared by the other deployments colocated with that deployment. Unlike the 
-`shared` component, the `gitlab` component is optional.    
+shared by the other deployments colocated with that deployment.
 
 [environment.py]: /environment.py
 
@@ -628,7 +627,7 @@ These steps are performed once per deployment (multiple times per project).
 4. For *Name*, enter `azul-{stage}` where stage is the name of the deployment
 
 5. Add an entry to *Authorized JavaScript origins* and enter the output from
-   `python3 -c 'from azul import config; print(config.service_endpoint)'`
+   `python3 -m azul config.service_endpoint`
 
 6. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
     value of the previous field and enter the resulting value.
