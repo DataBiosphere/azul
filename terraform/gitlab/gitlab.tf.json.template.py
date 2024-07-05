@@ -364,22 +364,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             [
                                 f'arn:aws:s3:::{bucket_name}',
                                 f'arn:aws:s3:::{bucket_name}/*'
-                            ] for bucket_name in (
-                                [
-                                    'edu-ucsc-gi-platform-hca-dev-*',
-                                    'edu-ucsc-gi-singlecell-azul-*',
-                                ] if 'singlecell' in config.domain_name else [
-                                    'edu-ucsc-gi-platform-anvil-*',
-                                    'edu-ucsc-gi-platform-anvil-*',
-                                ] if 'anvil' in config.domain_name else [
-                                    'edu-ucsc-gi-platform-hca-prod-*',
-                                    'edu-ucsc-gi-azul-*',
-                                    '*.azul.data.humancellatlas.org',
-                                ]
-                            ) + aws_managed_buckets_for_ssm_agent
+                            ] for bucket_name in [
+                                aws.qualified_bucket_name('*'),
+                                *aws_managed_buckets_for_ssm_agent
+                            ]
                         )
                     },
-
                     {
                         'actions': [
                             'kms:ListAliases',

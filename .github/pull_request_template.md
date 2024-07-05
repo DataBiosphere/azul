@@ -188,8 +188,8 @@ title is `Fix: ` followed by the issue title
 
 ### Operator
 
-- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
-- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `API`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] Propagated any specific instructions related to the `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `API`, `reindex:partial`, `reindex:anvilprod` and `reindex:prod` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
 - [ ] PR is assigned to no one
 
 

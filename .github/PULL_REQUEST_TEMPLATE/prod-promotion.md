@@ -23,7 +23,6 @@ Connected issue: #0000
 
 - [ ] This PR is labeled `reindex:prod` <sub>or the changes introduced by it will not require reindexing of `prod`</sub>
 - [ ] This PR is labeled `reindex:partial` and its description documents the specific reindexing procedure for `prod` <sub>or requires a full reindex or is not labeled`reindex:prod`</sub>
-- [ ] This PR and its connected issues are labeled `API` <sub>or this PR does not modify a REST API</sub>
 
 
 ### Author (upgrading deployments)

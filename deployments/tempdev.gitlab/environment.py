@@ -26,6 +26,6 @@ def env() -> Mapping[str, Optional[str]]:
     """
     return {
         'azul_terraform_component': 'gitlab',
-        'azul_vpc_cidr': '172.22.0.0/16',
-        'azul_vpn_subnet': '10.43.0.0/16'
+        'azul_vpc_cidr': '172.25.0.0/16',
+        'azul_vpn_subnet': '10.46.0.0/16'
     }

@@ -198,6 +198,7 @@ class T(Enum):
             'deploy:gitlab',
             'deploy:runner',
             *iif(self is T.upgrade, ['backup:gitlab'], [
+                'API',
                 'reindex:partial',
                 *('reindex:' + d for d in self.downstream_deployments(target_branch))
             ])
@@ -430,12 +431,12 @@ def emit(t: T, target_branch: str):
                         ])
                     )
                 },
-                {
-                    'type': 'cli',
-                    'content': 'This PR and its connected issues are labeled `API`',
-                    'alt': 'or this PR does not modify a REST API'
-                },
                 *iif(t is T.default, [
+                    {
+                        'type': 'cli',
+                        'content': 'This PR and its connected issues are labeled `API`',
+                        'alt': 'or this PR does not modify a REST API'
+                    },
                     {
                         'type': 'cli',
                         'content': 'Added `a` (`A`) tag to commit title for backwards (in)compatible changes',
