@@ -490,7 +490,7 @@ def static_resource(file):
 def oauth2_redirect():
     oauth2_redirect_html = app.load_static_resource('swagger', 'oauth2-redirect.html')
     return Response(status_code=200,
-                    headers={"Content-Type": "text/html"},
+                    headers={'Content-Type': 'text/html'},
                     body=oauth2_redirect_html)
 
 
