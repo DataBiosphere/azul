@@ -568,16 +568,24 @@ def _entity_schema_recursive(field_types: FieldTypes,
             }
         elif field_type in _nullable_to_pfb_types:
             # Exceptions are fields that do not become lists during aggregation
-            exceptions = (
+            field_exceptions = (
                 'donor_count',
                 'estimated_cell_count',
                 'total_estimated_cells',
                 'total_estimated_cells_redundant',
-                'source_datarepo_snapshot_id'
+                'source_datarepo_snapshot_id',
+            )
+            path_exceptions = (
+                ('projects', 'accessions'),
+                ('projects', 'tissue_atlas')
             )
             # FIXME: The first term is not self-explanatory
             #        https://github.com/DataBiosphere/azul/issues/4094
-            if path[0] == 'files' and not plural or field_name in exceptions:
+            if (
+                path[0] == 'files' and not plural
+                or field_name in field_exceptions
+                or path in path_exceptions
+            ):
                 yield {
                     **name_fields,
                     'type': _nullable_to_pfb_types[field_type],
