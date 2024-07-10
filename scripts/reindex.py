@@ -26,6 +26,9 @@ from azul.bigquery_reservation import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.plugins.repository import (
+    tdr_anvil,
+)
 from azul.plugins.repository.tdr import (
     TDRPlugin,
 )
@@ -105,6 +108,11 @@ parser.add_argument('--purge',
                     default=False,
                     action='store_true',
                     help='Purge the queues before taking any action on the indices.')
+parser.add_argument('--import',
+                    default=False,
+                    action='store_true',
+                    dest='import_',
+                    help='Import sources into BigQuery data from TDR')
 parser.add_argument('--nowait', '--no-wait',
                     dest='wait',
                     default=True,
@@ -158,6 +166,17 @@ def main(argv: list[str]):
         else:
             parser.error('Cannot specify sources when performing a local reindex')
             assert False
+
+    if args.import_:
+        for catalog, sources in sources_by_catalog.items():
+            if config.is_tdr_enabled(catalog) and config.is_anvil_enabled(catalog) and sources:
+                plugin = azul.repository_plugin(catalog)
+                assert isinstance(plugin, tdr_anvil.Plugin)
+                for source in sources:
+                    source = plugin.resolve_source(source)
+                    plugin.import_tables(source)
+            else:
+                log.info('Skipping table import for catalog %r', catalog)
 
     if args.deindex:
         require(not any((args.index, args.delete, args.create)),

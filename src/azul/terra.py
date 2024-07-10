@@ -667,6 +667,73 @@ class TDRClient(SAMClient):
             else:
                 return self._check_response(url, response)
 
+    def create_dataset(self, dataset_name: str):
+        """
+        Create a BigQuery dataset in the project and region configured for the
+        current deployment.
+
+        :param dataset_name: Unqualified name of the dataset to create.
+                             `google.cloud.exceptions.Conflict` will be raised
+                             if a dataset with the same name already exists.
+        """
+        bigquery = self._bigquery(self.credentials.project_id)
+        ref = DatasetReference(bigquery.project, dataset_name)
+        dataset = Dataset(ref)
+        dataset.location = config.tdr_source_location
+        log.info('Creating BigQuery dataset %r in region %r',
+                 dataset.dataset_id, dataset.location)
+        bigquery.create_dataset(dataset)
+
+    def create_table(self,
+                     dataset_name: str,
+                     table_name: str,
+                     import_urls: Sequence[furl],
+                     *,
+                     overwrite: bool,
+                     clustering_fields: Optional[Sequence[str]] = None):
+        """
+        Create a BigQuery table in the project and region configured for the
+        current deployment.
+
+        :param dataset_name: Unqualified name of the dataset to contain the new
+                             table
+
+        :param table_name: Unqualified name of the new table
+
+        :param import_urls: URLs of parquet file(s) to populate the table. These
+                            must be `gs://` URLS and the GCS bucket's region
+                            must be compatible with the target dataset's. See
+                            https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-parquet#limitations
+
+        :param overwrite: Overwrite existing table with the same ID as the table
+                          we're trying to create (true) or raise an exception if
+                          such a table exists (false)
+
+        :param clustering_fields: Fields defining clustering for the table. See
+                                  https://cloud.google.com/bigquery/docs/clustered-tables
+        """
+        for url in import_urls:
+            require(url.scheme == 'gs', url)
+        table_id = f'{dataset_name}.{table_name}'
+        bigquery = self._bigquery(self.credentials.project_id)
+        write_disposition = (
+            WriteDisposition.WRITE_TRUNCATE if overwrite else WriteDisposition.WRITE_EMPTY
+        )
+        job_config = LoadJobConfig(
+            write_disposition=write_disposition,
+            clustering_fields=clustering_fields,
+            source_format=SourceFormat.PARQUET,
+            # Avoids convoluted data types for array fields
+            parquet_options=ParquetOptions.from_api_repr(dict(enable_list_inference=True))
+        )
+        log.info('Creating BigQuery table %r',
+                 f'{bigquery.project}.{dataset_name}.{table_name}')
+        load_job = bigquery.load_table_from_uri(source_uris=list(map(str, import_urls)),
+                                                destination=table_id,
+                                                job_config=job_config)
+        load_job.result()
+        log.info('Table created successfully')
+
     def export_parquet_urls(self,
                             snapshot_id: str
                             ) -> Optional[dict[str, list[mutable_furl]]]:

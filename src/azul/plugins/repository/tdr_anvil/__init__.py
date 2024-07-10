@@ -17,6 +17,12 @@ from typing import (
 )
 
 import attrs
+from furl import (
+    furl,
+)
+from google.cloud.exceptions import (
+    Conflict,
+)
 from more_itertools import (
     one,
 )
@@ -24,6 +30,7 @@ from more_itertools import (
 from azul import (
     cached_property,
     config,
+    reject,
     require,
     uuids,
 )
@@ -740,3 +747,36 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         entity_columns = {column['name'] for column in table['columns']}
         entity_columns.add('datarepo_row_id')
         return entity_columns
+
+    def import_tables(self, source: TDRSourceRef):
+        """
+        Import tables for an AnVIL snapshot into BigQuery via TDR's parquet
+        export API. Only tables defined in the AnVIL schema will be imported.
+        Currently, only GS-backed snapshots are supported.
+        """
+        require(source.spec.project == config.google_project(), source)
+        dataset_name = source.spec.name
+        try:
+            self.tdr.create_dataset(dataset_name)
+        except Conflict:
+            log.info('Dataset %r already exists', dataset_name)
+
+        urls_by_table = self.tdr.export_parquet_urls(source.id)
+        reject(urls_by_table is None,
+               'No parquet access information is available for snapshot %r.', source.spec)
+
+        for table in anvil_schema['tables']:
+            table_name = table['name']
+            urls = urls_by_table[table_name]
+            for url in urls:
+                require(url.origin == 'https://storage.googleapis.com',
+                        'Unsupported storage location for snapshot %r: %r',
+                        source.spec, url)
+                url.load(furl(scheme='gs',
+                              netloc=url.path.segments[0],
+                              path=url.path.segments[1:]))
+            self.tdr.create_table(dataset_name=dataset_name,
+                                  table_name=table_name,
+                                  import_urls=urls,
+                                  overwrite=False,
+                                  clustering_fields=table['primaryKey'])
