@@ -710,6 +710,10 @@ def env() -> Mapping[str, Optional[str]]:
         # configured to index. All configured snapshots must reside in the same
         # location.
         #
+        # This variable is used both to *verify* that the sources' actual
+        # location matches our expectations, and to *determine* the location of
+        # any sources we create ourselves.
+        #
         # https://cloud.google.com/bigquery/docs/locations
         #
         'AZUL_TDR_SOURCE_LOCATION': None,

@@ -60,6 +60,9 @@ emit_tf({
                             "title": f"azul_{config.deployment_stage}",
                             "permissions": [
                                 "bigquery.jobs.create",
+                                "bigquery.datasets.create",
+                                "bigquery.tables.create",
+                                "bigquery.tables.updateData",
                                 *[
                                     f'bigquery.{resource}.{action}'
                                     for resource in ('capacityCommitments', 'reservations')
