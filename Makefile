@@ -102,11 +102,15 @@ $(1)terraform: lambdas
 
 .PHONY: $(1)deploy
 $(1)deploy: check_python $(1)terraform
-	python $(project_root)/scripts/post_deploy_tdr.py
 endef
 
 $(eval $(call deploy,))
 $(eval $(call deploy,auto_))
+
+.PHONY: import
+import: check_python
+	python $(project_root)/scripts/reindex.py --import --sources "tdr:parquet:gcp:${GOOGLE_PROJECT}:*"
+	python $(project_root)/scripts/verify_tdr_sources.py
 
 .PHONY: destroy
 destroy:

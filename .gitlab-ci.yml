@@ -97,6 +97,19 @@ deploy:
     paths:
       - terraform/plan.json
 
+import:
+  extends: .base_on_push
+  stage: deploy
+  # The 1000G snapshot on `anvildev` takes about 3.5 minutes to import. There
+  # are currently 257 snapshots on `anvilprod`. 257 * 3.5 / 60 = 14.99 hours,
+  # which we choose to double.
+  timeout: 30h
+  needs:
+    - build_image
+    - deploy
+  script:
+    - make import
+
 deploy_browser:
   extends: .base_on_push
   stage: deploy
