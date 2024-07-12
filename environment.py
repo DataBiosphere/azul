@@ -279,7 +279,7 @@ def env() -> Mapping[str, Optional[str]]:
             # Run `_refresh && make environment.boot` after modifying the Python
             # image reference.
             'python': {
-                'ref': 'docker.io/library/python:{azul_python_version}-bullseye',
+                'ref': 'docker.io/library/python:{azul_python_version}-slim-bullseye',
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
