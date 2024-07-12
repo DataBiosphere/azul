@@ -11,6 +11,7 @@ from enum import (
 )
 import json
 import logging
+import time
 from time import (
     sleep,
 )
@@ -411,18 +412,21 @@ class TDRClient(SAMClient):
         require(actual_project == source_spec.subdomain,
                 'Actual Google project of TDR source differs from configured one',
                 actual_project, source_spec.subdomain)
-        storage = one(
-            resource
-            for resource in source['storage']
-            if resource['cloudResource'] == 'bigquery'
-        )
-        actual_location = storage['region']
+        actual_location = self._get_region(source, 'bigquery')
         # Uppercase is standard for multi-regions in the documentation but TDR
         # returns 'us' in lowercase
         require(actual_location.lower() == config.tdr_source_location.lower(),
                 'Actual storage location of TDR source differs from configured one',
                 actual_location, config.tdr_source_location)
         return source['id']
+
+    def _get_region(self, source: JSON, resource_type: str) -> str:
+        storage = one(
+            resource
+            for resource in source['storage']
+            if resource['cloudResource'] == resource_type
+        )
+        return storage['region']
 
     def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
@@ -533,7 +537,8 @@ class TDRClient(SAMClient):
                         endpoint: furl,
                         response: urllib3.HTTPResponse
                         ) -> MutableJSON:
-        if response.status == 200:
+        # 202 is observed while waiting for the Parquet export
+        if response.status in (200, 202):
             return json.loads(response.data)
         # FIXME: Azul sometimes conflates 401 and 403
         #        https://github.com/DataBiosphere/azul/issues/4463
@@ -650,3 +655,48 @@ class TDRClient(SAMClient):
                 return None
             else:
                 return self._check_response(url, response)
+
+    def export_parquet_urls(self,
+                            snapshot_id: str
+                            ) -> Optional[dict[str, list[mutable_furl]]]:
+        """
+        Obtain URLs of Parquet files for the data tables of the specified
+        snapshot. This is a time-consuming operation that usually takes on the
+        order of one minute to complete.
+
+        :param snapshot_id: The UUID of the snapshot
+
+        :return: A mapping of table names to lists of Parquet file download
+                 URLs, or `None` if if no Parquet downloads are available for
+                 the specified snapshot. The URLs are typically expiring signed
+                 URLs pointing to a cloud storage service such as GCS or Azure.
+        """
+        url = self._repository_endpoint('snapshots', snapshot_id, 'export')
+        # Required for Azure-backed snapshots
+        url.args.add('validatePrimaryKeyUniqueness', False)
+        while True:
+            response = self._request('GET', url)
+            response_body = self._check_response(url, response)
+            jobs_status = response_body['job_status']
+            job_id = response_body['id']
+            if jobs_status == 'running':
+                url = self._repository_endpoint('jobs', job_id)
+                log.info('Waiting for job %r ...', job_id)
+                time.sleep(2)
+            elif jobs_status == 'succeeded':
+                break
+            else:
+                raise TerraStatusException(url, response)
+        url = self._repository_endpoint('jobs', job_id, 'result')
+        response = self._request('GET', url)
+        response_body = self._check_response(url, response)
+        parquet = response_body['format'].get('parquet')
+        if parquet is not None:
+            region = self._get_region(response_body['snapshot'], 'bucket')
+            require(config.tdr_source_location == region,
+                    config.tdr_source_location, region)
+            parquet = {
+                table['name']: list(map(furl, table['paths']))
+                for table in parquet['location']['tables']
+            }
+        return parquet
