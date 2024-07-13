@@ -101,7 +101,7 @@ class KibanaProxy:
                                            detach=True,
                                            environment={
                                                'KIBANA_ELASTICSEARCH_URL': f'http://localhost:{proxy_port}',
-                                               'SERVER_PORT': kibana_port
+                                               'KIBANA_PORT_NUMBER': kibana_port
                                            },
                                            network_mode=f'container:{proxy.name}')
             containers.append(kibana)
