@@ -80,30 +80,37 @@ class KibanaProxy:
         proxy_port = self.options.proxy_port or kibana_port + 2
         containers = []
         try:
-            image = resolve_docker_image_for_launch('_signing_proxy')
-            proxy = self.create_container(image=image,
-                                          name='proxy',
-                                          auto_remove=True,
-                                          command=['-target', self.es_endpoint, '-port', str(proxy_port)],
-                                          detach=True,
-                                          environment={
-                                              'AWS_ACCESS_KEY_ID': creds.access_key,
-                                              'AWS_SECRET_ACCESS_KEY': creds.secret_key,
-                                              'AWS_SESSION_TOKEN': creds.token,
-                                              'AWS_REGION': os.environ['AWS_DEFAULT_REGION']
-                                          },
-                                          ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
-            containers.append(proxy)
+            if self.options.local_port is None:
+                image = resolve_docker_image_for_launch('_signing_proxy')
+                proxy = self.create_container(image=image,
+                                              name='proxy',
+                                              auto_remove=True,
+                                              command=['-target', self.es_endpoint, '-port', str(proxy_port)],
+                                              detach=True,
+                                              environment={
+                                                  'AWS_ACCESS_KEY_ID': creds.access_key,
+                                                  'AWS_SECRET_ACCESS_KEY': creds.secret_key,
+                                                  'AWS_SESSION_TOKEN': creds.token,
+                                                  'AWS_REGION': os.environ['AWS_DEFAULT_REGION']
+                                              },
+                                              ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
+                containers.append(proxy)
+                es_port = proxy_port
+                network_mode = f'container:{proxy.name}'
+            else:
+                proxy = None
+                es_port = self.options.local_port
+                network_mode = 'host'
             image = resolve_docker_image_for_launch('_kibana')
             kibana = self.create_container(image=image,
                                            name='kibana',
                                            auto_remove=True,
                                            detach=True,
                                            environment={
-                                               'KIBANA_ELASTICSEARCH_URL': f'http://localhost:{proxy_port}',
+                                               'KIBANA_ELASTICSEARCH_URL': f'http://localhost:{es_port}',
                                                'KIBANA_PORT_NUMBER': kibana_port
                                            },
-                                           network_mode=f'container:{proxy.name}')
+                                           network_mode=network_mode)
             containers.append(kibana)
             image = resolve_docker_image_for_launch('_cerebro')
             cerebro = self.create_container(image=image,
@@ -111,12 +118,13 @@ class KibanaProxy:
                                             auto_remove=True,
                                             command=[f'-Dhttp.port={cerebro_port}'],
                                             detach=True,
-                                            network_mode=f'container:{proxy.name}')
+                                            network_mode=network_mode)
             containers.append(cerebro)
 
             def start_containers():
-                proxy.start()
-                time.sleep(1)
+                if proxy is not None:
+                    proxy.start()
+                    time.sleep(1)
                 kibana.start()
                 cerebro.start()
 
@@ -132,7 +140,7 @@ class KibanaProxy:
                 time.sleep(10)
                 log.info('Now open Kibana at http://127.0.0.1:%i/ or Cerebro at '
                          'http://127.0.0.1:%i/#!/overview?host=http://localhost:%i/',
-                         kibana_port, cerebro_port, proxy_port)
+                         kibana_port, cerebro_port, es_port)
 
             tasks = [
                 start_containers,
@@ -168,6 +176,9 @@ def main(argv):
                           'The default is the Kibana port plus 2.')
     cli.add_argument('--domain', '-d', metavar='DOMAIN', default=os.environ.get('AZUL_ES_DOMAIN'),
                      help='The AWS Elasticsearch domain to use.')
+    cli.add_argument('--local-port', '-l', metavar='PORT', type=int,
+                     help='Configure Kibana to connect to an ES container running on the local'
+                          'machine at the specified port. This disables the signing proxy.')
     options = cli.parse_args(argv)
     if not options.domain:
         raise RuntimeError('Please pass --domain or set AZUL_ES_DOMAIN')
