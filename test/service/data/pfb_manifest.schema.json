@@ -1910,24 +1910,18 @@
                                         {
                                             "name": "namespace",
                                             "namespace": "projects.accessions",
-                                            "type": {
-                                                "items": [
-                                                    "null",
-                                                    "string"
-                                                ],
-                                                "type": "array"
-                                            }
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
                                         },
                                         {
                                             "name": "accession",
                                             "namespace": "projects.accessions",
-                                            "type": {
-                                                "items": [
-                                                    "null",
-                                                    "string"
-                                                ],
-                                                "type": "array"
-                                            }
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
                                         }
                                     ],
                                     "name": "projects.accessions",
@@ -1953,18 +1947,12 @@
                                         {
                                             "name": "atlas",
                                                "namespace": "projects.tissue_atlas",
-                                               "type": {
-                                                   "items": ["null", "string"],
-                                                   "type": "array"
-                                               }
+                                               "type": ["null", "string"]
                                         },
                                         {
                                             "name": "version",
                                             "namespace": "projects.tissue_atlas",
-                                            "type": {
-                                                "items": ["null", "string"],
-                                                "type": "array"
-                                            }
+                                            "type": ["null", "string"]
                                         }
                                     ],
                                    "name": "projects.tissue_atlas",

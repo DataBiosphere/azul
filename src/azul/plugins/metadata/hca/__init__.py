@@ -102,6 +102,9 @@ class Plugin(MetadataPlugin[HCABundle]):
                         'properties': {
                             'accessions': {
                                 'type': 'nested'
+                            },
+                            'tissue_atlas': {
+                                'type': 'nested'
                             }
                         }
                     }

@@ -17,6 +17,7 @@ from azul import (
 from azul.collections import (
     compose_keys,
     none_safe_itemgetter,
+    none_safe_key,
     none_safe_tuple_key,
 )
 from azul.indexer.aggregate import (
@@ -178,12 +179,16 @@ class ProjectAggregator(SimpleAggregator):
         elif field in ('project_description',
                        'contact_names',
                        'contributors',
-                       'publications',
-                       'accessions',
-                       'tissue_atlas'):
+                       'publications'):
             return None
         elif field == 'estimated_cell_count':
             return MaxAccumulator()
+        elif field == 'accessions':
+            return SetOfDictAccumulator(key=compose_keys(none_safe_key(),
+                                                         none_safe_itemgetter('accession')))
+        elif field == 'tissue_atlas':
+            return SetOfDictAccumulator(key=compose_keys(none_safe_key(),
+                                                         none_safe_itemgetter('atlas')))
         else:
             return super()._accumulator(field)
 
