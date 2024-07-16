@@ -530,7 +530,12 @@
             "publications": [],
             "is_tissue_atlas_project": [false],
             "bionetwork_name": ["Immune"],
-            "tissue_atlas": [],
+            "tissue_atlas": [
+                {
+                    "atlas": "Blood",
+                    "version": "v1.0"
+                }
+            ],
             "supplementary_links": [
                 null
             ]
@@ -3251,7 +3256,28 @@
             "_type": [
                 "project"
             ],
-            "accessions": [],
+            "accessions": [
+                {
+                    "accession": "E-MTAB-10026",
+                    "namespace": "array_express"
+                },
+                {
+                    "accession": "EGAD00000000002",
+                    "namespace": "ega"
+                },
+                {
+                    "accession": "EGAS00000000001",
+                    "namespace": "ega"
+                },
+                {
+                    "accession": "phs001836",
+                    "namespace": "dbgap"
+                },
+                {
+                    "accession": "phs001997.v1.p1",
+                    "namespace": "dbgap"
+                }
+            ],
             "contact_names": [
                 null
             ],

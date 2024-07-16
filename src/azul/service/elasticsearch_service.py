@@ -306,6 +306,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         except KeyError:
             pass
         else:
+            self._flatten_nested_aggs(aggs)
             self._translate_response_aggs(aggs)
             self._populate_accessible(aggs)
         return response
@@ -321,15 +322,20 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
 
         field_type = self.service.field_type(self.catalog, facet_path)
         if isinstance(field_type, Nested):
+            nested_agg = agg.bucket(name='nested',
+                                    agg_type='nested',
+                                    path=dotted(facet_path))
             facet_path = dotted(facet_path, field_type.agg_property)
+        else:
+            nested_agg = agg
         # Make an inner agg that will contain the terms in question
         path = dotted(facet_path, 'keyword')
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
-        agg.bucket(name='myTerms',
-                   agg_type='terms',
-                   field=path,
-                   size=config.terms_aggregation_size)
+        nested_agg.bucket(name='myTerms',
+                          agg_type='terms',
+                          field=path,
+                          size=config.terms_aggregation_size)
         agg.bucket('untagged', 'missing', field=path)
         return agg
 
@@ -355,6 +361,15 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
 
         for agg_name in request.aggs:
             annotate(request.aggs[agg_name])
+
+    def _flatten_nested_aggs(self, aggs: MutableJSON):
+        for facet, agg in aggs.items():
+            try:
+                nested_agg = agg.pop('nested')
+            except KeyError:
+                pass
+            else:
+                agg['myTerms'] = nested_agg['myTerms']
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """
