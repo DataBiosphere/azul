@@ -102,7 +102,6 @@ api_gateway_log_format = {
     'domainName': '$context.domainName',
     'domainPrefix': '$context.domainPrefix',
     'error_message': '$context.error.message',
-    'error_messageString': '$context.error.messageString',
     'error_responseType': '$context.error.responseType',
     'extendedRequestId': '$context.extendedRequestId',
     'httpMethod': '$context.httpMethod',
