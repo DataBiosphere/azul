@@ -242,33 +242,47 @@ emit_tf({
                                     ('AllowedIPs', 'allow', config.allowed_v4_ips_term)
                                 ]
                             ],
-                            {
-                                'name': config.waf_rate_rule_name,
-                                'action': {
-                                    'block': {
-                                        'custom_response': {
-                                            'response_code': 429,
-                                            'response_header': [
-                                                {
-                                                    'name': 'Retry-After',
-                                                    'value': str(config.waf_rate_rule_retry_after)
-                                                }
-                                            ]
+                            *[
+                                {
+                                    'name': name,
+                                    'action': {
+                                        'block': {
+                                            'custom_response': {
+                                                'response_code': 429,
+                                                'response_header': [
+                                                    {
+                                                        'name': 'Retry-After',
+                                                        'value': str(config.waf_rate_rule_retry_after)
+                                                    }
+                                                ]
+                                            }
                                         }
+                                    },
+                                    'statement': {
+                                        'rate_based_statement': {
+                                            'limit': limit,
+                                            'aggregate_key_type': 'IP'
+                                        }
+                                    },
+                                    'visibility_config': {
+                                        'metric_name': name,
+                                        'sampled_requests_enabled': True,
+                                        'cloudwatch_metrics_enabled': True
                                     }
-                                },
-                                'statement': {
-                                    'rate_based_statement': {
-                                        'limit': config.waf_rate_rule_limit,
-                                        'aggregate_key_type': 'IP'
-                                    }
-                                },
-                                'visibility_config': {
-                                    'metric_name': config.waf_rate_rule_name,
-                                    'sampled_requests_enabled': True,
-                                    'cloudwatch_metrics_enabled': True
                                 }
-                            },
+                                # We use two rate rules, one with a lower
+                                # threshold that will block requests, and one
+                                # with a higher threshold that will block
+                                # requests and trigger an alarm. Note, the rules
+                                # need to be defined in order of descending
+                                # threshold size since once a rate rule is
+                                # tripped, it will prevent evaluation of any
+                                # following rules.
+                                for name, limit in [
+                                    (config.waf_rate_alarm_rule_name, config.waf_rate_rule_limit * 2),
+                                    (config.waf_rate_rule_name, config.waf_rate_rule_limit),
+                                ]
+                            ],
                             {
                                 'name': 'AWS-CommonRuleSet',
                                 'override_action': {
