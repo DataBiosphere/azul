@@ -1047,6 +1047,7 @@ dcp38_sources = mkdict(dcp37_sources, 455, mkdelta([
 ]))
 dcp39_sources = mkdict(dcp38_sources, 456, mkdelta([
     mksrc('datarepo-31abbcbe', 'hca_prod_4a95101c9ffc4f30a809f04518a23803__20220113_dcp2_20240603_dcp39', 38),
+    mksrc('datarepo-664a24cb', 'hca_prod_7c75f07c608d4c4aa1b7b13d11c0ad31__20220117_dcp2_20230314_dcp25', 67, pop),
     mksrc('datarepo-cd6f5afa', 'hca_prod_838d46603d624b08b32ddc5cbd93919d__20240531_dcp2_20240603_dcp39', 8),
     mksrc('datarepo-f6c258a6', 'hca_prod_9483c664d5464b309ba3efbdbf9290b4__20240301_dcp2_20240604_dcp39', 13),
     mksrc('datarepo-cf29bb39', 'hca_prod_f2078d5f2e7d48448552f7c41a231e52__20230201_dcp2_20240603_dcp39', 78)
