@@ -260,7 +260,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': '1.6.6',
+        'azul_terraform_version': '1.9.2',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
