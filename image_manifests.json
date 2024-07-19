@@ -69,22 +69,22 @@
         "id": "sha256:28050017fcc92e471104a892c834004eb33f59be638586352dd1c0bcc1a587ff",
         "platform": "linux/amd64"
     },
-    "docker.io/gitlab/gitlab-ce:17.1.1-ce.0": {
-        "digest": "sha256:252890e87a956cb3af1df7f0701432bf151267a4517749ca6dbea2a403f183a8",
-        "id": "sha256:b18f5cd9a8fc506998036d4354e9880687341803c7921ce7990e840acb277449",
+    "docker.io/gitlab/gitlab-ce:17.2.0-ce.0": {
+        "digest": "sha256:5208208a0f78b11ee821595f2f8158259fcbe5dcc4dc1e5fd843caf5f1681963",
+        "id": "sha256:e538321f6f0de7ea1a8342159c8d153c57c28a3973b723f96fafd7f70c3c51f4",
         "platform": "linux/amd64"
     },
-    "docker.io/gitlab/gitlab-runner:ubuntu-v17.1.0": {
-        "digest": "sha256:4d06b702df6fd3ec4c9ce3670a66fa30c38d9159bf89c63a35895d4da28e551a",
+    "docker.io/gitlab/gitlab-runner:ubuntu-v17.2.0": {
+        "digest": "sha256:856009847f9736f5d77ceb87628d5265f9ea291dafbc17cce6e0e22fb0a65e4a",
         "manifests": {
             "linux/amd64": {
-                "digest": "sha256:2410a3442b1d58aed95e0b1b3f7ecb84bdbcb9db38106c80f58f12580c0a79b8",
-                "id": "sha256:82ae99ae81afbee585e91300c9deb8da6e91b378f2365513dbfeeab84eac0e7b",
+                "digest": "sha256:df0450909283fb6205477434291a0cabfce3984e2df71a12ba29abb78153119b",
+                "id": "sha256:10336331501e592e3dbb2221416aac193e4127058e0d06906a17498cdc99472d",
                 "platform": "linux/amd64"
             },
             "linux/arm64": {
-                "digest": "sha256:1e91282b050599bb71e6834d32879ecf9ee757f56c6edc3e10ed7d696e854a67",
-                "id": "sha256:c42038a8226d0cb16be90be6e6f0531698636ea881813cab471fa0c6f679559b",
+                "digest": "sha256:bf4f79f87753016027ec6219efcdddb0016946b8ed1c53750a66dcdd42b6a722",
+                "id": "sha256:56778a7adeaa491ac2a31aa76bb795dc20047eadfc7c1137ee587b9417ef06ab",
                 "platform": "linux/arm64"
             }
         }
