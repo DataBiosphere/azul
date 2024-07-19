@@ -102,14 +102,19 @@ class TestAppLogging(AzulUnitTestCase):
                         self.assertTrue(response.startswith(traceback_header))
                         self.assertIn(magic_message, response)
                         # … and the response is logged.
+                        headers = {
+                            'Content-Type': 'text/plain',
+                            'Strict-Transport-Security': 'max-age=31536000;'
+                                                         ' includeSubDomains',
+                            'X-Content-Type-Options': 'nosniff',
+                            'X-Frame-Options': 'DENY',
+                            'Cache-Control': 'no-store'
+                        }
                         self.assertEqual(
                             azul_log.output[2],
-                            'DEBUG:azul.chalice:Returning 500 response with headers {"Content-Type": "text/plain", '
-                            '"Strict-Transport-Security": "max-age=31536000; includeSubDomains", '
-                            '"X-Content-Type-Options": "nosniff", '
-                            '"X-Frame-Options": "DENY", '
-                            '"Cache-Control": "no-store"}. '
-                            'See next line for the first 1024 characters of the body.\n' + response)
+                            f'DEBUG:azul.chalice:Returning 500 response with headers {json.dumps(headers)}. '
+                            f'See next line for the first 1024 characters of the body.\n' + response
+                        )
                     else:
                         # Otherwise, a generic error response is returned …
                         self.assertEqual(response.json(), {
