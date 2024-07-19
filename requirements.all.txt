@@ -89,7 +89,7 @@ orderedmultidict==1.0.1
 packaging==24.1
 pathable==0.4.3
 pip==23.3.2
-posix-ipc==1.1.1
+posix_ipc==1.1.1
 proto-plus==1.24.0
 protobuf==4.25.4
 psutil==6.0.0
@@ -120,7 +120,7 @@ responses==0.22.0
 roundrobin==0.0.4
 rsa==4.7.2
 s3transfer==0.7.0
-setuptools==65.5.1
+setuptools==70.3.0
 setuptools-scm==5.0.2
 six==1.16.0
 smmap==5.0.1
