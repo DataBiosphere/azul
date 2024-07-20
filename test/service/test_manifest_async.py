@@ -185,9 +185,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                         format=format,
                                         manifest_key=manifest_key,
                                         file_name=file_name)
-                    url = self.base_url.set(path=path, args=params)
+                    initial_url = self.base_url.set(path=path, args=params)
                     if fetch:
-                        url.path.segments.insert(0, 'fetch')
+                        initial_url.path.segments.insert(0, 'fetch')
 
                     partitions = (
                         ManifestPartition(index=0,
@@ -219,6 +219,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         'executionArn': execution_arn,
                         'startDate': 123
                     }
+                    url = initial_url
                     for i, expected_status in enumerate(3 * [301] + [302]):
                         response = requests.request(method='PUT' if i == 0 else 'GET',
                                                     url=str(url),
