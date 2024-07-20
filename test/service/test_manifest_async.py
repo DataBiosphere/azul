@@ -294,34 +294,28 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
                     _sfn.reset_mock()
-            mock_effects = [
-                manifest,
-                CachedManifestNotFound(manifest_key)
-            ]
-            with (
-                mock.patch.object(ManifestService,
-                                  'get_cached_manifest_with_key',
-                                  side_effect=mock_effects),
-                mock.patch.object(ManifestService,
-                                  'verify_manifest_key',
-                                  return_value=manifest_key)
-            ):
-                for mock_effect in mock_effects:
-                    with self.subTest(mock_effect=mock_effect):
-                        assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
-                        response = requests.get(str(manifest_url), allow_redirects=False)
-                        if isinstance(mock_effect, Manifest):
-                            self.assertEqual(302, response.status_code)
-                            self.assertEqual(object_url, response.headers['Location'])
-                        elif isinstance(mock_effect, CachedManifestNotFound):
-                            self.assertEqual(410, response.status_code)
-                            expected_response = {
-                                'Code': 'GoneError',
-                                'Message': 'The requested manifest has expired, please request a new one'
-                            }
-                            self.assertEqual(expected_response, response.json())
-                        else:
-                            assert False, mock_effect
+
+            with mock.patch.object(ManifestService,
+                                   'verify_manifest_key',
+                                   return_value=manifest_key):
+                with mock.patch.object(ManifestService,
+                                       'get_cached_manifest_with_key',
+                                       return_value=manifest):
+                    assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
+                    response = requests.get(str(manifest_url), allow_redirects=False)
+                    self.assertEqual(302, response.status_code)
+                    self.assertEqual(object_url, response.headers['Location'])
+                with mock.patch.object(ManifestService,
+                                       'get_cached_manifest_with_key',
+                                       side_effect=CachedManifestNotFound(manifest_key)):
+                    assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
+                    response = requests.get(str(manifest_url), allow_redirects=False)
+                    self.assertEqual(410, response.status_code)
+                    expected_response = {
+                        'Code': 'GoneError',
+                        'Message': 'The requested manifest has expired, please request a new one'
+                    }
+                    self.assertEqual(expected_response, response.json())
 
     token = Token.first(execution_id).encode()
 
