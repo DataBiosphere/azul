@@ -168,8 +168,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         'filters': json.dumps(filters.explicit)
                     }
                     path = '/manifest/files'
-                    object_url = 'https://url.to.manifest?foo=bar'
-                    file_name = 'some_file_name'
+
+                    initial_url = self.base_url.set(path=path, args=params)
+                    if fetch:
+                        initial_url.path.segments.insert(0, 'fetch')
+
                     manifest_key = ManifestKey(catalog=self.catalog,
                                                format=format,
                                                manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
@@ -180,14 +183,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
                     manifest_url = self.base_url.set(path=path)
                     manifest_url.path.segments.append(signed_manifest_key.encode())
+
+                    object_url = 'https://url.to.manifest?foo=bar'
+                    file_name = 'some_file_name'
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format=format,
                                         manifest_key=manifest_key,
                                         file_name=file_name)
-                    initial_url = self.base_url.set(path=path, args=params)
-                    if fetch:
-                        initial_url.path.segments.insert(0, 'fetch')
 
                     partitions = (
                         ManifestPartition(index=0,
