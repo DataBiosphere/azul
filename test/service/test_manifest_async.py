@@ -295,20 +295,19 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(expected_url, str(url))
                     _sfn.reset_mock()
 
+            assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
             with mock.patch.object(ManifestService,
                                    'verify_manifest_key',
                                    return_value=manifest_key):
                 with mock.patch.object(ManifestService,
                                        'get_cached_manifest_with_key',
                                        return_value=manifest):
-                    assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
                     response = requests.get(str(manifest_url), allow_redirects=False)
                     self.assertEqual(302, response.status_code)
                     self.assertEqual(object_url, response.headers['Location'])
                 with mock.patch.object(ManifestService,
                                        'get_cached_manifest_with_key',
                                        side_effect=CachedManifestNotFound(manifest_key)):
-                    assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
                     response = requests.get(str(manifest_url), allow_redirects=False)
                     self.assertEqual(410, response.status_code)
                     expected_response = {
