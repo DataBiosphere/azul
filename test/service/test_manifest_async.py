@@ -154,7 +154,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     @mock.patch.object(AsyncManifestService, '_sfn')
     @mock.patch.object(ManifestService, 'get_manifest')
     @mock.patch.object(ManifestService, 'get_cached_manifest')
-    def test(self, get_cached_manifest, get_manifest, _sfn):
+    @mock.patch.object(ManifestService, 'verify_manifest_key')
+    @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
+    def test(self,
+             get_cached_manifest_with_key,
+             verify_manifest_key,
+             get_cached_manifest,
+             get_manifest,
+             _sfn):
         with responses.RequestsMock() as helper:
             helper.add_passthru(str(self.base_url))
             for fetch in (True, False):
@@ -296,25 +303,21 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     _sfn.reset_mock()
 
             assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
-            with mock.patch.object(ManifestService,
-                                   'verify_manifest_key',
-                                   return_value=manifest_key):
-                with mock.patch.object(ManifestService,
-                                       'get_cached_manifest_with_key',
-                                       return_value=manifest):
-                    response = requests.get(str(manifest_url), allow_redirects=False)
-                    self.assertEqual(302, response.status_code)
-                    self.assertEqual(object_url, response.headers['Location'])
-                with mock.patch.object(ManifestService,
-                                       'get_cached_manifest_with_key',
-                                       side_effect=CachedManifestNotFound(manifest_key)):
-                    response = requests.get(str(manifest_url), allow_redirects=False)
-                    self.assertEqual(410, response.status_code)
-                    expected_response = {
-                        'Code': 'GoneError',
-                        'Message': 'The requested manifest has expired, please request a new one'
-                    }
-                    self.assertEqual(expected_response, response.json())
+            assert verify_manifest_key.not_called
+            verify_manifest_key.return_value = manifest_key
+            assert get_cached_manifest_with_key.not_called
+            get_cached_manifest_with_key.return_value = manifest
+            response = requests.get(str(manifest_url), allow_redirects=False)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(object_url, response.headers['Location'])
+            get_cached_manifest_with_key.side_effect = CachedManifestNotFound(manifest_key)
+            response = requests.get(str(manifest_url), allow_redirects=False)
+            self.assertEqual(410, response.status_code)
+            expected_response = {
+                'Code': 'GoneError',
+                'Message': 'The requested manifest has expired, please request a new one'
+            }
+            self.assertEqual(expected_response, response.json())
 
     token = Token.first(execution_id).encode()
 
