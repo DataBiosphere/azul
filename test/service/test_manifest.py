@@ -260,6 +260,8 @@ class ManifestTestCase(WebServiceTestCase,
         # the replica documents in the index. We haven't figured out how to
         # ensure that this ordering is reliably deterministic, so we sort to
         # make the test insensitive to it.
+        # FIXME: Document order of replicas is nondeterministic
+        #        https://github.com/DataBiosphere/azul/issues/6442
         sort_key = compose_keys(none_safe_tuple_key(),
                                 # This is necessary to stabilize the ordering of
                                 # DUOS replicas, which have the same id as the
