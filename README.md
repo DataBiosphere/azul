@@ -683,7 +683,7 @@ request for the AWS SES Identity to be granted production access::
     --contact-language EN \
     --mail-type TRANSACTIONAL \
     --production-access-enabled \
-    --website-url $(python -c 'from azul import config; print(api_lambda_domain("notify"))') \
+    --website-url $(python -m azul 'config.api_lambda_domain("notify")') \
     --use-case-description \
         'Use a lambda function invoked by an SNS topic to forward the SNS notification via email to a single recipient.'
 
