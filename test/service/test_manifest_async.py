@@ -314,7 +314,16 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                          operation_name='StartExecution',
                                                          error_code='ExecutionAlreadyExists')
                     _sfn.start_execution.side_effect = exception
-                    response = requests.put(url=str(initial_url), allow_redirects=False)
+
+                    # Introduce an insignificant difference in the SFN input by
+                    # reordering the `filters` dictionary entries. The repeated
+                    # request should be considered valid and matching the completed
+                    # step function execution.
+                    url = initial_url.copy()
+                    filters = json.loads(url.args['filters'])
+                    url.args['filters'] = json.dumps(dict(reversed(filters.items())))
+
+                    response = requests.put(url=str(url), allow_redirects=False)
                     _sfn.reset_mock(side_effect=True)
                     if fetch:
                         self.assertEqual(200, response.status_code)
