@@ -1045,7 +1045,7 @@ dcp38_sources = mkdict(dcp37_sources, 455, mkdelta([
     mksrc('datarepo-37460143', 'hca_prod_d5c91e922e7f473d8cf3ab03bbae21c2__20240503_dcp2_20240508_dcp38', 41),
     mksrc('datarepo-39884574', 'hca_prod_daef3fda262045aea3f71613814a35bf__20240503_dcp2_20240508_dcp38', 47)
 ]))
-dcp39_sources = mkdict(dcp38_sources, 456, mkdelta([
+dcp39_sources = mkdict(dcp38_sources, 455, mkdelta([
     mksrc('datarepo-31abbcbe', 'hca_prod_4a95101c9ffc4f30a809f04518a23803__20220113_dcp2_20240603_dcp39', 38),
     mksrc('datarepo-664a24cb', 'hca_prod_7c75f07c608d4c4aa1b7b13d11c0ad31__20220117_dcp2_20230314_dcp25', 67, pop),
     mksrc('datarepo-cd6f5afa', 'hca_prod_838d46603d624b08b32ddc5cbd93919d__20240531_dcp2_20240603_dcp39', 8),
@@ -1054,7 +1054,7 @@ dcp39_sources = mkdict(dcp38_sources, 456, mkdelta([
 
 ]))
 
-dcp40_sources = mkdict(dcp39_sources, 459, mkdelta([
+dcp40_sources = mkdict(dcp39_sources, 458, mkdelta([
     mksrc('datarepo-7ff6ae27', 'hca_prod_005d611a14d54fbf846e571a1f874f70__20220111_dcp2_20240711_dcp40', 884),
     mksrc('datarepo-083a593d', 'hca_prod_027c51c60719469fa7f5640fe57cbece__20220110_dcp2_20240711_dcp40', 8),
     mksrc('datarepo-6e878a15', 'hca_prod_065e6c13ad6b46a38075c3137eb03068__20220213_dcp2_20240711_dcp40', 121),
@@ -1065,7 +1065,6 @@ dcp40_sources = mkdict(dcp39_sources, 459, mkdelta([
     mksrc('datarepo-2f17d9dd', 'hca_prod_16ed4ad8731946b288596fe1c1d73a82__20220111_dcp2_20240711_dcp40', 29),
     mksrc('datarepo-98b77527', 'hca_prod_1c6a960d52ac44eab728a59c7ab9dc8e__20220110_dcp2_20240711_dcp40', 11),
     mksrc('datarepo-8c31fd19', 'hca_prod_2d4d89f2ebeb467cae60a3efc5e8d4ba__20230206_dcp2_20240711_dcp40', 2),
-    mksrc('datarepo-f9579ac6', 'hca_prod_2ef3655a973d4d699b4121fa4041eed7__20220111_dcp2_20240711_dcp40', 11),
     mksrc('datarepo-5feaa5ad', 'hca_prod_31887183a72c43089eacc6140313f39c__20220111_dcp2_20240711_dcp40', 7),
     mksrc('datarepo-c094bcbc', 'hca_prod_40272c3b46974bd4ba3f82fa96b9bf71__20220303_dcp2_20240711_dcp40', 7),
     mksrc('datarepo-d72f8298', 'hca_prod_425c2759db664c93a358a562c069b1f1__20220519_dcp2_20240711_dcp40', 326),

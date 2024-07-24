@@ -694,13 +694,11 @@ anvil6_sources = mkdict(anvil5_sources, 250, mkdelta([
     # @formatter:on
 ]))
 
-anvil7_sources = mkdict(anvil6_sources, 259, mkdelta([
-    mksrc('datarepo-b09013d2', 'ANVIL_ALSCompute_Collection_GRU_20231016_ANV5_202406261937', 14593),
+anvil7_sources = mkdict(anvil6_sources, 257, mkdelta([
     mksrc('datarepo-c9e438dc', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUCL_DS_EARET_MDS_WES_20221026_ANV5_202406261957', 686),
     mksrc('datarepo-90a1d452', 'ANVIL_GREGoR_R01_GRU_20240208_ANV5_202407011515', 2473),
     mksrc('datarepo-c27c13db', 'ANVIL_GREGoR_R01_HMB_20240208_ANV5_202407011529', 222),
     mksrc('datarepo-3594cc06', 'ANVIL_HPRC_20240401_ANV5_202406261913', 63201),
-    mksrc('datarepo-93e6891e', 'ANVIL_MAS_ISO_seq_20240113_ANV5_202406262021', 205),
     mksrc('datarepo-49f55ff6', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Light_DS_WGS_20240625_ANV5_202406262032', 60),
     mksrc('datarepo-54040f7f', 'ANVIL_T2T_CHRY_20240301_ANV5_202406271432', 309979),
     mksrc('datarepo-5048eadd', 'ANVIL_ccdg_broad_ai_ibd_daly_brant_burnstein_utsw_wes_20240627_ANV5_202406271535', 66),
