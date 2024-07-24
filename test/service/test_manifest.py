@@ -20,9 +20,6 @@ from io import (
     BytesIO,
 )
 import json
-from operator import (
-    itemgetter,
-)
 import os
 from pathlib import (
     Path,
@@ -68,7 +65,7 @@ from azul import (
 from azul.collections import (
     adict,
     compose_keys,
-    none_safe_key,
+    none_safe_tuple_key,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -2059,7 +2056,11 @@ class TestAnvilManifests(AnvilManifestTestCase):
             expected_schema = json.load(f)
         with open(self._data_path('service') / 'verbatim/pfb_entities.json') as f:
             expected_entities = json.load(f)
-        sort_key = compose_keys(none_safe_key(), itemgetter('id'))
+        sort_key = compose_keys(none_safe_tuple_key(),
+                                # This is necessary to stabilize the ordering of
+                                # DUOS replicas, which have the same id as the
+                                # main dataset replica.
+                                lambda entity: (entity['id'], entity['object'].get('datarepo_row_id')))
         entities.sort(key=sort_key)
         expected_entities.sort(key=sort_key)
         self.assertEqual(expected_schema, schema)
