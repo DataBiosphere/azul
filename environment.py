@@ -139,6 +139,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': None,
 
         # The name of a catalog to perform reindex or other operational tasks on.
+        # By default, these tasks are performed on all catalogs.
         #
         'azul_current_catalog': None,
 
