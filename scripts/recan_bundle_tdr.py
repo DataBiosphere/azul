@@ -400,7 +400,7 @@ def main(argv):
 
     tdr_source = TDRSourceRef(id=args.source_id,
                               spec=TDRSourceSpec(prefix=Prefix.of_everything,
-                                                 project='test_project',
+                                                 subdomain='test_project',
                                                  name='test_name',
                                                  is_snapshot=True))
     tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)

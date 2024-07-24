@@ -93,7 +93,7 @@ log = logging.getLogger(__name__)
 
 @attrs.frozen(kw_only=True)
 class TDRSourceSpec(SourceSpec):
-    project: str
+    subdomain: str
     name: str
     is_snapshot: bool
 
@@ -105,24 +105,26 @@ class TDRSourceSpec(SourceSpec):
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{project}:{type}/{name}:{prefix}' ending with an optional
+        'tdr:{subdomain}:{type}/{name}:{prefix}' ending with an optional
         '/{partition_prefix_length}'.
 
         >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:/0')
         >>> s # doctest: +NORMALIZE_WHITESPACE
         TDRSourceSpec(prefix=Prefix(common='', partition=0),
-                      project='foo',
+                      subdomain='foo',
                       name='bar',
                       is_snapshot=True)
+
         >>> s.bq_name
         'bar'
+
         >>> str(s)
         'tdr:foo:snapshot/bar:/0'
 
         >>> d = TDRSourceSpec.parse('tdr:foo:dataset/bar:42/2')
         >>> d # doctest: +NORMALIZE_WHITESPACE
         TDRSourceSpec(prefix=Prefix(common='42', partition=2),
-                      project='foo',
+                      subdomain='foo',
                       name='bar',
                       is_snapshot=False)
         >>> d.bq_name
@@ -142,7 +144,7 @@ class TDRSourceSpec(SourceSpec):
         """
         rest, prefix = cls._parse(spec)
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, name = rest.split(':')
+        service, subdomain, name = rest.split(':')
         type, name = name.split('/')
         assert service == 'tdr', service
         if type == cls._type_snapshot:
@@ -152,7 +154,7 @@ class TDRSourceSpec(SourceSpec):
         else:
             assert False, type
         self = cls(prefix=prefix,
-                   project=project,
+                   subdomain=subdomain,
                    name=name,
                    is_snapshot=is_snapshot)
         assert spec == str(self), spec
@@ -181,7 +183,7 @@ class TDRSourceSpec(SourceSpec):
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
         return ':'.join([
             'tdr',
-            self.project,
+            self.subdomain,
             f'{source_type}/{self.name}',
             str(self.prefix)
         ])
@@ -191,7 +193,7 @@ class TDRSourceSpec(SourceSpec):
         return self._type_snapshot if self.is_snapshot else self._type_dataset
 
     def qualify_table(self, table_name: str) -> str:
-        return '.'.join((self.project, self.bq_name, table_name))
+        return '.'.join((self.subdomain, self.bq_name, table_name))
 
     def contains(self, other: 'SourceSpec') -> bool:
         """
@@ -213,7 +215,7 @@ class TDRSourceSpec(SourceSpec):
             isinstance(other, TDRSourceSpec)
             and super().contains(other)
             and self.is_snapshot == other.is_snapshot
-            and self.project == other.project
+            and self.subdomain == other.subdomain
             and self.name == other.name
         )
 
@@ -454,11 +456,11 @@ class TDRClient(SAMClient):
         """
         Verify that the client is authorized to read from TDR BigQuery tables.
         """
-        resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.project!r}'
+        resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.subdomain!r}'
         try:
             self.run_sql(f'''
                 SELECT *
-                FROM `{source.project}.{source.bq_name}.INFORMATION_SCHEMA.TABLES`
+                FROM `{source.subdomain}.{source.bq_name}.INFORMATION_SCHEMA.TABLES`
                 LIMIT 1
             ''')
         except Forbidden:
