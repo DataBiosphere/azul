@@ -278,7 +278,7 @@ To specify a catalog to be reindexed, set ``Key`` to ``azul_current_catalog``
 and ``Value`` to the name of the catalog, for example, ``dcp3``. To specify the
 sources to be reindexed, set ``Key`` to ``azul_current_sources`` and
 ``Value`` to a space-separated list of sources globs, e.g.
-``*:snapshot/hca_dev_* *:snapshot/lungmap_dev_*``. Check the inputs you just
+``*:hca_dev_* *:lungmap_dev_*``. Check the inputs you just
 made. Start the ``reindex`` job by clicking on ``Run job``. Wait until the job
 has completed.
 

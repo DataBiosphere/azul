@@ -30,7 +30,7 @@ def mksrc(google_project, snapshot, subgraphs, flags: int = 0) -> tuple[str, str
     source = None if flags & pop else ':'.join([
         'tdr',
         google_project,
-        'snapshot/' + snapshot,
+        snapshot,
         '/' + str(partition_prefix_length(subgraphs))
     ])
     return project, source

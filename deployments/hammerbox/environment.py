@@ -41,7 +41,7 @@ def mksrc(google_project,
     source = None if flags & pop else ':'.join([
         'tdr',
         google_project,
-        'snapshot/' + snapshot,
+        snapshot,
         prefix + '/0'
     ])
     return project, source

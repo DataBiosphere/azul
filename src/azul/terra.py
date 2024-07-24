@@ -95,49 +95,24 @@ log = logging.getLogger(__name__)
 class TDRSourceSpec(SourceSpec):
     subdomain: str
     name: str
-    is_snapshot: bool
-
-    _type_dataset = 'dataset'
-
-    _type_snapshot = 'snapshot'
 
     @classmethod
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{subdomain}:{type}/{name}:{prefix}' ending with an optional
+        'tdr:{subdomain}:{name}:{prefix}' ending with an optional
         '/{partition_prefix_length}'.
 
-        >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:/0')
+        >>> s = TDRSourceSpec.parse('tdr:foo:bar:/0')
         >>> s # doctest: +NORMALIZE_WHITESPACE
         TDRSourceSpec(prefix=Prefix(common='', partition=0),
                       subdomain='foo',
-                      name='bar',
-                      is_snapshot=True)
-
-        >>> s.bq_name
-        'bar'
+                      name='bar')
 
         >>> str(s)
-        'tdr:foo:snapshot/bar:/0'
+        'tdr:foo:bar:/0'
 
-        >>> d = TDRSourceSpec.parse('tdr:foo:dataset/bar:42/2')
-        >>> d # doctest: +NORMALIZE_WHITESPACE
-        TDRSourceSpec(prefix=Prefix(common='42', partition=2),
-                      subdomain='foo',
-                      name='bar',
-                      is_snapshot=False)
-        >>> d.bq_name
-        'datarepo_bar'
-        >>> str(d)
-        'tdr:foo:dataset/bar:42/2'
-
-        >>> TDRSourceSpec.parse('tdr:foo:baz/bar:42/0')
-        Traceback (most recent call last):
-        ...
-        AssertionError: baz
-
-        >>> TDRSourceSpec.parse('tdr:foo:snapshot/bar:n32/0')
+        >>> TDRSourceSpec.parse('tdr:foo:bar:n32/0')
         Traceback (most recent call last):
         ...
         azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
@@ -145,76 +120,55 @@ class TDRSourceSpec(SourceSpec):
         rest, prefix = cls._parse(spec)
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
         service, subdomain, name = rest.split(':')
-        type, name = name.split('/')
         assert service == 'tdr', service
-        if type == cls._type_snapshot:
-            is_snapshot = True
-        elif type == cls._type_dataset:
-            is_snapshot = False
-        else:
-            assert False, type
         self = cls(prefix=prefix,
                    subdomain=subdomain,
-                   name=name,
-                   is_snapshot=is_snapshot)
+                   name=name)
         assert spec == str(self), spec
         return self
-
-    @property
-    def bq_name(self):
-        return self.name if self.is_snapshot else f'datarepo_{self.name}'
 
     def __str__(self) -> str:
         """
         The inverse of :meth:`parse`.
 
-        >>> s = 'tdr:foo:snapshot/bar:/0'
+        >>> s = 'tdr:foo:bar:/0'
         >>> s == str(TDRSourceSpec.parse(s))
         True
 
-        >>> s = 'tdr:foo:snapshot/bar:22/0'
+        >>> s = 'tdr:foo:bar:22/0'
         >>> s == str(TDRSourceSpec.parse(s))
         True
 
-        >>> s = 'tdr:foo:snapshot/bar:22/2'
+        >>> s = 'tdr:foo:bar:22/2'
         >>> s == str(TDRSourceSpec.parse(s))
         True
         """
-        source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
         return ':'.join([
             'tdr',
             self.subdomain,
-            f'{source_type}/{self.name}',
+            self.name,
             str(self.prefix)
         ])
 
-    @property
-    def type_name(self):
-        return self._type_snapshot if self.is_snapshot else self._type_dataset
-
     def qualify_table(self, table_name: str) -> str:
-        return '.'.join((self.subdomain, self.bq_name, table_name))
+        return '.'.join((self.subdomain, self.name, table_name))
 
     def contains(self, other: 'SourceSpec') -> bool:
         """
         >>> p = TDRSourceSpec.parse
 
-        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:foo:snapshot/bar:/0'))
+        >>> p('tdr:foo:bar:/0').contains(p('tdr:foo:bar:/0'))
         True
 
-        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:bar:snapshot/bar:/0'))
+        >>> p('tdr:foo:bar:/0').contains(p('tdr:bar:bar:/0'))
         False
 
-        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:foo:dataset/bar:/0'))
-        False
-
-        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:foo:snapshot/baz:/0'))
+        >>> p('tdr:foo:bar:/0').contains(p('tdr:foo:baz:/0'))
         False
         """
         return (
             isinstance(other, TDRSourceSpec)
             and super().contains(other)
-            and self.is_snapshot == other.is_snapshot
             and self.subdomain == other.subdomain
             and self.name == other.name
         )
@@ -431,7 +385,7 @@ class TDRClient(SAMClient):
                               location=storage['region'])
 
     def _retrieve_source(self, source: SourceRef) -> MutableJSON:
-        endpoint = self._repository_endpoint(source.spec.type_name + 's', source.id)
+        endpoint = self._repository_endpoint('snapshots', source.id)
         response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
         require(source.spec.name == response['name'],
@@ -439,8 +393,8 @@ class TDRClient(SAMClient):
         return response
 
     def _lookup_source(self, source: TDRSourceSpec) -> MutableJSON:
-        endpoint = self._repository_endpoint(source.type_name + 's')
-        endpoint.set(args=dict(filter=source.bq_name, limit='2'))
+        endpoint = self._repository_endpoint('snapshots')
+        endpoint.set(args=dict(filter=source.name, limit='2'))
         response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
         total = response['filteredTotal']
@@ -450,17 +404,17 @@ class TDRClient(SAMClient):
             source_id = one(response['items'])['id']
             return self._retrieve_source(SourceRef(id=source_id, spec=source))
         else:
-            raise TerraNameConflictException(endpoint, source.bq_name, response)
+            raise TerraNameConflictException(endpoint, source.name, response)
 
     def check_bigquery_access(self, source: TDRSourceSpec):
         """
         Verify that the client is authorized to read from TDR BigQuery tables.
         """
-        resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.subdomain!r}'
+        resource = f'BigQuery dataset {source.name!r} in Google Cloud project {source.subdomain!r}'
         try:
             self.run_sql(f'''
                 SELECT *
-                FROM `{source.subdomain}.{source.bq_name}.INFORMATION_SCHEMA.TABLES`
+                FROM `{source.subdomain}.{source.name}.INFORMATION_SCHEMA.TABLES`
                 LIMIT 1
             ''')
         except Forbidden:

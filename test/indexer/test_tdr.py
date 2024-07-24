@@ -194,7 +194,7 @@ class TDRPluginTestCase(TDRTestCase,
                                                '--log-level=debug',
                                                '--port=9050',
                                                '--project=' + cls.source.spec.subdomain,
-                                               '--dataset=' + cls.source.spec.bq_name
+                                               '--dataset=' + cls.source.spec.name
                                            ])
 
     def _make_mock_tdr_tables(self,

@@ -176,7 +176,7 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
             self.assertEqual(response.status, 404)
 
     mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
+    make_mock_source_spec = 'tdr:mock:{}:/2'.format
 
     @classmethod
     def _sources(cls):
