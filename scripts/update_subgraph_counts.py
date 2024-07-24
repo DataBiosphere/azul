@@ -105,12 +105,12 @@ class SubgraphCounter:
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class SourceSpecArgs:
     project: str
-    snapshot: str
+    name: str
     subgraph_count: int
     explicit_prefix: Optional[str]
 
     def __str__(self) -> str:
-        params = f'{self.project!r}, {self.snapshot!r}, {self.subgraph_count!r}'
+        params = f'{self.project!r}, {self.name!r}, {self.subgraph_count!r}'
         if self.explicit_prefix is not None:
             params += f', prefix={self.explicit_prefix!r}'
         return f'mksrc({params})'
@@ -141,7 +141,7 @@ def generate_sources(catalog: CatalogName,
             if default_prefix not in prefixed_counter.partition_sizes:
                 explicit_prefix = prefixed_counter.ideal_common_prefix()
         return SourceSpecArgs(project=source.spec.project,
-                              snapshot=source.spec.name,
+                              name=source.spec.name,
                               subgraph_count=counter.count,
                               explicit_prefix=explicit_prefix)
 
