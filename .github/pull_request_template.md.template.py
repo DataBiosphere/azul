@@ -812,6 +812,14 @@ def emit(t: T, target_branch: str):
                                'Moved connected issue to *Merged stable* column in ZenHub',
                                f'Moved connected {t.issues} to *Merged lower* column in ZenHub')
             }),
+            iif(t is T.upgrade,
+                {
+                    'type': 'cli',
+                    'content': 'Closed related Dependabot PRs with a comment referencing the corresponding '
+                               'commit in this PR',
+                    'alt': 'or this PR does not include any such commits'
+                }
+                ),
             {
                 'type': 'cli',
                 'content': 'Pushed merge commit to GitHub'
