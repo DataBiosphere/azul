@@ -1720,9 +1720,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'source_spec',
-                'tdr:test_anvil_project:anvil_snapshot:/2',
-                'tdr:test_anvil_project:anvil_snapshot:/2',
-                'tdr:test_anvil_project:anvil_snapshot:/2'
+                'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot:/2',
+                'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot:/2',
+                'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot:/2'
             ),
             (
                 'datasets.document_id',

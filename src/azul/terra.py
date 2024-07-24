@@ -5,6 +5,10 @@ from abc import (
 from collections.abc import (
     Sequence,
 )
+from enum import (
+    StrEnum,
+    auto,
+)
 import json
 import logging
 from time import (
@@ -52,6 +56,7 @@ from azul import (
     cache,
     config,
     mutable_furl,
+    reject,
     require,
 )
 from azul.auth import (
@@ -93,6 +98,16 @@ log = logging.getLogger(__name__)
 
 @attrs.frozen(kw_only=True)
 class TDRSourceSpec(SourceSpec):
+    class Type(StrEnum):
+        bigquery = auto()
+        parquet = auto()
+
+    class Domain(StrEnum):
+        gcp = auto()
+        azure = auto()
+
+    type: Type
+    domain: Domain
     subdomain: str
     name: str
 
@@ -100,28 +115,46 @@ class TDRSourceSpec(SourceSpec):
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{subdomain}:{name}:{prefix}' ending with an optional
+        'tdr:{type}{domain}{subdomain}:{name}:{prefix}' ending with an optional
         '/{partition_prefix_length}'.
 
-        >>> s = TDRSourceSpec.parse('tdr:foo:bar:/0')
+        >>> s = TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:/0')
         >>> s # doctest: +NORMALIZE_WHITESPACE
         TDRSourceSpec(prefix=Prefix(common='', partition=0),
+                      type=<Type.bigquery: 'bigquery'>,
+                      domain=<Domain.gcp: 'gcp'>,
                       subdomain='foo',
                       name='bar')
 
         >>> str(s)
-        'tdr:foo:bar:/0'
+        'tdr:bigquery:gcp:foo:bar:/0'
 
-        >>> TDRSourceSpec.parse('tdr:foo:bar:n32/0')
+        >>> TDRSourceSpec.parse('tdr:spam:gcp:foo:bar:/0')
+        Traceback (most recent call last):
+        ...
+        ValueError: 'spam' is not a valid TDRSourceSpec.Type
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:eggs:foo:bar:/0')
+        Traceback (most recent call last):
+        ...
+        ValueError: 'eggs' is not a valid TDRSourceSpec.Domain
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:n32/0')
         Traceback (most recent call last):
         ...
         azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
         """
         rest, prefix = cls._parse(spec)
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, subdomain, name = rest.split(':')
+        service, type, domain, subdomain, name = rest.split(':')
         assert service == 'tdr', service
+        type = cls.Type(type)
+        reject(type == cls.Type.parquet, 'Parquet sources are not yet supported')
+        domain = cls.Domain(domain)
+        reject(domain == cls.Domain.azure, 'Azure sources are not yet supported')
         self = cls(prefix=prefix,
+                   type=type,
+                   domain=domain,
                    subdomain=subdomain,
                    name=name)
         assert spec == str(self), spec
@@ -131,20 +164,22 @@ class TDRSourceSpec(SourceSpec):
         """
         The inverse of :meth:`parse`.
 
-        >>> s = 'tdr:foo:bar:/0'
+        >>> s = 'tdr:bigquery:gcp:foo:bar:/0'
         >>> s == str(TDRSourceSpec.parse(s))
         True
 
-        >>> s = 'tdr:foo:bar:22/0'
+        >>> s = 'tdr:bigquery:gcp:foo:bar:22/0'
         >>> s == str(TDRSourceSpec.parse(s))
         True
 
-        >>> s = 'tdr:foo:bar:22/2'
+        >>> s = 'tdr:bigquery:gcp:foo:bar:22/2'
         >>> s == str(TDRSourceSpec.parse(s))
         True
         """
         return ':'.join([
             'tdr',
+            self.type.value,
+            self.domain.value,
             self.subdomain,
             self.name,
             str(self.prefix)
@@ -157,18 +192,20 @@ class TDRSourceSpec(SourceSpec):
         """
         >>> p = TDRSourceSpec.parse
 
-        >>> p('tdr:foo:bar:/0').contains(p('tdr:foo:bar:/0'))
+        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:foo:bar:/0'))
         True
 
-        >>> p('tdr:foo:bar:/0').contains(p('tdr:bar:bar:/0'))
+        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:bar:bar:/0'))
         False
 
-        >>> p('tdr:foo:bar:/0').contains(p('tdr:foo:baz:/0'))
+        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:foo:baz:/0'))
         False
         """
         return (
             isinstance(other, TDRSourceSpec)
             and super().contains(other)
+            and self.type == other.type
+            and self.domain == other.domain
             and self.subdomain == other.subdomain
             and self.name == other.name
         )

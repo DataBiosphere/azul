@@ -29,6 +29,8 @@ def mksrc(google_project, snapshot, subgraphs, flags: int = 0) -> tuple[str, str
     assert flags <= ma | pop
     source = None if flags & pop else ':'.join([
         'tdr',
+        'bigquery',
+        'gcp',
         google_project,
         snapshot,
         '/' + str(partition_prefix_length(subgraphs))
