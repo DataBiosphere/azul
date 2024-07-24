@@ -316,7 +316,7 @@ emit_tf({
                             'dimensions': {
                                 'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
                                 'Region': config.region,
-                                'Rule': config.waf_rate_rule_name
+                                'Rule': config.waf_rate_alarm_rule_name
                             },
                             'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                             'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
