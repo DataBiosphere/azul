@@ -508,10 +508,20 @@ tf_config = {
                     }
                 }
                 for name, pattern in [
-                    ('clamscan', '"clamscan succeeded"'),
-                    ('freshclam', '"freshclam succeeded"'),
-                    # Using '?' to create an "a OR b" filter pattern
-                    ('clam_fail', '?"clamscan failed" ?"freshclam failed"'),
+                    # Using '?' to create an "a OR b" filter pattern.
+                    # If the GitLab instance is rebooted when a long-running
+                    # (14h+) scan is nearing completion, we may go more than 24
+                    # hours without matching a successful scan. To prevent this
+                    # from triggering false positive alarms, we include a
+                    # sub-pattern to also match successful power-offs & reboots.
+                    ('clamscan', '?"clamscan succeeded" '
+                                 '?"systemd: Starting Reboot" '
+                                 '?"systemd: Starting Power-Off"'),
+                    ('freshclam', '?"freshclam succeeded" '
+                                  '?"systemd: Starting Reboot" '
+                                  '?"systemd: Starting Power-Off"'),
+                    ('clam_fail', '?"clamscan failed" '
+                                  '?"freshclam failed"')
                 ]
             }
         },
