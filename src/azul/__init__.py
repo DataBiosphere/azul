@@ -1568,6 +1568,8 @@ class Config:
 
     waf_rate_rule_name = 'RateRule'
 
+    waf_rate_alarm_rule_name = 'RateAlarmRule'
+
     waf_rate_rule_period = 300  # seconds; this value is fixed by AWS
 
     waf_rate_rule_retry_after = 30  # seconds
