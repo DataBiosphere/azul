@@ -85,6 +85,7 @@ Connected issue: #0000
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but excluded any `p` tags</sub>
 - [ ] Moved connected issue to *Merged lower* column in ZenHub
+- [ ] Closed related Dependabot PRs with a comment referencing the corresponding commit in this PR <sub>or this PR does not include any such commits</sub>
 - [ ] Pushed merge commit to GitHub
 
 
