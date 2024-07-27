@@ -339,16 +339,16 @@ def _normalize_arch(arch: str,
     return arch, variant
 
 
-class Artifact(TypedDict):
+class Gist(TypedDict):
     """
-    An manifest or a blob, something that can be hashed.
+    Represents an image manifest or a blob, or any Docker artifact with a digest
     """
 
-    #: A hash of the content, most likely starting in `sha256:`
+    #: A hash of the content, typically starting in `sha256:`
     digest: str
 
 
-class Manifest(Artifact):
+class ImageGist(Gist):
     """
     A Docker image
     """
@@ -362,12 +362,12 @@ class Manifest(Artifact):
     id: str
 
 
-class ManifestList(Artifact):
+class IndexImageGist(Gist):
     """
     A multi-platform image, also known as an image index
     """
     #: The images in the list, by platform (`os/arch` or `os/arch/variant`)
-    manifests: dict[str, Manifest]
+    manifests: dict[str, ImageGist]
 
 
 @attrs.define(frozen=True, slots=False)
@@ -376,15 +376,15 @@ class Repository:
     name: str
 
     @classmethod
-    def get_manifests(cls):
-        manifests: dict[str, Manifest | ManifestList] = {}
+    def get_gists(cls):
+        gists: dict[str, ImageGist | IndexImageGist] = {}
         for alias, ref in images_by_alias.items():
             log.info('Getting information for %r (%s)', alias, ref)
             repository = Repository(host=ref.registry_host,
                                     name=ref.relative_name)
             digest = repository.get_tag(ref.tag)
-            manifests[str(ref)] = repository.get_manifest(digest)
-        return manifests
+            gists[str(ref)] = repository.get_gist(digest)
+        return gists
 
     def get_tag(self, tag: str) -> str:
         """
@@ -394,7 +394,7 @@ class Repository:
         digest, _ = self._client.head_manifest_and_response(tag)
         return digest
 
-    def get_manifest(self, digest: str) -> Manifest | ManifestList:
+    def get_gist(self, digest: str) -> ImageGist | IndexImageGist:
         """
         Return the manifest for the given digest.
         """
@@ -406,7 +406,7 @@ class Repository:
                   | 'application/vnd.docker.distribution.manifest.list.v2+json'):
                 return {
                     'digest': digest,
-                    'manifests': self._get_manifests(manifest['manifests'])
+                    'manifests': self._get_gists(manifest['manifests'])
                 }
             case ('application/vnd.docker.distribution.manifest.v2+json'
                   | 'application/vnd.oci.image.manifest.v1+json'):
@@ -420,19 +420,19 @@ class Repository:
             case media_type:
                 raise NotImplementedError(media_type)
 
-    def _get_manifests(self, manifest_list: JSONs):
-        manifests: dict[str, Manifest] = {}
-        for entry in manifest_list:
-            platform = Platform.from_json(entry['platform']).normalize()
+    def _get_gists(self, manifests: JSONs) -> dict[str, ImageGist]:
+        gists = {}
+        for manifest in manifests:
+            platform = Platform.from_json(manifest['platform']).normalize()
             if platform in platforms:
                 platform = str(platform)
-                digest = entry['digest']
-                manifest: Manifest = self.get_manifest(digest)
-                require(manifest['platform'] == platform,
-                        'Inconsistent platform in config and manifest',
-                        entry, manifest)
-                manifests[platform] = manifest
-        return manifests
+                digest = manifest['digest']
+                gist: ImageGist = self.get_gist(digest)
+                require(gist['platform'] == platform,
+                        'Inconsistent platform between manifest and manifest list',
+                        manifest, gist)
+                gists[platform] = gist
+        return gists
 
     def get_blob(self, digest: str) -> bytes:
         """
@@ -503,12 +503,12 @@ def log_lines(context: Any, command: str, output: Iterable[bytes]):
         log.debug('%s: docker %s %s', context, command, line.decode().strip())
 
 
-def get_docker_image_manifest(ref: TagImageRef) -> Manifest | ManifestList:
-    return get_docker_image_manifests()[str(ref)]
+def get_docker_image_gist(ref: TagImageRef) -> ImageGist | IndexImageGist:
+    return get_docker_image_gists()[str(ref)]
 
 
-def get_docker_image_manifests() -> dict[str, Manifest | ManifestList]:
-    with open(config.docker_image_manifests_path) as f:
+def get_docker_image_gists() -> dict[str, ImageGist | IndexImageGist]:
+    with open(config.docker_image_gists_path) as f:
         return json.load(f)
 
 
@@ -518,29 +518,29 @@ def resolve_docker_image_for_launch(alias: str) -> str:
     image with the given alias. The alias is the top level key in the JSON
     object contained in the environment variable `azul_docker_images`.
     """
-    ref_to_pull, manifest = resolve_docker_image_for_pull(alias)
+    ref_to_pull, gist = resolve_docker_image_for_pull(alias)
     image = pull_docker_image(ref_to_pull)
     # In either case, the verification below ensures that the image we pulled
     # has the expected ID.
     try:
-        manifests = cast(ManifestList, manifest)['manifests']
+        gists = cast(IndexImageGist, gist)['manifests']
     except KeyError:
         # For single-platform images, this is straight forward.
-        assert image.id == cast(Manifest, manifest)['id']
+        assert image.id == cast(ImageGist, gist)['id']
     else:
         # To determine the expected ID for images that are part of a multi-
         # platform image aka "manifest list" aka "image index", we need to know
         # what specific platform was pulled since we left it to Docker to
         # determine the best match.
         platform = Platform.from_json(image.attrs, config=True).normalize()
-        assert image.id == manifests[str(platform)]['id']
+        assert image.id == gists[str(platform)]['id']
     # Returning the image ID means that the container will be launched using
     # exactly the image we just pulled and verified.
     return image.id
 
 
 def resolve_docker_image_for_pull(alias: str
-                                  ) -> tuple[TagImageRef, Manifest | ManifestList]:
+                                  ) -> tuple[TagImageRef, ImageGist | IndexImageGist]:
     """
     Return an image reference that can be used to pull the image
     with the given alias from the ECR. Also return a JSON structure
@@ -550,12 +550,12 @@ def resolve_docker_image_for_pull(alias: str
     log.info('Resolving image %r %r …', alias, ref)
     # Use image mirrored in ECR (if defined), instead of the upstream registry
     ref_to_pull = TagImageRef.parse(config.docker_registry + str(ref))
-    manifest = get_docker_image_manifest(ref)
+    gist = get_docker_image_gist(ref)
     # If no mirror registry is configured, both refs will be equal and we will
     # pull from the upstream registry. We should pull by digest in that case,
     # since the tag might have been altered in the upstream registry. If a
     # mirror is configured, we will need to pull the image by its tag because we
     # don't track the repository digest of images mirrored to ECR.
     if ref == ref_to_pull:
-        ref_to_pull = ref.with_digest(manifest['digest'])
-    return ref_to_pull, manifest
+        ref_to_pull = ref.with_digest(gist['digest'])
+    return ref_to_pull, gist

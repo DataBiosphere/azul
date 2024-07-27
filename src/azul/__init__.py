@@ -1566,7 +1566,7 @@ class Config:
     ]
 
     @property
-    def docker_image_manifests_path(self) -> Path:
+    def docker_image_gists_path(self) -> Path:
         return Path(config.project_root) / 'image_manifests.json'
 
     blocked_v4_ips_term = 'blocked_v4_ips'

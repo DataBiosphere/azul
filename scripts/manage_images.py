@@ -36,13 +36,13 @@ from azul.deployment import (
 )
 from azul.docker import (
     DigestImageRef,
-    Manifest,
-    ManifestList,
+    ImageGist,
+    IndexImageGist,
     Platform,
     Repository,
     TagImageRef,
-    get_docker_image_manifest,
-    get_docker_image_manifests,
+    get_docker_image_gist,
+    get_docker_image_gists,
     platforms,
     pull_docker_image,
     push_docker_image,
@@ -59,28 +59,28 @@ log = logging.getLogger(__name__)
 
 def copy_image(src: str):
     src = TagImageRef.parse(src)
-    manifest_or_list = get_docker_image_manifest(src)
+    gist = get_docker_image_gist(src)
     try:
-        manifests = cast(ManifestList, manifest_or_list)['manifests']
+        gists = cast(IndexImageGist, gist)['manifests']
     except KeyError:
-        copy_single_platform_image(src, cast(Manifest, manifest_or_list), tag=src.tag)
+        copy_single_platform_image(src, cast(ImageGist, gist), tag=src.tag)
     else:
-        copy_multi_platform_image(src, manifests)
+        copy_multi_platform_image(src, gists)
 
 
 def copy_single_platform_image(src: TagImageRef,
-                               manifest: Manifest,
+                               gist: ImageGist,
                                tag: str,
                                ) -> DigestImageRef:
-    platform = Platform.parse(manifest['platform'])
+    platform = Platform.parse(gist['platform'])
     log.info('Copying image %r for platform %r', src, platform)
-    image = pull_docker_image(src.with_digest(manifest['digest']))
-    assert image.id == manifest['id'], (src, image.attrs, manifest)
+    image = pull_docker_image(src.with_digest(gist['digest']))
+    assert image.id == gist['id'], (src, image.attrs, gist)
 
     dst = TagImageRef.create(name=config.docker_registry + src.name, tag=tag)
     image.tag(dst.name, tag=dst.tag)
     image = push_docker_image(dst)
-    assert image.id == manifest['id'], (dst, image.attrs, manifest)
+    assert image.id == gist['id'], (dst, image.attrs, gist)
 
     # After a successful push of the image, Docker should have recorded the
     # digest under which the image is known in the destination repository, i.e.,
@@ -124,15 +124,15 @@ def copy_single_platform_image(src: TagImageRef,
 
 
 def copy_multi_platform_image(src: TagImageRef,
-                              manifests: dict[str, Manifest]
+                              gists: dict[str, ImageGist]
                               ) -> None:
     log.info('Copying all parts of multi-platform image %r …', src)
     dst_parts: list[DigestImageRef] = []
-    for platform, manifest in manifests.items():
-        assert platform == manifest['platform'], (platform, manifest)
+    for platform, gist in gists.items():
+        assert platform == gist['platform'], (platform, gist)
         platform = Platform.parse(platform)
         dst_tag = make_platform_tag(src.tag, platform)
-        dst_part = copy_single_platform_image(src, manifest, tag=dst_tag)
+        dst_part = copy_single_platform_image(src, gist, tag=dst_tag)
         dst_parts.append(dst_part)
     log.info('Copied all parts (%d in total) of multi-platform image %r',
              len(dst_parts), src)
@@ -171,15 +171,15 @@ def platform_tag_suffix(platform):
 
 def delete_unused_images(repository):
     expected_tags = set()
-    for ref, manifest_or_list in get_docker_image_manifests().items():
+    for ref, gist in get_docker_image_gists().items():
         ref = TagImageRef.parse(ref)
         expected_tags.add(ref.tag)
         try:
-            manifests = cast(ManifestList, manifest_or_list)['manifests']
+            parts = cast(IndexImageGist, gist)['manifests']
         except KeyError:
             pass
         else:
-            for platform in manifests.keys():
+            for platform in parts.keys():
                 platform = Platform.parse(platform)
                 expected_tags.add(make_platform_tag(ref.tag, platform))
 
@@ -279,9 +279,9 @@ class Semaphore(ContextManager):
 
 
 def update_manifests():
-    manifests = Repository.get_manifests()
-    with write_file_atomically(config.docker_image_manifests_path) as f:
-        json.dump(manifests, f, indent=4)
+    gists = Repository.get_gists()
+    with write_file_atomically(config.docker_image_gists_path) as f:
+        json.dump(gists, f, indent=4)
 
 
 def main():
