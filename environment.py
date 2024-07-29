@@ -302,11 +302,11 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:17.2.0-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:17.2.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.2.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.2.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
