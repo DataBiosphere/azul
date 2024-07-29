@@ -4,10 +4,14 @@ from abc import (
 )
 from base64 import (
     b64decode,
+    b64encode,
     urlsafe_b64encode,
 )
 from collections import (
     defaultdict,
+)
+from contextlib import (
+    contextmanager,
 )
 from hashlib import (
     sha1,
@@ -18,6 +22,7 @@ import logging
 import os
 import re
 import subprocess
+import tempfile
 from typing import (
     Any,
     Iterable,
@@ -36,9 +41,6 @@ from docker.models.images import (
 from dxf import (
     DXF,
     DXFBase,
-)
-from furl import (
-    furl,
 )
 from more_itertools import (
     one,
@@ -151,6 +153,19 @@ class ImageRef(metaclass=ABCMeta):
     @property
     def is_mirrored(self) -> bool:
         return self.ecr_registry_host_re.fullmatch(self.registry_host) is not None
+
+    @property
+    def auth_server_url(self) -> str:
+        """
+        The Docker client tracks credentials in ~/.docker/config.json using the
+        URL or hostname of the server requesting authentication. Similarly, the
+        credential helpers expect the same value on stdandard input. This method
+        returns that value for this repository.
+        """
+        if self.registry == 'docker.io':
+            return 'https://index.docker.io/v1/'
+        else:
+            return self.registry_host
 
     @property
     def tf_repository(self):
@@ -391,16 +406,22 @@ class IndexImageGist(Gist):
 
 @attrs.define(frozen=True, slots=False)
 class Repository:
-    host: str
-    name: str
+    image_ref: ImageRef
+
+    @cached_property
+    def host(self) -> str:
+        return self.image_ref.registry_host
+
+    @cached_property
+    def name(self) -> str:
+        return self.image_ref.relative_name
 
     @classmethod
     def get_gists(cls):
         gists: dict[str, ImageGist | IndexImageGist] = {}
         for alias, ref in images_by_alias.items():
             log.info('Getting information for %r (%s)', alias, ref)
-            repository = Repository(host=ref.registry_host,
-                                    name=ref.relative_name)
+            repository = cls(ref)
             digest = repository.get_tag(ref.tag)
             gists[str(ref)] = repository.get_gist(digest)
         return gists
@@ -472,43 +493,77 @@ class Repository:
     def _client(self):
         return DXF(host=self.host,
                    repo=self.name,
-                   auth=self._auth,
+                   auth=self._dxf_auth,
                    insecure=self.host.startswith('localhost:') or self.host == 'localhost')
 
-    def _auth(self, dxf: DXFBase, response: requests.Response):
-        host: str = furl(response.request.url).host
-        if host == 'ghcr.io':
-            dxf.authenticate(authorization=self._ghcr_io_auth,
-                             response=response)
-        elif host.endswith('.docker.io') or host == 'docker.io':
-            username, password = self._docker_io_auth
-            dxf.authenticate(username=username,
-                             password=password,
-                             response=response)
-        else:
-            raise NotImplementedError(host)
-
-    @property
-    def _ghcr_io_auth(self) -> str:
-        return 'Authorization: ' + os.environ['GITHUB_TOKEN']
+    def _dxf_auth(self, dxf: DXFBase, response: requests.Response):
+        username, password = self._auth
+        dxf.authenticate(username=username,
+                         password=password,
+                         response=response)
 
     @cached_property
-    def _docker_io_auth(self) -> tuple[str, str]:
-        url = 'https://index.docker.io/v1/'
+    def _auth(self) -> tuple[str, str]:
+        auth_server_url = self.image_ref.auth_server_url
         with open(os.path.expanduser('~/.docker/config.json')) as f:
             config = json.load(f)
         try:
-            cred_store = config['credsStore']
+            creds_store = config['credsStore']
         except KeyError:
-            auth = b64decode(config['auths'][url]['auth']).decode('ascii')
-            username, _, secret = auth.partition(':')
-            return username, secret
+            return self._decode_auth(config['auths'][auth_server_url]['auth'])
         else:
-            command = 'docker-credential-' + cred_store
+            command = 'docker-credential-' + creds_store
             output = subprocess.check_output(args=[command, 'get'],
-                                             input=url.encode('ascii'))
+                                             input=auth_server_url.encode('ascii'))
             output = json.loads(output)
             return output['Username'], output['Secret']
+
+    @property
+    def encoded_auth(self) -> str:
+        return self._encode_auth(*self._auth)
+
+    def _decode_auth(self, auth: str) -> tuple[str, str]:
+        auth = b64decode(auth.encode('ascii')).decode()
+        username, _, secret = auth.partition(':')
+        return username, secret
+
+    def _encode_auth(self, username: str, secret: str) -> str:
+        auth = username + ':' + secret
+        return b64encode(auth.encode()).decode('ascii')
+
+    @classmethod
+    @contextmanager
+    def temporary_auth_file(cls, *refs: ImageRef):
+        """
+        While some utilities in the Docker/OCI ecosystem are able to read
+        plain-text credentials from the Docker client's configuration file
+        (~/.docker/config.json), they often lack support for the credential
+        helpers that can be configured there. Removing the credStore entry from
+        that configiguration file would disable these helpers, but a prominent
+        Docker client distribution (Docker Desktop for macOS and Windows)
+        reinserts the entry every time it starts up.
+
+        This context manager provides a temporary containers-auth.json [1] with
+        plain-text credentials for the repositories hosting the given images.
+        The credentials are obtained by extracting plain-text credentials from
+        ~/.docker/config.json or by invoking the credStore helper configured
+        there. The path to the temporary file is passed to the context on entry
+        and the file is deleted when the context is exited.
+
+        [1] https://github.com/containers/image/blob/main/docs/containers-auth.json.5.md
+        """
+        with tempfile.NamedTemporaryFile() as auth_file:
+            auths = {
+                'auths': {
+                    ref.auth_server_url: {
+                        'auth': cls(ref).encoded_auth
+                    }
+                    for ref in refs
+                },
+            }
+            auth_file.write(json.dumps(auths).encode())
+            auth_file.flush()
+            yield auth_file.name
 
 
 @attrs.frozen(kw_only=True)

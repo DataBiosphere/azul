@@ -76,13 +76,15 @@ def copy_single_platform_image(src: TagImageRef,
     log.info('Copying image %r for platform %r', src, platform)
     digest = gist['digest']
     dst = TagImageRef.create(name=config.docker_registry + src.name, tag=tag)
-    command = [
-        'skopeo',
-        'copy',
-        'docker://' + str(src.with_digest(digest)),
-        'docker://' + str(dst)
-    ]
-    subprocess.run(command, check=True)
+
+    with Repository.temporary_auth_file(dst, src) as auth_file:
+        command = [
+            'skopeo', 'copy', '--authfile', auth_file, '--preserve-digests',
+            'docker://' + str(src.with_digest(digest)),
+            'docker://' + str(dst)
+        ]
+        subprocess.run(command, check=True)
+
     response = aws.ecr.batch_get_image(repositoryName=dst.relative_name,
                                        imageIds=[{'imageDigest': digest, 'imageTag': dst.tag}])
     dst_manifest_str = one(response['images'])['imageManifest']
