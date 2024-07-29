@@ -16,6 +16,7 @@ from hashlib import (
 import json
 import logging
 import os
+import re
 import subprocess
 from typing import (
     Any,
@@ -144,6 +145,12 @@ class ImageRef(metaclass=ABCMeta):
         """
         registry = self.registry
         return 'registry-1.docker.io' if registry == 'docker.io' else registry
+
+    ecr_registry_host_re = re.compile(r'[\d]+\.dkr\.ecr\.[^.]+\.amazonaws\.com')
+
+    @property
+    def is_mirrored(self) -> bool:
+        return self.ecr_registry_host_re.fullmatch(self.registry_host) is not None
 
     @property
     def tf_repository(self):
@@ -601,22 +608,15 @@ def resolve_docker_image_for_launch(alias: str) -> str:
 
 
 def resolve_docker_image_for_pull(alias: str
-                                  ) -> tuple[TagImageRef, ImageGist | IndexImageGist]:
+                                  ) -> tuple[DigestImageRef, ImageGist | IndexImageGist]:
     """
-    Return an image reference that can be used to pull the image
-    with the given alias from the ECR. Also return a JSON structure
-    that describes the image ID and digest.
+    Return a reference to, and the gist of, the image with the given alias, for
+    the purpose of pulling said image.
     """
     ref = TagImageRef.parse(config.docker_images[alias]['ref'])
     log.info('Resolving image %r %r …', alias, ref)
-    # Use image mirrored in ECR (if defined), instead of the upstream registry
-    ref_to_pull = TagImageRef.parse(config.docker_registry + str(ref))
     gist = get_docker_image_gist(ref)
-    # If no mirror registry is configured, both refs will be equal and we will
-    # pull from the upstream registry. We should pull by digest in that case,
-    # since the tag might have been altered in the upstream registry. If a
-    # mirror is configured, we will need to pull the image by its tag because we
-    # don't track the repository digest of images mirrored to ECR.
-    if ref == ref_to_pull:
-        ref_to_pull = ref.with_digest(gist['digest'])
-    return ref_to_pull, gist
+    ref = TagImageRef.parse(config.docker_registry + str(ref))
+    digest = gist['mirror_digest' if ref.is_mirrored else 'digest']
+    ref = ref.with_digest(digest)
+    return ref, gist
