@@ -1333,7 +1333,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         expected = [
             {
                 'type': replica_type,
-                'contents': bundle.metadata_files[key],
+                'value': bundle.metadata_files[key],
             }
             for bundle in map(self._load_canned_bundle, self.bundles())
             for replica_type, key in [
@@ -2082,7 +2082,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
             # Consolidate entities with the same replica (i.e. datasets)
             json_hash(entity).digest(): {
                 'type': 'anvil_' + entity_ref.entity_type,
-                'contents': entity,
+                'value': entity,
             }
             for bundle in self.bundles()
             for entity_ref, entity in self._load_canned_bundle(bundle).entities.items()
