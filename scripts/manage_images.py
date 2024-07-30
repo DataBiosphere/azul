@@ -75,7 +75,7 @@ def copy_single_platform_image(src: TagImageRef,
     platform = Platform.parse(gist['platform'])
     log.info('Copying image %r for platform %r', src, platform)
     digest = gist['digest']
-    dst = TagImageRef.create(name=config.docker_registry + src.name, tag=tag)
+    dst = src.with_tag(tag=tag).port_to(config.docker_registry)
 
     with Repository.temporary_auth_file(dst, src) as auth_file:
         command = [
@@ -109,7 +109,7 @@ def copy_multi_platform_image(src: TagImageRef,
     log.info('Copied all parts (%d in total) of multi-platform image %r',
              len(dst_parts), src)
     dst_manifest = ImageIndexManifest.create(dst_parts)
-    dst = TagImageRef.create(name=config.docker_registry + src.name, tag=src.tag)
+    dst = src.port_to(config.docker_registry)
     try:
         aws.ecr.put_image(repositoryName=dst.relative_name,
                           imageManifest=dst_manifest.json,

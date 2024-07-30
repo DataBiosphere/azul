@@ -1536,7 +1536,12 @@ class Config:
 
     @property
     def docker_registry(self) -> str:
-        return self.environ['azul_docker_registry']
+        name = 'azul_docker_registry'
+        value = self.environ[name]
+        if len(value) > 0:
+            require(value[-1] == '/', 'Variable %r must be empty or end in /', name)
+            value = value[:-1]
+        return value
 
     @property
     def terraform_version(self) -> str:

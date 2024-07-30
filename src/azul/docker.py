@@ -148,11 +148,62 @@ class ImageRef(metaclass=ABCMeta):
         registry = self.registry
         return 'registry-1.docker.io' if registry == 'docker.io' else registry
 
+    def with_digest(self, digest: str) -> 'DigestImageRef':
+        return DigestImageRef.create(self.name, digest)
+
+    def with_tag(self, tag: str) -> 'TagImageRef':
+        return TagImageRef.create(self.name, tag)
+
     ecr_registry_host_re = re.compile(r'[\d]+\.dkr\.ecr\.[^.]+\.amazonaws\.com')
 
     @property
     def is_mirrored(self) -> bool:
         return self.ecr_registry_host_re.fullmatch(self.registry_host) is not None
+
+    def port_to(self, registry: str) -> Self:
+        """
+        >>> ref = ImageRef.parse('a/b/c:d')
+        >>> ref.port_to('e')
+        TagImageRef(registry='e', username='a', repository=('b', 'c'), tag='d')
+        >>> ref.port_to('')
+        TagImageRef(registry='a', username='b', repository=('c',), tag='d')
+        >>> ref.port_to('a')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Reference already ported to registry',
+        TagImageRef(registry='a', username='b', repository=('c',), tag='d'),
+        'a')
+        """
+        if registry:
+            require(self.registry != registry,
+                    'Reference already ported to registry',
+                    self, registry)
+            return type(self).parse(registry + '/' + str(self))
+        else:
+            return self
+
+    def port_from(self, registry: str) -> Self:
+        """
+        >>> ref = ImageRef.parse('a/b/c:d')
+        >>> ref.port_to('e').port_from('e')
+        TagImageRef(registry='a', username='b', repository=('c',), tag='d')
+        >>> ref.port_to('').port_from('')
+        TagImageRef(registry='a', username='b', repository=('c',), tag='d')
+        >>> ref.port_from('e')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Reference does not use the registry to port from',
+        TagImageRef(registry='a', username='b', repository=('c',), tag='d'), 'e')
+        """
+        if registry:
+            require(self.registry == registry,
+                    'Reference does not use the registry to port from',
+                    self, registry)
+            return type(self).parse(str(self).removeprefix(registry + '/'))
+        else:
+            return self
 
     @property
     def auth_server_url(self) -> str:
@@ -262,9 +313,6 @@ class TagImageRef(ImageRef):
     @property
     def qualifier(self) -> str:
         return self.tag
-
-    def with_digest(self, digest: str) -> DigestImageRef:
-        return DigestImageRef.create(self.name, digest)
 
 
 @attrs.define(frozen=True)
@@ -669,9 +717,9 @@ def resolve_docker_image_for_pull(alias: str
     the purpose of pulling said image.
     """
     ref = TagImageRef.parse(config.docker_images[alias]['ref'])
-    log.info('Resolving image %r %r …', alias, ref)
+    log.info('Resolving %r image %r …', alias, ref)
     gist = get_docker_image_gist(ref)
-    ref = TagImageRef.parse(config.docker_registry + str(ref))
+    ref = ref.port_to(config.docker_registry)
     # For multi-arch images, we need to use the digest of the mirrored image, if
     # we're pulling from a mirror.  For single-arch images, the digest is the
     # same between the upstream and mirror registries.
@@ -681,4 +729,5 @@ def resolve_docker_image_for_pull(alias: str
         'digest'
     ]
     ref = ref.with_digest(digest)
+    log.info('Resolved %r image to %r', alias, ref)
     return ref, gist

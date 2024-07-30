@@ -222,45 +222,44 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The version of Docker used throughout the system.
         #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build. In
-        # order to update that file, you must run `_refresh && make
-        # environment.boot` after changing the definition below.
-        #
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        # Modifying this variable requires running `make docker_images.json`,
-        # redeploying the `shared` and `gitlab` components, as well as building
-        # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
-        # for how).
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build.
+        #
+        # Modifying this variable requires running `make docker_images.json`
+        # and `make environment.boot`, in that order, and committing the
+        # resulting changes. It also requires redeploying the `shared` and
+        # `gitlab` components, as well as building and pushing the executor
+        # image (see terraform/gitlab/runner/Dockerfile for how).
         #
         'azul_docker_version': '27.1.2',
 
         # The version of Python used throughout the system.
         #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab and GitHub
-        # Actions build. In order to update that file, you must run `_refresh &&
-        # make environment.boot` after changing the definition below.
-        #
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build.
+        #
         # Modifying this variable requires running `make docker_images.json`
-        # and redeploying the `shared` component.
+        # and committing the resulting changes. It also requires redeploying the
+        # `shared` component.
         #
         'azul_python_version': '3.11.9',
 
         # The version of Terraform used throughout the system.
         #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build. In
-        # order to update that file, you must run `_refresh && make
-        # environment.boot` after changing the definition below.
-        #
         # This variable is not intended to be overridden per deployment or
         # locally.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build.
+        #
+        # Modifying this variable requires running `make environment.boot` and
+        # committing the resulting changes.
         #
         'azul_terraform_version': '1.9.4',
 
@@ -270,14 +269,14 @@ def env() -> Mapping[str, Optional[str]]:
         # redeploying the `shared` TF component.
 
         'azul_docker_images': json.dumps({
-            # Updating the Docker image also requires building and pushing the
-            # executor image (see terraform/gitlab/runner/Dockerfile for how).
+            # See `azul_docker_version` above about what actions are required
+            # after modifying this entry.
             'docker': {
                 'ref': 'docker.io/library/docker:{azul_docker_version}',
                 'url': 'https://hub.docker.com/_/docker'
             },
-            # Run `_refresh && make environment.boot` after modifying the Python
-            # image reference.
+            # See `azul_python_version` above about what actions are required
+            # after modifying this entry.
             'python': {
                 'ref': 'docker.io/library/python:{azul_python_version}-slim-bullseye',
                 'url': 'https://hub.docker.com/_/python',

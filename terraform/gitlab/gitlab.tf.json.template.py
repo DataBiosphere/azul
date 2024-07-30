@@ -1652,7 +1652,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'content': json.dumps(
                                 {
                                     'credHelpers': {
-                                        config.docker_registry[:-1]: 'ecr-login'
+                                        config.docker_registry: 'ecr-login'
                                     }
                                 }
                                 if config.docker_registry else
