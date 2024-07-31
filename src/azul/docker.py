@@ -3,6 +3,7 @@ from abc import (
     abstractmethod,
 )
 from base64 import (
+    b64decode,
     urlsafe_b64encode,
 )
 from collections import (
@@ -10,6 +11,7 @@ from collections import (
 )
 from hashlib import (
     sha1,
+    sha256,
 )
 import json
 import logging
@@ -366,6 +368,16 @@ class IndexImageGist(Gist):
     """
     A multi-platform image, also known as an image index
     """
+    #: While the inherited ``digest`` property pertains to the original
+    #: registry, this property contains the digest of the image in the mirror
+    #: registry, i.e. ECR.  Even though the digests of the platform-specific
+    #: parts of a multi-platform image are the same in both registries, the
+    #: digest of the mirrored multi-platform image usually differs from the
+    #: original because 1) the mirror only includes a subset of the original
+    #: parts and 2) the digest algorithm is generally sensitive to insignificant
+    #: JSON differences in whitespace or property order.
+    mirror_digest: str
+
     #: The images in the list, by platform (`os/arch` or `os/arch/variant`)
     parts: dict[str, ImageGist]
 
@@ -404,9 +416,15 @@ class Repository:
         match manifest['mediaType']:
             case ('application/vnd.oci.image.index.v1+json'
                   | 'application/vnd.docker.distribution.manifest.list.v2+json'):
+                parts = self._get_mirrored_parts(manifest['manifests'])
+                mirror_manifest = ImageIndexManifest.create({
+                    platform: ImageIndexPart(digest=part['digest'], size=size)
+                    for platform, (part, size) in parts.items()
+                })
                 return {
                     'digest': digest,
-                    'parts': self._get_gists(manifest['manifests'])
+                    'mirror_digest': mirror_manifest.digest,
+                    'parts': {str(platform): part for platform, (part, size) in parts.items()}
                 }
             case ('application/vnd.docker.distribution.manifest.v2+json'
                   | 'application/vnd.oci.image.manifest.v1+json'):
@@ -420,18 +438,19 @@ class Repository:
             case media_type:
                 raise NotImplementedError(media_type)
 
-    def _get_gists(self, manifests: JSONs) -> dict[str, ImageGist]:
+    def _get_mirrored_parts(self,
+                            manifests: JSONs
+                            ) -> dict[Platform, tuple[ImageGist, int]]:
         gists = {}
         for manifest in manifests:
             platform = Platform.from_json(manifest['platform']).normalize()
             if platform in platforms:
-                platform = str(platform)
-                digest = manifest['digest']
+                digest, size = manifest['digest'], manifest['size']
                 gist: ImageGist = self.get_gist(digest)
-                require(gist['platform'] == platform,
+                require(gist['platform'] == str(platform),
                         'Inconsistent platform between manifest and manifest list',
                         manifest, gist)
-                gists[platform] = gist
+                gists[platform] = gist, size
         return gists
 
     def get_blob(self, digest: str) -> bytes:
@@ -468,13 +487,55 @@ class Repository:
 
     @cached_property
     def _docker_io_auth(self) -> tuple[str, str]:
+        url = 'https://index.docker.io/v1/'
         with open(os.path.expanduser('~/.docker/config.json')) as f:
             config = json.load(f)
-        command = 'docker-credential-' + config['credsStore']
-        output = subprocess.check_output(args=[command, 'get'],
-                                         input=b'https://index.docker.io/v1/')
-        output = json.loads(output)
-        return output['Username'], output['Secret']
+        try:
+            cred_store = config['credsStore']
+        except KeyError:
+            auth = b64decode(config['auths'][url]['auth']).decode('ascii')
+            username, _, secret = auth.partition(':')
+            return username, secret
+        else:
+            command = 'docker-credential-' + cred_store
+            output = subprocess.check_output(args=[command, 'get'],
+                                             input=url.encode('ascii'))
+            output = json.loads(output)
+            return output['Username'], output['Secret']
+
+
+@attrs.frozen(kw_only=True)
+class ImageIndexPart:
+    digest: str
+    size: int
+
+
+@attrs.frozen(kw_only=True)
+class ImageIndexManifest:
+    json: str
+    digest: str
+
+    @classmethod
+    def create(cls, parts: dict[Platform, ImageIndexPart]) -> Self:
+        manifest = {
+            'schemaVersion': 2,
+            'mediaType': 'application/vnd.docker.distribution.manifest.list.v2+json',
+            'manifests': [
+                {
+                    'mediaType': 'application/vnd.docker.distribution.manifest.v2+json',
+                    'size': part.size,
+                    'digest': part.digest,
+                    'platform': {
+                        'architecture': platform.arch,
+                        'os': platform.os
+                    }
+                }
+                for platform, part in parts.items()
+            ]
+        }
+        manifest = json.dumps(manifest, indent=4)
+        digest = 'sha256:' + sha256(manifest.encode()).hexdigest()
+        return cls(json=manifest, digest=digest)
 
 
 def pull_docker_image(ref: ImageRef) -> Image:

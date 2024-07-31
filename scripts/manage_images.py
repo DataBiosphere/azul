@@ -37,6 +37,8 @@ from azul.deployment import (
 from azul.docker import (
     DigestImageRef,
     ImageGist,
+    ImageIndexManifest,
+    ImageIndexPart,
     IndexImageGist,
     Platform,
     Repository,
@@ -44,8 +46,6 @@ from azul.docker import (
     get_docker_image_gist,
     get_docker_image_gists,
     platforms,
-    pull_docker_image,
-    push_docker_image,
 )
 from azul.files import (
     write_file_atomically,
@@ -71,89 +71,58 @@ def copy_image(src: str):
 def copy_single_platform_image(src: TagImageRef,
                                gist: ImageGist,
                                tag: str,
-                               ) -> DigestImageRef:
+                               ) -> tuple[DigestImageRef, int]:
     platform = Platform.parse(gist['platform'])
     log.info('Copying image %r for platform %r', src, platform)
-    image = pull_docker_image(src.with_digest(gist['digest']))
-    assert image.id == gist['id'], (src, image.attrs, gist)
-
+    digest = gist['digest']
     dst = TagImageRef.create(name=config.docker_registry + src.name, tag=tag)
-    image.tag(dst.name, tag=dst.tag)
-    image = push_docker_image(dst)
-    assert image.id == gist['id'], (dst, image.attrs, gist)
-
-    # After a successful push of the image, Docker should have recorded the
-    # digest under which the image is known in the destination repository, i.e.,
-    # the one it was just pushed to. Earlier, when the image was pulled from the
-    # source repository, that repository's digest of the image was recorded. The
-    # source and destination digests are usually different. If the copied image
-    # is to be part of a multi-platform image in the destination repository, we
-    # obviously need to supply the destination digest. Often, we can figure this
-    # out just by looking at the repository digests that Docker recorded for the
-    # image during pushes and pulls.
-    #
-    refs = set()
-    for ref in image.attrs['RepoDigests']:
-        ref = DigestImageRef.parse(ref)
-        if ref == dst.with_digest(ref.digest):
-            refs.add(ref)
-
-    # However, when Docker is asked to pull a multi-platform image, it actually
-    # pulls one of the platform images that are part of that image and then
-    # records the digest of the multi-platform image with the single-platform
-    # image that it pulled. Other people have observed this, too:
-    #
-    # https://github.com/docker/hub-feedback/issues/1925
-    #
-    # Using an image in Azul involves a pull from the repository it was copied
-    # to. Recall that we only pull from the upstream repository during the
-    # copying of an image. While the pull records the multi-platform digest, a
-    # subsequent push (as would occur if this script were to be invoked again)
-    # will record the single-platform digest. Both digests will be associated
-    # with the ECR repository the image was copied to. If that's the case, we
-    # need to make a roundtrip to ECR to resolve the ambiguity.
-    #
-    if len(refs) > 1:
-        refs = set()
-        response = aws.ecr.describe_images(repositoryName=src.name)
-        for image in response['imageDetails']:
-            if tag in image.get('imageTags', []):
-                refs.add(dst.with_digest(image['imageDigest']))
-
-    return one(refs)
+    command = [
+        'skopeo',
+        'copy',
+        'docker://' + str(src.with_digest(digest)),
+        'docker://' + str(dst)
+    ]
+    subprocess.run(command, check=True)
+    response = aws.ecr.batch_get_image(repositoryName=dst.relative_name,
+                                       imageIds=[{'imageDigest': digest, 'imageTag': dst.tag}])
+    dst_manifest_str = one(response['images'])['imageManifest']
+    dst_manifest = json.loads(dst_manifest_str)
+    image_id = dst_manifest['config']['digest']
+    assert image_id == gist['id']
+    size = len(dst_manifest_str)
+    return dst.with_digest(digest), size
 
 
 def copy_multi_platform_image(src: TagImageRef,
                               src_parts: dict[str, ImageGist]
                               ) -> None:
     log.info('Copying all parts of multi-platform image %r …', src)
-    dst_parts: list[DigestImageRef] = []
+    dst_parts: dict[Platform, ImageIndexPart] = {}
     for platform, src_part in src_parts.items():
         assert platform == src_part['platform'], (platform, src_part)
         platform = Platform.parse(platform)
         dst_tag = make_platform_tag(src.tag, platform)
-        dst_part = copy_single_platform_image(src, src_part, tag=dst_tag)
-        dst_parts.append(dst_part)
+        dst_part, size = copy_single_platform_image(src, src_part, tag=dst_tag)
+        dst_parts[platform] = ImageIndexPart(digest=dst_part.digest, size=size)
     log.info('Copied all parts (%d in total) of multi-platform image %r',
              len(dst_parts), src)
-
+    dst_manifest = ImageIndexManifest.create(dst_parts)
     dst = TagImageRef.create(name=config.docker_registry + src.name, tag=src.tag)
-    log.info('Assembling multi-platform image %r …', dst)
-    subprocess.run([
-        'docker', 'manifest', 'rm',
-        str(dst)
-    ], check=False)
-    subprocess.run([
-        'docker', 'manifest', 'create',
-        str(dst),
-        *list(map(str, dst_parts))
-    ], check=True)
-    log.info('Pushing multi-platform image %r …', dst)
-    subprocess.run([
-        'docker', 'manifest', 'push',
-        str(dst)
-    ], check=True)
-    log.info('Successfully copied multi-platform image from %r to %r', src, dst)
+    try:
+        aws.ecr.put_image(repositoryName=dst.relative_name,
+                          imageManifest=dst_manifest.json,
+                          # ECR computes the digest and compares it against
+                          # what we specify here
+                          imageDigest=dst_manifest.digest,
+                          imageTag=dst.tag)
+    except aws.ecr.exceptions.ImageAlreadyExistsException:
+        # "The specified image has already been pushed, and there were no
+        # changes to the manifest or image tag after the last push"
+        #
+        # https://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_PutImage.html
+        pass
+    log.info('Copied multi-platform image with digest %s from %r to %r',
+             dst_manifest.digest, src, dst)
 
 
 def make_platform_tag(tag, platform: Platform):

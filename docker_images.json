@@ -1,6 +1,7 @@
 {
     "docker.io/library/docker:27.1.2": {
         "digest": "sha256:2e5515536bf789843b48030fdca3e3719463ba85c43b1da7d5687f5997b79d26",
+        "mirror_digest": "sha256:7f9059f717809e9ef4ac0374863cd8e06e87999f0229cc2511a2e8a948733e5b",
         "parts": {
             "linux/amd64": {
                 "digest": "sha256:43ab51f3d83fe39d147490c81d4fdef24352cdef90ef4c0d8152918cc95e40ab",
@@ -16,6 +17,7 @@
     },
     "docker.io/library/python:3.11.9-slim-bullseye": {
         "digest": "sha256:98d223d4801f1237560234274e23f7ed8571bdd5988879d37e5a1ff5f5764ecb",
+        "mirror_digest": "sha256:51b0976b06e08910f36eac9fddebb16952e5517504a115815e0da5e982ea0030",
         "parts": {
             "linux/amd64": {
                 "digest": "sha256:2fe85c25b98948eb8e9aa501c16e7a61324a03ad4ced3e54b1ae9e71c332ec8a",
@@ -31,6 +33,7 @@
     },
     "docker.io/ucscgi/azul-pycharm:2024.2-31": {
         "digest": "sha256:30af69531a9a4cb43dd33028f8a15ddd7ed62f9154fe1cf371979cb694d455c3",
+        "mirror_digest": "sha256:5470d01b63e942df8d4f9ed25bffd38431a2da59ddbb694036457334e4626d7c",
         "parts": {
             "linux/amd64": {
                 "digest": "sha256:d31a810065616436e9076e79ca6fc4de80d51166694de357508c211502e9a3b4",
@@ -46,6 +49,7 @@
     },
     "docker.io/ucscgi/azul-elasticsearch:7.17.23-25": {
         "digest": "sha256:ef207920f52ea50405dbcedb77b0f40087642b816a8205cbf52c06287ed2bec5",
+        "mirror_digest": "sha256:9444737b642f58bd06d44a796efba428a980ffe0c4b5fa266f2f7fc6a7b30ee6",
         "parts": {
             "linux/amd64": {
                 "digest": "sha256:1d7804445531f415f8fa7655e05aedb46c5a524198ebd6d084aeeee2f194e059",
@@ -76,6 +80,7 @@
     },
     "docker.io/gitlab/gitlab-runner:ubuntu-v17.3.0": {
         "digest": "sha256:77414ff4869267e403169c7430387b1c10aa7e26f8050f0762ae178b4633219d",
+        "mirror_digest": "sha256:806b6732e93b2b29d934f4e4a58bf60a789ca5d4df0a4100252b3de7473d5535",
         "parts": {
             "linux/amd64": {
                 "digest": "sha256:2f6589a4f8fe85b4c2b01956fce0a0d60803579cdeb2c444d7435a6403badecf",
@@ -91,6 +96,7 @@
     },
     "docker.io/library/docker:27.1.2-dind": {
         "digest": "sha256:2e5515536bf789843b48030fdca3e3719463ba85c43b1da7d5687f5997b79d26",
+        "mirror_digest": "sha256:7f9059f717809e9ef4ac0374863cd8e06e87999f0229cc2511a2e8a948733e5b",
         "parts": {
             "linux/amd64": {
                 "digest": "sha256:43ab51f3d83fe39d147490c81d4fdef24352cdef90ef4c0d8152918cc95e40ab",

@@ -20,6 +20,19 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6446 Base image of Azul image is not pinned to digest
+======================================================
+
+Developers on the operator roster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install `Skopeo`_. No additional configuration is required. Version 1.15.3 was
+tested extensively with these changes. Since then version 1.16.0 was released
+and limited testing suggests that it works as well.
+
+.. _Skopeo: https://github.com/containers/skopeo
+
+
 #6468 Upgrade dependencies 2024-08-05
 =====================================
 
