@@ -1340,9 +1340,9 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                 ('links', 'links.json'),
                 ('cell_suspension', 'cell_suspension_0.json'),
                 ('project', 'project_0.json'),
-                ('file', 'sequence_file_0.json'),
-                ('file', 'sequence_file_1.json'),
-                ('sample', 'specimen_from_organism_0.json')
+                ('sequence_file', 'sequence_file_0.json'),
+                ('sequence_file', 'sequence_file_1.json'),
+                ('specimen_from_organism', 'specimen_from_organism_0.json')
             ]
         ]
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})

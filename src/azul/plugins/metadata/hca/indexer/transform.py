@@ -462,8 +462,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     api_bundle: api.Bundle
 
     def replica_type(self, entity: EntityReference) -> str:
-        assert entity.entity_type == self.entity_type(), entity
-        return entity.entity_type.removesuffix('s')
+        api_entity = self.api_bundle.entities[UUID(entity.entity_id)]
+        return api_entity.schema_name
 
     @classmethod
     def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
