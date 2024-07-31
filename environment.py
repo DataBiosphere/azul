@@ -230,7 +230,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        # Modifying this variable requires running `make image_manifests.json`,
+        # Modifying this variable requires running `make docker_images.json`,
         # redeploying the `shared` and `gitlab` components, as well as building
         # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
         # for how).
@@ -247,7 +247,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        # Modifying this variable requires running `make image_manifests.json`
+        # Modifying this variable requires running `make docker_images.json`
         # and redeploying the `shared` component.
         #
         'azul_python_version': '3.11.9',
@@ -266,7 +266,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
-        # references below requires running `make image_manifests.json` and
+        # references below requires running `make docker_images.json` and
         # redeploying the `shared` TF component.
 
         'azul_docker_images': json.dumps({

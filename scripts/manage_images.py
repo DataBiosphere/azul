@@ -61,11 +61,11 @@ def copy_image(src: str):
     src = TagImageRef.parse(src)
     gist = get_docker_image_gist(src)
     try:
-        gists = cast(IndexImageGist, gist)['manifests']
+        parts = cast(IndexImageGist, gist)['parts']
     except KeyError:
         copy_single_platform_image(src, cast(ImageGist, gist), tag=src.tag)
     else:
-        copy_multi_platform_image(src, gists)
+        copy_multi_platform_image(src, parts)
 
 
 def copy_single_platform_image(src: TagImageRef,
@@ -124,15 +124,15 @@ def copy_single_platform_image(src: TagImageRef,
 
 
 def copy_multi_platform_image(src: TagImageRef,
-                              gists: dict[str, ImageGist]
+                              src_parts: dict[str, ImageGist]
                               ) -> None:
     log.info('Copying all parts of multi-platform image %r …', src)
     dst_parts: list[DigestImageRef] = []
-    for platform, gist in gists.items():
-        assert platform == gist['platform'], (platform, gist)
+    for platform, src_part in src_parts.items():
+        assert platform == src_part['platform'], (platform, src_part)
         platform = Platform.parse(platform)
         dst_tag = make_platform_tag(src.tag, platform)
-        dst_part = copy_single_platform_image(src, gist, tag=dst_tag)
+        dst_part = copy_single_platform_image(src, src_part, tag=dst_tag)
         dst_parts.append(dst_part)
     log.info('Copied all parts (%d in total) of multi-platform image %r',
              len(dst_parts), src)
@@ -175,7 +175,7 @@ def delete_unused_images(repository):
         ref = TagImageRef.parse(ref)
         expected_tags.add(ref.tag)
         try:
-            parts = cast(IndexImageGist, gist)['manifests']
+            parts = cast(IndexImageGist, gist)['parts']
         except KeyError:
             pass
         else:

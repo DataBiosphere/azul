@@ -28,7 +28,7 @@ Connected issue: #0000
 ### Author (upgrading deployments)
 
 - [ ] This PR is labeled `upgrade` <sub>or does not require upgrading deployments</sub>
-- [ ] This PR is labeled `deploy:shared` <sub>or does not modify `image_manifests.json`, and does not require deploying the `shared` component for any other reason</sub>
+- [ ] This PR is labeled `deploy:shared` <sub>or does not modify `docker_images.json`, and does not require deploying the `shared` component for any other reason</sub>
 - [ ] This PR is labeled `deploy:gitlab` <sub>or does not require deploying the `gitlab` component</sub>
 - [ ] This PR is labeled `deploy:runner` <sub>or does not require deploying the `runner` image</sub>
 

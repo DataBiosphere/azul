@@ -367,7 +367,7 @@ class IndexImageGist(Gist):
     A multi-platform image, also known as an image index
     """
     #: The images in the list, by platform (`os/arch` or `os/arch/variant`)
-    manifests: dict[str, ImageGist]
+    parts: dict[str, ImageGist]
 
 
 @attrs.define(frozen=True, slots=False)
@@ -406,7 +406,7 @@ class Repository:
                   | 'application/vnd.docker.distribution.manifest.list.v2+json'):
                 return {
                     'digest': digest,
-                    'manifests': self._get_gists(manifest['manifests'])
+                    'parts': self._get_gists(manifest['manifests'])
                 }
             case ('application/vnd.docker.distribution.manifest.v2+json'
                   | 'application/vnd.oci.image.manifest.v1+json'):
@@ -523,7 +523,7 @@ def resolve_docker_image_for_launch(alias: str) -> str:
     # In either case, the verification below ensures that the image we pulled
     # has the expected ID.
     try:
-        gists = cast(IndexImageGist, gist)['manifests']
+        parts = cast(IndexImageGist, gist)['parts']
     except KeyError:
         # For single-platform images, this is straight forward.
         assert image.id == cast(ImageGist, gist)['id']
@@ -533,7 +533,7 @@ def resolve_docker_image_for_launch(alias: str) -> str:
         # what specific platform was pulled since we left it to Docker to
         # determine the best match.
         platform = Platform.from_json(image.attrs, config=True).normalize()
-        assert image.id == gists[str(platform)]['id']
+        assert image.id == parts[str(platform)]['id']
     # Returning the image ID means that the container will be launched using
     # exactly the image we just pulled and verified.
     return image.id

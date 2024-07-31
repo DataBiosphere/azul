@@ -1072,7 +1072,7 @@ tf_config = {
                     ],
                     'triggers': {
                         'script_hash': '${filesha256("%s/scripts/manage_images.py")}' % config.project_root,
-                        'manifest_hash': '${filesha256("%s/image_manifests.json")}' % config.project_root
+                        'manifest_hash': '${filesha256("%s/docker_images.json")}' % config.project_root
                     },
                     'lifecycle': {
                         # While `triggers` above only accepts strings, this
@@ -1140,7 +1140,7 @@ tf_config = {
                     ],
                     'triggers': {
                         'script_hash': '${filesha256("%s/scripts/manage_images.py")}' % config.project_root,
-                        'manifest_hash': '${filesha256("%s/image_manifests.json")}' % config.project_root,
+                        'manifest_hash': '${filesha256("%s/docker_images.json")}' % config.project_root,
                         'images': ','.join(sorted(image.tf_image for image in images)),
                         'keep_unused': json.dumps(config.terraform_keep_unused)
                     },
