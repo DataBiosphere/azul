@@ -15,7 +15,7 @@ moto[s3,sqs,sns,dynamodb,iam]==4.1.13  # match the extras with the backends list
 boto3-stubs[s3,sqs,lambda,dynamodb,iam,ecr,stepfunctions,kms]==1.28.63  # match this with the version of the `boto3` runtime dependency
 openapi-spec-validator==0.5.1
 openpyxl==3.0.6
-posix-ipc==1.1.1
+posix_ipc==1.1.1
 pygithub==1.56
 python-dxf==11.4.0
 python-gitlab==3.13.0

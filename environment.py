@@ -233,7 +233,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
         # for how).
         #
-        'azul_docker_version': '25.0.5',
+        'azul_docker_version': '27.0.3',
 
         # The version of Python used throughout the system.
         #
@@ -260,7 +260,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': '1.6.6',
+        'azul_terraform_version': '1.9.2',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -281,32 +281,32 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.4-26',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.4-27',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.22-21',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.22-22',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-6',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-7',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.3.1-58',
+                'ref': 'docker.io/clamav/clamav:1.3.1-60',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:17.1.1-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:17.2.0-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.1.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.2.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
