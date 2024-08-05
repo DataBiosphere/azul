@@ -15,7 +15,6 @@ import logging
 import mimetypes
 import os
 import pathlib
-import secrets
 from typing import (
     Any,
     Iterator,
@@ -196,8 +195,6 @@ class AzulChaliceApp(Chalice):
         """
         response = get_response(event)
         seconds = 60 * 60 * 24 * 365
-        response.headers.setdefault('Content-Security-Policy',
-                                    self.content_security_policy())
         response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
@@ -471,34 +468,12 @@ class AzulChaliceApp(Chalice):
     def _controller(self, controller_cls: Type[C], **kwargs) -> C:
         return controller_cls(app=self, **kwargs)
 
-    def content_security_policy(self, nonce: Optional[str] = None) -> str:
-        def q(s: str) -> str:
-            return f"'{s}'"
-
-        def s(*args: str | None) -> str:
-            return ' '.join(filter(None, args))
-
-        self = q('self')
-        none = q('none')
-        if nonce is not None:
-            nonce = q(f'nonce-{nonce}')
-
-        return ';'.join([
-            s('default-src', self),
-            s('img-src', self, 'data:'),
-            s('script-src', self, nonce),
-            s('style-src', self, nonce),
-            s('frame-ancestors', none),
-        ])
-
     def swagger_ui(self) -> Response:
         swagger_ui_template = self.load_static_resource('swagger', 'swagger-ui.html.template.mustache')
         base_url = self.base_url
         redirect_url = furl(base_url).add(path='oauth2_redirect')
         deployment_url = furl(base_url).add(path='openapi')
-        nonce = secrets.token_urlsafe(32)
         swagger_ui_html = chevron.render(swagger_ui_template, {
-            'CSP_NONCE': json.dumps(nonce),
             'DEPLOYMENT_PATH': json.dumps(str(deployment_url.path)),
             'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
             'OAUTH2_REDIRECT_URL': json.dumps(str(redirect_url)),
@@ -508,10 +483,7 @@ class AzulChaliceApp(Chalice):
             ])
         })
         return Response(status_code=200,
-                        headers={
-                            'Content-Type': 'text/html',
-                            'Content-Security-Policy': self.content_security_policy(nonce)
-                        },
+                        headers={'Content-Type': 'text/html'},
                         body=swagger_ui_html)
 
     def swagger_resource(self, file) -> Response:
