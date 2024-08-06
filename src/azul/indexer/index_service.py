@@ -128,9 +128,15 @@ class IndexService(DocumentService):
         aggregate = index_name.doc_type is DocumentType.aggregate
         catalog = index_name.catalog
         assert catalog is not None, catalog
-        if config.catalogs[catalog].is_integration_test_catalog:
-            # The IT catalogs are far smaller than non-IT catalogs. There is no
-            # need for the same degree of concurrency as the non-IT catalogs.
+        if (
+            config.catalogs[catalog].is_integration_test_catalog
+            or config.deployment.is_unit_test
+        ):
+            # The test catalogs are far smaller than non-test catalogs. There is
+            # no need for the same degree of concurrency as the non-test catalogs.
+            # Fixing the number of shards also helps keep the order of documents
+            # in the index deterministic, which helps with writing unit tests,
+            # e.g. the verbatim PFB manifest tests.
             num_shards = 1
             num_replicas = 0
         else:

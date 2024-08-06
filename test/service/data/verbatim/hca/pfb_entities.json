@@ -1,0 +1,313 @@
+[
+    {
+        "id": null,
+        "name": "Metadata",
+        "object": {
+            "misc": {},
+            "nodes": [
+                {
+                    "links": [],
+                    "name": "cell_suspension",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "file",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "links",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "project",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "sample",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                }
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+        "name": "file",
+        "object": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
+            "file_core": {
+                "file_format": "fastq.gz",
+                "file_name": "SRR3562915_2.fastq.gz"
+            },
+            "insdc_run": [
+                "SRR3562915"
+            ],
+            "provenance": {
+                "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "submission_date": "2018-11-02T10:03:39.593Z",
+                "update_date": "2018-11-02T10:35:03.810Z"
+            },
+            "read_index": "read2",
+            "read_length": 75,
+            "schema_type": "file"
+        },
+        "relations": []
+    },
+    {
+        "id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+        "name": "file",
+        "object": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
+            "file_core": {
+                "file_format": "fastq.gz",
+                "file_name": "SRR3562915_1.fastq.gz"
+            },
+            "insdc_run": [
+                "SRR3562915"
+            ],
+            "provenance": {
+                "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "submission_date": "2018-11-02T10:03:39.600Z",
+                "update_date": "2018-11-02T10:35:07.705Z"
+            },
+            "read_index": "read1",
+            "read_length": 75,
+            "schema_type": "file"
+        },
+        "relations": []
+    },
+    {
+        "id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+        "name": "cell_suspension",
+        "object": {
+            "biomaterial_core": {
+                "biomaterial_description": "Single cell from human pancreas",
+                "biomaterial_id": "GSM2172585 1",
+                "insdc_biomaterial": "SRS1459312",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+            "genus_species": [
+                {
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                "submission_date": "2018-11-02T10:02:28.599Z",
+                "update_date": "2018-11-02T10:10:10.908Z"
+            },
+            "schema_type": "biomaterial",
+            "total_estimated_cells": 1
+        },
+        "relations": []
+    },
+    {
+        "id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+        "name": "sample",
+        "object": {
+            "biomaterial_core": {
+                "biomaterial_id": "DID_scRSq06_pancreas",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+            "diseases": [
+                {
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal",
+                    "text": "normal"
+                }
+            ],
+            "genus_species": [
+                {
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Australopithecus",
+                    "text": "Australopithecus"
+                }
+            ],
+            "organ": {
+                "ontology": "UBERON:0001264",
+                "ontology_label": "pancreas",
+                "text": "pancreas"
+            },
+            "organ_part": {
+                "ontology": "UBERON:0000006",
+                "ontology_label": "islet of Langerhans",
+                "text": "islet of Langerhans"
+            },
+            "provenance": {
+                "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                "submission_date": "2018-11-02T10:02:12.298Z",
+                "update_date": "2018-11-02T10:09:26.517Z"
+            },
+            "schema_type": "biomaterial"
+        },
+        "relations": []
+    },
+    {
+        "id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+        "name": "project",
+        "object": {
+            "contributors": [
+                {
+                    "address": "Bioengineering, Stanford University, James H. Clark Center, 318 Campus Drive,, Stanford, CA, USA",
+                    "contact_name": "Martin, Enge",
+                    "corresponding_contributor": null,
+                    "country": "USA",
+                    "email": "martin.enge@gmail.com",
+                    "institution": "University",
+                    "laboratory": null,
+                    "orcid_id": null,
+                    "phone": null,
+                    "project_role": null
+                },
+                {
+                    "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                    "contact_name": "Laura,,Huerta",
+                    "corresponding_contributor": false,
+                    "country": "UK",
+                    "email": "lauhuema@ebi.ac.uk",
+                    "institution": "Farmers Trucks",
+                    "laboratory": "John Dear",
+                    "orcid_id": "0000-0002-8748-599X",
+                    "phone": null,
+                    "project_role": "external curator"
+                },
+                {
+                    "address": "Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SD",
+                    "contact_name": "Matthew,,Green",
+                    "corresponding_contributor": false,
+                    "country": "UK",
+                    "email": "hewgreen@ebi.ac.uk",
+                    "institution": "Farmers Trucks",
+                    "laboratory": "John Dear",
+                    "orcid_id": "0000-0003-2771-9894",
+                    "phone": "(+44) 122-349-4444",
+                    "project_role": "Human Cell Atlas wrangler"
+                }
+            ],
+            "describedBy": "https://schema.humancellatlas.org/type/project/9.0.3/project",
+            "geo_series": "GSE81547",
+            "insdc_project": "SRP075496",
+            "project_core": {
+                "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                "project_short_name": "Single of human pancreas",
+                "project_title": "Single cell transcriptome patterns."
+            },
+            "provenance": {
+                "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                "submission_date": "2018-11-02T10:02:12.133Z",
+                "update_date": "2018-11-02T10:07:39.499Z"
+            },
+            "publications": [
+                {
+                    "authors": [
+                        "Enge M",
+                        "Arda HE",
+                        "Mignardi M",
+                        "Beausang J",
+                        "Bottino R",
+                        "Kim SK",
+                        "Quake SR"
+                    ],
+                    "doi": "10.1016/j.cell.2017.09.004",
+                    "pmid": 28965763,
+                    "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                    "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                }
+            ],
+            "schema_type": "project",
+            "supplementary_links": [
+                "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+        "name": "links",
+        "object": {
+            "describedBy": "https://schema.humancellatlas.org/system/1.1.3/links",
+            "links": [
+                {
+                    "input_type": "biomaterial",
+                    "inputs": [
+                        "412898c5-5b9b-4907-b07c-e9b89666e204"
+                    ],
+                    "output_type": "file",
+                    "outputs": [
+                        "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb"
+                    ],
+                    "process": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                    "protocols": [
+                        {
+                            "protocol_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                            "protocol_type": "library_preparation_protocol"
+                        },
+                        {
+                            "protocol_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                            "protocol_type": "sequencing_protocol"
+                        }
+                    ]
+                },
+                {
+                    "input_type": "biomaterial",
+                    "inputs": [
+                        "a21dc760-a500-4236-bcff-da34a0e873d2"
+                    ],
+                    "output_type": "biomaterial",
+                    "outputs": [
+                        "412898c5-5b9b-4907-b07c-e9b89666e204"
+                    ],
+                    "process": "4c28e079-59af-4bd3-8c8b-763ea0beba98",
+                    "protocols": [
+                        {
+                            "protocol_id": "31e708d3-79df-49b8-a3df-b1d694963468",
+                            "protocol_type": "dissociation_protocol"
+                        },
+                        {
+                            "protocol_id": "5bd4ba68-4c0e-4d22-840d-afc025e7badc",
+                            "protocol_type": "enrichment_protocol"
+                        }
+                    ]
+                },
+                {
+                    "input_type": "biomaterial",
+                    "inputs": [
+                        "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                    ],
+                    "output_type": "biomaterial",
+                    "outputs": [
+                        "a21dc760-a500-4236-bcff-da34a0e873d2"
+                    ],
+                    "process": "4674255d-5ecd-4860-9b8d-beae98772cd9",
+                    "protocols": []
+                }
+            ],
+            "schema_type": "link_bundle",
+            "schema_version": "1.1.3"
+        },
+        "relations": []
+    }
+]
