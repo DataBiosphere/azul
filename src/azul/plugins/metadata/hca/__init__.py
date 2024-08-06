@@ -171,7 +171,10 @@ class Plugin(MetadataPlugin[HCABundle]):
             ManifestFormat.terra_bdbag,
             ManifestFormat.terra_pfb,
             ManifestFormat.curl,
-            *iif(config.enable_replicas, [ManifestFormat.verbatim_jsonl])
+            *iif(config.enable_replicas, [
+                ManifestFormat.verbatim_jsonl,
+                ManifestFormat.verbatim_pfb
+            ])
         ]
 
     @property

@@ -20,9 +20,6 @@ from io import (
     BytesIO,
 )
 import json
-from operator import (
-    itemgetter,
-)
 import os
 from pathlib import (
     Path,
@@ -68,7 +65,7 @@ from azul import (
 from azul.collections import (
     adict,
     compose_keys,
-    none_safe_key,
+    none_safe_tuple_key,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -109,6 +106,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSON,
+    JSONs,
     MutableJSON,
     MutableJSONs,
 )
@@ -240,6 +238,39 @@ class ManifestTestCase(WebServiceTestCase,
         manifest.sort(key=sort_key)
         expected.sort(key=sort_key)
         self.assertEqual(expected, manifest)
+
+    def _assert_pfb(self,
+                    expected_schema: JSON,
+                    expected_entities: JSONs,
+                    actual: Response):
+        """
+        Assert that the body of the given response contains a valid PFB manifest
+        matching the expected schema and content, disregarding differences in
+        the ordering of the PFB entities.
+
+        :param expected_schema: a PFB schema.
+
+        :param expected_entities: a list of PFB entities.
+
+        :param actual: an HTTP response containing a PFB manifest.
+        """
+        manifest = fastavro.reader(BytesIO(actual.content))
+        schema = manifest.writer_schema
+        # The ordering of the entities in the manifest depends on the order of
+        # the replica documents in the index. We haven't figured out how to
+        # ensure that this ordering is reliably deterministic, so we sort to
+        # make the test insensitive to it.
+        # FIXME: Document order of replicas is nondeterministic
+        #        https://github.com/DataBiosphere/azul/issues/6442
+        sort_key = compose_keys(none_safe_tuple_key(),
+                                # This is necessary to stabilize the ordering of
+                                # DUOS replicas, which have the same id as the
+                                # main dataset replica.
+                                lambda entity: (entity['id'], entity['object'].get('datarepo_row_id')))
+        expected_entities = sorted(expected_entities, key=sort_key)
+        entities = sorted(manifest, key=sort_key)
+        self.assertEqual(expected_schema, schema)
+        self.assertEqual(expected_entities, entities)
 
     def _file_url(self, file_id, version):
         return str(self.base_url.set(path='/repository/files/' + file_id,
@@ -1318,6 +1349,15 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         self.assertEqual(200, response.status_code)
         self._assert_jsonl(expected, response)
 
+    def test_verbatim_pfb_manifest(self):
+        response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
+        self.assertEqual(200, response.status_code)
+        with open(self._data_path('service') / 'verbatim/hca/pfb_schema.json') as f:
+            expected_schema = json.load(f)
+        with open(self._data_path('service') / 'verbatim/hca/pfb_entities.json') as f:
+            expected_entities = json.load(f)
+        self._assert_pfb(expected_schema, expected_entities, response)
+
 
 class TestManifestCache(DCP1ManifestTestCase):
 
@@ -2052,15 +2092,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
     def test_verbatim_pfb_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
         self.assertEqual(200, response.status_code)
-        manifest = fastavro.reader(BytesIO(response.content))
-        schema = manifest.writer_schema
-        entities = list(manifest)
-        with open(self._data_path('service') / 'verbatim/pfb_schema.json') as f:
+        with open(self._data_path('service') / 'verbatim/anvil/pfb_schema.json') as f:
             expected_schema = json.load(f)
-        with open(self._data_path('service') / 'verbatim/pfb_entities.json') as f:
+        with open(self._data_path('service') / 'verbatim/anvil/pfb_entities.json') as f:
             expected_entities = json.load(f)
-        sort_key = compose_keys(none_safe_key(), itemgetter('id'))
-        entities.sort(key=sort_key)
-        expected_entities.sort(key=sort_key)
-        self.assertEqual(expected_schema, schema)
-        self.assertEqual(expected_entities, entities)
+        self._assert_pfb(expected_schema, expected_entities, response)
