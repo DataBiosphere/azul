@@ -652,6 +652,17 @@ def _entity_schema_recursive(field_types: FieldTypes,
             assert False, field_type
 
 
+def _sort_pfb_union(schema: str | dict) -> str:
+    if isinstance(schema, str):
+        return schema
+    else:
+        return schema['type']
+
+
+class SchemaUpdateException(Exception):
+    pass
+
+
 def _update_replica_schema(*,
                            schema: MutableJSON,
                            path: tuple[str, ...],
@@ -682,54 +693,73 @@ def _update_replica_schema(*,
     except KeyError:
         schema[key] = _new_replica_schema(path=path, value=value)
     else:
-        if old_type == []:
-            schema[key] = _new_replica_schema(path=path, value=value)
-        elif value is None:
-            if old_type == 'null' or isinstance(old_type, list):
-                pass
-            else:
-                schema[key] = ['null', old_type]
-        elif old_type == 'null':
-            schema[key] = [
-                'null',
-                _new_replica_schema(path=path, value=value)
-            ]
-        elif isinstance(value, list):
-            if isinstance(old_type, list):
-                old_type = old_type[1]
-            assert old_type['type'] == 'array', old_type
-            for v in value:
-                _update_replica_schema(schema=old_type,
-                                       path=path,
-                                       key='items',
-                                       value=v)
-        elif isinstance(value, dict):
-            if isinstance(old_type, list):
-                old_type = old_type[1]
-            assert old_type['type'] == 'record', old_type
-            old_fields = {field['name']: field for field in old_type['fields']}
-            for k in value.keys() | old_fields.keys():
-                try:
-                    field = old_fields[k]
-                except KeyError:
-                    field = {
-                        'name': k,
-                        'namespace': '.'.join(path),
-                        'type': 'null'
-                    }
-                    bisect.insort(old_type['fields'], field, key=itemgetter('name'))
-                    new_value = value[k]
-                else:
-                    new_value = value.get(k)
-                _update_replica_schema(schema=field,
-                                       path=(*path, k),
-                                       key='type',
-                                       value=new_value)
+        if isinstance(old_type, list):
+            _update_replica_schema_union(schema=schema, path=path, key=key, value=value)
         else:
-            new_type = _json_to_pfb_types[type(value)]
-            if isinstance(old_type, list):
-                old_type = old_type[1]
-            assert old_type == new_type, (old_type, value)
+            if value is None and old_type == 'null':
+                pass
+            elif (isinstance(value, list)
+                  and isinstance(old_type, dict) and old_type['type'] == 'array'):
+                for v in value:
+                    _update_replica_schema_union(schema=old_type,
+                                                 path=path,
+                                                 key='items',
+                                                 value=v)
+            elif (isinstance(value, dict)
+                  and isinstance(old_type, dict) and old_type['type'] == 'record'):
+                old_fields = {field['name']: field for field in old_type['fields']}
+                for k in value.keys() | old_fields.keys():
+                    try:
+                        field = old_fields[k]
+                    except KeyError:
+                        field = {
+                            'name': k,
+                            'namespace': '.'.join(path),
+                            'type': 'null'
+                        }
+                        bisect.insort(old_type['fields'], field, key=itemgetter('name'))
+                        new_value = value[k]
+                    else:
+                        new_value = value.get(k)
+                    _update_replica_schema_union(schema=field,
+                                                 path=(*path, k),
+                                                 key='type',
+                                                 value=new_value)
+            else:
+                try:
+                    new_type = _json_to_pfb_types[type(value)]
+                except KeyError:
+                    raise SchemaUpdateException
+                else:
+                    if new_type != old_type:
+                        raise SchemaUpdateException
+
+
+def _update_replica_schema_union(*,
+                                 schema: MutableJSON,
+                                 path: tuple[str, ...],
+                                 key: str,
+                                 value: AnyMutableJSON):
+    old_type = schema[key]
+    if not isinstance(old_type, list):
+        old_type = [old_type]
+    for union_member in old_type:
+        try:
+            _update_replica_schema(schema={key: union_member},
+                                   path=path,
+                                   key=key,
+                                   value=value)
+        except SchemaUpdateException:
+            continue
+        else:
+            break
+    else:
+        new_type = _new_replica_schema(path=path, value=value)
+        if old_type:
+            bisect.insort(old_type, new_type, key=_sort_pfb_union)
+        else:
+            old_type = new_type
+        schema[key] = old_type
 
 
 def _new_replica_schema(*,
