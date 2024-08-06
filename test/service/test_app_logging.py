@@ -40,7 +40,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                     with self.assertLogs(logger=log, level=level) as logs:
                         requests.get(str(url), headers=headers)
                     logs = [(r.levelno, r.getMessage()) for r in logs.records]
-                    request_headers = {
+                    headers = {
                         'host': url.netloc,
                         'user-agent': 'python-requests/2.32.2',
                         'accept-encoding': 'gzip, deflate, br',
@@ -48,29 +48,11 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                         'connection': 'keep-alive',
                         **headers,
                     }
-                    response_headers = {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': 'Authorization,'
-                                                        'Content-Type,'
-                                                        'X-Amz-Date,'
-                                                        'X-Amz-Security-Token,'
-                                                        'X-Api-Key',
-                        'Content-Security-Policy': "default-src 'self';"
-                                                   "img-src 'self' data:;"
-                                                   "script-src 'self';"
-                                                   "style-src 'self';"
-                                                   "frame-ancestors 'none'",
-                        'Strict-Transport-Security': 'max-age=31536000;'
-                                                     ' includeSubDomains',
-                        'X-Content-Type-Options': 'nosniff',
-                        'X-Frame-Options': 'DENY',
-                        'Cache-Control': 'no-store'
-                    }
                     self.assertEqual(logs, [
                         (
                             INFO,
                             f"Received GET request for '/health/basic', "
-                            f"with {json.dumps({'query': None, 'headers': request_headers})}."),
+                            f"with {json.dumps({'query': None, 'headers': headers})}."),
                         (
                             INFO,
                             "Authenticated request as OAuth2(access_token='foo_token')"
@@ -81,7 +63,13 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                             level,
                             'Returning 200 response. To log headers and body, set AZUL_DEBUG to 1.'
                             if level == INFO else
-                            f'Returning 200 response with headers {json.dumps(response_headers)}. '
+                            'Returning 200 response with headers {"Access-Control-Allow-Origin": '
+                            '"*", "Access-Control-Allow-Headers": '
+                            '"Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key", '
+                            '"Strict-Transport-Security": "max-age=31536000; includeSubDomains", '
+                            '"X-Content-Type-Options": "nosniff", '
+                            '"X-Frame-Options": "DENY", '
+                            '"Cache-Control": "no-store"}. '
                             'See next line for the first 1024 characters of the body.\n'
                             '{"up": true}'
                         )
