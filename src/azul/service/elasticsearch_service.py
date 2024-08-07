@@ -336,7 +336,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
                           agg_type='terms',
                           field=path,
                           size=config.terms_aggregation_size)
-        agg.bucket('untagged', 'missing', field=path)
+        nested_agg.bucket('untagged', 'missing', field=path)
         return agg
 
     def _annotate_aggs_for_translation(self, request: Search):
@@ -369,7 +369,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             except KeyError:
                 pass
             else:
-                agg['myTerms'] = nested_agg['myTerms']
+                agg.update(nested_agg)
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """
