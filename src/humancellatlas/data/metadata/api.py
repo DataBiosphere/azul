@@ -42,6 +42,7 @@ from azul import (
 )
 from azul.collections import (
     OrderedSet,
+    dict_merge,
 )
 from humancellatlas.data.metadata.age_range import (
     AgeRange,
@@ -940,7 +941,7 @@ class Link:
     link_type: str = 'process_link'
 
     @classmethod
-    def from_json(cls, json: JSON, schema_version: Tuple[int]) -> Iterable['Link']:
+    def from_json(cls, json: JSON, schema_version: tuple[int, ...]) -> Iterable['Link']:
         if 'source_id' in json:
             # DCP/1 v5 (obsolete)
             yield cls(source_id=UUID4(json['source_id']),
@@ -1132,7 +1133,7 @@ class Bundle:
                 except StopIteration:
                     return visit(entity)
                 else:
-                    return dict(chain.from_iterable(map(dict.items, map(visit, entities))))
+                    return dict_merge(map(visit, entities))
 
         def visit(entity: Entity) -> Mapping[UUID4, L]:
             if isinstance(entity, LinkedEntity):
