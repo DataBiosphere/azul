@@ -1475,7 +1475,8 @@ class Config:
 
     @property
     def current_sources(self) -> list[str]:
-        sources = shlex.split(self.environ['azul_current_sources'])
+        sources = self.environ.get('azul_current_sources', '*')
+        sources = shlex.split(sources)
         require(bool(sources), 'Sources cannot be empty', sources)
         return sources
 

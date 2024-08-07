@@ -139,14 +139,19 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': None,
 
         # The name of a catalog to perform reindex or other operational tasks on.
+        # By default, these tasks are performed on all catalogs.
         #
         'azul_current_catalog': None,
 
         # A space-separated list of shell globs to match the sources in the
-        # current catalog against, or "*" for all sources in the catalog. Only
-        # matching sources will be operated on. If no sources match, an error
-        # will be raised.
-        'azul_current_sources': '*',
+        # current catalog against, or "*" for all sources in the catalog. "*" is
+        # the default, but it is not defined here so that the variable can
+        # be interactively overridden when running jobs on GitLab.
+        #
+        # Only matching sources will be targeted when performing reindex or
+        # other operational tasks. If no sources match, an error will be raised.
+        #
+        'azul_current_sources': None,
 
         # The Account ID number for AWS
         #
