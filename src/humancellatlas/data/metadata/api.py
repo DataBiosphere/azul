@@ -98,14 +98,12 @@ class Entity:
     json: JSON = field(repr=False)
     document_id: UUID4
     submitter_id: str | None
-    metadata_manifest_entry: ManifestEntry | None
     submission_date: datetime
     update_date: datetime | None
 
     @classmethod
     def from_json(cls,
                   json: JSON,
-                  metadata_manifest_entry: ManifestEntry | None,
                   **kwargs):
         content = json.get('content', json)
         described_by = content['describedBy']
@@ -114,22 +112,15 @@ class Entity:
             sub_cls = entity_types[schema_name]
         except KeyError:
             raise TypeLookupError(described_by)
-        return sub_cls(json, metadata_manifest_entry, **kwargs)
+        return sub_cls(json, **kwargs)
 
     def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
+                 json: JSON
                  ) -> None:
         super().__init__()
         self.json = json
-        self.metadata_manifest_entry = metadata_manifest_entry
         provenance = json.get('hca_ingest') or json['provenance']
         self.document_id = UUID4(provenance['document_id'])
-        # Some older DCP/1 bundles use different UUIDs in the manifest and
-        # metadata.
-        if False:
-            if self.metadata_manifest_entry is not None:
-                assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
         submission_date = lookup(provenance, 'submission_date', 'submissionDate')
         self.submission_date = self._datetime(submission_date)
@@ -182,10 +173,9 @@ class LinkedEntity(Entity, metaclass=ABCMeta):
         raise NotImplementedError()
 
     def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
+                 json: JSON
                  ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+        super().__init__(json)
         self.children = {}
         self.parents = {}
 
@@ -299,11 +289,8 @@ class Project(Entity):
     estimated_cell_count: int | None
     bionetworks: OrderedSet[Bionetwork]
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         core = content['project_core']
         self.project_short_name = lookup(core, 'project_short_name', 'project_shortname')
@@ -375,11 +362,8 @@ class Biomaterial(LinkedEntity):
     from_processes: MutableMapping[UUID4, 'Process'] = field(repr=False)
     to_processes: MutableMapping[UUID4, 'Process']
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.biomaterial_id = content['biomaterial_core']['biomaterial_id']
         self.ncbi_taxon_id = content['biomaterial_core']['ncbi_taxon_id']
@@ -406,11 +390,8 @@ class DonorOrganism(Biomaterial):
     sex: str
     development_stage: str | None
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.genus_species = {ontology_label(gs) for gs in content['genus_species']}
         self.diseases = {ontology_label(d) for d in lookup(content, 'diseases', 'disease', default=[]) if d}
@@ -447,11 +428,8 @@ class SpecimenFromOrganism(Biomaterial):
     organ: str | None
     organ_parts: set[str]
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         preservation_storage = content.get('preservation_storage')
         self.storage_method = preservation_storage.get('storage_method') if preservation_storage else None
@@ -483,11 +461,8 @@ class SpecimenFromOrganism(Biomaterial):
 class ImagedSpecimen(Biomaterial):
     slice_thickness: float | int
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         self.slice_thickness = json['slice_thickness']
 
 
@@ -496,11 +471,8 @@ class CellSuspension(Biomaterial):
     estimated_cell_count: int | None
     selected_cell_types: set[str]
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.estimated_cell_count = lookup(content, 'estimated_cell_count', 'total_estimated_cells', default=None)
         self.selected_cell_types = {ontology_label(sct) for sct in
@@ -524,11 +496,8 @@ class CellLine(Biomaterial):
     type: str
     model_organ: str | None
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.type = lookup(content, 'type', 'cell_line_type')
         self.model_organ = ontology_label(content.get('model_organ'), default=None)
@@ -545,11 +514,8 @@ class Organoid(Biomaterial):
     model_organ: str
     model_organ_part: str | None
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.model_organ = ontology_label(lookup(content, 'model_organ', 'model_for_organ'), default=None)
         self.model_organ_part = ontology_label(content.get('model_organ_part'), default=None)
@@ -565,11 +531,8 @@ class Process(LinkedEntity):
     output_files: MutableMapping[UUID4, 'File']
     protocols: MutableMapping[UUID4, 'Protocol']
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         process_core = content['process_core']
         self.process_id = process_core['process_id']
@@ -607,35 +570,26 @@ class AnalysisProcess(Process):
 @dataclass(init=False)
 class DissociationProcess(Process):
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
+    def __init__(self, json: JSON) -> None:
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
-        super().__init__(json, metadata_manifest_entry)
+        super().__init__(json)
 
 
 @dataclass(init=False)
 class EnrichmentProcess(Process):
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
+    def __init__(self, json: JSON) -> None:
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
-        super().__init__(json, metadata_manifest_entry)
+        super().__init__(json)
 
 
 @dataclass(init=False)
 class LibraryPreparationProcess(Process):
     library_construction_approach: str
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
+    def __init__(self, json: JSON) -> None:
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
-        super().__init__(json, metadata_manifest_entry)
+        super().__init__(json)
         content = json.get('content', json)
         self.library_construction_approach = content['library_construction_approach']
 
@@ -644,12 +598,9 @@ class LibraryPreparationProcess(Process):
 class SequencingProcess(Process):
     instrument_manufacturer_model: str
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
+    def __init__(self, json: JSON) -> None:
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
-        super().__init__(json, metadata_manifest_entry)
+        super().__init__(json)
         content = json.get('content', json)
         self.instrument_manufacturer_model = ontology_label(content['instrument_manufacturer_model'])
 
@@ -672,11 +623,8 @@ class Protocol(LinkedEntity):
     protocol_id: str
     protocol_name: str | None
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         protocol_core = content['protocol_core']
         self.protocol_id = protocol_core['protocol_id']
@@ -694,11 +642,8 @@ class LibraryPreparationProtocol(Protocol):
     library_construction_method: str
     nucleic_acid_source: str | None
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         temp = lookup(content, 'library_construction_method', 'library_construction_approach')
         self.library_construction_method = ontology_label(temp) if isinstance(temp, dict) else temp
@@ -716,11 +661,8 @@ class SequencingProtocol(Protocol):
     instrument_manufacturer_model: str
     paired_end: bool | None
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.instrument_manufacturer_model = ontology_label(content.get('instrument_manufacturer_model'), default=None)
         self.paired_end = lookup(content, 'paired_end', 'paired_ends', default=None)
@@ -770,11 +712,8 @@ class TreatmentProtocol(Protocol):
 class ImagingProtocol(Protocol):
     probe: list[ImagingProbe]  # A list so all the ImagingProbe objects can be tallied when indexed
 
-    def __init__(self,
-                 json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None
-                 ) -> None:
-        super().__init__(json, metadata_manifest_entry)
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
         content = json.get('content', json)
         self.probe = [
             ImagingProbe.from_json(probe)
@@ -804,9 +743,8 @@ class File(LinkedEntity):
 
     def __init__(self,
                  json: JSON,
-                 metadata_manifest_entry: ManifestEntry | None,
                  manifest: Mapping[str, ManifestEntry]):
-        super().__init__(json, metadata_manifest_entry)
+        super().__init__(json)
         content = json.get('content', json)
         # '/' was once forbidden in file paths and was encoded with '!'. Now
         # '/' is allowed and we force it in the metadata so that backwards
@@ -847,9 +785,8 @@ class SequenceFile(File):
 
     def __init__(self,
                  json: JSON,
-                 metadata_manifest_entry,
                  manifest: Mapping[str, ManifestEntry]):
-        super().__init__(json, metadata_manifest_entry, manifest)
+        super().__init__(json, manifest)
         content = json.get('content', json)
         self.read_index = content['read_index']
         self.lane_index = content.get('lane_index')
@@ -866,9 +803,8 @@ class AnalysisFile(File):
 
     def __init__(self,
                  json: JSON,
-                 metadata_manifest_entry,
                  manifest: Mapping[str, ManifestEntry]):
-        super().__init__(json, metadata_manifest_entry, manifest)
+        super().__init__(json, manifest)
         content = json.get('content', json)
         self.matrix_cell_count = content.get('matrix_cell_count')
 
@@ -983,22 +919,22 @@ class Bundle:
         self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
         self.stitched = frozenset(map(UUID4, stitched_entity_ids))
 
-        json_by_core_cls: MutableMapping[type[E], list[tuple[JSON, ManifestEntry]]] = defaultdict(list)
+        json_by_core_cls: MutableMapping[type[E], list[JSON]] = defaultdict(list)
         for file_name, json in metadata_files.items():
             assert file_name.endswith('.json')
             schema_name, _, suffix = file_name[:-5].rpartition('_')
             if schema_name and suffix.isdigit():
                 entity_cls = entity_types[schema_name]
                 core_cls = core_types[entity_cls]
-                json_by_core_cls[core_cls].append((json, self.manifest.get(file_name)))
+                json_by_core_cls[core_cls].append(json)
 
         def from_json_vx(core_cls: type[E],
                          **kwargs
                          ) -> MutableMapping[UUID4, E]:
             json_entities = json_by_core_cls[core_cls]
             entities = (
-                core_cls.from_json(entity, manifest_entry, **kwargs)
-                for entity, manifest_entry in json_entities
+                core_cls.from_json(entity, **kwargs)
+                for entity in json_entities
             )
             return {entity.document_id: entity for entity in entities}
 
