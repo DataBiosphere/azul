@@ -9569,7 +9569,8 @@
                                 "terra.bdbag",
                                 "terra.pfb",
                                 "curl",
-                                "verbatim.jsonl"
+                                "verbatim.jsonl",
+                                "verbatim.pfb"
                             ]
                         },
                         "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact,\n  tab-separated manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two\n  manifests: one for Participants (aka Donors) and one for\n  Samples (aka Specimens). For more on the format of the\n  manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB\n  format][3]. This format is mainly used for exporting data to\n  Terra.\n\n- `curl` for a [curl configuration\n  file][4] manifest. This manifest can be used with the curl\n  program to download all the files listed in the manifest.\n\n- `verbatim.jsonl` for a verbatim\n  manifest in [JSONL][5] format. Each line contains an\n  unaltered metadata entity from the underlying repository.\n\n- `verbatim.pfb` for a verbatim\n  manifest in the [PFB format][3]. This format is mainly\n  used for exporting data to Terra.\n\n[1]: https://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n\n[5]: https://jsonlines.org/\n"
@@ -10992,7 +10993,8 @@
                                 "terra.bdbag",
                                 "terra.pfb",
                                 "curl",
-                                "verbatim.jsonl"
+                                "verbatim.jsonl",
+                                "verbatim.pfb"
                             ]
                         },
                         "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact,\n  tab-separated manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two\n  manifests: one for Participants (aka Donors) and one for\n  Samples (aka Specimens). For more on the format of the\n  manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB\n  format][3]. This format is mainly used for exporting data to\n  Terra.\n\n- `curl` for a [curl configuration\n  file][4] manifest. This manifest can be used with the curl\n  program to download all the files listed in the manifest.\n\n- `verbatim.jsonl` for a verbatim\n  manifest in [JSONL][5] format. Each line contains an\n  unaltered metadata entity from the underlying repository.\n\n- `verbatim.pfb` for a verbatim\n  manifest in the [PFB format][3]. This format is mainly\n  used for exporting data to Terra.\n\n[1]: https://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n\n[5]: https://jsonlines.org/\n"

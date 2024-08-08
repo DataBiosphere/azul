@@ -44,7 +44,17 @@ cis_alarms = [
     CloudTrailAlarm(name='api_unauthorized',
                     statistic='Sum',
                     filter_pattern='{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
-                    threshold=12,
+                    # We expect two false alarms caused by AWS Config every day
+                    # (see delivery_frequency below), two false alarms per week
+                    # from the SSM Agent running on the GitLab instance, and two
+                    # additional false alarms from that agent for every reboot
+                    # of the GitLab instance, which we expect to occur at most
+                    # once per day. We leave a margin of two false alarms to
+                    # account for occasional discrepancies in the number of
+                    # alarms, supposedly due to misalignment between the 24h
+                    # CloudWatch evaluation window and whatever schedule AWS
+                    # Config is on.
+                    threshold=8,
                     period=24 * 60 * 60),
     # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html#securityhub-cis-controls-3.2
     CloudTrailAlarm(name='console_no_mfa',
@@ -857,6 +867,9 @@ tf_config = {
             'shared': {
                 'name': config.qualified_resource_name(config.aws_config_term),
                 's3_bucket_name': '${aws_s3_bucket.aws_config.bucket}',
+                'snapshot_delivery_properties': {
+                    'delivery_frequency': 'TwentyFour_Hours'
+                },
                 'depends_on': [
                     'aws_config_configuration_recorder.shared'
                 ]

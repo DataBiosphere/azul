@@ -978,6 +978,8 @@ class Config:
     class Deployment:
         name: str
 
+        test_name = 'dummy'
+
         @property
         def is_shared(self) -> bool:
             """
@@ -1064,6 +1066,10 @@ class Config:
                 self.is_sandbox
                 and config.Deployment(config.main_deployment_stage).is_lower
             )
+
+        @property
+        def is_unit_test(self):
+            return self.name == self.test_name
 
     @property
     def deployment(self) -> Deployment:
@@ -1469,7 +1475,8 @@ class Config:
 
     @property
     def current_sources(self) -> list[str]:
-        sources = shlex.split(self.environ['azul_current_sources'])
+        sources = self.environ.get('azul_current_sources', '*')
+        sources = shlex.split(sources)
         require(bool(sources), 'Sources cannot be empty', sources)
         return sources
 

@@ -139,14 +139,19 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': None,
 
         # The name of a catalog to perform reindex or other operational tasks on.
+        # By default, these tasks are performed on all catalogs.
         #
         'azul_current_catalog': None,
 
         # A space-separated list of shell globs to match the sources in the
-        # current catalog against, or "*" for all sources in the catalog. Only
-        # matching sources will be operated on. If no sources match, an error
-        # will be raised.
-        'azul_current_sources': '*',
+        # current catalog against, or "*" for all sources in the catalog. "*" is
+        # the default, but it is not defined here so that the variable can
+        # be interactively overridden when running jobs on GitLab.
+        #
+        # Only matching sources will be targeted when performing reindex or
+        # other operational tasks. If no sources match, an error will be raised.
+        #
+        'azul_current_sources': None,
 
         # The Account ID number for AWS
         #
@@ -233,7 +238,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and pushing the executor image (see terraform/gitlab/runner/Dockerfile
         # for how).
         #
-        'azul_docker_version': '27.0.3',
+        'azul_docker_version': '27.1.1',
 
         # The version of Python used throughout the system.
         #
@@ -260,7 +265,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': '1.9.2',
+        'azul_terraform_version': '1.9.3',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -281,32 +286,32 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.4-27',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.4-28',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.22-22',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.22-23',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-7',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-8',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.3.1-60',
+                'ref': 'docker.io/clamav/clamav:1.3.1-61',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:17.2.0-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:17.2.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.2.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.2.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
