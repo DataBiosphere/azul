@@ -157,25 +157,11 @@ class StagingArea:
         entity_ids_by_type = self._entity_ids_by_type(subgraph_id)
         for entity_type, entity_ids in entity_ids_by_type.items():
             # Sort entity_ids to produce the same ordering on multiple runs
-            for i, entity_id in enumerate(sorted(entity_ids)):
-                json_file_name = f'{entity_type}_{i}.json'
+            for entity_id in sorted(entity_ids):
                 metadata_file = self.metadata[entity_id]
                 json_content = metadata_file.content
                 key = str(EntityReference(entity_type=entity_type, entity_id=entity_id))
                 metadata[key] = json_content
-                file_manifest = {
-                    'content-type': 'application/json;',
-                    'crc32c': '0' * 8,
-                    'indexed': True,
-                    'name': json_file_name,
-                    's3_etag': None,
-                    'sha1': None,
-                    'sha256': '0' * 64,
-                    'size': len(json.dumps(json_content)),
-                    'uuid': metadata_file.uuid,
-                    'version': metadata_file.version
-                }
-                manifest.append(file_manifest)
                 if entity_type.endswith('_file'):
                     file_manifest = self.descriptors[entity_id].manifest_entry
                     manifest.append(file_manifest)

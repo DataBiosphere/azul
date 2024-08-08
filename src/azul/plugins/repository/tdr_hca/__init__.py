@@ -190,12 +190,6 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                    ) -> None:
         if is_stitched:
             self.stitched.add(entity.entity_id)
-        self._add_manifest_entry(name='',
-                                 uuid=entity.entity_id,
-                                 version=TDRPlugin.format_version(row['version']),
-                                 size=row['content_size'],
-                                 content_type='application/json',
-                                 dcp_type=f'"metadata/{row["schema_type"]}"')
         if entity.entity_type.endswith('_file'):
             descriptor = json.loads(row['descriptor'])
             self._add_manifest_entry(name=row['file_name'],
@@ -212,9 +206,6 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                                       else content)
 
     metadata_columns: ClassVar[set[str]] = {
-        'version',
-        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
-        'BYTE_LENGTH(content) AS content_size',
         'content'
     }
 
@@ -462,7 +453,6 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
             else TDRHCABundle.data_columns if entity_type.endswith('_file')
             else TDRHCABundle.metadata_columns
         )
-        assert version_column in non_pk_columns
         table_name = backtick(self._full_table_name(source, entity_type))
         entity_id_type = one(set(map(type, entity_ids)))
 

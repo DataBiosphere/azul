@@ -1,36 +1,6 @@
 {
     "manifest": [
         {
-            "name": "enrichment_protocol_0.json",
-            "uuid": "003cb4a8-9871-488f-9042-820504991f17",
-            "version": "2020-08-13T10:24:31.885000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1801,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_0.json",
-            "uuid": "00dbea45-4e4d-5220-985e-afd8dcfce0b5",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_0.json",
-            "uuid": "012ba773-aefb-4d9f-8ec1-6714dc7f631b",
-            "version": "2020-08-13T10:24:32.490000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316894_S1_L001_I1_001.fastq.gz",
             "uuid": "01824e76-505c-4e99-9ffd-bc1b5f56f726",
             "version": "2020-08-13T10:24:33.604000Z",
@@ -42,36 +12,6 @@
             "sha1": "1dadbac219091ab46d96c3d50d35cbd7746677f7",
             "sha256": "5f6e2b3c8d6e00fd6dd51c301d1c97f2536a7887963e0365f215cd0f96d34f97",
             "s3_etag": "2a0329a71e83818c5f8e51fa091c5d20-39"
-        },
-        {
-            "name": "analysis_process_0.json",
-            "uuid": "0233488f-2a92-4e5c-a7c5-3508b39762aa",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_0.json",
-            "uuid": "02f33fc2-eb2f-4c78-a7f5-002a1747e71f",
-            "version": "2020-08-13T10:24:31.566000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_0.json",
-            "uuid": "0370e38d-bb67-4b79-be99-3ff27e21adba",
-            "version": "2020-08-13T10:24:39.091000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7352193_S1_L001_R2_001.fastq.gz",
@@ -87,66 +27,6 @@
             "s3_etag": "40155c79aec333af98e27949b87fae21-445"
         },
         {
-            "name": "sequence_file_1.json",
-            "uuid": "05345715-8f9f-44fe-8f28-f75552b17d5d",
-            "version": "2020-08-13T10:24:35.160000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_2.json",
-            "uuid": "0565f81d-86a0-4591-8a29-f7e3306556f2",
-            "version": "2020-08-13T10:24:32.576000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 610,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_3.json",
-            "uuid": "0619dd26-7a22-4fc9-ac35-7a381a502e6f",
-            "version": "2020-08-13T10:24:32.055000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_1.json",
-            "uuid": "07a18873-6df1-57a8-848c-980bfa29fbf5",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_2.json",
-            "uuid": "07a81052-3964-5b08-8f2d-066c1e29de7d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_3.json",
-            "uuid": "07b48eae-1703-5821-b3e6-66bb1488e7b2",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316890_S1_L001_R1_001.fastq.gz",
             "uuid": "085e5f88-ab09-4d69-bc14-afa71e1ae17c",
             "version": "2020-08-13T10:24:33.458000Z",
@@ -158,46 +38,6 @@
             "sha1": "f3ad92f512a428fe57395a344aa34c8bd18a4150",
             "sha256": "2c1bbc2263124703a0c818aa4c75f6cfaedd1b567ad15b80fe0c2d2d3004d20e",
             "s3_etag": "bb820841d613f555c098abebd67a620d-120"
-        },
-        {
-            "name": "analysis_file_4.json",
-            "uuid": "087aca40-9bc5-56b9-8cd5-a5a0488c18f2",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_1.json",
-            "uuid": "08b799a0-59d8-4c69-87b3-fd239aef4197",
-            "version": "2020-08-13T10:24:41.908000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 354,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_1.json",
-            "uuid": "09f063d9-7bc8-4567-bc27-fa1e7c87fa4d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_5.json",
-            "uuid": "0a79ce42-b2b7-5c37-8bb2-e61bc1b5e38f",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "cfa1e5da-607e-49b6-aa0d-8f43702b971f.bam",
@@ -220,26 +60,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_e9b071f2-1584-428b-9e3c-9a5943905a7d",
             "crc32c": "792b4a5d",
             "sha256": "b4d1cf6d019cfb4f27e501d567bd8e9543216037d18a455e32b2012f51dc89d2"
-        },
-        {
-            "name": "sequence_file_4.json",
-            "uuid": "0b9d7ae0-f6af-40e5-898d-7b2afc48c4b1",
-            "version": "2020-08-13T10:24:35.281000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_2.json",
-            "uuid": "0c1455f0-64c2-48a5-bba1-15588755bad5",
-            "version": "2020-08-13T10:24:35.916000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7352192_S1_L001_I1_001.fastq.gz",
@@ -266,56 +86,6 @@
             "sha256": "a06fa80743f30442e6fae4eb7d5e85354d11459783b2b52a84ffc4996b85825d"
         },
         {
-            "name": "analysis_process_2.json",
-            "uuid": "0c75f376-4092-403f-8b91-dbb19b4fdf94",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_3.json",
-            "uuid": "0ceed66e-513f-450f-89e9-3206f4485cdf",
-            "version": "2020-08-13T10:24:42.459000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_0.json",
-            "uuid": "0d27ca8e-5325-4e47-9807-8afd92e9bf89",
-            "version": "2020-08-13T10:24:30.913000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_6.json",
-            "uuid": "0db36828-3fae-5bd2-b052-ae63b88693d9",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_4.json",
-            "uuid": "0dd65ce8-29ba-4341-9a93-eb2ca1f06c72",
-            "version": "2020-08-13T10:24:42.189000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198629_S1_L001_R1_001.fastq.gz",
             "uuid": "0ea260e6-08d5-4488-86bb-8bf3412540ee",
             "version": "2020-08-13T10:24:32.650000Z",
@@ -338,46 +108,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_76492cfb-8b1b-4c35-b6b1-557d42f5d60c",
             "crc32c": "5c6fa039",
             "sha256": "c0231f78ab9909b02badc89a3e8dd44f06bba1658197974eaca1d5cc63c3053a"
-        },
-        {
-            "name": "sequence_file_5.json",
-            "uuid": "0f15fb43-c791-4113-a721-a9e3767e8f6d",
-            "version": "2020-08-13T10:24:33.420000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_6.json",
-            "uuid": "0fb3c4cd-6df4-48ac-b7c6-e96c144e0c42",
-            "version": "2020-08-13T10:24:32.564000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 611,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_5.json",
-            "uuid": "10a02923-b945-43fe-97db-c984e06dc5a7",
-            "version": "2020-08-13T10:24:42.080000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_7.json",
-            "uuid": "10a76c2f-2a9b-4430-88bc-c4f3828e4e3f",
-            "version": "2020-08-13T10:24:32.673000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "a9c40eb8-24b6-4436-a3d3-e8035e84f6ae.loom",
@@ -404,16 +134,6 @@
             "s3_etag": "22910df9d0c6a3a7f75bddabb9ba6d32-707"
         },
         {
-            "name": "analysis_file_7.json",
-            "uuid": "11712f1f-d3c5-54b4-9ab3-cd12b8eb15b7",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "4834STDY7002882_S1_L001_R1_001.fastq.gz",
             "uuid": "120e7f3e-597a-4119-a9d6-1624704666b4",
             "version": "2020-08-13T10:24:32.208000Z",
@@ -425,36 +145,6 @@
             "sha1": "ccd3be1abe70fc734d676a1006d866a2a93a82ef",
             "sha256": "6816fea09166fd064564088335450eaa5b1083f50519e9a21fa55353920d8f80",
             "s3_etag": "157095d69509e358dde9bb6e8e4283a9-411"
-        },
-        {
-            "name": "process_6.json",
-            "uuid": "1248ead2-3dd4-43fe-9f7c-9609ed77d9c2",
-            "version": "2020-08-13T10:24:43.108000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_8.json",
-            "uuid": "129bdef3-ae23-5273-920f-204cccd878fc",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_7.json",
-            "uuid": "136b438c-b819-4da2-8cc1-d6cace9c716c",
-            "version": "2020-08-13T10:24:35.788000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "bc583c0e-4336-43d4-a7da-dc7e1f72b50b.loom",
@@ -481,16 +171,6 @@
             "s3_etag": "a1f0b8682c661d898803cbcc8c6d08b2-36"
         },
         {
-            "name": "sequence_file_8.json",
-            "uuid": "15af1b4f-6944-4af6-8a2a-4fea163edde2",
-            "version": "2020-08-13T10:24:32.196000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 612,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "cfa1e5da-607e-49b6-aa0d-8f43702b971f.loom",
             "uuid": "15c898b4-124d-5c7b-b297-6b21226d0bda",
             "version": "2021-02-09T08:43:11.000000Z",
@@ -515,36 +195,6 @@
             "s3_etag": "26cbcbf85293abc62a9a9eb181b4b712-442"
         },
         {
-            "name": "analysis_file_9.json",
-            "uuid": "1685c144-966c-53fe-8bd3-2a053b55966c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_3.json",
-            "uuid": "16c04a1a-6c78-4755-ada4-36025cd69ce9",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_8.json",
-            "uuid": "16d53d3e-88ef-444a-aaec-e7947fc3e779",
-            "version": "2020-08-13T10:24:35.874000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "5d687d7c-8d96-4203-ad8e-d0668828ad37.bam",
             "uuid": "17510bd6-d94b-5f41-a726-967bf9955f31",
             "version": "2021-02-09T07:58:54.000000Z",
@@ -556,16 +206,6 @@
             "sha256": "ea95cc86e3823f9c94c28d8131a08859116b856fb519662e3ee4799fca6d1b2c"
         },
         {
-            "name": "cell_suspension_1.json",
-            "uuid": "17782e68-694a-42df-9411-9fd875b95cc7",
-            "version": "2020-08-13T10:24:31.793000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "9bb08d39-3957-4ff7-a20d-cc45a1cb38ab.loom",
             "uuid": "181fc217-c6d8-5fa3-a76a-c0cc766d6dcc",
             "version": "2021-02-09T09:21:12.000000Z",
@@ -575,26 +215,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_6bb86ff7-8f4a-4a06-bd75-57137cfd935d",
             "crc32c": "7bbeb67f",
             "sha256": "18ed3743678f279a15848d61015191871253f0be80427e274bf641e735ce02c3"
-        },
-        {
-            "name": "cell_suspension_2.json",
-            "uuid": "1853e602-4743-4179-863b-fb686a6a7a9a",
-            "version": "2020-08-13T10:24:31.810000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_9.json",
-            "uuid": "1872f705-7ccc-42af-80c5-7645ccd2848c",
-            "version": "2020-08-13T10:24:32.019000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7579223_S1_L001_R1_001.fastq.gz",
@@ -610,66 +230,6 @@
             "s3_etag": "e38138fa1e08cefe87b3dea37dd042fc-111"
         },
         {
-            "name": "analysis_process_4.json",
-            "uuid": "198dff35-0fb9-4edc-bf0c-e973ac7eba59",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_3.json",
-            "uuid": "19b7eb13-fef6-46a4-abb9-44a310e441b5",
-            "version": "2020-08-13T10:24:31.538000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 571,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_10.json",
-            "uuid": "1a17a213-3a73-4af8-a105-6e5b3d056263",
-            "version": "2020-08-13T10:24:35.172000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_5.json",
-            "uuid": "1a84035c-6716-40ce-844c-617eeaefb14d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_0.json",
-            "uuid": "1b5a4bc7-5a90-4782-a657-536a8b533156",
-            "version": "2020-08-13T10:24:30.757000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 954,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_4.json",
-            "uuid": "1b8c4fa4-24d0-42b5-99e1-8c04eba5d8c3",
-            "version": "2020-08-13T10:24:31.669000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7277560_S1_L001_I1_001.fastq.gz",
             "uuid": "1c4a667a-210a-445e-b773-d59840280580",
             "version": "2020-08-13T10:24:32.906000Z",
@@ -681,16 +241,6 @@
             "sha1": "0dc27f00b9250277779c6f16ec2d0f68dcae98c1",
             "sha256": "18f02f8983cc9555536a272fbcbb0f883ab58bf53b3275fc9e7acf1407d03aa7",
             "s3_etag": "425e2241300ed834bde143772abfe0c1-40"
-        },
-        {
-            "name": "process_9.json",
-            "uuid": "1d5a282b-b4b5-41dc-ab46-862476a87c18",
-            "version": "2020-08-13T10:24:43.022000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7277560_S1_L001_R1_001.fastq.gz",
@@ -706,26 +256,6 @@
             "s3_etag": "72cda04b2a2b74da1a3a1580c9072290-115"
         },
         {
-            "name": "process_10.json",
-            "uuid": "1d732738-9b3b-4393-920a-a3dd2ff6f7e1",
-            "version": "2020-08-13T10:24:42.979000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_10.json",
-            "uuid": "1da5525c-2986-510e-9890-748b232ad65e",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198631_S1_L001_R2_001.fastq.gz",
             "uuid": "1db22fe1-6ca8-4ca3-b91b-678f08d8626f",
             "version": "2020-08-13T10:24:32.734000Z",
@@ -739,56 +269,6 @@
             "s3_etag": "fe7a0ca8fe5ddd5aa8e1e4d8c64287d6-448"
         },
         {
-            "name": "sequence_file_11.json",
-            "uuid": "1e0c544d-2963-4fde-b3cb-5bb9b938acaa",
-            "version": "2020-08-13T10:24:32.552000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_1.json",
-            "uuid": "1edb7ccc-0cb3-41c4-a193-181542bce479",
-            "version": "2020-08-13T10:24:31.037000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_11.json",
-            "uuid": "1f43235c-6299-527b-b470-2b6638bdaf8b",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_6.json",
-            "uuid": "1f4840ce-45d5-4dbc-87a1-c2b06d0aa6c8",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_5.json",
-            "uuid": "1fe49331-d165-4443-a82b-612309cb9567",
-            "version": "2020-08-13T10:24:31.785000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "ded9b30e-12df-4998-846a-7cef685e4bd6.loom",
             "uuid": "1ff18c5a-846f-5000-b8c5-889b6328842a",
             "version": "2021-02-09T08:55:17.000000Z",
@@ -798,46 +278,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_72df293d-51e7-4933-b7a6-3a36efa8b2fd",
             "crc32c": "10c5753b",
             "sha256": "c520a898410a0668208e5176aaf336da590360f7a817f9daf30eeb4e98d23e7e"
-        },
-        {
-            "name": "process_11.json",
-            "uuid": "204a3bb9-d52f-407e-a3ed-f051a40dd7c3",
-            "version": "2020-08-13T10:24:35.845000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_6.json",
-            "uuid": "204dfd1c-ea7a-494b-a151-f1bcd586ddfb",
-            "version": "2020-08-13T10:24:31.844000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_7.json",
-            "uuid": "2096cc65-c180-45f2-93b7-fcc5c21db3a1",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_8.json",
-            "uuid": "20eaba77-49c4-4d9e-9e82-fb6351a9012a",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "4834STDY7038751_S1_L001_R2_001.fastq.gz",
@@ -866,16 +306,6 @@
             "s3_etag": "9d70f5b588c833437a1d6f37d32796e6-121"
         },
         {
-            "name": "analysis_process_9.json",
-            "uuid": "21581af6-c4c4-4268-9d63-cf5a3a7f5058",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7528288_S1_L001_R2_001.fastq.gz",
             "uuid": "21ac5c57-bebb-47d4-ad9b-491cdfbacb88",
             "version": "2020-08-13T10:24:35.036000Z",
@@ -902,86 +332,6 @@
             "s3_etag": "d481165ebb3f592dfd533e1dcacc3d73-118"
         },
         {
-            "name": "analysis_process_10.json",
-            "uuid": "223980cd-b247-415a-bb6d-41ed360837f2",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14717,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_12.json",
-            "uuid": "22ccc95d-d789-4398-a790-83f86bb420d8",
-            "version": "2020-08-13T10:24:42.022000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_12.json",
-            "uuid": "22d5f584-ff73-4a10-8377-387983b72a87",
-            "version": "2020-08-13T10:24:34.149000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_13.json",
-            "uuid": "232174af-3ebf-4b3b-97fd-35547950c4c8",
-            "version": "2020-08-13T10:24:41.868000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_13.json",
-            "uuid": "232c6da0-b86b-4995-8da1-a428211af836",
-            "version": "2020-08-13T10:24:32.661000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_14.json",
-            "uuid": "23a28752-d0c7-4a3c-8548-acc8ddc26af4",
-            "version": "2020-08-13T10:24:32.387000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_14.json",
-            "uuid": "2415ecb9-08af-4ecc-868b-69ba70a43c81",
-            "version": "2020-08-13T10:24:35.927000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_15.json",
-            "uuid": "24c3ce12-e4f9-4299-a005-320d602716ce",
-            "version": "2020-08-13T10:24:35.400000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "42b114bb-27ee-4415-b046-7ee5581adc27.loom",
             "uuid": "25c4395e-dcc3-5fd4-bff6-7dd2be6dbc1f",
             "version": "2021-02-09T08:37:06.000000Z",
@@ -991,16 +341,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_6835ecba-8a48-4c52-aa46-44fe1f5d41e2",
             "crc32c": "00e25bae",
             "sha256": "6eb654ff98948c299bb4aec48368d7300ee3363b5eac4d9f2ef864533ab9f38a"
-        },
-        {
-            "name": "sequence_file_16.json",
-            "uuid": "26131c11-6186-4b1a-b37d-fb12515622bf",
-            "version": "2020-08-13T10:24:34.175000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7277561_S1_L001_R2_001.fastq.gz",
@@ -1016,46 +356,6 @@
             "s3_etag": "bc5c744a4a8291bd7be93c8a7adfc15f-411"
         },
         {
-            "name": "collection_protocol_0.json",
-            "uuid": "266cf33e-5540-42cd-84de-757340908d42",
-            "version": "2020-08-13T10:24:31.877000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1372,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_7.json",
-            "uuid": "27749341-b419-4dca-9175-a6a9025116a9",
-            "version": "2020-08-13T10:24:31.801000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_15.json",
-            "uuid": "27e030cc-b89e-41fc-b0c8-c3258a4b2c6e",
-            "version": "2020-08-13T10:24:41.859000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_16.json",
-            "uuid": "282fda83-f6d8-4d5b-b47a-14d13d5206fe",
-            "version": "2020-08-13T10:24:41.741000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198630_S1_L001_R1_001.fastq.gz",
             "uuid": "285e146c-92b8-490c-b5e5-c8c24daa8ad2",
             "version": "2020-08-13T10:24:32.686000Z",
@@ -1069,116 +369,6 @@
             "s3_etag": "0eac6bcaca393be153cb08f62c55aeeb-122"
         },
         {
-            "name": "analysis_protocol_0.json",
-            "uuid": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
-            "version": "2021-02-26T16:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 401,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_17.json",
-            "uuid": "28f5f863-26d9-4ca8-abb3-705d369250e7",
-            "version": "2020-08-13T10:24:33.628000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_12.json",
-            "uuid": "295db19e-bdcc-5428-a68a-e0de856c4522",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_18.json",
-            "uuid": "2b40b918-2632-4a06-9746-6f542d884b90",
-            "version": "2020-08-13T10:24:32.734000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_8.json",
-            "uuid": "2b532bac-4ebb-47db-b5e2-37b8da2b5f6c",
-            "version": "2020-08-13T10:24:31.835000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_13.json",
-            "uuid": "2b64aedb-2563-547f-ba70-aa9b8c1d5d3f",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_17.json",
-            "uuid": "2b8cad63-d0bc-486b-923d-cc6f11eb6394",
-            "version": "2020-08-13T10:24:41.667000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_14.json",
-            "uuid": "2c88ef68-7029-5f00-9387-a364d6292976",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_18.json",
-            "uuid": "2d0d630a-58dd-42f7-bd7e-579ebec98d48",
-            "version": "2020-08-13T10:24:42.383000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_15.json",
-            "uuid": "2d253fef-4538-511a-a960-bd999afeecf4",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_19.json",
-            "uuid": "2e7e4b93-2d6c-4359-804c-f8ca1e21c31c",
-            "version": "2020-08-13T10:24:42.039000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "b49fb5d4-6f31-4b7d-827e-bc09ed30a167.bam",
             "uuid": "2ee42e3a-73ae-5632-9a22-11b6a0fdced8",
             "version": "2021-02-09T09:07:07.000000Z",
@@ -1188,16 +378,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_88c9c172-e8e5-4271-a556-ae6409e80c21",
             "crc32c": "b623c9bb",
             "sha256": "9cf2f6304126ce30855d38ea7f6b04493bb0f82a1b60493c921fbdcfcd7615f7"
-        },
-        {
-            "name": "process_20.json",
-            "uuid": "2f77c2c6-e843-48cd-a160-65fb904eb112",
-            "version": "2020-08-13T10:24:41.770000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 416,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7316889_S1_L001_R1_001.fastq.gz",
@@ -1211,16 +391,6 @@
             "sha1": "2b640b398f8a508945e4ff91469638b91b6c042f",
             "sha256": "af7641eda6bdad4c6cb1e54dc07e63297b4bfd7659227e48c1972b5ea8ffac29",
             "s3_etag": "6cb68f1add2e32098bab6e8e7880fbd4-121"
-        },
-        {
-            "name": "sequence_file_19.json",
-            "uuid": "30286c6d-ca78-4108-aff5-6809618656dc",
-            "version": "2020-08-13T10:24:32.375000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7462237_S1_L001_R2_001.fastq.gz",
@@ -1247,76 +417,6 @@
             "sha256": "fde8ba0d033beb01d3f33f2bee3044b15f745bb4de16f9bb358f96da9c1b6330"
         },
         {
-            "name": "specimen_from_organism_2.json",
-            "uuid": "31899978-a518-4d78-b85a-f62bca7ed723",
-            "version": "2020-08-13T10:24:31.046000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_20.json",
-            "uuid": "32714f4f-1a04-4fc3-bdd9-2ae6473fe544",
-            "version": "2020-08-13T10:24:33.513000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_21.json",
-            "uuid": "32a5b3e4-4f2f-4fb1-aeff-7fb01035eb8d",
-            "version": "2020-08-13T10:24:32.709000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_16.json",
-            "uuid": "33055074-248b-57fe-99fd-b5deab653ac0",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_22.json",
-            "uuid": "336b106c-f5f3-4d35-b583-05fc33ee910f",
-            "version": "2020-08-13T10:24:32.031000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 619,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_21.json",
-            "uuid": "3381994d-5624-4f5f-a574-01ad099c448c",
-            "version": "2020-08-13T10:24:41.984000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_17.json",
-            "uuid": "3450ac1e-8d8f-5bad-bd44-322d792acc8a",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "b49fb5d4-6f31-4b7d-827e-bc09ed30a167.loom",
             "uuid": "3516a5d0-2fa9-5fbb-b1cc-5a95ca12bf3d",
             "version": "2021-02-09T08:32:23.000000Z",
@@ -1326,36 +426,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_f11da9f1-cbaa-4d4b-aa41-2af8072d2ffa",
             "crc32c": "8adabeed",
             "sha256": "232990e63a8b60017a642fc123be84453b2c1fd18cdc1f22d457e2e64843cd92"
-        },
-        {
-            "name": "analysis_file_18.json",
-            "uuid": "35bc8baa-8916-5835-940c-ce684f30d4aa",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_11.json",
-            "uuid": "3650db01-27bd-4371-a431-71d28620a40a",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_22.json",
-            "uuid": "37925a3b-3bce-4876-bb29-745922b2c972",
-            "version": "2020-08-13T10:24:43.131000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7462237_S1_L001_I1_001.fastq.gz",
@@ -1384,36 +454,6 @@
             "s3_etag": "947e702e148656bd0e2cef982dee4636-501"
         },
         {
-            "name": "sequence_file_23.json",
-            "uuid": "384733f9-328f-4b3f-b201-9489ae09f5de",
-            "version": "2020-08-13T10:24:33.060000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_24.json",
-            "uuid": "38b67b47-7ef3-4e9e-88e1-3a8376769eb0",
-            "version": "2020-08-13T10:24:35.268000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_1.json",
-            "uuid": "39046bdd-483c-44ad-9b50-dea608d34255",
-            "version": "2020-08-13T10:24:30.765000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 928,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "62a131e1-c415-460e-bc5b-75cca5d3323b.loom",
             "uuid": "39121e35-d7a2-52ac-a826-529b0329033f",
             "version": "2021-02-09T08:27:29.000000Z",
@@ -1423,36 +463,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_68603f62-06f5-439d-bb1d-f0ac2dde8b5d",
             "crc32c": "23b634b1",
             "sha256": "ef0d834594ef9d7a5f260f1cabe62ce80488166776095aa6320d13243af7f29e"
-        },
-        {
-            "name": "analysis_process_12.json",
-            "uuid": "39c38ab6-dd8a-4098-87a8-8a861d55b7fb",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_25.json",
-            "uuid": "39c59048-bac9-4b5b-935b-75b150931f41",
-            "version": "2020-08-13T10:24:33.086000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_19.json",
-            "uuid": "3aa80a42-646a-5953-afe6-b177a78297df",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7555846_S1_L001_R2_001.fastq.gz",
@@ -1468,16 +478,6 @@
             "s3_etag": "409e2b7f5d55ea4186f0639ac40caa7f-451"
         },
         {
-            "name": "sequence_file_26.json",
-            "uuid": "3c6b5196-4dd9-4c23-a9d1-c1341d889ecf",
-            "version": "2020-08-13T10:24:34.137000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "232174af-3ebf-4b3b-97fd-35547950c4c8.loom",
             "uuid": "3de145e6-2439-593d-9779-c618b174ece0",
             "version": "2021-02-09T08:29:42.000000Z",
@@ -1489,16 +489,6 @@
             "sha256": "8e4d82dbc94e65a2bc71ced2d9cbcd830ef84285b80e73908d35582de2cbeb21"
         },
         {
-            "name": "sequence_file_27.json",
-            "uuid": "3e6ac46b-1d9d-4c91-b5df-e583208357fe",
-            "version": "2020-08-13T10:24:35.024000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "951a8ffc-69c5-4f7c-8ee8-39b76171f630.loom",
             "uuid": "3f0bfbb4-c9be-56db-9eb5-b37a6dc306a2",
             "version": "2021-02-09T08:32:25.000000Z",
@@ -1508,16 +498,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_bdfc4e44-3b5d-47b8-9c43-55eaef2e6b1c",
             "crc32c": "cee09154",
             "sha256": "63dec4047f1f26b7dfdddbada3c4a3a4e06ba896da8df8c0c32bce3b4a1e6728"
-        },
-        {
-            "name": "process_23.json",
-            "uuid": "3f20a83f-f01c-41f2-acaf-3c111dfa5465",
-            "version": "2020-08-13T10:24:42.500000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7198628_S1_L001_I1_001.fastq.gz",
@@ -1533,26 +513,6 @@
             "s3_etag": "ee7ae10697bfd0ee156a9168f5330af0-39"
         },
         {
-            "name": "sequence_file_28.json",
-            "uuid": "41a13523-c45b-4546-8273-9321d9a2c250",
-            "version": "2020-08-13T10:24:33.639000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_29.json",
-            "uuid": "41ae7f5d-67e9-4bc8-a844-262a9dea9b96",
-            "version": "2020-08-13T10:24:32.221000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 611,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198630_S1_L001_I1_001.fastq.gz",
             "uuid": "420d9c85-32cb-4f35-a939-918b1eda8d62",
             "version": "2020-08-13T10:24:32.673000Z",
@@ -1564,66 +524,6 @@
             "sha1": "e74cb8d25f1990382cc0f6b04cff4b7fb3359f8d",
             "sha256": "9afd39eba9b62fb767be5c941ff89acebfb1ae8b7c40674944e8c0a49e3c3110",
             "s3_etag": "f0e5a243085ea18699a9e2aefe6a480b-40"
-        },
-        {
-            "name": "process_24.json",
-            "uuid": "42b114bb-27ee-4415-b046-7ee5581adc27",
-            "version": "2020-08-13T10:24:42.403000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_protocol_1.json",
-            "uuid": "432a7422-59b5-5c46-8983-a7953f196781",
-            "version": "2021-05-24T12:00:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 447,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_25.json",
-            "uuid": "43c13443-4e03-42b3-a32f-d048c8ea465e",
-            "version": "2020-08-13T10:24:36.065000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_30.json",
-            "uuid": "44c70c3c-6fe7-4186-9aa5-b2cb1ea3b9d8",
-            "version": "2020-08-13T10:24:35.373000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_20.json",
-            "uuid": "450befbb-21c9-5b53-a7b9-38b517cebe76",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_31.json",
-            "uuid": "455c6c50-9424-4dac-b67c-1be48276d5b5",
-            "version": "2020-08-13T10:24:33.458000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7579210_S1_L001_R1_001.fastq.gz",
@@ -1652,36 +552,6 @@
             "s3_etag": "135dc0767246c28e251065697d3694ed-120"
         },
         {
-            "name": "cell_suspension_9.json",
-            "uuid": "469016a2-3bea-4244-8bae-835c499c8ac0",
-            "version": "2020-08-13T10:24:31.350000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_13.json",
-            "uuid": "46dc43b4-19e7-475f-a015-157436454de4",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 522,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_10.json",
-            "uuid": "470877fd-03da-40a6-9508-330b580cf728",
-            "version": "2020-08-13T10:24:31.516000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7352195_S1_L001_I1_001.fastq.gz",
             "uuid": "4725c942-1647-435d-9690-51cf8b817b6a",
             "version": "2020-08-13T10:24:34.213000Z",
@@ -1706,46 +576,6 @@
             "sha256": "128f6819011060a5c67e69fa8a3513cd599c05d7be49bab81ebcc054d9e3e197"
         },
         {
-            "name": "sequence_file_32.json",
-            "uuid": "47f2b446-7a03-4286-8a35-41e52394622c",
-            "version": "2020-08-13T10:24:32.540000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_21.json",
-            "uuid": "489c7fd9-1ac8-5b78-a91d-a44761f9d6e0",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_22.json",
-            "uuid": "4964726c-4bf7-58a0-a401-6eecf9c7a3b3",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_33.json",
-            "uuid": "49a158d2-9786-4f54-bac9-67244497c9c9",
-            "version": "2020-08-13T10:24:34.230000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316893_S1_L001_R2_001.fastq.gz",
             "uuid": "4a0269a6-6026-4d2f-9d1d-5bb60c0042df",
             "version": "2020-08-13T10:24:33.592000Z",
@@ -1759,16 +589,6 @@
             "s3_etag": "a3f16fe800becb016a63999f711764e8-438"
         },
         {
-            "name": "analysis_file_23.json",
-            "uuid": "4a28b164-2d5a-5232-946a-ac70276036b5",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "c301901f-95cd-4a3e-a4df-761fa21e92af.bam",
             "uuid": "4a2cee73-ad0a-5ad9-bed4-62c32852f66d",
             "version": "2021-02-09T08:50:46.000000Z",
@@ -1778,16 +598,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_73559e8a-1b51-4a65-b0dd-5f8ce6d2e79f",
             "crc32c": "b7940494",
             "sha256": "86d81fe60c02eedd66a3ab32fdcd3eb0952b36a8f2217972d1764db9682bdf12"
-        },
-        {
-            "name": "analysis_file_24.json",
-            "uuid": "4a302268-f155-5a27-b164-dff6f1fc78fa",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "1d5a282b-b4b5-41dc-ab46-862476a87c18.loom",
@@ -1812,36 +622,6 @@
             "sha256": "5100ca6d4633f426dfa275e7f6acaac55d667e3eadbc5d62586e6df110684cd6"
         },
         {
-            "name": "sequencing_protocol_0.json",
-            "uuid": "4adcb95e-8d5d-41dd-8299-8a7b686e8e4a",
-            "version": "2020-08-13T10:24:31.936000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1077,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_14.json",
-            "uuid": "4ae55a6b-6e40-4300-b2a7-7e8c72c285de",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_34.json",
-            "uuid": "4b06739c-d81c-45cd-825f-cc5145f15065",
-            "version": "2020-08-13T10:24:35.294000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "f26c4715-5488-4d7f-ae0e-1c965128fbb1.bam",
             "uuid": "4b13d612-7d7e-5ee1-9c8b-20ba230dbb03",
             "version": "2021-02-09T09:09:16.000000Z",
@@ -1851,26 +631,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_3d1b845d-f8d6-4c09-8d5d-b86eadf168c8",
             "crc32c": "59c9afb8",
             "sha256": "b94e08048d43e6cbfa5383d7bfeb351bac619b711e50bc63dd85325f69d2954b"
-        },
-        {
-            "name": "sequence_file_35.json",
-            "uuid": "4ba330b1-83f6-4d6f-9eb4-4c2f9f8b12ae",
-            "version": "2020-08-13T10:24:35.307000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_25.json",
-            "uuid": "4ba8f00e-0833-5862-bc6e-0cc2acb5d684",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7352194_S1_L001_R2_001.fastq.gz",
@@ -1886,36 +646,6 @@
             "s3_etag": "da8c7a4b5e4abda322a2e568ee7a7b38-437"
         },
         {
-            "name": "sequence_file_36.json",
-            "uuid": "4bd54cd4-ca70-4566-a2bf-9fecb4dfbc34",
-            "version": "2020-08-13T10:24:35.184000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_15.json",
-            "uuid": "4c1d363b-0560-49f2-addd-aaa879db3d30",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_11.json",
-            "uuid": "4c32ae0b-8338-4906-90ef-06e1e4fd7577",
-            "version": "2020-08-13T10:24:31.660000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316891_S1_L001_R1_001.fastq.gz",
             "uuid": "4cbe8be7-074d-4104-a5bd-87150fb592a6",
             "version": "2020-08-13T10:24:33.499000Z",
@@ -1927,26 +657,6 @@
             "sha1": "5ce2415e8cc41684a81ea0cb599b2fbc3a1f4c20",
             "sha256": "2eda610d3e0979030ca199dea0466482c93973fb86b4f2ab0fb9bc13af1aed97",
             "s3_etag": "2374934040596499f756181c0c9d8385-121"
-        },
-        {
-            "name": "cell_suspension_12.json",
-            "uuid": "4dae1604-6e74-4306-ae82-2da7ca2efd77",
-            "version": "2020-08-13T10:24:31.312000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_37.json",
-            "uuid": "4e7c6725-5d49-4ed6-9a5f-b7d0eaf75469",
-            "version": "2020-08-13T10:24:34.352000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7198434_S1_L001_R2_001.fastq.gz",
@@ -1973,26 +683,6 @@
             "sha1": "745ee0360cccde97d38b942cbd05da0144ed9696",
             "sha256": "c42d04f1d6c37e870a25eba6aa82b791b8a58c493571b854baf4b14669e29376",
             "s3_etag": "81922301e6e20453ca778d6c0ac36e67-41"
-        },
-        {
-            "name": "sequence_file_38.json",
-            "uuid": "4f91ed04-d045-4904-a78e-103294d4f5e9",
-            "version": "2020-08-13T10:24:34.315000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_13.json",
-            "uuid": "4fd506bc-5824-4a7b-a44a-8d02532c5277",
-            "version": "2020-08-13T10:24:31.408000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 573,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7462238_S1_L001_R1_001.fastq.gz",
@@ -2030,56 +720,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_1796e1b4-7b31-4652-8f43-43c0bde724fd",
             "crc32c": "318c8949",
             "sha256": "0ae94e2e9d200a942fd31d02dcdcf238ca3993925e018fa063f3b994b7807a59"
-        },
-        {
-            "name": "sequence_file_39.json",
-            "uuid": "529a01ff-db1b-4a8e-924b-8749387f5dcb",
-            "version": "2020-08-13T10:24:33.579000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_40.json",
-            "uuid": "529e093e-c122-4939-8264-993ad651efd7",
-            "version": "2020-08-13T10:24:34.304000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_26.json",
-            "uuid": "52ca4cde-727f-564e-95dd-7872573ebeba",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_26.json",
-            "uuid": "536ba4f7-6694-4a31-8df1-0e6668ed10da",
-            "version": "2020-08-13T10:24:43.036000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_27.json",
-            "uuid": "538399a0-da86-57f5-88c6-b150db89c3f3",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7528288_S1_L001_I1_001.fastq.gz",
@@ -2121,46 +761,6 @@
             "s3_etag": "bf1405de08229ed21943bc295ee974da-38"
         },
         {
-            "name": "specimen_from_organism_3.json",
-            "uuid": "54bfca9c-a1f8-4632-a0cb-5f7b5edf48d6",
-            "version": "2020-08-13T10:24:31.028000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_41.json",
-            "uuid": "550bbb11-4786-46b4-a9c1-46f105b14644",
-            "version": "2020-08-13T10:24:35.049000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_28.json",
-            "uuid": "561a5c40-9014-5bce-b48b-a2df2687b562",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "library_preparation_protocol_0.json",
-            "uuid": "565d6b74-caae-44f1-a1fc-a0b29a1f24f1",
-            "version": "2020-08-13T10:24:31.920000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 898,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7352192_S1_L001_R1_001.fastq.gz",
             "uuid": "56f78439-cccd-41bb-8eaf-c05f96695879",
             "version": "2020-08-13T10:24:34.113000Z",
@@ -2172,26 +772,6 @@
             "sha1": "27b2734cf00221d1fad57827ef0b640aaf53fd26",
             "sha256": "2ec153bd215511111510141be98592c91f9b0819fcc23d575f7feb614bfa5edb",
             "s3_etag": "1d8f1eb66749dc7a9cd3ac96d33e9787-123"
-        },
-        {
-            "name": "process_27.json",
-            "uuid": "57c18bb9-bb99-48dc-bf49-70e3e558deeb",
-            "version": "2020-08-13T10:24:35.731000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 351,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_16.json",
-            "uuid": "58d03b27-9049-444e-a337-3491a5d715e1",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7277553_S1_L001_I1_001.fastq.gz",
@@ -2242,16 +822,6 @@
             "sha256": "5594ee95d8320e8661316bf3d85135b1e830bac9a89a2eb37b4d7d1dee7bf04a"
         },
         {
-            "name": "process_28.json",
-            "uuid": "5a0999a5-9945-4d18-8f0a-7ed5a6b1f27b",
-            "version": "2020-08-13T10:24:36.786000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316892_S1_L001_I1_001.fastq.gz",
             "uuid": "5a6387c1-c6b2-488d-b014-4fb3f3d11c8f",
             "version": "2020-08-13T10:24:33.526000Z",
@@ -2278,26 +848,6 @@
             "s3_etag": "e6b6dfdae6aba4059a0666d355a4fe7c-119"
         },
         {
-            "name": "process_29.json",
-            "uuid": "5b4f46d9-346e-4eec-b55e-801d37ece165",
-            "version": "2020-08-13T10:24:41.711000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_2.json",
-            "uuid": "5baa7164-60f5-4b28-8bad-e9a0563cac70",
-            "version": "2020-08-13T10:24:30.656000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 907,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "73bd1209-cfb5-420f-bd97-574ed9c7cd0e.loom",
             "uuid": "5c3d1e59-cae7-5f21-b925-9d27bf675a9e",
             "version": "2021-02-09T06:58:40.000000Z",
@@ -2307,26 +857,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_cbf909fc-caa8-422a-8793-2ec9cfbf15c7",
             "crc32c": "04bf8663",
             "sha256": "fa1d7780062c99b9a588c0fc662831dfe3452c9656681c15a5335d7820e058a3"
-        },
-        {
-            "name": "process_30.json",
-            "uuid": "5c745dc7-ece2-4df5-96b3-bca92b832c73",
-            "version": "2020-08-13T10:24:40.340000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_31.json",
-            "uuid": "5d687d7c-8d96-4203-ad8e-d0668828ad37",
-            "version": "2020-08-13T10:24:42.443000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7179364_S1_L001_R2_001.fastq.gz",
@@ -2353,56 +883,6 @@
             "sha256": "81a48b17067a337fb6061a18c55b75c0a519042990793bfa06e2c9094e145776"
         },
         {
-            "name": "cell_suspension_14.json",
-            "uuid": "5ee0a825-8c35-4fe5-ab67-454c6bfd949b",
-            "version": "2020-08-13T10:24:31.652000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_32.json",
-            "uuid": "5fbb11aa-074b-42ad-bb8c-13d80c3b2490",
-            "version": "2020-08-13T10:24:35.836000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_15.json",
-            "uuid": "5fc661b9-440a-4b6f-b2f9-f847043debec",
-            "version": "2020-08-13T10:24:31.143000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_29.json",
-            "uuid": "6008e2eb-ea1d-54b2-9611-fa896ae9aa21",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_42.json",
-            "uuid": "601bacd5-c250-4dd3-a83d-c9f31a1b0dd8",
-            "version": "2020-08-13T10:24:34.163000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "be7a2637-26cf-48ba-bfc5-52fa945d2d88.loom",
             "uuid": "608ff0ee-d075-59e3-b62a-ca5b523078db",
             "version": "2021-02-09T08:41:26.000000Z",
@@ -2412,86 +892,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_6a9a196e-4f14-49e7-8668-8c4e36f4972f",
             "crc32c": "bd72b77c",
             "sha256": "203a0617a3488975dfe212816c050900f994159cad8231c53fb29387c9778280"
-        },
-        {
-            "name": "sequence_file_43.json",
-            "uuid": "611d7372-2d5d-4b93-9cb8-b6d689b0f905",
-            "version": "2020-08-13T10:24:32.961000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_16.json",
-            "uuid": "6194245b-1ce5-495e-8e85-d859b3fcce66",
-            "version": "2020-08-13T10:24:31.731000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_4.json",
-            "uuid": "619887a0-67fb-4e24-be95-409f9b3e8474",
-            "version": "2020-08-13T10:24:30.811000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_30.json",
-            "uuid": "61a2e552-6617-589e-8985-e1b730d3095c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_33.json",
-            "uuid": "61a4052c-bbc0-4666-9747-ed6b4c706ac6",
-            "version": "2020-08-13T10:24:40.486000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_31.json",
-            "uuid": "61d46fd3-fd85-5eb1-a251-7000d2394830",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_34.json",
-            "uuid": "62a131e1-c415-460e-bc5b-75cca5d3323b",
-            "version": "2020-08-13T10:24:42.013000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_44.json",
-            "uuid": "62f9d7c8-cb0b-4c30-b2d8-ab43fa4b3384",
-            "version": "2020-08-13T10:24:35.124000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7579222_S1_L001_I1_001.fastq.gz",
@@ -2507,16 +907,6 @@
             "s3_etag": "da68aa73befaea452d87139293a85aee-41"
         },
         {
-            "name": "analysis_file_32.json",
-            "uuid": "63bee9b4-8743-5a13-b144-80cf68313083",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "62a131e1-c415-460e-bc5b-75cca5d3323b.bam",
             "uuid": "6453a4e5-5b30-58a1-bc08-d3a5167b3738",
             "version": "2021-02-09T09:03:28.000000Z",
@@ -2526,26 +916,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_cfb5458f-7625-4b83-9098-3aca7ac7180a",
             "crc32c": "2012939c",
             "sha256": "e6ab7bdc5ea11b0ca25b98bef5e253133796de05fa396d0c8259b912149e1875"
-        },
-        {
-            "name": "cell_suspension_17.json",
-            "uuid": "64713d72-8e8f-4350-a3ba-e1981c872100",
-            "version": "2020-08-13T10:24:31.320000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_33.json",
-            "uuid": "65358965-9b3b-5187-bf6a-f918c6009f83",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7179364_S1_L001_I1_001.fastq.gz",
@@ -2598,46 +968,6 @@
             "s3_etag": "b99f601c1d1aa686790caa3cab57eed9-126"
         },
         {
-            "name": "process_35.json",
-            "uuid": "687ef9ee-e18c-446f-bbb6-97c31ba0ce9b",
-            "version": "2020-08-13T10:24:38.998000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_36.json",
-            "uuid": "68b20827-e2b9-4d02-ac17-32ebf7aaf49c",
-            "version": "2020-08-13T10:24:35.892000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_45.json",
-            "uuid": "68cac6a2-5453-4d08-9af2-a4e01f259dd3",
-            "version": "2020-08-13T10:24:33.592000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_5.json",
-            "uuid": "69576784-ca06-4ccb-bab7-d6e8353a8036",
-            "version": "2020-08-13T10:24:30.896000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7579211_S1_L001_I1_001.fastq.gz",
             "uuid": "69615be2-bace-489c-ab42-4b0842bbebd4",
             "version": "2020-08-13T10:24:35.307000Z",
@@ -2651,46 +981,6 @@
             "s3_etag": "298920853a2eeaf65d5794b6c4698d7a-40"
         },
         {
-            "name": "analysis_file_34.json",
-            "uuid": "69cc1f24-8be9-58aa-af3e-99c13507216e",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_37.json",
-            "uuid": "69ccee6f-c88d-4443-88a0-e46ed47bf2a1",
-            "version": "2020-08-13T10:24:36.007000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_46.json",
-            "uuid": "69f04b25-c698-4a6e-aff3-7bccc1e969b7",
-            "version": "2020-08-13T10:24:32.339000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_35.json",
-            "uuid": "6a019fd6-5db6-5717-8c4a-3a22a6fba738",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "a0e661e2-dac9-4004-9605-8307c15f831d.bam",
             "uuid": "6a26e03a-37ad-57ff-a8d4-6eccfe56ca12",
             "version": "2021-02-09T09:00:25.000000Z",
@@ -2702,46 +992,6 @@
             "sha256": "2ea0e6ba08c99d5c56bc2ad13f8d07eb769346897f4dbfffcb6e65bf28cfe165"
         },
         {
-            "name": "sequence_file_47.json",
-            "uuid": "6a512fd9-3942-4497-87fd-977d2a243b1c",
-            "version": "2020-08-13T10:24:34.377000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_36.json",
-            "uuid": "6a73dfce-0163-5b3e-b1cd-0df84fb30871",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_18.json",
-            "uuid": "6b34fa3f-1878-48ec-84c2-e2d8877903c4",
-            "version": "2020-08-13T10:24:31.258000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 572,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_6.json",
-            "uuid": "6b94e023-9280-45df-ac3d-5a258e19bf29",
-            "version": "2020-08-13T10:24:30.949000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "951a8ffc-69c5-4f7c-8ee8-39b76171f630.bam",
             "uuid": "6bad9f0e-c0f6-5200-b2e7-6d60296072db",
             "version": "2021-02-09T09:09:18.000000Z",
@@ -2751,16 +1001,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_b58af2aa-b6f4-4446-9ded-e517c2ca76ee",
             "crc32c": "3d1cd02c",
             "sha256": "df1c0cd457f8571af823346f5621c603f90ed724dba704ec19f61032b743d4a3"
-        },
-        {
-            "name": "sequence_file_48.json",
-            "uuid": "6c52e66a-d034-476c-8f32-5d760b6a5029",
-            "version": "2020-08-13T10:24:34.972000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "22ccc95d-d789-4398-a790-83f86bb420d8.bam",
@@ -2800,16 +1040,6 @@
             "s3_etag": "d26ac29dd31f34ffa9ea8285b2b39a08-42"
         },
         {
-            "name": "cell_suspension_19.json",
-            "uuid": "700af591-d469-4a3d-a908-cff116f28242",
-            "version": "2020-08-13T10:24:31.769000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198628_S1_L001_R2_001.fastq.gz",
             "uuid": "701795c2-dc0b-40f0-ad73-2572e414e278",
             "version": "2020-08-13T10:24:32.624000Z",
@@ -2847,56 +1077,6 @@
             "sha256": "cdbbe1a4d9799beb06ebcfccd69886e3005d1c46e35a98d8c93c9ea959b369c0"
         },
         {
-            "name": "process_38.json",
-            "uuid": "71aef8a5-add1-46ce-b5e9-c172a52414a2",
-            "version": "2020-08-13T10:24:40.584000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_49.json",
-            "uuid": "71c8dfa2-0a8c-4ae0-8161-933454f56420",
-            "version": "2020-08-13T10:24:32.650000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_50.json",
-            "uuid": "71e9623c-1cfa-4efe-9448-f4014da727dc",
-            "version": "2020-08-13T10:24:35.346000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_39.json",
-            "uuid": "7229676a-4449-4a2f-ac97-284eb599841c",
-            "version": "2020-08-13T10:24:42.208000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_17.json",
-            "uuid": "725cbe75-92a1-46dc-862a-1b9d012e0fc1",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7555847_S1_L001_I1_001.fastq.gz",
             "uuid": "72a375f0-bf6b-4a62-a737-44800855ce46",
             "version": "2020-08-13T10:24:35.160000Z",
@@ -2910,36 +1090,6 @@
             "s3_etag": "5726fb174b4861abbe63648860699979-40"
         },
         {
-            "name": "process_40.json",
-            "uuid": "72abfd0e-51d3-4b13-8495-bfaab2f1096b",
-            "version": "2020-08-13T10:24:41.822000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 416,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_20.json",
-            "uuid": "7318a24c-7abf-445d-b4d2-2c5acc01e715",
-            "version": "2020-08-13T10:24:31.393000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 573,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_21.json",
-            "uuid": "732d6ffa-1d89-4476-ad10-5ce9d83a78ad",
-            "version": "2020-08-13T10:24:31.550000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "4834STDY7038751_S1_L001_I1_001.fastq.gz",
             "uuid": "739de51d-30f4-45f8-81ea-9f051a18b748",
             "version": "2020-08-13T10:24:32.375000Z",
@@ -2951,16 +1101,6 @@
             "sha1": "dc905e39b918e0cfbfc34fd7697b9433fa26cbc0",
             "sha256": "10884b8ece72dcba07519e40a634fb5c8b182f95f485e4bb1bdcb1bf41baddd3",
             "s3_etag": "55df2f1a2f2278e3e311ff6afe783c63-84"
-        },
-        {
-            "name": "process_41.json",
-            "uuid": "73bd1209-cfb5-420f-bd97-574ed9c7cd0e",
-            "version": "2020-08-13T10:24:42.930000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "b1883730-3304-48c1-904b-eb90ab226168.bam",
@@ -2998,56 +1138,6 @@
             "sha256": "bdb6a040386fb7bc48bbb103b1f7dffc18a9e9a475d76f5025e5d4f6e57bf0c1"
         },
         {
-            "name": "cell_suspension_22.json",
-            "uuid": "74d1b609-5477-4ec3-840e-fa721ffa580f",
-            "version": "2020-08-13T10:24:31.585000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_51.json",
-            "uuid": "75017000-be20-4f58-91ea-abaf63344959",
-            "version": "2020-08-13T10:24:32.893000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_52.json",
-            "uuid": "756f8cce-2d70-4c53-a893-e26d556f0f06",
-            "version": "2020-08-13T10:24:34.365000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_7.json",
-            "uuid": "75b6d713-08dc-4eff-9347-95c9519a34cd",
-            "version": "2020-08-13T10:24:30.987000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_53.json",
-            "uuid": "76f76203-8b14-4a33-8a0d-d7687d887772",
-            "version": "2020-08-13T10:24:32.363000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "b7914794-f8a7-4fba-bb5b-10536eac7d8b.bam",
             "uuid": "77d1797c-3775-53c1-bb54-10b8e39a1dde",
             "version": "2021-02-09T09:38:10.000000Z",
@@ -3079,46 +1169,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_a614ecde-cd68-4c6e-b30f-57f5db399101",
             "crc32c": "910292ed",
             "sha256": "a53c471fc99b199c88dc0bea29771daf8a95e257f66084e619de6a31fe577dca"
-        },
-        {
-            "name": "sequence_file_54.json",
-            "uuid": "785275c2-08e7-486f-bed5-850993b704d3",
-            "version": "2020-08-13T10:24:32.882000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_37.json",
-            "uuid": "789c58d2-6a0d-514e-ac56-f884cd5e078d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_3.json",
-            "uuid": "793d9bf6-00cb-49e6-acc2-2cc724036645",
-            "version": "2020-08-13T10:24:30.748000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 953,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_42.json",
-            "uuid": "796e5529-dd1a-4579-a469-a770eaa2216f",
-            "version": "2020-08-13T10:24:41.011000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "ded9b30e-12df-4998-846a-7cef685e4bd6.bam",
@@ -3167,16 +1217,6 @@
             "sha256": "ebf817f953b6d907ba9e98146ecb3197b121f24c78ed4e5a710c5e59bc6e8e16"
         },
         {
-            "name": "sequence_file_55.json",
-            "uuid": "7ae24487-8546-422c-ad9b-bfa36bdd6ba4",
-            "version": "2020-08-13T10:24:32.600000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7579222_S1_L001_R1_001.fastq.gz",
             "uuid": "7b2d444d-65f1-43e2-848d-22bcd2774c96",
             "version": "2020-08-13T10:24:35.358000Z",
@@ -3203,26 +1243,6 @@
             "s3_etag": "6a92546f1cd5d58892af69dea7621752-121"
         },
         {
-            "name": "sequence_file_56.json",
-            "uuid": "7beb8479-c655-4b01-af4f-69f1668e1c6d",
-            "version": "2020-08-13T10:24:32.846000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_23.json",
-            "uuid": "7c2c2ced-a0e3-4df7-ae1d-890218465626",
-            "version": "2020-08-13T10:24:31.341000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "c301901f-95cd-4a3e-a4df-761fa21e92af.loom",
             "uuid": "7d0d9872-cdea-5f19-956e-eb47032a512a",
             "version": "2021-02-09T08:14:41.000000Z",
@@ -3232,76 +1252,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_9270f2ba-13a9-4e77-a5b1-d9536b0e0fc8",
             "crc32c": "d6563e51",
             "sha256": "0fca305a7e7793e9219cbe076e333768f3f8608b9cd7cd701f82b83dcd12aa22"
-        },
-        {
-            "name": "sequence_file_57.json",
-            "uuid": "7ee8e5aa-5faa-4491-bd66-150e202974dd",
-            "version": "2020-08-13T10:24:32.686000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_58.json",
-            "uuid": "7efd8179-7a9a-4ef1-b199-46f94581cb1a",
-            "version": "2020-08-13T10:24:33.438000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_43.json",
-            "uuid": "7f0f3ad8-9052-4003-ac7d-4e2e509b85f5",
-            "version": "2020-08-13T10:24:42.049000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_44.json",
-            "uuid": "7fa6adde-000d-4360-9f45-2b5da4721f70",
-            "version": "2020-08-13T10:24:43.095000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_45.json",
-            "uuid": "7ff7f0ac-a14a-4c42-800b-016141f020fd",
-            "version": "2020-08-13T10:24:41.751000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 416,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_38.json",
-            "uuid": "80738c1d-105a-525e-8b84-ae666d549159",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_59.json",
-            "uuid": "807e13ad-b807-44b5-92c8-9057b858968f",
-            "version": "2020-08-13T10:24:32.721000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "f26c4715-5488-4d7f-ae0e-1c965128fbb1.loom",
@@ -3328,26 +1278,6 @@
             "s3_etag": "2c9007b937f14a59020fd0e33ac2d7dc-706"
         },
         {
-            "name": "process_46.json",
-            "uuid": "8106eec7-2c2f-41b4-ad4d-997e683ed9fc",
-            "version": "2020-08-13T10:24:41.147000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_60.json",
-            "uuid": "81204476-377f-4bf9-b5de-27f8b14d47c5",
-            "version": "2020-08-13T10:24:34.113000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7179363_S1_L001_R2_001.fastq.gz",
             "uuid": "812b02ca-7aab-4166-8fe5-cb623f67ca93",
             "version": "2020-08-13T10:24:32.515000Z",
@@ -3361,16 +1291,6 @@
             "s3_etag": "3c4fde059dd5b11915f697a689dd79d6-446"
         },
         {
-            "name": "analysis_file_39.json",
-            "uuid": "81f56ff9-36eb-5897-b2e7-318c075ecbc8",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "3f20a83f-f01c-41f2-acaf-3c111dfa5465.loom",
             "uuid": "82aef31f-b0b0-56de-adfc-c6085c65a1f3",
             "version": "2021-02-09T08:41:35.000000Z",
@@ -3380,56 +1300,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_5b612f1d-25b6-4e66-9a73-932a21619fda",
             "crc32c": "f6d69eb7",
             "sha256": "2ed721c27d441448a2aa8860bab81c9fc1003e445d76db41ceb5a0e7d4051185"
-        },
-        {
-            "name": "analysis_process_18.json",
-            "uuid": "82c03181-f541-4770-8bad-5fb68bf221b2",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_61.json",
-            "uuid": "82c6f8e4-79f9-48b7-aab5-35853db742a4",
-            "version": "2020-08-13T10:24:34.213000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_62.json",
-            "uuid": "82fc4ead-bf34-4834-91ed-cb6ec1717baa",
-            "version": "2020-08-13T10:24:33.664000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_63.json",
-            "uuid": "835ec088-c1a5-4b0c-897c-22bc92950587",
-            "version": "2020-08-13T10:24:33.403000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_64.json",
-            "uuid": "837fa4ab-745a-4a41-9fbf-0a4d1d1054d5",
-            "version": "2020-08-13T10:24:34.389000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "7229676a-4449-4a2f-ac97-284eb599841c.bam",
@@ -3443,76 +1313,6 @@
             "sha256": "442bec395a107f1b2188d7afd2761f80483587afd3915e576f3e1f7b5c87d288"
         },
         {
-            "name": "analysis_file_40.json",
-            "uuid": "845dd01f-cad1-54a4-8ff3-acd78d29a5b1",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_41.json",
-            "uuid": "853ce2df-ac1e-5d3b-aa74-00ff4eab33c2",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_65.json",
-            "uuid": "85716ed2-d37c-4e4a-bd8a-864154bad299",
-            "version": "2020-08-13T10:24:35.061000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_24.json",
-            "uuid": "85a66538-6c12-4ab4-9679-b1f95001606d",
-            "version": "2020-08-13T10:24:31.418000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 571,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_4.json",
-            "uuid": "85dc3748-6751-482b-b7cd-c1e08f7df5c0",
-            "version": "2020-08-13T10:24:30.684000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 928,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_66.json",
-            "uuid": "85df5aac-75ac-416a-ba8b-b9b0f8b4e619",
-            "version": "2020-08-13T10:24:32.858000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_25.json",
-            "uuid": "85e09b5b-24a8-4eea-9b0a-8ca17f9db79d",
-            "version": "2020-08-13T10:24:31.853000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "73bd1209-cfb5-420f-bd97-574ed9c7cd0e.bam",
             "uuid": "861c56b3-6733-5991-863b-31c51fd428c6",
             "version": "2021-02-09T07:41:29.000000Z",
@@ -3524,16 +1324,6 @@
             "sha256": "3a39f4e58813285e9da7fce330f85700911ae21794b7b7232196446cb137f912"
         },
         {
-            "name": "process_47.json",
-            "uuid": "87fa5eb0-98d2-40ae-8bb1-445d0d2d0c11",
-            "version": "2020-08-13T10:24:36.291000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "1d5a282b-b4b5-41dc-ab46-862476a87c18.bam",
             "uuid": "8822d3e6-d454-500b-b8b6-54c869f2240b",
             "version": "2021-02-09T09:05:31.000000Z",
@@ -3543,36 +1333,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_db018aa9-e5f9-4cb7-ab8b-8a3d268d6a9e",
             "crc32c": "fb5b0b7a",
             "sha256": "8293fc2fd269aea14956128358d1f23168084bc05bd7e60349ee00db92c66872"
-        },
-        {
-            "name": "analysis_file_42.json",
-            "uuid": "8848e80d-192f-5c47-bb3e-ef0d519e1761",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "dissociation_protocol_0.json",
-            "uuid": "8881df7f-15da-48a9-8934-a2d65188543e",
-            "version": "2020-08-13T10:24:31.911000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1230,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_67.json",
-            "uuid": "8a62b078-1656-4145-83ee-a54b74b1f566",
-            "version": "2020-08-13T10:24:35.073000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "1d732738-9b3b-4393-920a-a3dd2ff6f7e1.loom",
@@ -3599,66 +1359,6 @@
             "s3_etag": "43f0c691f322b435ac8369ada28cf4da-368"
         },
         {
-            "name": "analysis_file_43.json",
-            "uuid": "8cdbf96a-27ae-590c-b967-8a850c760785",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_48.json",
-            "uuid": "8d4c4056-6a9b-4c33-907c-66f4351fe7c1",
-            "version": "2020-08-13T10:24:41.371000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_26.json",
-            "uuid": "8d7b1004-5265-40cd-8912-336d71e0f296",
-            "version": "2020-08-13T10:24:31.711000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_44.json",
-            "uuid": "8de90a27-1f7c-5651-b3d6-8527c1ed92d6",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_45.json",
-            "uuid": "8f3ed51f-9369-59ac-a2bc-70e1af25d169",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_5.json",
-            "uuid": "8f63d864-87e5-40f3-8f68-936640010c7d",
-            "version": "2020-08-13T10:24:30.639000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 912,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7277552_S1_L001_R2_001.fastq.gz",
             "uuid": "8f920042-b17f-4968-b57a-7f86508226d5",
             "version": "2020-08-13T10:24:32.858000Z",
@@ -3670,26 +1370,6 @@
             "sha1": "3cc505e318fb811f19662518b9e101205a3c3449",
             "sha256": "ca488c94fc90bf27cdc28ef726fdfa7c15ae8c11242874e76c9d16154ab231ed",
             "s3_etag": "5d3ea1d01d7bbf19799636543c8fe84e-370"
-        },
-        {
-            "name": "sequence_file_68.json",
-            "uuid": "8fee28bf-4f9b-4d62-814b-ea97119048ee",
-            "version": "2020-08-13T10:24:33.499000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_69.json",
-            "uuid": "9005739b-11b7-410d-88ad-e05a765dabd9",
-            "version": "2020-08-13T10:24:35.320000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7316889_S1_L001_I1_001.fastq.gz",
@@ -3716,66 +1396,6 @@
             "sha1": "acbe97d6f01b9181bb6a1025b0772506844769fc",
             "sha256": "9733bb3c8ff714e40c88e2162c18d6cd0bf79eea583dcf33f9330f77ae0459fb",
             "s3_etag": "45baf56975ca408786d7c33b2bb642b3-441"
-        },
-        {
-            "name": "analysis_file_46.json",
-            "uuid": "90465f43-bfdf-56d4-a9e1-7a765d60a1fe",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_27.json",
-            "uuid": "90ab9fe3-3847-4477-bff8-66db44610c92",
-            "version": "2020-08-13T10:24:31.677000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_70.json",
-            "uuid": "90bd06b3-c8fd-4ed8-98b4-9bf21e9466f9",
-            "version": "2020-08-13T10:24:34.984000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_28.json",
-            "uuid": "91a5af73-4a8a-4285-bcbb-42344e18745f",
-            "version": "2020-08-13T10:24:31.527000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_47.json",
-            "uuid": "91caea03-3c9a-5ba8-9acc-3685e3a6062e",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_49.json",
-            "uuid": "9210ccdd-107f-4ef3-9a2d-f9c573788f43",
-            "version": "2020-08-13T10:24:37.787000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "27e030cc-b89e-41fc-b0c8-c3258a4b2c6e.bam",
@@ -3824,46 +1444,6 @@
             "s3_etag": "ce0ee960590fe27d5105b91a00ae6c00-422"
         },
         {
-            "name": "sequence_file_71.json",
-            "uuid": "9403a717-07d2-4510-9f19-77d41747c188",
-            "version": "2020-08-13T10:24:32.906000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_6.json",
-            "uuid": "9417041b-2952-41d5-b0d8-b42694f4fd4a",
-            "version": "2020-08-13T10:24:30.739000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 950,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_8.json",
-            "uuid": "94259313-d341-4b1f-b9cc-48a760d81c19",
-            "version": "2020-08-13T10:24:31.072000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_72.json",
-            "uuid": "9447492f-3a6a-4f33-a128-605686ae6d65",
-            "version": "2020-08-13T10:24:34.187000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "4834STDY7002878_S1_L001_R1_001.fastq.gz",
             "uuid": "9487afae-0606-40f8-9770-2bfbc9635829",
             "version": "2020-08-13T10:24:32.067000Z",
@@ -3886,16 +1466,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_f379bb72-faae-47a2-a757-9d5301fafe75",
             "crc32c": "ca73b12e",
             "sha256": "d01416ffd22ccbf7088da98d8aec8842ea6168128a432f477f57eac51b2739c1"
-        },
-        {
-            "name": "process_50.json",
-            "uuid": "951a8ffc-69c5-4f7c-8ee8-39b76171f630",
-            "version": "2020-08-13T10:24:42.092000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7528286_S1_L001_I1_001.fastq.gz",
@@ -3924,16 +1494,6 @@
             "s3_etag": "2a2a86bff18315a33af72538152d8574-82"
         },
         {
-            "name": "sequence_file_73.json",
-            "uuid": "96cbabdb-30b4-4c71-9250-bb7efcd9ee1e",
-            "version": "2020-08-13T10:24:35.358000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "4834STDY7038750_S1_L001_R1_001.fastq.gz",
             "uuid": "96d0d820-8df2-47b6-8091-3b0a234c5688",
             "version": "2020-08-13T10:24:32.351000Z",
@@ -3947,16 +1507,6 @@
             "s3_etag": "b5c45e68318edf665b6080d514f2b7cb-471"
         },
         {
-            "name": "process_51.json",
-            "uuid": "96d2674c-2f8f-4495-b95f-a6be448ba8fb",
-            "version": "2020-08-13T10:24:39.020000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "42b114bb-27ee-4415-b046-7ee5581adc27.bam",
             "uuid": "9774fb4a-ead0-55a7-b924-d8a5bd83bbcf",
             "version": "2021-02-09T09:16:35.000000Z",
@@ -3966,16 +1516,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_de044165-6e46-4bde-8761-780ef577dd91",
             "crc32c": "29f9c047",
             "sha256": "fde653a0b1232fb865489fe0c4fa20e46b67722a21f4a3298cfb73767025c936"
-        },
-        {
-            "name": "sequence_file_74.json",
-            "uuid": "97ab1a9b-43d0-443d-b25c-228f79cb5666",
-            "version": "2020-08-13T10:24:32.834000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7555847_S1_L001_R2_001.fastq.gz",
@@ -4002,116 +1542,6 @@
             "sha256": "5b85bc7651d5633b89354073a0334467f301811ba83025fca8fb6c6dc4228d81"
         },
         {
-            "name": "analysis_process_19.json",
-            "uuid": "98f74c7b-abd8-4adc-b68f-f68aa5d3e58c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_20.json",
-            "uuid": "997fecc1-cc72-4357-9a33-8aa2be30d96b",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_75.json",
-            "uuid": "99985ea4-d29e-4357-9879-99440a002b49",
-            "version": "2020-08-13T10:24:33.604000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_76.json",
-            "uuid": "9a4277c3-806b-4906-a777-613f01a51003",
-            "version": "2020-08-13T10:24:33.031000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_48.json",
-            "uuid": "9b6d349f-774f-56e1-ab6b-938385c60a4f",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_49.json",
-            "uuid": "9baa3062-0022-53e2-a3df-14df08c4c66c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_52.json",
-            "uuid": "9bb08d39-3957-4ff7-a20d-cc45a1cb38ab",
-            "version": "2020-08-13T10:24:41.954000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_77.json",
-            "uuid": "9c25532b-bbac-408a-8b3b-4d7f565f11b9",
-            "version": "2020-08-13T10:24:32.624000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_78.json",
-            "uuid": "9c6fffe5-0f64-4325-8e2f-8be4fa5417b9",
-            "version": "2020-08-13T10:24:33.526000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_79.json",
-            "uuid": "9d578de9-08fb-47f8-9bc4-77e9577965e7",
-            "version": "2020-08-13T10:24:33.485000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_53.json",
-            "uuid": "9d8ad642-95f5-4574-b9fd-a22f147f3809",
-            "version": "2020-08-13T10:24:41.585000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7352194_S1_L001_I1_001.fastq.gz",
             "uuid": "9eb9a3ac-8d35-4ac8-af2a-9272ffa13b97",
             "version": "2020-08-13T10:24:34.175000Z",
@@ -4136,76 +1566,6 @@
             "sha256": "a00ef69e48bbde334b0dd5d8770d555140fdd9d5e2c66ccc42a50bc33a7f6978"
         },
         {
-            "name": "process_54.json",
-            "uuid": "9f686a8c-9b49-4b37-9c5e-a6017b4aaf0e",
-            "version": "2020-08-13T10:24:35.817000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_55.json",
-            "uuid": "a0cf7b57-f8ac-4591-bfe5-a9a2b7416057",
-            "version": "2020-08-13T10:24:35.901000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_56.json",
-            "uuid": "a0e661e2-dac9-4004-9605-8307c15f831d",
-            "version": "2020-08-13T10:24:42.170000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_50.json",
-            "uuid": "a0ea22e2-cab6-506d-8211-bb479591a04c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_51.json",
-            "uuid": "a1dbe553-ade6-5ce4-b9f9-77c740891c97",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_57.json",
-            "uuid": "a2653332-1aab-49d6-8da8-b5c5fe004e70",
-            "version": "2020-08-13T10:24:35.770000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_80.json",
-            "uuid": "a3bef94d-a68f-43d4-8cb8-58977b20f849",
-            "version": "2020-08-13T10:24:32.067000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316890_S1_L001_I1_001.fastq.gz",
             "uuid": "a42125f1-93c2-40c3-9247-ad419a2527e7",
             "version": "2020-08-13T10:24:33.438000Z",
@@ -4217,16 +1577,6 @@
             "sha1": "81d637b963ba88e68eabbccdf0dd0db3f5274f0f",
             "sha256": "91e01365791dc3b2c665b5244b1265d61c45716f3183bb33326c4fb4e86a824a",
             "s3_etag": "3d9ede6ba99224ae4bb451dc8131dd31-39"
-        },
-        {
-            "name": "sequence_file_81.json",
-            "uuid": "a428e47e-0081-497b-9c8a-7c852f4eb103",
-            "version": "2020-08-13T10:24:35.333000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "1d732738-9b3b-4393-920a-a3dd2ff6f7e1.bam",
@@ -4251,26 +1601,6 @@
             "sha256": "382ad9e9d0545e42d8ea800cf7d4c0fe91a14cb432e58fcc86a13b3f9414b082"
         },
         {
-            "name": "cell_suspension_29.json",
-            "uuid": "a69fcb4d-a7ec-4101-9e5a-1959bc3265ae",
-            "version": "2020-08-13T10:24:31.575000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_58.json",
-            "uuid": "a753faac-75d8-442d-a44d-b0320ba88fe0",
-            "version": "2020-08-13T10:24:41.439000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7277561_S1_L001_R1_001.fastq.gz",
             "uuid": "a7708bfc-0d3d-4c87-bea3-34790a7aad2c",
             "version": "2020-08-13T10:24:33.086000Z",
@@ -4282,76 +1612,6 @@
             "sha1": "82a76bdc5c56153a4b91d1216df2327e386a3d6e",
             "sha256": "9ca0b9a333dabc8c1a1de31efb0b4f10f1628cb0338b1db203daef14957314bc",
             "s3_etag": "c36b18744bd09a554f8cb80179174de3-119"
-        },
-        {
-            "name": "cell_suspension_30.json",
-            "uuid": "a7738486-8b11-4e05-a004-6c931569972f",
-            "version": "2020-08-13T10:24:31.188000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_52.json",
-            "uuid": "a78f0746-6eed-5b0e-9772-aab4bceec02c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_59.json",
-            "uuid": "a81da3e0-7245-44e8-8034-b9ebab1fcf2f",
-            "version": "2020-08-13T10:24:36.075000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_31.json",
-            "uuid": "a8674039-068d-4560-aa99-b9481239d4fb",
-            "version": "2020-08-13T10:24:31.205000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_21.json",
-            "uuid": "a87c5838-140e-40f4-97b0-591aecbe1b3c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_60.json",
-            "uuid": "a9c40eb8-24b6-4436-a3d3-e8035e84f6ae",
-            "version": "2020-08-13T10:24:42.991000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_61.json",
-            "uuid": "aa76f640-744e-4c50-92af-33c7f54fc7ee",
-            "version": "2020-08-13T10:24:41.649000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7277561_S1_L001_I1_001.fastq.gz",
@@ -4391,16 +1651,6 @@
             "sha256": "5826d5b4d61d940252f23006100da6a6e5e77eada00b4fbaa124f8aaec1f8822"
         },
         {
-            "name": "enrichment_protocol_1.json",
-            "uuid": "ad3e2c96-e515-431a-a1fa-fc7b57cff8ea",
-            "version": "2020-08-13T10:24:31.902000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 634,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7579210_S1_L001_I1_001.fastq.gz",
             "uuid": "ad5b6061-910a-44d0-b8e6-7294d8b9e6d7",
             "version": "2020-08-13T10:24:35.268000Z",
@@ -4412,86 +1662,6 @@
             "sha1": "797ea06a51d40576e3927645f0823028584a05a5",
             "sha256": "deaa8e19d29aba886f3f514d9e43ccad547c9205173b1b34e3af205d781ff791",
             "s3_etag": "fb9714e64339d2f9029497d089bed4ab-42"
-        },
-        {
-            "name": "specimen_from_organism_9.json",
-            "uuid": "ae073235-e422-4c3a-8bf4-9892d6e769b3",
-            "version": "2020-08-13T10:24:30.849000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_32.json",
-            "uuid": "ae38fa93-e50c-4033-a1e9-ac404ede7380",
-            "version": "2020-08-13T10:24:31.761000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_7.json",
-            "uuid": "ae71343b-df16-49a3-829d-a6e61afdc079",
-            "version": "2020-08-13T10:24:30.711000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 954,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_62.json",
-            "uuid": "aeaa76b1-161d-4d9f-a520-d30e87d9c1d9",
-            "version": "2020-08-13T10:24:41.802000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 416,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_82.json",
-            "uuid": "afe45faa-e5e1-4cf8-8d79-4092dca736bd",
-            "version": "2020-08-13T10:24:32.503000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_53.json",
-            "uuid": "b13f3346-158d-5509-bc82-3aed1b2c23be",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_63.json",
-            "uuid": "b1883730-3304-48c1-904b-eb90ab226168",
-            "version": "2020-08-13T10:24:42.179000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_64.json",
-            "uuid": "b2b1e2e5-b9f9-4a5f-91c5-ea7cda58cffe",
-            "version": "2020-08-13T10:24:40.179000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "7fa6adde-000d-4360-9f45-2b5da4721f70.bam",
@@ -4518,46 +1688,6 @@
             "s3_etag": "78335fc7178c5bf74c29adabcef0c75a-125"
         },
         {
-            "name": "analysis_process_22.json",
-            "uuid": "b486e644-c56d-4209-b7c7-e56c527306b2",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_65.json",
-            "uuid": "b49fb5d4-6f31-4b7d-827e-bc09ed30a167",
-            "version": "2020-08-13T10:24:42.112000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_83.json",
-            "uuid": "b4d16fe2-eeac-4a26-9cc3-17414b87f3b1",
-            "version": "2020-08-13T10:24:32.612000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_54.json",
-            "uuid": "b4f3e64c-ff38-5dd3-8656-ee8c06b1c673",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7555846_S1_L001_I1_001.fastq.gz",
             "uuid": "b544dfff-faa5-4579-b4be-fccb8cf972a4",
             "version": "2020-08-13T10:24:35.124000Z",
@@ -4569,56 +1699,6 @@
             "sha1": "8f2cff89a391b0b99204506c9429c497f0202201",
             "sha256": "749000111a560a414496e85dae4c24ded0a14c124e709c0140b6f65d19103399",
             "s3_etag": "ae13fe00729cf7573a69c73d9d15ddf5-42"
-        },
-        {
-            "name": "cell_suspension_33.json",
-            "uuid": "b5e9df12-e333-4754-a01b-c83c4b8f644a",
-            "version": "2020-08-13T10:24:31.702000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_84.json",
-            "uuid": "b61e4f40-1742-4bbb-a20d-78a934c5f8de",
-            "version": "2020-08-13T10:24:34.100000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_66.json",
-            "uuid": "b7914794-f8a7-4fba-bb5b-10536eac7d8b",
-            "version": "2020-08-13T10:24:42.241000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_55.json",
-            "uuid": "b7f87bc7-bb85-5bd8-beae-1d14cd6846ef",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_10.json",
-            "uuid": "b8912f33-12a7-4bf8-9f25-e91fbc77517c",
-            "version": "2020-08-13T10:24:30.976000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7579210_S1_L001_R2_001.fastq.gz",
@@ -4634,76 +1714,6 @@
             "s3_etag": "91037e801be9c3e425547c7b258797aa-430"
         },
         {
-            "name": "process_67.json",
-            "uuid": "b92aadd5-3603-4e12-a92d-22e1f9757361",
-            "version": "2020-08-13T10:24:41.422000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_56.json",
-            "uuid": "b9877824-638a-5fde-8196-70317fa1cc19",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_23.json",
-            "uuid": "b9b49dd4-471a-4364-bc72-acaa1bcb633d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_8.json",
-            "uuid": "ba005942-3abb-4988-90a4-57747fb05b8b",
-            "version": "2020-08-13T10:24:30.782000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 956,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_85.json",
-            "uuid": "ba276a56-3bdf-42ff-93f4-2920c3a288f9",
-            "version": "2020-08-13T10:24:34.934000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_86.json",
-            "uuid": "bb2d6938-f6ad-461b-8fa4-eca0e4c040b2",
-            "version": "2020-08-13T10:24:35.011000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_87.json",
-            "uuid": "bb2edf45-1041-4e38-9ace-ec922a747f80",
-            "version": "2020-08-13T10:24:32.528000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7462239_S1_L001_I1_001.fastq.gz",
             "uuid": "bb8154f5-e9c7-41d1-84dc-bf95c66a9946",
             "version": "2020-08-13T10:24:34.365000Z",
@@ -4715,66 +1725,6 @@
             "sha1": "232044f9050affb2fdb7f4ee30702cc1b30a69b7",
             "sha256": "6cd7dd0c0255d91fd2f448d420fa8ac0a40ebcff5e9017e3d1e1934375c8d8b1",
             "s3_etag": "2806dff0c7788ad5ccdb64f40b416fff-41"
-        },
-        {
-            "name": "analysis_file_57.json",
-            "uuid": "bbb02342-bad3-5d6c-89fa-1cbaf2e7b5dd",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_58.json",
-            "uuid": "bc454c4f-c3b4-565f-be09-44d7523a80de",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_68.json",
-            "uuid": "bc583c0e-4336-43d4-a7da-dc7e1f72b50b",
-            "version": "2020-08-13T10:24:42.220000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_69.json",
-            "uuid": "bc5ba4f6-a3f1-4156-830f-11228df251bc",
-            "version": "2020-08-13T10:24:43.121000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_24.json",
-            "uuid": "bc6bf485-351c-47c7-9837-d564bd32699b",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_25.json",
-            "uuid": "bcee0e35-49c4-4af1-b202-eaf4df226025",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7555847_S1_L001_R1_001.fastq.gz",
@@ -4803,16 +1753,6 @@
             "s3_etag": "1b1d2ffb22f211139bc1235109249d81-440"
         },
         {
-            "name": "process_70.json",
-            "uuid": "bd90d9bf-cf73-407b-8e3a-07ef2f9c2fd8",
-            "version": "2020-08-13T10:24:36.136000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7528286_S1_L001_R2_001.fastq.gz",
             "uuid": "be3b1c9a-c417-4c4f-956f-e1162da429b6",
             "version": "2020-08-13T10:24:34.958000Z",
@@ -4824,36 +1764,6 @@
             "sha1": "ac365154accb17d8e654116eddb6ebb85d8c20d6",
             "sha256": "6ef549c71a14061b4c4265f80f9965a6014fd37866ed409b406e19ba448af35d",
             "s3_etag": "5b1d7c8f8ea2f5951f6da235149171f6-434"
-        },
-        {
-            "name": "sequence_file_88.json",
-            "uuid": "be3cffb9-150a-4a1e-8f4b-a0afde4eea5a",
-            "version": "2020-08-13T10:24:34.958000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_71.json",
-            "uuid": "be7a2637-26cf-48ba-bfc5-52fa945d2d88",
-            "version": "2020-08-13T10:24:42.576000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_11.json",
-            "uuid": "bed46309-3752-4115-a307-8c20d93dce55",
-            "version": "2020-08-13T10:24:31.063000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7352195_S1_L001_R1_001.fastq.gz",
@@ -4869,76 +1779,6 @@
             "s3_etag": "92438302dab957869ceb35382d680318-125"
         },
         {
-            "name": "process_72.json",
-            "uuid": "bfac08a4-0266-4d6b-b8a4-24b57f560017",
-            "version": "2020-08-13T10:24:41.338000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_73.json",
-            "uuid": "c0c71843-6831-4e91-90cf-cb31d4a4b277",
-            "version": "2020-08-13T10:24:35.694000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 351,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_89.json",
-            "uuid": "c0e0476d-b0c5-434b-9c33-92e52900341d",
-            "version": "2020-08-13T10:24:34.340000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_90.json",
-            "uuid": "c1102423-264b-4668-9e09-39b105474d6f",
-            "version": "2020-08-13T10:24:35.136000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_59.json",
-            "uuid": "c1770287-3376-5cc1-a2a2-9676e7f5716e",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_60.json",
-            "uuid": "c18f9014-7086-5216-a73a-e37af51f2bbb",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 470,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_26.json",
-            "uuid": "c1ab22ca-2289-4384-82be-a3f16bdf113d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "3381994d-5624-4f5f-a574-01ad099c448c.bam",
             "uuid": "c2088136-2f49-5833-b397-16e27d741b5f",
             "version": "2021-02-09T08:58:30.000000Z",
@@ -4948,16 +1788,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_9d65c949-0eda-4ee7-a06f-90df40b68410",
             "crc32c": "bbd4b704",
             "sha256": "168661b3777b0cc21228e13f36bad2c4a562a17a8e31b67b1b5fb84bd6c68619"
-        },
-        {
-            "name": "sequence_file_91.json",
-            "uuid": "c27ebc26-f0b4-4f42-8b10-061fb04f77bd",
-            "version": "2020-08-13T10:24:33.471000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7316891_S1_L001_I1_001.fastq.gz",
@@ -4973,36 +1803,6 @@
             "s3_etag": "1c77db5ecc58fb769618f4e6ae648bcc-40"
         },
         {
-            "name": "process_74.json",
-            "uuid": "c301901f-95cd-4a3e-a4df-761fa21e92af",
-            "version": "2020-08-13T10:24:42.103000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_92.json",
-            "uuid": "c30c31d2-ccfb-4651-8b78-a25a23ab4e95",
-            "version": "2020-08-13T10:24:32.079000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 619,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_61.json",
-            "uuid": "c31aecba-db6a-5229-a729-66269d90ee8a",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198631_S1_L001_I1_001.fastq.gz",
             "uuid": "c375c822-c26f-4196-9d4d-586d063a9583",
             "version": "2020-08-13T10:24:32.709000Z",
@@ -5016,16 +1816,6 @@
             "s3_etag": "2c5760cb790a359354cc583d7fa19de0-41"
         },
         {
-            "name": "sequence_file_93.json",
-            "uuid": "c50f0504-73bc-4bd6-8ed3-1dcf0b60549f",
-            "version": "2020-08-13T10:24:35.148000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "e23d96b7-a271-403e-a29e-b2bdb1949070.loom",
             "uuid": "c5674446-c1fa-5509-a077-a296cf1df801",
             "version": "2021-02-09T07:18:44.000000Z",
@@ -5035,36 +1825,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_92321fe8-831c-419c-8129-198781ffa3c6",
             "crc32c": "b1d3e0d6",
             "sha256": "a95c5b191e7a0085af5df55c618d9766b2538c82df0a011bf365d13eecf616a4"
-        },
-        {
-            "name": "cell_suspension_34.json",
-            "uuid": "c57bdaec-21df-479e-857e-ddb6f5f78f95",
-            "version": "2020-08-13T10:24:31.749000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_62.json",
-            "uuid": "c5ab8014-5630-5ce5-9aaf-247e12d4ef6d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_27.json",
-            "uuid": "c6ca5e48-0be8-4b66-ac11-6e25511afe2a",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "e7b60260-7ae4-4d5a-b1a4-51622467e4b3.loom",
@@ -5089,16 +1849,6 @@
             "sha256": "3528217e3ebd6f758c3707173ff291db40e7fa9f61ec8817c0cd067846190e7b"
         },
         {
-            "name": "sequence_file_94.json",
-            "uuid": "c79e49e1-62b2-41c4-a3eb-96bbe01a2ed4",
-            "version": "2020-08-13T10:24:34.125000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "7f0f3ad8-9052-4003-ac7d-4e2e509b85f5.loom",
             "uuid": "c7c7643a-be8f-5f84-92ee-26da94393427",
             "version": "2021-02-09T08:39:32.000000Z",
@@ -5121,16 +1871,6 @@
             "sha1": "ec7a34429db16eb3cd20d2ea2211968c4f639b72",
             "sha256": "f4ba68dc01c7e9a275edfd1cc81b60b13b7608b19ded95ee14d0ba2287dfd09b",
             "s3_etag": "97169cf73536398646459095973addb3-131"
-        },
-        {
-            "name": "cell_suspension_35.json",
-            "uuid": "c8d8c14f-4e5e-4911-a386-391fd1153969",
-            "version": "2020-08-13T10:24:31.267000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7528288_S1_L001_R1_001.fastq.gz",
@@ -5192,26 +1932,6 @@
             "s3_etag": "e00d24d3b81c33a77630fa565cf4dd1f-38"
         },
         {
-            "name": "analysis_file_63.json",
-            "uuid": "cc430c2e-f377-5651-aa5d-3dfa30b421cd",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_75.json",
-            "uuid": "cc78276c-f893-4aa3-996a-1c5dc2c351c6",
-            "version": "2020-08-13T10:24:36.056000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "2d0d630a-58dd-42f7-bd7e-579ebec98d48.bam",
             "uuid": "cd2174ec-d1f0-5cca-a5bc-5070f6736991",
             "version": "2021-02-09T08:06:02.000000Z",
@@ -5236,16 +1956,6 @@
             "s3_etag": "c053f755982b3cd11a68b6f7bde54dae-80"
         },
         {
-            "name": "analysis_process_28.json",
-            "uuid": "cdba26d8-9b1d-471f-9a08-875a09cbb96b",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198631_S1_L001_R1_001.fastq.gz",
             "uuid": "ce37ba6d-9b5a-4573-840c-ee6cec97de9e",
             "version": "2020-08-13T10:24:32.721000Z",
@@ -5257,16 +1967,6 @@
             "sha1": "fe90500ce6836e50ce263420e8ed70099a0b01cf",
             "sha256": "8d8fc1bf87e005c06c536d335a15e9e7d5ef785ef3cc026a682b0c6942efc5bf",
             "s3_etag": "3df42a1fcd0408031c95a87c84a632eb-124"
-        },
-        {
-            "name": "analysis_file_64.json",
-            "uuid": "ce52572d-f7d1-585d-a54f-fc14297d19c0",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7316893_S1_L001_R1_001.fastq.gz",
@@ -5282,46 +1982,6 @@
             "s3_etag": "b2531da9466375d048edd14f513ca0a1-120"
         },
         {
-            "name": "process_76.json",
-            "uuid": "cf6620a8-3a16-46fe-815b-039a8dde9e16",
-            "version": "2020-08-13T10:24:41.693000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_95.json",
-            "uuid": "cf835034-c34b-4b5d-aac6-8de2e280e959",
-            "version": "2020-08-13T10:24:35.036000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_77.json",
-            "uuid": "cfa1e5da-607e-49b6-aa0d-8f43702b971f",
-            "version": "2020-08-13T10:24:41.945000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_29.json",
-            "uuid": "d09272b0-2827-4b7b-9a8c-a63fec7376ca",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316889_S1_L001_R2_001.fastq.gz",
             "uuid": "d0a991b4-440b-48ee-87bf-d5613ca9da8b",
             "version": "2020-08-13T10:24:33.420000Z",
@@ -5335,56 +1995,6 @@
             "s3_etag": "450cc950037ce1e4e9beace7bc1518c7-452"
         },
         {
-            "name": "donor_organism_9.json",
-            "uuid": "d0baedfe-0556-4c2b-a1a0-d1e28ef07bb5",
-            "version": "2020-08-13T10:24:30.629000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 925,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_65.json",
-            "uuid": "d1b3c364-8f6c-57d2-847c-1b22257f7e87",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_96.json",
-            "uuid": "d1bbc8a6-9320-4527-bca3-2dbb172bea38",
-            "version": "2020-08-13T10:24:32.399000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_66.json",
-            "uuid": "d2b3f3a1-b030-5c80-89d4-42a76db79127",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_30.json",
-            "uuid": "d2b4df36-221d-413d-8e9a-b233b72d3832",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7198629_S1_L001_I1_001.fastq.gz",
             "uuid": "d2fbc3ac-231e-4d92-b35d-a0b94a741937",
             "version": "2020-08-13T10:24:32.637000Z",
@@ -5396,16 +2006,6 @@
             "sha1": "cec471617503fa3d62066515d74b43f73f687a40",
             "sha256": "1b0b864520d6677140a32a5fd4a2e2f532dc9c3666dc43c3d672e886deef19be",
             "s3_etag": "c76b0dd7cc59940da4b75782416b3218-40"
-        },
-        {
-            "name": "analysis_file_67.json",
-            "uuid": "d3142cb9-7285-5185-a5a5-c63d5f3cade8",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7198434_S1_L001_I1_001.fastq.gz",
@@ -5434,46 +2034,6 @@
             "s3_etag": "da9190e8554e35f834b8899ea61b3c0e-433"
         },
         {
-            "name": "sequence_file_97.json",
-            "uuid": "d3c05176-1d0b-4ce1-b005-0af8c35129cd",
-            "version": "2020-08-13T10:24:33.384000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_31.json",
-            "uuid": "d3c42b32-d484-458c-ad66-e7e9e7889ee9",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_68.json",
-            "uuid": "d41aa539-54ba-5f2e-bfd6-4c9905ee38a1",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_36.json",
-            "uuid": "d4b2569d-4f63-41c0-9a11-97068ee3ae68",
-            "version": "2020-08-13T10:24:31.722000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7528287_S1_L001_R2_001.fastq.gz",
             "uuid": "d50fce4b-6645-4c91-bac0-401728be36d8",
             "version": "2020-08-13T10:24:34.997000Z",
@@ -5485,16 +2045,6 @@
             "sha1": "7914c3a8dc6ce0cbf221cfb14d5c707bed933922",
             "sha256": "89fef5accff1842c94eb312f3df65e4dae810f3a538bc46a1ee2547f4f337338",
             "s3_etag": "4631fadd9d7dba61943251c40f8f82ac-459"
-        },
-        {
-            "name": "sequence_file_98.json",
-            "uuid": "d5744e7d-7ab9-4d86-8a3a-bfc9e96946fc",
-            "version": "2020-08-13T10:24:34.242000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7462239_S1_L001_R2_001.fastq.gz",
@@ -5562,106 +2112,6 @@
             "s3_etag": "6b132d0973c5afa226e35f2cf045d0c5-121"
         },
         {
-            "name": "process_78.json",
-            "uuid": "d7f083b3-1e02-4838-a7a2-a52bc7bcb1bb",
-            "version": "2020-08-13T10:24:41.721000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_99.json",
-            "uuid": "d7f0b745-c135-4594-9a4b-a4c66c8a1520",
-            "version": "2020-08-13T10:24:32.208000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 611,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_69.json",
-            "uuid": "d8146d19-442a-5dbe-a075-b3a1ef0ebf07",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_37.json",
-            "uuid": "d94541a9-1505-4a33-8ff5-fcb2b19b0d92",
-            "version": "2020-08-13T10:24:31.594000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_70.json",
-            "uuid": "d9b006ee-9626-517f-baed-e6c7bc8a8686",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_100.json",
-            "uuid": "da490be5-56d8-4510-a3c9-c256666fbe4d",
-            "version": "2020-08-13T10:24:34.921000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_79.json",
-            "uuid": "da70fbc5-f917-483a-990f-a5356da78b50",
-            "version": "2020-08-13T10:24:35.998000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_101.json",
-            "uuid": "daa5945d-5d1f-4586-9c85-e3fa5af8bfb5",
-            "version": "2020-08-13T10:24:35.433000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_32.json",
-            "uuid": "dab143f7-7a17-48ba-a7b9-60064444ada5",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_102.json",
-            "uuid": "dabbfa84-9a92-448a-a09f-8a2eaf13b958",
-            "version": "2020-08-13T10:24:33.567000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316890_S1_L001_R2_001.fastq.gz",
             "uuid": "db5c9d93-73ce-400f-809a-cf8649a0a3bb",
             "version": "2020-08-13T10:24:33.471000Z",
@@ -5675,16 +2125,6 @@
             "s3_etag": "956bbe3a0913e93ca54afeb3524e0e90-436"
         },
         {
-            "name": "specimen_from_organism_12.json",
-            "uuid": "dba60b5a-af86-4fde-8cfc-49b008f5adad",
-            "version": "2020-08-13T10:24:31.081000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "bc5ba4f6-a3f1-4156-830f-11228df251bc.loom",
             "uuid": "dbde50d2-6912-59a2-82b0-3b4014dc988c",
             "version": "2021-02-09T07:11:23.000000Z",
@@ -5694,76 +2134,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_7e411aad-6f02-48f2-99f6-7f814540fedd",
             "crc32c": "56d63318",
             "sha256": "78cdef9ebfa842d462b6982bcf2399355fa01f121e47d205143165777b604826"
-        },
-        {
-            "name": "sequence_file_103.json",
-            "uuid": "dbe02baf-4c99-4784-bf03-2ebeeef70288",
-            "version": "2020-08-13T10:24:32.588000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 610,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_104.json",
-            "uuid": "dbe117fc-c5ee-4347-bb8a-1a3fb9c89895",
-            "version": "2020-08-13T10:24:32.698000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_71.json",
-            "uuid": "dc9ec562-3a71-5e42-b486-4f846ff7fcc0",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_72.json",
-            "uuid": "dcaba295-f646-562f-8752-6f6fa634bc4f",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_10.json",
-            "uuid": "dd19fdc7-35a9-432f-9a97-670637433eda",
-            "version": "2020-08-13T10:24:30.696000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 930,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_105.json",
-            "uuid": "de694c96-1135-4d40-a44c-88ca899d164c",
-            "version": "2020-08-13T10:24:34.997000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_80.json",
-            "uuid": "ded9b30e-12df-4998-846a-7cef685e4bd6",
-            "version": "2020-08-13T10:24:42.003000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 354,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "3f20a83f-f01c-41f2-acaf-3c111dfa5465.bam",
@@ -5788,46 +2158,6 @@
             "sha256": "bfce44110db3cf10828073373c12502cc102405254549261ef2c2d29473539e2"
         },
         {
-            "name": "sequence_file_106.json",
-            "uuid": "dfe9cbbb-cf19-4e2d-bd3c-70e0d9235f67",
-            "version": "2020-08-13T10:24:33.109000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_73.json",
-            "uuid": "e0b0252f-8351-5ce3-a804-632a1cd78d28",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_33.json",
-            "uuid": "e1b9ecf6-6fd8-4bc1-a28d-e9c9850055af",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_81.json",
-            "uuid": "e23d96b7-a271-403e-a29e-b2bdb1949070",
-            "version": "2020-08-13T10:24:42.543000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7462239_S1_L001_R1_001.fastq.gz",
             "uuid": "e29a9b1c-1ea6-4774-876f-765c7ac65d02",
             "version": "2020-08-13T10:24:34.377000Z",
@@ -5841,16 +2171,6 @@
             "s3_etag": "93dfce13f90811593e344eba5c3d094a-128"
         },
         {
-            "name": "analysis_file_74.json",
-            "uuid": "e3735012-e613-5a77-b38e-68fb27f9fdd7",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7277552_S1_L001_I1_001.fastq.gz",
             "uuid": "e48d6415-0b7b-4e06-9c7b-861f33c1f1c7",
             "version": "2020-08-13T10:24:32.834000Z",
@@ -5862,16 +2182,6 @@
             "sha1": "be43649c5ebd04a1250f33c14a29f2a82bbe8c8d",
             "sha256": "45e12661114a325951c1d9cc3a333adb36cbf88e85b60575a2ab92472b2c875e",
             "s3_etag": "86be2e843bc4fed1910a203d7062693e-37"
-        },
-        {
-            "name": "sequence_file_107.json",
-            "uuid": "e512685e-d15e-4b12-9f7f-e871da115586",
-            "version": "2020-08-13T10:24:32.515000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "4834STDY7038750_S1_L001_R2_001.fastq.gz",
@@ -5911,66 +2221,6 @@
             "s3_etag": "3c08f55d1cfce81e74b27d01e6a89e6e-127"
         },
         {
-            "name": "analysis_process_34.json",
-            "uuid": "e607b72f-3024-4d7e-8292-19d2d53a3a95",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_75.json",
-            "uuid": "e6604cbc-c882-5f03-b4d0-807eb969a293",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 417,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_76.json",
-            "uuid": "e6a532d6-bba0-5304-809c-5fc5f8373529",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_108.json",
-            "uuid": "e779b50e-a892-4a0c-af02-2dd400956018",
-            "version": "2020-08-13T10:24:35.477000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_109.json",
-            "uuid": "e79faefc-5135-4e43-a64d-8db7472d3f2e",
-            "version": "2020-08-13T10:24:33.537000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_82.json",
-            "uuid": "e7b60260-7ae4-4d5a-b1a4-51622467e4b3",
-            "version": "2020-08-13T10:24:41.993000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 357,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7277553_S1_L001_R2_001.fastq.gz",
             "uuid": "e7bd55f0-f6b6-4bfc-9395-35297fffd7d4",
             "version": "2020-08-13T10:24:32.893000Z",
@@ -6008,36 +2258,6 @@
             "sha256": "889cb58651c7ec75e50c040081ed3bad5f81cb731e7f791e282060b310e9e611"
         },
         {
-            "name": "analysis_file_77.json",
-            "uuid": "e8cb5e82-22fa-5e54-984e-3d2e4b91a100",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_11.json",
-            "uuid": "e8fbe9c1-ab25-4300-a40d-65d0e8f627e0",
-            "version": "2020-08-13T10:24:30.672000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 926,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_110.json",
-            "uuid": "e97d853f-aaf2-4b69-8300-f9aac8111c39",
-            "version": "2020-08-13T10:24:34.199000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "fetal-development-human-liver-10XV2.loom",
             "uuid": "e9ac4222-8586-5d9b-8c6d-ba1b58d75a1d",
             "version": "2021-02-16T04:18:18.000000Z",
@@ -6047,26 +2267,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_2f503475-0506-4ccb-9abe-2bbf8036d894",
             "crc32c": "42dd4073",
             "sha256": "9d5294b0fe71b21cd03f1516111c53e1143a23260eaa32871e1a244c0c23b735"
-        },
-        {
-            "name": "analysis_process_35.json",
-            "uuid": "e9de5082-46c8-4b26-83c0-7fd480dcb142",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_83.json",
-            "uuid": "e9eb59a6-8324-47c7-8d54-4517587c6802",
-            "version": "2020-08-13T10:24:41.106000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7462238_S1_L001_R2_001.fastq.gz",
@@ -6080,26 +2280,6 @@
             "sha1": "1d90d37c253370fde01cce5bc8981ca77fbe5bf0",
             "sha256": "a04b3bfd947c7bdaa1109383e77bec52fb81c27a2339ee51252e2960469508f6",
             "s3_etag": "2734ac545cc9ae534ee2d2465a60e3b1-473"
-        },
-        {
-            "name": "process_84.json",
-            "uuid": "ea7b5ae7-acdc-4d67-8665-c8a0b52da561",
-            "version": "2020-08-13T10:24:35.942000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_111.json",
-            "uuid": "ea99b549-cd95-445b-a796-a4ccd992491d",
-            "version": "2020-08-13T10:24:32.351000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "536ba4f7-6694-4a31-8df1-0e6668ed10da.bam",
@@ -6137,16 +2317,6 @@
             "sha256": "37e9cf42e9e91569c0f7d475aee6d31a18404fe1c2bc47dd9bdd7e49e63dc486"
         },
         {
-            "name": "sequence_file_112.json",
-            "uuid": "ed8bc174-30cc-4fa4-9e48-0543b825b1e4",
-            "version": "2020-08-13T10:24:32.870000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "9bb08d39-3957-4ff7-a20d-cc45a1cb38ab.bam",
             "uuid": "ee40ec89-7cd0-5a9f-9f21-a1a4d69f5a1d",
             "version": "2021-02-09T10:33:14.000000Z",
@@ -6156,86 +2326,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_9599783a-f964-45b6-ab0c-a9b9149cb322",
             "crc32c": "b42f4582",
             "sha256": "1e853bdb1dab96c62e3ed8959e339cb7e07ee50e9e8a929263ff8ae961e13b43"
-        },
-        {
-            "name": "sequence_file_113.json",
-            "uuid": "ee9ad501-69c5-49df-89d2-32ea89591634",
-            "version": "2020-08-13T10:24:33.616000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "donor_organism_12.json",
-            "uuid": "eed4d335-880b-4735-9d04-cdbf706e3d44",
-            "version": "2020-08-13T10:24:30.730000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 928,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_85.json",
-            "uuid": "eed7135f-d544-4e23-b8c9-266999b4135f",
-            "version": "2020-08-13T10:24:41.811000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 416,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_38.json",
-            "uuid": "ef50dd96-a305-4edd-84e7-aae93377c488",
-            "version": "2020-08-13T10:24:31.197000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 576,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_86.json",
-            "uuid": "f027f9ff-0d24-49e2-b71d-18543a4631f2",
-            "version": "2020-08-13T10:24:35.883000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 352,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_87.json",
-            "uuid": "f0e53f0b-f5b9-4b5e-a168-de936401dc24",
-            "version": "2020-08-13T10:24:37.291000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_114.json",
-            "uuid": "f17d1da2-2965-4732-a94a-6cd2a58fc873",
-            "version": "2020-08-13T10:24:32.044000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 619,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "enrichment_protocol_2.json",
-            "uuid": "f1903d0b-1cb2-4208-bc20-a37ad8612452",
-            "version": "2020-08-13T10:24:31.894000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1801,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7352192_S1_L001_R2_001.fastq.gz",
@@ -6251,16 +2341,6 @@
             "s3_etag": "fa422f75cc7b67358c003577ebb1cd33-424"
         },
         {
-            "name": "analysis_process_36.json",
-            "uuid": "f1f25c56-1cd7-44e4-8e58-7adafd43529c",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "e23d96b7-a271-403e-a29e-b2bdb1949070.bam",
             "uuid": "f264de1c-35b3-5f4e-8d6f-f3a11bd30e93",
             "version": "2021-02-09T07:42:39.000000Z",
@@ -6272,16 +2352,6 @@
             "sha256": "d60e8996ece7a99f830a0be167f0abeea61ef5e8c267d2afbf56a318c4a88052"
         },
         {
-            "name": "process_88.json",
-            "uuid": "f26c4715-5488-4d7f-ae0e-1c965128fbb1",
-            "version": "2020-08-13T10:24:42.199000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "0ceed66e-513f-450f-89e9-3206f4485cdf.bam",
             "uuid": "f2b68b09-0776-5913-a34a-0944942c2b87",
             "version": "2021-02-09T08:42:46.000000Z",
@@ -6291,16 +2361,6 @@
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_a48216e7-c146-411c-97c7-e183ae1daeab",
             "crc32c": "4133c641",
             "sha256": "af6d158d5d21f2c91cfceece4136a9e27a108eb24dcf35d8125fc9c7f009cfd2"
-        },
-        {
-            "name": "donor_organism_13.json",
-            "uuid": "f2ed99b4-a68d-4d54-8c65-9534ad5931b5",
-            "version": "2020-08-13T10:24:30.774000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 950,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "FCAImmP7277560_S1_L001_R2_001.fastq.gz",
@@ -6316,76 +2376,6 @@
             "s3_etag": "a9936256470c5398bb755cc85ccc35c8-399"
         },
         {
-            "name": "project_0.json",
-            "uuid": "f2fe82f0-4454-4d84-b416-a885f3121e59",
-            "version": "2020-08-13T09:49:57.572000Z",
-            "content-type": "application/json; dcp-type=\"metadata/project\"",
-            "size": 8766,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_89.json",
-            "uuid": "f333416d-7f9e-4e54-9fbb-2ee29d55aed9",
-            "version": "2020-08-13T10:24:41.761000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 416,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_37.json",
-            "uuid": "f3b53d83-7ee7-42db-b2d5-05a792204872",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_90.json",
-            "uuid": "f3e0b538-bf64-417d-8746-52d5ad9311be",
-            "version": "2020-08-13T10:24:36.162000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_91.json",
-            "uuid": "f4183399-0e70-466e-8915-8e4481f9b7d1",
-            "version": "2020-08-13T10:24:42.954000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 359,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "process_92.json",
-            "uuid": "f4a448a7-bc5a-4014-ab1f-0d1a8cd4e47c",
-            "version": "2020-08-13T10:24:40.436000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_115.json",
-            "uuid": "f683fadf-dd8c-4cfe-ae8b-34e3af5b74a1",
-            "version": "2020-08-13T10:24:33.652000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 613,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "4834STDY7002882_S1_L001_R2_001.fastq.gz",
             "uuid": "f706178d-1afd-4bbb-bb69-12645ec038a6",
             "version": "2020-08-13T10:24:32.221000Z",
@@ -6397,26 +2387,6 @@
             "sha1": "bec5a332041c2be7ac226ebf3619ecd834dff895",
             "sha256": "5a1aacf952fafcf36435e160cff4b01af9e3fead34c1a42c2f31425e4a1d0583",
             "s3_etag": "a52f448699def4372fbf925086ddaebd-614"
-        },
-        {
-            "name": "process_93.json",
-            "uuid": "f70a20e6-ad33-424e-b385-bb9a19be000e",
-            "version": "2020-08-13T10:24:41.616000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 415,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_116.json",
-            "uuid": "f895f666-e3ed-4a7e-a7f5-42586a6244ea",
-            "version": "2020-08-13T10:24:34.328000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "4834STDY7038751_S1_L001_R1_001.fastq.gz",
@@ -6469,56 +2439,6 @@
             "sha256": "c223e4d5e42e03dbc6fc3c0d05bb58acbdcad8e02b1169631fb5fe9bb6fd9ea1"
         },
         {
-            "name": "sequence_file_117.json",
-            "uuid": "fa78c4ab-4057-45b1-8266-af045ae28535",
-            "version": "2020-08-13T10:24:33.552000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 615,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_38.json",
-            "uuid": "fbbd6c03-df0d-44dd-b383-c1efb83abb2e",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "specimen_from_organism_13.json",
-            "uuid": "fbed02e6-1547-469c-b96f-45c61111af53",
-            "version": "2020-08-13T10:24:31.055000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 770,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_118.json",
-            "uuid": "fd0752c7-210b-4acd-a7ef-df7ffcdfbd3d",
-            "version": "2020-08-13T10:24:34.290000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 616,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_39.json",
-            "uuid": "fd0cff96-93f2-4eb4-88f2-991f60542f46",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "FCAImmP7316895_S1_L001_R2_001.fastq.gz",
             "uuid": "fd5a2b33-eebc-41e3-b880-a39736a47a7c",
             "version": "2020-08-13T10:24:33.664000Z",
@@ -6530,66 +2450,6 @@
             "sha1": "cd8cc28fbdc21ac5ac1f59175dff4c9f8c6e08f0",
             "sha256": "6f492eed4c3dce56c23be051c2280c0d02082764cc12eee0d78ec053575e33c8",
             "s3_etag": "01f727a9513e37db4f9127dddaa83443-439"
-        },
-        {
-            "name": "analysis_file_78.json",
-            "uuid": "fda0ea89-2300-59ed-9125-784883c5e211",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_process_40.json",
-            "uuid": "fe261b23-efd5-445b-8dd4-46e47231ccff",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 14716,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_79.json",
-            "uuid": "fe4686b9-acd3-5237-acf1-1bd9cc0c19c5",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "analysis_file_80.json",
-            "uuid": "ff3b3d1c-2ba9-50a9-9ca7-0558012cbe7d",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 327,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "sequence_file_119.json",
-            "uuid": "ffba13e2-0937-49b3-961a-2ce3055ad5c6",
-            "version": "2020-08-13T10:24:32.637000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 614,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "cell_suspension_39.json",
-            "uuid": "ffe830d9-c586-47d1-9bb4-33baed6dcdc7",
-            "version": "2020-08-13T10:24:31.133000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         }
     ],
     "metadata": {

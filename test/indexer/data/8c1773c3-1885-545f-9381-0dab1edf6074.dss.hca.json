@@ -1,78 +1,6 @@
 {
     "manifest": [
         {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "project_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 4353,
-            "uuid": "90bf705c-d891-5ce2-aa54-094488b445c6",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "process_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 388,
-            "uuid": "8c1773c3-1885-545f-9381-0dab1edf6074",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "process_1.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 388,
-            "uuid": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "process_2.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 388,
-            "uuid": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "imaged_specimen_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 509,
-            "uuid": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "sequence_file_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 456,
-            "uuid": "31786d8d-d046-58d1-b7b4-49bc1114a0f8",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "50660f48",
             "indexed": false,
@@ -82,18 +10,6 @@
             "sha256": "50f5bb493c1291e6c1b5c716963b7bd5c9a8158b3c26561d00c5ee0ae2dc4d64",
             "size": 185,
             "uuid": "92855c6f-2807-50b6-a2a4-19b13c71aa65",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "sequence_file_1.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 455,
-            "uuid": "6a0e071d-9bfc-5e12-b1b9-e887885e12f6",
             "version": "2021-01-01T00:00:00.000000Z"
         },
         {
@@ -109,18 +25,6 @@
             "version": "2021-01-01T00:00:00.000000Z"
         },
         {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "sequence_file_2.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 455,
-            "uuid": "f6abda5c-65f3-5015-8167-ae78b96f5693",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "50660f48",
             "indexed": false,
@@ -130,78 +34,6 @@
             "sha256": "50f5bb493c1291e6c1b5c716963b7bd5c9a8158b3c26561d00c5ee0ae2dc4d64",
             "size": 185,
             "uuid": "b613022f-86b4-50ab-9ca2-7dfe2bc27bef",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "library_preparation_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 1289,
-            "uuid": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "sequencing_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 945,
-            "uuid": "1b8dfafd-178f-5826-a661-8a022334aaeb",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "specimen_from_organism_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 770,
-            "uuid": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "imaging_preparation_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 639,
-            "uuid": "7cd840db-f395-5a61-bd17-72c2b2319c23",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "donor_organism_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 879,
-            "uuid": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "collection_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 2167,
-            "uuid": "c5752f73-3511-55e1-95af-040ab3924bce",
             "version": "2021-01-01T00:00:00.000000Z"
         }
     ],

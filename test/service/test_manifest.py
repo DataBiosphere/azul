@@ -367,7 +367,6 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             # specimen
             '224d3750-f1f7-5b04-bbce-e23f09eea7d7': new_specimen_id
         }
-        manifest = self._replace_uuids(bundle.manifest, old_to_new)
         metadata = self._replace_uuids(bundle.metadata, old_to_new)
         # Change organ to prevent cell_suspensions aggregating together
         metadata[f'specimen_from_organism/{new_specimen_id}']['organ'] = {
@@ -376,10 +375,9 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             'ontology_label': 'lung'
         }
         links = self._replace_uuids(bundle.links, old_to_new)
-        assert isinstance(manifest, list)
         return DSSBundle(fqid=self.bundle_fqid(uuid=old_to_new[bundle.uuid],
                                                version=bundle.version),
-                         manifest=cast(MutableJSONs, manifest),
+                         manifest=cast(MutableJSONs, bundle.manifest),
                          metadata=metadata,
                          links=links)
 

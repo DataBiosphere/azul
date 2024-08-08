@@ -12,16 +12,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c"
         },
         {
-            "name": "",
-            "uuid": "08b09d15-ef99-4278-9b88-65127adb51b9",
-            "version": "2019-09-20T13:43:51.921000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1036,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "IDC9_L001_I1.fastq.gz",
             "uuid": "08bc2234-5157-4f5c-b348-5d63cc9f14e1",
             "version": "2019-09-24T09:35:07.310307Z",
@@ -33,36 +23,6 @@
             "sha256": "5a51c7ea8ce08cafb06d279041bd65f0759ab24bb6d2c25f2ca488d017cd2bc6",
             "s3_etag": "4cc2f68ce54b988081c14118adc480c4-7",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_c82292d3-61d1-5785-b8dc-24b9365df5bd"
-        },
-        {
-            "name": "",
-            "uuid": "116965f3-f094-4769-9d28-ae675c1b569c",
-            "version": "2019-10-03T10:54:38.894000Z",
-            "content-type": "application/json; dcp-type=\"metadata/project\"",
-            "size": 4304,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
-            "version": "2019-09-20T13:51:28.379000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "15de6ce1-c185-4852-ade4-43614c5d048b",
-            "version": "2019-09-20T13:43:52.606000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 388,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
@@ -102,36 +62,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_83e89c54-4fc6-58b0-800c-3788539c41e7"
         },
         {
-            "name": "",
-            "uuid": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
-            "version": "2019-09-24T09:35:06.958773Z",
-            "size": 353,
-            "indexed": true,
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "23f8e139-f4fa-4476-ba59-ff5d37003c34",
-            "version": "2019-09-20T13:50:08.455000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
-            "version": "2019-09-20T13:50:35.338000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "IDC9_L002_R1.fastq.gz",
             "uuid": "292b2faf-0db3-4ba1-a6a5-cb7bdfa9313d",
             "version": "2019-09-24T09:35:08.157668Z",
@@ -145,86 +75,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_dba31e1c-1b9c-56ae-af74-16b00b8144d2"
         },
         {
-            "name": "",
-            "uuid": "2945bb1f-90de-42a3-afa1-f57a62c853f0",
-            "version": "2019-09-20T13:43:52.178000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 931,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "2b7adb0a-82a4-4319-80d1-4a73d879dec1",
-            "version": "2019-09-20T13:43:52.612000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 1041,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "345bcbd2-f3a7-4f57-a806-fbb0ce4a25da",
-            "version": "2019-09-20T13:43:52.381000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 815,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "35e07477-76cb-4a92-99b6-7b3bbb02ec06",
-            "version": "2019-09-20T13:49:42.254000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "3c3d882a-cc38-4eea-ac53-0885f906852e",
-            "version": "2019-09-20T13:52:19.666000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "3dffc456-caaf-4823-9f65-fc0db7abacbc",
-            "version": "2019-09-20T13:49:42.771000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "47ca0565-ab7d-42bd-8731-ce5d30cfd6c7",
-            "version": "2019-09-20T13:43:52.438000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 368,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "507d2814-1688-54e7-b73e-2f831aa34368",
-            "version": "2019-09-24T09:35:06.958773Z",
-            "size": 353,
-            "indexed": true,
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
             "uuid": "519ee493-0984-5b54-95ec-85452d506b00",
             "size": 1024,
@@ -234,56 +84,6 @@
             "crc32c": "",
             "sha256": "",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_9d6f268f-f484-5381-9095-f0998fa0c961"
-        },
-        {
-            "name": "",
-            "uuid": "5f68ea73-350b-4d37-a341-3004139fb699",
-            "version": "2019-09-20T13:50:35.660000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
-            "version": "2019-09-20T13:50:59.836000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
-            "version": "2019-09-20T13:52:17.560000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "70054038-cb12-429d-bb37-69185ff1deee",
-            "version": "2019-09-20T13:43:52.455000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 1207,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "8612862e-beb1-416b-a807-0a83fae8d168",
-            "version": "2019-09-20T13:43:52.146000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 1256,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "IDC9_L003_R1.fastq.gz",
@@ -299,36 +99,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8"
         },
         {
-            "name": "",
-            "uuid": "906f8f09-deaa-40bb-bf50-27d2336b2dc4",
-            "version": "2019-09-20T13:43:52.387000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 781,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "98ee0901-d34c-48a5-915a-0511bac325ec",
-            "version": "2019-09-20T13:53:16.941000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
-            "version": "2019-09-20T13:50:08.492000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "IDC9_L004_R2.fastq.gz",
             "uuid": "ae5d1035-8f2b-4355-a0ef-bbb99958b303",
             "version": "2019-09-24T09:35:09.407370Z",
@@ -340,16 +110,6 @@
             "sha256": "4c9b22cfd3eb141a30a43fd52ce576b586279ca021444ff191c460a26cf1e4cc",
             "s3_etag": "c92e5374ac0a53b228d4c1511c2d2842-63",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_065dad63-3e05-5738-8ba5-9925d5d73d5e"
-        },
-        {
-            "name": "",
-            "uuid": "c343a47d-683f-571d-99c4-1331841b4e63",
-            "version": "2019-09-24T09:35:06.958773Z",
-            "size": 353,
-            "indexed": true,
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "IDC9_L001_R1.fastq.gz",
@@ -378,26 +138,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_e6c1d2ce-d6ad-500e-8682-626a555992ab"
         },
         {
-            "name": "",
-            "uuid": "c5cf9180-535a-4d1c-bdee-4f6ce7845b1e",
-            "version": "2019-09-20T13:43:52.368000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 368,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda",
-            "version": "2019-09-20T13:43:52.654000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 946,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "IDC9_L003_I1.fastq.gz",
             "uuid": "dd7d84d2-c515-489f-9ead-3f7df2c66848",
             "version": "2019-09-24T09:35:08.401689Z",
@@ -411,26 +151,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_bb455f5a-a70f-5155-85a0-46f475856e9f"
         },
         {
-            "name": "",
-            "uuid": "df5114c9-9f52-451b-afde-3673392fc864",
-            "version": "2019-09-20T13:43:52.607000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 368,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "e46af70a-0396-41db-9b74-330cb8244124",
-            "version": "2019-09-20T13:52:19.118000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 645,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "IDC9_L002_R2.fastq.gz",
             "uuid": "ea44789f-43b3-4684-b515-800605394177",
             "version": "2019-09-24T09:35:08.227847Z",
@@ -442,16 +162,6 @@
             "sha256": "e65d5d070584e7b08847fac0be1f89b7760ee9b301df792a66e5698d7d76d7f5",
             "s3_etag": "29da5762d5a55b9ecbd14c8663039f11-62",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_f140bd59-16c2-5082-aaf6-1c929e7063c6"
-        },
-        {
-            "name": "",
-            "uuid": "eaf15851-97e3-4e4b-b81b-0e625098f4d5",
-            "version": "2019-09-20T13:43:52.177000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 702,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "IDC9_L002_I1.fastq.gz",
@@ -1517,6 +1227,5 @@
             }
         ]
     },
-
     "stitched": []
 }

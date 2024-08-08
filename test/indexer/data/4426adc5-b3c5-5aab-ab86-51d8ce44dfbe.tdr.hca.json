@@ -1,46 +1,6 @@
 {
     "manifest": [
         {
-            "name": "",
-            "uuid": "01a1d04b-05d0-4904-b627-68b0dc02bc17",
-            "version": "2019-05-14T11:01:09.564000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 403,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "099457a1-a453-54c6-aae5-b70dafa33bbd",
-            "version": "2020-08-10T21:24:26.174274Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 547,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "116965f3-f094-4769-9d28-ae675c1b569c",
-            "version": "2019-10-03T10:54:38.894000Z",
-            "content-type": "application/json; dcp-type=\"metadata/project\"",
-            "size": 4304,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "201ae4d0-c7c6-4777-947f-18f5268884b6",
-            "version": "2019-05-14T12:06:23.503000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 628,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "6f5ddf2c-382d-4c0a-a506-3a5286067c83_qc.bam.bai",
             "uuid": "23b7f3f8-b707-5f3c-b8e6-9173efa9dcf8",
             "version": "2021-04-09T18:59:13.000000Z",
@@ -50,46 +10,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_446f8fa3-4244-42ba-b0a1-00e16b426cf4_6783e9b7-f3f3-4e4f-845f-0f3cc9743c91",
             "crc32c": "776f1ec2",
             "sha256": "1bb86ee570e328dcd72a684689ddd87c966209cfc4b2b5c36e50dd0e4c156cab"
-        },
-        {
-            "name": "",
-            "uuid": "3211ef8f-a60c-4892-ae55-91d6752dcd75",
-            "version": "2019-05-14T11:29:52.575000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 1267,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "33e31f6f-fe78-45bd-ae57-10d2d14253cf",
-            "version": "2019-05-14T12:29:57.858000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 317,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "5b503dcb-dca6-4e4f-988b-f7100c030dc5",
-            "version": "2019-05-14T11:06:42.648000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 794,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "5d82b884-7db4-47fa-9ccd-03054065c509",
-            "version": "2019-05-14T11:59:17.317000Z",
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "size": 617,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "TissueDissociationProtocol.pdf",
@@ -105,66 +25,6 @@
             "s3_etag": "7e892bf8f6aa489ccb08a995c7f017e1"
         },
         {
-            "name": "",
-            "uuid": "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
-            "version": "2019-05-14T12:20:34.464000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 318,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "7a015307-6db9-541f-aaae-db9fdb41000f",
-            "version": "2020-08-10T21:24:26.174274Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 350,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "848c816e-4ae8-4c9a-9e3d-ebe447519ff4",
-            "version": "2020-08-10T21:24:26.174274Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 2123,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "8f8b9587-237f-4995-9461-c96eac53d615",
-            "version": "2019-05-14T12:18:53.532000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 382,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "a06cb5d5-2675-4d64-aeb8-79e0103715f3",
-            "version": "2019-05-14T11:01:09.596000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 403,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "b8b76328-854c-5862-a688-9b761a9cea86",
-            "version": "2020-08-10T21:24:26.174274Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 354,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "SmartSeq2_sequencing_protocol.pdf",
             "uuid": "bf92ef4a-c422-44fb-bfc1-c2f86528b86b",
             "version": "2019-05-16T06:24:31.828599Z",
@@ -176,16 +36,6 @@
             "sha1": "9ec6ee2b6e2093681c1fed694b3a8c78a2aa3438",
             "sha256": "9c93a354a8636c041a31ba6f3fb00ef20352e1b853d8080d63a654221cb35673",
             "s3_etag": "2742e1e78f6d4663bf41d3080396695c"
-        },
-        {
-            "name": "",
-            "uuid": "c0d18b81-0b54-4a11-864b-cd3f43b7e7bf",
-            "version": "2019-05-14T12:26:53.666000Z",
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "size": 315,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         },
         {
             "name": "6f5ddf2c-382d-4c0a-a506-3a5286067c83_qc.bam",
@@ -212,26 +62,6 @@
             "s3_etag": "846fd9e6b98041df46a1ddb94e85b6b9"
         },
         {
-            "name": "",
-            "uuid": "dd7f3d64-4b79-48f0-9d8c-4324594fe820",
-            "version": "2019-05-14T11:06:42.695000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 574,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "e738a267-87fc-4070-abc7-b3be6442c6d0",
-            "version": "2019-05-14T11:01:15.816000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 407,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "22167_7#271_1.fastq.gz",
             "uuid": "ebf2947d-76d2-405b-a559-68c6ebb1b2d5",
             "version": "2019-05-16T02:50:21.018890Z",
@@ -245,26 +75,6 @@
             "s3_etag": "8786a82f739d1848aa5be480faf65e70"
         },
         {
-            "name": "",
-            "uuid": "eca2ab79-ad61-411f-815a-4f6d936d992b",
-            "version": "2019-05-14T11:06:42.648000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 758,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "",
-            "uuid": "ee7404a4-c183-4a75-8bd1-34b5fc140e81",
-            "version": "2019-05-14T12:13:41.926000Z",
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "size": 382,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "22167_7#271_2.fastq.gz",
             "uuid": "f4132e3a-c468-4ca3-ad7b-b97b61054151",
             "version": "2019-05-16T02:50:21.322397Z",
@@ -276,16 +86,6 @@
             "sha1": "e7525d173fbbb5f1bcf5b2fa16ab67c6014c191a",
             "sha256": "1f6c6f46078f45d6a308c819fe186ce25dcd36116497d9eb21990113c7fabb1e",
             "s3_etag": "6aca4df2ef18b97243967887837c3bef"
-        },
-        {
-            "name": "",
-            "uuid": "fcba26aa-658c-4120-ab31-cc5a5a00f759",
-            "version": "2019-05-14T11:06:42.781000Z",
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "size": 590,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
         }
     ],
     "metadata": {
