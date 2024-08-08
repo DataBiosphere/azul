@@ -245,11 +245,6 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             is_stitched: bool,
                             checksums: Optional[Checksums] = None,
                             drs_uri: Optional[str] = None) -> None:
-        # These requirements prevent mismatches in the DRS domain, and ensure
-        # that changes to the column syntax don't go undetected.
-        if drs_uri is not None:
-            parsed = RegularDRSURI.parse(drs_uri)
-            require(parsed.uri.netloc == config.tdr_service_url.netloc)
         self.manifest.append({
             'name': name,
             'uuid': uuid,
@@ -288,6 +283,10 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                     external_drs_uri = None
                 return external_drs_uri
         else:
+            # This requirement prevent mismatches in the DRS domain, and ensures
+            # that changes to the column syntax don't go undetected.
+            parsed = RegularDRSURI.parse(file_id)
+            require(parsed.uri.netloc == config.tdr_service_url.netloc)
             return file_id
 
 
