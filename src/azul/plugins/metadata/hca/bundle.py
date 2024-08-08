@@ -41,6 +41,7 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
     """
     metadata_files: MutableJSON
     links: MutableJSON
+    stitched: set[str] = attrs.field(factory=set)
 
     def reject_joiner(self, catalog: CatalogName):
         self._reject_joiner(self.manifest)
@@ -52,6 +53,7 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
             'manifest': self.manifest,
             'metadata': self.metadata_files,
             'links': self.links,
+            'stitched': sorted(self.stitched)
         }
 
     @classmethod
@@ -59,7 +61,13 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
         manifest = json_['manifest']
         metadata = json_['metadata']
         links = json_['links']
+        stitched = json_['stitched']
         assert isinstance(manifest, list), manifest
         assert isinstance(metadata, dict), metadata
         assert isinstance(links, dict), links
-        return cls(fqid=fqid, manifest=manifest, metadata_files=metadata, links=links)
+        assert isinstance(stitched, list), stitched
+        return cls(fqid=fqid,
+                   manifest=manifest,
+                   metadata_files=metadata,
+                   links=links,
+                   stitched=set(stitched))

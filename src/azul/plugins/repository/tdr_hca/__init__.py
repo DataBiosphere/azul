@@ -189,13 +189,14 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                    row: BigQueryRow,
                    is_stitched: bool
                    ) -> None:
+        if is_stitched:
+            self.stitched.add(entity.entity_id)
         self._add_manifest_entry(name=entity_key,
                                  uuid=entity.entity_id,
                                  version=TDRPlugin.format_version(row['version']),
                                  size=row['content_size'],
                                  content_type='application/json',
-                                 dcp_type=f'"metadata/{row["schema_type"]}"',
-                                 is_stitched=is_stitched)
+                                 dcp_type=f'"metadata/{row["schema_type"]}"')
         if entity.entity_type.endswith('_file'):
             descriptor = json.loads(row['descriptor'])
             self._add_manifest_entry(name=row['file_name'],
@@ -204,7 +205,6 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                                      size=descriptor['size'],
                                      content_type=descriptor['content_type'],
                                      dcp_type='data',
-                                     is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
                                      drs_uri=self._parse_drs_uri(row['file_id'], descriptor))
         content = row['content']
@@ -241,7 +241,6 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             size: int,
                             content_type: str,
                             dcp_type: str,
-                            is_stitched: bool,
                             checksums: Optional[Checksums] = None,
                             drs_uri: Optional[str] = None) -> None:
         self.manifest.append({
@@ -250,7 +249,6 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
             'version': version,
             'content-type': f'{content_type}; dcp-type={dcp_type}',
             'size': size,
-            'is_stitched': is_stitched,
             **(
                 {
                     'indexed': True,

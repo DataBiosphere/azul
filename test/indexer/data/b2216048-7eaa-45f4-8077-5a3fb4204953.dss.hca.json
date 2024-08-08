@@ -627,5 +627,6 @@
         "describedBy": "https://schema.humancellatlas.org/bundle/1.0.0/links",
         "schema_version": "1.0.0",
         "schema_type": "link_bundle"
-    }
+    },
+    "stitched": []
 }

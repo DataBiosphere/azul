@@ -177,7 +177,6 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRHCABundle:
     links_entry = None
     for entry in manifest:
         entry['version'] = convert_version(entry['version'])
-        entry['is_stitched'] = False
         if entry['name'] == 'links.json':
             links_entry = entry
         if entry['indexed']:

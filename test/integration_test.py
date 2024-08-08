@@ -1931,16 +1931,26 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
 
             metadata_plugin_name = catalog.plugins['metadata'].name
             if metadata_plugin_name == 'hca':
-                self.assertEqual({'manifest', 'metadata', 'links'}, bundle_json.keys())
+                self.assertEqual({'manifest',
+                                  'metadata',
+                                  'links',
+                                  'stitched'}, bundle_json.keys())
                 manifest = bundle_json['manifest']
                 metadata = bundle_json['metadata']
                 links = bundle_json['links']
+                stitched = bundle_json['stitched']
                 self.assertIsInstance(manifest, list)
                 self.assertIsInstance(metadata, dict)
                 self.assertIsInstance(links, dict)
+                self.assertIsInstance(stitched, list)
                 manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
                 metadata_files = sorted(metadata.keys())
                 self.assertListEqual(manifest_files, metadata_files)
+                metadata_ids = {
+                    entry['provenance']['document_id']
+                    for entry in metadata.values()
+                }
+                self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
                 self.assertEqual({'entities', 'links'}, bundle_json.keys())
                 entities, links = bundle_json['entities'], bundle_json['links']

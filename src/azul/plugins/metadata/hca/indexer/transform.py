@@ -1428,7 +1428,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
         return 'files'
 
     def _entities(self) -> Iterable[api.File]:
-        return api.not_stitched(self.api_bundle.files.values())
+        return self.api_bundle.not_stitched(self.api_bundle.files)
 
     def _transform(self, files: Iterable[api.File]) -> Iterable[Contribution]:
         zarr_stores: Mapping[str, list[api.File]] = self.group_zarrs(files)
@@ -1586,7 +1586,7 @@ class SampleTransformer(PartitionedTransformer):
 
     def _entities(self) -> Iterable[Sample]:
         samples: dict[str, Sample] = dict()
-        for file in api.not_stitched(self.api_bundle.files.values()):
+        for file in self.api_bundle.not_stitched(self.api_bundle.files):
             self._find_ancestor_samples(file, samples)
         return samples.values()
 
@@ -1643,7 +1643,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _dated_entities(self) -> Iterable[DatedEntity]:
-        return api.not_stitched(self.api_bundle.entities.values())
+        return self.api_bundle.not_stitched(self.api_bundle.entities)
 
     def estimate(self, partition: BundlePartition) -> int:
         return int(partition.contains(self._singleton_id))

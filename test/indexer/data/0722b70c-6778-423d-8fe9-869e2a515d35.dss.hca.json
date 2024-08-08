@@ -6,7 +6,6 @@
             "version": "2021-03-18T11:38:47.812000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 1628,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -17,7 +16,6 @@
             "version": "2021-03-18T11:38:49.863000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 412,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -28,7 +26,6 @@
             "version": "2021-04-22T15:50:01.103000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 851,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -39,7 +36,6 @@
             "version": "2021-03-18T11:38:49.142000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 415,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -50,7 +46,6 @@
             "version": "2021-01-21T12:00:11.354000Z",
             "content-type": "application/json; dcp-type=\"metadata/project\"",
             "size": 3832,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -61,7 +56,6 @@
             "version": "2021-03-18T11:38:48.652000Z",
             "content-type": "binary/octet-stream; dcp-type=data; dcp-type=data",
             "size": 11636297998,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_8ab15f7b-ec0f-433a-b6fb-28cbe0fb8dc3_cc8da2bc-eeed-4c04-b069-764c0ec9f7f6",
             "crc32c": "d04bf2d8",
@@ -75,7 +69,6 @@
             "version": "2021-03-18T11:38:48.639000Z",
             "content-type": "binary/octet-stream; dcp-type=data; dcp-type=data",
             "size": 4535175932,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_8ab15f7b-ec0f-433a-b6fb-28cbe0fb8dc3_1e60afef-6c94-4eb9-84f2-ff59398ca9da",
             "crc32c": "5fa7dd50",
@@ -89,7 +82,6 @@
             "version": "2021-03-18T11:38:47.910000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 821,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -100,7 +92,6 @@
             "version": "2021-03-18T11:38:48.652000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 538,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -111,7 +102,6 @@
             "version": "2021-03-18T11:38:47.844000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 793,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -122,7 +112,6 @@
             "version": "2021-03-18T11:38:49.499000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 352,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -133,7 +122,6 @@
             "version": "2021-03-18T11:38:48.639000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 538,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -144,7 +132,6 @@
             "version": "2021-03-18T11:38:47.755000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 845,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -155,7 +142,6 @@
             "version": "2021-03-18T11:38:47.884000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 1095,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -166,7 +152,6 @@
             "version": "2021-03-18T11:38:47.207000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 1047,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -177,7 +162,6 @@
             "version": "2021-03-18T11:38:47.509000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 836,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -188,7 +172,6 @@
             "version": "2021-03-18T11:38:47.863000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 710,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -779,5 +762,6 @@
         "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
         "schema_version": "2.1.1",
         "schema_type": "links"
-    }
+    },
+    "stitched": []
 }

@@ -18,8 +18,8 @@ from itertools import (
     chain,
 )
 from typing import (
+    Collection,
     Iterable,
-    Iterator,
     Mapping,
     MutableMapping,
     TypeVar,
@@ -75,7 +75,6 @@ class ManifestEntry:
     # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
     #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
-    is_stitched: bool = field(init=False)
 
     def __init__(self, json: MutableJSON):
         # '/' was once forbidden in file paths and was encoded with '!'. Now
@@ -85,7 +84,6 @@ class ManifestEntry:
         self.json = json
         self.content_type = json['content-type']
         self.uuid = UUID4(json['uuid'])
-        self.is_stitched = json.get('is_stitched', False)
         for f in fields(self):
             if f.init:
                 value = json.get(f.name)
@@ -103,13 +101,6 @@ class Entity:
     metadata_manifest_entry: ManifestEntry | None
     submission_date: datetime
     update_date: datetime | None
-
-    @property
-    def is_stitched(self):
-        if self.metadata_manifest_entry is None:
-            return False
-        else:
-            return self.metadata_manifest_entry.is_stitched
 
     @classmethod
     def from_json(cls,
@@ -166,20 +157,6 @@ class Entity:
 # A type variable for subtypes of Entity
 #
 E = TypeVar('E', bound=Entity)
-
-
-# noinspection PyPep8Naming
-@dataclass(frozen=True)
-class not_stitched(Iterable[E]):
-    """
-    An iterable of the entities in the argument iterable that are not stitched.
-    This is an iterable, so it can be consumed repeatedly.
-    """
-
-    entities: Iterable[E]
-
-    def __iter__(self) -> Iterator[E]:
-        return (e for e in self.entities if not e.is_stitched)
 
 
 class TypeLookupError(Exception):
@@ -999,10 +976,12 @@ class Bundle:
                  version: str,
                  manifest: MutableJSONs,
                  metadata_files: Mapping[str, JSON],
-                 links_json: JSON):
+                 links_json: JSON,
+                 stitched_entity_ids: Collection[str] = ()):
         self.uuid = UUID4(uuid)
         self.version = version
         self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
+        self.stitched = frozenset(map(UUID4, stitched_entity_ids))
 
         json_by_core_cls: MutableMapping[type[E], list[tuple[JSON, ManifestEntry]]] = defaultdict(list)
         for file_name, json in metadata_files.items():
@@ -1095,6 +1074,13 @@ class Bundle:
             return empty
 
         return recurse(self.root_entities().values())
+
+    def not_stitched(self, entities: Mapping[UUID, E]) -> list[E]:
+        return [
+            entity
+            for uuid, entity in entities.items()
+            if uuid not in self.stitched
+        ]
 
     @cached_property
     def leaf_cell_suspensions(self) -> Mapping[UUID4, CellSuspension]:

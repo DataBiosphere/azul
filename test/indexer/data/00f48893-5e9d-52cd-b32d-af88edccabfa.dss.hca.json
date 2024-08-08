@@ -6,7 +6,6 @@
             "version": "2019-09-13T09:16:27.260339Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 847438091,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_b9549f9f-d892-4093-93fd-197d02ec7c97",
             "crc32c": "0292db90",
@@ -20,7 +19,6 @@
             "version": "2019-09-13T09:16:28.234453Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 3115598454,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_7f4c7463-76d0-4f3a-a690-e93369ada2e9",
             "crc32c": "24d98de6",
@@ -34,7 +32,6 @@
             "version": "2019-09-13T08:37:53.849000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 582,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -45,7 +42,6 @@
             "version": "2019-09-13T09:07:26.172000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -56,7 +52,6 @@
             "version": "2019-09-13T08:37:57.269000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 302,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -67,7 +62,6 @@
             "version": "2019-09-13T08:56:51.563000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -78,7 +72,6 @@
             "version": "2019-09-13T09:16:23.710869Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 1110577684,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_cd7ace86-c1f9-4c36-8ba0-078520babe83",
             "crc32c": "3f0921bb",
@@ -92,7 +85,6 @@
             "version": "2019-09-13T08:37:53.860000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 583,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -103,7 +95,6 @@
             "version": "2019-09-13T08:37:53.863000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 852,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -114,7 +105,6 @@
             "version": "2021-02-03T20:52:24.000000Z",
             "content-type": "application/octet-stream; dcp-type=data",
             "size": 26511968866,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_5fcadd72-ba4a-4571-a1c4-5d4d3aeef8b5",
             "crc32c": "c844464d",
@@ -126,7 +116,6 @@
             "version": "2019-09-13T08:37:53.822000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 758,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -137,7 +126,6 @@
             "version": "2019-09-13T08:37:53.886000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 852,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -148,7 +136,6 @@
             "version": "2019-09-13T08:37:57.270000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -159,7 +146,6 @@
             "version": "2019-09-13T08:37:57.205000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 302,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -170,7 +156,6 @@
             "version": "2019-09-13T09:16:27.588981Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 2219396571,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_bfb499b5-2323-4fcf-a8b0-38ad5a885576",
             "crc32c": "fce36c7d",
@@ -184,7 +169,6 @@
             "version": "2021-02-26T16:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 401,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -195,7 +179,6 @@
             "version": "2019-09-13T08:37:57.269000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 297,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -206,7 +189,6 @@
             "version": "2019-09-13T08:43:56.724000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -217,7 +199,6 @@
             "version": "2019-09-13T08:37:53.821000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 894,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -228,7 +209,6 @@
             "version": "2019-09-13T08:53:16.964000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -239,7 +219,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 14716,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -250,7 +229,6 @@
             "version": "2019-09-13T08:54:00.067000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -261,7 +239,6 @@
             "version": "2019-09-13T09:16:26.837580Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 2138914697,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_c2fbaabe-13b9-44ce-82a0-7c98360ac75f",
             "crc32c": "f549d920",
@@ -275,7 +252,6 @@
             "version": "2021-02-03T20:52:32.000000Z",
             "content-type": "application/octet-stream; dcp-type=data",
             "size": 26831853703,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_591d4cef-47cf-4bfb-9334-88220e7cdc60",
             "crc32c": "f82a27d8",
@@ -287,7 +263,6 @@
             "version": "2019-09-13T08:37:57.203000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -298,7 +273,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 14716,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -309,7 +283,6 @@
             "version": "2019-09-13T09:16:27.026166Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 9531866142,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_799febcc-e9a4-4bb2-9c77-bdcf327c3905",
             "crc32c": "a837186f",
@@ -323,7 +296,6 @@
             "version": "2019-09-13T09:16:26.831163Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 2845965046,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_2830c506-de2e-4f68-8b95-5b6f5ac4b54d",
             "crc32c": "7eb38813",
@@ -337,7 +309,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 14716,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -348,7 +319,6 @@
             "version": "2019-09-13T08:37:57.167000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -359,7 +329,6 @@
             "version": "2019-09-13T08:37:53.845000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 853,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -370,7 +339,6 @@
             "version": "2021-05-24T12:00:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 447,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -381,7 +349,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 327,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -392,7 +359,6 @@
             "version": "2019-09-13T08:37:57.186000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -403,7 +369,6 @@
             "version": "2021-02-03T21:06:32.000000Z",
             "content-type": "application/vnd.loom; dcp-type=data",
             "size": 776280864,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_a15219d7-6a71-4827-8337-5bd42816a568",
             "crc32c": "a9fb633c",
@@ -415,7 +380,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 327,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -426,7 +390,6 @@
             "version": "2019-09-13T09:16:24.192766Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 9820193406,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_7b607ae7-1136-41f7-937e-ea2c3015a949",
             "crc32c": "3c380752",
@@ -440,7 +403,6 @@
             "version": "2019-09-13T09:01:51.268000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 603,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -451,7 +413,6 @@
             "version": "2021-02-03T21:08:31.000000Z",
             "content-type": "application/vnd.loom; dcp-type=data",
             "size": 1016626791,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_55cb0c0b-e617-491a-b055-a7cd1a438c96",
             "crc32c": "9d1f0a8c",
@@ -463,7 +424,6 @@
             "version": "2019-09-13T09:16:28.462542Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 12676468570,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_16af29e4-8b77-4d44-b6f0-39403e4bf6ea",
             "crc32c": "093721b6",
@@ -477,7 +437,6 @@
             "version": "2021-02-03T20:52:27.000000Z",
             "content-type": "application/octet-stream; dcp-type=data",
             "size": 13010167180,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_4bc6a861-4ecb-4758-ba27-8326821d6be5",
             "crc32c": "2ad80e5f",
@@ -489,7 +448,6 @@
             "version": "2019-09-13T08:37:53.837000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 902,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -500,7 +458,6 @@
             "version": "2019-09-13T08:56:00.663000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -511,7 +468,6 @@
             "version": "2019-09-13T08:46:45.334000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 603,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -522,7 +478,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 327,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -533,7 +488,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 417,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -544,7 +498,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 14716,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -555,7 +508,6 @@
             "version": "2021-02-03T20:52:29.000000Z",
             "content-type": "application/octet-stream; dcp-type=data",
             "size": 12572677836,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_ae7ba5e9-3f9b-449f-9fc1-5d52226ce8fe",
             "crc32c": "a8427ce7",
@@ -567,7 +519,6 @@
             "version": "2019-09-13T08:42:35.822000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -578,7 +529,6 @@
             "version": "2019-09-13T09:16:23.982952Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 2950925436,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_96e58cce-a961-48c5-b4fd-84f4e994e10a",
             "crc32c": "068824ae",
@@ -592,7 +542,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 327,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -603,7 +552,6 @@
             "version": "2019-09-13T08:37:53.825000Z",
             "content-type": "application/json; dcp-type=\"metadata/project\"",
             "size": 11767,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -614,7 +562,6 @@
             "version": "2021-02-03T20:52:12.000000Z",
             "content-type": "application/octet-stream; dcp-type=data",
             "size": 15412634970,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_6e60265d-6c02-44bb-80e1-e6158592353a",
             "crc32c": "a068a3b9",
@@ -626,7 +573,6 @@
             "version": "2019-09-13T08:37:57.252000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 302,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -637,7 +583,6 @@
             "version": "2019-09-13T08:37:53.868000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 569,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -648,7 +593,6 @@
             "version": "2021-02-03T21:06:08.000000Z",
             "content-type": "application/vnd.loom; dcp-type=data",
             "size": 806647102,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_65f4713e-e622-4204-ba56-4e24350ac6db",
             "crc32c": "72dc7f49",
@@ -660,7 +604,6 @@
             "version": "2019-09-13T08:37:57.171000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -671,7 +614,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 14716,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -682,7 +624,6 @@
             "version": "2019-09-13T09:16:27.766043Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 6042475560,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_08aeefd9-3ae6-4b9e-b95d-05129fd54f43",
             "crc32c": "f3a599fa",
@@ -696,7 +637,6 @@
             "version": "2019-09-13T08:57:01.788000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -707,7 +647,6 @@
             "version": "2019-09-13T08:37:53.815000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 915,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -718,7 +657,6 @@
             "version": "2021-02-03T21:12:10.000000Z",
             "content-type": "application/vnd.loom; dcp-type=data",
             "size": 639715445,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_97429722-fa8d-4e23-b7a8-9bce9f6dafab",
             "crc32c": "3b799574",
@@ -730,7 +668,6 @@
             "version": "2019-09-13T08:37:57.174000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -741,7 +678,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 417,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -752,7 +688,6 @@
             "version": "2019-09-13T08:53:56.305000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -763,7 +698,6 @@
             "version": "2019-09-13T08:37:57.252000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 302,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -774,7 +708,6 @@
             "version": "2019-09-13T09:16:26.425735Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 1071829396,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_5c7817ba-9ebe-4ee4-adf4-7e377576c709",
             "crc32c": "de18d088",
@@ -788,7 +721,6 @@
             "version": "2019-09-13T08:54:12.962000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -799,7 +731,6 @@
             "version": "2019-09-13T08:37:53.838000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 583,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -810,7 +741,6 @@
             "version": "2019-09-13T08:37:57.252000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -821,7 +751,6 @@
             "version": "2019-09-13T08:37:53.853000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 847,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -832,7 +761,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 327,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -843,7 +771,6 @@
             "version": "2019-09-13T09:16:27.945734Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 20962104505,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_2b407a11-dc22-4313-a523-f0cd6387bd13",
             "crc32c": "b844e997",
@@ -857,7 +784,6 @@
             "version": "2019-09-13T08:37:53.832000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 668,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -868,7 +794,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 417,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -879,7 +804,6 @@
             "version": "2021-02-11T23:11:45.000000Z",
             "content-type": "application/vnd.loom; dcp-type=data",
             "size": 255471211,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_b4cdcc6c-15ea-4f43-a872-0d2fc7db6fd8",
             "crc32c": "d1b06ce5",
@@ -891,7 +815,6 @@
             "version": "2021-02-03T21:08:27.000000Z",
             "content-type": "application/vnd.loom; dcp-type=data",
             "size": 972969186,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_f76e3d66-f748-4d82-b345-69e7ef60b1ab",
             "crc32c": "567bee09",
@@ -903,7 +826,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 522,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -914,7 +836,6 @@
             "version": "2019-09-13T09:16:27.063168Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 5915975880,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_7da1904a-5076-46fd-b95e-2366a907d789",
             "crc32c": "1c00b5b2",
@@ -928,7 +849,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 417,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -939,7 +859,6 @@
             "version": "2019-09-13T09:16:27.300840Z",
             "content-type": "application/gzip; dcp-type=data",
             "size": 20619721127,
-            "is_stitched": true,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_a18a7953-48aa-4e6b-810b-caf5767095c7",
             "crc32c": "a5db114b",
@@ -953,7 +872,6 @@
             "version": "2019-09-13T08:53:22.108000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 603,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -964,7 +882,6 @@
             "version": "2019-09-13T08:37:57.269000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 301,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -975,7 +892,6 @@
             "version": "2019-09-13T09:07:14.915000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -986,7 +902,6 @@
             "version": "2019-09-13T08:37:53.864000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 569,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -997,7 +912,6 @@
             "version": "2019-09-13T08:37:53.864000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
             "size": 838,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -1008,7 +922,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 417,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -1019,7 +932,6 @@
             "version": "2019-09-13T08:49:05.856000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 608,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -1030,7 +942,6 @@
             "version": "2019-09-13T08:37:53.809000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 970,
-            "is_stitched": true,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -1041,7 +952,6 @@
             "version": "2020-02-03T10:30:00.000000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 462,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -4892,5 +4802,93 @@
                 ]
             }
         ]
-    }
+    },
+
+    "stitched": [
+        "07b45ad4-7797-4c16-bfae-493fb41d6600",
+        "09eb8fc6-9e27-4f08-87c5-bfccf918ee12",
+        "0aabed05-6a89-4141-9384-828a33581419",
+        "1016adeb-cdc3-47d6-a89e-771c763dd2e7",
+        "1116b396-448e-4dd1-b9c9-78357c511e15",
+        "15f64718-69cf-462c-9704-e8a1f54c27c8",
+        "1985c53a-b78f-4d9e-9563-dffed8207efd",
+        "1d3e48d7-d80f-4b99-85bd-04ff393288e7",
+        "1dda6a28-cbaa-4506-be47-fa117e8f463c",
+        "20329887-aab3-55fb-ba2c-e3eb27a20f6d",
+        "2509f42a-0328-4e33-8d21-79d37560d846",
+        "252b008d-8b5a-450c-a17c-4e779a17ff26",
+        "25999eea-6f12-40a8-aecf-d1524c7cf564",
+        "262f55a3-d03d-49ae-8080-1a6208fddb4f",
+        "27622c20-c017-4a98-b62c-76035758bc09",
+        "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+        "2f8a07c2-4a6b-47ac-a304-0dead66eee9e",
+        "30040306-be5c-48f9-b221-e666e279ab5b",
+        "3030903f-4a4b-4b30-ab93-3b10183181e0",
+        "33682180-6cdf-4d0c-9fe0-e1c029ac13b2",
+        "366c7a41-3b80-4c7d-af4b-20248e69425f",
+        "39255288-6791-45b0-ac7e-b3ef4c981a3b",
+        "39ae3998-72a4-41ba-b00f-526bfecb8ca2",
+        "3ac6d370-c10b-54a2-a1ed-52f661aae1d7",
+        "3ad5d964-6c2c-4adc-badb-9100ceada68c",
+        "3d7a4690-8760-491c-98f9-9a1aea3f79b5",
+        "3e2b02f8-5b3b-4ab2-8ef4-7ae8a856854e",
+        "3e3505f9-4f47-402f-bfb8-960af07f91da",
+        "3f615b1d-d507-4912-82c5-9cb575cd19c1",
+        "4054b722-a585-4e90-8d74-a02fb4d98202",
+        "427c0a62-9baf-42ab-a3a3-f48d10544280",
+        "43598186-06cd-5f4b-95d9-fecb0a35d3ab",
+        "48a0c58c-ea67-4014-8752-6339de02b70e",
+        "4b611790-d17b-5938-86c4-695480abb4ef",
+        "4c866eb3-7470-5ee8-91b9-942246f19fde",
+        "5140b603-8cc1-4566-9043-e68145efbbd6",
+        "52149e21-dcd2-4288-a5eb-e526c3dcf745",
+        "5a11ed4f-41d1-53b4-9e62-3c0bbd04b4b0",
+        "5ceca6a5-2bc0-4b38-908b-01d4fec71d9f",
+        "640e64f1-6ada-5d12-a772-fe4ed4eeecea",
+        "66b7152c-8e94-412b-b0e4-f8fbf554df5a",
+        "6bd884d2-fccf-4227-8efc-184751527dfb",
+        "6d52232d-dc77-4070-bdb1-9bb0ee59d309",
+        "70ff6783-333f-5c1b-8208-3b495df95620",
+        "759bad57-b725-5346-b3ff-9fb80b27cfe7",
+        "76502973-5eb8-40b1-a0dc-17c4f772edaa",
+        "76fc7a86-572e-5e00-ac87-b55d81a8515d",
+        "799f314f-7c6c-4981-be36-8e1310bf38e6",
+        "79f589cb-32a2-4ba6-a091-7c5d820d02df",
+        "7a96a0c2-e22a-57ad-ac46-4c2433a63d94",
+        "820c396e-248b-5b4e-91b9-d7801cd9725f",
+        "8b81f0c2-3b57-4072-8a10-c169fece543e",
+        "932000d6-c63b-40f0-bdd5-469fa4db8be2",
+        "98ab4428-d66a-57b7-a802-83fdec68d744",
+        "98c88684-6469-4bb3-90aa-57a4ea101244",
+        "9b4ae2d9-d681-4f08-b111-6f1878145b35",
+        "9d720856-425d-404f-bb5b-51c225e92dd6",
+        "9f8f5212-0749-460b-9a46-2949dea45d52",
+        "a166be3d-6e84-4058-a1bd-edf90cf3ee88",
+        "a301dcb4-6a8f-5ef8-af7e-6a9fe44058e8",
+        "a5e37780-0b71-4610-8a7c-26142dedfcec",
+        "a7915c55-1d80-5724-9c81-6dd0a9130361",
+        "a7b21a25-e76e-420d-8892-538062bfefbf",
+        "ad220152-0eb4-4f85-a03e-c7e81ea3f167",
+        "ad5fed6e-b0e1-40a0-82e8-0cfc2eca0786",
+        "b01b2e61-3ebd-48cc-b071-f2e8cb42ff7c",
+        "b1b6ea44-e0b7-425a-9faa-51ecff56783e",
+        "b360251f-7550-4c08-b576-781858554ea1",
+        "b8049daa-7458-47bf-8ec2-3f5c56d2cb34",
+        "b949e4b6-c3fb-58b4-865b-40cb3ef2b6c6",
+        "b9ab7f46-071a-48cf-bc7f-fdb9c8dd0c22",
+        "ba595d79-aa43-4e3a-ad10-89f92ef4f22f",
+        "bc111cd3-bf54-57ce-8af1-88f5997a0a9d",
+        "bdd02a5f-2007-56f9-abeb-8c2c5c99a08e",
+        "d65c128c-3bb7-4da3-8d56-b60007cf8d15",
+        "d90280cc-a294-57de-b350-5234a5278c19",
+        "d94b88bc-3507-4644-a221-1c99861895e2",
+        "e0efcd8d-8433-4b40-9eee-11dafb699a5a",
+        "e511e7ff-e67c-4eb3-b0db-13aecefb5486",
+        "e92c42c7-f238-44ea-b147-e199b768d450",
+        "eb32bfc6-e7be-4093-8959-b8bf27f2404f",
+        "edc72947-b776-4150-8bfe-b7331acfa66f",
+        "f51568e8-b84c-504b-82f0-3ad5975d4bcb",
+        "f6407a7a-eecc-4735-a96a-b8bb634118e4",
+        "fa99959f-faa2-4d69-a092-48333e59f5f3"
+    ]
 }

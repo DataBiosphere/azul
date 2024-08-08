@@ -6,7 +6,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -17,19 +16,18 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 15535233,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_47bc2618-c6e0-4352-8350-bd5ccf7748f5",
             "crc32c": "5bf9776f",
             "sha256": "053074e25a96a463c081e38bcd02662ba1536dd0cb71411bd111b8a2086a03e1"
         },
         {
+
             "name": "supplementary_file_1.json",
             "uuid": "5b465aad-0981-5152-b468-e615e20f5884",
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -40,7 +38,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 7570475,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_3d334510-824b-4a28-8205-03fb50744c01",
             "crc32c": "c8c42fc3",
@@ -52,7 +49,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -63,7 +59,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 38722784,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_7337ebf7-0428-4a49-bb8d-755b88aa6e8c",
             "crc32c": "82ee1217",
@@ -75,7 +70,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -86,7 +80,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 118250749,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_456d748a-6823-4225-871f-acf42c9624ea",
             "crc32c": "15b69eed",
@@ -98,7 +91,6 @@
             "version": "2019-09-13T08:37:53.825000Z",
             "content-type": "application/json; dcp-type=\"metadata/project\"",
             "size": 11767,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -109,7 +101,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -120,7 +111,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 69813802,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_8c9a8805-d265-4767-8294-76f269dd18c8",
             "crc32c": "4f3d0c47",
@@ -132,7 +122,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 651,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -143,7 +132,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/octet-stream; dcp-type=data",
             "size": 2300969,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_8167c570-ced0-42cd-b7cf-3a18accec2d9",
             "crc32c": "42fcdb28",
@@ -155,7 +143,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -166,7 +153,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 187835236,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_bd2f1c8c-91bf-479a-9cc4-2776a5b19260",
             "crc32c": "0209e859",
@@ -178,7 +164,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
             "size": 656,
-            "is_stitched": false,
             "indexed": true,
             "crc32c": "",
             "sha256": ""
@@ -189,7 +174,6 @@
             "version": "2021-02-10T16:56:40.419579Z",
             "content-type": "application/zip; dcp-type=data",
             "size": 17985905,
-            "is_stitched": false,
             "indexed": false,
             "drs_uri": "drs://mock_drs_domain.lan/v1_6f1987da-5cbf-492c-b930-fd24891099a8_e36038df-51fd-4939-b65a-1241b00e98e2",
             "crc32c": "a21bdb72",
@@ -849,5 +833,6 @@
                 ]
             }
         ]
-    }
+    },
+    "stitched": []
 }
