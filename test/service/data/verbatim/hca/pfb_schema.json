@@ -1,0 +1,791 @@
+{
+    "fields": [
+        {
+            "default": null,
+            "name": "id",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "object",
+            "type": [
+                {
+                    "fields": [
+                        {
+                            "name": "nodes",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "name",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_reference",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "values",
+                                            "type": {
+                                                "type": "map",
+                                                "values": "string"
+                                            }
+                                        },
+                                        {
+                                            "name": "links",
+                                            "type": {
+                                                "items": {
+                                                    "fields": [
+                                                        {
+                                                            "name": "multiplicity",
+                                                            "type": {
+                                                                "name": "Multiplicity",
+                                                                "symbols": [
+                                                                    "ONE_TO_ONE",
+                                                                    "ONE_TO_MANY",
+                                                                    "MANY_TO_ONE",
+                                                                    "MANY_TO_MANY"
+                                                                ],
+                                                                "type": "enum"
+                                                            }
+                                                        },
+                                                        {
+                                                            "name": "dst",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "name",
+                                                            "type": "string"
+                                                        }
+                                                    ],
+                                                    "name": "Link",
+                                                    "type": "record"
+                                                },
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "properties",
+                                            "type": {
+                                                "items": {
+                                                    "fields": [
+                                                        {
+                                                            "name": "name",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "ontology_reference",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "values",
+                                                            "type": {
+                                                                "type": "map",
+                                                                "values": "string"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "name": "Property",
+                                                    "type": "record"
+                                                },
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "Node",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "misc",
+                            "type": {
+                                "type": "map",
+                                "values": "string"
+                            }
+                        }
+                    ],
+                    "name": "Metadata",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "biomaterial_core",
+                            "namespace": "cell_suspension",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "biomaterial_description",
+                                        "namespace": "cell_suspension.biomaterial_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "biomaterial_id",
+                                        "namespace": "cell_suspension.biomaterial_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "insdc_biomaterial",
+                                        "namespace": "cell_suspension.biomaterial_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ncbi_taxon_id",
+                                        "namespace": "cell_suspension.biomaterial_core",
+                                        "type": {
+                                            "items": "long",
+                                            "type": "array"
+                                        }
+                                    }
+                                ],
+                                "name": "cell_suspension.biomaterial_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "describedBy",
+                            "namespace": "cell_suspension",
+                            "type": "string"
+                        },
+                        {
+                            "name": "genus_species",
+                            "namespace": "cell_suspension",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "ontology",
+                                            "namespace": "cell_suspension.genus_species",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_label",
+                                            "namespace": "cell_suspension.genus_species",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "text",
+                                            "namespace": "cell_suspension.genus_species",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "cell_suspension.genus_species",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "cell_suspension",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "cell_suspension.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "cell_suspension.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "cell_suspension.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "cell_suspension.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "cell_suspension",
+                            "type": "string"
+                        },
+                        {
+                            "name": "total_estimated_cells",
+                            "namespace": "cell_suspension",
+                            "type": "long"
+                        }
+                    ],
+                    "name": "cell_suspension",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "describedBy",
+                            "namespace": "file",
+                            "type": "string"
+                        },
+                        {
+                            "name": "file_core",
+                            "namespace": "file",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "file_format",
+                                        "namespace": "file.file_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "file_name",
+                                        "namespace": "file.file_core",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "file.file_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "insdc_run",
+                            "namespace": "file",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "file",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "file.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "file.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "file.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "file.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "read_index",
+                            "namespace": "file",
+                            "type": "string"
+                        },
+                        {
+                            "name": "read_length",
+                            "namespace": "file",
+                            "type": "long"
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "file",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "file",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "describedBy",
+                            "namespace": "links",
+                            "type": "string"
+                        },
+                        {
+                            "name": "links",
+                            "namespace": "links",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "input_type",
+                                            "namespace": "links.links",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "inputs",
+                                            "namespace": "links.links",
+                                            "type": {
+                                                "items": "string",
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "output_type",
+                                            "namespace": "links.links",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "outputs",
+                                            "namespace": "links.links",
+                                            "type": {
+                                                "items": "string",
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "process",
+                                            "namespace": "links.links",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "protocols",
+                                            "namespace": "links.links",
+                                            "type": {
+                                                "items": {
+                                                    "fields": [
+                                                        {
+                                                            "name": "protocol_id",
+                                                            "namespace": "links.links.protocols",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "protocol_type",
+                                                            "namespace": "links.links.protocols",
+                                                            "type": "string"
+                                                        }
+                                                    ],
+                                                    "name": "links.links.protocols",
+                                                    "type": "record"
+                                                },
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "links.links",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "links",
+                            "type": "string"
+                        },
+                        {
+                            "name": "schema_version",
+                            "namespace": "links",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "links",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "contributors",
+                            "namespace": "project",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "address",
+                                            "namespace": "project.contributors",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "contact_name",
+                                            "namespace": "project.contributors",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "corresponding_contributor",
+                                            "namespace": "project.contributors",
+                                            "type": [
+                                                "boolean",
+                                                "null"
+                                            ]
+                                        },
+                                        {
+                                            "name": "country",
+                                            "namespace": "project.contributors",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "email",
+                                            "namespace": "project.contributors",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "institution",
+                                            "namespace": "project.contributors",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "laboratory",
+                                            "namespace": "project.contributors",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "orcid_id",
+                                            "namespace": "project.contributors",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "phone",
+                                            "namespace": "project.contributors",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "project_role",
+                                            "namespace": "project.contributors",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        }
+                                    ],
+                                    "name": "project.contributors",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "describedBy",
+                            "namespace": "project",
+                            "type": "string"
+                        },
+                        {
+                            "name": "geo_series",
+                            "namespace": "project",
+                            "type": "string"
+                        },
+                        {
+                            "name": "insdc_project",
+                            "namespace": "project",
+                            "type": "string"
+                        },
+                        {
+                            "name": "project_core",
+                            "namespace": "project",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "project_description",
+                                        "namespace": "project.project_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "project_short_name",
+                                        "namespace": "project.project_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "project_title",
+                                        "namespace": "project.project_core",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "project.project_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "project",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "project.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "project.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "project.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "project.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "publications",
+                            "namespace": "project",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "authors",
+                                            "namespace": "project.publications",
+                                            "type": {
+                                                "items": "string",
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "doi",
+                                            "namespace": "project.publications",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "pmid",
+                                            "namespace": "project.publications",
+                                            "type": "long"
+                                        },
+                                        {
+                                            "name": "publication_title",
+                                            "namespace": "project.publications",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "publication_url",
+                                            "namespace": "project.publications",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "project.publications",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "project",
+                            "type": "string"
+                        },
+                        {
+                            "name": "supplementary_links",
+                            "namespace": "project",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "project",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "biomaterial_core",
+                            "namespace": "sample",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "biomaterial_id",
+                                        "namespace": "sample.biomaterial_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ncbi_taxon_id",
+                                        "namespace": "sample.biomaterial_core",
+                                        "type": {
+                                            "items": "long",
+                                            "type": "array"
+                                        }
+                                    }
+                                ],
+                                "name": "sample.biomaterial_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "describedBy",
+                            "namespace": "sample",
+                            "type": "string"
+                        },
+                        {
+                            "name": "diseases",
+                            "namespace": "sample",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "ontology",
+                                            "namespace": "sample.diseases",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_label",
+                                            "namespace": "sample.diseases",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "text",
+                                            "namespace": "sample.diseases",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "sample.diseases",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "genus_species",
+                            "namespace": "sample",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "ontology",
+                                            "namespace": "sample.genus_species",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_label",
+                                            "namespace": "sample.genus_species",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "text",
+                                            "namespace": "sample.genus_species",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "sample.genus_species",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ",
+                            "namespace": "sample",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "sample.organ",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ontology_label",
+                                        "namespace": "sample.organ",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "sample.organ",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sample.organ",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "organ_part",
+                            "namespace": "sample",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "sample.organ_part",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ontology_label",
+                                        "namespace": "sample.organ_part",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "sample.organ_part",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sample.organ_part",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "sample",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "sample.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "sample.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "sample.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sample.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "sample",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "sample",
+                    "type": "record"
+                }
+            ]
+        },
+        {
+            "default": [],
+            "name": "relations",
+            "type": {
+                "items": {
+                    "fields": [
+                        {
+                            "name": "dst_id",
+                            "type": "string"
+                        },
+                        {
+                            "name": "dst_name",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "Relation",
+                    "type": "record"
+                },
+                "type": "array"
+            }
+        }
+    ],
+    "name": "Entity",
+    "type": "record"
+}
