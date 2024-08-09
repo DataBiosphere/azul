@@ -185,21 +185,20 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
     def add_entity(self,
                    *,
                    entity_key: str,
-                   entity_type: EntityType,
-                   entity_row: BigQueryRow,
+                   entity: EntityReference,
+                   row: BigQueryRow,
                    is_stitched: bool
                    ) -> None:
-        entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
-                                 uuid=entity_id,
-                                 version=TDRPlugin.format_version(entity_row['version']),
-                                 size=entity_row['content_size'],
+                                 uuid=entity.entity_id,
+                                 version=TDRPlugin.format_version(row['version']),
+                                 size=row['content_size'],
                                  content_type='application/json',
-                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"',
+                                 dcp_type=f'"metadata/{row["schema_type"]}"',
                                  is_stitched=is_stitched)
-        if entity_type.endswith('_file'):
-            descriptor = json.loads(entity_row['descriptor'])
-            self._add_manifest_entry(name=entity_row['file_name'],
+        if entity.entity_type.endswith('_file'):
+            descriptor = json.loads(row['descriptor'])
+            self._add_manifest_entry(name=row['file_name'],
                                      uuid=descriptor['file_id'],
                                      version=descriptor['file_version'],
                                      size=descriptor['size'],
@@ -207,8 +206,8 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                                      dcp_type='data',
                                      is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
-                                     drs_uri=self._parse_drs_uri(entity_row['file_id'], descriptor))
-        content = entity_row['content']
+                                     drs_uri=self._parse_drs_uri(row['file_id'], descriptor))
+        content = row['content']
         self.metadata_files[entity_key] = (json.loads(content)
                                            if isinstance(content, str)
                                            else content)
@@ -360,11 +359,11 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                     pk_column = entity_type + '_id'
                     rows.sort(key=itemgetter(pk_column))
                     for i, row in enumerate(rows):
-                        is_stitched = EntityReference(entity_id=row[pk_column],
-                                                      entity_type=entity_type) not in root_entities
+                        entity = EntityReference(entity_id=row[pk_column], entity_type=entity_type)
+                        is_stitched = entity not in root_entities
                         bundle.add_entity(entity_key=f'{entity_type}_{i}.json',
-                                          entity_type=entity_type,
-                                          entity_row=row,
+                                          entity=entity,
+                                          row=row,
                                           is_stitched=is_stitched)
                 else:
                     log.error('TDR worker failed to retrieve entities of type %r',
