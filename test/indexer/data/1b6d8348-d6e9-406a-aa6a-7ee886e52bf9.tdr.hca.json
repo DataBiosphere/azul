@@ -711,7 +711,7 @@
                 "schema_minor_version": 5
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file_6.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -765,7 +765,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_2.json": {
+        "sequence_file_4.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -819,7 +819,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_4.json": {
+        "sequence_file_7.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -846,7 +846,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_5.json": {
+        "sequence_file_8.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -873,7 +873,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_6.json": {
+        "sequence_file_5.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -900,7 +900,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_7.json": {
+        "sequence_file_10.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -927,7 +927,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_8.json": {
+        "sequence_file_9.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -954,7 +954,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_9.json": {
+        "sequence_file_2.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -981,7 +981,7 @@
                 "schema_minor_version": 2
             }
         },
-        "sequence_file_10.json": {
+        "sequence_file_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -1313,7 +1313,7 @@
                 "schema_minor_version": 2
             }
         },
-        "process_2.json": {
+        "process_3.json": {
             "process_core": {
                 "process_id": "process_id_1"
             },
@@ -1327,7 +1327,7 @@
                 "schema_minor_version": 2
             }
         },
-        "process_3.json": {
+        "process_2.json": {
             "process_core": {
                 "process_id": "process_id_3"
             },
