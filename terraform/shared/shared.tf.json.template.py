@@ -917,6 +917,37 @@ tf_config = {
                     ]
                 }
                 for control in ['Macie.1', 'Macie.2']
+            },
+            **{
+                'nist_control_' + control.lower().replace('.', '_'): {
+                    'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
+                                             f'/nist-800-53/v/5.0.0/{control}',
+                    'control_status': 'DISABLED',
+                    'disabled_reason': 'Not a moderate level control',
+                    'depends_on': [
+                        'aws_securityhub_standards_subscription.nist_800_53'
+                    ]
+                }
+                for control in [
+                    'ACM.1',
+                    'CloudFront.1',
+                    'S3.15',
+                    #
+                    # We don't disable EFS.6 since despite it being listed as a
+                    # control applicable to NIST SP 800-53 Rev. 5 …
+                    #
+                    # https://docs.aws.amazon.com/securityhub/latest/userguide/nist-standard.html
+                    #
+                    # … but it is not. Other AWS documentation backs up this
+                    # claim:
+                    #
+                    # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-controls-reference.html
+                    #
+                    # We don't disable ElasticCache.4 to .7 since these controls
+                    # are not available in our AWS Region:
+                    #
+                    # https://docs.aws.amazon.com/securityhub/latest/userguide/regions-controls.html
+                ]
             }
         },
         'aws_iam_account_password_policy': {
