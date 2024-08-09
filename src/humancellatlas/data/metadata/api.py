@@ -911,7 +911,7 @@ class Bundle:
                  uuid: str,
                  version: str,
                  manifest: MutableJSONs,
-                 metadata_files: Mapping[str, JSON],
+                 metadata: Mapping[str, JSON],
                  links_json: JSON,
                  stitched_entity_ids: Collection[str] = ()):
         self.uuid = UUID4(uuid)
@@ -920,7 +920,7 @@ class Bundle:
         self.stitched = frozenset(map(UUID4, stitched_entity_ids))
 
         json_by_core_cls: MutableMapping[type[E], list[JSON]] = defaultdict(list)
-        for file_name, json in metadata_files.items():
+        for file_name, json in metadata.items():
             assert file_name.endswith('.json')
             schema_name, _, suffix = file_name[:-5].rpartition('_')
             if schema_name and suffix.isdigit():

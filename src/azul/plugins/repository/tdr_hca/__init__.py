@@ -208,9 +208,9 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                                      checksums=Checksums.from_json(descriptor),
                                      drs_uri=self._parse_drs_uri(row['file_id'], descriptor))
         content = row['content']
-        self.metadata_files[entity_key] = (json.loads(content)
-                                           if isinstance(content, str)
-                                           else content)
+        self.metadata[entity_key] = (json.loads(content)
+                                     if isinstance(content, str)
+                                     else content)
 
     metadata_columns: ClassVar[set[str]] = {
         'version',
@@ -337,7 +337,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
         bundle = TDRHCABundle(fqid=bundle_fqid,
                               manifest=[],
-                              metadata_files={},
+                              metadata={},
                               links={})
         entities, root_entities, links_jsons = self._stitch_bundles(bundle)
         bundle.links = self._merge_links(links_jsons)

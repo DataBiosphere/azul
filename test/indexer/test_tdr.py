@@ -356,7 +356,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         assert isinstance(emulated_bundle, TDRHCABundle)
         # Manifest and metadata should both be sorted by entity UUID
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
-        self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
+        self.assertEqual(test_bundle.metadata, emulated_bundle.metadata)
         self.assertEqual(test_bundle.links, emulated_bundle.links)
 
 

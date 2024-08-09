@@ -39,19 +39,19 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
         'version': '2019-05-16T162155.020000Z'
     }
     """
-    metadata_files: MutableJSON
+    metadata: MutableJSON
     links: MutableJSON
     stitched: set[str] = attrs.field(factory=set)
 
     def reject_joiner(self, catalog: CatalogName):
         self._reject_joiner(self.manifest)
-        self._reject_joiner(self.metadata_files)
+        self._reject_joiner(self.metadata)
         self._reject_joiner(self.links)
 
     def to_json(self) -> MutableJSON:
         return {
             'manifest': self.manifest,
-            'metadata': self.metadata_files,
+            'metadata': self.metadata,
             'links': self.links,
             'stitched': sorted(self.stitched)
         }
@@ -68,6 +68,6 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
         assert isinstance(stitched, list), stitched
         return cls(fqid=fqid,
                    manifest=manifest,
-                   metadata_files=metadata,
+                   metadata=metadata,
                    links=links,
                    stitched=set(stitched))

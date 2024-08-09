@@ -1835,7 +1835,7 @@ class TestIndexResponse(IndexResponseTestCase):
         # First assert the order of the contributors in the indexed bundle
         bundle = self.indexed_bundles[bundle_uuid]
         assert isinstance(bundle, HCABundle)
-        project = bundle.metadata_files['project_0.json']
+        project = bundle.metadata['project_0.json']
         self.assertEqual(project_id, project['provenance']['document_id'])
         actual = [c['email'] for c in project['contributors']]
         self.assertEqual(expected, actual)

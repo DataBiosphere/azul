@@ -144,12 +144,12 @@ class TestAccessorApi(AzulUnitTestCase):
         uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
         version = '2018-08-03T082009.272868Z'
         canning_directory = os.path.join('examples', directory)
-        manifest, metadata_files, links = self._canned_bundle(canning_directory, uuid, version)
+        manifest, metadata, links = self._canned_bundle(canning_directory, uuid, version)
         self.assertIsNotNone(manifest)
         self._assert_bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
-                            metadata_files=metadata_files,
+                            metadata=metadata,
                             links=links,
                             **kwargs)
 
@@ -157,7 +157,7 @@ class TestAccessorApi(AzulUnitTestCase):
         name = f'{uuid}.{version}.json'
         return os.path.join(os.path.dirname(__file__), 'cans', directory, name)
 
-    def _can_bundle(self, directory, uuid, version, manifest, metadata_files, links):  # pragma: no cover
+    def _can_bundle(self, directory, uuid, version, manifest, metadata, links):  # pragma: no cover
         """
         Save a bundle's manifest & metadata files to a local directory
         """
@@ -166,7 +166,7 @@ class TestAccessorApi(AzulUnitTestCase):
         with atomic_write(path, overwrite=True) as f:
             json.dump({
                 'manifest': manifest,
-                'metadata': metadata_files,
+                'metadata': metadata,
                 'links': links
             }, f)
 
@@ -342,8 +342,8 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
         sequencing_protocols = [p for p in bundle.protocols.values() if isinstance(p, SequencingProtocol)]
         self.assertEqual(len(sequencing_protocols), 1)
         self.assertEqual(sequencing_protocols[0].paired_end, True)
@@ -355,16 +355,16 @@ class TestAccessorApi(AzulUnitTestCase):
                      **assertion_kwargs
                      ) -> Bundle:
 
-        manifest, metadata_files, links = self._canned_bundle(deployment, uuid, version)
+        manifest, metadata, links = self._canned_bundle(deployment, uuid, version)
 
         return self._assert_bundle(uuid=uuid,
                                    version=version,
                                    manifest=manifest,
-                                   metadata_files=metadata_files,
+                                   metadata=metadata,
                                    links=links,
                                    **assertion_kwargs)
 
-    def _assert_bundle(self, uuid, version, manifest, metadata_files, links,
+    def _assert_bundle(self, uuid, version, manifest, metadata, links,
                        age_range=None,
                        diseases=frozenset({None}),
                        project_roles=frozenset({None}),
@@ -381,7 +381,7 @@ class TestAccessorApi(AzulUnitTestCase):
                        slice_thickness=None,
                        ncbi_taxon_ids=None,
                        content_description=None) -> Bundle:
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
 
         # Every data file's manifest entry should be referenced by a metadata
         # entity that describes the data file. id() is used to work around the
@@ -517,8 +517,8 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
         analysis_protocols = [p for p in bundle.protocols.values() if isinstance(p, AnalysisProtocol)]
         self.assertEqual(len(analysis_protocols), 1)
         self.assertEqual(str(analysis_protocols[0].document_id), 'bb17ee61-193e-4ae1-a014-4f1b1c19b8b7')
@@ -528,8 +528,8 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_imaging_protocol(self):
         uuid = '94f2ba52-30c8-4de0-a78e-f95a3f8deb9c'
         version = '2019-04-03T103426.471000Z'
-        manifest, metadata_files, links = self._canned_bundle('staging', uuid, version)
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        manifest, metadata, links = self._canned_bundle('staging', uuid, version)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
         imaging_protocol = one(p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol))
         self.assertEqual(len(imaging_protocol.probe), 240)
         assay_types = {probe.assay_type for probe in imaging_protocol.probe}
@@ -538,8 +538,8 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_cell_line(self):
         uuid = 'ffee3a9b-14de-4dda-980f-c08092b2dabe'
         version = '2019-04-17T175706.867000Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
         cell_lines = [cl for cl in bundle.biomaterials.values() if isinstance(cl, CellLine)]
         self.assertEqual(len(cell_lines), 1)
         self.assertEqual(str(cell_lines[0].document_id), '961092cd-dcff-4b59-a0d2-ceeef0aece74')
@@ -556,8 +556,8 @@ class TestAccessorApi(AzulUnitTestCase):
         """
         uuid = 'cc0b5aa4-9f66-48d2-aa4f-ed019d1c9439'
         version = '2019-05-15T222432.561000Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
         for expected_count, link_type in [(6, 'process_link'), (2, 'supplementary_file_link')]:
             actual_count = sum(1 for link in bundle.links if link.link_type == link_type)
             self.assertEqual(expected_count, actual_count)
@@ -572,10 +572,10 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_project_fields(self):
         uuid = '68bdc676-c442-4581-923e-319c1c2d9018'
         version = '2018-10-07T130111.835234Z'
-        manifest, metadata_files, links = self._canned_bundle('staging', uuid, version)
+        manifest, metadata, links = self._canned_bundle('staging', uuid, version)
 
         def assert_bundle():
-            bundle = Bundle(uuid, version, manifest, metadata_files, links)
+            bundle = Bundle(uuid, version, manifest, metadata, links)
             project = bundle.projects[UUID('519b58ef-6462-4ed3-8c0d-375b54f53c31')]
             self.assertEqual(len(project.publications), 1)
             publication = project.publications.pop()
@@ -595,9 +595,9 @@ class TestAccessorApi(AzulUnitTestCase):
 
         assert_bundle()
 
-        for publication in metadata_files['project_0.json']['publications']:
+        for publication in metadata['project_0.json']['publications']:
             self._rename_keys(publication, title='publication_title', url='publication_url')
-        for contributor in metadata_files['project_0.json']['contributors']:
+        for contributor in metadata['project_0.json']['contributors']:
             if 'project_role' in contributor:
                 contributor['project_role'] = dict(text=contributor['project_role'])
 
@@ -606,10 +606,10 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_project_contact(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
 
         def assert_bundle():
-            bundle = Bundle(uuid, version, manifest, metadata_files, links)
+            bundle = Bundle(uuid, version, manifest, metadata, links)
             project = bundle.projects[UUID('d96c2451-6e22-441f-a3e6-70fd0878bb1b')]
             self.assertEqual(len(project.contributors), 5)
             expected_names = {
@@ -625,7 +625,7 @@ class TestAccessorApi(AzulUnitTestCase):
 
         assert_bundle()
 
-        for contributor in metadata_files['project_0.json']['contributors']:
+        for contributor in metadata['project_0.json']['contributors']:
             self._rename_keys(contributor, name='contact_name')
 
         assert_bundle()
@@ -633,10 +633,10 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_file_format(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
 
         def assert_bundle():
-            bundle = Bundle(uuid, version, manifest, metadata_files, links)
+            bundle = Bundle(uuid, version, manifest, metadata, links)
             self.assertEqual(len(bundle.files), 6)
             for file in bundle.files.values():
                 if isinstance(file, SequenceFile):
@@ -648,7 +648,7 @@ class TestAccessorApi(AzulUnitTestCase):
 
         assert_bundle()
 
-        for file_name, file_content in metadata_files.items():
+        for file_name, file_content in metadata.items():
             if file_name.startswith('sequence_file_') or file_name.startswith('supplementary_file_'):
                 self._rename_keys(file_content['file_core'], format='file_format')
 
@@ -657,10 +657,10 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_link_destination_type(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
 
         def assert_bundle():
-            bundle = Bundle(uuid, version, manifest, metadata_files, links)
+            bundle = Bundle(uuid, version, manifest, metadata, links)
             destination_types = {link.destination_type for link in bundle.links}
             expected_types = {
                 'library_preparation_protocol',
@@ -701,7 +701,7 @@ class TestAccessorApi(AzulUnitTestCase):
                                **case
                            }
                        ],
-                       metadata_files={},
+                       metadata={},
                        links_json={})
             self.assertEqual(cm.exception.args[0], 'Property cannot be absent or None')
             checksums.append(cm.exception.args[1])
@@ -710,7 +710,7 @@ class TestAccessorApi(AzulUnitTestCase):
     def test_name_substitution(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
-        manifest, metadata_files, links = self._canned_bundle('prod', uuid, version)
+        manifest, metadata, links = self._canned_bundle('prod', uuid, version)
 
         files_before = [f['name'] for f in manifest]
         with_bang_before = set(f for f in files_before if '!' in f)
@@ -736,7 +736,7 @@ class TestAccessorApi(AzulUnitTestCase):
         with_slash_before = set(f for f in files_before if '/' in f)
         self.assertEqual(set(), with_slash_before)
 
-        bundle = Bundle(uuid, version, manifest, metadata_files, links)
+        bundle = Bundle(uuid, version, manifest, metadata, links)
 
         expected_slash_after = set(f1.replace('!', '/') for f1 in with_bang_before)
         entity_json_file_names = set(e.json['file_core']['file_name']

@@ -364,9 +364,9 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             '224d3750-f1f7-5b04-bbce-e23f09eea7d7': '5275e5a0-6043-4ec9-86a1-6c1140cbeede',
         }
         manifest = self._replace_uuids(bundle.manifest, old_to_new)
-        metadata_files = self._replace_uuids(bundle.metadata_files, old_to_new)
+        metadata = self._replace_uuids(bundle.metadata, old_to_new)
         # Change organ to prevent cell_suspensions aggregating together
-        metadata_files['specimen_from_organism_0.json']['organ'] = {
+        metadata['specimen_from_organism_0.json']['organ'] = {
             'text': 'lung',
             'ontology': 'UBERON:0002048',
             'ontology_label': 'lung'
@@ -376,7 +376,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         return DSSBundle(fqid=self.bundle_fqid(uuid=old_to_new[bundle.uuid],
                                                version=bundle.version),
                          manifest=cast(MutableJSONs, manifest),
-                         metadata_files=metadata_files,
+                         metadata=metadata,
                          links=links)
 
     def _replace_uuids(self,
@@ -397,12 +397,12 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         bundle = self._load_canned_bundle(bundle)
         # Since most of the metadata is duplicated (including biomaterial_id)
         # the donor_count will not increase.
-        duplicate_donor = deepcopy(bundle.metadata_files['donor_organism_0.json'])
+        duplicate_donor = deepcopy(bundle.metadata['donor_organism_0.json'])
         del duplicate_donor['organism_age']
         del duplicate_donor['organism_age_unit']
         donor_id = '0895599c-f57d-4843-963e-11eab29f883b'
         duplicate_donor['provenance']['document_id'] = donor_id
-        bundle.metadata_files['donor_organism_1.json'] = duplicate_donor
+        bundle.metadata['donor_organism_1.json'] = duplicate_donor
         donor_link = one(ln for ln in bundle.links['links']
                          if one(ln['inputs'])['input_type'] == 'donor_organism')
         new_donor_reference = {
@@ -562,9 +562,9 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             for entry in bundle.manifest
             if entry['name'] in files_names
         ]
-        metadata_files = {
+        metadata = {
             file_name: copy_json(content)
-            for file_name, content in bundle.metadata_files.items()
+            for file_name, content in bundle.metadata.items()
             if file_name in files_names
         }
         # This is an older bundle so there are no supplementary file links.
@@ -574,7 +574,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         self._index_bundle(DSSBundle(fqid=self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
                                                            version='2000-01-01T01:00:00.000000Z'),
                                      manifest=manifest,
-                                     metadata_files=metadata_files,
+                                     metadata=metadata,
                                      links=links))
 
         filters = {
@@ -1350,7 +1350,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             ]:
                 expected.append({
                     'type': replica_type,
-                    'value': bundle.metadata_files[key],
+                    'value': bundle.metadata[key],
                 })
 
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})

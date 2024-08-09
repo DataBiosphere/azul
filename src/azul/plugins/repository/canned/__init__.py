@@ -199,7 +199,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                                            version=version)
         bundle = CannedBundle(fqid=bundle_fqid,
                               manifest=manifest,
-                              metadata_files=metadata,
+                              metadata=metadata,
                               links=links)
         assert version == bundle.version, (version, bundle)
         log.info('It took %.003fs to download bundle %s.%s',
