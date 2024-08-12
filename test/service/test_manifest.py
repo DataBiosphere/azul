@@ -1585,7 +1585,12 @@ class TestManifestResponse(DCP1ManifestTestCase):
         Verify the response from manifest endpoints for all manifest formats
         """
 
-        def test(*, format: ManifestFormat, fetch: bool, url: Optional[furl] = None):
+        def test(*,
+                 format: ManifestFormat,
+                 fetch: bool,
+                 curl: bool = False,
+                 url: furl | None = None):
+            assert not (fetch and curl)
             object_url = furl('https://url.to.manifest?foo=bar')
             default_file_name = 'some_object_key.csv'
             manifest_key = ManifestKey(catalog=self.catalog,
@@ -1632,7 +1637,8 @@ class TestManifestResponse(DCP1ManifestTestCase):
                     'bash': f'curl {options} {file_name} {expected_url_for_bash}'
                 }
             if url is None:
-                method, request_url = 'PUT', self.base_url.set(path=path, args=args)
+                method = 'POST' if curl else 'PUT'
+                request_url = self.base_url.set(path=path, args=args)
             else:
                 assert not fetch
                 method, request_url = 'GET', url
@@ -1643,12 +1649,12 @@ class TestManifestResponse(DCP1ManifestTestCase):
                     'Location': str(expected_url),
                     'CommandLine': expected
                 }
-                response = requests.request('PUT', str(request_url))
+                response = requests.request(method, str(request_url))
                 self.assertEqual(200, response.status_code)
                 self.assertEqual(expected, response.json())
                 self.assertEqual('application/json', response.headers['Content-Type'])
                 if format is ManifestFormat.curl:
-                    test(format=format, fetch=False, url=expected_url)
+                    test(format=format, fetch=False, curl=curl, url=expected_url)
             else:
                 response = requests.request(method, str(request_url), allow_redirects=False)
                 expected = ''.join(
@@ -1662,8 +1668,9 @@ class TestManifestResponse(DCP1ManifestTestCase):
 
         for format in self.app_module.app.metadata_plugin.manifest_formats:
             for fetch in True, False:
-                with self.subTest(format=format, fetch=fetch):
-                    test(format=format, fetch=fetch)
+                for curl in [False] if fetch else [False, True]:
+                    with self.subTest(format=format, fetch=fetch, curl=curl):
+                        test(format=format, fetch=fetch, curl=curl)
 
 
 class TestManifestPartitioning(DCP1ManifestTestCase, DocumentCloningTestCase):

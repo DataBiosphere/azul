@@ -1074,10 +1074,10 @@ def parameter_hoisting_note(method: str,
 def repository_search_spec(*, post: bool):
     id_spec_link = '#operations-Index-get_index__entity_type___entity_id_'
     return {
-        'summary': fd(f'''
-            Search an index for entities of interest
-            {", with filters provided in the request body" if post else ""}.
-        '''),
+        'summary': (
+            'Search an index for entities of interest' +
+            iif(post, ', with large parameters provided in the request body')
+        ),
         'deprecated': post,
         'description':
             iif(post, parameter_hoisting_note('GET', '/index/files', 'POST') + fd('''
@@ -1313,14 +1313,34 @@ def get_summary():
                                              authentication=request.authentication)
 
 
-def manifest_route(*, fetch: bool, initiate: bool):
+post_manifest_example_url = (
+    f'{app.base_url}/manifest/files'
+    f'?catalog={list(config.catalogs.keys())[0]}'
+    '&filters={…}'
+    f'&format={app.metadata_plugin.manifest_formats[0].value}'
+)
+
+
+def manifest_route(*, fetch: bool, initiate: bool, curl: bool = False):
+    if initiate:
+        if curl:
+            assert not fetch
+            method = 'POST'
+        else:
+            method = 'PUT'
+    else:
+        assert not curl
+        method = 'GET'
     return app.route(
         # The path parameter could be a token *or* an object key, but we don't
         # want to complicate the API with this detail
         ('/fetch' if fetch else '')
         + ('/manifest/files' if initiate else '/manifest/files/{token}'),
         # The initial PUT request is idempotent.
-        methods=['PUT' if initiate else 'GET'],
+        methods=[method],
+        # In order to support requests made with `curl` and its `--data` option,
+        # we accept the `application/x-www-form-urlencoded` content-type.
+        content_types=['application/json', 'application/x-www-form-urlencoded'],
         interactive=fetch,
         cors=True,
         path_spec=None if initiate else {
@@ -1332,6 +1352,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
         },
         method_spec={
             'tags': ['Manifests'],
+            'deprecated': curl,
             'summary':
                 (
                     'Initiate the preparation of a manifest'
@@ -1339,19 +1360,50 @@ def manifest_route(*, fetch: bool, initiate: bool):
                     'Determine status of a manifest preparation job'
                 ) + (
                     ' via XHR' if fetch else ''
+                ) + (
+                    ' as an alternative to PUT for curl users' if curl else ''
                 ),
-            'description': fd('''
-                Create a manifest preparation job, returning either
+            'description': (
+                fd('''
+                    Create a manifest preparation job, returning either
 
-                - a 301 redirect to the URL of the status of that job or
+                    - a 301 redirect to the URL of the status of that job or
 
-                - a 302 redirect to the URL of an already prepared manifest.
+                    - a 302 redirect to the URL of an already prepared manifest.
+                ''')
+                + iif(not curl, fd(f'''
+                    This endpoint is not suitable for interactive use via the
+                    Swagger UI. Please use [{method} /fetch/manifest/files][1]
+                    instead.
 
-                This endpoint is not suitable for interactive use via the
-                Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
+                    [1]: #operations-Manifests-{method.lower()}_fetch_manifest_files
+                '''))
+                + parameter_hoisting_note(method, '/manifest/files', method)
+                + iif(curl, fd(f'''
+                    Requests to this endpoint are idempotent, so PUT would be
+                    the more standards-compliant method to use. POST is offered
+                    as a convenience for `curl` users, exploiting the fact that
+                    `curl` drops to GET when following a redirect in response to
+                    a POST, but not a PUT request. This is the only reason for
+                    the deprecation of this endpoint and there are currently no
+                    plans to remove it.
 
-                [1]: #operations-Manifests-put_fetch_manifest_files
-            ''') + parameter_hoisting_note('PUT', '/manifest/files', 'PUT')
+                    To use this endpoint with `curl`, pass the `--location` and
+                    `--data` options. This makes `curl` automatically follow the
+                    intermediate redirects to the GET /manifest/files endpoint,
+                    and ultimately to the URL that yields the manifest. Example:
+
+                    ```
+                    curl --data "" --location {post_manifest_example_url}
+                    ```
+
+                    In order to facilitate this, a POST request to this endpoint
+                    may have a `Content-Type` header of
+                    `application/x-www-form-urlencoded`, which is what the
+                    `--data` option sends. The body must be empty in that case
+                    and parameters cannot be hoisted as described above.
+                '''))
+            )
             if initiate and not fetch else
             fd('''
                 Check on the status of an ongoing manifest preparation job,
@@ -1367,15 +1419,17 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 instead.
 
                 [1]: #operations-Manifests-get_fetch_manifest_files__token_
-            ''') if not initiate and not fetch else fd('''
+            ''')
+            if not initiate and not fetch else
+            fd(f'''
                 Create a manifest preparation job, returning a 200 status
                 response whose JSON body emulates the HTTP headers that would be
-                found in a response to an equivalent request to the [PUT
+                found in a response to an equivalent request to the [{method}
                 /manifest/files][1] endpoint.
 
                 Whenever client-side JavaScript code is used in a web
                 application to request the preparation of a manifest from Azul,
-                this endpoint should be used instead of [PUT
+                this endpoint should be used instead of [{method}
                 /manifest/files][1]. This way, the client can use XHR to make
                 the request, retaining full control over the handling of
                 redirects and enabling the client to bypass certain limitations
@@ -1385,8 +1439,9 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 upper limit on the number of consecutive redirects, before the
                 manifest generation job is done.
 
-                [1]: #operations-Manifests-put_manifest_files
-            ''') + parameter_hoisting_note('PUT', '/fetch/manifest/files', 'PUT')
+                [1]: #operations-Manifests-{method.lower()}_manifest_files
+            ''')
+            + parameter_hoisting_note(method, '/fetch/manifest/files', method)
             if initiate and fetch else
             fd('''
                 Check on the status of an ongoing manifest preparation job,
@@ -1531,10 +1586,10 @@ def manifest_route(*, fetch: bool, initiate: bool):
 
                         For a detailed description of these properties see the
                         documentation for the respective response headers
-                        documented under ''') + (fd('''
-                        [PUT /manifest/files][1].
+                        documented under ''') + (fd(f'''
+                        [{method} /manifest/files][1].
 
-                        [1]: #operations-Manifests-put_manifest_files
+                        [1]: #operations-Manifests-{method.lower()}_manifest_files
                         ''') if initiate else fd('''
                         [GET /manifest/files/{token}][1].
 
@@ -1576,6 +1631,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
     )
 
 
+@manifest_route(fetch=False, initiate=True, curl=True)
 @manifest_route(fetch=False, initiate=True)
 def file_manifest():
     return _file_manifest(fetch=False)
@@ -1598,6 +1654,14 @@ def fetch_file_manifest_with_token(token: str):
 
 def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
     request = app.current_request
+    post = request.method == 'POST'
+    if (
+        post
+        and request.headers.get('content-type') == 'application/x-www-form-urlencoded'
+        and request.raw_body != b''
+    ):
+        raise BRE('The body must be empty for a POST request of content-type '
+                  '`application/x-www-form-urlencoded` to this endpoint')
     query_params = request.query_params or {}
     _hoist_parameters(query_params, request)
     if token_or_key is None:

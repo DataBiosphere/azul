@@ -21,7 +21,9 @@ from io import (
     TextIOWrapper,
 )
 from itertools import (
+    chain,
     count,
+    product,
     starmap,
 )
 import json
@@ -600,12 +602,21 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
         assert supported_formats
-        for format in [None, *supported_formats]:
+        for curl, format in chain(
+            product([False, True], [None, *supported_formats])
+        ):
             filters = self._manifest_filters(catalog)
-            first_fetch = bool(self.random.getrandbits(1))
-            for fetch in [first_fetch, not first_fetch]:
-                with self.subTest('manifest', catalog=catalog, format=format, fetch=fetch):
-                    args = dict(catalog=catalog, filters=json.dumps(filters))
+            if curl:
+                first_fetch = False
+                fetch_modes = [first_fetch]
+            else:
+                first_fetch = bool(self.random.getrandbits(1))
+                fetch_modes = [first_fetch, not first_fetch]
+            for fetch in fetch_modes:
+                with self.subTest('manifest', catalog=catalog, format=format,
+                                  fetch=fetch, curl=curl):
+                    args = dict(catalog=catalog,
+                                filters=json.dumps(filters))
                     if format is None:
                         format = first(supported_formats)
                     else:
@@ -627,7 +638,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         # resilience against DOS attacks.
 
                         def worker(_):
-                            response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
+                            response = self._check_endpoint(POST if curl else PUT,
+                                                            '/manifest/files',
+                                                            args=args,
+                                                            fetch=fetch)
                             self._manifest_validators[format](catalog, response)
 
                         num_workers = 3
