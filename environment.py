@@ -70,15 +70,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The first catalog listed is the default catalog.
         #
-        # A source represents a TDR dataset, TDR snapshot, or canned staging
-        # area to index. Each source is a string matching the following EBNF
-        # grammar:
+        # A source represents a TDR snapshot or canned staging area to index.
+        # Each source is a string matching the following EBNF grammar:
         #
         # source = TDR source | canned source ;
         #
         # TDR source = 'tdr:', Google Cloud project name,
-        #              ':', ( 'dataset' | 'snapshot' ),
-        #              '/', TDR dataset or snapshot name,
+        #              ':', TDR dataset or snapshot name,
         #              ':', [ prefix ],
         #              '/', partition prefix length ;
         #
@@ -116,8 +114,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # Examples:
         #
-        # tdr:broad-jade-dev-data:snapshot/hca_mvp:/1
-        # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1
+        # tdr:broad-jade-dev-data:hca_mvp:/1
         # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:2
         #
         # This variable tends to be large. If you get `Argument list too long`

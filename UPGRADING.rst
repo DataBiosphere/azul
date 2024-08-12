@@ -20,6 +20,17 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6426 Clean-up and generalize TDR source specs
+==============================================
+
+The "snapshot/" string has been removed from TDR source specs, and the ``type``
+and ``domain`` fields have been added.
+
+Update the ``mksrc`` function in ``environment.py`` for each of your personal
+deployments. As always, use the sandbox deployment's ``environment.py`` as a
+model when upgrading personal deployments.
+
+
 #6432 Upgrade dependencies 2024-07-22
 =====================================
 

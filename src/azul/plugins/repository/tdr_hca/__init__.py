@@ -5,7 +5,6 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 from itertools import (
-    groupby,
     islice,
 )
 import json
@@ -39,7 +38,6 @@ from azul import (
 )
 from azul.bigquery import (
     BigQueryRow,
-    BigQueryRows,
     backtick,
 )
 from azul.drs import (
@@ -276,27 +274,21 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                        file_id: Optional[str],
                        descriptor: JSON
                        ) -> Optional[str]:
-        # The file_id column is present for datasets, but is usually null, may
-        # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
-        # so we avoid parsing the column altogether for datasets.
-        if self.fqid.source.spec.is_snapshot:
-            if file_id is None:
-                try:
-                    external_drs_uri = descriptor['drs_uri']
-                except KeyError:
-                    raise RequirementError('`file_id` is null and `drs_uri` '
-                                           'is not set in file descriptor', descriptor)
-                else:
-                    # FIXME: Support non-null DRS URIs in file descriptors
-                    #        https://github.com/DataBiosphere/azul/issues/3631
-                    if external_drs_uri is not None:
-                        log.warning('Non-null `drs_uri` in file descriptor (%s)', external_drs_uri)
-                        external_drs_uri = None
-                    return external_drs_uri
+        if file_id is None:
+            try:
+                external_drs_uri = descriptor['drs_uri']
+            except KeyError:
+                raise RequirementError('`file_id` is null and `drs_uri` '
+                                       'is not set in file descriptor', descriptor)
             else:
-                return file_id
+                # FIXME: Support non-null DRS URIs in file descriptors
+                #        https://github.com/DataBiosphere/azul/issues/3631
+                if external_drs_uri is not None:
+                    log.warning('Non-null `drs_uri` in file descriptor (%s)', external_drs_uri)
+                    external_drs_uri = None
+                return external_drs_uri
         else:
-            return None
+            return file_id
 
 
 class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
@@ -324,7 +316,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                       ) -> list[TDRBundleFQID]:
         source_prefix = source.spec.prefix.common
         validate_uuid_prefix(source_prefix + prefix)
-        current_bundles = self._query_latest_version(source.spec, f'''
+        current_bundles = self._query_unique_sorted(f'''
             SELECT links_id, version
             FROM {backtick(self._full_table_name(source.spec, 'links'))}
             WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
@@ -336,24 +328,15 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
             for row in current_bundles
         ]
 
-    def _query_latest_version(self,
-                              source: TDRSourceSpec,
-                              query: str,
-                              group_by: str
-                              ) -> list[BigQueryRow]:
+    def _query_unique_sorted(self,
+                             query: str,
+                             group_by: str
+                             ) -> list[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
-        groups = groupby(sorted(iter_rows, key=key), key=key)
-        return [self._choose_one_version(source, group) for _, group in groups]
-
-    def _choose_one_version(self,
-                            source: TDRSourceSpec,
-                            versioned_items: BigQueryRows
-                            ) -> BigQueryRow:
-        if source.is_snapshot:
-            return one(versioned_items)
-        else:
-            return max(versioned_items, key=itemgetter('version'))
+        rows = sorted(iter_rows, key=key)
+        require(len(set(map(key, rows))) == len(rows), 'Expected unique keys', group_by)
+        return rows
 
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
         bundle = TDRHCABundle(fqid=bundle_fqid,
@@ -514,7 +497,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
             WHERE {self._in(where_columns, where_values)}
         '''
         log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
-        rows = self._query_latest_version(source, query, group_by=pk_column)
+        rows = self._query_unique_sorted(query, group_by=pk_column)
         log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
         missing = expected - {row[pk_column] for row in rows}
         require(not missing,

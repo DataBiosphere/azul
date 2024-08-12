@@ -240,7 +240,6 @@ class File(Entity):
         assert self.concrete_type.endswith('_file')
         self.file_manifest_entry = one(e for e in bundle.manifest
                                        if e['name'] == self.metadata['file_core']['file_name'])
-        assert bundle.fqid.source.spec.is_snapshot
         assert self.file_manifest_entry['drs_path'] is not None
 
     def to_json_row(self) -> JSON:
@@ -368,7 +367,7 @@ def main(argv):
                         help='The UUID of the existing DCP/1 canned bundle.')
     parser.add_argument('--source-id', '-s',
                         default=TestTDRHCAPlugin.source.id,
-                        help='The UUID of the snapshot/dataset to contain the canned DCP/2 bundle.')
+                        help='The UUID of the snapshot to contain the canned DCP/2 bundle.')
     parser.add_argument('--version', '-v',
                         default=TestTDRHCAPlugin.bundle_fqid.version,
                         help='The version for any mock entities synthesized by the script.')
@@ -400,9 +399,8 @@ def main(argv):
 
     tdr_source = TDRSourceRef(id=args.source_id,
                               spec=TDRSourceSpec(prefix=Prefix.of_everything,
-                                                 project='test_project',
-                                                 name='test_name',
-                                                 is_snapshot=True))
+                                                 subdomain='test_project',
+                                                 name='test_name'))
     tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)
 
     add_supp_files(tdr_bundle,

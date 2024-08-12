@@ -177,7 +177,7 @@ class TDRPluginTestCase(TDRTestCase,
         # noinspection PyAbstractClass
         class Plugin(MockPlugin, self._plugin_cls()):
             netloc = self.netloc
-            project_id = self.source.spec.project
+            project_id = self.source.spec.subdomain
 
         return Plugin(sources={source_spec})
 
@@ -193,8 +193,8 @@ class TDRPluginTestCase(TDRTestCase,
                                            command=[
                                                '--log-level=debug',
                                                '--port=9050',
-                                               '--project=' + cls.source.spec.project,
-                                               '--dataset=' + cls.source.spec.bq_name
+                                               '--project=' + cls.source.spec.subdomain,
+                                               '--dataset=' + cls.source.spec.name
                                            ])
 
     def _make_mock_tdr_tables(self,
@@ -228,7 +228,7 @@ class TDRPluginTestCase(TDRTestCase,
             }
 
         plugin = self.plugin_for_source_spec(source)
-        bq = plugin.tdr._bigquery(source.project)
+        bq = plugin.tdr._bigquery(source.subdomain)
         table_name = plugin._full_table_name(source, table_name)
         # https://youtrack.jetbrains.com/issue/PY-50178
         # noinspection PyTypeChecker
