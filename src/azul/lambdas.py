@@ -31,6 +31,7 @@ class Lambda:
     name: str
     role: str
     slot_location: Optional[str]
+    version: str
 
     @property
     def is_contribution_lambda(self) -> bool:
@@ -74,13 +75,15 @@ class Lambda:
     def from_response(cls, response: JSON) -> 'Lambda':
         name = response['FunctionName']
         role = response['Role']
+        version = response['Version']
         try:
             slot_location = response['Environment']['Variables']['AZUL_TDR_SOURCE_LOCATION']
         except KeyError:
             slot_location = None
         return cls(name=name,
                    role=role,
-                   slot_location=slot_location)
+                   slot_location=slot_location,
+                   version=version)
 
     def __attrs_post_init__(self):
         if self.slot_location is None:
