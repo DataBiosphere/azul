@@ -293,7 +293,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-8',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-9',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
