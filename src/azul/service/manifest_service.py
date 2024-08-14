@@ -2081,7 +2081,7 @@ class JSONLVerbatimManifestGenerator(VerbatimManifestGenerator):
         with open(path, 'w') as f:
             for replica in self._all_replicas():
                 entry = {
-                    'contents': replica['contents'],
+                    'value': replica['contents'],
                     'type': replica['replica_type']
                 }
                 json.dump(entry, f)

@@ -3471,7 +3471,7 @@
                 }
             },
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-            "replica_type": "file",
+            "replica_type": "sequence_file",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb"
             ]
@@ -3541,7 +3541,7 @@
                 }
             },
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
-            "replica_type": "file",
+            "replica_type": "sequence_file",
             "hub_ids": [
                 "70d1af4a-82c8-478a-8960-e9028b3616ca"
             ]
@@ -3593,7 +3593,7 @@
                 }
             },
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
-            "replica_type": "sample",
+            "replica_type": "specimen_from_organism",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                 "70d1af4a-82c8-478a-8960-e9028b3616ca"

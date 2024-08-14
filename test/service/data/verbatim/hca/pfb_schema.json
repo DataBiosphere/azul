@@ -226,85 +226,6 @@
                     "fields": [
                         {
                             "name": "describedBy",
-                            "namespace": "file",
-                            "type": "string"
-                        },
-                        {
-                            "name": "file_core",
-                            "namespace": "file",
-                            "type": {
-                                "fields": [
-                                    {
-                                        "name": "file_format",
-                                        "namespace": "file.file_core",
-                                        "type": "string"
-                                    },
-                                    {
-                                        "name": "file_name",
-                                        "namespace": "file.file_core",
-                                        "type": "string"
-                                    }
-                                ],
-                                "name": "file.file_core",
-                                "type": "record"
-                            }
-                        },
-                        {
-                            "name": "insdc_run",
-                            "namespace": "file",
-                            "type": {
-                                "items": "string",
-                                "type": "array"
-                            }
-                        },
-                        {
-                            "name": "provenance",
-                            "namespace": "file",
-                            "type": {
-                                "fields": [
-                                    {
-                                        "name": "document_id",
-                                        "namespace": "file.provenance",
-                                        "type": "string"
-                                    },
-                                    {
-                                        "name": "submission_date",
-                                        "namespace": "file.provenance",
-                                        "type": "string"
-                                    },
-                                    {
-                                        "name": "update_date",
-                                        "namespace": "file.provenance",
-                                        "type": "string"
-                                    }
-                                ],
-                                "name": "file.provenance",
-                                "type": "record"
-                            }
-                        },
-                        {
-                            "name": "read_index",
-                            "namespace": "file",
-                            "type": "string"
-                        },
-                        {
-                            "name": "read_length",
-                            "namespace": "file",
-                            "type": "long"
-                        },
-                        {
-                            "name": "schema_type",
-                            "namespace": "file",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "file",
-                    "type": "record"
-                },
-                {
-                    "fields": [
-                        {
-                            "name": "describedBy",
                             "namespace": "links",
                             "type": "string"
                         },
@@ -595,56 +516,135 @@
                 {
                     "fields": [
                         {
+                            "name": "describedBy",
+                            "namespace": "sequence_file",
+                            "type": "string"
+                        },
+                        {
+                            "name": "file_core",
+                            "namespace": "sequence_file",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "file_format",
+                                        "namespace": "sequence_file.file_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "file_name",
+                                        "namespace": "sequence_file.file_core",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sequence_file.file_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "insdc_run",
+                            "namespace": "sequence_file",
+                            "type": {
+                                "items": "string",
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "sequence_file",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "sequence_file.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "sequence_file.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "sequence_file.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sequence_file.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "read_index",
+                            "namespace": "sequence_file",
+                            "type": "string"
+                        },
+                        {
+                            "name": "read_length",
+                            "namespace": "sequence_file",
+                            "type": "long"
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "sequence_file",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "sequence_file",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
                             "name": "biomaterial_core",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": {
                                 "fields": [
                                     {
                                         "name": "biomaterial_id",
-                                        "namespace": "sample.biomaterial_core",
+                                        "namespace": "specimen_from_organism.biomaterial_core",
                                         "type": "string"
                                     },
                                     {
                                         "name": "ncbi_taxon_id",
-                                        "namespace": "sample.biomaterial_core",
+                                        "namespace": "specimen_from_organism.biomaterial_core",
                                         "type": {
                                             "items": "long",
                                             "type": "array"
                                         }
                                     }
                                 ],
-                                "name": "sample.biomaterial_core",
+                                "name": "specimen_from_organism.biomaterial_core",
                                 "type": "record"
                             }
                         },
                         {
                             "name": "describedBy",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": "string"
                         },
                         {
                             "name": "diseases",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": {
                                 "items": {
                                     "fields": [
                                         {
                                             "name": "ontology",
-                                            "namespace": "sample.diseases",
+                                            "namespace": "specimen_from_organism.diseases",
                                             "type": "string"
                                         },
                                         {
                                             "name": "ontology_label",
-                                            "namespace": "sample.diseases",
+                                            "namespace": "specimen_from_organism.diseases",
                                             "type": "string"
                                         },
                                         {
                                             "name": "text",
-                                            "namespace": "sample.diseases",
+                                            "namespace": "specimen_from_organism.diseases",
                                             "type": "string"
                                         }
                                     ],
-                                    "name": "sample.diseases",
+                                    "name": "specimen_from_organism.diseases",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -652,27 +652,27 @@
                         },
                         {
                             "name": "genus_species",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": {
                                 "items": {
                                     "fields": [
                                         {
                                             "name": "ontology",
-                                            "namespace": "sample.genus_species",
+                                            "namespace": "specimen_from_organism.genus_species",
                                             "type": "string"
                                         },
                                         {
                                             "name": "ontology_label",
-                                            "namespace": "sample.genus_species",
+                                            "namespace": "specimen_from_organism.genus_species",
                                             "type": "string"
                                         },
                                         {
                                             "name": "text",
-                                            "namespace": "sample.genus_species",
+                                            "namespace": "specimen_from_organism.genus_species",
                                             "type": "string"
                                         }
                                     ],
-                                    "name": "sample.genus_species",
+                                    "name": "specimen_from_organism.genus_species",
                                     "type": "record"
                                 },
                                 "type": "array"
@@ -680,86 +680,86 @@
                         },
                         {
                             "name": "organ",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": {
                                 "fields": [
                                     {
                                         "name": "ontology",
-                                        "namespace": "sample.organ",
+                                        "namespace": "specimen_from_organism.organ",
                                         "type": "string"
                                     },
                                     {
                                         "name": "ontology_label",
-                                        "namespace": "sample.organ",
+                                        "namespace": "specimen_from_organism.organ",
                                         "type": "string"
                                     },
                                     {
                                         "name": "text",
-                                        "namespace": "sample.organ",
+                                        "namespace": "specimen_from_organism.organ",
                                         "type": "string"
                                     }
                                 ],
-                                "name": "sample.organ",
+                                "name": "specimen_from_organism.organ",
                                 "type": "record"
                             }
                         },
                         {
                             "name": "organ_part",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": {
                                 "fields": [
                                     {
                                         "name": "ontology",
-                                        "namespace": "sample.organ_part",
+                                        "namespace": "specimen_from_organism.organ_part",
                                         "type": "string"
                                     },
                                     {
                                         "name": "ontology_label",
-                                        "namespace": "sample.organ_part",
+                                        "namespace": "specimen_from_organism.organ_part",
                                         "type": "string"
                                     },
                                     {
                                         "name": "text",
-                                        "namespace": "sample.organ_part",
+                                        "namespace": "specimen_from_organism.organ_part",
                                         "type": "string"
                                     }
                                 ],
-                                "name": "sample.organ_part",
+                                "name": "specimen_from_organism.organ_part",
                                 "type": "record"
                             }
                         },
                         {
                             "name": "provenance",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": {
                                 "fields": [
                                     {
                                         "name": "document_id",
-                                        "namespace": "sample.provenance",
+                                        "namespace": "specimen_from_organism.provenance",
                                         "type": "string"
                                     },
                                     {
                                         "name": "submission_date",
-                                        "namespace": "sample.provenance",
+                                        "namespace": "specimen_from_organism.provenance",
                                         "type": "string"
                                     },
                                     {
                                         "name": "update_date",
-                                        "namespace": "sample.provenance",
+                                        "namespace": "specimen_from_organism.provenance",
                                         "type": "string"
                                     }
                                 ],
-                                "name": "sample.provenance",
+                                "name": "specimen_from_organism.provenance",
                                 "type": "record"
                             }
                         },
                         {
                             "name": "schema_type",
-                            "namespace": "sample",
+                            "namespace": "specimen_from_organism",
                             "type": "string"
                         }
                     ],
-                    "name": "sample",
+                    "name": "specimen_from_organism",
                     "type": "record"
                 }
             ]
