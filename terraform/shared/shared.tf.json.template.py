@@ -857,6 +857,9 @@ tf_config = {
             'shared': {
                 'name': config.qualified_resource_name(config.aws_config_term),
                 's3_bucket_name': '${aws_s3_bucket.aws_config.bucket}',
+                'snapshot_delivery_properties': {
+                    'delivery_frequency': 'TwentyFour_Hours'
+                },
                 'depends_on': [
                     'aws_config_configuration_recorder.shared'
                 ]
