@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6468 Upgrade dependencies 2024-08-05
+=====================================
+
+Everyone
+~~~~~~~~
+
+Update Terraform on your developer machines to version 1.9.4.
+
+
 #6426 Clean-up and generalize TDR source specs
 ==============================================
 

@@ -262,7 +262,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': '1.9.3',
+        'azul_terraform_version': '1.9.4',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -283,17 +283,17 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.4-28',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.6-30',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.22-23',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.23-24',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-8',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-9',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
@@ -304,7 +304,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:17.2.1-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:17.2.2-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
