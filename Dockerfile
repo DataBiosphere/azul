@@ -10,7 +10,9 @@ SHELL ["/bin/bash", "-c"]
 # are updated.
 #
 ARG azul_image_version=1
-RUN apt-get update && apt-get upgrade -y
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get -y install build-essential curl unzip
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
