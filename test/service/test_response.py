@@ -3498,11 +3498,13 @@ class TestResponseFields(IndexResponseTestCase):
         self.assertEqual(expected_bionetwork_name, project['bionetworkName'])
         self.assertTrue(project['isTissueAtlasProject'])
 
-        tissue_atlas = {
+        tissue_atlas = response_json['termFacets']['tissueAtlas']
+        self.assertEqual(5, tissue_atlas['total'])
+        terms = {
             entry['term']: entry['count']
-            for entry in response_json['termFacets']['tissueAtlas']['terms']
+            for entry in tissue_atlas['terms']
         }
-        self.assertEqual({None: 1, 'Lung': 1, 'Retina': 1, 'Blood': 1}, tissue_atlas)
+        self.assertEqual({None: 2, 'Lung': 1, 'Retina': 1, 'Blood': 1}, terms)
 
 
 class TestUnpopulatedIndexResponse(IndexResponseTestCase):
