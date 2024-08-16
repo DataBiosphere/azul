@@ -18,7 +18,10 @@ from azul.terraform import (
 
 log = logging.getLogger(__name__)
 
+resource = 'aws_securityhub_standards_control'
 renamed: dict[str, Optional[str]] = {
+    f'{resource}.best_practices_macie_{num}': f'{resource}.nist_control_macie_{num}'
+    for num in [1, 2]
 }
 
 

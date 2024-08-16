@@ -914,16 +914,16 @@ tf_config = {
         #        https://github.com/DataBiosphere/azul/issues/5890
         'aws_securityhub_standards_control': {
             **{
-                f'best_practices_macie_{num}': {
+                'nist_control_' + control.lower().replace('.', '_'): {
                     'standards_control_arn': f'arn:aws:securityhub:{aws.region_name}:{aws.account}:control'
-                                             f'/aws-foundational-security-best-practices/v/1.0.0/Macie.{num}',
+                                             f'/aws-foundational-security-best-practices/v/1.0.0/{control}',
                     'control_status': 'DISABLED',
                     'disabled_reason': 'Generates alarm noise; tracked independently as follow-up work',
                     'depends_on': [
                         'aws_securityhub_standards_subscription.best_practices'
                     ]
                 }
-                for num in [1, 2]
+                for control in ['Macie.1', 'Macie.2']
             }
         },
         'aws_iam_account_password_policy': {
