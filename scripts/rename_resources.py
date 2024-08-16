@@ -19,9 +19,6 @@ from azul.terraform import (
 log = logging.getLogger(__name__)
 
 renamed: dict[str, Optional[str]] = {
-    # FIXME: Remove the following entry
-    #        https://github.com/DataBiosphere/azul/pull/6285
-    'opensearch_cluster_settings.index': None
 }
 
 
