@@ -36,6 +36,10 @@ from azul.collections import (
     OrderedSet,
     dict_merge,
 )
+
+from azul.indexer.document import (
+    EntityReference,
+)
 from azul.types import (
     JSON,
     MutableJSON,
@@ -920,13 +924,11 @@ class Bundle:
         self.stitched = frozenset(map(UUID4, stitched_entity_ids))
 
         json_by_core_cls: MutableMapping[type[E], list[JSON]] = defaultdict(list)
-        for file_name, json in metadata.items():
-            assert file_name.endswith('.json')
-            schema_name, _, suffix = file_name[:-5].rpartition('_')
-            if schema_name and suffix.isdigit():
-                entity_cls = entity_types[schema_name]
-                core_cls = core_types[entity_cls]
-                json_by_core_cls[core_cls].append(json)
+        for key, json in metadata.items():
+            schema_name = EntityReference.parse(key).entity_type
+            entity_cls = entity_types[schema_name]
+            core_cls = core_types[entity_cls]
+            json_by_core_cls[core_cls].append(json)
 
         def from_json_vx(core_cls: type[E],
                          **kwargs

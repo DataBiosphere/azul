@@ -76,7 +76,7 @@
         }
     ],
     "metadata": {
-        "supplementary_file_0.json": {
+        "supplementary_file/538faa28-3235-5e4b-a998-5672e2d964e8": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
             "schema_type": "file",
             "schema_version": "2.2.0",
@@ -99,7 +99,7 @@
                 "update_date": "2020-12-03T10:39:17.144517Z"
             }
         },
-        "supplementary_file_1.json": {
+        "supplementary_file/6c142250-567c-5b63-bd4f-0d78499863f8": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
             "schema_type": "file",
             "schema_version": "2.2.0",
@@ -122,7 +122,7 @@
                 "update_date": "2020-12-03T10:39:17.144517Z"
             }
         },
-        "supplementary_file_2.json": {
+        "supplementary_file/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
             "schema_type": "file",
             "schema_version": "2.2.0",
@@ -145,7 +145,7 @@
                 "update_date": "2020-12-03T10:39:17.144517Z"
             }
         },
-        "project_0.json": {
+        "project/8185730f-4113-40d3-9cc3-929271784c2b": {
             "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
             "schema_type": "project",
             "project_core": {

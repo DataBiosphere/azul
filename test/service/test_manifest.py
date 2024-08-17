@@ -70,6 +70,9 @@ from azul.collections import (
 from azul.indexer import (
     SourcedBundleFQID,
 )
+from azul.indexer.document import (
+    EntityReference,
+)
 from azul.json import (
     copy_json,
     json_hash,
@@ -355,18 +358,19 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         type.
         """
         bundle = self._load_canned_bundle(bundle)
+        new_specimen_id = '5275e5a0-6043-4ec9-86a1-6c1140cbeede'
         old_to_new = {
             # process
             '4da04038-adab-59a9-b6c4-3a61242cc972': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
             # cell_suspension
             'd9eaaffe-4c93-5503-984f-762e8dfddce4': 'd6b3d2ab-5715-4486-a544-ac09fafac279',
             # specimen
-            '224d3750-f1f7-5b04-bbce-e23f09eea7d7': '5275e5a0-6043-4ec9-86a1-6c1140cbeede',
+            '224d3750-f1f7-5b04-bbce-e23f09eea7d7': new_specimen_id
         }
         manifest = self._replace_uuids(bundle.manifest, old_to_new)
         metadata = self._replace_uuids(bundle.metadata, old_to_new)
         # Change organ to prevent cell_suspensions aggregating together
-        metadata['specimen_from_organism_0.json']['organ'] = {
+        metadata[f'specimen_from_organism/{new_specimen_id}']['organ'] = {
             'text': 'lung',
             'ontology': 'UBERON:0002048',
             'ontology_label': 'lung'
@@ -397,12 +401,13 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         bundle = self._load_canned_bundle(bundle)
         # Since most of the metadata is duplicated (including biomaterial_id)
         # the donor_count will not increase.
-        duplicate_donor = deepcopy(bundle.metadata['donor_organism_0.json'])
+        old_donor_id = '9173ee6a-f1b2-5762-9272-3433b5ef7530'
+        duplicate_donor = deepcopy(bundle.metadata[f'donor_organism/{old_donor_id}'])
         del duplicate_donor['organism_age']
         del duplicate_donor['organism_age_unit']
         donor_id = '0895599c-f57d-4843-963e-11eab29f883b'
         duplicate_donor['provenance']['document_id'] = donor_id
-        bundle.metadata['donor_organism_1.json'] = duplicate_donor
+        bundle.metadata[f'donor_organism/{donor_id}'] = duplicate_donor
         donor_link = one(ln for ln in bundle.links['links']
                          if one(ln['inputs'])['input_type'] == 'donor_organism')
         new_donor_reference = {
@@ -551,28 +556,28 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         # Duplicate one of the files into a minimal mock bundle to test
         # redundant file contributions from different bundles (for example due
         # to stitching)
-        files_names = {
-            'supplementary_file_1.json',
-            'SmartSeq2_RTPCR_protocol.pdf',
-            'links.json',
-            'project_0.json'
+        entity_ids = {
+            '89e313db-4423-4d53-b17e-164949acfa8f',  # Supplementary file (metadata)
+            '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',  # Supplementary file (data)
+            '67bc798b-a34a-4104-8cab-cad648471f69',  # Project
         }
         manifest = [
             entry
             for entry in bundle.manifest
-            if entry['name'] in files_names
+            if entry['uuid'] in entity_ids
         ]
         metadata = {
-            file_name: copy_json(content)
-            for file_name, content in bundle.metadata.items()
-            if file_name in files_names
+            ref: copy_json(content)
+            for ref, content in bundle.metadata.items()
+            if EntityReference.parse(ref).entity_id in entity_ids
         }
         # This is an older bundle so there are no supplementary file links.
         # The existing links reference entities that weren't copied to the mock bundle.
         links = bundle.links
         links['links'].clear()
-        self._index_bundle(DSSBundle(fqid=self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
-                                                           version='2000-01-01T01:00:00.000000Z'),
+        new_bundle_fqid = self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
+                                           version='2000-01-01T01:00:00.000000Z')
+        self._index_bundle(DSSBundle(fqid=new_bundle_fqid,
                                      manifest=manifest,
                                      metadata=metadata,
                                      links=links))
@@ -1341,16 +1346,16 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                 'type': 'links',
                 'value': bundle.links
             })
-            for replica_type, key in [
-                ('cell_suspension', 'cell_suspension_0.json'),
-                ('project', 'project_0.json'),
-                ('sequence_file', 'sequence_file_0.json'),
-                ('sequence_file', 'sequence_file_1.json'),
-                ('specimen_from_organism', 'specimen_from_organism_0.json')
+            for ref in [
+                'cell_suspension/412898c5-5b9b-4907-b07c-e9b89666e204',
+                'project/e8642221-4c2c-4fd7-b926-a68bce363c88',
+                'sequence_file/70d1af4a-82c8-478a-8960-e9028b3616ca',
+                'sequence_file/0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb',
+                'specimen_from_organism/a21dc760-a500-4236-bcff-da34a0e873d2'
             ]:
                 expected.append({
-                    'type': replica_type,
-                    'value': bundle.metadata[key],
+                    'type': EntityReference.parse(ref).entity_type,
+                    'value': bundle.metadata[ref],
                 })
 
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})

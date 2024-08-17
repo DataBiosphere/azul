@@ -266,7 +266,7 @@
         }
     ],
     "metadata": {
-        "cell_suspension_0.json": {
+        "cell_suspension/0037c9eb-8038-432f-8d9d-13ee094e54ab": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -300,7 +300,7 @@
                 "update_date": "2018-09-13T18:24:16.328Z"
             }
         },
-        "cell_suspension_1.json": {
+        "cell_suspension/aaaaaaaa-8038-432f-8d9d-13ee094e54ab": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -334,7 +334,7 @@
                 "update_date": "2018-09-13T18:24:16.328Z"
             }
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/b4e55fe1-7bab-44ba-a81d-3d8cb3873244": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -359,7 +359,7 @@
                 "update_date": "2018-09-13T18:18:32.288Z"
             }
         },
-        "specimen_from_organism_1.json": {
+        "specimen_from_organism/aaaaaaaa-7bab-44ba-a81d-3d8cb3873244": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -384,7 +384,7 @@
                 "update_date": "2018-09-13T18:18:32.288Z"
             }
         },
-        "donor_organism_0.json": {
+        "donor_organism/89b50434-f831-4e15-a8c0-0d57e6baa94c": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -432,7 +432,7 @@
                 "update_date": "2018-09-13T18:10:58.580Z"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/6c946b6c-040e-45cc-9114-a8b1454c8d20": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -447,7 +447,7 @@
                 "update_date": "2018-09-14T09:10:48.771Z"
             }
         },
-        "sequence_file_1.json": {
+        "sequence_file/c86e42d7-854a-479b-a627-6be1b49c980c": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -462,7 +462,7 @@
                 "update_date": "2018-09-14T09:10:48.630Z"
             }
         },
-        "supplementary_file_0.json": {
+        "supplementary_file/eeea6514-bfdc-473b-a9ae-82b00ab30c38": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
             "schema_type": "file",
             "file_core": {
@@ -476,7 +476,7 @@
                 "update_date": "2018-09-13T19:20:05.725Z"
             }
         },
-        "supplementary_file_1.json": {
+        "supplementary_file/89e313db-4423-4d53-b17e-164949acfa8f": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
             "schema_type": "file",
             "file_core": {
@@ -490,7 +490,7 @@
                 "update_date": "2018-09-13T19:20:05.505Z"
             }
         },
-        "supplementary_file_2.json": {
+        "supplementary_file/bf7df45c-c2d5-49a8-8110-7e1f17ed0094": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
             "schema_type": "file",
             "file_core": {
@@ -504,7 +504,7 @@
                 "update_date": "2018-09-13T19:20:06.395Z"
             }
         },
-        "project_0.json": {
+        "project/67bc798b-a34a-4104-8cab-cad648471f69": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.2/project",
             "schema_type": "project",
             "project_core": {
@@ -618,7 +618,7 @@
                 "update_date": "2018-09-13T18:07:50.370Z"
             }
         },
-        "library_preparation_protocol_0.json": {
+        "library_preparation_protocol/0076f0aa-14c6-4cb9-93f8-97229787be21": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -649,7 +649,7 @@
                 "update_date": "2018-09-13T18:02:29.834Z"
             }
         },
-        "sequencing_protocol_0.json": {
+        "sequencing_protocol/362d9c34-f5c0-4906-955b-61ba0aac58cc": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -672,7 +672,7 @@
                 "update_date": "2018-09-13T18:02:29.857Z"
             }
         },
-        "dissociation_protocol_0.json": {
+        "dissociation_protocol/40056e47-131d-4c6e-a884-a927bfccf8ce": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -690,7 +690,7 @@
                 "update_date": "2018-09-13T18:02:29.781Z"
             }
         },
-        "enrichment_protocol_0.json": {
+        "enrichment_protocol/d3287615-b97a-4984-a8cf-30a1c30e4773": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -708,7 +708,7 @@
                 "update_date": "2018-09-13T18:02:30.081Z"
             }
         },
-        "process_0.json": {
+        "process/72732ed3-7b71-47df-bcec-c765ef7ea758": {
             "process_core": {
                 "process_id": "proc_22028_5#300"
             },
@@ -720,7 +720,7 @@
                 "update_date": "2018-09-13T18:34:58.206Z"
             }
         },
-        "process_1.json": {
+        "process/6d77eef9-96cf-410e-8bbc-a83430267b61": {
             "process_core": {
                 "process_id": "process_id_3550"
             },
@@ -732,7 +732,7 @@
                 "update_date": "2018-09-13T18:44:31.057Z"
             }
         },
-        "process_2.json": {
+        "process/c0f05fdb-8375-4c39-adba-24a63c004b9d": {
             "process_core": {
                 "process_id": "process_id_47"
             },

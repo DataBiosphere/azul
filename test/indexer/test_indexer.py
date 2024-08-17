@@ -246,9 +246,9 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                         expected = bundle.links
                                     else:
                                         expected = one(
-                                            m
-                                            for m in bundle.metadata.values()
-                                            if m['provenance']['document_id'] == entity_id
+                                            v
+                                            for k, v in bundle.metadata.items()
+                                            if EntityReference.parse(k).entity_id == entity_id
                                         )
                                     # Replica contents should match the entity
                                     # metadata as supplied by the repository
@@ -396,9 +396,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         entity = next(e for e in tallies_1.keys() if e.entity_type != 'bundles')
         tallies_1.pop(entity)
 
-        entity_contents = bundle.metadata[
-            one(m for m in bundle.manifest if m['uuid'] == entity.entity_id)['name']
-        ]
+        entity_contents = one(
+            metadata
+            for ref, metadata in bundle.metadata.items()
+            if EntityReference.parse(ref).entity_id == entity.entity_id
+        )
         coordinates = [
             ContributionCoordinates(
                 entity=entity,
@@ -1845,7 +1847,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         #
         target_metadata = has_cells_bundle.metadata
         source_metadata = no_cells_bundle.metadata
-        target_metadata['project_0.json'] = source_metadata['project_0.json']
+        target_project = 'project/ed79221b-9713-44cd-94af-183f88c348cd'
+        source_project = 'project/6615efae-fca8-4dd2-a223-9cfcf30fe94d'
+        target_metadata[target_project] = source_metadata[source_project]
         self._index_bundle(has_cells_bundle)
         expected = {
             'total_estimated_cells': 10000,
@@ -2171,7 +2175,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
                                        version='2019-10-03T10:55:24.911627Z')
         bundle = self._load_canned_bundle(bundle_fqid)
-        project = bundle.metadata['project_0.json']
+        project = bundle.metadata['project/116965f3-f094-4769-9d28-ae675c1b569c']
         contributor = project['contributors'][0]
         assert contributor['institution'] == 'Lund University'
         contributor['institution'] += ' || LabMED'

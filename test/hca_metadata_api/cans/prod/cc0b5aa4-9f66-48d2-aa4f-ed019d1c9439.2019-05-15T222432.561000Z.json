@@ -158,7 +158,7 @@
         }
     ],
     "metadata": {
-        "cell_suspension_0.json": {
+        "cell_suspension/01ba6be9-ed4b-4c6b-ae05-2e06aadc2019": {
             "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.1.0/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -173,7 +173,7 @@
                 "update_date": "2019-05-14T12:00:06.941Z"
             }
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/74eb3cb5-918a-49fc-9e15-3ac49fd54caf": {
             "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.2.0/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -191,7 +191,7 @@
                 "update_date": "2019-05-14T11:46:47.512Z"
             }
         },
-        "donor_organism_0.json": {
+        "donor_organism/63818269-c4d9-429b-85a3-db39c0dd7fa0": {
             "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.3.0/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -216,7 +216,7 @@
                 "update_date": "2019-05-14T11:29:50.173Z"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/61fd5348-92c5-446b-a57a-746330cebf76": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -230,7 +230,7 @@
                 "update_date": "2019-05-14T11:21:17.762Z"
             }
         },
-        "supplementary_file_0.json": {
+        "supplementary_file/e738a267-87fc-4070-abc7-b3be6442c6d0": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.0.0/supplementary_file",
             "schema_type": "file",
             "file_core": {
@@ -243,7 +243,7 @@
                 "update_date": "2019-05-14T11:01:15.816Z"
             }
         },
-        "supplementary_file_1.json": {
+        "supplementary_file/01a1d04b-05d0-4904-b627-68b0dc02bc17": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.0.0/supplementary_file",
             "schema_type": "file",
             "file_core": {
@@ -256,7 +256,7 @@
                 "update_date": "2019-05-14T11:01:09.564Z"
             }
         },
-        "project_0.json": {
+        "project/8c3c290d-dfff-4553-8868-54ce45f4ba7f": {
             "describedBy": "https://schema.humancellatlas.org/type/project/14.0.0/project",
             "schema_type": "project",
             "project_core": {
@@ -271,7 +271,7 @@
                 "update_date": "2019-05-14T11:20:51.382Z"
             }
         },
-        "process_0.json": {
+        "process/91f475ec-be51-4f1e-a904-74b10b7259f1": {
             "process_core": {
                 "process_id": "proc_21784_6#51"
             },
@@ -283,7 +283,7 @@
                 "update_date": "2019-05-14T12:10:53.274Z"
             }
         },
-        "process_1.json": {
+        "process/e521d67d-c134-4dbd-9555-29e23f0463c5": {
             "process_core": {
                 "process_id": "process_id_366"
             },
@@ -295,7 +295,7 @@
                 "update_date": "2019-05-14T12:27:20.135Z"
             }
         },
-        "process_2.json": {
+        "process/453a352c-94fb-4d3b-b609-df1e7abf8c09": {
             "process_core": {
                 "process_id": "process_id_24"
             },

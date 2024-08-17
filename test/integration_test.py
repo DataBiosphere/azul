@@ -1943,13 +1943,12 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 self.assertIsInstance(metadata, dict)
                 self.assertIsInstance(links, dict)
                 self.assertIsInstance(stitched, list)
-                manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
-                metadata_files = sorted(metadata.keys())
-                self.assertListEqual(manifest_files, metadata_files)
+                manifest_ids = sorted(e['uuid'] for e in manifest if e['indexed'])
                 metadata_ids = {
-                    entry['provenance']['document_id']
-                    for entry in metadata.values()
+                    EntityReference.parse(ref).entity_id
+                    for ref in metadata.keys()
                 }
+                self.assertListEqual(manifest_ids, sorted(metadata_ids))
                 self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
                 self.assertEqual({'entities', 'links'}, bundle_json.keys())

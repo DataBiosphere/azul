@@ -998,7 +998,7 @@
         }
     ],
     "metadata": {
-        "cell_suspension_0.json": {
+        "cell_suspension/02201088-f3be-46ce-bb04-e7c464189900": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -1022,7 +1022,7 @@
                 "update_date": "2018-10-16T08:05:07.167Z"
             }
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/4c2b6ea0-43eb-4e37-b973-f2bdbc724e92": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -1057,7 +1057,7 @@
                 "update_date": "2018-10-16T08:03:01.801Z"
             }
         },
-        "donor_organism_0.json": {
+        "donor_organism/d919428e-d58b-4815-b36a-c9f186df6582": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -1103,7 +1103,7 @@
                 "update_date": "2018-10-16T07:55:45.931Z"
             }
         },
-        "analysis_file_0.json": {
+        "analysis_file/3404deaa-6274-4b78-99ae-442dd401714c": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1116,7 +1116,7 @@
                 "update_date": "2018-10-24T23:40:09.753Z"
             }
         },
-        "analysis_file_1.json": {
+        "analysis_file/884d5482-3432-4259-b551-955ba35becc2": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1129,7 +1129,7 @@
                 "update_date": "2018-10-24T23:40:06.755Z"
             }
         },
-        "analysis_file_2.json": {
+        "analysis_file/77d3b337-d169-44a5-9b6a-be1c6d1b31b7": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1142,7 +1142,7 @@
                 "update_date": "2018-10-24T23:40:09.754Z"
             }
         },
-        "analysis_file_3.json": {
+        "analysis_file/b115459d-d690-418c-a608-48ede1cc5a43": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1155,7 +1155,7 @@
                 "update_date": "2018-10-24T23:40:06.755Z"
             }
         },
-        "analysis_file_4.json": {
+        "analysis_file/05ea34ca-995b-4c30-9f87-81ad07e61305": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1168,7 +1168,7 @@
                 "update_date": "2018-10-24T23:40:12.765Z"
             }
         },
-        "analysis_file_5.json": {
+        "analysis_file/03e676dd-1718-40e0-a246-f3c6a594e334": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1181,7 +1181,7 @@
                 "update_date": "2018-10-24T23:40:18.754Z"
             }
         },
-        "analysis_file_6.json": {
+        "analysis_file/19fee968-3d70-43a1-a64a-a778d656bd2e": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1194,7 +1194,7 @@
                 "update_date": "2018-10-24T23:40:21.780Z"
             }
         },
-        "analysis_file_7.json": {
+        "analysis_file/edd03152-3219-41cd-9129-62f2e8944e91": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1207,7 +1207,7 @@
                 "update_date": "2018-10-24T23:40:21.759Z"
             }
         },
-        "analysis_file_8.json": {
+        "analysis_file/e8972873-6e54-40d8-85ca-790a8d5688d0": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1220,7 +1220,7 @@
                 "update_date": "2018-10-24T23:40:21.780Z"
             }
         },
-        "analysis_file_9.json": {
+        "analysis_file/babd98f7-c1ae-4a5d-bf85-7cb347a3ce96": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1233,7 +1233,7 @@
                 "update_date": "2018-10-24T23:40:24.806Z"
             }
         },
-        "analysis_file_10.json": {
+        "analysis_file/3314dd32-6acf-4841-83a4-03d4807d1365": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1246,7 +1246,7 @@
                 "update_date": "2018-10-24T23:40:24.810Z"
             }
         },
-        "analysis_file_11.json": {
+        "analysis_file/f6e76583-bc31-41e1-8695-7198e7842ea0": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1259,7 +1259,7 @@
                 "update_date": "2018-10-24T23:40:24.812Z"
             }
         },
-        "analysis_file_12.json": {
+        "analysis_file/f2473460-2b19-4b16-97c7-6eaa9060df6f": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1272,7 +1272,7 @@
                 "update_date": "2018-10-24T23:40:12.765Z"
             }
         },
-        "analysis_file_13.json": {
+        "analysis_file/0fa2c00a-02e4-444d-998d-b812d647565f": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1285,7 +1285,7 @@
                 "update_date": "2018-10-24T23:40:06.756Z"
             }
         },
-        "analysis_file_14.json": {
+        "analysis_file/09989709-cca8-4f82-a07f-6fa6a9fa3e03": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1298,7 +1298,7 @@
                 "update_date": "2018-10-24T23:40:27.764Z"
             }
         },
-        "analysis_file_15.json": {
+        "analysis_file/020634de-da4b-47bb-b084-8c2d7e70ae17": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1311,7 +1311,7 @@
                 "update_date": "2018-10-24T23:40:15.768Z"
             }
         },
-        "analysis_file_16.json": {
+        "analysis_file/f6a47716-c494-4229-85e9-bd1f20afa5d1": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1324,7 +1324,7 @@
                 "update_date": "2018-10-24T23:40:18.758Z"
             }
         },
-        "analysis_file_17.json": {
+        "analysis_file/c82423e7-a621-4fee-bed2-5efa916124e3": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1337,7 +1337,7 @@
                 "update_date": "2018-10-24T23:40:27.770Z"
             }
         },
-        "analysis_file_18.json": {
+        "analysis_file/401a3d93-c4c9-4f59-960e-41de71839619": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1350,7 +1350,7 @@
                 "update_date": "2018-10-24T23:40:27.759Z"
             }
         },
-        "analysis_file_19.json": {
+        "analysis_file/f06c17a5-8197-4b6f-928a-55ffa8d796d2": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1363,7 +1363,7 @@
                 "update_date": "2018-10-24T23:40:30.762Z"
             }
         },
-        "analysis_file_20.json": {
+        "analysis_file/95bdd09a-cc14-4a7b-b0f8-96cd4d6dcb1c": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1376,7 +1376,7 @@
                 "update_date": "2018-10-24T23:40:30.757Z"
             }
         },
-        "analysis_file_21.json": {
+        "analysis_file/a3d20426-80af-4c2b-90a6-6e6644539aad": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1389,7 +1389,7 @@
                 "update_date": "2018-10-24T23:40:30.762Z"
             }
         },
-        "analysis_file_22.json": {
+        "analysis_file/f6cdb1dd-df7c-4dab-bdd1-4bb59a2044f7": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1402,7 +1402,7 @@
                 "update_date": "2018-10-24T23:40:33.825Z"
             }
         },
-        "analysis_file_23.json": {
+        "analysis_file/4de506d4-78d1-4de2-9780-e91f8a9d7b6d": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1415,7 +1415,7 @@
                 "update_date": "2018-10-24T23:40:33.825Z"
             }
         },
-        "analysis_file_24.json": {
+        "analysis_file/c8aa1527-f40c-4e50-b7ca-51646562422b": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1428,7 +1428,7 @@
                 "update_date": "2018-10-24T23:40:33.831Z"
             }
         },
-        "analysis_file_25.json": {
+        "analysis_file/6cc5378a-295b-4e72-80a2-370434fd2b94": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1441,7 +1441,7 @@
                 "update_date": "2018-10-24T23:40:36.805Z"
             }
         },
-        "analysis_file_26.json": {
+        "analysis_file/75178504-d0ef-4d32-a3e6-6faa1026be84": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1454,7 +1454,7 @@
                 "update_date": "2018-10-24T23:40:36.794Z"
             }
         },
-        "analysis_file_27.json": {
+        "analysis_file/215add4a-6239-4443-9b0c-c5e2b6e7052f": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1467,7 +1467,7 @@
                 "update_date": "2018-10-24T23:40:36.798Z"
             }
         },
-        "analysis_file_28.json": {
+        "analysis_file/f894b6e3-98b3-4161-97e4-a8d4ac9ad677": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1480,7 +1480,7 @@
                 "update_date": "2018-10-24T23:40:39.785Z"
             }
         },
-        "analysis_file_29.json": {
+        "analysis_file/f909af01-995b-499a-9086-fd2a90123102": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1493,7 +1493,7 @@
                 "update_date": "2018-10-24T23:40:39.793Z"
             }
         },
-        "analysis_file_30.json": {
+        "analysis_file/75d692f4-e796-453d-b260-44a42f126c93": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1506,7 +1506,7 @@
                 "update_date": "2018-10-24T23:40:39.800Z"
             }
         },
-        "analysis_file_31.json": {
+        "analysis_file/08be64a7-9ef4-4d17-b7d8-41f79c24c987": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1519,7 +1519,7 @@
                 "update_date": "2018-10-24T23:40:42.786Z"
             }
         },
-        "analysis_file_32.json": {
+        "analysis_file/770c9eb2-f63f-4bd2-94c1-e2b6da1feeac": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1532,7 +1532,7 @@
                 "update_date": "2018-10-24T23:40:42.787Z"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/b66c9d19-322c-42d4-8b65-3478fd0afa6a": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -1550,7 +1550,7 @@
                 "update_date": "2018-10-16T08:27:14.280Z"
             }
         },
-        "sequence_file_1.json": {
+        "sequence_file/02c8352d-b2ba-4de4-a574-335eb9a61e0e": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -1568,7 +1568,7 @@
                 "update_date": "2018-10-16T08:27:16.223Z"
             }
         },
-        "project_0.json": {
+        "project/08e7b6ba-5825-47e9-be2d-7978533c5f8c": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.3/project",
             "schema_type": "project",
             "project_core": {
@@ -1636,7 +1636,7 @@
                 "update_date": "2018-10-16T07:55:45.727Z"
             }
         },
-        "analysis_protocol_0.json": {
+        "analysis_protocol/7a56f120-c055-4b63-acdf-8cc80c3555c1": {
             "computational_method": "SmartSeq2SingleCell",
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/analysis/8.0.3/analysis_protocol",
             "protocol_core": {
@@ -1652,7 +1652,7 @@
                 "update_date": "2018-10-24T23:35:51.714Z"
             }
         },
-        "library_preparation_protocol_0.json": {
+        "library_preparation_protocol/7faadd95-bcee-4627-8990-04b79cf617f9": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1680,7 +1680,7 @@
                 "update_date": "2018-10-16T07:54:00.211Z"
             }
         },
-        "sequencing_protocol_0.json": {
+        "sequencing_protocol/dcf48263-da0f-4fb8-9af7-2cb0e3af5b09": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1700,7 +1700,7 @@
                 "update_date": "2018-10-16T07:54:00.089Z"
             }
         },
-        "dissociation_protocol_0.json": {
+        "dissociation_protocol/2f0c9a0e-bf38-4df9-ba9c-d3502b843e2b": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1721,7 +1721,7 @@
                 "update_date": "2018-10-16T07:54:00.103Z"
             }
         },
-        "enrichment_protocol_0.json": {
+        "enrichment_protocol/d9fdfade-52d2-40df-b299-e9aa292ea120": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1739,7 +1739,7 @@
                 "update_date": "2018-10-16T07:54:00.229Z"
             }
         },
-        "analysis_process_0.json": {
+        "analysis_process/4460eba6-6517-4283-992f-0e0d3ce0ef45": {
             "analysis_run_type": "run",
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/analysis/8.0.3/analysis_process",
             "input_bundles": [
@@ -2183,7 +2183,7 @@
                 "update_date": "2018-10-24T23:35:57.706Z"
             }
         },
-        "process_0.json": {
+        "process/33d33846-5287-425b-a94f-2c3ec14a323c": {
             "process_core": {
                 "process_id": "SRR3564380"
             },
@@ -2195,7 +2195,7 @@
                 "update_date": "2018-10-16T08:11:24.186Z"
             }
         },
-        "process_1.json": {
+        "process/34cb3bc6-661b-4bbd-b51c-0b5e6f5e248d": {
             "process_core": {
                 "process_id": "process_id_2179"
             },
@@ -2207,7 +2207,7 @@
                 "update_date": "2018-10-16T08:08:00.774Z"
             }
         },
-        "process_2.json": {
+        "process/4a1432a1-ae18-45f2-b574-9869b7242289": {
             "process_core": {
                 "process_id": "process_id_8"
             },

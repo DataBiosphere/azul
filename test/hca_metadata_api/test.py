@@ -35,6 +35,9 @@ from more_itertools import (
     one,
 )
 
+from azul.indexer.document import (
+    EntityReference,
+)
 from azul_test_case import (
     AzulUnitTestCase,
 )
@@ -573,10 +576,11 @@ class TestAccessorApi(AzulUnitTestCase):
         uuid = '68bdc676-c442-4581-923e-319c1c2d9018'
         version = '2018-10-07T130111.835234Z'
         manifest, metadata, links = self._canned_bundle('staging', uuid, version)
+        project_id = '519b58ef-6462-4ed3-8c0d-375b54f53c31'
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata, links)
-            project = bundle.projects[UUID('519b58ef-6462-4ed3-8c0d-375b54f53c31')]
+            project = bundle.projects[UUID(project_id)]
             self.assertEqual(len(project.publications), 1)
             publication = project.publications.pop()
             title = 'Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.'
@@ -594,10 +598,10 @@ class TestAccessorApi(AzulUnitTestCase):
             self.assertEqual(project.supplementary_links, supplementary_links)
 
         assert_bundle()
-
-        for publication in metadata['project_0.json']['publications']:
+        project_metadata = metadata[f'project/{project_id}']
+        for publication in project_metadata['publications']:
             self._rename_keys(publication, title='publication_title', url='publication_url')
-        for contributor in metadata['project_0.json']['contributors']:
+        for contributor in project_metadata['contributors']:
             if 'project_role' in contributor:
                 contributor['project_role'] = dict(text=contributor['project_role'])
 
@@ -607,10 +611,11 @@ class TestAccessorApi(AzulUnitTestCase):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
         manifest, metadata, links = self._canned_bundle('prod', uuid, version)
+        project_id = 'd96c2451-6e22-441f-a3e6-70fd0878bb1b'
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata, links)
-            project = bundle.projects[UUID('d96c2451-6e22-441f-a3e6-70fd0878bb1b')]
+            project = bundle.projects[UUID(project_id)]
             self.assertEqual(len(project.contributors), 5)
             expected_names = {
                 'Sabina,,Kanton',
@@ -625,7 +630,7 @@ class TestAccessorApi(AzulUnitTestCase):
 
         assert_bundle()
 
-        for contributor in metadata['project_0.json']['contributors']:
+        for contributor in metadata[f'project/{project_id}']['contributors']:
             self._rename_keys(contributor, name='contact_name')
 
         assert_bundle()
@@ -648,8 +653,8 @@ class TestAccessorApi(AzulUnitTestCase):
 
         assert_bundle()
 
-        for file_name, file_content in metadata.items():
-            if file_name.startswith('sequence_file_') or file_name.startswith('supplementary_file_'):
+        for ref, file_content in metadata.items():
+            if EntityReference.parse(ref).entity_type in {'sequence_file', 'supplementary_file_'}:
                 self._rename_keys(file_content['file_core'], format='file_format')
 
         assert_bundle()

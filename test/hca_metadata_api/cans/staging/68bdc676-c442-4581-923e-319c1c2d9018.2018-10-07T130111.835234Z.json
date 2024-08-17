@@ -182,7 +182,7 @@
         }
     ],
     "metadata": {
-        "cell_suspension_0.json": {
+        "cell_suspension/ef97eef1-a436-4462-a152-1a2b86ee8831": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -217,7 +217,7 @@
                 "update_date": "2018-10-07T12:04:46.292Z"
             }
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/80cb479b-dcb4-4dbb-a75d-0249a964bb70": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -252,7 +252,7 @@
                 "update_date": "2018-10-07T12:01:39.672Z"
             }
         },
-        "donor_organism_0.json": {
+        "donor_organism/6c992ba4-c132-4dd3-840e-13cf3f38243e": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -296,7 +296,7 @@
                 "update_date": "2018-10-07T12:00:40.749Z"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/f3d5c7cb-7ab4-4903-8e0e-dc942121fe27": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -314,7 +314,7 @@
                 "update_date": "2018-10-07T12:08:49.204Z"
             }
         },
-        "project_0.json": {
+        "project/519b58ef-6462-4ed3-8c0d-375b54f53c31": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.3/project",
             "schema_type": "project",
             "project_core": {
@@ -411,7 +411,7 @@
                 "update_date": "2018-10-07T12:00:40.290Z"
             }
         },
-        "library_preparation_protocol_0.json": {
+        "library_preparation_protocol/5f82b9c4-f3d7-410c-b843-0e5cdec9efa5": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -446,7 +446,7 @@
                 "update_date": "2018-10-07T11:58:50.532Z"
             }
         },
-        "sequencing_protocol_0.json": {
+        "sequencing_protocol/d678165b-2753-4393-bf3b-5e2a09ba892c": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -469,7 +469,7 @@
                 "update_date": "2018-10-07T11:58:50.511Z"
             }
         },
-        "dissociation_protocol_0.json": {
+        "dissociation_protocol/920078d0-b17e-4f23-8cf6-0674b19e7bec": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -488,7 +488,7 @@
                 "update_date": "2018-10-07T11:58:50.432Z"
             }
         },
-        "enrichment_protocol_0.json": {
+        "enrichment_protocol/644c5f2d-33c8-4bf4-b411-b2dbec8b8227": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -508,7 +508,7 @@
                 "update_date": "2018-10-07T11:58:50.413Z"
             }
         },
-        "collection_protocol_0.json": {
+        "collection_protocol/403b586f-fd8d-45f2-a431-4bb6cc33d7d4": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/8.2.6/collection_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -527,7 +527,7 @@
                 "update_date": "2018-10-07T11:58:50.563Z"
             }
         },
-        "enrichment_protocol_1.json": {
+        "enrichment_protocol/9ab53e6a-464e-44b1-aa24-12daca989969": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -546,7 +546,7 @@
                 "update_date": "2018-10-07T11:58:50.474Z"
             }
         },
-        "process_0.json": {
+        "process/18d49b08-d095-4371-bb34-151037f9f461": {
             "insdc_experiment": {
                 "insdc_experiment": "SRX3366459"
             },
@@ -561,7 +561,7 @@
                 "update_date": "2018-10-07T12:08:28.754Z"
             }
         },
-        "process_1.json": {
+        "process/d13a5a85-b8c7-4a07-9c0c-9180bd0a78eb": {
             "process_core": {
                 "process_id": "process_id_2255"
             },
@@ -573,7 +573,7 @@
                 "update_date": "2018-10-07T12:06:52.636Z"
             }
         },
-        "process_2.json": {
+        "process/5a15ed38-5e37-44ff-ba35-0d17bb8564bd": {
             "process_core": {
                 "process_location": "Sri Lanka",
                 "process_id": "process_id_15"

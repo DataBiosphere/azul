@@ -26,7 +26,7 @@
         }
     ],
     "metadata": {
-        "project_0.json": {
+        "project/93f6a42f-1790-4af4-b5d1-8c436cb6feae": {
             "content": {
                 "describedBy": "https://schema.humancellatlas.org/type/project/5.1.0/project",
                 "project_core": {
@@ -150,7 +150,7 @@
             "schema_version": "5.1.0",
             "schema_type": "project_bundle"
         },
-        "cell_suspension_0.json": {
+        "cell_suspension/603a818f-dbe7-466a-8241-58b9c1618846": {
             "content": {
                 "genus_species": [
                     {
@@ -181,7 +181,7 @@
                 "document_id": "603a818f-dbe7-466a-8241-58b9c1618846"
             }
         },
-        "specimen_from_organism_1.json": {
+        "specimen_from_organism/4e41a067-dbb7-439f-b72f-80240ce858f6": {
             "content": {
                 "biomaterial_core": {
                     "has_input_biomaterial": "1139",
@@ -213,7 +213,7 @@
                 "document_id": "4e41a067-dbb7-439f-b72f-80240ce858f6"
             }
         },
-        "donor_organism_2.json": {
+        "donor_organism/bf8492ad-1d45-46aa-9fe9-67058b8c2410": {
             "content": {
                 "is_living": false,
                 "mus_musculus_specific": {
@@ -258,7 +258,7 @@
                 "document_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/d2f32681-9c1a-4dfd-b506-c24327afb8d1": {
             "content": {
                 "file_core": {
                     "file_name": "22011_1#268_1.fastq.gz",
@@ -274,7 +274,7 @@
                 "document_id": "d2f32681-9c1a-4dfd-b506-c24327afb8d1"
             }
         },
-        "sequence_file_1.json": {
+        "sequence_file/aa662c76-d220-49f4-8316-f4af5820d60b": {
             "content": {
                 "file_core": {
                     "file_name": "22011_1#268_2.fastq.gz",
@@ -290,7 +290,7 @@
                 "document_id": "aa662c76-d220-49f4-8316-f4af5820d60b"
             }
         },
-        "dissociation_process_0.json": {
+        "dissociation_process/b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902": {
             "content": {
                 "nucleic_acid_source": "single cell",
                 "process_core": {
@@ -308,7 +308,7 @@
                 "document_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902"
             }
         },
-        "process_1.json": {
+        "process/f03590d8-4e65-478e-bc67-a8c64d2c93e9": {
             "content": {
                 "process_core": {
                     "process_id": "sampling_process_6"
@@ -323,7 +323,7 @@
                 "document_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9"
             }
         },
-        "enrichment_process_2.json": {
+        "enrichment_process/2f2fb366-249f-49e3-b47d-a0bb39d9bc78": {
             "content": {
                 "enrichment_method": "FACS",
                 "process_core": {
@@ -340,7 +340,7 @@
                 "document_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78"
             }
         },
-        "enrichment_process_3.json": {
+        "enrichment_process/a192f0d7-8e8e-48ae-b80d-3cb18acb3215": {
             "content": {
                 "enrichment_method": "FACS",
                 "process_core": {
@@ -357,7 +357,7 @@
                 "document_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215"
             }
         },
-        "library_preparation_process_4.json": {
+        "library_preparation_process/687065f3-c70f-46c3-8452-a5eead33a1bf": {
             "content": {
                 "input_nucleic_acid_molecule": {
                     "text": "polyA RNA",
@@ -386,7 +386,7 @@
                 "document_id": "687065f3-c70f-46c3-8452-a5eead33a1bf"
             }
         },
-        "sequencing_process_5.json": {
+        "sequencing_process/2580dcf9-3f7d-4421-b962-ab860e10d072": {
             "content": {
                 "paired_ends": true,
                 "instrument_manufacturer_model": {
@@ -411,7 +411,7 @@
                 "document_id": "2580dcf9-3f7d-4421-b962-ab860e10d072"
             }
         },
-        "protocol_0.json": {
+        "protocol/c9a1e203-bddc-45d3-87c4-6010be8e0127": {
             "content": {
                 "protocol_core": {
                     "protocol_name": "Extracting cells from lymph nodes",
@@ -428,7 +428,7 @@
                 "document_id": "c9a1e203-bddc-45d3-87c4-6010be8e0127"
             }
         },
-        "protocol_1.json": {
+        "protocol/a1c80daf-58b0-4b7a-8e29-d0130493c8e6": {
             "content": {
                 "protocol_core": {
                     "protocol_name": "FACS sorting cells by surface markers",
@@ -445,7 +445,7 @@
                 "document_id": "a1c80daf-58b0-4b7a-8e29-d0130493c8e6"
             }
         },
-        "protocol_2.json": {
+        "protocol/52d79a89-4b49-4c1b-b857-5cc5da07f643": {
             "content": {
                 "protocol_core": {
                     "protocol_name": "Make/amplify cDNA for each cell",
@@ -466,7 +466,7 @@
                 "document_id": "52d79a89-4b49-4c1b-b857-5cc5da07f643"
             }
         },
-        "protocol_3.json": {
+        "protocol/ca6096cf-13c1-4930-8308-6ab05865e2c9": {
             "content": {
                 "protocol_core": {
                     "protocol_name": "Sequencing SmartSeq2 cells",

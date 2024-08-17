@@ -146,7 +146,7 @@
         }
     ],
     "metadata": {
-        "project_0.json": {
+        "project/90bf705c-d891-5ce2-aa54-094488b445c6": {
             "array_express_accessions": [
                 "E-MTAB-10026"
             ],
@@ -263,7 +263,7 @@
             ],
             "schema_type": "project"
         },
-        "process_0.json": {
+        "process/3ac62c33-93e1-56b4-b857-59497f5d942d": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
@@ -277,7 +277,7 @@
             },
             "schema_type": "process"
         },
-        "process_1.json": {
+        "process/ae8529dc-3bc9-5061-828a-3c5dfacded64": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
@@ -291,7 +291,7 @@
             },
             "schema_type": "process"
         },
-        "process_2.json": {
+        "process/c6b932ff-69f1-58b1-a6e6-30319f04541b": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
@@ -305,7 +305,7 @@
             },
             "schema_type": "process"
         },
-        "imaged_specimen_0.json": {
+        "imaged_specimen/0bf91a05-85df-5d7d-bcc0-a625c5921de2": {
             "biomaterial_core": {
                 "biomaterial_id": "AP3_imagedspecimen",
                 "biomaterial_name": "AP3_imagedspecimen",
@@ -324,7 +324,7 @@
             "schema_type": "biomaterial",
             "slice_thickness": 10.0
         },
-        "image_file_0.json": {
+        "image_file/b29a331e-2d7b-507f-8e47-d6151bfeeb21": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/2.5.0/image_file",
             "file_core": {
                 "content_description": [
@@ -347,7 +347,7 @@
             },
             "schema_type": "file"
         },
-        "imaging_protocol_0.json": {
+        "imaging_protocol/50150415-898c-5dff-826e-55f9cb937b93": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/11.4.0/imaging_protocol",
             "magnification": "40x",
             "microscopy_technique": {
@@ -372,7 +372,7 @@
             },
             "schema_type": "protocol"
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/9a0bb729-552a-5f6e-9ed6-1f988c259531": {
             "biomaterial_core": {
                 "biomaterial_id": "AP3_specimen",
                 "biomaterial_name": "AP2_specimen",
@@ -409,7 +409,7 @@
             },
             "schema_type": "biomaterial"
         },
-        "imaging_preparation_protocol_0.json": {
+        "imaging_preparation_protocol/7cd840db-f395-5a61-bd17-72c2b2319c23": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/2.3.0/imaging_preparation_protocol",
             "protocol_core": {
                 "protocol_description": "All tissues were sectioned using the Leica CX3050S cryostat and were cut at 10um. Tissue optimization was performed to obtain permeabilization time for fetal tissue (12 min).",
@@ -424,7 +424,7 @@
             },
             "schema_type": "protocol"
         },
-        "donor_organism_0.json": {
+        "donor_organism/2d7b50d8-cd06-5408-9fde-1faed01c9ab2": {
             "biomaterial_core": {
                 "biomaterial_id": "AP3",
                 "biomaterial_name": "Sanger_AP3",
@@ -467,7 +467,7 @@
             "schema_type": "biomaterial",
             "sex": "unknown"
         },
-        "collection_protocol_0.json": {
+        "collection_protocol/c5752f73-3511-55e1-95af-040ab3924bce": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
             "method": {
                 "ontology": "EFO:0009121",

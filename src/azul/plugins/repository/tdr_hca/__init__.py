@@ -208,9 +208,9 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                                      checksums=Checksums.from_json(descriptor),
                                      drs_uri=self._parse_drs_uri(row['file_id'], descriptor))
         content = row['content']
-        self.metadata[entity_key] = (json.loads(content)
-                                     if isinstance(content, str)
-                                     else content)
+        self.metadata[str(entity)] = (json.loads(content)
+                                      if isinstance(content, str)
+                                      else content)
 
     metadata_columns: ClassVar[set[str]] = {
         'version',

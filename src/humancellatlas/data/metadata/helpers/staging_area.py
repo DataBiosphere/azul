@@ -29,6 +29,9 @@ from azul import (
     reject,
     require,
 )
+from azul.indexer.document import (
+    EntityReference,
+)
 from azul.types import (
     JSON,
     MutableJSON,
@@ -158,7 +161,8 @@ class StagingArea:
                 json_file_name = f'{entity_type}_{i}.json'
                 metadata_file = self.metadata[entity_id]
                 json_content = metadata_file.content
-                metadata[json_file_name] = json_content
+                key = str(EntityReference(entity_type=entity_type, entity_id=entity_id))
+                metadata[key] = json_content
                 file_manifest = {
                     'content-type': 'application/json;',
                     'crc32c': '0' * 8,

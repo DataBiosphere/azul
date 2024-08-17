@@ -146,7 +146,7 @@
         }
     ],
     "metadata": {
-        "project_0.json": {
+        "project/6ec8e247-2eb0-42d1-823f-75facd03988d": {
             "content": {
                 "contributors": [
                     {
@@ -250,7 +250,7 @@
             "schema_version": "5.1.0",
             "schema_type": "project_bundle"
         },
-        "cell_suspension_0.json": {
+        "cell_suspension/a86b1fda-bb1d-4ef8-87d9-392517d4a937": {
             "content": {
                 "biomaterial_core": {
                     "has_input_biomaterial": "A1-Spl-0-TL5",
@@ -277,7 +277,7 @@
                 "document_id": "a86b1fda-bb1d-4ef8-87d9-392517d4a937"
             }
         },
-        "specimen_from_organism_1.json": {
+        "specimen_from_organism/d231b8f3-8fa3-4f3b-a8e5-66eca6228ae7": {
             "content": {
                 "state_of_specimen": {
                     "ischemic_time": 7200,
@@ -320,7 +320,7 @@
                 "document_id": "d231b8f3-8fa3-4f3b-a8e5-66eca6228ae7"
             }
         },
-        "donor_organism_2.json": {
+        "donor_organism/9a7acc6d-8352-497e-b162-5e63b380366f": {
             "content": {
                 "is_living": false,
                 "death": {
@@ -381,7 +381,7 @@
                 "document_id": "9a7acc6d-8352-497e-b162-5e63b380366f"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/49fddace-4c59-41c1-8930-0707460132d7": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S1_L001_I1_001.fastq.gz",
@@ -397,7 +397,7 @@
                 "document_id": "49fddace-4c59-41c1-8930-0707460132d7"
             }
         },
-        "sequence_file_1.json": {
+        "sequence_file/771d9bcb-a5ff-43b5-b3e8-e738cc4c05bf": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S1_L001_R1_001.fastq.gz",
@@ -413,7 +413,7 @@
                 "document_id": "771d9bcb-a5ff-43b5-b3e8-e738cc4c05bf"
             }
         },
-        "sequence_file_2.json": {
+        "sequence_file/8ebfd02e-2a74-4367-80db-48082f331625": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S1_L001_R2_001.fastq.gz",
@@ -429,7 +429,7 @@
                 "document_id": "8ebfd02e-2a74-4367-80db-48082f331625"
             }
         },
-        "sequence_file_3.json": {
+        "sequence_file/fea5cc65-6d94-4d1e-a807-ec248f79b83d": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S2_L001_I1_001.fastq.gz",
@@ -445,7 +445,7 @@
                 "document_id": "fea5cc65-6d94-4d1e-a807-ec248f79b83d"
             }
         },
-        "sequence_file_4.json": {
+        "sequence_file/cee5b925-919c-4c77-8ea2-be51a1728e2b": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S2_L001_R1_001.fastq.gz",
@@ -461,7 +461,7 @@
                 "document_id": "cee5b925-919c-4c77-8ea2-be51a1728e2b"
             }
         },
-        "sequence_file_5.json": {
+        "sequence_file/c548066c-9994-415a-98cb-3df2933937ff": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S2_L001_R2_001.fastq.gz",
@@ -477,7 +477,7 @@
                 "document_id": "c548066c-9994-415a-98cb-3df2933937ff"
             }
         },
-        "sequence_file_6.json": {
+        "sequence_file/b7d8d43c-bee6-48eb-bb36-0c07701c47b5": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S3_L001_I1_001.fastq.gz",
@@ -493,7 +493,7 @@
                 "document_id": "b7d8d43c-bee6-48eb-bb36-0c07701c47b5"
             }
         },
-        "sequence_file_7.json": {
+        "sequence_file/6bc5b7ef-68f8-445d-8460-f04180c4fae1": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S3_L001_R1_001.fastq.gz",
@@ -509,7 +509,7 @@
                 "document_id": "6bc5b7ef-68f8-445d-8460-f04180c4fae1"
             }
         },
-        "sequence_file_8.json": {
+        "sequence_file/17add91c-4063-4684-859d-d739baa4b9bb": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S3_L001_R2_001.fastq.gz",
@@ -525,7 +525,7 @@
                 "document_id": "17add91c-4063-4684-859d-d739baa4b9bb"
             }
         },
-        "sequence_file_9.json": {
+        "sequence_file/b7554cb7-dc5a-4b07-9c7a-c04466d30576": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S4_L001_I1_001.fastq.gz",
@@ -541,7 +541,7 @@
                 "document_id": "b7554cb7-dc5a-4b07-9c7a-c04466d30576"
             }
         },
-        "sequence_file_10.json": {
+        "sequence_file/5239e70b-7d8d-4285-971f-9a156441c2f2": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S4_L001_R1_001.fastq.gz",
@@ -557,7 +557,7 @@
                 "document_id": "5239e70b-7d8d-4285-971f-9a156441c2f2"
             }
         },
-        "sequence_file_11.json": {
+        "sequence_file/024c5cb6-f473-40c9-9eb3-da08caf3180e": {
             "content": {
                 "file_core": {
                     "file_name": "HCATisStabAug177078016_S4_L001_R2_001.fastq.gz",
@@ -573,7 +573,7 @@
                 "document_id": "024c5cb6-f473-40c9-9eb3-da08caf3180e"
             }
         },
-        "process_0.json": {
+        "process/7d3747dc-9e3a-4740-8504-82086ad1d63a": {
             "content": {
                 "process_core": {
                     "process_id": "wrapper_process_7"
@@ -588,7 +588,7 @@
                 "document_id": "7d3747dc-9e3a-4740-8504-82086ad1d63a"
             }
         },
-        "process_1.json": {
+        "process/8797a64c-b498-4de6-aea7-86401199bee4": {
             "content": {
                 "process_core": {
                     "process_id": "sampling_process_3"
@@ -603,7 +603,7 @@
                 "document_id": "8797a64c-b498-4de6-aea7-86401199bee4"
             }
         },
-        "library_preparation_process_2.json": {
+        "library_preparation_process/fa9febdf-425e-41bc-925f-b17f27b96e61": {
             "content": {
                 "input_nucleic_acid_molecule": {
                     "text": "polyA RNA",
@@ -636,7 +636,7 @@
                 "document_id": "fa9febdf-425e-41bc-925f-b17f27b96e61"
             }
         },
-        "sequencing_process_3.json": {
+        "sequencing_process/0c6332ef-633b-403b-b4ed-c61ccacf87c8": {
             "content": {
                 "process_core": {
                     "process_id": "sequencing_process_1",
@@ -657,7 +657,7 @@
                 "document_id": "0c6332ef-633b-403b-b4ed-c61ccacf87c8"
             }
         },
-        "protocol_0.json": {
+        "protocol/73b0c9ae-a5bb-446e-9c7b-d0954e6af425": {
             "content": {
                 "protocol_core": {
                     "protocol_name": "10X Genomics protocol - including loading single cells and library prep",
