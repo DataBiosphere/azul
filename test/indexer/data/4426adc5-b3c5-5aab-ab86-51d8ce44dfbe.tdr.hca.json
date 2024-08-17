@@ -1,7 +1,7 @@
 {
     "manifest": [
         {
-            "name": "supplementary_file_0.json",
+            "name": "",
             "uuid": "01a1d04b-05d0-4904-b627-68b0dc02bc17",
             "version": "2019-05-14T11:01:09.564000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -11,7 +11,7 @@
             "sha256": ""
         },
         {
-            "name": "analysis_protocol_0.json",
+            "name": "",
             "uuid": "099457a1-a453-54c6-aae5-b70dafa33bbd",
             "version": "2020-08-10T21:24:26.174274Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -21,7 +21,7 @@
             "sha256": ""
         },
         {
-            "name": "project_0.json",
+            "name": "",
             "uuid": "116965f3-f094-4769-9d28-ae675c1b569c",
             "version": "2019-10-03T10:54:38.894000Z",
             "content-type": "application/json; dcp-type=\"metadata/project\"",
@@ -31,7 +31,7 @@
             "sha256": ""
         },
         {
-            "name": "cell_suspension_0.json",
+            "name": "",
             "uuid": "201ae4d0-c7c6-4777-947f-18f5268884b6",
             "version": "2019-05-14T12:06:23.503000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -52,7 +52,7 @@
             "sha256": "1bb86ee570e328dcd72a684689ddd87c966209cfc4b2b5c36e50dd0e4c156cab"
         },
         {
-            "name": "donor_organism_0.json",
+            "name": "",
             "uuid": "3211ef8f-a60c-4892-ae55-91d6752dcd75",
             "version": "2019-05-14T11:29:52.575000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -62,7 +62,7 @@
             "sha256": ""
         },
         {
-            "name": "process_0.json",
+            "name": "",
             "uuid": "33e31f6f-fe78-45bd-ae57-10d2d14253cf",
             "version": "2019-05-14T12:29:57.858000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -72,7 +72,7 @@
             "sha256": ""
         },
         {
-            "name": "library_preparation_protocol_0.json",
+            "name": "",
             "uuid": "5b503dcb-dca6-4e4f-988b-f7100c030dc5",
             "version": "2019-05-14T11:06:42.648000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -82,7 +82,7 @@
             "sha256": ""
         },
         {
-            "name": "specimen_from_organism_0.json",
+            "name": "",
             "uuid": "5d82b884-7db4-47fa-9ccd-03054065c509",
             "version": "2019-05-14T11:59:17.317000Z",
             "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
@@ -105,7 +105,7 @@
             "s3_etag": "7e892bf8f6aa489ccb08a995c7f017e1"
         },
         {
-            "name": "process_1.json",
+            "name": "",
             "uuid": "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
             "version": "2019-05-14T12:20:34.464000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -115,7 +115,7 @@
             "sha256": ""
         },
         {
-            "name": "analysis_file_0.json",
+            "name": "",
             "uuid": "7a015307-6db9-541f-aaae-db9fdb41000f",
             "version": "2020-08-10T21:24:26.174274Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -125,7 +125,7 @@
             "sha256": ""
         },
         {
-            "name": "analysis_process_0.json",
+            "name": "",
             "uuid": "848c816e-4ae8-4c9a-9e3d-ebe447519ff4",
             "version": "2020-08-10T21:24:26.174274Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -135,7 +135,7 @@
             "sha256": ""
         },
         {
-            "name": "sequence_file_0.json",
+            "name": "",
             "uuid": "8f8b9587-237f-4995-9461-c96eac53d615",
             "version": "2019-05-14T12:18:53.532000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -145,7 +145,7 @@
             "sha256": ""
         },
         {
-            "name": "supplementary_file_1.json",
+            "name": "",
             "uuid": "a06cb5d5-2675-4d64-aeb8-79e0103715f3",
             "version": "2019-05-14T11:01:09.596000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -155,7 +155,7 @@
             "sha256": ""
         },
         {
-            "name": "analysis_file_1.json",
+            "name": "",
             "uuid": "b8b76328-854c-5862-a688-9b761a9cea86",
             "version": "2020-08-10T21:24:26.174274Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -178,7 +178,7 @@
             "s3_etag": "2742e1e78f6d4663bf41d3080396695c"
         },
         {
-            "name": "process_2.json",
+            "name": "",
             "uuid": "c0d18b81-0b54-4a11-864b-cd3f43b7e7bf",
             "version": "2019-05-14T12:26:53.666000Z",
             "content-type": "application/json; dcp-type=\"metadata/process\"",
@@ -212,7 +212,7 @@
             "s3_etag": "846fd9e6b98041df46a1ddb94e85b6b9"
         },
         {
-            "name": "enrichment_protocol_0.json",
+            "name": "",
             "uuid": "dd7f3d64-4b79-48f0-9d8c-4324594fe820",
             "version": "2019-05-14T11:06:42.695000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -222,7 +222,7 @@
             "sha256": ""
         },
         {
-            "name": "supplementary_file_2.json",
+            "name": "",
             "uuid": "e738a267-87fc-4070-abc7-b3be6442c6d0",
             "version": "2019-05-14T11:01:15.816000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -245,7 +245,7 @@
             "s3_etag": "8786a82f739d1848aa5be480faf65e70"
         },
         {
-            "name": "sequencing_protocol_0.json",
+            "name": "",
             "uuid": "eca2ab79-ad61-411f-815a-4f6d936d992b",
             "version": "2019-05-14T11:06:42.648000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
@@ -255,7 +255,7 @@
             "sha256": ""
         },
         {
-            "name": "sequence_file_1.json",
+            "name": "",
             "uuid": "ee7404a4-c183-4a75-8bd1-34b5fc140e81",
             "version": "2019-05-14T12:13:41.926000Z",
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -278,7 +278,7 @@
             "s3_etag": "6aca4df2ef18b97243967887837c3bef"
         },
         {
-            "name": "dissociation_protocol_0.json",
+            "name": "",
             "uuid": "fcba26aa-658c-4120-ab31-cc5a5a00f759",
             "version": "2019-05-14T11:06:42.781000Z",
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",

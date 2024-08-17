@@ -184,14 +184,13 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
 
     def add_entity(self,
                    *,
-                   entity_key: str,
                    entity: EntityReference,
                    row: BigQueryRow,
                    is_stitched: bool
                    ) -> None:
         if is_stitched:
             self.stitched.add(entity.entity_id)
-        self._add_manifest_entry(name=entity_key,
+        self._add_manifest_entry(name='',
                                  uuid=entity.entity_id,
                                  version=TDRPlugin.format_version(row['version']),
                                  size=row['content_size'],
@@ -356,11 +355,10 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                     rows = future.result()
                     pk_column = entity_type + '_id'
                     rows.sort(key=itemgetter(pk_column))
-                    for i, row in enumerate(rows):
+                    for row in rows:
                         entity = EntityReference(entity_id=row[pk_column], entity_type=entity_type)
                         is_stitched = entity not in root_entities
-                        bundle.add_entity(entity_key=f'{entity_type}_{i}.json',
-                                          entity=entity,
+                        bundle.add_entity(entity=entity,
                                           row=row,
                                           is_stitched=is_stitched)
                 else:
