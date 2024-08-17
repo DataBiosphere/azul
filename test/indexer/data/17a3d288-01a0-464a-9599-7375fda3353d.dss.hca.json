@@ -146,7 +146,7 @@
         }
     ],
     "metadata": {
-        "project.json": {
+        "project_0.json": {
             "content": {
                 "contributors": [
                     {
@@ -250,462 +250,434 @@
             "schema_version": "5.1.0",
             "schema_type": "project_bundle"
         },
-        "biomaterial.json": {
-            "biomaterials": [
-                {
-                    "content": {
-                        "biomaterial_core": {
-                            "has_input_biomaterial": "A1-Spl-0-TL5",
-                            "ncbi_taxon_id": [
-                                9606
-                            ],
-                            "biomaterial_id": "A1-Spl-0-TL5_cells",
-                            "biomaterial_name": "cells from fresh spleen"
-                        },
-                        "genus_species": [
-                            {
-                                "text": "Homo sapiens",
-                                "ontology": "NCBITaxon:9606"
-                            }
-                        ],
-                        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/5.1.0/cell_suspension",
-                        "total_estimated_cells": 39300000,
-                        "schema_type": "biomaterial"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.189Z",
-                        "updateDate": "2018-03-27T13:10:43.316Z",
-                        "document_id": "a86b1fda-bb1d-4ef8-87d9-392517d4a937"
-                    }
+        "cell_suspension_0.json": {
+            "content": {
+                "biomaterial_core": {
+                    "has_input_biomaterial": "A1-Spl-0-TL5",
+                    "ncbi_taxon_id": [
+                        9606
+                    ],
+                    "biomaterial_id": "A1-Spl-0-TL5_cells",
+                    "biomaterial_name": "cells from fresh spleen"
                 },
-                {
-                    "content": {
-                        "state_of_specimen": {
-                            "ischemic_time": 7200,
-                            "gross_image": [
-                                "284C_IMAGE_spleen_annotated.jpg"
-                            ],
-                            "postmortem_interval": 19800,
-                            "ischemic_temperature": "warm",
-                            "microscopic_description": "dead cells are quite faint on microscope at LMB"
-                        },
-                        "organ": {
-                            "text": "spleen",
-                            "ontology": "UBERON:0002106"
-                        },
-                        "genus_species": [
-                            {
-                                "text": "Homo sapiens",
-                                "ontology": "NCBITaxon:9606"
-                            }
-                        ],
-                        "schema_type": "biomaterial",
-                        "biomaterial_core": {
-                            "biomaterial_description": "fresh spleen",
-                            "has_input_biomaterial": "284C-A1",
-                            "biomaterial_name": "284C_spleen_fresh",
-                            "supplementary_files": [
-                                "284C_IMAGE_spleen_annotated.jpeg"
-                            ],
-                            "ncbi_taxon_id": [
-                                9606
-                            ],
-                            "biomaterial_id": "A1-Spl-0-TL5"
-                        },
-                        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/5.1.0/specimen_from_organism"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.291Z",
-                        "updateDate": "2018-03-27T13:10:43.420Z",
-                        "document_id": "d231b8f3-8fa3-4f3b-a8e5-66eca6228ae7"
+                "genus_species": [
+                    {
+                        "text": "Homo sapiens",
+                        "ontology": "NCBITaxon:9606"
                     }
-                },
-                {
-                    "content": {
-                        "is_living": false,
-                        "death": {
-                            "cause_of_death": "Hypoxic brain damage",
-                            "cold_perfused": false
-                        },
-                        "biological_sex": "male",
-                        "weight": "80-85",
-                        "disease": [
-                            {
-                                "text": "normal",
-                                "ontology": "PATO:0000461"
-                            }
-                        ],
-                        "genus_species": [
-                            {
-                                "text": "Homo sapiens",
-                                "ontology": "NCBITaxon:9606"
-                            }
-                        ],
-                        "height_unit": {
-                            "text": "meter",
-                            "ontology": "UO:0000008"
-                        },
-                        "height": "1.75-1.8",
-                        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/5.1.0/donor_organism",
-                        "organism_age": "55-60",
-                        "schema_type": "biomaterial",
-                        "biomaterial_core": {
-                            "biomaterial_id": "284C-A1",
-                            "ncbi_taxon_id": [
-                                9606
-                            ],
-                            "biomaterial_description": "Spleen",
-                            "biomaterial_name": "284C-spleen"
-                        },
-                        "medical_history": {
-                            "alcohol_history": "3-6 units/day",
-                            "smoking_history": "Smoker, 20/day for 25 years, stopped 2000"
-                        },
-                        "organism_age_unit": {
-                            "text": "year",
-                            "ontology": "UO:0000036"
-                        },
-                        "development_stage": {
-                            "text": "adult",
-                            "ontology": "EFO:0001272"
-                        },
-                        "weight_unit": {
-                            "text": "kg",
-                            "ontology": "UO:0000009"
-                        }
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.212Z",
-                        "updateDate": "2018-03-27T13:10:46.762Z",
-                        "document_id": "9a7acc6d-8352-497e-b162-5e63b380366f"
-                    }
-                }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/bundle/5.1.0/biomaterial",
-            "schema_version": "5.1.0",
-            "schema_type": "biomaterial_bundle"
+                ],
+                "describedBy": "https://schema.humancellatlas.org/type/biomaterial/5.1.0/cell_suspension",
+                "total_estimated_cells": 39300000,
+                "schema_type": "biomaterial"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.189Z",
+                "updateDate": "2018-03-27T13:10:43.316Z",
+                "document_id": "a86b1fda-bb1d-4ef8-87d9-392517d4a937"
+            }
         },
-        "file.json": {
-            "files": [
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S1_L001_I1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "index1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.480Z",
-                        "document_id": "49fddace-4c59-41c1-8930-0707460132d7"
-                    }
+        "specimen_from_organism_1.json": {
+            "content": {
+                "state_of_specimen": {
+                    "ischemic_time": 7200,
+                    "gross_image": [
+                        "284C_IMAGE_spleen_annotated.jpg"
+                    ],
+                    "postmortem_interval": 19800,
+                    "ischemic_temperature": "warm",
+                    "microscopic_description": "dead cells are quite faint on microscope at LMB"
                 },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S1_L001_R1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.490Z",
-                        "document_id": "771d9bcb-a5ff-43b5-b3e8-e738cc4c05bf"
-                    }
+                "organ": {
+                    "text": "spleen",
+                    "ontology": "UBERON:0002106"
                 },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S1_L001_R2_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read2",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.502Z",
-                        "document_id": "8ebfd02e-2a74-4367-80db-48082f331625"
+                "genus_species": [
+                    {
+                        "text": "Homo sapiens",
+                        "ontology": "NCBITaxon:9606"
                     }
+                ],
+                "schema_type": "biomaterial",
+                "biomaterial_core": {
+                    "biomaterial_description": "fresh spleen",
+                    "has_input_biomaterial": "284C-A1",
+                    "biomaterial_name": "284C_spleen_fresh",
+                    "supplementary_files": [
+                        "284C_IMAGE_spleen_annotated.jpeg"
+                    ],
+                    "ncbi_taxon_id": [
+                        9606
+                    ],
+                    "biomaterial_id": "A1-Spl-0-TL5"
                 },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S2_L001_I1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "index1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.515Z",
-                        "document_id": "fea5cc65-6d94-4d1e-a807-ec248f79b83d"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S2_L001_R1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.524Z",
-                        "document_id": "cee5b925-919c-4c77-8ea2-be51a1728e2b"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S2_L001_R2_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read2",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.534Z",
-                        "document_id": "c548066c-9994-415a-98cb-3df2933937ff"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S3_L001_I1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "index1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.545Z",
-                        "document_id": "b7d8d43c-bee6-48eb-bb36-0c07701c47b5"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S3_L001_R1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.555Z",
-                        "document_id": "6bc5b7ef-68f8-445d-8460-f04180c4fae1"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S3_L001_R2_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read2",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.564Z",
-                        "document_id": "17add91c-4063-4684-859d-d739baa4b9bb"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S4_L001_I1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "index1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.575Z",
-                        "document_id": "b7554cb7-dc5a-4b07-9c7a-c04466d30576"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S4_L001_R1_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read1",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.587Z",
-                        "document_id": "5239e70b-7d8d-4285-971f-9a156441c2f2"
-                    }
-                },
-                {
-                    "content": {
-                        "file_core": {
-                            "file_name": "HCATisStabAug177078016_S4_L001_R2_001.fastq.gz",
-                            "file_format": "fastq.gz"
-                        },
-                        "lane_index": 1,
-                        "read_index": "read2",
-                        "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
-                        "schema_type": "file"
-                    },
-                    "hca_ingest": {
-                        "submissionDate": "2018-03-27T13:10:38.597Z",
-                        "document_id": "024c5cb6-f473-40c9-9eb3-da08caf3180e"
-                    }
-                }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/bundle/1.0.0/file",
-            "schema_version": "1.0.0",
-            "schema_type": "file_bundle"
+                "describedBy": "https://schema.humancellatlas.org/type/biomaterial/5.1.0/specimen_from_organism"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.291Z",
+                "updateDate": "2018-03-27T13:10:43.420Z",
+                "document_id": "d231b8f3-8fa3-4f3b-a8e5-66eca6228ae7"
+            }
         },
-        "process.json": {
-            "processes": [
-                {
-                    "content": {
-                        "process_core": {
-                            "process_id": "wrapper_process_7"
-                        },
-                        "describedBy": "https://schema.humancellatlas.org/type/process/1.0.0/process",
-                        "schema_type": "process"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:39.071Z",
-                        "updateDate": "2018-03-27T13:10:48.960Z",
-                        "document_id": "7d3747dc-9e3a-4740-8504-82086ad1d63a"
-                    }
+        "donor_organism_2.json": {
+            "content": {
+                "is_living": false,
+                "death": {
+                    "cause_of_death": "Hypoxic brain damage",
+                    "cold_perfused": false
                 },
-                {
-                    "content": {
-                        "process_core": {
-                            "process_id": "sampling_process_3"
-                        },
-                        "describedBy": "https://schema.humancellatlas.org/type/process/1.0.0/process",
-                        "schema_type": "process"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.410Z",
-                        "updateDate": "2018-03-27T13:10:46.927Z",
-                        "document_id": "8797a64c-b498-4de6-aea7-86401199bee4"
+                "biological_sex": "male",
+                "weight": "80-85",
+                "disease": [
+                    {
+                        "text": "normal",
+                        "ontology": "PATO:0000461"
                     }
+                ],
+                "genus_species": [
+                    {
+                        "text": "Homo sapiens",
+                        "ontology": "NCBITaxon:9606"
+                    }
+                ],
+                "height_unit": {
+                    "text": "meter",
+                    "ontology": "UO:0000008"
                 },
-                {
-                    "content": {
-                        "input_nucleic_acid_molecule": {
-                            "text": "polyA RNA",
-                            "ontology": "OBI:0000869"
-                        },
-                        "process_core": {
-                            "process_id": "library_preparation_process_1",
-                            "process_name": "Library preparation for 10x_v2 sequencing"
-                        },
-                        "umi_barcode": {
-                            "barcode_offset": 16,
-                            "barcode_length": 10,
-                            "barcode_read": "Read 1"
-                        },
-                        "library_construction_approach": "10x_v2",
-                        "cell_barcode": {
-                            "barcode_offset": 0,
-                            "barcode_length": 16,
-                            "barcode_read": "Read 1"
-                        },
-                        "schema_type": "process",
-                        "end_bias": "3 prime tag",
-                        "describedBy": "https://schema.humancellatlas.org/type/process/sequencing/5.1.0/library_preparation_process",
-                        "strand": "second"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.700Z",
-                        "updateDate": "2018-03-27T13:10:48.152Z",
-                        "document_id": "fa9febdf-425e-41bc-925f-b17f27b96e61"
-                    }
+                "height": "1.75-1.8",
+                "describedBy": "https://schema.humancellatlas.org/type/biomaterial/5.1.0/donor_organism",
+                "organism_age": "55-60",
+                "schema_type": "biomaterial",
+                "biomaterial_core": {
+                    "biomaterial_id": "284C-A1",
+                    "ncbi_taxon_id": [
+                        9606
+                    ],
+                    "biomaterial_description": "Spleen",
+                    "biomaterial_name": "284C-spleen"
                 },
-                {
-                    "content": {
-                        "process_core": {
-                            "process_id": "sequencing_process_1",
-                            "process_name": "10x_v2 sequencing"
-                        },
-                        "instrument_manufacturer_model": {
-                            "text": "Illumina HiSeq 4000",
-                            "ontology": "EFO:0008563"
-                        },
-                        "paired_ends": true,
-                        "describedBy": "https://schema.humancellatlas.org/type/process/sequencing/5.1.0/sequencing_process",
-                        "schema_type": "process"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.859Z",
-                        "updateDate": "2018-03-27T13:10:48.049Z",
-                        "document_id": "0c6332ef-633b-403b-b4ed-c61ccacf87c8"
-                    }
+                "medical_history": {
+                    "alcohol_history": "3-6 units/day",
+                    "smoking_history": "Smoker, 20/day for 25 years, stopped 2000"
+                },
+                "organism_age_unit": {
+                    "text": "year",
+                    "ontology": "UO:0000036"
+                },
+                "development_stage": {
+                    "text": "adult",
+                    "ontology": "EFO:0001272"
+                },
+                "weight_unit": {
+                    "text": "kg",
+                    "ontology": "UO:0000009"
                 }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/bundle/5.2.1/process",
-            "schema_version": "5.2.1",
-            "schema_type": "process_bundle"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.212Z",
+                "updateDate": "2018-03-27T13:10:46.762Z",
+                "document_id": "9a7acc6d-8352-497e-b162-5e63b380366f"
+            }
         },
-        "protocol.json": {
-            "protocols": [
-                {
-                    "content": {
-                        "protocol_core": {
-                            "protocol_name": "10X Genomics protocol - including loading single cells and library prep",
-                            "protocol_description": "ChromiumTM Single Cell 3' Library & Gel Bead Kit v2",
-                            "document": "10x_sequencing_protocol.pdf",
-                            "protocol_id": "10x_sequencing_protocol"
-                        },
-                        "describedBy": "https://schema.humancellatlas.org/type/protocol/5.1.0/protocol",
-                        "protocol_type": {
-                            "text": "single cell nucleic acid sequencing protocol",
-                            "ontology": "EFO:0008439"
-                        },
-                        "schema_type": "protocol"
-                    },
-                    "hca_ingest": {
-                        "accession": "",
-                        "submissionDate": "2018-03-27T13:10:38.103Z",
-                        "updateDate": "2018-03-27T13:10:45.995Z",
-                        "document_id": "73b0c9ae-a5bb-446e-9c7b-d0954e6af425"
-                    }
-                }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/bundle/5.1.0/protocol",
-            "schema_version": "5.1.0",
-            "schema_type": "protocol_bundle"
+        "sequence_file_0.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S1_L001_I1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "index1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.480Z",
+                "document_id": "49fddace-4c59-41c1-8930-0707460132d7"
+            }
+        },
+        "sequence_file_1.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S1_L001_R1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.490Z",
+                "document_id": "771d9bcb-a5ff-43b5-b3e8-e738cc4c05bf"
+            }
+        },
+        "sequence_file_2.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S1_L001_R2_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read2",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.502Z",
+                "document_id": "8ebfd02e-2a74-4367-80db-48082f331625"
+            }
+        },
+        "sequence_file_3.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S2_L001_I1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "index1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.515Z",
+                "document_id": "fea5cc65-6d94-4d1e-a807-ec248f79b83d"
+            }
+        },
+        "sequence_file_4.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S2_L001_R1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.524Z",
+                "document_id": "cee5b925-919c-4c77-8ea2-be51a1728e2b"
+            }
+        },
+        "sequence_file_5.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S2_L001_R2_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read2",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.534Z",
+                "document_id": "c548066c-9994-415a-98cb-3df2933937ff"
+            }
+        },
+        "sequence_file_6.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S3_L001_I1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "index1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.545Z",
+                "document_id": "b7d8d43c-bee6-48eb-bb36-0c07701c47b5"
+            }
+        },
+        "sequence_file_7.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S3_L001_R1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.555Z",
+                "document_id": "6bc5b7ef-68f8-445d-8460-f04180c4fae1"
+            }
+        },
+        "sequence_file_8.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S3_L001_R2_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read2",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.564Z",
+                "document_id": "17add91c-4063-4684-859d-d739baa4b9bb"
+            }
+        },
+        "sequence_file_9.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S4_L001_I1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "index1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.575Z",
+                "document_id": "b7554cb7-dc5a-4b07-9c7a-c04466d30576"
+            }
+        },
+        "sequence_file_10.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S4_L001_R1_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read1",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.587Z",
+                "document_id": "5239e70b-7d8d-4285-971f-9a156441c2f2"
+            }
+        },
+        "sequence_file_11.json": {
+            "content": {
+                "file_core": {
+                    "file_name": "HCATisStabAug177078016_S4_L001_R2_001.fastq.gz",
+                    "file_format": "fastq.gz"
+                },
+                "lane_index": 1,
+                "read_index": "read2",
+                "describedBy": "https://schema.humancellatlas.org/type/file/5.1.0/sequence_file",
+                "schema_type": "file"
+            },
+            "hca_ingest": {
+                "submissionDate": "2018-03-27T13:10:38.597Z",
+                "document_id": "024c5cb6-f473-40c9-9eb3-da08caf3180e"
+            }
+        },
+        "process_0.json": {
+            "content": {
+                "process_core": {
+                    "process_id": "wrapper_process_7"
+                },
+                "describedBy": "https://schema.humancellatlas.org/type/process/1.0.0/process",
+                "schema_type": "process"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:39.071Z",
+                "updateDate": "2018-03-27T13:10:48.960Z",
+                "document_id": "7d3747dc-9e3a-4740-8504-82086ad1d63a"
+            }
+        },
+        "process_1.json": {
+            "content": {
+                "process_core": {
+                    "process_id": "sampling_process_3"
+                },
+                "describedBy": "https://schema.humancellatlas.org/type/process/1.0.0/process",
+                "schema_type": "process"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.410Z",
+                "updateDate": "2018-03-27T13:10:46.927Z",
+                "document_id": "8797a64c-b498-4de6-aea7-86401199bee4"
+            }
+        },
+        "library_preparation_process_2.json": {
+            "content": {
+                "input_nucleic_acid_molecule": {
+                    "text": "polyA RNA",
+                    "ontology": "OBI:0000869"
+                },
+                "process_core": {
+                    "process_id": "library_preparation_process_1",
+                    "process_name": "Library preparation for 10x_v2 sequencing"
+                },
+                "umi_barcode": {
+                    "barcode_offset": 16,
+                    "barcode_length": 10,
+                    "barcode_read": "Read 1"
+                },
+                "library_construction_approach": "10x_v2",
+                "cell_barcode": {
+                    "barcode_offset": 0,
+                    "barcode_length": 16,
+                    "barcode_read": "Read 1"
+                },
+                "schema_type": "process",
+                "end_bias": "3 prime tag",
+                "describedBy": "https://schema.humancellatlas.org/type/process/sequencing/5.1.0/library_preparation_process",
+                "strand": "second"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.700Z",
+                "updateDate": "2018-03-27T13:10:48.152Z",
+                "document_id": "fa9febdf-425e-41bc-925f-b17f27b96e61"
+            }
+        },
+        "sequencing_process_3.json": {
+            "content": {
+                "process_core": {
+                    "process_id": "sequencing_process_1",
+                    "process_name": "10x_v2 sequencing"
+                },
+                "instrument_manufacturer_model": {
+                    "text": "Illumina HiSeq 4000",
+                    "ontology": "EFO:0008563"
+                },
+                "paired_ends": true,
+                "describedBy": "https://schema.humancellatlas.org/type/process/sequencing/5.1.0/sequencing_process",
+                "schema_type": "process"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.859Z",
+                "updateDate": "2018-03-27T13:10:48.049Z",
+                "document_id": "0c6332ef-633b-403b-b4ed-c61ccacf87c8"
+            }
+        },
+        "protocol_0.json": {
+            "content": {
+                "protocol_core": {
+                    "protocol_name": "10X Genomics protocol - including loading single cells and library prep",
+                    "protocol_description": "ChromiumTM Single Cell 3' Library & Gel Bead Kit v2",
+                    "document": "10x_sequencing_protocol.pdf",
+                    "protocol_id": "10x_sequencing_protocol"
+                },
+                "describedBy": "https://schema.humancellatlas.org/type/protocol/5.1.0/protocol",
+                "protocol_type": {
+                    "text": "single cell nucleic acid sequencing protocol",
+                    "ontology": "EFO:0008439"
+                },
+                "schema_type": "protocol"
+            },
+            "hca_ingest": {
+                "accession": "",
+                "submissionDate": "2018-03-27T13:10:38.103Z",
+                "updateDate": "2018-03-27T13:10:45.995Z",
+                "document_id": "73b0c9ae-a5bb-446e-9c7b-d0954e6af425"
+            }
         },
         "links.json": {
             "links": [

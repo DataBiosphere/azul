@@ -999,58 +999,30 @@ class Bundle:
         self.version = version
         self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
 
-        def from_json(core_cls: type[E],
-                      json_entities: list[tuple[JSON, ManifestEntry]],
-                      **kwargs
-                      ) -> MutableMapping[UUID4, E]:
+        json_by_core_cls: MutableMapping[type[E], list[tuple[JSON, ManifestEntry]]] = defaultdict(list)
+        for file_name, json in metadata_files.items():
+            assert file_name.endswith('.json')
+            schema_name, _, suffix = file_name[:-5].rpartition('_')
+            if schema_name and suffix.isdigit():
+                entity_cls = entity_types[schema_name]
+                core_cls = core_types[entity_cls]
+                json_by_core_cls[core_cls].append((json, self.manifest.get(file_name)))
+
+        def from_json_vx(core_cls: type[E],
+                         **kwargs
+                         ) -> MutableMapping[UUID4, E]:
+            json_entities = json_by_core_cls[core_cls]
             entities = (
                 core_cls.from_json(entity, manifest_entry, **kwargs)
                 for entity, manifest_entry in json_entities
             )
             return {entity.document_id: entity for entity in entities}
 
-        if 'project.json' in metadata_files:
-
-            def from_json_v5(core_cls: type[E], file_name, key=None, **kwargs) -> MutableMapping[UUID4, E]:
-                file_content = metadata_files.get(file_name)
-                if file_content:
-                    manifest_entry = self.manifest.get(file_name)
-                    json_entities = file_content[key] if key else [file_content]
-                    json_entities = [(json_entity, manifest_entry) for json_entity in json_entities]
-                    return from_json(core_cls, json_entities, **kwargs)
-                else:
-                    return {}
-
-            self.projects = from_json_v5(Project, 'project.json')
-            self.biomaterials = from_json_v5(Biomaterial, 'biomaterial.json', 'biomaterials')
-            self.processes = from_json_v5(Process, 'process.json', 'processes')
-            self.protocols = from_json_v5(Protocol, 'protocol.json', 'protocols')
-            self.files = from_json_v5(File, 'file.json', 'files', manifest=self.manifest)
-
-        elif 'project_0.json' in metadata_files:
-
-            json_by_core_cls: MutableMapping[type[E], list[tuple[JSON, ManifestEntry]]] = defaultdict(list)
-            for file_name, json in metadata_files.items():
-                assert file_name.endswith('.json')
-                schema_name, _, suffix = file_name[:-5].rpartition('_')
-                if schema_name and suffix.isdigit():
-                    entity_cls = entity_types[schema_name]
-                    core_cls = core_types[entity_cls]
-                    json_by_core_cls[core_cls].append((json, self.manifest.get(file_name)))
-
-            def from_json_vx(core_cls: type[E], **kwargs) -> MutableMapping[UUID4, E]:
-                json_entities = json_by_core_cls[core_cls]
-                return from_json(core_cls, json_entities, **kwargs)
-
-            self.projects = from_json_vx(Project)
-            self.biomaterials = from_json_vx(Biomaterial)
-            self.processes = from_json_vx(Process)
-            self.protocols = from_json_vx(Protocol)
-            self.files = from_json_vx(File, manifest=self.manifest)
-
-        else:
-
-            raise RuntimeError('Unable to detect bundle structure')
+        self.projects = from_json_vx(Project)
+        self.biomaterials = from_json_vx(Biomaterial)
+        self.processes = from_json_vx(Process)
+        self.protocols = from_json_vx(Protocol)
+        self.files = from_json_vx(File, manifest=self.manifest)
 
         self.entities = {**self.projects, **self.biomaterials, **self.processes, **self.protocols, **self.files}
 

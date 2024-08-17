@@ -1464,9 +1464,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.assertEqual(4, len(file_uuids))
         for bundle_fqid in bundles:
             bundle = self._load_canned_bundle(bundle_fqid)
-            files: JSONs = bundle.metadata_files['file.json']['files']
-            for file in files:
-                file_document_ids.add(file['hca_ingest']['document_id'])
+            for doc in bundle.metadata_files.values():
+                if doc.get('content', {}).get('schema_type') == 'file':
+                    file_document_ids.add(doc['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 
     def test_indexing_matrix_related_files(self):
