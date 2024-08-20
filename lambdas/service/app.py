@@ -1421,7 +1421,7 @@ repository_files_spec = {
         ),
         params.query(
             'wait',
-            schema.optional(int),
+            schema.optional(schema.default(0)),
             description=fd('''
                 If 0, the client is responsible for honoring the waiting period
                 specified in the Retry-After response header. If 1, the server
