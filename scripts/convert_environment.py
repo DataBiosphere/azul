@@ -13,19 +13,19 @@ from typing import (
     Optional,
 )
 
-"""
-Convert an old-style `environment` Bash script to a new-style `environment.py`.
-
-This is by no means a complete parser for shell scripts. It recognizes only the
-script statements typically used in `environment` and `environment.local` files.
-"""
-
 from azul.files import (
     write_file_atomically,
 )
 from azul.strings import (
     single_quote as sq,
 )
+
+"""
+Convert an old-style `environment` Bash script to a new-style `environment.py`.
+
+This is by no means a complete parser for shell scripts. It recognizes only the
+script statements typically used in `environment` and `environment.local` files.
+"""
 
 
 class Variable(NamedTuple):
