@@ -153,32 +153,29 @@ class TestAccessorApi(AzulUnitTestCase):
                             **kwargs)
 
     def _canned_bundle_path(self, directory, uuid, version):
-        return os.path.join(os.path.dirname(__file__), 'cans', directory, uuid, version)
+        name = f'{uuid}.{version}.json'
+        return os.path.join(os.path.dirname(__file__), 'cans', directory, name)
 
     def _can_bundle(self, directory, uuid, version, manifest, metadata_files):  # pragma: no cover
         """
         Save a bundle's manifest & metadata files to a local directory
         """
-        dir_path = self._canned_bundle_path(directory, uuid, version)
-        os.makedirs(dir_path, exist_ok=True)
-        with atomic_write(os.path.join(dir_path, 'manifest.json'), overwrite=True) as f:
-            json.dump(manifest, f)
-        with atomic_write(os.path.join(dir_path, 'metadata.json'), overwrite=True) as f:
-            json.dump(metadata_files, f)
+        path = self._canned_bundle_path(directory, uuid, version)
+        os.makedirs(directory, exist_ok=True)
+        with atomic_write(path, overwrite=True) as f:
+            json.dump({
+                'manifest': manifest,
+                'metadata': metadata_files
+            }, f)
 
     def _canned_bundle(self, directory, uuid, version):
         """
         Load a previously canned bundle
         """
         dir_path = self._canned_bundle_path(directory, uuid, version)
-        if os.path.isdir(dir_path):
-            with open(os.path.join(dir_path, 'manifest.json')) as f:
-                manifest = json.load(f)
-            with open(os.path.join(dir_path, 'metadata.json')) as f:
-                metadata_files = json.load(f)
-            return manifest, metadata_files
-        else:
-            return None, None
+        with open(dir_path) as f:
+            bundle = json.load(f)
+        return bundle['manifest'], bundle['metadata']
 
     def test_v5_bundle(self):
         """
