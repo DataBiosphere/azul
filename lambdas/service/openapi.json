@@ -11169,7 +11169,8 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int64",
+                            "default": 0
                         },
                         "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the Retry-After response header. If 1, the server\nwill delay the response in order to consume as much of that\nwaiting period as possible. This parameter should only be set to\n1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any amount\nof wait time left will still be returned in the Retry-After\nheader of the response.\n"
                     },
@@ -11304,7 +11305,8 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int64",
+                            "default": 0
                         },
                         "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the Retry-After response header. If 1, the server\nwill delay the response in order to consume as much of that\nwaiting period as possible. This parameter should only be set to\n1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any amount\nof wait time left will still be returned in the Retry-After\nheader of the response.\n"
                     },
