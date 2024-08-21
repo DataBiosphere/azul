@@ -481,151 +481,151 @@
                 "updateDate": "2018-03-28T14:30:39.321Z",
                 "document_id": "ca6096cf-13c1-4930-8308-6ab05865e2c9"
             }
-        },
-        "links.json": {
-            "links": [
-                {
-                    "source_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
-                    "source_type": "biomaterial",
-                    "destination_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
-                    "destination_type": "dissociation_process"
-                },
-                {
-                    "source_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
-                    "source_type": "dissociation_process",
-                    "destination_id": "603a818f-dbe7-466a-8241-58b9c1618846",
-                    "destination_type": "biomaterial"
-                },
-                {
-                    "source_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
-                    "source_type": "dissociation_process",
-                    "destination_id": "c9a1e203-bddc-45d3-87c4-6010be8e0127",
-                    "destination_type": "protocol"
-                },
-                {
-                    "source_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
-                    "source_type": "process",
-                    "destination_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
-                    "destination_type": "biomaterial"
-                },
-                {
-                    "source_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410",
-                    "source_type": "biomaterial",
-                    "destination_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
-                    "destination_type": "process"
-                },
-                {
-                    "source_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
-                    "source_type": "biomaterial",
-                    "destination_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78",
-                    "destination_type": "enrichment_process"
-                },
-                {
-                    "source_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78",
-                    "source_type": "enrichment_process",
-                    "destination_id": "603a818f-dbe7-466a-8241-58b9c1618846",
-                    "destination_type": "biomaterial"
-                },
-                {
-                    "source_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78",
-                    "source_type": "enrichment_process",
-                    "destination_id": "a1c80daf-58b0-4b7a-8e29-d0130493c8e6",
-                    "destination_type": "protocol"
-                },
-                {
-                    "source_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
-                    "source_type": "process",
-                    "destination_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
-                    "destination_type": "biomaterial"
-                },
-                {
-                    "source_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410",
-                    "source_type": "biomaterial",
-                    "destination_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
-                    "destination_type": "process"
-                },
-                {
-                    "source_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
-                    "source_type": "biomaterial",
-                    "destination_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215",
-                    "destination_type": "enrichment_process"
-                },
-                {
-                    "source_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215",
-                    "source_type": "enrichment_process",
-                    "destination_id": "603a818f-dbe7-466a-8241-58b9c1618846",
-                    "destination_type": "biomaterial"
-                },
-                {
-                    "source_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215",
-                    "source_type": "enrichment_process",
-                    "destination_id": "a1c80daf-58b0-4b7a-8e29-d0130493c8e6",
-                    "destination_type": "protocol"
-                },
-                {
-                    "source_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
-                    "source_type": "process",
-                    "destination_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
-                    "destination_type": "biomaterial"
-                },
-                {
-                    "source_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410",
-                    "source_type": "biomaterial",
-                    "destination_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
-                    "destination_type": "process"
-                },
-                {
-                    "source_id": "603a818f-dbe7-466a-8241-58b9c1618846",
-                    "source_type": "biomaterial",
-                    "destination_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
-                    "destination_type": "library_preparation_process"
-                },
-                {
-                    "source_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
-                    "source_type": "library_preparation_process",
-                    "destination_id": "d2f32681-9c1a-4dfd-b506-c24327afb8d1",
-                    "destination_type": "file"
-                },
-                {
-                    "source_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
-                    "source_type": "library_preparation_process",
-                    "destination_id": "aa662c76-d220-49f4-8316-f4af5820d60b",
-                    "destination_type": "file"
-                },
-                {
-                    "source_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
-                    "source_type": "library_preparation_process",
-                    "destination_id": "52d79a89-4b49-4c1b-b857-5cc5da07f643",
-                    "destination_type": "protocol"
-                },
-                {
-                    "source_id": "603a818f-dbe7-466a-8241-58b9c1618846",
-                    "source_type": "biomaterial",
-                    "destination_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
-                    "destination_type": "sequencing_process"
-                },
-                {
-                    "source_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
-                    "source_type": "sequencing_process",
-                    "destination_id": "d2f32681-9c1a-4dfd-b506-c24327afb8d1",
-                    "destination_type": "file"
-                },
-                {
-                    "source_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
-                    "source_type": "sequencing_process",
-                    "destination_id": "aa662c76-d220-49f4-8316-f4af5820d60b",
-                    "destination_type": "file"
-                },
-                {
-                    "source_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
-                    "source_type": "sequencing_process",
-                    "destination_id": "ca6096cf-13c1-4930-8308-6ab05865e2c9",
-                    "destination_type": "protocol"
-                }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/bundle/1.0.0/links",
-            "schema_version": "1.0.0",
-            "schema_type": "link_bundle"
         }
+    },
+    "links": {
+        "links": [
+            {
+                "source_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
+                "source_type": "biomaterial",
+                "destination_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
+                "destination_type": "dissociation_process"
+            },
+            {
+                "source_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
+                "source_type": "dissociation_process",
+                "destination_id": "603a818f-dbe7-466a-8241-58b9c1618846",
+                "destination_type": "biomaterial"
+            },
+            {
+                "source_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
+                "source_type": "dissociation_process",
+                "destination_id": "c9a1e203-bddc-45d3-87c4-6010be8e0127",
+                "destination_type": "protocol"
+            },
+            {
+                "source_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
+                "source_type": "process",
+                "destination_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
+                "destination_type": "biomaterial"
+            },
+            {
+                "source_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410",
+                "source_type": "biomaterial",
+                "destination_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
+                "destination_type": "process"
+            },
+            {
+                "source_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
+                "source_type": "biomaterial",
+                "destination_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78",
+                "destination_type": "enrichment_process"
+            },
+            {
+                "source_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78",
+                "source_type": "enrichment_process",
+                "destination_id": "603a818f-dbe7-466a-8241-58b9c1618846",
+                "destination_type": "biomaterial"
+            },
+            {
+                "source_id": "2f2fb366-249f-49e3-b47d-a0bb39d9bc78",
+                "source_type": "enrichment_process",
+                "destination_id": "a1c80daf-58b0-4b7a-8e29-d0130493c8e6",
+                "destination_type": "protocol"
+            },
+            {
+                "source_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
+                "source_type": "process",
+                "destination_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
+                "destination_type": "biomaterial"
+            },
+            {
+                "source_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410",
+                "source_type": "biomaterial",
+                "destination_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
+                "destination_type": "process"
+            },
+            {
+                "source_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
+                "source_type": "biomaterial",
+                "destination_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215",
+                "destination_type": "enrichment_process"
+            },
+            {
+                "source_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215",
+                "source_type": "enrichment_process",
+                "destination_id": "603a818f-dbe7-466a-8241-58b9c1618846",
+                "destination_type": "biomaterial"
+            },
+            {
+                "source_id": "a192f0d7-8e8e-48ae-b80d-3cb18acb3215",
+                "source_type": "enrichment_process",
+                "destination_id": "a1c80daf-58b0-4b7a-8e29-d0130493c8e6",
+                "destination_type": "protocol"
+            },
+            {
+                "source_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
+                "source_type": "process",
+                "destination_id": "4e41a067-dbb7-439f-b72f-80240ce858f6",
+                "destination_type": "biomaterial"
+            },
+            {
+                "source_id": "bf8492ad-1d45-46aa-9fe9-67058b8c2410",
+                "source_type": "biomaterial",
+                "destination_id": "f03590d8-4e65-478e-bc67-a8c64d2c93e9",
+                "destination_type": "process"
+            },
+            {
+                "source_id": "603a818f-dbe7-466a-8241-58b9c1618846",
+                "source_type": "biomaterial",
+                "destination_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
+                "destination_type": "library_preparation_process"
+            },
+            {
+                "source_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
+                "source_type": "library_preparation_process",
+                "destination_id": "d2f32681-9c1a-4dfd-b506-c24327afb8d1",
+                "destination_type": "file"
+            },
+            {
+                "source_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
+                "source_type": "library_preparation_process",
+                "destination_id": "aa662c76-d220-49f4-8316-f4af5820d60b",
+                "destination_type": "file"
+            },
+            {
+                "source_id": "687065f3-c70f-46c3-8452-a5eead33a1bf",
+                "source_type": "library_preparation_process",
+                "destination_id": "52d79a89-4b49-4c1b-b857-5cc5da07f643",
+                "destination_type": "protocol"
+            },
+            {
+                "source_id": "603a818f-dbe7-466a-8241-58b9c1618846",
+                "source_type": "biomaterial",
+                "destination_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
+                "destination_type": "sequencing_process"
+            },
+            {
+                "source_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
+                "source_type": "sequencing_process",
+                "destination_id": "d2f32681-9c1a-4dfd-b506-c24327afb8d1",
+                "destination_type": "file"
+            },
+            {
+                "source_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
+                "source_type": "sequencing_process",
+                "destination_id": "aa662c76-d220-49f4-8316-f4af5820d60b",
+                "destination_type": "file"
+            },
+            {
+                "source_id": "2580dcf9-3f7d-4421-b962-ab860e10d072",
+                "source_type": "sequencing_process",
+                "destination_id": "ca6096cf-13c1-4930-8308-6ab05865e2c9",
+                "destination_type": "protocol"
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/bundle/1.0.0/links",
+        "schema_version": "1.0.0",
+        "schema_type": "link_bundle"
     }
 }

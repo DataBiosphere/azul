@@ -141,18 +141,16 @@ class StagingArea:
         """
         Return a bundle from the staging area
         """
-        version, manifest, metadata = self.get_bundle_parts(subgraph_id)
-        return Bundle(subgraph_id, version, manifest, metadata)
+        version, manifest, metadata, links = self.get_bundle_parts(subgraph_id)
+        return Bundle(subgraph_id, version, manifest, metadata, links)
 
-    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, MutableJSONs, MutableJSON]:
+    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, MutableJSONs, MutableJSON, MutableJSON]:
         """
         Return the components to create a bundle from the staging area
         """
         links_file = self.links[subgraph_id]
         manifest = []
-        metadata = {
-            'links.json': links_file.content
-        }
+        metadata = {}
         entity_ids_by_type = self._entity_ids_by_type(subgraph_id)
         for entity_type, entity_ids in entity_ids_by_type.items():
             # Sort entity_ids to produce the same ordering on multiple runs
@@ -179,7 +177,7 @@ class StagingArea:
                     manifest.append(file_manifest)
                 else:
                     pass
-        return links_file.version, manifest, metadata
+        return links_file.version, manifest, metadata, links_file.content
 
     def _entity_ids_by_type(self,
                             subgraph_id: str

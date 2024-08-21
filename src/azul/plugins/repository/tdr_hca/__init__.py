@@ -341,9 +341,10 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
         bundle = TDRHCABundle(fqid=bundle_fqid,
                               manifest=[],
-                              metadata_files={})
+                              metadata_files={},
+                              links={})
         entities, root_entities, links_jsons = self._stitch_bundles(bundle)
-        bundle.metadata_files['links.json'] = self._merge_links(links_jsons)
+        bundle.links = self._merge_links(links_jsons)
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {

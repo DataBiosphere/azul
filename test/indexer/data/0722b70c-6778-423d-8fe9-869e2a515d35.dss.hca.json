@@ -195,98 +195,6 @@
         }
     ],
     "metadata": {
-        "links.json": {
-            "links": [
-                {
-                    "link_type": "process_link",
-                    "process_id": "0722b70c-6778-423d-8fe9-869e2a515d35",
-                    "process_type": "process",
-                    "inputs": [
-                        {
-                            "input_type": "cell_suspension",
-                            "input_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "sequence_file",
-                            "output_id": "95595c66-2121-4ebc-9f2e-b5b61d193f25"
-                        },
-                        {
-                            "output_type": "sequence_file",
-                            "output_id": "54647cbb-7814-4d9a-b7f8-a6605c2f7aa6"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "ca16fcf2-48df-4b2a-bd48-a5fce6b0cd75"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "328e83cc-1e31-4d49-bf69-3504a7d1d4ba"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_id": "70b02064-3cf5-4e97-88f8-731c6e246965",
-                    "process_type": "process",
-                    "inputs": [
-                        {
-                            "input_type": "organoid",
-                            "input_id": "df23c109-59f0-46d3-bd09-660175b51bda"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "cell_suspension",
-                            "output_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "59eeb73e-64d6-4959-9c69-b85570a20900"
-                        },
-                        {
-                            "protocol_type": "enrichment_protocol",
-                            "protocol_id": "f4234276-bdac-4ad1-b4a0-4b5d595ae04c"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_id": "0d48b9ba-5fea-4260-abbc-2949ac357f75",
-                    "process_type": "process",
-                    "inputs": [
-                        {
-                            "input_type": "cell_line",
-                            "input_id": "d91bbbd5-c2c1-4bb7-906f-494ee686658e"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "organoid",
-                            "output_id": "df23c109-59f0-46d3-bd09-660175b51bda"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "0a8112d1-d401-4c0d-8334-8cda8f8532c8"
-                        },
-                        {
-                            "protocol_type": "differentiation_protocol",
-                            "protocol_id": "0078130e-8a91-47d0-9ff7-854ae772b8ea"
-                        }
-                    ]
-                }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
-            "schema_version": "2.1.1",
-            "schema_type": "links"
-        },
         "dissociation_protocol_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
             "method": {
@@ -779,5 +687,97 @@
                 "schema_minor_version": 2
             }
         }
+    },
+    "links": {
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "0722b70c-6778-423d-8fe9-869e2a515d35",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "95595c66-2121-4ebc-9f2e-b5b61d193f25"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "54647cbb-7814-4d9a-b7f8-a6605c2f7aa6"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "ca16fcf2-48df-4b2a-bd48-a5fce6b0cd75"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "328e83cc-1e31-4d49-bf69-3504a7d1d4ba"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "70b02064-3cf5-4e97-88f8-731c6e246965",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "organoid",
+                        "input_id": "df23c109-59f0-46d3-bd09-660175b51bda"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "59eeb73e-64d6-4959-9c69-b85570a20900"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "f4234276-bdac-4ad1-b4a0-4b5d595ae04c"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "0d48b9ba-5fea-4260-abbc-2949ac357f75",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_line",
+                        "input_id": "d91bbbd5-c2c1-4bb7-906f-494ee686658e"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "organoid",
+                        "output_id": "df23c109-59f0-46d3-bd09-660175b51bda"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "0a8112d1-d401-4c0d-8334-8cda8f8532c8"
+                    },
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "0078130e-8a91-47d0-9ff7-854ae772b8ea"
+                    }
+                ]
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_version": "2.1.1",
+        "schema_type": "links"
     }
 }

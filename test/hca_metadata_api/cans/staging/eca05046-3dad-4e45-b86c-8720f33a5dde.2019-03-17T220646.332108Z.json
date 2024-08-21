@@ -705,74 +705,74 @@
                 "submission_date": "2019-03-17T22:00:57.743Z",
                 "update_date": "2019-03-17T22:01:03.254Z"
             }
-        },
-        "links.json": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/system/1.1.5/links",
-            "schema_type": "link_bundle",
-            "schema_version": "1.1.5",
-            "links": [
-                {
-                    "process": "8a0879df-13e0-4dce-9776-20fb259796e9",
-                    "inputs": [
-                        "74a06f8b-dff1-44d2-b1a6-99e3d14b69d1"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "6380c3bc-8bc3-459b-aea3-05dd6c0842ef",
-                        "ceb4dfaa-ecaf-4757-ae54-9d83707f66cc",
-                        "5201d410-d789-4df6-b3fd-9edac998e5f3"
-                    ],
-                    "output_type": "file",
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "aa7e9a08-2a0c-4575-a9a9-13cab4e96e73"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "4bc436f7-e429-4355-8d6e-853d8e639b37"
-                        }
-                    ]
-                },
-                {
-                    "process": "b2e86d49-6874-4522-a68c-43166e858bdd",
-                    "inputs": [
-                        "f3531ee2-d408-4075-b63e-0d0e2b01116c"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "74a06f8b-dff1-44d2-b1a6-99e3d14b69d1"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "1e9abdf3-54da-4c73-9e57-1297ceb39399"
-                        },
-                        {
-                            "protocol_type": "enrichment_protocol",
-                            "protocol_id": "df679627-ccb6-426d-a709-c259db607d84"
-                        }
-                    ]
-                },
-                {
-                    "process": "b147df84-443b-4dd2-8327-7ea42adcd151",
-                    "inputs": [
-                        "20db3238-9ce6-4820-8495-6753e4147d51"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "f3531ee2-d408-4075-b63e-0d0e2b01116c"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": [
-                        {
-                            "protocol_type": "collection_protocol",
-                            "protocol_id": "c3dabd8c-6f32-4c0b-a13b-11bb71cc95de"
-                        }
-                    ]
-                }
-            ]
         }
+    },
+    "links": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+            {
+                "process": "8a0879df-13e0-4dce-9776-20fb259796e9",
+                "inputs": [
+                    "74a06f8b-dff1-44d2-b1a6-99e3d14b69d1"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6380c3bc-8bc3-459b-aea3-05dd6c0842ef",
+                    "ceb4dfaa-ecaf-4757-ae54-9d83707f66cc",
+                    "5201d410-d789-4df6-b3fd-9edac998e5f3"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "aa7e9a08-2a0c-4575-a9a9-13cab4e96e73"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "4bc436f7-e429-4355-8d6e-853d8e639b37"
+                    }
+                ]
+            },
+            {
+                "process": "b2e86d49-6874-4522-a68c-43166e858bdd",
+                "inputs": [
+                    "f3531ee2-d408-4075-b63e-0d0e2b01116c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "74a06f8b-dff1-44d2-b1a6-99e3d14b69d1"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "1e9abdf3-54da-4c73-9e57-1297ceb39399"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "df679627-ccb6-426d-a709-c259db607d84"
+                    }
+                ]
+            },
+            {
+                "process": "b147df84-443b-4dd2-8327-7ea42adcd151",
+                "inputs": [
+                    "20db3238-9ce6-4820-8495-6753e4147d51"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "f3531ee2-d408-4075-b63e-0d0e2b01116c"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "c3dabd8c-6f32-4c0b-a13b-11bb71cc95de"
+                    }
+                ]
+            }
+        ]
     }
 }

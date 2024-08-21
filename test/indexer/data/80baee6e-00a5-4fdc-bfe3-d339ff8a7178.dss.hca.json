@@ -195,98 +195,6 @@
         }
     ],
     "metadata": {
-        "links.json": {
-            "links": [
-                {
-                    "link_type": "process_link",
-                    "process_id": "80baee6e-00a5-4fdc-bfe3-d339ff8a7178",
-                    "process_type": "process",
-                    "inputs": [
-                        {
-                            "input_type": "cell_suspension",
-                            "input_id": "38f53d63-e470-491a-a98a-83bf0c47b630"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "sequence_file",
-                            "output_id": "64f1a275-671c-46a2-ba7f-6647e672c8d7"
-                        },
-                        {
-                            "output_type": "sequence_file",
-                            "output_id": "e27de859-4b05-43d6-8437-7f7dfc0507d1"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "9b9f5554-0f48-4af5-a765-c45226e0531c"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "58612e7a-c83a-4c7d-ab53-974b207291eb"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_id": "4ce6bcb3-6402-4265-b18e-fa3ebea6e786",
-                    "process_type": "process",
-                    "inputs": [
-                        {
-                            "input_type": "specimen_from_organism",
-                            "input_id": "5b2453cf-dffd-42e4-8868-73aec60b1418"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "cell_suspension",
-                            "output_id": "38f53d63-e470-491a-a98a-83bf0c47b630"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "97c799c5-5db6-4d57-8a03-0fb877039255"
-                        },
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "37aee665-8ee9-451c-b1ef-e998cc268481"
-                        },
-                        {
-                            "protocol_type": "enrichment_protocol",
-                            "protocol_id": "46299069-e6aa-4b95-b134-5dcbd4685cb3"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_id": "f188ad1d-17dc-4f21-a35d-c24a1d53e728",
-                    "process_type": "process",
-                    "inputs": [
-                        {
-                            "input_type": "donor_organism",
-                            "input_id": "270341ef-ab2d-4e88-9ae1-b49684fc60e0"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "specimen_from_organism",
-                            "output_id": "5b2453cf-dffd-42e4-8868-73aec60b1418"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "collection_protocol",
-                            "protocol_id": "5f886847-ef33-4a9b-b971-f2fe9f429cc4"
-                        }
-                    ]
-                }
-            ],
-            "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
-            "schema_version": "2.1.1",
-            "schema_type": "links"
-        },
         "sequencing_protocol_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
             "schema_type": "protocol",
@@ -835,5 +743,97 @@
                 "schema_minor_version": 2
             }
         }
+    },
+    "links": {
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "80baee6e-00a5-4fdc-bfe3-d339ff8a7178",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "38f53d63-e470-491a-a98a-83bf0c47b630"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "64f1a275-671c-46a2-ba7f-6647e672c8d7"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "e27de859-4b05-43d6-8437-7f7dfc0507d1"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "9b9f5554-0f48-4af5-a765-c45226e0531c"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "58612e7a-c83a-4c7d-ab53-974b207291eb"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "4ce6bcb3-6402-4265-b18e-fa3ebea6e786",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "5b2453cf-dffd-42e4-8868-73aec60b1418"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "38f53d63-e470-491a-a98a-83bf0c47b630"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "97c799c5-5db6-4d57-8a03-0fb877039255"
+                    },
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "37aee665-8ee9-451c-b1ef-e998cc268481"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "46299069-e6aa-4b95-b134-5dcbd4685cb3"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "f188ad1d-17dc-4f21-a35d-c24a1d53e728",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "270341ef-ab2d-4e88-9ae1-b49684fc60e0"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "5b2453cf-dffd-42e4-8868-73aec60b1418"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "5f886847-ef33-4a9b-b971-f2fe9f429cc4"
+                    }
+                ]
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_version": "2.1.1",
+        "schema_type": "links"
     }
 }

@@ -197,54 +197,6 @@
         }
     ],
     "metadata": {
-        "links.json": {
-            "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
-            "schema_type": "links",
-            "schema_version": "2.1.1",
-            "links": [
-                {
-                    "link_type": "supplementary_file_link",
-                    "entity": {
-                        "entity_type": "project",
-                        "entity_id": "8185730f-4113-40d3-9cc3-929271784c2b"
-                    },
-                    "files": [
-                        {
-                            "file_id": "b905c8be-2e2d-592c-8481-3eb7a87c6484",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "87f31102-ebbc-5875-abdf-4fa5cea48e8d",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "733318e0-19c2-51e8-9ad6-d94ad562dd46",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "c59e2de5-01fe-56eb-be56-679ed14161bf",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "68bda896-3b3e-5f2a-9212-f4030a0f37e2",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "0c5ab869-da2d-5c11-b4ae-f978a052899f",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "cade4593-bfba-56ed-80ab-080d0de7d5a4",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "5b465aad-0981-5152-b468-e615e20f5884",
-                            "file_type": "supplementary_file"
-                        }
-                    ]
-                }
-            ]
-        },
         "supplementary_file_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
             "schema_type": "file",
@@ -849,5 +801,53 @@
                 "update_date": "2019-09-13T08:37:53.825Z"
             }
         }
+    },
+    "links": {
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_type": "links",
+        "schema_version": "2.1.1",
+        "links": [
+            {
+                "link_type": "supplementary_file_link",
+                "entity": {
+                    "entity_type": "project",
+                    "entity_id": "8185730f-4113-40d3-9cc3-929271784c2b"
+                },
+                "files": [
+                    {
+                        "file_id": "b905c8be-2e2d-592c-8481-3eb7a87c6484",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "87f31102-ebbc-5875-abdf-4fa5cea48e8d",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "733318e0-19c2-51e8-9ad6-d94ad562dd46",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "c59e2de5-01fe-56eb-be56-679ed14161bf",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "68bda896-3b3e-5f2a-9212-f4030a0f37e2",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "0c5ab869-da2d-5c11-b4ae-f978a052899f",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "cade4593-bfba-56ed-80ab-080d0de7d5a4",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "5b465aad-0981-5152-b468-e615e20f5884",
+                        "file_type": "supplementary_file"
+                    }
+                ]
+            }
+        ]
     }
 }

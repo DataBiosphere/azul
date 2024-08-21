@@ -243,15 +243,12 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                     entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
                                     replicas.append(entity_id)
                                     if entity_id == bundle.uuid:
-                                        expected = bundle.metadata_files['links.json']
+                                        expected = bundle.links
                                     else:
                                         expected = one(
                                             m
                                             for m in bundle.metadata_files.values()
-                                            if (
-                                                m['schema_type'] != 'link_bundle'
-                                                and m['provenance']['document_id'] == entity_id
-                                            )
+                                            if m['provenance']['document_id'] == entity_id
                                         )
                                     # Replica contents should match the entity
                                     # metadata as supplied by the repository
@@ -292,7 +289,8 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                 bundle = self._load_canned_bundle(bundle_fqid)
                 bundle = DSSBundle(fqid=bundle_fqid,
                                    manifest=bundle.manifest,
-                                   metadata_files=bundle.metadata_files)
+                                   metadata_files=bundle.metadata_files,
+                                   links=bundle.links)
                 self.index_service.create_indices(self.catalog)
                 try:
                     self._index_bundle(bundle)
@@ -602,6 +600,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 assert False, f'Cannot handle values of type {type(v)}'
 
         bundle.metadata_files = _walkthrough(bundle.metadata_files)
+        bundle.links = _walkthrough(bundle.links)
         return old_file_uuid
 
     def _num_docs_by_index(self, hits) -> Mapping[tuple[str, DocumentType], int]:
@@ -1465,7 +1464,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         for bundle_fqid in bundles:
             bundle = self._load_canned_bundle(bundle_fqid)
             for doc in bundle.metadata_files.values():
-                if doc.get('content', {}).get('schema_type') == 'file':
+                if doc['content']['schema_type'] == 'file':
                     file_document_ids.add(doc['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 

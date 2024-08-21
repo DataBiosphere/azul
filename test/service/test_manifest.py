@@ -371,11 +371,13 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
             'ontology': 'UBERON:0002048',
             'ontology_label': 'lung'
         }
+        links = self._replace_uuids(bundle.links, old_to_new)
         assert isinstance(manifest, list)
         return DSSBundle(fqid=self.bundle_fqid(uuid=old_to_new[bundle.uuid],
                                                version=bundle.version),
                          manifest=cast(MutableJSONs, manifest),
-                         metadata_files=metadata_files)
+                         metadata_files=metadata_files,
+                         links=links)
 
     def _replace_uuids(self,
                        object_: JSON,
@@ -401,7 +403,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         donor_id = '0895599c-f57d-4843-963e-11eab29f883b'
         duplicate_donor['provenance']['document_id'] = donor_id
         bundle.metadata_files['donor_organism_1.json'] = duplicate_donor
-        donor_link = one(ln for ln in bundle.metadata_files['links.json']['links']
+        donor_link = one(ln for ln in bundle.links['links']
                          if one(ln['inputs'])['input_type'] == 'donor_organism')
         new_donor_reference = {
             'input_id': donor_id,
@@ -567,11 +569,13 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         }
         # This is an older bundle so there are no supplementary file links.
         # The existing links reference entities that weren't copied to the mock bundle.
-        metadata_files['links.json']['links'].clear()
+        links = bundle.links
+        links['links'].clear()
         self._index_bundle(DSSBundle(fqid=self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
                                                            version='2000-01-01T01:00:00.000000Z'),
                                      manifest=manifest,
-                                     metadata_files=metadata_files))
+                                     metadata_files=metadata_files,
+                                     links=links))
 
         filters = {
             'fileId': {
@@ -1330,21 +1334,25 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                         self.assertEqual(expected_cd, actual_cd)
 
     def test_verbatim_jsonl_manifest(self):
-        expected = [
-            {
-                'type': replica_type,
-                'value': bundle.metadata_files[key],
-            }
-            for bundle in map(self._load_canned_bundle, self.bundles())
+        expected = []
+        for bundle in self.bundles():
+            bundle = self._load_canned_bundle(bundle)
+            expected.append({
+                'type': 'links',
+                'value': bundle.links
+            })
             for replica_type, key in [
-                ('links', 'links.json'),
                 ('cell_suspension', 'cell_suspension_0.json'),
                 ('project', 'project_0.json'),
                 ('sequence_file', 'sequence_file_0.json'),
                 ('sequence_file', 'sequence_file_1.json'),
                 ('specimen_from_organism', 'specimen_from_organism_0.json')
-            ]
-        ]
+            ]:
+                expected.append({
+                    'type': replica_type,
+                    'value': bundle.metadata_files[key],
+                })
+
         response = self._get_manifest(ManifestFormat.verbatim_jsonl, {})
         self.assertEqual(200, response.status_code)
         self._assert_jsonl(expected, response)

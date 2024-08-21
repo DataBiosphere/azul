@@ -688,80 +688,80 @@
                 "submission_date": "2019-07-18T21:12:40.114Z",
                 "update_date": "2019-07-18T21:12:44.455Z"
             }
-        },
-        "links.json": {
-            "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
-            "schema_type": "link_bundle",
-            "schema_version": "1.1.5",
-            "links": [
-                {
-                    "process": "f59c9106-16a8-47f8-b681-490d23ee09de",
-                    "inputs": [
-                        "13eab62e-0038-4997-aeab-aa3192cc090e"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "3f193e72-8efe-4c2a-ace1-79140ca36477",
-                        "078b71eb-220a-43e5-a0fc-4f231e90f85f"
-                    ],
-                    "output_type": "file",
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "dc19bb22-ae7b-431b-9b8b-7b49799a8fcd"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "461851b8-55a5-4ae6-a52a-5bca71a00beb"
-                        }
-                    ]
-                },
-                {
-                    "process": "a03f7164-419b-4792-9a52-e6dda08b85bc",
-                    "inputs": [
-                        "4ccd163e-a630-4ede-bc0c-336ba044b783"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "13eab62e-0038-4997-aeab-aa3192cc090e"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": []
-                },
-                {
-                    "process": "57d2c83d-cd8b-44c9-9644-c3475a44b0a7",
-                    "inputs": [
-                        "92254a9e-3a14-4760-b229-d914f3e8973f"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "4ccd163e-a630-4ede-bc0c-336ba044b783"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": []
-                },
-                {
-                    "process": "8b1f44be-7eaa-4030-b6c5-697c5fc388eb",
-                    "inputs": [
-                        "39d1a24f-1785-476d-9c04-065be917e3ff"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "92254a9e-3a14-4760-b229-d914f3e8973f"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": [
-                        {
-                            "protocol_type": "collection_protocol",
-                            "protocol_id": "79f7c6ac-ada8-4c17-86ec-e73e87b94374"
-                        },
-                        {
-                            "protocol_type": "enrichment_protocol",
-                            "protocol_id": "5d9fc5a2-5516-4205-9d6e-8d0d674f146f"
-                        }
-                    ]
-                }
-            ]
         }
+    },
+    "links": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+            {
+                "process": "f59c9106-16a8-47f8-b681-490d23ee09de",
+                "inputs": [
+                    "13eab62e-0038-4997-aeab-aa3192cc090e"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "3f193e72-8efe-4c2a-ace1-79140ca36477",
+                    "078b71eb-220a-43e5-a0fc-4f231e90f85f"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "dc19bb22-ae7b-431b-9b8b-7b49799a8fcd"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "461851b8-55a5-4ae6-a52a-5bca71a00beb"
+                    }
+                ]
+            },
+            {
+                "process": "a03f7164-419b-4792-9a52-e6dda08b85bc",
+                "inputs": [
+                    "4ccd163e-a630-4ede-bc0c-336ba044b783"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "13eab62e-0038-4997-aeab-aa3192cc090e"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "57d2c83d-cd8b-44c9-9644-c3475a44b0a7",
+                "inputs": [
+                    "92254a9e-3a14-4760-b229-d914f3e8973f"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "4ccd163e-a630-4ede-bc0c-336ba044b783"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "8b1f44be-7eaa-4030-b6c5-697c5fc388eb",
+                "inputs": [
+                    "39d1a24f-1785-476d-9c04-065be917e3ff"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "92254a9e-3a14-4760-b229-d914f3e8973f"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "79f7c6ac-ada8-4c17-86ec-e73e87b94374"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "5d9fc5a2-5516-4205-9d6e-8d0d674f146f"
+                    }
+                ]
+            }
+        ]
     }
 }

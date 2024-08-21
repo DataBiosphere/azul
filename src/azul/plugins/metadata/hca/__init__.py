@@ -80,7 +80,8 @@ class Plugin(MetadataPlugin[HCABundle]):
         api_bundle = api.Bundle(uuid=bundle.uuid,
                                 version=bundle.version,
                                 manifest=bundle.manifest,
-                                metadata_files=bundle.metadata_files)
+                                metadata_files=bundle.metadata_files,
+                                links_json=bundle.links)
 
         def transformers():
             for transformer_cls in self.transformer_types():

@@ -40,21 +40,26 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
     }
     """
     metadata_files: MutableJSON
+    links: MutableJSON
 
     def reject_joiner(self, catalog: CatalogName):
         self._reject_joiner(self.manifest)
         self._reject_joiner(self.metadata_files)
+        self._reject_joiner(self.links)
 
     def to_json(self) -> MutableJSON:
         return {
             'manifest': self.manifest,
-            'metadata': self.metadata_files
+            'metadata': self.metadata_files,
+            'links': self.links,
         }
 
     @classmethod
     def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> 'Bundle':
         manifest = json_['manifest']
         metadata = json_['metadata']
+        links = json_['links']
         assert isinstance(manifest, list), manifest
         assert isinstance(metadata, dict), metadata
-        return cls(fqid=fqid, manifest=manifest, metadata_files=metadata)
+        assert isinstance(links, dict), links
+        return cls(fqid=fqid, manifest=manifest, metadata_files=metadata, links=links)

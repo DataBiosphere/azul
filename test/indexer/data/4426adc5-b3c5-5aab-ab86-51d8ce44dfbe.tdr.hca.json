@@ -316,179 +316,6 @@
         }
     ],
     "metadata": {
-        "links.json": {
-            "describedBy": "https://schema.humancellatlas.org/system/3.0.0/links",
-            "schema_type": "links",
-            "schema_version": "3.0.0",
-            "links": [
-                {
-                    "inputs": [
-                        {
-                            "input_id": "8f8b9587-237f-4995-9461-c96eac53d615",
-                            "input_type": "sequence_file"
-                        }
-                    ],
-                    "link_type": "process_link",
-                    "outputs": [
-                        {
-                            "output_id": "b8b76328-854c-5862-a688-9b761a9cea86",
-                            "output_type": "analysis_file"
-                        }
-                    ],
-                    "process_id": "848c816e-4ae8-4c9a-9e3d-ebe447519ff4",
-                    "process_type": "analysis_process",
-                    "protocols": [
-                        {
-                            "protocol_id": "099457a1-a453-54c6-aae5-b70dafa33bbd",
-                            "protocol_type": "analysis_protocol"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "input_id": "ee7404a4-c183-4a75-8bd1-34b5fc140e81",
-                            "input_type": "sequence_file"
-                        }
-                    ],
-                    "link_type": "process_link",
-                    "outputs": [
-                        {
-                            "output_id": "7a015307-6db9-541f-aaae-db9fdb41000f",
-                            "output_type": "analysis_file"
-                        }
-                    ],
-                    "process_id": "848c816e-4ae8-4c9a-9e3d-ebe447519ff4",
-                    "process_type": "analysis_process",
-                    "protocols": [
-                        {
-                            "protocol_id": "099457a1-a453-54c6-aae5-b70dafa33bbd",
-                            "protocol_type": "analysis_protocol"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_type": "process",
-                    "process_id": "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
-                    "inputs": [
-                        {
-                            "input_type": "cell_suspension",
-                            "input_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "sequence_file",
-                            "output_id": "8f8b9587-237f-4995-9461-c96eac53d615"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "5b503dcb-dca6-4e4f-988b-f7100c030dc5"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "eca2ab79-ad61-411f-815a-4f6d936d992b"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_type": "process",
-                    "process_id": "33e31f6f-fe78-45bd-ae57-10d2d14253cf",
-                    "inputs": [
-                        {
-                            "input_type": "specimen_from_organism",
-                            "input_id": "5d82b884-7db4-47fa-9ccd-03054065c509"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "cell_suspension",
-                            "output_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "fcba26aa-658c-4120-ab31-cc5a5a00f759"
-                        },
-                        {
-                            "protocol_type": "enrichment_protocol",
-                            "protocol_id": "dd7f3d64-4b79-48f0-9d8c-4324594fe820"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_type": "process",
-                    "process_id": "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
-                    "inputs": [
-                        {
-                            "input_type": "cell_suspension",
-                            "input_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "sequence_file",
-                            "output_id": "ee7404a4-c183-4a75-8bd1-34b5fc140e81"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "5b503dcb-dca6-4e4f-988b-f7100c030dc5"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "eca2ab79-ad61-411f-815a-4f6d936d992b"
-                        }
-                    ]
-                },
-                {
-                    "link_type": "process_link",
-                    "process_type": "process",
-                    "process_id": "c0d18b81-0b54-4a11-864b-cd3f43b7e7bf",
-                    "inputs": [
-                        {
-                            "input_type": "donor_organism",
-                            "input_id": "3211ef8f-a60c-4892-ae55-91d6752dcd75"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_type": "specimen_from_organism",
-                            "output_id": "5d82b884-7db4-47fa-9ccd-03054065c509"
-                        }
-                    ],
-                    "protocols": []
-                },
-                {
-                    "link_type": "supplementary_file_link",
-                    "entity": {
-                        "entity_type": "project",
-                        "entity_id": "116965f3-f094-4769-9d28-ae675c1b569c"
-                    },
-                    "files": [
-                        {
-                            "file_id": "e738a267-87fc-4070-abc7-b3be6442c6d0",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "01a1d04b-05d0-4904-b627-68b0dc02bc17",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "a06cb5d5-2675-4d64-aeb8-79e0103715f3",
-                            "file_type": "supplementary_file"
-                        }
-                    ]
-                }
-            ]
-        },
         "sequence_file_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",
             "schema_type": "file",
@@ -1044,5 +871,178 @@
                 "update_date": "2019-05-14T11:06:42.781Z"
             }
         }
+    },
+    "links": {
+        "describedBy": "https://schema.humancellatlas.org/system/3.0.0/links",
+        "schema_type": "links",
+        "schema_version": "3.0.0",
+        "links": [
+            {
+                "inputs": [
+                    {
+                        "input_id": "8f8b9587-237f-4995-9461-c96eac53d615",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "b8b76328-854c-5862-a688-9b761a9cea86",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "848c816e-4ae8-4c9a-9e3d-ebe447519ff4",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "099457a1-a453-54c6-aae5-b70dafa33bbd",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "ee7404a4-c183-4a75-8bd1-34b5fc140e81",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "7a015307-6db9-541f-aaae-db9fdb41000f",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "848c816e-4ae8-4c9a-9e3d-ebe447519ff4",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "099457a1-a453-54c6-aae5-b70dafa33bbd",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "8f8b9587-237f-4995-9461-c96eac53d615"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "5b503dcb-dca6-4e4f-988b-f7100c030dc5"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "eca2ab79-ad61-411f-815a-4f6d936d992b"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "33e31f6f-fe78-45bd-ae57-10d2d14253cf",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "5d82b884-7db4-47fa-9ccd-03054065c509"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "fcba26aa-658c-4120-ab31-cc5a5a00f759"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "dd7f3d64-4b79-48f0-9d8c-4324594fe820"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "ee7404a4-c183-4a75-8bd1-34b5fc140e81"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "5b503dcb-dca6-4e4f-988b-f7100c030dc5"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "eca2ab79-ad61-411f-815a-4f6d936d992b"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "c0d18b81-0b54-4a11-864b-cd3f43b7e7bf",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "3211ef8f-a60c-4892-ae55-91d6752dcd75"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "5d82b884-7db4-47fa-9ccd-03054065c509"
+                    }
+                ],
+                "protocols": []
+            },
+            {
+                "link_type": "supplementary_file_link",
+                "entity": {
+                    "entity_type": "project",
+                    "entity_id": "116965f3-f094-4769-9d28-ae675c1b569c"
+                },
+                "files": [
+                    {
+                        "file_id": "e738a267-87fc-4070-abc7-b3be6442c6d0",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "01a1d04b-05d0-4904-b627-68b0dc02bc17",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "a06cb5d5-2675-4d64-aeb8-79e0103715f3",
+                        "file_type": "supplementary_file"
+                    }
+                ]
+            }
+        ]
     }
 }

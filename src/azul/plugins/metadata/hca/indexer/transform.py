@@ -511,7 +511,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         if not config.enable_replicas:
             replica = None
         elif self.entity_type() == 'bundles':
-            links = self.bundle.metadata_files['links.json']
+            links = self.bundle.links
             replica = self._replica(links, entity_ref, hub_ids)
         else:
             assert isinstance(entity, api.Entity), entity

@@ -82,34 +82,6 @@
         }
     ],
     "metadata": {
-        "links.json": {
-            "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
-            "schema_type": "links",
-            "schema_version": "2.1.1",
-            "links": [
-                {
-                    "link_type": "supplementary_file_link",
-                    "entity": {
-                        "entity_type": "project",
-                        "entity_id": "8185730f-4113-40d3-9cc3-929271784c2b"
-                    },
-                    "files": [
-                        {
-                            "file_id": "538faa28-3235-5e4b-a998-5672e2d964e8",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18",
-                            "file_type": "supplementary_file"
-                        },
-                        {
-                            "file_id": "6c142250-567c-5b63-bd4f-0d78499863f8",
-                            "file_type": "supplementary_file"
-                        }
-                    ]
-                }
-            ]
-        },
         "supplementary_file_0.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
             "schema_type": "file",
@@ -599,5 +571,33 @@
                 "update_date": "2019-09-13T08:37:53.825Z"
             }
         }
+    },
+    "links": {
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_type": "links",
+        "schema_version": "2.1.1",
+        "links": [
+            {
+                "link_type": "supplementary_file_link",
+                "entity": {
+                    "entity_type": "project",
+                    "entity_id": "8185730f-4113-40d3-9cc3-929271784c2b"
+                },
+                "files": [
+                    {
+                        "file_id": "538faa28-3235-5e4b-a998-5672e2d964e8",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "6c142250-567c-5b63-bd4f-0d78499863f8",
+                        "file_type": "supplementary_file"
+                    }
+                ]
+            }
+        ]
     }
 }

@@ -192,14 +192,15 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         self._assert_source(bundle_fqid.source)
         now = time.time()
         staging_area = self.staging_area(bundle_fqid.source.spec.name)
-        version, manifest, metadata = staging_area.get_bundle_parts(bundle_fqid.uuid)
+        version, manifest, metadata, links = staging_area.get_bundle_parts(bundle_fqid.uuid)
         if bundle_fqid.version is None:
             bundle_fqid = CannedBundleFQID(source=bundle_fqid.source,
                                            uuid=bundle_fqid.uuid,
                                            version=version)
         bundle = CannedBundle(fqid=bundle_fqid,
                               manifest=manifest,
-                              metadata_files=metadata)
+                              metadata_files=metadata,
+                              links=links)
         assert version == bundle.version, (version, bundle)
         log.info('It took %.003fs to download bundle %s.%s',
                  time.time() - now, bundle.uuid, bundle.version)

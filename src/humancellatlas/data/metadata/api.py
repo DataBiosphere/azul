@@ -994,7 +994,12 @@ class Bundle:
     entities: MutableMapping[UUID4, Entity] = field(repr=False)
     links: list[Link]
 
-    def __init__(self, uuid: str, version: str, manifest: MutableJSONs, metadata_files: Mapping[str, JSON]):
+    def __init__(self,
+                 uuid: str,
+                 version: str,
+                 manifest: MutableJSONs,
+                 metadata_files: Mapping[str, JSON],
+                 links_json: JSON):
         self.uuid = UUID4(uuid)
         self.version = version
         self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
@@ -1026,7 +1031,6 @@ class Bundle:
 
         self.entities = {**self.projects, **self.biomaterials, **self.processes, **self.protocols, **self.files}
 
-        links_json = metadata_files['links.json']
         schema_version = tuple(map(int, links_json['schema_version'].split('.')))
         self.links = list(chain.from_iterable(
             Link.from_json(link, schema_version)
