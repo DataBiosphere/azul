@@ -2845,18 +2845,6 @@
             "version": "2019-04-03T101353.834000Z"
         },
         {
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "crc32c": "70bbc6b8",
-            "indexed": true,
-            "name": "links.json",
-            "s3_etag": "7385add25e1c482b4d9b4881fb3e196f",
-            "sha1": "df323c0304644ec6c9cc94694198f568fa43ca86",
-            "sha256": "3cec4e10f26331a01ccea9741267a9d5a59a00a39b5a67059cd3f18eb3030663",
-            "size": 14532,
-            "uuid": "48f0d8a4-fd04-4fee-8301-7441b6efcf48",
-            "version": "2019-04-03T105534.952135Z"
-        },
-        {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "d1fbf93a",
             "indexed": false,

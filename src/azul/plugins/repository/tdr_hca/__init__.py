@@ -343,10 +343,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                               manifest=[],
                               metadata_files={})
         entities, root_entities, links_jsons = self._stitch_bundles(bundle)
-        bundle.add_entity(entity_key='links.json',
-                          entity_type='links',
-                          entity_row=self._merge_links(links_jsons),
-                          is_stitched=False)
+        bundle.metadata_files['links.json'] = self._merge_links(links_jsons)
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
@@ -555,12 +552,6 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
         """
         root, *stitched = links_jsons
         if stitched:
-            merged = {
-                'links_id': root['links_id'],
-                'version': root['version']
-            }
-            for common_key in ('project_id', 'schema_type'):
-                merged[common_key] = one({row[common_key] for row in links_jsons})
             source_contents = [row['content'] for row in links_jsons]
             # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
             #        https://github.com/DataBiosphere/azul/issues/3215
@@ -574,14 +565,9 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                 'describedBy': str(schema_url),
                 'links': sum((sc['links'] for sc in source_contents), start=[])
             }
-            merged['content'] = merged_content  # Keep result of parsed JSON for reuse
-            merged['content_size'] = len(json.dumps(merged_content))
-            assert merged.keys() == one({
-                frozenset(row.keys()) for row in links_jsons
-            }), merged
             assert merged_content.keys() == one({
                 frozenset(sc.keys()) for sc in source_contents
             }), merged_content
-            return merged
+            return merged_content
         else:
-            return root
+            return root['content']

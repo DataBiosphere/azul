@@ -7105,17 +7105,6 @@
             "sha256": ""
         },
         {
-            "name": "links.json",
-            "uuid": "fce68057-b0f0-5d11-b9a7-30e8fa3259a8",
-            "version": "2021-02-09T01:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 101562,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "sequence_file_118.json",
             "uuid": "fd0752c7-210b-4acd-a7ef-df7ffcdfbd3d",
             "version": "2020-08-13T10:24:34.290000Z",

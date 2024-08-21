@@ -1,17 +1,6 @@
 {
     "manifest": [
         {
-            "name": "links.json",
-            "uuid": "00f48893-5e9d-52cd-b32d-af88edccabfa",
-            "version": "2020-02-03T10:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 12651,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "Retina_Wong_scRNA_Sample5_I1.fastq.gz",
             "uuid": "07b45ad4-7797-4c16-bfae-493fb41d6600",
             "version": "2019-09-13T09:16:27.260339Z",

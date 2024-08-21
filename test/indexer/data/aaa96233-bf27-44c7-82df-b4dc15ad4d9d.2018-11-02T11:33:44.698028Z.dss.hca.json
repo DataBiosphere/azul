@@ -157,18 +157,6 @@
             "version": "2018-11-02T10:12:03.520000Z"
         },
         {
-            "content-type": "application/json; dcp-type='metadata/links'",
-            "crc32c": "aace07f3",
-            "indexed": true,
-            "name": "links.json",
-            "s3_etag": "77a21047cf9b7c706e72663090e67d4d",
-            "sha1": "766cefe20615e3f8aa5e0fc2042e4192d0494041",
-            "sha256": "e4163bdffb83d5cdf9f00b51febd05962fbc728189fc7c836ab0d4a667680c6c",
-            "size": 2083,
-            "uuid": "b09d8a5a-550c-425f-baaa-1c963a8a3312",
-            "version": "2018-11-02T11:33:44.257057Z"
-        },
-        {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "54bb9c82",
             "indexed": false,

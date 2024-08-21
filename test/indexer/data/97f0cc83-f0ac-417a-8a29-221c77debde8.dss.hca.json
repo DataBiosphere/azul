@@ -169,18 +169,6 @@
             "s3_etag": "e16b715d16d5703a2d68bd1ec1c6e879"
         },
         {
-            "name": "links.json",
-            "uuid": "63b2b373-b6e3-4553-a153-a262102f5739",
-            "version": "2019-10-14T19:54:43.467042Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 2266,
-            "indexed": true,
-            "crc32c": "f2d7c7c3",
-            "sha1": "b65099884d6700966385b1242b84fd9374fee38f",
-            "sha256": "557dc252c866fea4a762cde5ca096b58917cd20316ce670eb3a6709fcc144507",
-            "s3_etag": "94654bceaa4153da6130ddd40c59f68a"
-        },
-        {
             "name": "E8.75_anterior_Rep1_barcodes.fastq.gz",
             "uuid": "1fdcd06c-ea5b-4e5a-b382-ae42dcfc8aca",
             "version": "2019-10-14T19:54:43.781599Z",

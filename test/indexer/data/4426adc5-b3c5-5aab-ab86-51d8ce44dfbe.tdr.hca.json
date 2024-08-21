@@ -79,17 +79,6 @@
             "sha256": ""
         },
         {
-            "name": "links.json",
-            "uuid": "4426adc5-b3c5-5aab-ab86-51d8ce44dfbe",
-            "version": "2020-08-10T21:24:26.174274Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 3322,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "library_preparation_protocol_0.json",
             "uuid": "5b503dcb-dca6-4e4f-988b-f7100c030dc5",
             "version": "2019-05-14T11:06:42.648000Z",

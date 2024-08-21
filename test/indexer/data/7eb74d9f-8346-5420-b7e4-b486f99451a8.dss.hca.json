@@ -144,17 +144,6 @@
             "s3_etag": "be870140031523af537bbb3861fff77e-44"
         },
         {
-            "name": "links.json",
-            "uuid": "7eb74d9f-8346-5420-b7e4-b486f99451a8",
-            "version": "2020-02-03T10:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 2483,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "project_0.json",
             "uuid": "8185730f-4113-40d3-9cc3-929271784c2b",
             "version": "2019-09-13T08:37:53.825000Z",

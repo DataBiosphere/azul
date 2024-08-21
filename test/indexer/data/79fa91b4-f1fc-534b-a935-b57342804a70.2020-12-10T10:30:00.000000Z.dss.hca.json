@@ -2223,17 +2223,6 @@
             "sha256": "04b3c4a0b85159145d49208536b7020807b022fd9b7a2b031fe7695a1ba317c8"
         },
         {
-            "name": "links.json",
-            "uuid": "79fa91b4-f1fc-534b-a935-b57342804a70",
-            "version": "2020-12-10T10:30:00.000000Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 76574,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "sequence_file_29.json",
             "uuid": "7a058660-f594-4eb5-b02f-bace314f6d76",
             "version": "2019-10-22T20:01:16.863000Z",

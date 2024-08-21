@@ -179,17 +179,6 @@
             "sha256": ""
         },
         {
-            "name": "links.json",
-            "uuid": "04836733-0449-4e57-be2e-6f3b8fbdfb12",
-            "version": "2021-05-10T23:25:12.412000Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 358661,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "process_0.json",
             "uuid": "04836733-0449-4e57-be2e-6f3b8fbdfb12",
             "version": "2021-05-10T23:25:12.412000Z",

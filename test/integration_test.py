@@ -1937,14 +1937,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 self.assertIsInstance(metadata, dict)
                 manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
                 metadata_files = sorted(metadata.keys())
-
-                if catalog.plugins['repository'].name == 'canned':
-                    # FIXME: Manifest entry not generated for links.json by
-                    #        StagingArea.get_bundle
-                    #        https://github.com/DataBiosphere/hca-metadata-api/issues/52
-                    assert 'links.json' not in manifest_files
-                    metadata_files.remove('links.json')
-
+                metadata_files.remove('links.json')
                 self.assertListEqual(manifest_files, metadata_files)
             elif metadata_plugin_name == 'anvil':
                 self.assertEqual({'entities', 'links'}, bundle_json.keys())

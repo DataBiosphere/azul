@@ -97,17 +97,6 @@
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_385feda5-d1e3-5a51-8e55-f4f491a4e7bf"
         },
         {
-            "name": "links.json",
-            "uuid": "1b6d8348-d6e9-406a-aa6a-7ee886e52bf9",
-            "version": "2019-09-24T09:35:06.958773Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 3786,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": "",
-            "is_stitched": false
-        },
-        {
             "name": "IDC9_L001_R2.fastq.gz",
             "uuid": "1b9d4386-97ac-402d-a93d-40740b2c3c28",
             "version": "2019-09-24T09:35:07.677792Z",

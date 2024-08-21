@@ -24,17 +24,6 @@
             "sha256": "053074e25a96a463c081e38bcd02662ba1536dd0cb71411bd111b8a2086a03e1"
         },
         {
-            "name": "links.json",
-            "uuid": "4b03c1ce-9df1-5cd5-a8e4-48a2fe095081",
-            "version": "2021-02-10T16:56:40.419579Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 935,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "supplementary_file_1.json",
             "uuid": "5b465aad-0981-5152-b468-e615e20f5884",
             "version": "2021-02-10T16:56:40.419579Z",

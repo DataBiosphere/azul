@@ -139,17 +139,6 @@
             "s3_etag": "4a55ee383287a1b4f0aa4e756178c73f-2"
         },
         {
-            "name": "links.json",
-            "uuid": "80baee6e-00a5-4fdc-bfe3-d339ff8a7178",
-            "version": "2021-03-12T22:43:32.330000Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 1725,
-            "is_stitched": false,
-            "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
             "name": "process_1.json",
             "uuid": "80baee6e-00a5-4fdc-bfe3-d339ff8a7178",
             "version": "2021-03-12T22:43:32.330000Z",

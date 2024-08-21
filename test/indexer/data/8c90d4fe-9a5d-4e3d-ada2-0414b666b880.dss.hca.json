@@ -349,18 +349,6 @@
             "s3_etag": "dcc9422f3633e5300292514d24e943e1"
         },
         {
-            "name": "links.json",
-            "uuid": "50f1b06c-511b-4145-b9d2-67b5a75dd573",
-            "version": "2019-10-14T19:54:58.503698Z",
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "size": 3221,
-            "indexed": true,
-            "crc32c": "186097fd",
-            "sha1": "0e1d47d5a4f2dad48ccf4a69f9333cd5a357eede",
-            "sha256": "19a3f7ac683ca22312302cc05aea13f21bdb4f0c5dacbeb29ded1f0803f47d16",
-            "s3_etag": "56b3adc600a5b1f7f57275dd3a78b4d6"
-        },
-        {
             "name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R1.fastq.gz",
             "uuid": "f4146a80-2737-4299-8d9a-0ec685dbac8b",
             "version": "2019-10-14T19:54:58.812291Z",

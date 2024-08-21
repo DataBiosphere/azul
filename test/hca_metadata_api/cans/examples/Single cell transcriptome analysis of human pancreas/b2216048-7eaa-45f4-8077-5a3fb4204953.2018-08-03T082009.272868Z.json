@@ -37,18 +37,6 @@
             "version": "1"
         },
         {
-            "crc32c": "C0EF71FC",
-            "sha1": "79e8137293c18fc1ef1a4b2a532e59f6223fbec3",
-            "sha256": "d333cfe228457aaa476b4ccf39bdd4c620bfcf0f2c11ccfff83c9aacb7a17c13",
-            "s3_etag": "cbacd6ba075487820bcd49e2667581b6",
-            "content-type": "application/json; dcp-type=\"metadata/json\"",
-            "indexed": true,
-            "name": "links.json",
-            "size": 1727,
-            "uuid": "169acedb-1e56-4b6d-a3d7-0d3e56d74098",
-            "version": "1"
-        },
-        {
             "crc32c": "8D88697D",
             "sha1": "cfbab7537d593e0b1765b65b755e88244bd88ebc",
             "sha256": "ec56a160551570d476b3923472e19f2cb916f65b85c72e825784653ddee27f77",
