@@ -653,6 +653,19 @@
                 }
             }
         },
+        "/maintenance/schedule": {
+            "get": {
+                "summary": "A maintenance schedule as an JSON object",
+                "tags": [
+                    "Auxiliary"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\nThis object may be hanceforth refered to as \"the schedule\"\nor `schedule`.\nThe `start` time of an event is its `actual_start` if set,\nor its `planned_start` otherwise. The `end` time of an event\nis its `actual_end` if set, or its `start` plus\n`planned_duration` otherwise. All events in the schedule are\nsorted by their `start` time. No two events have the same\n`start` time. Each event defines an interval\n`[e.start, e.end)` and there is no overlap between these\n intervals.\n\n A pending event is one where `actual_start` is absent. An\n active event is one where `actual_start` is present but\n `actual_end` is absent. There can be at most one active\n event.\n"
+                    }
+                }
+            }
+        },
         "/index/catalogs": {
             "get": {
                 "summary": "List all available catalogs.",

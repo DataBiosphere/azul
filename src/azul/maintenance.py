@@ -11,9 +11,9 @@ import json
 from operator import (
     attrgetter,
 )
-import sys
 from typing import (
     Iterator,
+    Self,
     Sequence,
 )
 
@@ -24,12 +24,21 @@ from more_itertools import (
 )
 
 from azul import (
+    CatalogName,
     JSON,
+    cached_property,
+    config,
     reject,
     require,
 )
 from azul.collections import (
     adict,
+)
+from azul.deployment import (
+    aws,
+)
+from azul.service.storage_service import (
+    StorageObjectNotFound,
 )
 from azul.time import (
     format_dcp2_datetime,
@@ -46,7 +55,7 @@ class MaintenanceImpactKind(Enum):
 @attrs.define
 class MaintenanceImpact:
     kind: MaintenanceImpactKind
-    affected_catalogs: list[str]
+    affected_catalogs: list[CatalogName]
 
     @classmethod
     def from_json(cls, impact: JSON):
@@ -58,8 +67,9 @@ class MaintenanceImpact:
                     affected_catalogs=self.affected_catalogs)
 
     def validate(self):
-        require(all(isinstance(c, str) and c for c in self.affected_catalogs),
-                'Invalid catalog name/pattern')
+        require(all(
+            isinstance(c, CatalogName) and c for c in self.affected_catalogs),
+            'Invalid catalog name/pattern')
         require(all({0: True, 1: c[-1] == '*'}.get(c.count('*'), False)
                     for c in self.affected_catalogs),
                 'Invalid catalog pattern')
@@ -75,7 +85,7 @@ class MaintenanceEvent:
     actual_end: datetime | None
 
     @classmethod
-    def from_json(cls, event: JSON):
+    def from_json(cls, event: JSON) -> Self:
         return cls(planned_start=cls._parse_datetime(event['planned_start']),
                    planned_duration=timedelta(seconds=event['planned_duration']),
                    description=event['description'],
@@ -139,7 +149,7 @@ class MaintenanceSchedule:
         starts = set(e.start for e in self.events)
         require(len(starts) == len(self.events),
                 'Start times are not distinct')
-        # Since starts are distinct, we'll never need the end as a tie breaker
+        # Since starts are distinct, we'll never need the end as a tie-breaker
         intervals = [(e.start, e.end) for e in self.events]
         require(intervals == sorted(intervals),
                 'Events are not sorted by start time')
@@ -154,15 +164,22 @@ class MaintenanceSchedule:
     def pending_events(self) -> list[MaintenanceEvent]:
         """
         Returns a list of pending events in this schedule. The elements in the
-        returned list can be modified until another method is invoked on this schedule. The
-        modifications will be reflected in ``self.events`` but the caller is
-        responsible for ensuring they don't invalidate this schedule.
+        returned list can be modified until another method is invoked on this
+        schedule. The modifications will be reflected in ``self.events`` but the
+        caller is responsible for ensuring they don't invalidate this schedule.
         """
         events = enumerate(self.events)
         for i, e in events:
             if e.actual_start is None:
                 return self.events[i:]
         return []
+
+    def past_events(self) -> list[MaintenanceEvent]:
+        return [
+            e
+            for e in self.events
+            if e.actual_end is not None and e.actual_start is not None
+        ]
 
     def active_event(self) -> MaintenanceEvent | None:
         return only(self._active_events())
@@ -191,6 +208,14 @@ class MaintenanceSchedule:
         except BaseException:
             self.events = events
             raise
+
+    def adjust_event(self, additional_duration: timedelta):
+        event = self.active_event()
+        reject(event is None, 'No active event')
+        event.planned_duration += additional_duration
+        self._heal(event, iter(self.pending_events()))
+        assert self.active_event() is not None
+        return event
 
     def cancel_event(self, index: int) -> MaintenanceEvent:
         event = self.pending_events()[index]
@@ -223,3 +248,108 @@ class MaintenanceSchedule:
                 next_event.planned_start = event.end
             event = next_event
         self.validate()
+
+
+class MaintenanceService:
+
+    @property
+    def bucket(self):
+        return aws.shared_bucket
+
+    @property
+    def object_key(self):
+        return f'azul/{config.deployment_stage}/azul.json'
+
+    @cached_property
+    def client(self):
+        return aws.s3
+
+    @property
+    def _get_schedule(self) -> JSON:
+        try:
+            response = self.client.get_object(Bucket=self.bucket,
+                                              Key=self.object_key)
+        except self.client.exceptions.NoSuchKey:
+            raise StorageObjectNotFound
+        else:
+            return json.loads(response['Body'].read())
+
+    @property
+    def get_schedule(self) -> MaintenanceSchedule:
+        schedule = self._get_schedule
+        schedule = MaintenanceSchedule.from_json(schedule['maintenance']['schedule'])
+        schedule.validate()
+        return schedule
+
+    def put_schedule(self, schedule: MaintenanceSchedule):
+        schedule = schedule.to_json()
+        return self.client.put_object(Bucket=self.bucket,
+                                      Key=self.object_key,
+                                      Body=json.dumps({
+                                          "maintenance": {
+                                              "schedule": schedule
+                                          }
+                                      }).encode())
+
+    def provision_event(self,
+                        planned_start: str,
+                        planned_duration: int,
+                        description: str,
+                        partial: list[str] | None = None,
+                        degraded: list[str] | None = None,
+                        unavailable: list[str] | None = None) -> MaintenanceEvent:
+        """
+        Uses the given inmput parametes to provision a new MaintenanceEvent.
+        This new MaintenanceEvent object can then be added as an event to an
+        existing schedule. It is primarily used by `add_event` to create and add
+        events to the maintenance schedule.
+        """
+        partial = [{
+            'kind': 'partial_responses',
+            'affected_catalogs': partial
+        }] if partial is not None else []
+        degraded = [{
+            'kind': 'degraded_performance',
+            'affected_catalogs': degraded
+        }] if degraded is not None else []
+        unavailable = [{
+            'kind': 'service_unavailable',
+            'affected_catalogs': unavailable
+        }] if unavailable is not None else []
+        impacts = [*partial, *degraded, *unavailable]
+        return MaintenanceEvent.from_json({
+            'planned_start': planned_start,
+            'planned_duration': planned_duration,
+            'description': description,
+            'impacts': impacts
+        })
+
+    def add_event(self, event: MaintenanceEvent) -> JSON:
+        schedule = self.get_schedule
+        schedule.add_event(event)
+        self.put_schedule(schedule)
+        return schedule.to_json()
+
+    def cancel_event(self, index: int) -> JSON:
+        schedule = self.get_schedule
+        event = schedule.cancel_event(index)
+        self.put_schedule(schedule)
+        return event.to_json()
+
+    def start_event(self) -> JSON:
+        schedule = self.get_schedule
+        event = schedule.start_event()
+        self.put_schedule(schedule)
+        return event.to_json()
+
+    def end_event(self) -> JSON:
+        schedule = self.get_schedule
+        event = schedule.end_event()
+        self.put_schedule(schedule)
+        return event.to_json()
+
+    def adjust_event(self, additional_duration: timedelta) -> JSON:
+        schedule = self.get_schedule
+        event = schedule.adjust_event(additional_duration)
+        self.put_schedule(schedule)
+        return event.to_json()
