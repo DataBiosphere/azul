@@ -508,16 +508,16 @@ class AzulChaliceApp(Chalice):
                         headers={'Content-Type': 'text/html'},
                         body=swagger_ui_html)
 
-    def swagger_resource(self, file) -> Response:
-        if os.sep in file:
-            raise BadRequestError(file)
+    def swagger_resource(self, file_name: str) -> Response:
+        if os.sep in file_name:
+            raise BadRequestError(file_name)
         else:
             try:
-                body = self.load_static_resource('swagger', file)
+                body = self.load_static_resource('swagger', file_name)
             except FileNotFoundError:
-                raise NotFoundError(file)
+                raise NotFoundError(file_name)
             else:
-                path = pathlib.Path(file)
+                path = pathlib.Path(file_name)
                 content_type = mimetypes.types_map[path.suffix]
                 return Response(status_code=200,
                                 headers={'Content-Type': content_type},
