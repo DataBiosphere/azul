@@ -18,8 +18,6 @@ from itertools import (
     chain,
 )
 from typing import (
-    Any,
-    Dict,
     Iterable,
     Iterator,
     List,
@@ -44,6 +42,12 @@ from azul.collections import (
     OrderedSet,
     dict_merge,
 )
+from azul.types import (
+    JSON,
+    MutableJSON,
+    MutableJSONs,
+    is_optional,
+)
 from humancellatlas.data.metadata.age_range import (
     AgeRange,
 )
@@ -58,10 +62,6 @@ from humancellatlas.data.metadata.lookup import (
 # A few helpful type aliases
 #
 UUID4 = UUID
-AnyJSON2 = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
-AnyJSON1 = Union[str, int, float, bool, None, Dict[str, AnyJSON2], List[AnyJSON2]]
-AnyJSON = Union[str, int, float, bool, None, Dict[str, AnyJSON1], List[AnyJSON1]]
-JSON = Dict[str, AnyJSON]
 
 
 @dataclass(init=False)
@@ -83,7 +83,7 @@ class ManifestEntry:
     version: str
     is_stitched: bool = field(init=False)
 
-    def __init__(self, json: JSON):
+    def __init__(self, json: MutableJSON):
         # '/' was once forbidden in file paths and was encoded with '!'. Now
         # '/' is allowed and we force it in the metadata so that backwards
         # compatibility is simplified downstream.
@@ -822,26 +822,6 @@ class ImagingPreparationProtocol(Protocol):
     pass
 
 
-def is_optional(t):
-    """
-    https://stackoverflow.com/a/62641842/4171119
-
-    >>> is_optional(str)
-    False
-    >>> is_optional(Optional[str])
-    True
-    >>> is_optional(Union[str, None])
-    True
-    >>> is_optional(Union[None, str])
-    True
-    >>> is_optional(Union[str, None, int])
-    True
-    >>> is_optional(Union[str, int])
-    False
-    """
-    return t == Optional[t]
-
-
 @dataclass(init=False)
 class File(LinkedEntity):
     format: str
@@ -1020,7 +1000,7 @@ class Bundle:
     entities: MutableMapping[UUID4, Entity] = field(repr=False)
     links: List[Link]
 
-    def __init__(self, uuid: str, version: str, manifest: List[JSON], metadata_files: Mapping[str, JSON]):
+    def __init__(self, uuid: str, version: str, manifest: MutableJSONs, metadata_files: Mapping[str, JSON]):
         self.uuid = UUID4(uuid)
         self.version = version
         self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}

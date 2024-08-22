@@ -25,7 +25,6 @@ import time
 from typing import (
     Optional,
     Type,
-    cast,
 )
 
 from furl import (
@@ -64,8 +63,6 @@ from azul.time import (
 )
 from azul.types import (
     JSON,
-    MutableJSON,
-    MutableJSONs,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -201,8 +198,8 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                                            uuid=bundle_fqid.uuid,
                                            version=version)
         bundle = CannedBundle(fqid=bundle_fqid,
-                              manifest=cast(MutableJSONs, manifest),
-                              metadata_files=cast(MutableJSON, metadata))
+                              manifest=manifest,
+                              metadata_files=metadata)
         assert version == bundle.version, (version, bundle)
         log.info('It took %.003fs to download bundle %s.%s',
                  time.time() - now, bundle.uuid, bundle.version)

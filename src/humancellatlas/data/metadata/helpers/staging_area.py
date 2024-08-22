@@ -26,13 +26,17 @@ from furl import (
 
 import git
 
-from humancellatlas.data.metadata.api import (
-    Bundle,
-    JSON,
-)
-from humancellatlas.data.metadata.helpers.exception import (
+from azul import (
     reject,
     require,
+)
+from azul.types import (
+    JSON,
+    MutableJSON,
+    MutableJSONs,
+)
+from humancellatlas.data.metadata.api import (
+    Bundle,
 )
 from humancellatlas.data.metadata.helpers.schema_validation import (
     SchemaValidator,
@@ -49,14 +53,14 @@ class JsonFile:
     uuid: str
     version: str
     name: str
-    content: JSON
+    content: MutableJSON
     _validator: ClassVar[SchemaValidator] = SchemaValidator()
 
     def __attrs_post_init__(self):
         self._validator.validate_json(self.content, self.name)
 
     @classmethod
-    def from_json(cls, file_name: str, content: JSON) -> 'JsonFile':
+    def from_json(cls, file_name: str, content: MutableJSON) -> 'JsonFile':
         def parse_file_name(file_name: str) -> Sequence[str]:
             suffix = '.json'
             assert file_name.endswith(suffix), file_name
@@ -141,7 +145,7 @@ class StagingArea:
         version, manifest, metadata = self.get_bundle_parts(subgraph_id)
         return Bundle(subgraph_id, version, manifest, metadata)
 
-    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, list[JSON], JSON]:
+    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, MutableJSONs, MutableJSON]:
         """
         Return the components to create a bundle from the staging area
         """
