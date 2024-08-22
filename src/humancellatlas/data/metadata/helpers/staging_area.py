@@ -11,7 +11,6 @@ from typing import (
     Mapping,
     Self,
     Sequence,
-    Set,
     TypeVar,
 )
 from uuid import (
@@ -184,7 +183,7 @@ class StagingArea:
 
     def _entity_ids_by_type(self,
                             subgraph_id: str
-                            ) -> dict[str, Set[str]]:
+                            ) -> dict[str, set[str]]:
         """
         Return a mapping of entity types (e.g. 'analysis_file',
         'cell_suspension') to a set of entity IDs
