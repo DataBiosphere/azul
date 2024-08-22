@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "supplementary_file/22561f93-d5e0-57eb-a54e-2d9d565cc234": {
             "name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
             "uuid": "046a88ef-d19f-51ed-9003-14847dffc820",
             "size": 1024,
@@ -11,7 +11,7 @@
             "sha256": "",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c"
         },
-        {
+        "sequence_file/5f68ea73-350b-4d37-a341-3004139fb699": {
             "name": "IDC9_L001_I1.fastq.gz",
             "uuid": "08bc2234-5157-4f5c-b348-5d63cc9f14e1",
             "version": "2019-09-24T09:35:07.310307Z",
@@ -24,7 +24,7 @@
             "s3_etag": "4cc2f68ce54b988081c14118adc480c4-7",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_c82292d3-61d1-5785-b8dc-24b9365df5bd"
         },
-        {
+        "supplementary_file/c343a47d-683f-571d-99c4-1331841b4e63": {
             "name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
             "uuid": "19617367-cda8-54e0-8296-84623ef58c3f",
             "size": 1024,
@@ -35,7 +35,7 @@
             "sha256": "",
             "drs_uri": null
         },
-        {
+        "sequence_file/133f2a25-f3aa-49a7-b9b6-d185d302fb26": {
             "name": "IDC9_L004_R1.fastq.gz",
             "uuid": "1abc51fb-6b3a-45e9-8691-fc250b4e0509",
             "version": "2019-09-24T09:35:09.245235Z",
@@ -48,7 +48,7 @@
             "s3_etag": "c9c70827a7c5d23bb150105a14112af9-20",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_385feda5-d1e3-5a51-8e55-f4f491a4e7bf"
         },
-        {
+        "sequence_file/3c3d882a-cc38-4eea-ac53-0885f906852e": {
             "name": "IDC9_L001_R2.fastq.gz",
             "uuid": "1b9d4386-97ac-402d-a93d-40740b2c3c28",
             "version": "2019-09-24T09:35:07.677792Z",
@@ -61,7 +61,7 @@
             "s3_etag": "06705170a39d451d000c0143135fc5c3-64",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_83e89c54-4fc6-58b0-800c-3788539c41e7"
         },
-        {
+        "sequence_file/63051b9f-87d4-4853-a4a0-5cc742ef6e72": {
             "name": "IDC9_L002_R1.fastq.gz",
             "uuid": "292b2faf-0db3-4ba1-a6a5-cb7bdfa9313d",
             "version": "2019-09-24T09:35:08.157668Z",
@@ -74,7 +74,7 @@
             "s3_etag": "31985ad7f32b053fa97f05216c6e805e-20",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_dba31e1c-1b9c-56ae-af74-16b00b8144d2"
         },
-        {
+        "supplementary_file/507d2814-1688-54e7-b73e-2f831aa34368": {
             "name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
             "uuid": "519ee493-0984-5b54-95ec-85452d506b00",
             "size": 1024,
@@ -85,7 +85,7 @@
             "sha256": "",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_9d6f268f-f484-5381-9095-f0998fa0c961"
         },
-        {
+        "sequence_file/a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0": {
             "name": "IDC9_L003_R1.fastq.gz",
             "uuid": "87fb0ccd-07d9-4dde-bbb0-c61338e3127b",
             "version": "2019-09-24T09:35:08.661156Z",
@@ -98,7 +98,7 @@
             "s3_etag": "fc818501a59964e076aff1bc7f7068c6-20",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8"
         },
-        {
+        "sequence_file/e46af70a-0396-41db-9b74-330cb8244124": {
             "name": "IDC9_L004_R2.fastq.gz",
             "uuid": "ae5d1035-8f2b-4355-a0ef-bbb99958b303",
             "version": "2019-09-24T09:35:09.407370Z",
@@ -111,7 +111,7 @@
             "s3_etag": "c92e5374ac0a53b228d4c1511c2d2842-63",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_065dad63-3e05-5738-8ba5-9925d5d73d5e"
         },
-        {
+        "sequence_file/23f8e139-f4fa-4476-ba59-ff5d37003c34": {
             "name": "IDC9_L001_R1.fastq.gz",
             "uuid": "c4288821-5775-4163-9543-5d29f847b03b",
             "version": "2019-09-24T09:35:07.508582Z",
@@ -124,7 +124,7 @@
             "s3_etag": "046326b00d6cc7485eba093190ee7610-20",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_93ce1f3e-a963-5463-948f-44751a37f48d"
         },
-        {
+        "sequence_file/98ee0901-d34c-48a5-915a-0511bac325ec": {
             "name": "IDC9_L003_R2.fastq.gz",
             "uuid": "c4613a58-8bfb-43c6-8901-35d579631859",
             "version": "2019-09-24T09:35:08.872601Z",
@@ -137,7 +137,7 @@
             "s3_etag": "3188a7180ba75349ca223905e3f589c1-64",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_e6c1d2ce-d6ad-500e-8682-626a555992ab"
         },
-        {
+        "sequence_file/3dffc456-caaf-4823-9f65-fc0db7abacbc": {
             "name": "IDC9_L003_I1.fastq.gz",
             "uuid": "dd7d84d2-c515-489f-9ead-3f7df2c66848",
             "version": "2019-09-24T09:35:08.401689Z",
@@ -150,7 +150,7 @@
             "s3_etag": "d7046367bee15cd004af8f9882874042-7",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_bb455f5a-a70f-5155-85a0-46f475856e9f"
         },
-        {
+        "sequence_file/6ca8e43f-5f40-4eb9-bfa9-294c54dbeade": {
             "name": "IDC9_L002_R2.fastq.gz",
             "uuid": "ea44789f-43b3-4684-b515-800605394177",
             "version": "2019-09-24T09:35:08.227847Z",
@@ -163,7 +163,7 @@
             "s3_etag": "29da5762d5a55b9ecbd14c8663039f11-62",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_f140bd59-16c2-5082-aaf6-1c929e7063c6"
         },
-        {
+        "sequence_file/35e07477-76cb-4a92-99b6-7b3bbb02ec06": {
             "name": "IDC9_L002_I1.fastq.gz",
             "uuid": "ed7405bd-c1d0-4501-9a7a-7e953d887322",
             "version": "2019-09-24T09:35:07.845958Z",
@@ -176,7 +176,7 @@
             "s3_etag": "4077676da51c8b6eff706b1ebf43114c-7",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_b644bacb-5e69-5f73-baaf-f32178b0d0fd"
         },
-        {
+        "sequence_file/27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6": {
             "name": "IDC9_L004_I1.fastq.gz",
             "uuid": "f0011946-dbea-4f87-9858-5e3fd32a9829",
             "version": "2019-09-24T09:35:09.172703Z",
@@ -189,7 +189,7 @@
             "s3_etag": "20497e6cbc5f671fa94cf69bf0febdad-7",
             "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_a694f8a4-424d-56db-9329-d449667416ea"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/906f8f09-deaa-40bb-bf50-27d2336b2dc4": {
             "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",

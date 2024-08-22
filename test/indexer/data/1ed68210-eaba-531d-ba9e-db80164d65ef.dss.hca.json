@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/8da4bdb9-ab64-5a90-8bce-f0ed5106ea41": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "9d9e936d",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "c88f5811-6b23-5f9c-951f-29b4a80e6b4b",
             "version": "2021-01-01T00:00:00.000000Z"
         },
-        {
+        "sequence_file/de17aa7d-be28-53c1-b7a3-1f4b3989e3e6": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "e30fa683",
             "indexed": false,
@@ -24,7 +24,7 @@
             "uuid": "14c05ce3-f946-5936-893c-ee0ddd7407fb",
             "version": "2021-01-01T00:00:00.000000Z"
         }
-    ],
+    },
     "metadata": {
         "project/90bf705c-d891-5ce2-aa54-094488b445c6": {
             "array_express_accessions": [

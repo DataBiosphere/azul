@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/f3d5c7cb-7ab4-4903-8e0e-dc942121fe27": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "a3f89844",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "9dee7111-d743-43a1-b768-118614bf7987",
             "version": "2018-10-07T130110.968810Z"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/ef97eef1-a436-4462-a152-1a2b86ee8831": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

@@ -29,7 +29,6 @@ from tempfile import (
 )
 from typing import (
     Optional,
-    cast,
 )
 from unittest.mock import (
     MagicMock,
@@ -111,7 +110,6 @@ from azul.types import (
     JSON,
     JSONs,
     MutableJSON,
-    MutableJSONs,
 )
 from indexer import (
     AnvilCannedBundleTestCase,
@@ -377,7 +375,7 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         links = self._replace_uuids(bundle.links, old_to_new)
         return DSSBundle(fqid=self.bundle_fqid(uuid=old_to_new[bundle.uuid],
                                                version=bundle.version),
-                         manifest=cast(MutableJSONs, bundle.manifest),
+                         manifest=bundle.manifest,
                          metadata=metadata,
                          links=links)
 
@@ -555,15 +553,14 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
         # redundant file contributions from different bundles (for example due
         # to stitching)
         entity_ids = {
-            '89e313db-4423-4d53-b17e-164949acfa8f',  # Supplementary file (metadata)
-            '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',  # Supplementary file (data)
+            '89e313db-4423-4d53-b17e-164949acfa8f',  # Supplementary file
             '67bc798b-a34a-4104-8cab-cad648471f69',  # Project
         }
-        manifest = [
-            entry
-            for entry in bundle.manifest
-            if entry['uuid'] in entity_ids
-        ]
+        manifest = {
+            ref: entry
+            for ref, entry in bundle.manifest.items()
+            if EntityReference.parse(ref).entity_id in entity_ids
+        }
         metadata = {
             ref: copy_json(content)
             for ref, content in bundle.metadata.items()

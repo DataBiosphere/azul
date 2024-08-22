@@ -15,7 +15,6 @@ from azul.indexer import (
 from azul.types import (
     JSON,
     MutableJSON,
-    MutableJSONs,
 )
 
 log = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ log = logging.getLogger(__name__)
 
 @attrs.define(kw_only=True)
 class HCABundle(Bundle[BUNDLE_FQID], ABC):
-    manifest: MutableJSONs
+    manifest: MutableJSON
     """
     Each item of the `manifest` attribute's value has this shape:
     {
@@ -62,7 +61,7 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
         metadata = json_['metadata']
         links = json_['links']
         stitched = json_['stitched']
-        assert isinstance(manifest, list), manifest
+        assert isinstance(manifest, dict), manifest
         assert isinstance(metadata, dict), metadata
         assert isinstance(links, dict), links
         assert isinstance(stitched, list), stitched

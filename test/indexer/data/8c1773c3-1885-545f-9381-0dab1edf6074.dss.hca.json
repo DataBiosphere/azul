@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/31786d8d-d046-58d1-b7b4-49bc1114a0f8": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "50660f48",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "92855c6f-2807-50b6-a2a4-19b13c71aa65",
             "version": "2021-01-01T00:00:00.000000Z"
         },
-        {
+        "sequence_file/6a0e071d-9bfc-5e12-b1b9-e887885e12f6": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "50660f48",
             "indexed": false,
@@ -24,7 +24,7 @@
             "uuid": "c2fe321a-487d-5e53-83d3-766aad105c4f",
             "version": "2021-01-01T00:00:00.000000Z"
         },
-        {
+        "sequence_file/f6abda5c-65f3-5015-8167-ae78b96f5693": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "50660f48",
             "indexed": false,
@@ -36,7 +36,7 @@
             "uuid": "b613022f-86b4-50ab-9ca2-7dfe2bc27bef",
             "version": "2021-01-01T00:00:00.000000Z"
         }
-    ],
+    },
     "metadata": {
         "project/90bf705c-d891-5ce2-aa54-094488b445c6": {
             "array_express_accessions": [

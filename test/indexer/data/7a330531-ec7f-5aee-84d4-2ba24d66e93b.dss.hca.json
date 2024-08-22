@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "analysis_file/caf6d2a8-2272-5689-b3d8-9c97370d6c29": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "4383f7cb",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "0ba8d3b7-c002-5124-a35b-edd9badd198a",
             "version": "2021-01-01T00:00:00.000000Z"
         }
-    ],
+    },
     "metadata": {
         "project/90bf705c-d891-5ce2-aa54-094488b445c6": {
             "array_express_accessions": [

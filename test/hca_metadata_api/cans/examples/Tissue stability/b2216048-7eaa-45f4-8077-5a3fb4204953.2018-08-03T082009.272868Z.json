@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/4d3839bf-e39f-4136-92a4-6f7009e88567": {
             "crc32c": "5E314552",
             "sha1": "0caf6b4d52c6095fe9b78eae9f12f4b2e7bdee3b",
             "sha256": "e7f7e93c198d758a084d0ef4065b0314ba7365a72eeccc77f3b6368e4b951308",
@@ -12,7 +12,7 @@
             "uuid": "72b3bd3f-1874-4636-bffe-0ab382cf6d72",
             "version": "1"
         },
-        {
+        "supplementary_file/c3ce4634-ba98-45a7-a546-a2e3f4873d4c": {
             "crc32c": "5BA5B282",
             "sha1": "6c65e7c34a953a96a9991e302a367999f0612fab",
             "sha256": "fced35e7be4a017707f154e25a16f4b8f5287f636909d7d4c1ef4802cc090c78",
@@ -24,7 +24,7 @@
             "uuid": "e0e51494-0793-4145-b10e-32d0c48f7905",
             "version": "1"
         },
-        {
+        "supplementary_file/f973157b-0dfa-48aa-b790-faef283a513d": {
             "crc32c": "CAD4F2CE",
             "sha1": "595994145200f0ad7917bb019f86164e6bcc58e8",
             "sha256": "a01dcb62b1948ea2b998b2e763a9aa5d888072c0e71c6c324c9aa1c2b9ed13d4",
@@ -36,7 +36,7 @@
             "uuid": "81f61d0b-514d-47c5-814d-e238996ecab2",
             "version": "1"
         },
-        {
+        "supplementary_file/339458c4-c7ab-4ee1-9071-999af6d16d47": {
             "crc32c": "92435DE6",
             "sha1": "e6928d497f33a976aa49ee799358f3b2f048196b",
             "sha256": "4b05be3a55ad520d3d3afd0b0e1c9f82b5ed7e0b1feb9b57c0283b7e430f0f38",
@@ -48,7 +48,7 @@
             "uuid": "0b251162-aeb6-418b-b313-49602512745e",
             "version": "1"
         },
-        {
+        "supplementary_file/903bc97d-addf-45fa-ae35-cf7e31d0c20b": {
             "crc32c": "03D66B96",
             "sha1": "225ec6c9f8675206e628611b2bf2dbb4a24b5765",
             "sha256": "be3904db8cdb8deba1619eed9ec227071d842c874c61676eaa9a6bf8afd73156",
@@ -60,7 +60,7 @@
             "uuid": "7b8da1fb-e6c2-4fc1-b370-11fa9698939f",
             "version": "1"
         },
-        {
+        "supplementary_file/e9000e63-4ead-468d-826a-9bea0a1c68ab": {
             "crc32c": "455326F9",
             "sha1": "f1cc033ec095cf812f0d2ad0689d277b271523e5",
             "sha256": "023f39b768280f66d91cf9cc7771d14c1a0f893ecd96d4727ec6206d99041922",
@@ -72,7 +72,7 @@
             "uuid": "a0e29103-23b1-4570-a335-29ab7e4de062",
             "version": "1"
         },
-        {
+        "supplementary_file/529fd903-f4b9-44a9-b32f-047d359ad541": {
             "crc32c": "76070BE8",
             "sha1": "8c6fd1a6af8c050415b42795e40975ce0e685d1b",
             "sha256": "ade3a42aa52b0159f8cafdf112119632ec06fc9eefe3a8846e7431e02b1dca87",
@@ -84,7 +84,7 @@
             "uuid": "06403366-b0af-455b-b5e7-ec7cfbacb791",
             "version": "1"
         },
-        {
+        "supplementary_file/9904d58a-4a23-4099-b885-3bdefac39b20": {
             "crc32c": "FCA6B2B2",
             "sha1": "05e3276d65e86b46b080243380ca92954fa8e46d",
             "sha256": "32f7948b17e53588ba1c7ebe2c0ea11560eeb232b1d626e3d24a82d46a035140",
@@ -96,7 +96,7 @@
             "uuid": "aa155ec7-5ef5-4a22-9907-23019097fba0",
             "version": "1"
         },
-        {
+        "supplementary_file/f863f044-f904-4bf2-8535-fa45f123f237": {
             "crc32c": "A5FA937C",
             "sha1": "8b8325fffab6dff50944126ad95ff44776128440",
             "sha256": "ab30dc7402b9d849adf90f1433b952f005a56a6989c6a0306901d7dbeac203d8",
@@ -108,7 +108,7 @@
             "uuid": "769901d5-ef88-4c45-b83c-5bf9a97d59d2",
             "version": "1"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/932dae75-ba79-42a6-915a-c6a67b39835c": {
             "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/36d7f891-8a43-4ae4-8472-a34dcb2be643": {
             "crc32c": "29B559F9",
             "sha1": "0587673d7d88efa40a6f4d25d34d2eba14cf8e8b",
             "sha256": "df8b88b6f32f494a53687f79724a6ebd8bbb9c5c0474b9a857d467a0bdb83c2d",
@@ -12,7 +12,7 @@
             "uuid": "c8a4ea32-6d66-48f3-b480-9421743b9c0a",
             "version": "1"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/7b53bae2-2424-44c0-9d80-ad72e8bca136": {
             "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

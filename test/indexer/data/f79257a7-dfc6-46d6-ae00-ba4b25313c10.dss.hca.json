@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/6c946b6c-040e-45cc-9114-a8b1454c8d20": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "980453cc",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "f2b6c6f0-8d25-4aae-b255-1974cc110cfe",
             "version": "2018-09-14T12:33:43.720332Z"
         },
-        {
+        "sequence_file/c86e42d7-854a-479b-a627-6be1b49c980c": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "d2417d49",
             "indexed": false,
@@ -24,7 +24,7 @@
             "uuid": "f6608ce9-a570-4d5d-bd1f-407454958424",
             "version": "2018-09-14T12:33:45.304412Z"
         },
-        {
+        "supplementary_file/eeea6514-bfdc-473b-a9ae-82b00ab30c38": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "847325b6",
             "indexed": false,
@@ -36,7 +36,7 @@
             "uuid": "156c15a3-3406-45d3-a25e-27179baf0c59",
             "version": "2018-09-14T12:33:46.866929Z"
         },
-        {
+        "supplementary_file/89e313db-4423-4d53-b17e-164949acfa8f": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "b9364bfa",
             "indexed": false,
@@ -48,7 +48,7 @@
             "uuid": "5f9b45af-9a26-4b16-a785-7f2d1053dd7c",
             "version": "2018-09-14T12:33:47.012715Z"
         },
-        {
+        "supplementary_file/bf7df45c-c2d5-49a8-8110-7e1f17ed0094": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "3658ec51",
             "indexed": false,
@@ -60,7 +60,7 @@
             "uuid": "0db87826-ea2d-422b-ba71-b15d0e4293ae",
             "version": "2018-09-14T12:33:47.221025Z"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/0037c9eb-8038-432f-8d9d-13ee094e54ab": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

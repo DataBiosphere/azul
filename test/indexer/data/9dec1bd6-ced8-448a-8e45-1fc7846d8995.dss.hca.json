@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/e080459e-e4ab-40ea-ab75-a2646b5fdd29": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "fa399aa2",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "e080459e-e4ab-40ea-ab75-a2646b5fdd29",
             "version": "2018-03-29T15:43:13.328705Z"
         },
-        {
+        "sequence_file/3417cdb5-5618-4c0c-bc27-62a4eb78916a": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "7453bf7a",
             "indexed": false,
@@ -24,7 +24,7 @@
             "uuid": "3417cdb5-5618-4c0c-bc27-62a4eb78916a",
             "version": "2018-03-29T15:43:14.679074Z"
         }
-    ],
+    },
     "metadata": {
         "project/93f6a42f-1790-4af4-b5d1-8c436cb6feae": {
             "content": {

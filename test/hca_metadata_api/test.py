@@ -391,7 +391,7 @@ class TestAccessorApi(AzulUnitTestCase):
         # fact that dict instances aren't hashable and to ensure that no
         # redundant copies are made.
         self.assertEqual(set(id(f.manifest_entry.json) for f in bundle.files.values()),
-                         set(id(me) for me in manifest if not me['indexed']))
+                         set(id(me) for me in manifest.values() if not me['indexed']))
 
         biomaterials = bundle.biomaterials.values()
 
@@ -695,8 +695,8 @@ class TestAccessorApi(AzulUnitTestCase):
             with self.assertRaises(TypeError) as cm:
                 Bundle(uuid=uuid,
                        version='',
-                       manifest=[
-                           {
+                       manifest={
+                           '': {
                                'uuid': uuid,
                                'version': '',
                                'name': '',
@@ -705,7 +705,7 @@ class TestAccessorApi(AzulUnitTestCase):
                                'content-type': '',
                                **case
                            }
-                       ],
+                       },
                        metadata={},
                        links_json={})
             self.assertEqual(cm.exception.args[0], 'Property cannot be absent or None')
@@ -717,7 +717,7 @@ class TestAccessorApi(AzulUnitTestCase):
         version = '2019-02-02T065454.662896Z'
         manifest, metadata, links = self._canned_bundle('prod', uuid, version)
 
-        files_before = [f['name'] for f in manifest]
+        files_before = [f['name'] for f in manifest.values()]
         with_bang_before = set(f for f in files_before if '!' in f)
         expected_bang_before = {
             '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!.zattrs',
@@ -747,7 +747,7 @@ class TestAccessorApi(AzulUnitTestCase):
         entity_json_file_names = set(e.json['file_core']['file_name']
                                      for e in bundle.entities.values()
                                      if isinstance(e, (AnalysisFile, SequenceFile)))
-        for files_after in set(bundle.manifest.keys()), entity_json_file_names:
+        for files_after in {e.name for e in bundle.manifest.values()}, entity_json_file_names:
             with_bang_after = set(f1 for f1 in files_after if '!' in f1)
             self.assertEqual(set(), with_bang_after)
             with_slash_after = set(f1 for f1 in files_after if '/' in f1)

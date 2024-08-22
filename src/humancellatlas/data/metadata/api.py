@@ -34,6 +34,7 @@ from azul import (
 )
 from azul.collections import (
     OrderedSet,
+    adict,
     dict_merge,
 )
 
@@ -43,7 +44,6 @@ from azul.indexer.document import (
 from azul.types import (
     JSON,
     MutableJSON,
-    MutableJSONs,
     is_optional,
 )
 from humancellatlas.data.metadata.age_range import (
@@ -747,7 +747,7 @@ class File(LinkedEntity):
 
     def __init__(self,
                  json: JSON,
-                 manifest: Mapping[str, ManifestEntry]):
+                 manifest_entry: ManifestEntry):
         super().__init__(json)
         content = json.get('content', json)
         # '/' was once forbidden in file paths and was encoded with '!'. Now
@@ -756,7 +756,7 @@ class File(LinkedEntity):
         core = content['file_core']
         core['file_name'] = core['file_name'].replace('!', '/')
         self.format = lookup(core, 'format', 'file_format')
-        self.manifest_entry = manifest[core['file_name']]
+        self.manifest_entry = manifest_entry
         self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
         self.file_source = core.get('file_source')
         self.from_processes = dict()
@@ -789,8 +789,8 @@ class SequenceFile(File):
 
     def __init__(self,
                  json: JSON,
-                 manifest: Mapping[str, ManifestEntry]):
-        super().__init__(json, manifest)
+                 manifest_entry: ManifestEntry):
+        super().__init__(json, manifest_entry)
         content = json.get('content', json)
         self.read_index = content['read_index']
         self.lane_index = content.get('lane_index')
@@ -807,8 +807,8 @@ class AnalysisFile(File):
 
     def __init__(self,
                  json: JSON,
-                 manifest: Mapping[str, ManifestEntry]):
-        super().__init__(json, manifest)
+                 manifest_entry: ManifestEntry):
+        super().__init__(json, manifest_entry)
         content = json.get('content', json)
         self.matrix_cell_count = content.get('matrix_cell_count')
 
@@ -914,29 +914,30 @@ class Bundle:
     def __init__(self,
                  uuid: str,
                  version: str,
-                 manifest: MutableJSONs,
-                 metadata: Mapping[str, JSON],
+                 manifest: Mapping[str, MutableJSON],
+                 metadata: Mapping[str, MutableJSON],
                  links_json: JSON,
                  stitched_entity_ids: Collection[str] = ()):
         self.uuid = UUID4(uuid)
         self.version = version
-        self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
+        self.manifest = {ref: ManifestEntry(e) for ref, e in manifest.items()}
         self.stitched = frozenset(map(UUID4, stitched_entity_ids))
 
-        json_by_core_cls: MutableMapping[type[E], list[JSON]] = defaultdict(list)
+        entity_args_by_core_cls: MutableMapping[type[E], list[dict]] = defaultdict(list)
         for key, json in metadata.items():
             schema_name = EntityReference.parse(key).entity_type
             entity_cls = entity_types[schema_name]
             core_cls = core_types[entity_cls]
-            json_by_core_cls[core_cls].append(json)
+            args = adict(json=json,
+                         manifest_entry=self.manifest.get(key))
+            entity_args_by_core_cls[core_cls].append(args)
 
         def from_json_vx(core_cls: type[E],
-                         **kwargs
                          ) -> MutableMapping[UUID4, E]:
-            json_entities = json_by_core_cls[core_cls]
+            args_list = entity_args_by_core_cls[core_cls]
             entities = (
-                core_cls.from_json(entity, **kwargs)
-                for entity in json_entities
+                core_cls.from_json(**args)
+                for args in args_list
             )
             return {entity.document_id: entity for entity in entities}
 
@@ -944,7 +945,7 @@ class Bundle:
         self.biomaterials = from_json_vx(Biomaterial)
         self.processes = from_json_vx(Process)
         self.protocols = from_json_vx(Protocol)
-        self.files = from_json_vx(File, manifest=self.manifest)
+        self.files = from_json_vx(File)
 
         self.entities = {**self.projects, **self.biomaterials, **self.processes, **self.protocols, **self.files}
 

@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/5be64c5b-766b-43ad-ab5a-467ef1c47cc4": {
             "name": "CZIKidney7587405_S1_L001_R1_001.fastq.gz",
             "uuid": "075284e4-6a7b-45ba-a990-112beefd1296",
             "version": "2019-10-23T14:49:35.991570Z",
@@ -13,7 +13,7 @@
             "sha256": "3dc835af365d10a8b6f86e9119e513a722551c756e8999fed4085394127c3689",
             "s3_etag": "880df531d0365e1b06973b93a1d15a5a-119"
         },
-        {
+        "sequence_file/5646ff87-0427-4af5-a1ad-e072e6187c23": {
             "name": "4834STDY7002876_S1_L001_R1_001.fastq.gz",
             "uuid": "07e479d6-d44a-444e-bd19-7b955e4d0b37",
             "version": "2019-10-23T14:49:36.039396Z",
@@ -26,7 +26,7 @@
             "sha256": "f2ec67873c9ac76a4eb94bd8f7aa13aabe877778115b567471a6237d06f3d35f",
             "s3_etag": "2365f210fc1bab590021b2031d893706-522"
         },
-        {
+        "analysis_file/c564580f-c1bb-5c2d-a0d0-0baebebdf7e4": {
             "name": "51fb7eb7-a422-482e-a98e-c9e6f9628e97.bam",
             "uuid": "0d2f92fd-72da-53e6-8035-6b9b2b41a2f6",
             "version": "2021-02-04T15:19:30.000000Z",
@@ -37,7 +37,7 @@
             "crc32c": "1747a06c",
             "sha256": "2bb185ee6e44e7bf6a2768dbf4e0509cc79f7ee0f956cbdaf87977b0a1b8ca96"
         },
-        {
+        "analysis_file/10439c86-98bb-5009-8374-577a41575424": {
             "name": "0f14c412-5014-4ac0-9a71-858b2f047777.bam",
             "uuid": "0df377a4-119b-5600-a3e6-e7c1bc94033f",
             "version": "2021-02-04T15:10:36.000000Z",
@@ -48,7 +48,7 @@
             "crc32c": "ee74c898",
             "sha256": "e7effa40cbf6adeda081c14a9bfd90735bcb7d0aee66e563400ed378d1de3407"
         },
-        {
+        "sequence_file/2b8c990c-4b79-4536-bf5f-1c8e57bff598": {
             "name": "CZIKidney7632801_S1_L001_R2_001.fastq.gz",
             "uuid": "0e9affc6-0257-44d8-8e27-3c723b9c8443",
             "version": "2019-10-23T14:49:42.059197Z",
@@ -61,7 +61,7 @@
             "sha256": "dfeed362194feb9731fb01ddb194b5d32bef27aa71be1ac96145e99d89321092",
             "s3_etag": "aaab19ef6c64720286e392b72168b0a0-230"
         },
-        {
+        "analysis_file/9a41c791-004c-5d89-a10c-d58d2ef7eca3": {
             "name": "3a20b6a5-6652-4486-86bc-842c7c31c343.loom",
             "uuid": "0f2bdf51-97c6-5892-b9e7-ad826dbf1321",
             "version": "2021-02-04T15:37:35.000000Z",
@@ -72,7 +72,7 @@
             "crc32c": "c3003233",
             "sha256": "b4c9abbc701054b0b8685c6567566df4f01180dcb83ba6bdb35d250167bb7ca1"
         },
-        {
+        "sequence_file/70d226a8-01f4-4955-8293-210a6ec78920": {
             "name": "CZIKidney7632802_S1_L001_R2_001.fastq.gz",
             "uuid": "0fadf81a-30b4-4e70-ba6f-028950d06ec4",
             "version": "2019-10-23T14:49:36.081789Z",
@@ -85,7 +85,7 @@
             "sha256": "f2743a5243764eb59f04f88f673abc500d0a4c5538ae03b2fb81634155eba960",
             "s3_etag": "afe7816bac5b09b8496366eda4bb52cd-197"
         },
-        {
+        "sequence_file/599a4315-3b4b-4c42-9d68-961a2396cae5": {
             "name": "CZIKidney7632803_S1_L001_R2_001.fastq.gz",
             "uuid": "10e05576-100a-48cc-aa83-a30f09514384",
             "version": "2019-10-23T14:49:36.882952Z",
@@ -98,7 +98,7 @@
             "sha256": "c85efb39f331adeb34c937226e6661a4a575259ec6e36e6e3d353d606cdbdfaf",
             "s3_etag": "dcfb4f63603f7909ea8f5f1b6e8f86e0-212"
         },
-        {
+        "sequence_file/c8758f13-7e9b-464a-bada-b41b8b9e925f": {
             "name": "CZIKidney7587408_S1_L001_R2_001.fastq.gz",
             "uuid": "1456adad-9a4b-4a80-b115-9813f7a6b93c",
             "version": "2019-10-23T14:49:39.474413Z",
@@ -111,7 +111,7 @@
             "sha256": "ff538f40e72691b1c6f581d401144cf11b885622428985b216d97c3e43e62ef3",
             "s3_etag": "fe9271acb1ebea16f8f12e1327310298-31"
         },
-        {
+        "sequence_file/3de452b4-1c2a-49d6-80c8-495715921447": {
             "name": "CZIKidney7587404_S1_L001_R2_001.fastq.gz",
             "uuid": "1841191a-cad6-4bb8-b174-f41d94bee738",
             "version": "2019-10-23T14:49:36.895477Z",
@@ -124,7 +124,7 @@
             "sha256": "8bf272444637c809139c82bc65a41e3f33648eaa2cd1ce5e87854e7d6d1009b7",
             "s3_etag": "939afb3b3e5fb7829889c6a2be427348-31"
         },
-        {
+        "analysis_file/509608f1-e1d5-561c-b0d6-54348f0adb29": {
             "name": "51fb7eb7-a422-482e-a98e-c9e6f9628e97.loom",
             "uuid": "18c7131a-6f18-50a0-a805-04e0f4e2d7aa",
             "version": "2021-02-04T15:38:21.000000Z",
@@ -135,7 +135,7 @@
             "crc32c": "30fda154",
             "sha256": "85c0cc9d33346a374c50580fd00fef3bac6e9da0317deec948c677fc8bd7619c"
         },
-        {
+        "sequence_file/1eb30a4b-d595-4142-ae68-0a4ff4281c8d": {
             "name": "FCAImmP7528293_S1_L001_I1_001.fastq.gz",
             "uuid": "1932be60-8d3d-412b-86ac-4186ea87326b",
             "version": "2019-10-23T14:49:36.297060Z",
@@ -148,7 +148,7 @@
             "sha256": "003d74031b80fda82d6a96efa149dd028f1e0d7983283a576eb7cb9e3acc7986",
             "s3_etag": "728d08481bad39fb75abb4d36471cd06-40"
         },
-        {
+        "supplementary_file/944589e7-48a4-4333-b773-8e632ccb8865": {
             "name": "fetal_kidney_collection.pdf",
             "uuid": "1a04d1fb-55cc-4fd2-810a-71cf26d1aee9",
             "version": "2019-10-23T14:49:37.778548Z",
@@ -161,7 +161,7 @@
             "sha256": "8e241b0143084993f50332fec9d85fba8ad09d745fe02b3962af55925099a947",
             "s3_etag": "cce74f82cc90c9e5059acd326513ae37"
         },
-        {
+        "sequence_file/6500ad38-5b46-4186-9208-6a9494679191": {
             "name": "FCAImmP7462243_S1_L001_R1_001.fastq.gz",
             "uuid": "1a625464-2ab2-4d39-a1a5-e4e2240aa1fc",
             "version": "2019-10-23T14:49:36.819981Z",
@@ -174,7 +174,7 @@
             "sha256": "4c559dba0abed8f728e89eb48325dce81263d818812f3c9fa5a0e5b807e8d0e9",
             "s3_etag": "dce00c3dcdf1725d7ae0fbc365c8dbcc-126"
         },
-        {
+        "sequence_file/d3ea1255-7208-4952-be7f-7372d2dc9466": {
             "name": "4834STDY7002881_S1_L001_R2_001.fastq.gz",
             "uuid": "1d428c59-694c-4596-a360-a5e857f90635",
             "version": "2019-10-23T14:49:36.110149Z",
@@ -187,7 +187,7 @@
             "sha256": "6cbfc8a7166eae65a0b1171a71f4aa560d160798b14bd55dcec7061573036394",
             "s3_etag": "93e305000c055a82867f8f05eff05d7a-669"
         },
-        {
+        "analysis_file/fbcc2483-8a75-50ec-8cb6-8148a5087dce": {
             "name": "d8c08782-6f69-4314-947c-1afe6928cbce.loom",
             "uuid": "1d8a4488-3c4c-52b1-9912-52f08da57022",
             "version": "2021-02-04T15:28:41.000000Z",
@@ -198,7 +198,7 @@
             "crc32c": "599e199f",
             "sha256": "4181f361b8385d423fe4efbbfed08e703092469c40b40a568352cb5bde9b11f9"
         },
-        {
+        "supplementary_file/53089129-f71b-412c-ae2d-f7e8e50044c3": {
             "name": "fetal_flow_enrichment_2.pdf",
             "uuid": "1e3c935e-a508-47e5-a1a1-da5ad78a4f36",
             "version": "2019-10-23T14:49:36.963262Z",
@@ -211,7 +211,7 @@
             "sha256": "573a10fd2924173e82f8a8f3fa0c5fb6c68ca9373f7e2cdfaf39e68086d8204b",
             "s3_etag": "641a7fe74d0dc149a65b51a1b753e4a9"
         },
-        {
+        "sequence_file/8f6318ea-e692-4085-a693-02f4ff3204b5": {
             "name": "CZIKidney7587408_S1_L001_I1_001.fastq.gz",
             "uuid": "210c7287-2f6e-4a93-8c63-202fa0b596b7",
             "version": "2019-10-23T14:49:38.876464Z",
@@ -224,7 +224,7 @@
             "sha256": "51344e0de3761e9d45ca83916b8cc63e1afd3ab28b01ddaff3db9857750fe497",
             "s3_etag": "57cb25ef7a42dd6da8500a352aeb3023-4"
         },
-        {
+        "sequence_file/7a058660-f594-4eb5-b02f-bace314f6d76": {
             "name": "CZIKidney7587406_S1_L001_R1_001.fastq.gz",
             "uuid": "247b3006-918e-49de-9797-df31ffcfe4ca",
             "version": "2019-10-23T14:49:35.241234Z",
@@ -237,7 +237,7 @@
             "sha256": "70549b60bd385959d8eaf74cacc634991f70319535ecb6c320033c1bb355da14",
             "s3_etag": "514631b815424e2129ddce60de417275-135"
         },
-        {
+        "sequence_file/9614720d-ed06-4e72-9a4f-cb62088ff608": {
             "name": "FCAImmP7528293_S1_L001_R2_001.fastq.gz",
             "uuid": "25f7e8ad-e20e-4b7a-99b5-1f3c5bbfdf18",
             "version": "2019-10-23T14:49:36.795211Z",
@@ -250,7 +250,7 @@
             "sha256": "4c4ae28aac14171aef0c080993a4a1d6495c3b0c64a3c127fff574bb62dad43b",
             "s3_etag": "4d58aa43c6228235a108c5ba906f4cdf-439"
         },
-        {
+        "sequence_file/e28e68a3-3042-45f6-a714-ba8622a4b34e": {
             "name": "FCAImmP7555850_S1_L001_R1_001.fastq.gz",
             "uuid": "29a8f5fb-43a8-4f18-9255-f7573e9c4600",
             "version": "2019-10-23T14:49:35.155466Z",
@@ -263,7 +263,7 @@
             "sha256": "2dc0672b9e2c56e0ededbc6b50d609a9eb87dc0776afedc5abeb8b55e317dcd5",
             "s3_etag": "80923baffe8ef38b23af2ce6d79b788c-131"
         },
-        {
+        "analysis_file/f9b8be35-2641-5f85-af13-c0390b7bfe23": {
             "name": "548a75b4-ba45-4700-b7bb-656c3995c316.loom",
             "uuid": "30e6964e-df3b-5f93-ae18-b49ba08aea26",
             "version": "2021-02-04T15:30:21.000000Z",
@@ -274,7 +274,7 @@
             "crc32c": "1303acc0",
             "sha256": "d9671d190632e21e328f77e3344c240408852ca5a94299daeb504d0472575590"
         },
-        {
+        "analysis_file/5bb0243e-0764-5a77-ae7d-1638ebfd27b0": {
             "name": "83b474d3-c20f-48f6-95a0-b0fa2269f14d.bam",
             "uuid": "313c30cb-6941-5c2e-8c3e-60c02df4b977",
             "version": "2021-02-04T15:18:45.000000Z",
@@ -285,7 +285,7 @@
             "crc32c": "ff8963ff",
             "sha256": "af03184af8db101077bf2f7426a985b5b0510fe8c18acc0b26ad21313847ed6c"
         },
-        {
+        "analysis_file/44175006-91f3-5d95-9a08-b33e08ed1ae3": {
             "name": "b3ce1085-08dc-42ff-a609-6968315327a8.loom",
             "uuid": "316010e4-fdb5-5628-9510-adba0ca80a29",
             "version": "2021-02-04T15:30:01.000000Z",
@@ -296,7 +296,7 @@
             "crc32c": "bdc8f0d2",
             "sha256": "244c3f8d43f3b3756ecfb5b993bf4a8a149fa1def6c8f791b4b504dfdae46a6a"
         },
-        {
+        "analysis_file/df5af5d4-56e1-517b-8f47-7bf4888c853a": {
             "name": "082e87ac-5cf6-4bad-bedb-5f6591b8f566.loom",
             "uuid": "37accfb7-029b-57ba-892f-716f718dc9d2",
             "version": "2021-02-04T15:36:40.000000Z",
@@ -307,7 +307,7 @@
             "crc32c": "7e417f16",
             "sha256": "f1df2d78c8ab3a16d2207c6c315222c85a7c311ce14f9442d04b046eb381d4c1"
         },
-        {
+        "analysis_file/f9bf5721-5ee8-5837-8eb9-da3810cf04f1": {
             "name": "2c2c943c-1c0e-462c-b630-8a91a1f0fb94.bam",
             "uuid": "3c480b25-d8d1-5516-96ea-be6547af82ca",
             "version": "2021-02-04T15:20:15.000000Z",
@@ -318,7 +318,7 @@
             "crc32c": "3d0fd311",
             "sha256": "f65d5d47cfcd5d3cb8da8bb278e844bcba3dd2a5e922106df162443eb8cc6476"
         },
-        {
+        "analysis_file/38a0ef48-9df1-5fef-8eb6-b32fbb67aabd": {
             "name": "dc31f31d-ab56-4025-9834-99be638a2d50.loom",
             "uuid": "41d76180-77ac-5cb3-92bd-eb867d8c52c9",
             "version": "2021-02-04T15:34:25.000000Z",
@@ -329,7 +329,7 @@
             "crc32c": "5fc8c565",
             "sha256": "2ed196acb07ca0835b88625e430f19582992588ab21f340eab60a52b67d5bc65"
         },
-        {
+        "analysis_file/50547806-882a-5915-b217-5bbc692239b9": {
             "name": "6d273f72-f55c-4c8e-b91e-29e762194c3f.loom",
             "uuid": "4246f2be-5949-525d-a4ba-491176f13f69",
             "version": "2021-02-04T15:42:04.000000Z",
@@ -340,7 +340,7 @@
             "crc32c": "67682c74",
             "sha256": "6a748a5cb0cb3f7de9b4e3bd6968f2b10dd8b2ec82ee9b030e18a9f97c43f533"
         },
-        {
+        "sequence_file/1f50a6ba-90e5-4162-b6ac-6f8d5bfe72cc": {
             "name": "FCAImmP7462243_S1_L001_I1_001.fastq.gz",
             "uuid": "4471ff2f-9528-4ab0-a422-78ed0852e4a5",
             "version": "2019-10-23T14:49:36.492952Z",
@@ -353,7 +353,7 @@
             "sha256": "aa4f17dac6909575af38011a162368df992236c9439f4c300583d42c43b6efd9",
             "s3_etag": "0b7e4f8ddf4324812b3cb9ee97335603-41"
         },
-        {
+        "sequence_file/4e80d841-15c5-4da1-9660-4400b41d0536": {
             "name": "CZIKidney7587404_S1_L001_I1_001.fastq.gz",
             "uuid": "44d21c39-6acb-483a-99be-8fe8e7a5d208",
             "version": "2019-10-23T14:49:36.319957Z",
@@ -366,7 +366,7 @@
             "sha256": "653e505985e3aa978bf13cb1e80d187f28721f061e8d53e350e6131a9a24be4a",
             "s3_etag": "a11651abdb256ebdf639c54ff965584f-4"
         },
-        {
+        "sequence_file/8831df7b-25f6-482e-9e54-5c53bdda4d53": {
             "name": "FCAImmP7462242_S1_L001_I1_001.fastq.gz",
             "uuid": "475885e1-5b81-452f-a939-91dc9b207f5b",
             "version": "2019-10-23T14:49:35.964355Z",
@@ -379,7 +379,7 @@
             "sha256": "4f9f99dbe1f59610cb67e74b96e0f0a836996c16d13f6ac53e50d9e70e962dba",
             "s3_etag": "986c0432ccc091eff9d3d0ad151d62cb-41"
         },
-        {
+        "analysis_file/4d411b9c-06de-5805-bb7f-eca54e1c42cc": {
             "name": "cc5a78a1-539f-4dec-80b6-62f35dcafd89.loom",
             "uuid": "49e80111-c3ae-5c09-b484-18cf66b7c7fd",
             "version": "2021-02-04T15:39:46.000000Z",
@@ -390,7 +390,7 @@
             "crc32c": "7e6a6128",
             "sha256": "74f46c9d5ab97fe5462721aba690d331bd2ee820e34dba0b6d82be17fec0dd32"
         },
-        {
+        "analysis_file/b138cb0f-a34d-5b29-8b23-a37bc6f961fd": {
             "name": "3a20b6a5-6652-4486-86bc-842c7c31c343.bam",
             "uuid": "4ad98f14-2ff2-53de-9c97-50fbcc9a6e3e",
             "version": "2021-02-04T15:19:14.000000Z",
@@ -401,7 +401,7 @@
             "crc32c": "7c5a064d",
             "sha256": "88d858feaa2e73dca48f77f913af87ea51eb4e8b705e1b82df2529b6f7ea79ee"
         },
-        {
+        "analysis_file/448173cc-00c9-56e1-9bde-a8136521dc6f": {
             "name": "157ba915-28d7-4d80-89ad-71c8291dbc05.loom",
             "uuid": "4c12888b-2a1a-52c9-b0fa-499ef34adc21",
             "version": "2021-02-04T15:34:14.000000Z",
@@ -412,7 +412,7 @@
             "crc32c": "40b3fbbf",
             "sha256": "b50034b00cae8ec23176c44e179394a8458399fc90fefdc6031148ab28f002d8"
         },
-        {
+        "sequence_file/ec1af218-9b00-4366-8890-5cebf580f225": {
             "name": "FCAImmP7462242_S1_L001_R2_001.fastq.gz",
             "uuid": "4c46c08e-5552-4c32-8e39-5bd489718c8c",
             "version": "2019-10-23T14:49:36.612035Z",
@@ -425,7 +425,7 @@
             "sha256": "4e897dff146a790750ac21042408a00193718f6710c2a8fff7c564cfd264bca6",
             "s3_etag": "27880ab39d704119f8423e04c960c037-459"
         },
-        {
+        "analysis_file/f2393819-bde7-5d77-a1ef-ea58d87e5232": {
             "name": "afd0ea55-e710-4b46-bb05-2423e491b6f5.bam",
             "uuid": "4fc5aa24-c7b1-511c-b6a2-6d8366b3b025",
             "version": "2021-02-04T15:19:59.000000Z",
@@ -436,7 +436,7 @@
             "crc32c": "cf26ba03",
             "sha256": "ae3c4e2f1f33b1a56428dad317715efd8f43065a061dd680d67e11c943da5a37"
         },
-        {
+        "analysis_file/40905b7b-03ca-52b1-9ac7-76e350824c88": {
             "name": "d8c08782-6f69-4314-947c-1afe6928cbce.bam",
             "uuid": "50de5887-5ab7-5e8f-a6da-81b52089e98b",
             "version": "2021-02-04T15:18:10.000000Z",
@@ -447,7 +447,7 @@
             "crc32c": "3f7dc49c",
             "sha256": "3c8a71e2406e00bdb6c68b031777bd1bd5eeb9530ffa827ca5d2c8b36c6fce26"
         },
-        {
+        "sequence_file/abffd51d-843c-4f79-8e18-40d8374ade83": {
             "name": "CZIKidney7587407_S1_L001_I1_001.fastq.gz",
             "uuid": "51c769a9-63ad-42bc-b3e5-eba1d9ce843f",
             "version": "2019-10-23T14:49:36.225050Z",
@@ -460,7 +460,7 @@
             "sha256": "467e5944c0c7229135e0595efd888e9088f4abeb8015afac242898cc4a177092",
             "s3_etag": "098872161f58b6d170d66f9adcd8b52f-4"
         },
-        {
+        "sequence_file/b72fccff-7178-4f4c-bf6a-c32cc99af28c": {
             "name": "CZIKidney7587406_S1_L001_I1_001.fastq.gz",
             "uuid": "56b327ac-557e-4a07-90a7-4f167d241773",
             "version": "2019-10-23T14:49:34.986762Z",
@@ -473,7 +473,7 @@
             "sha256": "f11245bb3ab2a5d0d692d1474362050b254abb45f9007b1ec5708a79f308b3cd",
             "s3_etag": "135c8577a08750ca573249bccdd8e6f0-46"
         },
-        {
+        "sequence_file/ba9ca87a-7818-4915-9f7f-0ba588ffad1f": {
             "name": "FCAImmP7579214_S1_L001_R1_001.fastq.gz",
             "uuid": "5756416b-6522-41da-8db3-977c3f707a0e",
             "version": "2019-10-23T14:49:35.505898Z",
@@ -486,7 +486,7 @@
             "sha256": "1ee01811344f5385c269f99b226fe4e69e1d0f727790254a7b7138a19d15f47c",
             "s3_etag": "77ad610c51af129a3576ce16bfddd369-124"
         },
-        {
+        "supplementary_file/182c7357-0ac0-483d-8189-b321cb3e8d74": {
             "name": "sequencing_protocol.pdf",
             "uuid": "58630e07-76d1-4d12-af1f-8a15fef59e1c",
             "version": "2019-10-23T14:49:38.127172Z",
@@ -499,7 +499,7 @@
             "sha256": "58af4130ca276b443d217473a4a09e020fbe7784f1701bc100bb531bc52ce542",
             "s3_etag": "df67cf9dfb9c3bbda7c429d046f136a4"
         },
-        {
+        "analysis_file/f6809490-ac47-5fe5-af87-1923c320164e": {
             "name": "b6dec4a6-2d9b-40ac-80c4-41dce01aea46.bam",
             "uuid": "5935370b-5330-5787-b1cf-51987f5957d5",
             "version": "2021-02-04T15:09:35.000000Z",
@@ -510,7 +510,7 @@
             "crc32c": "a1c6f6d0",
             "sha256": "9d2d547cf0402a8ae37372f4113f8c73d4b0a208a8966f72567bb2b4f65e91a7"
         },
-        {
+        "supplementary_file/63a1acfd-ca01-451d-a41d-d3a7ffd1655b": {
             "name": "mature_kidney_enrichment_2.pdf",
             "uuid": "5bb24f6f-34f5-4955-80b1-dd7ceb6d55a6",
             "version": "2019-10-23T14:49:36.424530Z",
@@ -523,7 +523,7 @@
             "sha256": "e8663e057333702cdc8c8858ec78d82cf395196f7a6c9ee73f156734cdd3048b",
             "s3_etag": "64072145f4e0c1e25e078dcc3cb2b53a"
         },
-        {
+        "supplementary_file/1c531e83-02f4-4c00-b161-f186a1b5e1fb": {
             "name": "fetal_kidney_dissociation.pdf",
             "uuid": "602081b8-1b64-430c-8c85-093e21e1c972",
             "version": "2019-10-23T14:49:36.042217Z",
@@ -536,7 +536,7 @@
             "sha256": "51f972e117bb796cc52ee38ab1dc253acd85b8cd04ac9b57537151a929e58576",
             "s3_etag": "e8bf8a7772e947a955406a2dfd6b380e"
         },
-        {
+        "sequence_file/7d29fb39-c214-4edd-9dec-093dcc527429": {
             "name": "CZIKidney7632804_S1_L001_I1_001.fastq.gz",
             "uuid": "604b4322-f029-4bcd-84e1-e234017cda2f",
             "version": "2019-10-23T14:49:37.075449Z",
@@ -549,7 +549,7 @@
             "sha256": "354b54545a7b7b9c0989e5d872b7be1884e5d68bffaa0e4cb7273d963617287a",
             "s3_etag": "dbf0c1c5cfd5e87b83bc4abd1f2fd6d7-22"
         },
-        {
+        "sequence_file/91069ce7-7605-401a-bdbb-087420d0b207": {
             "name": "4834STDY7002875_S1_L001_R1_001.fastq.gz",
             "uuid": "6144552f-b4b0-460b-b5a6-7bd3035d2f1b",
             "version": "2019-10-23T14:49:36.041233Z",
@@ -562,7 +562,7 @@
             "sha256": "a760719c32e5a4518d0a9b4d7acf6329c93f034528a06ee3b073ce2f9c5359a7",
             "s3_etag": "574c84f1d2a4414f79605c955437f4cc-533"
         },
-        {
+        "analysis_file/4db3cc2d-f0ac-5cdf-8656-4c9b096a0092": {
             "name": "6a0f0064-ba67-43d6-985e-68d8edcf8c0b.loom",
             "uuid": "615aea9b-2bc7-54b8-97c5-a16ac697f790",
             "version": "2021-02-04T15:37:43.000000Z",
@@ -573,7 +573,7 @@
             "crc32c": "c2d99f86",
             "sha256": "f9cc00b90609b81a4de0456baa9dc13504c639a1ff540ebbaef78b1751c98883"
         },
-        {
+        "analysis_file/5ef41564-04c4-5260-b974-9b37fcc73e35": {
             "name": "2c2c943c-1c0e-462c-b630-8a91a1f0fb94.loom",
             "uuid": "61618af9-079f-578d-a834-8ec482403b17",
             "version": "2021-02-04T16:04:14.000000Z",
@@ -584,7 +584,7 @@
             "crc32c": "b6456846",
             "sha256": "84f61df5cbfdbb93a3e0507c62149b0402ca9cebf6314091dd5d5ac88a7e065c"
         },
-        {
+        "analysis_file/57c38b28-848d-5716-8c68-a3b3222aac6e": {
             "name": "44b8ad82-1109-4543-a534-a85b34c2c301.loom",
             "uuid": "61f531af-0cc2-5f69-8b93-bc04f8f29279",
             "version": "2021-02-04T15:42:09.000000Z",
@@ -595,7 +595,7 @@
             "crc32c": "b39eaf46",
             "sha256": "3791682b4805efb5af5fe53d4cf6ec84df50eb67d4e5457d03d3616cbcf36a28"
         },
-        {
+        "sequence_file/db9fbac5-641e-4dad-af15-a7afa407654b": {
             "name": "FCAImmP7462243_S1_L001_R2_001.fastq.gz",
             "uuid": "6447d1eb-f1ee-44f1-9fc6-1a0bb39677fd",
             "version": "2019-10-23T14:49:37.235823Z",
@@ -608,7 +608,7 @@
             "sha256": "a999c60998cddf55308f97122588c3bc622d1f236b904c7ac29672532e1b973a",
             "s3_etag": "fa0e99c5e5a93285a3863e3e58cd3585-459"
         },
-        {
+        "sequence_file/f9703a2c-b024-4917-a6b0-981b38cfb784": {
             "name": "4834STDY7002875_S1_L001_I1_001.fastq.gz",
             "uuid": "657b9016-387f-4951-bf3d-4b749f4a4f23",
             "version": "2019-10-23T14:49:35.751781Z",
@@ -621,7 +621,7 @@
             "sha256": "15a0c008f9c26639daca2b4acc7ea1fc21586b5bca02ae73deb73b67c7287157",
             "s3_etag": "a69fb94dafd54d8a35e73df0aaf1078f-81"
         },
-        {
+        "supplementary_file/c72eb744-4971-4525-802c-d898349b392a": {
             "name": "fetal_flow_enrichment_1.pdf",
             "uuid": "6ff514d2-c9aa-482a-ba40-da02a5c5fac8",
             "version": "2019-10-23T14:49:36.685177Z",
@@ -634,7 +634,7 @@
             "sha256": "71b479ed07ed506b85c4f1dedff7cd1ed809bbf0afd98ac63d3779a7d74d58e0",
             "s3_etag": "622b6cefec5b65803467998f5c8a597f"
         },
-        {
+        "sequence_file/b2ba2d5e-31f2-4bc6-be3d-c20acad86aa1": {
             "name": "FCAImmP7579214_S1_L001_I1_001.fastq.gz",
             "uuid": "70fa85f0-3a54-4bb0-a7b7-061575f963e3",
             "version": "2019-10-23T14:49:35.249762Z",
@@ -647,7 +647,7 @@
             "sha256": "fb1001ca85d07caa812e10a8e8a66d787824e98ddda3b8572b89570b653e0d2b",
             "s3_etag": "5ed7e298143a30f9496cf2cc45b95d15-42"
         },
-        {
+        "sequence_file/65128ed2-a70b-4b04-8591-4303acef31e3": {
             "name": "FCAImmP7555849_S1_L001_R2_001.fastq.gz",
             "uuid": "722fafff-d2ec-4a1f-b36b-70f7cc6d2192",
             "version": "2019-10-23T14:49:35.401133Z",
@@ -660,7 +660,7 @@
             "sha256": "ddea274092e87299b5431cab12bf02313b6cc14c2d8624ba5ffc087fc7143b84",
             "s3_etag": "b8e80010816e78c7e174a47404ab4d1a-406"
         },
-        {
+        "sequence_file/438f185f-0e8b-4b34-b03f-7491552ef9b7": {
             "name": "FCAImmP7462242_S1_L001_R1_001.fastq.gz",
             "uuid": "72932e5b-c25b-401c-8c48-aab023661968",
             "version": "2019-10-23T14:49:36.195057Z",
@@ -673,7 +673,7 @@
             "sha256": "4ab11fdc664c0b6ab7a5e4387a91229cfe6fff6e3badddefadc895a7adae6b3d",
             "s3_etag": "4133cbbbec292dcefeff85b73ba221bb-127"
         },
-        {
+        "analysis_file/3e9b54c2-4244-5549-a0ca-ea1524949a86": {
             "name": "548a75b4-ba45-4700-b7bb-656c3995c316.bam",
             "uuid": "7512e2e0-ac08-5d56-b2a4-d553bc24227c",
             "version": "2021-02-04T15:19:29.000000Z",
@@ -684,7 +684,7 @@
             "crc32c": "a97d1fd6",
             "sha256": "2f6b1a57f2391bcf7d8df1d5b0516704e44e24afda3752a2ad44dd16f493a42b"
         },
-        {
+        "analysis_file/a4a43ddf-e654-526c-98fa-9c0679f2bc95": {
             "name": "01f7c3d0-d4be-432d-aa25-8c7fbce20b49.bam",
             "uuid": "75150c4f-0ce4-56b1-a4d8-2342f5d4a3b8",
             "version": "2021-02-04T15:18:34.000000Z",
@@ -695,7 +695,7 @@
             "crc32c": "cf3be405",
             "sha256": "e2c38c4031b55d34b38239d2487ebdd6d836e10f8dea2184da5f631413136e07"
         },
-        {
+        "sequence_file/90a63c12-7fec-49c5-9b1a-7d622c4390f8": {
             "name": "CZIKidney7587406_S1_L001_R2_001.fastq.gz",
             "uuid": "791a846a-1241-4b0c-a3e3-24160fc321ee",
             "version": "2019-10-23T14:49:35.594638Z",
@@ -708,7 +708,7 @@
             "sha256": "d9a99fc35767a48cf5e158092bb72bd1a7003c9f6fc1a44437eb991b01c2551c",
             "s3_etag": "94e6d6f92d63daf0518305adee6fe855-398"
         },
-        {
+        "sequence_file/427003bc-a728-469a-aa8a-61bc2309956f": {
             "name": "FCAImmP7528292_S1_L001_R2_001.fastq.gz",
             "uuid": "7923e38e-8649-41b7-b0a6-ac901630be3c",
             "version": "2019-10-23T14:49:36.207303Z",
@@ -721,7 +721,7 @@
             "sha256": "c6fb824e7c0bfd0272683a9804bff77f5de94087eeb1803f5ec8d66a7fafafc3",
             "s3_etag": "2d314e2ca4018bb287c3104dc1db7635-441"
         },
-        {
+        "analysis_file/5f89237b-83d8-5b2b-880c-2fc4f0c1db1c": {
             "name": "6d273f72-f55c-4c8e-b91e-29e762194c3f.bam",
             "uuid": "79c607a7-8bf6-5288-831d-715ef9e450d5",
             "version": "2021-02-04T15:21:25.000000Z",
@@ -732,7 +732,7 @@
             "crc32c": "5238ca18",
             "sha256": "04b3c4a0b85159145d49208536b7020807b022fd9b7a2b031fe7695a1ba317c8"
         },
-        {
+        "analysis_file/67f7a04b-7b04-5bb2-a492-efb98f819e97": {
             "name": "44b8ad82-1109-4543-a534-a85b34c2c301.bam",
             "uuid": "7c7a336b-a771-5257-a7b2-da2d87896ea4",
             "version": "2021-02-04T15:18:31.000000Z",
@@ -743,7 +743,7 @@
             "crc32c": "916734d4",
             "sha256": "0434d6c74de9b5805b55c4418baff1948ded8978983767e939dbfbbefc50e622"
         },
-        {
+        "sequence_file/cb6662a8-c395-4f75-b6fa-87c186917ed2": {
             "name": "CZIKidney7632804_S1_L001_R2_001.fastq.gz",
             "uuid": "7e63de17-6e27-4a78-b029-a8db8cc121a6",
             "version": "2019-10-23T14:49:37.725790Z",
@@ -756,7 +756,7 @@
             "sha256": "3e37e18fdd5e1723f3829e55e8f9c180f7a59eb0923047845f6c6daceebc1615",
             "s3_etag": "0a6e68cbe2a1a34b91a228a9ccdbc42b-212"
         },
-        {
+        "analysis_file/3cd78fb7-b7bc-5ab1-b122-47585f0023d4": {
             "name": "afd0ea55-e710-4b46-bb05-2423e491b6f5.loom",
             "uuid": "824111f5-d9fa-5ca8-9329-0f172332c98e",
             "version": "2021-02-04T15:34:36.000000Z",
@@ -767,7 +767,7 @@
             "crc32c": "98229a5d",
             "sha256": "f0ce93f44bfab810b45c39a7b3274c8fbfe6ac784f7aecc2af3e003c14112e1d"
         },
-        {
+        "analysis_file/1b675693-2615-519e-bfa7-cc008b0ff6e9": {
             "name": "dc31f31d-ab56-4025-9834-99be638a2d50.bam",
             "uuid": "855fdb57-1c0e-5875-aef5-f6e14876b15c",
             "version": "2021-02-04T15:19:56.000000Z",
@@ -778,7 +778,7 @@
             "crc32c": "f2cc8e97",
             "sha256": "c1f8237cb3280231cc46fc54fcbcf177aaacf169b134b0521961ec93b58c5bf5"
         },
-        {
+        "sequence_file/138dcce5-f9a8-497c-9de1-70a289bdc936": {
             "name": "CZIKidney7632801_S1_L001_R1_001.fastq.gz",
             "uuid": "8a9a73f6-9a38-494a-84b2-2d0e11b60c17",
             "version": "2019-10-23T14:49:41.743420Z",
@@ -791,7 +791,7 @@
             "sha256": "dd3dc4dc8e5ef643c1d719249de369e00f9007fe54a52f351826a9e300fe80c2",
             "s3_etag": "4b71dea004532b3977353e7577a1bb67-67"
         },
-        {
+        "sequence_file/d8577b2c-16a2-484f-9269-9196d7cca451": {
             "name": "4834STDY7002885_S1_L001_R2_001.fastq.gz",
             "uuid": "8bee60a4-c810-4157-852d-f6510859aad6",
             "version": "2019-10-23T14:49:35.816042Z",
@@ -804,7 +804,7 @@
             "sha256": "69d98b3aa12da9a87c1d0e95833d47c1721411d827316438d7578eba63bc7a02",
             "s3_etag": "40bdbad0f6b2bf9bdda796e6f92e5d6d-640"
         },
-        {
+        "analysis_file/c8b8eac3-92be-5a6c-94ac-e554face58a8": {
             "name": "13a062ba-2b8e-43a1-bc2a-bc17f650b37d.bam",
             "uuid": "8d2bd05e-52ae-5fae-bdcd-97e9cd74a62b",
             "version": "2021-02-04T15:18:10.000000Z",
@@ -815,7 +815,7 @@
             "crc32c": "76608f7f",
             "sha256": "ac3a27e4bfe3b1c915fe1ccceca5df2c177d04f79ce8c265a6d29da6e10fc637"
         },
-        {
+        "sequence_file/8fb13af8-c385-46a2-aecc-c741c1e8a5ad": {
             "name": "FCAImmP7555850_S1_L001_I1_001.fastq.gz",
             "uuid": "8f2afe24-5222-4451-a9d6-323d33e49156",
             "version": "2019-10-23T14:49:34.890344Z",
@@ -828,7 +828,7 @@
             "sha256": "342d8e031c6b7f0f80e01a0fe66ba22963b8a3e019a42a71a9f17535d75725ca",
             "s3_etag": "518cf60e522ae84138c0eb97087cbad8-42"
         },
-        {
+        "analysis_file/9b35ba1f-2445-5fcc-a510-d4da345854fe": {
             "name": "37cad11b-c8c9-4d1f-b715-498b0f8d4b35.bam",
             "uuid": "901b4d92-9b4d-5e10-b98b-c64c8535c7e3",
             "version": "2021-02-04T15:20:20.000000Z",
@@ -839,7 +839,7 @@
             "crc32c": "1374624d",
             "sha256": "0094bcebc749eb663f46144371b98f8c3e6a7cc907be8329c9d68a0b74a9cc5b"
         },
-        {
+        "analysis_file/2b9f7c89-d1c2-53ef-a769-80fec2f7d9e6": {
             "name": "0f14c412-5014-4ac0-9a71-858b2f047777.loom",
             "uuid": "9178a5a8-dbc2-5dfd-be33-2ac8e6f2fc96",
             "version": "2021-02-04T15:18:49.000000Z",
@@ -850,7 +850,7 @@
             "crc32c": "eb47f837",
             "sha256": "a4b826463126706ccb417d646a000bc7a5d6bdb0f0583718eaa771c1cd2aca6b"
         },
-        {
+        "sequence_file/47bb0f79-31f9-42a8-ac34-4be08ef807d9": {
             "name": "FCAImmP7579214_S1_L001_R2_001.fastq.gz",
             "uuid": "a2a60cf5-2597-4ba3-b9fa-7ecdde004c8c",
             "version": "2019-10-23T14:49:35.806273Z",
@@ -863,7 +863,7 @@
             "sha256": "ad9fe409670b55a358153094a9a26580abb88ac9dc5bfa32da959c24a8f8a746",
             "s3_etag": "ff87ab5686654a1ffc019898b92ab7b5-427"
         },
-        {
+        "sequence_file/cb7a8922-0b74-42f5-9346-f80ebbaddb57": {
             "name": "4834STDY7002881_S1_L001_R1_001.fastq.gz",
             "uuid": "a3b89f52-1007-4aa4-8889-f2b3670c82bd",
             "version": "2019-10-23T14:49:35.905654Z",
@@ -876,7 +876,7 @@
             "sha256": "91ea6ce14c3c3b4154b2c3580b41907b61617c411f015fe79825e67bebc68cd4",
             "s3_etag": "83f2b32a2b90e403122a2f6e3bffb4fa-452"
         },
-        {
+        "analysis_file/6f7195ee-5bcd-5b4d-a3a7-a6ad404edba9": {
             "name": "b3ce1085-08dc-42ff-a609-6968315327a8.bam",
             "uuid": "a642669d-72f1-5e03-94fe-83a993c7facd",
             "version": "2021-02-04T15:19:15.000000Z",
@@ -887,7 +887,7 @@
             "crc32c": "4b2de361",
             "sha256": "943b90f707a5a49e724d4d35576ff6204f0c59d848a98fed72054dd8f0192c81"
         },
-        {
+        "analysis_file/febe54b0-6388-5024-a971-fa88862a4e62": {
             "name": "0b52914d-687b-44d1-9a70-a95df55ed502.loom",
             "uuid": "a64cdd04-6d28-5f81-9f2d-4ae6989e9ddc",
             "version": "2021-02-04T15:38:21.000000Z",
@@ -898,7 +898,7 @@
             "crc32c": "ee277c19",
             "sha256": "91c9176ebfd73ea2dd4c0ac637d3bb10377028e7ae1bd76092bcd6d4432a5aa6"
         },
-        {
+        "analysis_file/be883019-a8df-564d-87ff-c24a1358fdb6": {
             "name": "6a0f0064-ba67-43d6-985e-68d8edcf8c0b.bam",
             "uuid": "aac09eaf-b9e3-5469-b34f-d2ec70f57089",
             "version": "2021-02-04T15:19:45.000000Z",
@@ -909,7 +909,7 @@
             "crc32c": "2b04c689",
             "sha256": "13344642086dda33e78a9a1dbebfab9f3e9857adf75033e8b864aa075affbc18"
         },
-        {
+        "supplementary_file/06e90b33-4403-41e8-b783-e65bf7de982a": {
             "name": "mature_kidney_declined_transplant_collection.pdf",
             "uuid": "b0d1afa7-c798-4172-9231-33584e52f70f",
             "version": "2019-10-23T14:49:37.430555Z",
@@ -922,7 +922,7 @@
             "sha256": "3cae6a92ad756c9eaa8590608b83ca5711ab71a3172bfb0982821d52d44eb321",
             "s3_etag": "7e679875a0b2eab202a13f52d4b31f43"
         },
-        {
+        "sequence_file/be64dbc9-183f-44c9-8b15-d8298ee6c4e9": {
             "name": "CZIKidney7587408_S1_L001_R1_001.fastq.gz",
             "uuid": "b12b9f7a-1136-456b-b0e0-aa05c29d1355",
             "version": "2019-10-23T14:49:39.066147Z",
@@ -935,7 +935,7 @@
             "sha256": "3d6fff7f27d356a52dd32467f29d656a3e20c4b8af3ff2fd84d59b88c5182cf4",
             "s3_etag": "af663775a444ae1231feaa7f58054616-10"
         },
-        {
+        "analysis_file/8b643b3c-3000-5cf4-8aa1-64a4b9d68abf": {
             "name": "157ba915-28d7-4d80-89ad-71c8291dbc05.bam",
             "uuid": "b4efa99e-25c8-5eef-96a4-84f2551bcc29",
             "version": "2021-02-04T15:22:02.000000Z",
@@ -946,7 +946,7 @@
             "crc32c": "ae57f412",
             "sha256": "88ed668949cdb5d906593b13263d0b2692b245a5fc3bd471fdf141b49364ac41"
         },
-        {
+        "sequence_file/b58fd1d3-1488-40b2-9530-50c0fe54a4dd": {
             "name": "FCAImmP7579215_S1_L001_I1_001.fastq.gz",
             "uuid": "b58109d6-0e7e-49cb-abd5-4ca20e43046e",
             "version": "2019-10-23T14:49:35.581314Z",
@@ -959,7 +959,7 @@
             "sha256": "c97a6eb18f24dcbd7b67fe23d7a2a8439c64f5a975ccfbdeca64ebb19fd6b064",
             "s3_etag": "f23de8553e81fa170fe9b74cbc2849bf-39"
         },
-        {
+        "sequence_file/2dd22fa3-fe29-4d60-b890-a8ee8b9731ce": {
             "name": "CZIKidney7587407_S1_L001_R1_001.fastq.gz",
             "uuid": "b869ef9d-300d-46e0-941f-ad0f036773b2",
             "version": "2019-10-23T14:49:36.564794Z",
@@ -972,7 +972,7 @@
             "sha256": "330afac3a7c054fb8ebdf9d919042cc7e4c0843537d0ff29e0a2953bd05df792",
             "s3_etag": "61f8159c3cfff0907ed40a3c5bd22203-9"
         },
-        {
+        "analysis_file/aec768aa-9e5d-57ab-b249-09f01b2e5f03": {
             "name": "90b34757-474f-42c3-9d31-683a5a0a84bd.bam",
             "uuid": "ba36a0b5-a686-5e72-91c9-b29f9c1d3f2e",
             "version": "2021-02-04T15:20:54.000000Z",
@@ -983,7 +983,7 @@
             "crc32c": "69c365f0",
             "sha256": "178fafd3009d67115cf41b43ee2b79fd2b2f90d8d53e651caa283d515523be65"
         },
-        {
+        "sequence_file/97890d18-72bf-4feb-b713-1d057d1f6519": {
             "name": "CZIKidney7632804_S1_L001_R1_001.fastq.gz",
             "uuid": "ba802a39-ab3c-4ddf-8606-6904ec798ff5",
             "version": "2019-10-23T14:49:37.437316Z",
@@ -996,7 +996,7 @@
             "sha256": "34e5d327b484e2e830c42d7fe5d560879780aa5e4a681735e9d964e6bbc31bfb",
             "s3_etag": "5c75238d05713e84688c2bdabd857fb5-62"
         },
-        {
+        "analysis_file/0f9e435b-dbd3-5fd6-9b4e-347433de69b0": {
             "name": "082e87ac-5cf6-4bad-bedb-5f6591b8f566.bam",
             "uuid": "bba19c1b-66b5-5b45-8391-e7b9e749afc3",
             "version": "2021-02-04T15:20:16.000000Z",
@@ -1007,7 +1007,7 @@
             "crc32c": "51a1f1c7",
             "sha256": "25f1957f0120fada1a53b8bd6dd83354bc6c7c047d2b100db727303cdd9c64bf"
         },
-        {
+        "sequence_file/4294907c-ba62-4597-845a-07fb788a2bb0": {
             "name": "CZIKidney7632803_S1_L001_R1_001.fastq.gz",
             "uuid": "bc752490-c165-4e59-a335-5690f1809ac9",
             "version": "2019-10-23T14:49:36.430227Z",
@@ -1020,7 +1020,7 @@
             "sha256": "d588f85e1e213efb4c58c03d2bf4730aa8fa49b400c2245217c40ac4d47b48ea",
             "s3_etag": "107f64539db86fbbd2040a02e03d9c9a-62"
         },
-        {
+        "analysis_file/509c765d-cf97-5166-ae8f-b0c26a42f759": {
             "name": "0b52914d-687b-44d1-9a70-a95df55ed502.bam",
             "uuid": "c0eb3628-4aae-5215-8fe8-dfc1974fb288",
             "version": "2021-02-04T15:20:12.000000Z",
@@ -1031,7 +1031,7 @@
             "crc32c": "b5f6f5af",
             "sha256": "4a4ef01d91dbb0040b16e5fe71fdbec8eb95417194db92e8941459f00c36b9e7"
         },
-        {
+        "sequence_file/be252ee9-c27b-4937-8e96-e971c25ed794": {
             "name": "4834STDY7002885_S1_L001_R1_001.fastq.gz",
             "uuid": "c1e549a6-8711-4381-853d-c54469b4b5c0",
             "version": "2019-10-23T14:49:35.560374Z",
@@ -1044,7 +1044,7 @@
             "sha256": "c00895076c854c2028b01a33a0146d7e7224e3c923e115d3bcf147a3738a612d",
             "s3_etag": "ba7060f70372487113fd540750e24e11-454"
         },
-        {
+        "analysis_file/caee5d2b-466f-5762-a565-8fa4a520faba": {
             "name": "13a062ba-2b8e-43a1-bc2a-bc17f650b37d.loom",
             "uuid": "c1eef424-40cb-51f6-a574-755494d44789",
             "version": "2021-02-04T15:42:49.000000Z",
@@ -1055,7 +1055,7 @@
             "crc32c": "1b82593b",
             "sha256": "7dd312ee41306938d8ea67f64c1715a195791c0d55aeace04f1fc5a2083ebc21"
         },
-        {
+        "sequence_file/154ff85c-da53-4b85-b02b-002211631867": {
             "name": "4834STDY7002886_S1_L001_R2_001.fastq.gz",
             "uuid": "c2fadf72-fab9-47a5-ae9f-50d97753d3ef",
             "version": "2019-10-23T14:49:36.121618Z",
@@ -1068,7 +1068,7 @@
             "sha256": "7d4c8335faed154a54031b3a438a0fcfc52e6779dce7726171f7109fe0c8e215",
             "s3_etag": "9a82ee2b11d36742aed8f533c835bf11-639"
         },
-        {
+        "supplementary_file/5b84bbca-dfde-462c-9c79-c914f32e03c4": {
             "name": "mature_kidney_tumour_nephrectomy_collection.pdf",
             "uuid": "c89d294a-1921-46fa-9392-b714af40c97c",
             "version": "2019-10-23T14:49:37.166260Z",
@@ -1081,7 +1081,7 @@
             "sha256": "198335a877c0973b496f4800671764fcb00ea49bedeb4c509940c8dbb1cc3b50",
             "s3_etag": "e14585a837302d76e54214694e774511"
         },
-        {
+        "sequence_file/59e40d0b-dfbc-4668-bb8a-d0b39d25ca88": {
             "name": "4834STDY7002886_S1_L001_R1_001.fastq.gz",
             "uuid": "ca6b8d6b-6d19-4ff0-b487-c13cdf801a60",
             "version": "2019-10-23T14:49:35.869066Z",
@@ -1094,7 +1094,7 @@
             "sha256": "deda38c8e989c8cc929f785bda1f91a4a2810b5260a516fa6b3759f3adfd01c6",
             "s3_etag": "49389e1568a9893f7a8c2b84be271bb0-449"
         },
-        {
+        "analysis_file/b149162c-3450-5301-b057-c3930459584d": {
             "name": "83b474d3-c20f-48f6-95a0-b0fa2269f14d.loom",
             "uuid": "ca707466-c643-54d0-a251-d4314081608b",
             "version": "2021-02-04T15:41:19.000000Z",
@@ -1105,7 +1105,7 @@
             "crc32c": "a1f23b01",
             "sha256": "6091065cd4fbaa03c00ab5751a84201ac5f621e87cc83b06c0254a235eb37cf9"
         },
-        {
+        "sequence_file/9ea7643b-d0ba-49b0-b441-0c5d3c2cfe59": {
             "name": "4834STDY7002875_S1_L001_R2_001.fastq.gz",
             "uuid": "caf7fc00-38ab-4af5-beda-c70c1fb4448e",
             "version": "2019-10-23T14:49:36.268172Z",
@@ -1118,7 +1118,7 @@
             "sha256": "e3ebb27123311c9e9794b64da7e1fed26efa8aec159440284b72298e7faec5cb",
             "s3_etag": "5655d418b8d0a42dfa014347fdb62188-728"
         },
-        {
+        "sequence_file/6033d2ea-8c96-4f43-956c-b9701f63ed66": {
             "name": "FCAImmP7528292_S1_L001_R1_001.fastq.gz",
             "uuid": "cb189806-adb0-42d2-b519-b9e48a23bc94",
             "version": "2019-10-23T14:49:35.987421Z",
@@ -1131,7 +1131,7 @@
             "sha256": "bc422a27764e114ff5693bc3f08a160e8691b75e18c54d1e2a653352e5ab50f5",
             "s3_etag": "63c2c86265dfce008512b4dd7541a10d-129"
         },
-        {
+        "sequence_file/200f221c-c86e-4c67-9d25-5d8210ae33c6": {
             "name": "CZIKidney7587407_S1_L001_R2_001.fastq.gz",
             "uuid": "cc671147-98a3-4e96-ae78-7f6b637271d6",
             "version": "2019-10-23T14:49:36.910033Z",
@@ -1144,7 +1144,7 @@
             "sha256": "e87ee24018e844c7d41347dacbe76a36f1db6e919134bf1c47b3cf6a6b4fcad6",
             "s3_etag": "34fab5b41d1dccd1fa2fef5923835aa8-30"
         },
-        {
+        "sequence_file/0c8d1b87-0d6e-4e47-8130-1372bfa05c51": {
             "name": "CZIKidney7632803_S1_L001_I1_001.fastq.gz",
             "uuid": "cc811606-6aff-421b-ac56-b26adbfe67f4",
             "version": "2019-10-23T14:49:36.145573Z",
@@ -1157,7 +1157,7 @@
             "sha256": "aae0aecef9c211605dabe4e9a285938a06abb817c19e3093a77fc2be05a2eeca",
             "s3_etag": "85e565de539223290e1fe8367596b228-22"
         },
-        {
+        "sequence_file/de1febb4-49dd-4a8a-b9c0-7ea493dd2d5a": {
             "name": "FCAImmP7528293_S1_L001_R1_001.fastq.gz",
             "uuid": "d96cdcd2-d832-470d-96d8-db8f92075703",
             "version": "2019-10-23T14:49:36.527086Z",
@@ -1170,7 +1170,7 @@
             "sha256": "0c9963ec30c0a712d8d4d1e2a560c8a9d211987b616eadba8283295fe95d0f1e",
             "s3_etag": "a48c864326cd6f92ed6e1be459a9ac04-129"
         },
-        {
+        "sequence_file/e3777b07-1706-4434-a523-1335f0b96b30": {
             "name": "4834STDY7002886_S1_L001_I1_001.fastq.gz",
             "uuid": "da200c32-cfbd-435f-8786-2cf542b87367",
             "version": "2019-10-23T14:49:35.633033Z",
@@ -1183,7 +1183,7 @@
             "sha256": "bd605855ac9f99188b1d7d31d598c004b92ce1c44788a954a36c852167437c1d",
             "s3_etag": "9f7242d78d43e541ab78c97f7dfd7ecc-82"
         },
-        {
+        "supplementary_file/77700dee-f8b3-40d1-b527-e0e53562eb49": {
             "name": "library_preparation_protocol.pdf",
             "uuid": "dc4b7fff-0876-4f92-96cc-167efc91b516",
             "version": "2019-10-23T14:49:38.400942Z",
@@ -1196,7 +1196,7 @@
             "sha256": "e53a5768236b5f83e22f057162c72357c7a4915299366c28eb37b1ee5b21c3aa",
             "s3_etag": "cf0884d109a6ba1a2f71240a9466c47b"
         },
-        {
+        "analysis_file/9702f6ba-fd5b-5972-80d4-629e8a8fa8e9": {
             "name": "90b34757-474f-42c3-9d31-683a5a0a84bd.loom",
             "uuid": "dc6cba3b-5de7-5405-80ba-ba0d16f9285f",
             "version": "2021-02-04T15:45:09.000000Z",
@@ -1207,7 +1207,7 @@
             "crc32c": "fcdfbbf8",
             "sha256": "05a5076408fe0659856201fe3891e369814bf5281a227a3212a60d077a6bf549"
         },
-        {
+        "sequence_file/a6a5f2ec-2b8c-4419-82a9-f6bdb80e849c": {
             "name": "4834STDY7002885_S1_L001_I1_001.fastq.gz",
             "uuid": "dce25965-6000-496a-b884-fa4dc0491a4d",
             "version": "2019-10-23T14:49:35.268557Z",
@@ -1220,7 +1220,7 @@
             "sha256": "1b22fa3c456729a3e28e9a5fa4a35f641989d5e8b21b2d2a93470a1796d5f666",
             "s3_etag": "c696e743f5309e1759b7961a85176148-80"
         },
-        {
+        "analysis_file/0115dbfc-99f2-59b4-8430-75cd79e3c04d": {
             "name": "cc5a78a1-539f-4dec-80b6-62f35dcafd89.bam",
             "uuid": "dd3dccbb-4bc8-5384-8693-96b82fe5f685",
             "version": "2021-02-04T15:21:05.000000Z",
@@ -1231,7 +1231,7 @@
             "crc32c": "3a71013d",
             "sha256": "0881ac2400044a0ea314313328f07eba6e03a02846d6fe1aef97828894930fcf"
         },
-        {
+        "analysis_file/32c69d68-1792-53af-9f42-0e97c9afc94b": {
             "name": "37cad11b-c8c9-4d1f-b715-498b0f8d4b35.loom",
             "uuid": "df9eea5a-6dea-55bc-9257-35cd9e7c58cc",
             "version": "2021-02-04T15:49:34.000000Z",
@@ -1242,7 +1242,7 @@
             "crc32c": "5c0696a6",
             "sha256": "50640f0ade01cc166a041954bab0ede4c73a672b2afa4db03ea33db05843b475"
         },
-        {
+        "analysis_file/b666cb1a-1a4f-511f-859e-2779aad16fa0": {
             "name": "b6dec4a6-2d9b-40ac-80c4-41dce01aea46.loom",
             "uuid": "dfad809b-a282-5bb4-9d71-0a5bf3da0417",
             "version": "2021-02-04T15:23:10.000000Z",
@@ -1253,7 +1253,7 @@
             "crc32c": "26f1f7cf",
             "sha256": "2ccc35dc18a2c60d6f8de37b940fac88054079dc22ab5ce6b7273b35d43725b4"
         },
-        {
+        "sequence_file/48cb1c07-fb20-453a-bb98-18dfd9eb4eb8": {
             "name": "CZIKidney7587404_S1_L001_R1_001.fastq.gz",
             "uuid": "e5b37a2a-d819-4961-8fa5-f47ce08532a9",
             "version": "2019-10-23T14:49:36.592775Z",
@@ -1266,7 +1266,7 @@
             "sha256": "4e655ed6734c394ce00510bde28d3143d250229bb97da3b37665b64cab8fbc0f",
             "s3_etag": "ba8826d9776d2fd1d5be2d8c2ecfa235-10"
         },
-        {
+        "sequence_file/ae5068b7-fa8a-46be-8a07-d735093f1aa5": {
             "name": "4834STDY7002876_S1_L001_R2_001.fastq.gz",
             "uuid": "e957cc11-3b0d-41ab-9f4e-3bb45688fd8e",
             "version": "2019-10-23T14:49:36.362500Z",
@@ -1279,7 +1279,7 @@
             "sha256": "3eae3978778a708e6c82d478a22852349f85a03bcc871eaa9e50b8f15f2d5236",
             "s3_etag": "32e29d540767b0a2a62349b71bc43db6-724"
         },
-        {
+        "sequence_file/64c1be0b-56b7-4d5a-b7c8-e8f7f88e0427": {
             "name": "FCAImmP7579215_S1_L001_R2_001.fastq.gz",
             "uuid": "ee6f108e-efd4-4eb3-8e51-76fcef37455b",
             "version": "2019-10-23T14:49:36.093968Z",
@@ -1292,7 +1292,7 @@
             "sha256": "d912bdc68b99f51cc4e0631fed1853cd5572af6b5465a258e1f932b5649cf10e",
             "s3_etag": "c7dbb43857d7302cd6ce3d590cfbf211-402"
         },
-        {
+        "analysis_file/689bcda6-eb41-588a-b4a9-8827e22b1856": {
             "name": "01f7c3d0-d4be-432d-aa25-8c7fbce20b49.loom",
             "uuid": "ef880b39-ded0-529f-8b50-44961b8f852e",
             "version": "2021-02-04T15:35:28.000000Z",
@@ -1303,7 +1303,7 @@
             "crc32c": "eff7e88e",
             "sha256": "e1817119fe105c459e7f5ab3f9382e99f505abf4437fc20f6908b5bbb9bee01b"
         },
-        {
+        "supplementary_file/f1aecf03-b60d-483c-a09f-69223cc1ad0e": {
             "name": "mature_kidney_dissociation.pdf",
             "uuid": "eff119a8-5bdb-473d-8479-27b3aa0926bc",
             "version": "2019-10-23T14:49:35.785263Z",
@@ -1316,7 +1316,7 @@
             "sha256": "b44f306bc5713eb2321d26493a8ced020178bfc7ea5ce2f96adda17d685c8243",
             "s3_etag": "3140409968ff3ab6981de2a136276e01"
         },
-        {
+        "sequence_file/c2137939-c2c6-44d7-8e11-7d6d6d5443eb": {
             "name": "CZIKidney7632801_S1_L001_I1_001.fastq.gz",
             "uuid": "f11f27c5-f4b0-4d20-9c8f-d1af764c7c0a",
             "version": "2019-10-23T14:49:41.497702Z",
@@ -1329,7 +1329,7 @@
             "sha256": "6cc486a645990e540bbb6abfc2ec4e73552ef04684cb5038fd06ba0490f85945",
             "s3_etag": "d76cd625f2a396910fc7c3e075696248-23"
         },
-        {
+        "sequence_file/85849811-ff50-46ec-9245-79140a1ca705": {
             "name": "FCAImmP7528292_S1_L001_I1_001.fastq.gz",
             "uuid": "f2f0f2f6-21bb-4672-8cbe-6143c5586b69",
             "version": "2019-10-23T14:49:35.621545Z",
@@ -1342,7 +1342,7 @@
             "sha256": "a2c3ee2132af329fcff94ec95906e2a533128b748905adbeaab2e27cd2546685",
             "s3_etag": "0ff3beba492edeef53ebfa5c74c4aa67-42"
         },
-        {
+        "sequence_file/fb5fdf8f-f79f-479a-a662-2f3bed88e960": {
             "name": "CZIKidney7632802_S1_L001_I1_001.fastq.gz",
             "uuid": "f3b306f2-3627-4fbe-b4d0-9968ee934452",
             "version": "2019-10-23T14:49:35.514301Z",
@@ -1355,7 +1355,7 @@
             "sha256": "b98b29bc6efa84b152e9b6c0a741ff13ae722065bf90998cad1a6a11a7cfd5ea",
             "s3_etag": "0bc0ca931c5966ed61bda3335fe778b2-21"
         },
-        {
+        "sequence_file/9b53a5c0-fd77-4d55-b697-16a95c67c4c2": {
             "name": "CZIKidney7587405_S1_L001_R2_001.fastq.gz",
             "uuid": "f6cf748f-03ac-411c-8e52-d5a5c606e673",
             "version": "2019-10-23T14:49:36.222729Z",
@@ -1368,7 +1368,7 @@
             "sha256": "cb55a549053c171a2a2077c565d004db5363d8ef9d35c18b06ed88f21a545bcc",
             "s3_etag": "887ed419642b5e1fa98a7b0f71f981a2-393"
         },
-        {
+        "analysis_file/c60bf214-0340-53c0-b75b-af84a82808d6": {
             "name": "sc-atlas-human-kidney-10XV2.loom",
             "uuid": "fbdede77-a96e-5480-a4e5-2e20275fc0e8",
             "version": "2021-02-11T23:24:52.000000Z",
@@ -1379,7 +1379,7 @@
             "crc32c": "60aaad4d",
             "sha256": "75e27f6ce8b8f4e89470b34dc048736a19024c92c6dc6754f503313a19e77c55"
         },
-        {
+        "sequence_file/6c002a62-76b3-4578-8afd-c88cfd62a682": {
             "name": "FCAImmP7555850_S1_L001_R2_001.fastq.gz",
             "uuid": "fd1a13ab-4a77-4f7c-964b-7e07722581c1",
             "version": "2019-10-23T14:49:35.471867Z",
@@ -1392,7 +1392,7 @@
             "sha256": "83b78d4ba19c8f05ec3df72c07917f39e085f0c89fe8e0c4fe525232b570b74b",
             "s3_etag": "b73882d8f872a34c5b7da5998f4a7b77-450"
         },
-        {
+        "sequence_file/c30f45e7-0575-46c3-8ea2-3ac864b439e9": {
             "name": "4834STDY7002876_S1_L001_I1_001.fastq.gz",
             "uuid": "fe320cac-6005-46ab-a023-1c7157f5d426",
             "version": "2019-10-23T14:49:35.793282Z",
@@ -1405,7 +1405,7 @@
             "sha256": "521ce4b0c4935b9d9a46da29d6e4fa2d12e706f604eb5bbdc95f487ac524e237",
             "s3_etag": "971ebef0e94981f7010f76c1ff19cc37-80"
         },
-        {
+        "sequence_file/9abf31bf-fc25-4e44-ae99-0af17e017b95": {
             "name": "FCAImmP7555849_S1_L001_I1_001.fastq.gz",
             "uuid": "fe86eb27-196d-48be-a58b-840d7add69ec",
             "version": "2019-10-23T14:49:34.767268Z",
@@ -1418,7 +1418,7 @@
             "sha256": "71ffd33e410acc064a0d2647a876900d34e38a534e97c0c5e20740d793dc5e41",
             "s3_etag": "c643eed963e793c1aca9d12aed65f3a5-39"
         },
-        {
+        "sequence_file/a04c3838-8a5f-44c7-9b72-1c31c7a6c547": {
             "name": "CZIKidney7587405_S1_L001_I1_001.fastq.gz",
             "uuid": "feb85664-ff85-4b95-9198-036360f87cc9",
             "version": "2019-10-23T14:49:35.688269Z",
@@ -1431,7 +1431,7 @@
             "sha256": "02f7f2ae215918e69a94a1781d10d0241fac16c89330625016413c6cd11eed05",
             "s3_etag": "c4eb10a17c32fc4d5e9785024c8cad31-42"
         },
-        {
+        "sequence_file/121b6c9b-3b12-4fb8-8d98-fba4f1005770": {
             "name": "FCAImmP7579215_S1_L001_R1_001.fastq.gz",
             "uuid": "fede9b23-84cc-4d8e-97e3-9bd3fa3f4b19",
             "version": "2019-10-23T14:49:35.820178Z",
@@ -1444,7 +1444,7 @@
             "sha256": "65ff3db073e42c2c3cec9c74f91f37c2d4e6bdba73878e884f96272b6d9ec5db",
             "s3_etag": "0c3394426d4dd0e3b4bb5c43bbf953a0-119"
         },
-        {
+        "sequence_file/16a9712a-0a62-4f57-a57f-189992e6070b": {
             "name": "FCAImmP7555849_S1_L001_R1_001.fastq.gz",
             "uuid": "ff6b12b6-7733-476d-a081-32904abff547",
             "version": "2019-10-23T14:49:35.077705Z",
@@ -1457,7 +1457,7 @@
             "sha256": "663fcf54cbe999ebf26ab423d2c91c20634b6bf01b235869c866c6332465572f",
             "s3_etag": "be5e5229fd92fb22e34133c921cdb708-123"
         },
-        {
+        "sequence_file/4bf5245d-0168-48b5-83b8-c6aabdcf1a46": {
             "name": "4834STDY7002881_S1_L001_I1_001.fastq.gz",
             "uuid": "ffa809d2-47c7-45c6-b221-7c9d2478caa6",
             "version": "2019-10-23T14:49:35.543273Z",
@@ -1470,7 +1470,7 @@
             "sha256": "9becc65f81c3b5d208734b337b992903c5b948e189542526e299fefa4795a0e9",
             "s3_etag": "5b34bc4865ec441768acfea58db18a0d-82"
         },
-        {
+        "sequence_file/354517f9-c515-401a-a490-9917dea7d3f2": {
             "name": "CZIKidney7632802_S1_L001_R1_001.fastq.gz",
             "uuid": "ffac7235-fb12-4e0d-ac86-c608d45f43c3",
             "version": "2019-10-23T14:49:35.852293Z",
@@ -1483,7 +1483,7 @@
             "sha256": "c59ba00945e3197c2a19f76175d9eac1010df41ca08afc3342133daee1aee320",
             "s3_etag": "0613aa5824e81feca4684769d22f3a05-59"
         }
-    ],
+    },
     "metadata": {
         "analysis_file/0115dbfc-99f2-59b4-8430-75cd79e3c04d": {
             "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",

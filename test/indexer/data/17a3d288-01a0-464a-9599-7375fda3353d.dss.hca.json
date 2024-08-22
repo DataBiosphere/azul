@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/6bc5b7ef-68f8-445d-8460-f04180c4fae1": {
             "sha1": "3cf469fd27e6ded04b48e0e79d27c4125b036036",
             "name": "HCATisStabAug177078016_S3_L001_R1_001.fastq.gz",
             "uuid": "6bc5b7ef-68f8-445d-8460-f04180c4fae1",
@@ -12,7 +12,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 785410326
         },
-        {
+        "sequence_file/cee5b925-919c-4c77-8ea2-be51a1728e2b": {
             "sha1": "5044125213cf33d39797ce440b21d146d3c2dc44",
             "name": "HCATisStabAug177078016_S2_L001_R1_001.fastq.gz",
             "uuid": "cee5b925-919c-4c77-8ea2-be51a1728e2b",
@@ -24,7 +24,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1210026035
         },
-        {
+        "sequence_file/771d9bcb-a5ff-43b5-b3e8-e738cc4c05bf": {
             "sha1": "aef6f8c52aad47fbf643a93843794c7fb851aaac",
             "name": "HCATisStabAug177078016_S1_L001_R1_001.fastq.gz",
             "uuid": "771d9bcb-a5ff-43b5-b3e8-e738cc4c05bf",
@@ -36,7 +36,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 984579175
         },
-        {
+        "sequence_file/17add91c-4063-4684-859d-d739baa4b9bb": {
             "sha1": "a74e90f75e7c48eeaa7fb2396ed88e1cfc278f4b",
             "name": "HCATisStabAug177078016_S3_L001_R2_001.fastq.gz",
             "uuid": "17add91c-4063-4684-859d-d739baa4b9bb",
@@ -48,7 +48,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1796709528
         },
-        {
+        "sequence_file/024c5cb6-f473-40c9-9eb3-da08caf3180e": {
             "sha1": "016b573e4d0aff49147a13359e69b1c19e332817",
             "name": "HCATisStabAug177078016_S4_L001_R2_001.fastq.gz",
             "uuid": "024c5cb6-f473-40c9-9eb3-da08caf3180e",
@@ -60,7 +60,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2448868668
         },
-        {
+        "sequence_file/b7554cb7-dc5a-4b07-9c7a-c04466d30576": {
             "sha1": "1e5f42bd8d9071c4ff788f4f68c9abb5624ba8ad",
             "name": "HCATisStabAug177078016_S4_L001_I1_001.fastq.gz",
             "uuid": "b7554cb7-dc5a-4b07-9c7a-c04466d30576",
@@ -72,7 +72,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 544052716
         },
-        {
+        "sequence_file/fea5cc65-6d94-4d1e-a807-ec248f79b83d": {
             "sha1": "879fb66e2d808622de47c3f2183fdc190a0b20df",
             "name": "HCATisStabAug177078016_S2_L001_I1_001.fastq.gz",
             "uuid": "fea5cc65-6d94-4d1e-a807-ec248f79b83d",
@@ -84,7 +84,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 574722449
         },
-        {
+        "sequence_file/b7d8d43c-bee6-48eb-bb36-0c07701c47b5": {
             "sha1": "d40ffdbde0c17493af376b47661cec2f55b24f21",
             "name": "HCATisStabAug177078016_S3_L001_I1_001.fastq.gz",
             "uuid": "b7d8d43c-bee6-48eb-bb36-0c07701c47b5",
@@ -96,7 +96,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 359478571
         },
-        {
+        "sequence_file/5239e70b-7d8d-4285-971f-9a156441c2f2": {
             "sha1": "17fcbe4e89c4f68d8f7183de6dac0242919c7298",
             "name": "HCATisStabAug177078016_S4_L001_R1_001.fastq.gz",
             "uuid": "5239e70b-7d8d-4285-971f-9a156441c2f2",
@@ -108,7 +108,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1112212351
         },
-        {
+        "sequence_file/c548066c-9994-415a-98cb-3df2933937ff": {
             "sha1": "8e00425311948375295dc0df6d356e1e26c3e874",
             "name": "HCATisStabAug177078016_S2_L001_R2_001.fastq.gz",
             "uuid": "c548066c-9994-415a-98cb-3df2933937ff",
@@ -120,7 +120,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2734648788
         },
-        {
+        "sequence_file/8ebfd02e-2a74-4367-80db-48082f331625": {
             "sha1": "b4581e48612d503caeeb049c092e92739a905922",
             "name": "HCATisStabAug177078016_S1_L001_R2_001.fastq.gz",
             "uuid": "8ebfd02e-2a74-4367-80db-48082f331625",
@@ -132,7 +132,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2188935776
         },
-        {
+        "sequence_file/49fddace-4c59-41c1-8930-0707460132d7": {
             "sha1": "831d9ba53201a83506b236af27e6c1fb06a384f2",
             "name": "HCATisStabAug177078016_S1_L001_I1_001.fastq.gz",
             "uuid": "49fddace-4c59-41c1-8930-0707460132d7",
@@ -144,7 +144,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 470883073
         }
-    ],
+    },
     "metadata": {
         "project/6ec8e247-2eb0-42d1-823f-75facd03988d": {
             "content": {

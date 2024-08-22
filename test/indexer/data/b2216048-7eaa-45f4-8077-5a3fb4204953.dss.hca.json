@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/aa662c76-d220-49f4-8316-f4af5820d60b": {
             "sha1": "284b9be625b43327f353fd3d77b6aa5b4d32e69c",
             "name": "22011_1#268_2.fastq.gz",
             "uuid": "aa662c76-d220-49f4-8316-f4af5820d60b",
@@ -12,7 +12,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 88782381
         },
-        {
+        "sequence_file/d2f32681-9c1a-4dfd-b506-c24327afb8d1": {
             "sha1": "beeb73e062974cd9f37fc09822fea4fec2ceb609",
             "name": "22011_1#268_1.fastq.gz",
             "uuid": "d2f32681-9c1a-4dfd-b506-c24327afb8d1",
@@ -24,7 +24,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 74420452
         }
-    ],
+    },
     "metadata": {
         "project/93f6a42f-1790-4af4-b5d1-8c436cb6feae": {
             "content": {

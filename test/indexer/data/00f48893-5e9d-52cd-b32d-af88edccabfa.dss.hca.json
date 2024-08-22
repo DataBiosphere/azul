@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/e0efcd8d-8433-4b40-9eee-11dafb699a5a": {
             "name": "Retina_Wong_scRNA_Sample5_I1.fastq.gz",
             "uuid": "07b45ad4-7797-4c16-bfae-493fb41d6600",
             "version": "2019-09-13T09:16:27.260339Z",
@@ -13,7 +13,7 @@
             "sha256": "cc6bf034743ed5bf781320deeceb119b4584a7854d922b59f05392d6cd5cc737",
             "s3_etag": "b9223d5e376a061971bd23fb78e25fd8-13"
         },
-        {
+        "sequence_file/6d52232d-dc77-4070-bdb1-9bb0ee59d309": {
             "name": "Retina_Wong_scRNA_Sample5_R1.fastq.gz",
             "uuid": "09eb8fc6-9e27-4f08-87c5-bfccf918ee12",
             "version": "2019-09-13T09:16:28.234453Z",
@@ -26,7 +26,7 @@
             "sha256": "62495704a4bb9a99543fd2143ec577d7b4c106c57b7de37d5c8ed9e002152e5d",
             "s3_etag": "e3b61e35217b7ed1526704c92446e18a-47"
         },
-        {
+        "sequence_file/30040306-be5c-48f9-b221-e666e279ab5b": {
             "name": "Retina_Wong_scRNA_Sample4_I1.fastq.gz",
             "uuid": "1985c53a-b78f-4d9e-9563-dffed8207efd",
             "version": "2019-09-13T09:16:23.710869Z",
@@ -39,7 +39,7 @@
             "sha256": "fbb183a7608f5c4b98e0d9a2f4f77b843d24dcd727f0d5e4ea8111de7d9b22b2",
             "s3_etag": "f393918b58d786a89c467455152aa66e-17"
         },
-        {
+        "analysis_file/7a96a0c2-e22a-57ad-ac46-4c2433a63d94": {
             "name": "262f55a3-d03d-49ae-8080-1a6208fddb4f.bam",
             "uuid": "20329887-aab3-55fb-ba2c-e3eb27a20f6d",
             "version": "2021-02-03T20:52:24.000000Z",
@@ -50,7 +50,7 @@
             "crc32c": "c844464d",
             "sha256": "7a1ae83ca759edadf571751156b4482f592bda1224ae3bf8c7baccd1a2373b80"
         },
-        {
+        "sequence_file/f6407a7a-eecc-4735-a96a-b8bb634118e4": {
             "name": "Retina_Wong_scRNA_Sample2_I1.fastq.gz",
             "uuid": "27622c20-c017-4a98-b62c-76035758bc09",
             "version": "2019-09-13T09:16:27.588981Z",
@@ -63,7 +63,7 @@
             "sha256": "4d2a000eb5fe6eac0926812796794f265f1a1438346c30a2d459ddd3a0f3362c",
             "s3_etag": "0f3a2d1294d0e1cb0a2f504adc2aefaf-34"
         },
-        {
+        "sequence_file/b01b2e61-3ebd-48cc-b071-f2e8cb42ff7c": {
             "name": "Retina_Wong_scRNA_Sample1_I1.fastq.gz",
             "uuid": "39ae3998-72a4-41ba-b00f-526bfecb8ca2",
             "version": "2019-09-13T09:16:26.837580Z",
@@ -76,7 +76,7 @@
             "sha256": "979ff8bf675f4a3d56bb83e80e64641656bbfd1b7bfc805023445cf53fdd5450",
             "s3_etag": "ad7a88538e8a9c00b6d904c7eb00318c-32"
         },
-        {
+        "analysis_file/43598186-06cd-5f4b-95d9-fecb0a35d3ab": {
             "name": "ad220152-0eb4-4f85-a03e-c7e81ea3f167.bam",
             "uuid": "3ac6d370-c10b-54a2-a1ed-52f661aae1d7",
             "version": "2021-02-03T20:52:32.000000Z",
@@ -87,7 +87,7 @@
             "crc32c": "f82a27d8",
             "sha256": "874aaeeaf5d963df1fdc30a399250427873d5594457eece6603ae5f085930320"
         },
-        {
+        "sequence_file/15f64718-69cf-462c-9704-e8a1f54c27c8": {
             "name": "Retina_Wong_scRNA_Sample3_R2.fastq.gz",
             "uuid": "3e2b02f8-5b3b-4ab2-8ef4-7ae8a856854e",
             "version": "2019-09-13T09:16:27.026166Z",
@@ -100,7 +100,7 @@
             "sha256": "33ed54a5916930322b59f2e66ef840b7ae347da5fdec6a2443e5dceeb577b8a9",
             "s3_etag": "7d5599e41f686131c8d7da5b5f69f80f-143"
         },
-        {
+        "sequence_file/a7b21a25-e76e-420d-8892-538062bfefbf": {
             "name": "Retina_Wong_scRNA_Sample3_R1.fastq.gz",
             "uuid": "3e3505f9-4f47-402f-bfb8-960af07f91da",
             "version": "2019-09-13T09:16:26.831163Z",
@@ -113,7 +113,7 @@
             "sha256": "d06f4c866cb6f475692f322ae7415a188ae13fc3c37965daa101f73b425a8a47",
             "s3_etag": "fd9244e048c7d9e1f63f113736701ed5-43"
         },
-        {
+        "analysis_file/a7915c55-1d80-5724-9c81-6dd0a9130361": {
             "name": "262f55a3-d03d-49ae-8080-1a6208fddb4f.loom",
             "uuid": "4b611790-d17b-5938-86c4-695480abb4ef",
             "version": "2021-02-03T21:06:32.000000Z",
@@ -124,7 +124,7 @@
             "crc32c": "a9fb633c",
             "sha256": "3acf571a7329dece2fa69d92663bf6ea1cfe662b22e0ac8ab46b89ea8b1b5ba8"
         },
-        {
+        "sequence_file/9f8f5212-0749-460b-9a46-2949dea45d52": {
             "name": "Retina_Wong_scRNA_Sample4_R2.fastq.gz",
             "uuid": "5140b603-8cc1-4566-9043-e68145efbbd6",
             "version": "2019-09-13T09:16:24.192766Z",
@@ -137,7 +137,7 @@
             "sha256": "76f22d617806fffc64137ef2449e1e827a6d889c0b8e6fc0e38274f68c9f556d",
             "s3_etag": "012e21be88b6293dfc864c018f67ccf5-147"
         },
-        {
+        "analysis_file/d90280cc-a294-57de-b350-5234a5278c19": {
             "name": "1116b396-448e-4dd1-b9c9-78357c511e15.loom",
             "uuid": "5a11ed4f-41d1-53b4-9e62-3c0bbd04b4b0",
             "version": "2021-02-03T21:08:31.000000Z",
@@ -148,7 +148,7 @@
             "crc32c": "9d1f0a8c",
             "sha256": "733a4a7db49e1ef08a7f5631f3e658f49233c1d468d6d3da0a3f7c02621fab27"
         },
-        {
+        "sequence_file/52149e21-dcd2-4288-a5eb-e526c3dcf745": {
             "name": "Retina_Wong_scRNA_Sample5_R2.fastq.gz",
             "uuid": "5ceca6a5-2bc0-4b38-908b-01d4fec71d9f",
             "version": "2019-09-13T09:16:28.462542Z",
@@ -161,7 +161,7 @@
             "sha256": "46cc1e1fdd748e40227ccbb1eabd5f6456c7ef31faa934cbcb68a0707cb25427",
             "s3_etag": "a32e912ba25ab2702a47e31082806ee5-189"
         },
-        {
+        "analysis_file/b949e4b6-c3fb-58b4-865b-40cb3ef2b6c6": {
             "name": "1116b396-448e-4dd1-b9c9-78357c511e15.bam",
             "uuid": "640e64f1-6ada-5d12-a772-fe4ed4eeecea",
             "version": "2021-02-03T20:52:27.000000Z",
@@ -172,7 +172,7 @@
             "crc32c": "2ad80e5f",
             "sha256": "45e831be417a5bbf75b7d0a0a1a024ac9d9f22971115fd56f5b0e5b346e87a71"
         },
-        {
+        "analysis_file/70ff6783-333f-5c1b-8208-3b495df95620": {
             "name": "8b81f0c2-3b57-4072-8a10-c169fece543e.bam",
             "uuid": "76fc7a86-572e-5e00-ac87-b55d81a8515d",
             "version": "2021-02-03T20:52:29.000000Z",
@@ -183,7 +183,7 @@
             "crc32c": "a8427ce7",
             "sha256": "7098a7b9661d3be54f376c0e8b63ec7efbf2bf88ec389b79efbd7956f930519d"
         },
-        {
+        "sequence_file/39255288-6791-45b0-ac7e-b3ef4c981a3b": {
             "name": "Retina_Wong_scRNA_Sample4_R1.fastq.gz",
             "uuid": "79f589cb-32a2-4ba6-a091-7c5d820d02df",
             "version": "2019-09-13T09:16:23.982952Z",
@@ -196,7 +196,7 @@
             "sha256": "bb61a115aed93057cbd1dc8fb08e68ed5615cc8dc926a9b3336ea0ad58eef648",
             "s3_etag": "be870140031523af537bbb3861fff77e-44"
         },
-        {
+        "analysis_file/4c866eb3-7470-5ee8-91b9-942246f19fde": {
             "name": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e.bam",
             "uuid": "820c396e-248b-5b4e-91b9-d7801cd9725f",
             "version": "2021-02-03T20:52:12.000000Z",
@@ -207,7 +207,7 @@
             "crc32c": "a068a3b9",
             "sha256": "1ef67647e5113fcbebbf04fa7e57aaa220ae35229a9f28af289708ab4c975298"
         },
-        {
+        "analysis_file/bc111cd3-bf54-57ce-8af1-88f5997a0a9d": {
             "name": "ad220152-0eb4-4f85-a03e-c7e81ea3f167.loom",
             "uuid": "98ab4428-d66a-57b7-a802-83fdec68d744",
             "version": "2021-02-03T21:06:08.000000Z",
@@ -218,7 +218,7 @@
             "crc32c": "72dc7f49",
             "sha256": "c9f957119f9a7d5f7b05d338ea622a7c6f1384bcf6e72d290f1f7738df8f3f86"
         },
-        {
+        "sequence_file/6bd884d2-fccf-4227-8efc-184751527dfb": {
             "name": "Retina_Wong_scRNA_Sample2_R1.fastq.gz",
             "uuid": "9d720856-425d-404f-bb5b-51c225e92dd6",
             "version": "2019-09-13T09:16:27.766043Z",
@@ -231,7 +231,7 @@
             "sha256": "705302cc9b0e08a951d2cca198da496da212426e3f69153381245bbd9cbc2e20",
             "s3_etag": "8276b9dd2ef8b1174cb233d0aaf0f63a-91"
         },
-        {
+        "analysis_file/f51568e8-b84c-504b-82f0-3ad5975d4bcb": {
             "name": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e.loom",
             "uuid": "a301dcb4-6a8f-5ef8-af7e-6a9fe44058e8",
             "version": "2021-02-03T21:12:10.000000Z",
@@ -242,7 +242,7 @@
             "crc32c": "3b799574",
             "sha256": "285d82ac997f24fcd3543a47407bb84ed18babeb0186ecda4b3b208ba98e7a09"
         },
-        {
+        "sequence_file/799f314f-7c6c-4981-be36-8e1310bf38e6": {
             "name": "Retina_Wong_scRNA_Sample3_I1.fastq.gz",
             "uuid": "ad5fed6e-b0e1-40a0-82e8-0cfc2eca0786",
             "version": "2019-09-13T09:16:26.425735Z",
@@ -255,7 +255,7 @@
             "sha256": "700d3f3197a2f3f24273ab664dfa8e06c7a97ee8108c09b01de9e85f04f5390d",
             "s3_etag": "fbb100a856afca4d91f70afb015c2b5b-16"
         },
-        {
+        "sequence_file/1016adeb-cdc3-47d6-a89e-771c763dd2e7": {
             "name": "Retina_Wong_scRNA_Sample2_R2.fastq.gz",
             "uuid": "b9ab7f46-071a-48cf-bc7f-fdb9c8dd0c22",
             "version": "2019-09-13T09:16:27.945734Z",
@@ -268,7 +268,7 @@
             "sha256": "ba581a5282522ad15266c7843b1d18181e923c44f6ad9840184842af252e8f10",
             "s3_etag": "e2d161f5590706c0128c1aa41cc9b3eb-313"
         },
-        {
+        "analysis_file/fec17064-9014-50b0-9e1a-dfaef2fbb4fc": {
             "name": "wong-retina-human-eye-10XV2.loom",
             "uuid": "bd98f428-881e-501a-ac16-24f27a68ce2f",
             "version": "2021-02-11T23:11:45.000000Z",
@@ -279,7 +279,7 @@
             "crc32c": "d1b06ce5",
             "sha256": "6a6483c2e78da77017e912a4d350f141bda1ec7b269f20ca718b55145ee5c83c"
         },
-        {
+        "analysis_file/759bad57-b725-5346-b3ff-9fb80b27cfe7": {
             "name": "8b81f0c2-3b57-4072-8a10-c169fece543e.loom",
             "uuid": "bdd02a5f-2007-56f9-abeb-8c2c5c99a08e",
             "version": "2021-02-03T21:08:27.000000Z",
@@ -290,7 +290,7 @@
             "crc32c": "567bee09",
             "sha256": "52d70178293e01248f66928edaa01191c204e5169fa2b66b2008ddb4b0d4a412"
         },
-        {
+        "sequence_file/33682180-6cdf-4d0c-9fe0-e1c029ac13b2": {
             "name": "Retina_Wong_scRNA_Sample1_R1.fastq.gz",
             "uuid": "d65c128c-3bb7-4da3-8d56-b60007cf8d15",
             "version": "2019-09-13T09:16:27.063168Z",
@@ -303,7 +303,7 @@
             "sha256": "1a22499817f26c307ffe7876e2be5a2bdc9ab8aee2da3c6ca89af2bf3ab903e1",
             "s3_etag": "3c7331aa4273cc9d75e234311833acf7-89"
         },
-        {
+        "sequence_file/e92c42c7-f238-44ea-b147-e199b768d450": {
             "name": "Retina_Wong_scRNA_Sample1_R2.fastq.gz",
             "uuid": "d94b88bc-3507-4644-a221-1c99861895e2",
             "version": "2019-09-13T09:16:27.300840Z",
@@ -316,7 +316,7 @@
             "sha256": "e67ad7cfc615175e9c0f8940909965b4fa0e376253e8969596d638603bac7e8c",
             "s3_etag": "977e306603976db10215fba42f753254-308"
         }
-    ],
+    },
     "metadata": {
         "analysis_file/43598186-06cd-5f4b-95d9-fecb0a35d3ab": {
             "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",

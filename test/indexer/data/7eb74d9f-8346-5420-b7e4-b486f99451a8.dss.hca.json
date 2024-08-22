@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/30040306-be5c-48f9-b221-e666e279ab5b": {
             "name": "Retina_Wong_scRNA_Sample4_I1.fastq.gz",
             "uuid": "1985c53a-b78f-4d9e-9563-dffed8207efd",
             "version": "2019-09-13T09:16:23.710869Z",
@@ -13,7 +13,7 @@
             "sha256": "fbb183a7608f5c4b98e0d9a2f4f77b843d24dcd727f0d5e4ea8111de7d9b22b2",
             "s3_etag": "f393918b58d786a89c467455152aa66e-17"
         },
-        {
+        "sequence_file/9f8f5212-0749-460b-9a46-2949dea45d52": {
             "name": "Retina_Wong_scRNA_Sample4_R2.fastq.gz",
             "uuid": "5140b603-8cc1-4566-9043-e68145efbbd6",
             "version": "2019-09-13T09:16:24.192766Z",
@@ -26,7 +26,7 @@
             "sha256": "76f22d617806fffc64137ef2449e1e827a6d889c0b8e6fc0e38274f68c9f556d",
             "s3_etag": "012e21be88b6293dfc864c018f67ccf5-147"
         },
-        {
+        "analysis_file/d90280cc-a294-57de-b350-5234a5278c19": {
             "name": "1116b396-448e-4dd1-b9c9-78357c511e15.loom",
             "uuid": "5a11ed4f-41d1-53b4-9e62-3c0bbd04b4b0",
             "version": "2021-02-03T21:08:31.000000Z",
@@ -37,7 +37,7 @@
             "crc32c": "9d1f0a8c",
             "sha256": "733a4a7db49e1ef08a7f5631f3e658f49233c1d468d6d3da0a3f7c02621fab27"
         },
-        {
+        "analysis_file/b949e4b6-c3fb-58b4-865b-40cb3ef2b6c6": {
             "name": "1116b396-448e-4dd1-b9c9-78357c511e15.bam",
             "uuid": "640e64f1-6ada-5d12-a772-fe4ed4eeecea",
             "version": "2021-02-03T20:52:27.000000Z",
@@ -48,7 +48,7 @@
             "crc32c": "2ad80e5f",
             "sha256": "45e831be417a5bbf75b7d0a0a1a024ac9d9f22971115fd56f5b0e5b346e87a71"
         },
-        {
+        "sequence_file/39255288-6791-45b0-ac7e-b3ef4c981a3b": {
             "name": "Retina_Wong_scRNA_Sample4_R1.fastq.gz",
             "uuid": "79f589cb-32a2-4ba6-a091-7c5d820d02df",
             "version": "2019-09-13T09:16:23.982952Z",
@@ -61,7 +61,7 @@
             "sha256": "bb61a115aed93057cbd1dc8fb08e68ed5615cc8dc926a9b3336ea0ad58eef648",
             "s3_etag": "be870140031523af537bbb3861fff77e-44"
         }
-    ],
+    },
     "metadata": {
         "analysis_protocol/289ec28b-ce11-5be8-89ab-92fbceb874a0": {
             "computational_method": "Optimus",

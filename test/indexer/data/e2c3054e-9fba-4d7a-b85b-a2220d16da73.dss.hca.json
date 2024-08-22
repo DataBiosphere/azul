@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "analysis_file/f5f82e76-173c-4f95-b25a-4ddc80bd1f86": {
+
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "6bb92520",
             "indexed": false,
@@ -12,7 +13,7 @@
             "uuid": "d7408870-a345-4d5c-be33-edbd69385529",
             "version": "2018-10-24T23:42:14.573498Z"
         },
-        {
+        "analysis_file/9b32ad49-e38d-458c-8976-668daa24c30e": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "06cf46cb",
             "indexed": false,
@@ -24,7 +25,7 @@
             "uuid": "4754bb8b-fc1f-431d-b063-fdbc2930fbf3",
             "version": "2018-10-24T23:42:15.014013Z"
         },
-        {
+        "analysis_file/479b4d96-b76b-41a7-9606-a523d701ce0c": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "2d0486d5",
             "indexed": false,
@@ -36,7 +37,7 @@
             "uuid": "c594b1a2-6a72-4744-8fc4-07debf086cbf",
             "version": "2018-10-24T23:42:15.215728Z"
         },
-        {
+        "analysis_file/f0b686e9-7a26-40f1-bdb2-58a1414d77eb": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "e1c51bd2",
             "indexed": false,
@@ -48,7 +49,7 @@
             "uuid": "bb1b99aa-1343-4825-88c9-1b67400982fc",
             "version": "2018-10-24T23:42:15.408775Z"
         },
-        {
+        "analysis_file/30f8d79e-8a4d-4fd3-93af-b5346f16b640": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "53c649b7",
             "indexed": false,
@@ -60,7 +61,7 @@
             "uuid": "58fb543a-1021-499c-a96d-aa49612ece44",
             "version": "2018-10-24T23:42:15.703115Z"
         },
-        {
+        "analysis_file/20a011f9-e862-413b-bf1c-b43f3c64b874": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "09e98693",
             "indexed": false,
@@ -72,7 +73,7 @@
             "uuid": "7270a312-321a-4c33-80f3-4b02580be397",
             "version": "2018-10-24T23:42:15.988377Z"
         },
-        {
+        "analysis_file/c8caa0c3-7e78-40ac-a7f9-6219cbc2ee50": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "6dface93",
             "indexed": false,
@@ -84,7 +85,7 @@
             "uuid": "4c7e9d51-cd0a-4a0e-82e3-4c70550be2f0",
             "version": "2018-10-24T23:42:16.282105Z"
         },
-        {
+        "analysis_file/bdea53d3-49a6-4f5c-8504-d74996fe0745": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "522a934d",
             "indexed": false,
@@ -96,7 +97,7 @@
             "uuid": "3b5057e7-d9fa-4c66-b172-66efb9d46c7f",
             "version": "2018-10-24T23:42:16.551760Z"
         },
-        {
+        "analysis_file/0d27455f-d951-472a-849a-e234efca42d6": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "3290e07b",
             "indexed": false,
@@ -108,7 +109,7 @@
             "uuid": "8f886981-71ca-4d50-945d-fcad7456dce7",
             "version": "2018-10-24T23:42:16.801147Z"
         },
-        {
+        "analysis_file/2da7e3ba-23f5-4e81-9c36-5106b55bcdce": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "2ca91ed2",
             "indexed": false,
@@ -120,7 +121,7 @@
             "uuid": "6a02ba20-ba21-4685-b616-2651ce61df5c",
             "version": "2018-10-24T23:42:17.068963Z"
         },
-        {
+        "analysis_file/8776d7ea-5e3e-49a0-bd97-a713e9a14f3e": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "78cad56f",
             "indexed": false,
@@ -132,7 +133,7 @@
             "uuid": "c64fddc4-47bb-4219-8e1f-2c9b05192c30",
             "version": "2018-10-24T23:42:17.343576Z"
         },
-        {
+        "analysis_file/4fb97024-86ac-4d01-907d-d9b3159cf4be": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "37833b4b",
             "indexed": false,
@@ -144,7 +145,7 @@
             "uuid": "d5dcc2ea-11a3-40f6-94bd-b58584b9b9ea",
             "version": "2018-10-24T23:42:17.572545Z"
         },
-        {
+        "analysis_file/e1982adb-80b9-4ea6-a616-9206b0846afd": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "d05e6e24",
             "indexed": false,
@@ -156,7 +157,7 @@
             "uuid": "0e537564-ae91-460c-8b64-db6736fd342f",
             "version": "2018-10-24T23:42:17.849582Z"
         },
-        {
+        "analysis_file/b9254ef6-3f3a-4259-8829-01a6006fe5e3": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "383a286e",
             "indexed": false,
@@ -168,7 +169,7 @@
             "uuid": "7e977e69-0abf-4e2e-925b-fd312a91996c",
             "version": "2018-10-24T23:42:17.966695Z"
         },
-        {
+        "analysis_file/4bdb540a-7189-490a-9823-0f5c67e146d4": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "8be628a6",
             "indexed": false,
@@ -180,7 +181,7 @@
             "uuid": "c5745a0b-01c4-42ec-a4a3-4de76b72e3c7",
             "version": "2018-10-24T23:42:18.360888Z"
         },
-        {
+        "analysis_file/02e4b9e0-0750-4a21-8b18-46df9f7c86b5": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "1fcc995f",
             "indexed": false,
@@ -192,7 +193,7 @@
             "uuid": "780a8a11-d536-42be-9c92-a408b23f13a0",
             "version": "2018-10-24T23:42:18.517550Z"
         },
-        {
+        "analysis_file/55a4c327-4ca0-400d-88b9-91ccd89cad31": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "27f749cf",
             "indexed": false,
@@ -204,7 +205,7 @@
             "uuid": "989f8eac-c511-49e2-b4eb-1c7fde939df6",
             "version": "2018-10-24T23:42:19.746293Z"
         },
-        {
+        "analysis_file/dd5a65c4-23fc-40ba-8caf-37393a059e0f": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "c597ac81",
             "indexed": false,
@@ -216,7 +217,7 @@
             "uuid": "bc155f7e-ed46-41f1-a54b-5d094e1e32f2",
             "version": "2018-10-24T23:42:20.467152Z"
         },
-        {
+        "analysis_file/bc051b66-16fd-49b0-aca7-d6b29c445f61": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "444a7707",
             "indexed": false,
@@ -228,7 +229,7 @@
             "uuid": "0878349d-9608-4389-9b34-ac17d641c396",
             "version": "2018-10-24T23:42:20.712048Z"
         },
-        {
+        "analysis_file/b104083d-c607-4ad5-993e-e97632c9e4d9": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "f35d7e55",
             "indexed": false,
@@ -240,7 +241,7 @@
             "uuid": "65cf94ff-f203-4b93-aca4-2ef7ad3f5aa0",
             "version": "2018-10-24T23:42:20.881581Z"
         },
-        {
+        "analysis_file/b6576e30-18a2-412c-846d-377ad50cceed": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "1563daec",
             "indexed": false,
@@ -252,7 +253,7 @@
             "uuid": "0bf15e1e-cc40-43e1-b01f-93f2e725fae7",
             "version": "2018-10-24T23:42:21.017096Z"
         },
-        {
+        "analysis_file/544245b6-180b-4765-b8d2-db9a07fd2790": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "88068bce",
             "indexed": false,
@@ -264,7 +265,7 @@
             "uuid": "fd42c155-6189-4789-83b1-c6f3a7706228",
             "version": "2018-10-24T23:42:21.309195Z"
         },
-        {
+        "analysis_file/bdfc95f5-452d-45f0-a539-03e70be04d73": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "ae799606",
             "indexed": false,
@@ -276,7 +277,7 @@
             "uuid": "3877ba3c-3db8-4538-b3c6-39a4d70269eb",
             "version": "2018-10-24T23:42:21.442289Z"
         },
-        {
+        "analysis_file/46742270-3e39-45a2-99d6-50c2e1277045": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "38a3821e",
             "indexed": false,
@@ -288,7 +289,7 @@
             "uuid": "aea258d4-650e-45c8-890a-d2179a76a326",
             "version": "2018-10-24T23:42:21.729567Z"
         },
-        {
+        "analysis_file/1251ee1c-3f6f-43ef-b540-c4a3f3461e78": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "afce17ed",
             "indexed": false,
@@ -300,7 +301,7 @@
             "uuid": "af1aec5c-e200-4d9b-8ea4-f55bc4285615",
             "version": "2018-10-24T23:42:21.861075Z"
         },
-        {
+        "analysis_file/ad5a0217-3f5e-4293-bf4e-d56f55453dd5": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "c6565f75",
             "indexed": false,
@@ -312,7 +313,7 @@
             "uuid": "efb0702d-9593-4199-8129-2a86a13600a9",
             "version": "2018-10-24T23:42:21.990379Z"
         },
-        {
+        "analysis_file/fc842ec4-3fdc-447c-82a3-b59584f6509f": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "c0b4fc1c",
             "indexed": false,
@@ -324,7 +325,7 @@
             "uuid": "7474a924-91db-4468-81cf-4a28e6dacda5",
             "version": "2018-10-24T23:42:22.121285Z"
         },
-        {
+        "analysis_file/858b76ef-bb5b-44e2-b6fa-09efd3430a98": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "80af448b",
             "indexed": false,
@@ -336,7 +337,7 @@
             "uuid": "09144ccc-8f59-47c3-960d-1f97cedc0ba6",
             "version": "2018-10-24T23:42:22.356058Z"
         },
-        {
+        "analysis_file/8c4c53c9-87a3-4f28-8c65-57090360a9dc": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "f282f971",
             "indexed": false,
@@ -348,7 +349,7 @@
             "uuid": "0ecd1e02-2cf6-4c71-af42-259036b78284",
             "version": "2018-10-24T23:42:22.492841Z"
         },
-        {
+        "analysis_file/ec81ed84-ba61-4361-b611-c2ab3bf3f08e": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "b89e6723",
             "indexed": false,
@@ -360,7 +361,7 @@
             "uuid": "e6bc21b2-fbbd-46f3-9b3a-df0d547a3142",
             "version": "2018-10-24T23:42:22.705276Z"
         },
-        {
+        "analysis_file/51adec61-135c-4a93-b3d2-50019c0f58ad": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "1c9916e8",
             "indexed": false,
@@ -372,7 +373,7 @@
             "uuid": "63818a29-a94e-49ca-8c83-15e7813510d9",
             "version": "2018-10-24T23:42:22.837521Z"
         },
-        {
+        "analysis_file/abfb543f-345d-4f01-8a3d-c9c02b87cd0b": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "88035931",
             "indexed": false,
@@ -384,7 +385,7 @@
             "uuid": "599c92d3-6d60-4f14-a0e4-f6970958ae5a",
             "version": "2018-10-24T23:42:23.188749Z"
         },
-        {
+        "analysis_file/1afd626b-6730-4cb6-92c1-3379e7944f66": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "af11e230",
             "indexed": false,
@@ -396,7 +397,7 @@
             "uuid": "5f87557b-8b9e-44e5-b3e5-f1a785530418",
             "version": "2018-10-24T23:42:23.363215Z"
         },
-        {
+        "sequence_file/c8ed5871-28e6-42e2-8ccf-caa586a72c9e": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "0515f3b7",
             "indexed": false,
@@ -408,7 +409,7 @@
             "uuid": "e4232d09-11b1-44b6-a1d5-2049f2d2ef2e",
             "version": "2018-10-23T09:40:41.472595Z"
         },
-        {
+        "sequence_file/6291c2e7-3cc4-4d87-9bf6-2d6f6b131628": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "e1a944cc",
             "indexed": false,
@@ -420,7 +421,7 @@
             "uuid": "8194adce-71ef-45aa-af5a-468fc0f88c1c",
             "version": "2018-10-23T09:40:41.717604Z"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/75d0f208-d856-4e12-8916-a84f8f0e5338": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

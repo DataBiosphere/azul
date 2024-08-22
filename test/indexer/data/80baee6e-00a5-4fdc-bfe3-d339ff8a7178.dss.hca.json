@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/64f1a275-671c-46a2-ba7f-6647e672c8d7": {
             "name": "SRR3937937_R1.fastq.gz",
             "uuid": "0880fed3-ede3-4761-8555-8c159c3e800e",
             "version": "2021-03-12T22:38:42.790000Z",
@@ -13,7 +13,7 @@
             "sha256": "3eb49debed92777e57fa5a5a20192d8ca99942695b1073f294921e0379dd58fb",
             "s3_etag": "b408cb0c380283bb235a824a8011de87-2"
         },
-        {
+        "sequence_file/e27de859-4b05-43d6-8437-7f7dfc0507d1": {
             "name": "SRR3937937_R2.fastq.gz",
             "uuid": "8027bd7f-a3bb-4a75-97e9-1a385a158f96",
             "version": "2021-03-12T22:38:42.802000Z",
@@ -26,7 +26,7 @@
             "sha256": "931213e2e283ffc8272c5d51dc647040131767a495bf2412aaa8acb0e876facf",
             "s3_etag": "4a55ee383287a1b4f0aa4e756178c73f-2"
         }
-    ],
+    },
     "metadata": {
         "sequencing_protocol/58612e7a-c83a-4c7d-ab53-974b207291eb": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",

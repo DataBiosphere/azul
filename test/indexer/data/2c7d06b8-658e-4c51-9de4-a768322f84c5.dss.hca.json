@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "analysis_file/30038dc4-4de3-4fdb-abd3-a50ea36cb225": {
+
             "name": "GSM5177044_PD170_matrix.mtx.gz",
             "uuid": "f524cda6-8e08-4bf4-9fec-536107bca35a",
             "version": "2021-09-21T17:27:13.154000Z",
@@ -13,7 +14,7 @@
             "sha256": "6e13614e05e829d12a73df4d26f190a68ca2aa3579234c7e254ac21b290305f4",
             "s3_etag": "d742c32bd01d51e075e3d70e189f315a"
         }
-    ],
+    },
     "metadata": {
         "sequencing_protocol/c2f2fee0-c8dc-4511-9e4a-3db4ab6b2dce": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",

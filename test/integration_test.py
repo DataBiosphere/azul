@@ -1939,7 +1939,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 metadata = bundle_json['metadata']
                 links = bundle_json['links']
                 stitched = bundle_json['stitched']
-                self.assertIsInstance(manifest, list)
+                self.assertIsInstance(manifest, dict)
                 self.assertIsInstance(metadata, dict)
                 self.assertIsInstance(links, dict)
                 self.assertIsInstance(stitched, list)

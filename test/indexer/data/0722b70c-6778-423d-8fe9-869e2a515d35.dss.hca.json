@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/54647cbb-7814-4d9a-b7f8-a6605c2f7aa6": {
+
             "name": "SRR7648414_2.fastq.gz",
             "uuid": "297d6cef-d2dd-4eaf-bcd7-5abd0b27d556",
             "version": "2021-03-18T11:38:48.652000Z",
@@ -13,7 +14,7 @@
             "sha256": "d0dfc258e12273a9572383196724ed4ad9c6c4481660bb056074e777cc08478d",
             "s3_etag": "67c8d6b1cd71a8e88b1299e24c98b4ce-174"
         },
-        {
+        "sequence_file/95595c66-2121-4ebc-9f2e-b5b61d193f25": {
             "name": "SRR7648414_1.fastq.gz",
             "uuid": "2d392c72-e042-48f4-8d4c-02800e9303a5",
             "version": "2021-03-18T11:38:48.639000Z",
@@ -26,7 +27,7 @@
             "sha256": "84ac8921997a15ef8bb4721f6a135d660deb9b6f098a314d1d657fe667f3b8d5",
             "s3_etag": "0d8850e5eca0d74f0f683d0455e4cacd-68"
         }
-    ],
+    },
     "metadata": {
         "dissociation_protocol/0a8112d1-d401-4c0d-8334-8cda8f8532c8": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",

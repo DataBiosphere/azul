@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "analysis_file/48e42fe3-41cd-49bd-b7f4-1e3c49682131": {
+
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "074766b5",
             "indexed": false,
@@ -12,7 +13,7 @@
             "uuid": "ac880333-cb92-4f55-971a-614bd065d8ef",
             "version": "2018-10-10T03:10:31.316188Z"
         },
-        {
+        "analysis_file/8b4ed86d-99a8-4665-8f56-5a54fac6cb12": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "0d086593",
             "indexed": false,
@@ -24,7 +25,7 @@
             "uuid": "2866dfcd-6346-4db8-ad1c-36a50dd99f44",
             "version": "2018-10-10T03:10:31.541754Z"
         },
-        {
+        "analysis_file/416e31c0-b0ec-4674-ab37-ab8506a9f219": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "a45828f5",
             "indexed": false,
@@ -36,7 +37,7 @@
             "uuid": "ee417573-2281-439a-98f9-05fcb5dd2faf",
             "version": "2018-10-10T03:10:31.845129Z"
         },
-        {
+        "analysis_file/0b34a80b-c818-4010-b193-e44a77036e27": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "e8b38826",
             "indexed": false,
@@ -48,7 +49,7 @@
             "uuid": "2526ee96-c839-4d0e-869c-585fc9066cda",
             "version": "2018-10-10T03:10:32.229536Z"
         },
-        {
+        "analysis_file/9a827f0b-d74a-436f-a39f-f8c8c9eadfa3": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "132739db",
             "indexed": false,
@@ -60,7 +61,7 @@
             "uuid": "3a97e493-d758-4659-84f2-1c8060161459",
             "version": "2018-10-10T03:10:32.503612Z"
         },
-        {
+        "analysis_file/1d77c6c5-24b6-4d43-ad5d-b02fba050025": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "062199a3",
             "indexed": false,
@@ -72,7 +73,7 @@
             "uuid": "e399a1c6-f595-400b-b71b-ea95707fbf74",
             "version": "2018-10-10T03:10:32.812584Z"
         },
-        {
+        "analysis_file/18791e67-0c74-43e0-be28-f0c3cd78c7a4": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "8c75cbf7",
             "indexed": false,
@@ -84,7 +85,7 @@
             "uuid": "35a4d374-9eb3-404b-8ef9-fa295062f969",
             "version": "2018-10-10T03:10:33.293412Z"
         },
-        {
+        "analysis_file/9d88ec61-e189-4618-ac15-992a134749a8": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "d0ea20f5",
             "indexed": false,
@@ -96,7 +97,7 @@
             "uuid": "f7cbd75f-abb1-4703-bf11-7d55a28ae5c0",
             "version": "2018-10-10T03:10:33.596635Z"
         },
-        {
+        "analysis_file/c059ee58-fbea-40d9-b552-acc1285138a3": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "d5d1e302",
             "indexed": false,
@@ -108,7 +109,7 @@
             "uuid": "29466279-4d12-44dd-9f87-8429b61a9f13",
             "version": "2018-10-10T03:10:33.862470Z"
         },
-        {
+        "analysis_file/28220905-f58d-48a1-9258-53f97dd9d388": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "38eadd82",
             "indexed": false,
@@ -120,7 +121,7 @@
             "uuid": "4f53c7d8-13fd-4e60-8168-df2a26652d8f",
             "version": "2018-10-10T03:10:34.363765Z"
         },
-        {
+        "analysis_file/21319798-fe9e-40a4-bcdb-a4c0780ee7bf": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "ec79e888",
             "indexed": false,
@@ -132,7 +133,7 @@
             "uuid": "70367094-c901-4d72-a6b3-d2859729073a",
             "version": "2018-10-10T03:10:34.734838Z"
         },
-        {
+        "analysis_file/fd67cd38-2483-49ff-8a9b-0fe1f2607901": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "5191baeb",
             "indexed": false,
@@ -144,7 +145,7 @@
             "uuid": "84985aaf-e397-45ee-8b96-37ed2cc650d4",
             "version": "2018-10-10T03:10:35.017351Z"
         },
-        {
+        "analysis_file/a5acdc07-18bf-4c06-b212-2b36e52173ef": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "700bd519",
             "indexed": false,
@@ -156,7 +157,7 @@
             "uuid": "51c9ad31-5888-47eb-9e0c-02f042373c4e",
             "version": "2018-10-10T03:10:35.284782Z"
         },
-        {
+        "analysis_file/da510e7a-5495-40c5-964d-b5291372102c": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "6ce5efc2",
             "indexed": false,
@@ -168,7 +169,7 @@
             "uuid": "7eda54d3-3522-4079-9089-60839ee4d4f9",
             "version": "2018-10-10T03:10:35.686843Z"
         },
-        {
+        "analysis_file/14d63962-7cd3-43fc-a4d6-dc8f761c9ebd": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "3d94b063",
             "indexed": false,
@@ -180,7 +181,7 @@
             "uuid": "b1c167da-0825-4c63-9cbc-2aada1ab367c",
             "version": "2018-10-10T03:10:35.971561Z"
         },
-        {
+        "analysis_file/b7f69b47-cbdf-4ec9-be6e-d316827aad8e": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "7581baea",
             "indexed": false,
@@ -192,7 +193,7 @@
             "uuid": "cf859616-212d-4579-bd86-03c5f8e06ec0",
             "version": "2018-10-10T03:10:36.453150Z"
         },
-        {
+        "analysis_file/a3b39c62-3dd8-48f9-bcba-08a16f43a40b": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "24b04481",
             "indexed": false,
@@ -204,7 +205,7 @@
             "uuid": "55878ed2-a7bf-423f-b6ee-97969e2e66ef",
             "version": "2018-10-10T03:10:37.034867Z"
         },
-        {
+        "analysis_file/b4767274-c12b-401f-8bc1-9c9213149442": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "4e75003e",
             "indexed": false,
@@ -216,7 +217,7 @@
             "uuid": "c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d",
             "version": "2018-10-10T03:10:37.983672Z"
         },
-        {
+        "analysis_file/dfa9da1b-3f48-4c76-86a2-833ded3e2745": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "444a7707",
             "indexed": false,
@@ -228,7 +229,7 @@
             "uuid": "54541cc5-9010-425b-9037-22e43948c97c",
             "version": "2018-10-10T03:10:38.239541Z"
         },
-        {
+        "analysis_file/11d84aef-c087-4fd1-bdc9-0c3402a0db01": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "444a7707",
             "indexed": false,
@@ -240,7 +241,7 @@
             "uuid": "66b8f976-6f1e-45b3-bd97-069658c3c847",
             "version": "2018-10-10T03:10:38.474167Z"
         },
-        {
+        "analysis_file/345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "c6ab0701",
             "indexed": false,
@@ -252,7 +253,7 @@
             "uuid": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62",
             "version": "2018-10-10T03:10:38.714461Z"
         },
-        {
+        "analysis_file/5aa074b9-f6e6-4790-9608-b5eb37425341": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "cd2fd51f",
             "indexed": false,
@@ -264,7 +265,7 @@
             "uuid": "0c518a52-f315-4ea2-beed-1c9d8f2d802b",
             "version": "2018-10-10T03:10:39.039270Z"
         },
-        {
+        "analysis_file/b9672a5e-03be-41a6-9155-b29626815e11": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "b89e6723",
             "indexed": false,
@@ -276,7 +277,7 @@
             "uuid": "136108ab-277e-47a4-acc3-1feed8fb2f25",
             "version": "2018-10-10T03:10:39.426609Z"
         },
-        {
+        "analysis_file/c0da3d0b-128b-4b37-a3d6-9538ab29e9b6": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "caaefa77",
             "indexed": false,
@@ -288,7 +289,7 @@
             "uuid": "0bef5419-739c-4a2c-aedb-43754d55d51c",
             "version": "2018-10-10T03:10:39.642846Z"
         },
-        {
+        "analysis_file/46465f1a-a0cc-413f-aebc-505e4714c6b2": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "f629ec34",
             "indexed": false,
@@ -300,7 +301,7 @@
             "uuid": "3a5f7299-1aa1-4060-9631-212c29b4d807",
             "version": "2018-10-10T03:10:39.899615Z"
         },
-        {
+        "analysis_file/7ba06d4d-c134-4324-84e6-3a37e57af2ce": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "59d86b68",
             "indexed": false,
@@ -312,7 +313,7 @@
             "uuid": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5",
             "version": "2018-10-10T03:10:40.113268Z"
         },
-        {
+        "analysis_file/7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "25d193cf",
             "indexed": false,
@@ -324,7 +325,7 @@
             "uuid": "68ba4711-1447-42ac-aa40-9c0e4cda1666",
             "version": "2018-10-10T03:10:40.583439Z"
         },
-        {
+        "analysis_file/54604922-909e-4094-83d7-9d8ac7e7cdbd": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "17a84191",
             "indexed": false,
@@ -336,7 +337,7 @@
             "uuid": "27e66328-e337-4bcd-ba15-7893ecaf841f",
             "version": "2018-10-10T03:10:40.801631Z"
         },
-        {
+        "analysis_file/e0fc82a4-9bc2-4219-b763-99c865e4f9c0": {
             "content-type": "application/json; dcp-type=data",
             "crc32c": "25d193cf",
             "indexed": false,
@@ -348,7 +349,7 @@
             "uuid": "2ab1a516-ef36-41b6-a78f-513361658feb",
             "version": "2018-10-10T03:10:40.958708Z"
         },
-        {
+        "analysis_file/5c3246df-9ee8-42fe-ab19-ddd0ddea3e15": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "bdc30523",
             "indexed": false,
@@ -360,7 +361,7 @@
             "uuid": "351970aa-bc4c-405e-a274-be9e08e42e98",
             "version": "2018-10-10T03:10:41.135992Z"
         },
-        {
+        "sequence_file/5f0cdf49-aabe-40f4-8af3-033115805bb0": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "4ef74578",
             "indexed": false,
@@ -372,7 +373,7 @@
             "uuid": "c005f647-b3fb-45a8-857a-8f5e6a878ccf",
             "version": "2018-10-10T02:38:11.612423Z"
         },
-        {
+        "sequence_file/74c8c730-139e-40a5-b77e-f46088fa4d95": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "69987b3e",
             "indexed": false,
@@ -384,7 +385,7 @@
             "uuid": "b764ce7d-3938-4451-b68c-678feebc8f2a",
             "version": "2018-10-10T02:38:11.851483Z"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

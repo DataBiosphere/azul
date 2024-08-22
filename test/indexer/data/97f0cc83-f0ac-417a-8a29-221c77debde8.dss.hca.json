@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/430755e7-2263-4b5b-ad65-b3231c0eb61d": {
+
             "name": "E8.75_anterior_Rep1_barcodes.fastq.gz",
             "uuid": "1fdcd06c-ea5b-4e5a-b382-ae42dcfc8aca",
             "version": "2019-10-14T19:54:43.781599Z",
@@ -12,7 +13,7 @@
             "sha256": "94d28c18eb39cd1ed4d76c08af4d5bfabb38f2e96705b7c095665202a84b975c",
             "s3_etag": "469cb924ee6fc974b5cf1e23992c2930-206"
         },
-        {
+        "sequence_file/d53454df-9542-4c64-9f84-0d798d923777": {
             "name": "E8.75_anterior_Rep1_genomic.fastq.gz",
             "uuid": "e8f4a1a6-bd63-49d8-848d-160782b33e4e",
             "version": "2019-10-14T19:54:43.923029Z",
@@ -24,7 +25,7 @@
             "sha256": "bec2df465ef1ab7de6e75b403dc8f10a2e524be2ceefc78fd409007c175d558d",
             "s3_etag": "f82998df8a181bafcef0d156bba05079-771"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/5ea17576-5f1d-4879-97a1-6a868ccb2b0b": {
             "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",

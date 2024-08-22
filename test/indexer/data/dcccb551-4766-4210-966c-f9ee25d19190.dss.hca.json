@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "analysis_file/cf93f747-1392-4670-8eb3-3ac60a96855e": {
+
             "content-type": "text/tab-separated-values; dcp-type=data",
             "crc32c": "e511d1cf",
             "indexed": false,
@@ -12,7 +13,7 @@
             "uuid": "58b69c85-f5f3-4b94-8933-5520a54a6b25",
             "version": "2018-10-18T20:46:12.510116Z"
         },
-        {
+        "analysis_file/477c0b3e-4a06-4214-8f27-58199ba63528": {
             "content-type": "text/tab-separated-values; dcp-type=data",
             "crc32c": "7571fac9",
             "indexed": false,
@@ -24,7 +25,7 @@
             "uuid": "b372aac3-0e2a-4815-9cb8-06957c0034d7",
             "version": "2018-10-18T20:46:12.954781Z"
         },
-        {
+        "analysis_file/ad6d5170-d74b-408c-af6b-25a14315c9da": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "883bc27f",
             "indexed": false,
@@ -36,7 +37,7 @@
             "uuid": "c81783cd-0531-4f64-9eef-a3e622152aae",
             "version": "2018-10-18T20:46:13.142208Z"
         },
-        {
+        "analysis_file/50be9b67-fae5-4472-9719-478dd1303d6e": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "182c881d",
             "indexed": false,
@@ -48,7 +49,7 @@
             "uuid": "17456232-f453-4178-b6d4-4c28840e0e9f",
             "version": "2018-10-18T20:46:13.433149Z"
         },
-        {
+        "analysis_file/fd16b62e-e540-4f03-8ba0-07d0c204e3c8": {
             "content-type": "text/csv; dcp-type=data",
             "crc32c": "d3902ae4",
             "indexed": false,
@@ -60,7 +61,7 @@
             "uuid": "4cca0b74-7bfb-45a5-8a26-7342151805c9",
             "version": "2018-10-18T20:46:14.214293Z"
         },
-        {
+        "analysis_file/3c41b5b6-f480-4d47-8c5e-155e7c1adf54": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "1462f373",
             "indexed": false,
@@ -72,7 +73,7 @@
             "uuid": "0664a03c-9199-430e-9df6-e83e4a77df16",
             "version": "2018-10-18T20:46:14.565244Z"
         },
-        {
+        "analysis_file/022a217c-384d-4d9d-8631-6397b6838e3a": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "63dd3167",
             "indexed": false,
@@ -84,7 +85,7 @@
             "uuid": "a12a783c-6b91-4788-80b3-f25dae7838ce",
             "version": "2018-10-18T20:46:14.923428Z"
         },
-        {
+        "analysis_file/9b778e46-0c51-4260-8e3f-000ecc145f0a": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "a40c0ecb",
             "indexed": false,
@@ -96,7 +97,7 @@
             "uuid": "52d08a61-8d7b-4fd6-98e6-0620f815ecc5",
             "version": "2018-10-18T20:46:15.089157Z"
         },
-        {
+        "analysis_file/af025a74-53f1-4972-b50d-53095b5ffac2": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "03eb39ec",
             "indexed": false,
@@ -108,7 +109,7 @@
             "uuid": "40bb9b37-9c3c-4be4-adf6-c8609493d223",
             "version": "2018-10-18T20:46:15.963496Z"
         },
-        {
+        "analysis_file/e8395271-7c8e-4ec4-9598-495df43fe5fd": {
             "content-type": "text/html; dcp-type=data",
             "crc32c": "d5973bce",
             "indexed": false,
@@ -120,7 +121,7 @@
             "uuid": "05311530-98da-4ac7-a4da-244c0a19ae4a",
             "version": "2018-10-18T20:46:17.373562Z"
         },
-        {
+        "analysis_file/211a8fbf-b190-4576-ac2f-2b1a91743abb": {
             "content-type": "text/tab-separated-values; dcp-type=data",
             "crc32c": "7c54ea3d",
             "indexed": false,
@@ -132,7 +133,7 @@
             "uuid": "d0757b34-5974-44e3-a8ae-5b60f7691913",
             "version": "2018-10-18T20:46:18.194283Z"
         },
-        {
+        "analysis_file/17222e3a-5757-45e9-9dfe-c4b6aa10f28a": {
             "content-type": "text/tab-separated-values; dcp-type=data",
             "crc32c": "7571fac9",
             "indexed": false,
@@ -144,7 +145,7 @@
             "uuid": "5d8aea02-2dff-4bda-a218-2ee4c5cabfb4",
             "version": "2018-10-18T20:46:18.594371Z"
         },
-        {
+        "analysis_file/2fb8a975-b50c-4528-b850-838a19e19a1e": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "283d035a",
             "indexed": false,
@@ -156,7 +157,7 @@
             "uuid": "934faa14-ec75-4171-8c08-5ab20cc6ebff",
             "version": "2018-10-18T20:46:18.842610Z"
         },
-        {
+        "sequence_file/213381ea-6161-4159-853e-cfcae4968001": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "e80c9f6f",
             "indexed": false,
@@ -168,7 +169,7 @@
             "uuid": "8a0670ac-e3bd-4d38-afdc-0cf6d85e6adf",
             "version": "2018-10-11T22:04:37.262084Z"
         },
-        {
+        "sequence_file/9ee3da9e-83ca-4c02-84d6-ac09702b12ba": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "17a27554",
             "indexed": false,
@@ -180,7 +181,7 @@
             "uuid": "d1e5058a-b53c-4e71-9cbc-1853d95b75bd",
             "version": "2018-10-11T22:04:37.518108Z"
         },
-        {
+        "sequence_file/330a08ca-ae8e-4f1f-aa03-970abcd27f39": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "577e04eb",
             "indexed": false,
@@ -192,7 +193,7 @@
             "uuid": "a36fe69b-874b-4b9b-8e77-68be23cf98cd",
             "version": "2018-10-11T22:04:37.811384Z"
         },
-        {
+        "supplementary_file/281c2d08-9e43-47f9-b937-e733e3ba3322": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "1e67ff31",
             "indexed": false,
@@ -204,7 +205,7 @@
             "uuid": "9485d3c7-55f6-49f5-9eb1-ff85d8e4ef9f",
             "version": "2018-10-11T22:04:38.049605Z"
         },
-        {
+        "supplementary_file/ae1d6fa7-964f-465a-8c78-565206827434": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "201fded1",
             "indexed": false,
@@ -216,7 +217,7 @@
             "uuid": "05f653e7-2920-499b-95fe-455d585da2b7",
             "version": "2018-10-11T22:04:38.189879Z"
         },
-        {
+        "supplementary_file/f518a8cc-e1d9-4fc9-bc32-491dd8543902": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "47441108",
             "indexed": false,
@@ -228,7 +229,7 @@
             "uuid": "5eca9eb4-f837-4aa4-98e1-172a7c6da7ee",
             "version": "2018-10-11T22:04:38.356356Z"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/803fd65a-c578-4c4f-a39e-bedec24e2578": {
             "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",

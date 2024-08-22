@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "supplementary_file/0c5ab869-da2d-5c11-b4ae-f978a052899f": {
             "name": "E-MTAB-7316.processed.5.zip",
             "uuid": "0c5ab869-da2d-5c11-b4ae-f978a052899f",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -11,7 +11,7 @@
             "crc32c": "5bf9776f",
             "sha256": "053074e25a96a463c081e38bcd02662ba1536dd0cb71411bd111b8a2086a03e1"
         },
-        {
+        "supplementary_file/5b465aad-0981-5152-b468-e615e20f5884": {
             "name": "E-MTAB-7316.processed.7.zip",
             "uuid": "5b465aad-0981-5152-b468-e615e20f5884",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -22,7 +22,7 @@
             "crc32c": "c8c42fc3",
             "sha256": "af3ea779ca01a2ba65f9415720a44648ef28a6ed73c9ec30e54ed4ba9895f590"
         },
-        {
+        "supplementary_file/68bda896-3b3e-5f2a-9212-f4030a0f37e2": {
             "name": "E-MTAB-7316.processed.4.zip",
             "uuid": "68bda896-3b3e-5f2a-9212-f4030a0f37e2",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -33,7 +33,7 @@
             "crc32c": "82ee1217",
             "sha256": "f1458913c223553d09966ff94f0ed3d87e7cdfce21904f32943d70f691d8f7a0"
         },
-        {
+        "supplementary_file/733318e0-19c2-51e8-9ad6-d94ad562dd46": {
             "name": "E-MTAB-7316.processed.2.zip",
             "uuid": "733318e0-19c2-51e8-9ad6-d94ad562dd46",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -44,7 +44,7 @@
             "crc32c": "15b69eed",
             "sha256": "cb7beb6f4e8c684e41d25aa4dc1294dcb1e070e87f9ed852463bf651d511a36b"
         },
-        {
+        "supplementary_file/87f31102-ebbc-5875-abdf-4fa5cea48e8d": {
             "name": "E-MTAB-7316.processed.1.zip",
             "uuid": "87f31102-ebbc-5875-abdf-4fa5cea48e8d",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -55,7 +55,7 @@
             "crc32c": "4f3d0c47",
             "sha256": "331bd925c08539194eb06e197a1238e1306c3b7876b6fe13548d03824cc4b68b"
         },
-        {
+        "supplementary_file/b905c8be-2e2d-592c-8481-3eb7a87c6484": {
             "name": "WongRetinaCelltype.csv",
             "uuid": "b905c8be-2e2d-592c-8481-3eb7a87c6484",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -66,7 +66,7 @@
             "crc32c": "42fcdb28",
             "sha256": "4f515b8fbbec8bfbc72c8c0d656897ee37bfa30bab6eb50fdc641924227be674"
         },
-        {
+        "supplementary_file/c59e2de5-01fe-56eb-be56-679ed14161bf": {
             "name": "E-MTAB-7316.processed.3.zip",
             "uuid": "c59e2de5-01fe-56eb-be56-679ed14161bf",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -77,7 +77,7 @@
             "crc32c": "0209e859",
             "sha256": "6372732e9fe9b8d58c8be8df88ea439d5c68ee9bb02e3d472c94633fadf782a1"
         },
-        {
+        "supplementary_file/cade4593-bfba-56ed-80ab-080d0de7d5a4": {
             "name": "E-MTAB-7316.processed.6.zip",
             "uuid": "cade4593-bfba-56ed-80ab-080d0de7d5a4",
             "version": "2021-02-10T16:56:40.419579Z",
@@ -88,7 +88,7 @@
             "crc32c": "a21bdb72",
             "sha256": "1c57cba1ade259fc9ec56b914b507507d75ccbf6ddeebf03ba00c922c30e0c6e"
         }
-    ],
+    },
     "metadata": {
         "supplementary_file/0c5ab869-da2d-5c11-b4ae-f978a052899f": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",

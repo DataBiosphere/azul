@@ -35,7 +35,6 @@ from azul.indexer.document import (
 from azul.types import (
     JSON,
     MutableJSON,
-    MutableJSONs,
 )
 from humancellatlas.data.metadata.api import (
     Bundle,
@@ -147,12 +146,14 @@ class StagingArea:
         version, manifest, metadata, links = self.get_bundle_parts(subgraph_id)
         return Bundle(subgraph_id, version, manifest, metadata, links)
 
-    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, MutableJSONs, MutableJSON, MutableJSON]:
+    def get_bundle_parts(self,
+                         subgraph_id: str
+                         ) -> tuple[str, MutableJSON, MutableJSON, MutableJSON]:
         """
         Return the components to create a bundle from the staging area
         """
         links_file = self.links[subgraph_id]
-        manifest = []
+        manifest = {}
         metadata = {}
         entity_ids_by_type = self._entity_ids_by_type(subgraph_id)
         for entity_type, entity_ids in entity_ids_by_type.items():
@@ -164,7 +165,7 @@ class StagingArea:
                 metadata[key] = json_content
                 if entity_type.endswith('_file'):
                     file_manifest = self.descriptors[entity_id].manifest_entry
-                    manifest.append(file_manifest)
+                    manifest[key] = file_manifest
                 else:
                     pass
         return links_file.version, manifest, metadata, links_file.content

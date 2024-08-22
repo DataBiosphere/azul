@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/d2f32681-9c1a-4dfd-b506-c24327afb8d1": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "f93b9d00",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "d2f32681-9c1a-4dfd-b506-c24327afb8d1",
             "version": "2018-03-29T142044.370144Z"
         },
-        {
+        "sequence_file/aa662c76-d220-49f4-8316-f4af5820d60b": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "1b953a24",
             "indexed": false,
@@ -24,7 +24,7 @@
             "uuid": "aa662c76-d220-49f4-8316-f4af5820d60b",
             "version": "2018-03-29T142045.025802Z"
         }
-    ],
+    },
     "metadata": {
         "project/93f6a42f-1790-4af4-b5d1-8c436cb6feae": {
             "content": {

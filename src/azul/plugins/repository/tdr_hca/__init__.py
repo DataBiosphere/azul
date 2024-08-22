@@ -192,7 +192,8 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
             self.stitched.add(entity.entity_id)
         if entity.entity_type.endswith('_file'):
             descriptor = json.loads(row['descriptor'])
-            self._add_manifest_entry(name=row['file_name'],
+            self._add_manifest_entry(entity,
+                                     name=row['file_name'],
                                      uuid=descriptor['file_id'],
                                      version=descriptor['file_version'],
                                      size=descriptor['size'],
@@ -224,6 +225,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
     _suffix = 'tdr.'
 
     def _add_manifest_entry(self,
+                            entity: EntityReference,
                             *,
                             name: str,
                             uuid: str,
@@ -233,7 +235,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             dcp_type: str,
                             checksums: Optional[Checksums] = None,
                             drs_uri: Optional[str] = None) -> None:
-        self.manifest.append({
+        self.manifest[str(entity)] = {
             'name': name,
             'uuid': uuid,
             'version': version,
@@ -250,7 +252,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                     **checksums.to_json()
                 }
             )
-        })
+        }
 
     def _parse_drs_uri(self,
                        file_id: Optional[str],
@@ -326,7 +328,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
 
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
         bundle = TDRHCABundle(fqid=bundle_fqid,
-                              manifest=[],
+                              manifest={},
                               metadata={},
                               links={})
         entities, root_entities, links_jsons = self._stitch_bundles(bundle)
@@ -356,7 +358,6 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                     log.error('TDR worker failed to retrieve entities of type %r',
                               entity_type, exc_info=e)
                     raise e
-        bundle.manifest.sort(key=itemgetter('uuid'))
         return bundle
 
     def _stitch_bundles(self,

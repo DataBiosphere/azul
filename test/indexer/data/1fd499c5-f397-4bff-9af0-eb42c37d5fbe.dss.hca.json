@@ -1,6 +1,7 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/0d352174-7bf3-44b3-9b7b-7ef3056ed085": {
+
             "name": "SRR7648416_2.fastq.gz",
             "uuid": "2761715a-8de8-4d66-8286-90d89436a83d",
             "version": "2021-03-18T11:38:48.691000Z",
@@ -13,7 +14,7 @@
             "sha256": "a5a2f1f0c3353ae1d871c97f0d5d5e57f045d947a8d4ca02faff64a47a370745",
             "s3_etag": "07aaf23698191a8a3163999a86fb849a-239"
         },
-        {
+        "sequence_file/853dbcbd-8aaf-479d-8e57-134e11c61b72": {
             "name": "SRR7648416_1.fastq.gz",
             "uuid": "c3b97a11-bba4-42e7-bfee-7dcfd8249462",
             "version": "2021-03-18T11:38:48.705000Z",
@@ -26,7 +27,7 @@
             "sha256": "97b855bb74b7371bf3975e5a29185375eda7bd5468bd18c659fd0ccfc963ed25",
             "s3_etag": "fd8819217ffaee274a2156820276b229-84"
         }
-    ],
+    },
     "metadata": {
         "process/04446f99-f9ed-4a4a-82ec-203ed468cbc0": {
             "process_core": {

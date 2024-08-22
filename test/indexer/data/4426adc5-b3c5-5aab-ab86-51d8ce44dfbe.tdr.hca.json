@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "analysis_file/b8b76328-854c-5862-a688-9b761a9cea86": {
             "name": "6f5ddf2c-382d-4c0a-a506-3a5286067c83_qc.bam.bai",
             "uuid": "23b7f3f8-b707-5f3c-b8e6-9173efa9dcf8",
             "version": "2021-04-09T18:59:13.000000Z",
@@ -11,7 +11,7 @@
             "crc32c": "776f1ec2",
             "sha256": "1bb86ee570e328dcd72a684689ddd87c966209cfc4b2b5c36e50dd0e4c156cab"
         },
-        {
+        "supplementary_file/e738a267-87fc-4070-abc7-b3be6442c6d0": {
             "name": "TissueDissociationProtocol.pdf",
             "uuid": "6578c322-7060-4c82-8469-9e54100e6b44",
             "version": "2019-05-16T06:24:31.517373Z",
@@ -24,7 +24,7 @@
             "sha256": "6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779",
             "s3_etag": "7e892bf8f6aa489ccb08a995c7f017e1"
         },
-        {
+        "supplementary_file/a06cb5d5-2675-4d64-aeb8-79e0103715f3": {
             "name": "SmartSeq2_sequencing_protocol.pdf",
             "uuid": "bf92ef4a-c422-44fb-bfc1-c2f86528b86b",
             "version": "2019-05-16T06:24:31.828599Z",
@@ -37,7 +37,7 @@
             "sha256": "9c93a354a8636c041a31ba6f3fb00ef20352e1b853d8080d63a654221cb35673",
             "s3_etag": "2742e1e78f6d4663bf41d3080396695c"
         },
-        {
+        "analysis_file/7a015307-6db9-541f-aaae-db9fdb41000f": {
             "name": "6f5ddf2c-382d-4c0a-a506-3a5286067c83_qc.bam",
             "uuid": "c8e93df7-2623-5e86-890a-aca3e925795e",
             "version": "2021-04-09T18:59:14.000000Z",
@@ -48,7 +48,7 @@
             "crc32c": "663a65bd",
             "sha256": "ee0f3adaae040b58653e601c9c031e50d2537f05df6e4ce16e1f8e2cf48b50e4"
         },
-        {
+        "supplementary_file/01a1d04b-05d0-4904-b627-68b0dc02bc17": {
             "name": "SmartSeq2_RTPCR_protocol.pdf",
             "uuid": "cd8e02d1-d0f9-4094-9a31-329931df60dc",
             "version": "2019-05-16T06:24:31.672118Z",
@@ -61,7 +61,7 @@
             "sha256": "2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16",
             "s3_etag": "846fd9e6b98041df46a1ddb94e85b6b9"
         },
-        {
+        "sequence_file/ee7404a4-c183-4a75-8bd1-34b5fc140e81": {
             "name": "22167_7#271_1.fastq.gz",
             "uuid": "ebf2947d-76d2-405b-a559-68c6ebb1b2d5",
             "version": "2019-05-16T02:50:21.018890Z",
@@ -74,7 +74,7 @@
             "sha256": "9c74e575192defc4e6d40518fd590b6a13d134b3d87a97a6b5140b36f26ce01a",
             "s3_etag": "8786a82f739d1848aa5be480faf65e70"
         },
-        {
+        "sequence_file/8f8b9587-237f-4995-9461-c96eac53d615": {
             "name": "22167_7#271_2.fastq.gz",
             "uuid": "f4132e3a-c468-4ca3-ad7b-b97b61054151",
             "version": "2019-05-16T02:50:21.322397Z",
@@ -87,7 +87,7 @@
             "sha256": "1f6c6f46078f45d6a308c819fe186ce25dcd36116497d9eb21990113c7fabb1e",
             "s3_etag": "6aca4df2ef18b97243967887837c3bef"
         }
-    ],
+    },
     "metadata": {
         "sequence_file/8f8b9587-237f-4995-9461-c96eac53d615": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",

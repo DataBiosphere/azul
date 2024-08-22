@@ -583,7 +583,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         new_file_uuid = str(uuid4())
         bundle.manifest = deepcopy(bundle.manifest)
         file_name = '21935_7#154_2.fastq.gz'
-        for file in bundle.manifest:
+        for file in bundle.manifest.values():
             if file['name'] == file_name:
                 old_file_uuid = file['uuid']
                 file['uuid'] = new_file_uuid

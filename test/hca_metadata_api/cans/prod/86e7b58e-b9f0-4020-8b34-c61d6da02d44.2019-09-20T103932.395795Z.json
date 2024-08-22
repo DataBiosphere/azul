@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/12484c33-24ec-4293-8f96-4cb1a43a6479": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "759039c3",
             "indexed": false,
@@ -12,7 +12,7 @@
             "uuid": "ea5eea99-d788-4762-8de5-32602316da79",
             "version": "2019-09-20T104007.794231Z"
         },
-        {
+        "sequence_file/f85b458b-b189-4ee7-939a-c905b70ae431": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "9069c15e",
             "indexed": false,
@@ -24,7 +24,7 @@
             "uuid": "351cae9c-9695-4797-b455-526dd29117bb",
             "version": "2019-09-20T104008.028755Z"
         },
-        {
+        "sequence_file/18feeb7d-66ca-4ea4-a019-a10e5b762465": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "80b75620",
             "indexed": false,
@@ -36,7 +36,7 @@
             "uuid": "b64d8e12-028a-46fd-a778-5a5a8e971289",
             "version": "2019-09-20T104008.305993Z"
         },
-        {
+        "supplementary_file/2e64e936-85ec-49a0-8365-578b5621bcb1": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "82c6888c",
             "indexed": false,
@@ -48,7 +48,7 @@
             "uuid": "8e71749b-d445-409a-bc53-ba359438df69",
             "version": "2019-09-20T104008.555357Z"
         },
-        {
+        "supplementary_file/720e6453-71ff-4742-ba6a-e5a3a5d3cee0": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "18cb622e",
             "indexed": false,
@@ -60,7 +60,7 @@
             "uuid": "dfa8a3b3-192c-4867-8c52-f956a6ebab06",
             "version": "2019-09-20T104008.746891Z"
         },
-        {
+        "supplementary_file/09917cf3-76de-4b85-8944-03664cd0d954": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "ced2f561",
             "indexed": false,
@@ -72,7 +72,7 @@
             "uuid": "deb6c7db-8ed1-4c87-ab39-44c3499e8499",
             "version": "2019-09-20T104008.919497Z"
         },
-        {
+        "supplementary_file/8fb964a1-fd66-43b6-9d13-57db6bd185f2": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "5ef01a45",
             "indexed": false,
@@ -84,7 +84,7 @@
             "uuid": "58b2c404-62c7-46cc-912f-99a5731cd8e5",
             "version": "2019-09-20T104009.214107Z"
         }
-    ],
+    },
     "metadata": {
         "cell_suspension/eb27c398-f017-4ef1-acc8-3f51af87fe17": {
             "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",

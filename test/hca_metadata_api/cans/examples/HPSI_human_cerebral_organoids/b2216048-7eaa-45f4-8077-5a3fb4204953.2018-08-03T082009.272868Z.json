@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/740b2221-41c6-498d-87de-8b2937a5ebed": {
             "crc32c": "E9B38AA1",
             "sha1": "0cec1204162ddfbd3782a1aedce104b373163a9f",
             "sha256": "3f29407965e542a4787b6ab1f32ea3f4162017dc88e294ab3e48ddfe76d476e7",
@@ -12,7 +12,7 @@
             "uuid": "b9f26dd4-dddc-426d-97bb-674e8a0a26a2",
             "version": "1"
         },
-        {
+        "sequence_file/a3f614b3-e6cf-4751-a15d-ff623efea62a": {
             "crc32c": "59378C79",
             "sha1": "d982fed4c2cfd402a145637f1bc1d6364745a506",
             "sha256": "ff3118605c52fd9cb96cb17b96ecc8ec74b72cb75558305e8630568478c03547",
@@ -24,7 +24,7 @@
             "uuid": "1af1df49-a772-4645-bc0e-e8a599ab7121",
             "version": "1"
         },
-        {
+        "sequence_file/56c2a158-e389-40a3-97a7-0f2966a393b8": {
             "crc32c": "8F96945F",
             "sha1": "9cc9baf78624edf0e2c39e48ab7f559f32cfd7ca",
             "sha256": "5a4bc638c31346d1fc4cde4cc8bfaf2341e486ba377edbeafb42a12d49ab6ddc",
@@ -36,7 +36,7 @@
             "uuid": "53c4d13c-d3d3-4294-affe-fd1fecf9d1ef",
             "version": "1"
         },
-        {
+        "supplementary_file/a0eb3208-97e4-498c-993b-20757231b233": {
             "crc32c": "62D4DB03",
             "sha1": "32df780ee719286fccafae4d715607d4f05f3c40",
             "sha256": "6daea9af107bd45e2666ca2ccd1a2a3d98c42b892a7a783093b638508eccb158",
@@ -48,7 +48,7 @@
             "uuid": "c7555cbd-d66c-4f9a-b3f4-23e013da6910",
             "version": "1"
         },
-        {
+        "supplementary_file/e01ee650-58b3-4f3c-8da8-4483700a1eae": {
             "crc32c": "B9D38666",
             "sha1": "095ce1889337b2d8dd5ba3ce21ad85903ebda004",
             "sha256": "a8b3535da8ba62f83c31b238c86a6f4b9848f913c6d35824cef5f955748f1ab9",
@@ -60,7 +60,7 @@
             "uuid": "b5bc3187-6553-4410-b589-ac0f3bb6858f",
             "version": "1"
         },
-        {
+        "supplementary_file/5ab06a61-c66b-4d3d-9889-ab47371a65b0": {
             "crc32c": "47985515",
             "sha1": "b12c361c6d4ebb7c255ddb3e67e3babbd1fe0e25",
             "sha256": "492641dd1bc0004c879d9fe8599e03a455612892df4802f5a1e9c860216777f6",
@@ -72,7 +72,7 @@
             "uuid": "28aa156f-3eee-481b-8849-ab68ddf4b67d",
             "version": "1"
         }
-    ],
+    },
     "metadata": {
         "cell_line/304fadde-e22a-4ff9-9544-f8ec097b6135": {
             "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/8.6.2/cell_line",

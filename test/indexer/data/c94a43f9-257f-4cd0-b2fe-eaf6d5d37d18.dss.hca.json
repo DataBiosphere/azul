@@ -1,6 +1,6 @@
 {
-    "manifest": [
-        {
+    "manifest": {
+        "sequence_file/95f09de9-0e7a-49c3-8bbc-f3fb512bc86e": {
             "sha1": "a19f32c06b4286e1608c5e2118fa943afba610a6",
             "name": "MantonBM6_HiSeq_5_S12_L004_R1_001.fastq.gz",
             "uuid": "95f09de9-0e7a-49c3-8bbc-f3fb512bc86e",
@@ -12,7 +12,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1402192705
         },
-        {
+        "sequence_file/ca1ca1f1-f0ab-4224-8422-d5345ccab557": {
             "sha1": "1e93005ef5f17cdec6cc5a4ea406953a93863306",
             "name": "MantonBM8_HiSeq_5_S28_L008_R2_001.fastq.gz",
             "uuid": "ca1ca1f1-f0ab-4224-8422-d5345ccab557",
@@ -24,7 +24,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2937097047
         },
-        {
+        "sequence_file/9eb02069-4c56-4065-83ac-01eaf5fb9b68": {
             "sha1": "59728047fcb3e5aac521d50ee4e131f40350f98c",
             "name": "MantonBM8_HiSeq_1_S24_L007_R1_001.fastq.gz",
             "uuid": "9eb02069-4c56-4065-83ac-01eaf5fb9b68",
@@ -36,7 +36,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1134093703
         },
-        {
+        "sequence_file/176d224c-1e70-4ef8-ab96-ea63cfa63888": {
             "sha1": "8357cf65cae0af7a2524d5c397da31d0d69871e3",
             "name": "MantonBM7_HiSeq_7_S22_L005_R1_001.fastq.gz",
             "uuid": "176d224c-1e70-4ef8-ab96-ea63cfa63888",
@@ -48,7 +48,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 753163709
         },
-        {
+        "sequence_file/04e94fd5-49df-4149-9da5-ff9c86a2e494": {
             "sha1": "75a306656b83357c391b15a33eb9d5a02f4ddb57",
             "name": "MantonBM8_HiSeq_2_S25_L008_I1_001.fastq.gz",
             "uuid": "04e94fd5-49df-4149-9da5-ff9c86a2e494",
@@ -60,7 +60,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 330003676
         },
-        {
+        "sequence_file/e977ef2d-f54d-4ee7-893b-3873a8eb5dd3": {
             "sha1": "18adc57b77da277828cbbf4498f6f165a57dfc9a",
             "name": "MantonBM6_HiSeq_7_S14_L003_R1_001.fastq.gz",
             "uuid": "e977ef2d-f54d-4ee7-893b-3873a8eb5dd3",
@@ -72,7 +72,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1370421321
         },
-        {
+        "sequence_file/6f23ce85-e97e-4a77-bfea-3c0b95c775f4": {
             "sha1": "713dfad2ae2588357bafc031f31119d4b611092d",
             "name": "MantonBM6_HiSeq_2_S10_L004_R1_001.fastq.gz",
             "uuid": "6f23ce85-e97e-4a77-bfea-3c0b95c775f4",
@@ -84,7 +84,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1453623392
         },
-        {
+        "sequence_file/b8df1f2f-abb8-4af5-bbb0-c80623ab5bd5": {
             "sha1": "1607783b3ec9e05e09496a2931f8b52e03b5e520",
             "name": "MantonBM6_HiSeq_2_S10_L004_I1_001.fastq.gz",
             "uuid": "b8df1f2f-abb8-4af5-bbb0-c80623ab5bd5",
@@ -96,7 +96,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 474484062
         },
-        {
+        "sequence_file/ba79090e-1341-4427-9277-e0bc9c303bd5": {
             "sha1": "6a63f147f71a096a8eca835276a9f4749fa3c743",
             "name": "MantonBM5_HiSeq_8_S8_L001_I1_001.fastq.gz",
             "uuid": "ba79090e-1341-4427-9277-e0bc9c303bd5",
@@ -108,7 +108,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 405793422
         },
-        {
+        "sequence_file/575b968a-f85f-4dd8-bc0c-f00e1d07cd6b": {
             "sha1": "2eaa759a988b98d834ee0774f10425be3b88e8e5",
             "name": "MantonBM6_HiSeq_6_S13_L004_R2_001.fastq.gz",
             "uuid": "575b968a-f85f-4dd8-bc0c-f00e1d07cd6b",
@@ -120,7 +120,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4462684265
         },
-        {
+        "sequence_file/2320aa06-7d82-46ec-ad6d-a1c9fd280cde": {
             "sha1": "0373b8e19eb3ca160200826c237d9da44d01ba21",
             "name": "MantonBM8_HiSeq_4_S27_L008_I1_001.fastq.gz",
             "uuid": "2320aa06-7d82-46ec-ad6d-a1c9fd280cde",
@@ -132,7 +132,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 358895784
         },
-        {
+        "sequence_file/79f04454-2b15-485b-8b19-3d237025d480": {
             "sha1": "2f8963ab1b5ea9ae4a18beee3055ff9a6e693697",
             "name": "MantonBM5_HiSeq_6_S6_L001_R1_001.fastq.gz",
             "uuid": "79f04454-2b15-485b-8b19-3d237025d480",
@@ -144,7 +144,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1280563519
         },
-        {
+        "sequence_file/4b2ec2e1-b0e2-41ea-9a33-c473889f526f": {
             "sha1": "b223bf702a6a1d9f413c5d29ac6bd853dfbf22a3",
             "name": "MantonBM6_HiSeq_5_S12_L004_I1_001.fastq.gz",
             "uuid": "4b2ec2e1-b0e2-41ea-9a33-c473889f526f",
@@ -156,7 +156,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 459486657
         },
-        {
+        "sequence_file/36118c60-cf32-43af-bd56-cfcbe063b244": {
             "sha1": "987c09fab730d1191a42ea45b40a333c8b51d71d",
             "name": "MantonBM6_HiSeq_5_S12_L003_R2_001.fastq.gz",
             "uuid": "36118c60-cf32-43af-bd56-cfcbe063b244",
@@ -168,7 +168,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4030957742
         },
-        {
+        "sequence_file/8240917a-8fb5-47b5-8b35-64dd30c3b43f": {
             "sha1": "dd32b328252f8925089b4c593889abca2df96b38",
             "name": "MantonBM7_HiSeq_1_S16_L006_R1_001.fastq.gz",
             "uuid": "8240917a-8fb5-47b5-8b35-64dd30c3b43f",
@@ -180,7 +180,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 942622130
         },
-        {
+        "sequence_file/462d6d7c-8c83-4e91-b851-4ebe7f04ed4a": {
             "sha1": "61897eb95f79bc2a09865872f6f91c970a38698e",
             "name": "MantonBM8_HiSeq_3_S26_L007_R1_001.fastq.gz",
             "uuid": "462d6d7c-8c83-4e91-b851-4ebe7f04ed4a",
@@ -192,7 +192,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1019718897
         },
-        {
+        "sequence_file/8e931218-861c-44c4-8768-b9afd33acffc": {
             "sha1": "a3563bbf942ca2c60174a3df2f6cac8ad9fa7848",
             "name": "MantonBM5_HiSeq_8_S8_L001_R2_001.fastq.gz",
             "uuid": "8e931218-861c-44c4-8768-b9afd33acffc",
@@ -204,7 +204,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3400300750
         },
-        {
+        "sequence_file/f308eed4-5954-4047-a18e-9c309d9fdab9": {
             "sha1": "da55e496cc482fe61f51689ce94967c1021d6747",
             "name": "MantonBM7_HiSeq_6_S21_L006_I1_001.fastq.gz",
             "uuid": "f308eed4-5954-4047-a18e-9c309d9fdab9",
@@ -216,7 +216,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 321880654
         },
-        {
+        "sequence_file/06e4f4b4-9b0f-4ffc-ab2d-70fb659994b4": {
             "sha1": "f0243ed48571e4c9b626c8d88e65f3ea352fec1c",
             "name": "MantonBM7_HiSeq_3_S18_L006_R1_001.fastq.gz",
             "uuid": "06e4f4b4-9b0f-4ffc-ab2d-70fb659994b4",
@@ -228,7 +228,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1059942334
         },
-        {
+        "sequence_file/3555957c-8ac8-4afc-ab54-866d1cac3b1f": {
             "sha1": "25fd0d9c6fe44f500db19d5c570840a62d4a76e1",
             "name": "MantonBM7_HiSeq_3_S18_L005_R2_001.fastq.gz",
             "uuid": "3555957c-8ac8-4afc-ab54-866d1cac3b1f",
@@ -240,7 +240,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2642496004
         },
-        {
+        "sequence_file/2ff31790-2e31-4056-ade6-a40b3333efbe": {
             "sha1": "5a7fb773fb088cb80f294c1a7ed917c0c6e2b353",
             "name": "MantonBM8_HiSeq_3_S26_L008_I1_001.fastq.gz",
             "uuid": "2ff31790-2e31-4056-ade6-a40b3333efbe",
@@ -252,7 +252,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 322516637
         },
-        {
+        "sequence_file/cc95fef9-2681-4489-bc6c-1c5d494b29a8": {
             "sha1": "3bb1dc136347aadc8d72fa3b854abdb05129e40d",
             "name": "MantonBM7_HiSeq_7_S22_L006_I1_001.fastq.gz",
             "uuid": "cc95fef9-2681-4489-bc6c-1c5d494b29a8",
@@ -264,7 +264,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 296833355
         },
-        {
+        "sequence_file/b5110ae6-55e1-4fe8-bae2-9696e679057b": {
             "sha1": "c5f719d24db284470eb38275ebac21916c93a36d",
             "name": "MantonBM5_HiSeq_1_S1_L001_R2_001.fastq.gz",
             "uuid": "b5110ae6-55e1-4fe8-bae2-9696e679057b",
@@ -276,7 +276,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3726293078
         },
-        {
+        "sequence_file/5880c00e-4063-431e-8510-6cdaf5bb1c5d": {
             "sha1": "575a57814679ed1d921639725df6a813b1326ea1",
             "name": "MantonBM7_HiSeq_5_S20_L006_R2_001.fastq.gz",
             "uuid": "5880c00e-4063-431e-8510-6cdaf5bb1c5d",
@@ -288,7 +288,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2835180042
         },
-        {
+        "sequence_file/fc5adfc4-0bc4-45c3-8acd-429c56817520": {
             "sha1": "05fb5194a4c4f94d36743abbd3e71a0a25e30ca5",
             "name": "MantonBM6_HiSeq_1_S9_L004_R2_001.fastq.gz",
             "uuid": "fc5adfc4-0bc4-45c3-8acd-429c56817520",
@@ -300,7 +300,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4031554390
         },
-        {
+        "sequence_file/0daa891b-8d87-416e-8b26-d44824de5bbd": {
             "sha1": "a5676a7cf8957c358e4f12cc31908390b77acbb5",
             "name": "MantonBM7_HiSeq_1_S16_L005_R2_001.fastq.gz",
             "uuid": "0daa891b-8d87-416e-8b26-d44824de5bbd",
@@ -312,7 +312,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2345803321
         },
-        {
+        "sequence_file/4c9af689-d89d-4312-a12b-deeb03c2fdca": {
             "sha1": "94ab00b9f719c562838bd14953540ae38009fbb8",
             "name": "MantonBM5_HiSeq_3_S3_L001_I1_001.fastq.gz",
             "uuid": "4c9af689-d89d-4312-a12b-deeb03c2fdca",
@@ -324,7 +324,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 461950027
         },
-        {
+        "sequence_file/5e31c504-cb51-459e-a939-d49bc83d5d44": {
             "sha1": "c287eedcaadbbbffea0ba9ca7b3c0a5e77a0235b",
             "name": "MantonBM8_HiSeq_8_S31_L007_R1_001.fastq.gz",
             "uuid": "5e31c504-cb51-459e-a939-d49bc83d5d44",
@@ -336,7 +336,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 940066351
         },
-        {
+        "sequence_file/c114f74d-6854-43ce-bc70-39ca8e45e86a": {
             "sha1": "4ea8ef60c57243ed68bd6c0d759bdc42ba113252",
             "name": "MantonBM6_HiSeq_8_S15_L004_R1_001.fastq.gz",
             "uuid": "c114f74d-6854-43ce-bc70-39ca8e45e86a",
@@ -348,7 +348,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1453432629
         },
-        {
+        "sequence_file/518ee17c-7de1-4775-ad7d-167b2d2a8ad7": {
             "sha1": "3e669c5b44d40777ede5b5eacb2b7e5509638227",
             "name": "MantonBM6_HiSeq_6_S13_L004_I1_001.fastq.gz",
             "uuid": "518ee17c-7de1-4775-ad7d-167b2d2a8ad7",
@@ -360,7 +360,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 523935897
         },
-        {
+        "sequence_file/f488ad13-8645-4cc4-99d1-b3b72e8723c8": {
             "sha1": "b016a7d9883f3e332fe2235b911e3145a3a77694",
             "name": "MantonBM6_HiSeq_7_S14_L003_I1_001.fastq.gz",
             "uuid": "f488ad13-8645-4cc4-99d1-b3b72e8723c8",
@@ -372,7 +372,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 433334509
         },
-        {
+        "sequence_file/1ffaf155-7ff8-4fe4-9cc2-352f7ec0ef1c": {
             "sha1": "862974c6a9d9f4b602c67a2b2cbd88fb360f1751",
             "name": "MantonBM7_HiSeq_5_S20_L006_R1_001.fastq.gz",
             "uuid": "1ffaf155-7ff8-4fe4-9cc2-352f7ec0ef1c",
@@ -384,7 +384,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 973474498
         },
-        {
+        "sequence_file/ea6245c2-e8ee-4185-ae2f-0389a5bae598": {
             "sha1": "324ffbc614bad240bdec254bdf95551bc5a28206",
             "name": "MantonBM8_HiSeq_1_S24_L007_I1_001.fastq.gz",
             "uuid": "ea6245c2-e8ee-4185-ae2f-0389a5bae598",
@@ -396,7 +396,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 367922778
         },
-        {
+        "sequence_file/6ae60ce7-ae0a-421b-96f7-7954cad9cbfb": {
             "sha1": "5d5d82598ad59fcca6bfdcce6bbb1d94a068deef",
             "name": "MantonBM6_HiSeq_6_S13_L004_R1_001.fastq.gz",
             "uuid": "6ae60ce7-ae0a-421b-96f7-7954cad9cbfb",
@@ -408,7 +408,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1533491443
         },
-        {
+        "sequence_file/63c98bcc-255f-4efc-9712-e824463fbd2f": {
             "sha1": "e2cebb8793d318bca6c644b67c706f1086650237",
             "name": "MantonBM5_HiSeq_7_S7_L001_I1_001.fastq.gz",
             "uuid": "63c98bcc-255f-4efc-9712-e824463fbd2f",
@@ -420,7 +420,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 334936155
         },
-        {
+        "sequence_file/274e4b04-3174-46f1-bba5-004bb1ed2cc5": {
             "sha1": "25193b3b6dcb7c27ae3abb603fc4a29f81dd78b1",
             "name": "MantonBM8_HiSeq_7_S30_L007_R1_001.fastq.gz",
             "uuid": "274e4b04-3174-46f1-bba5-004bb1ed2cc5",
@@ -432,7 +432,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1035394960
         },
-        {
+        "sequence_file/7d516073-474d-4359-973d-3c454f2e080a": {
             "sha1": "b7b84da638b73fdb7adb6c9c1e853179281c3e87",
             "name": "MantonBM7_HiSeq_5_S20_L005_I1_001.fastq.gz",
             "uuid": "7d516073-474d-4359-973d-3c454f2e080a",
@@ -444,7 +444,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 274954915
         },
-        {
+        "sequence_file/aa24229f-3be5-495b-9989-d9e793056993": {
             "sha1": "e3ab9ac0eda935ef976a437cbb10676b2388f267",
             "name": "MantonBM8_HiSeq_3_S26_L008_R2_001.fastq.gz",
             "uuid": "aa24229f-3be5-495b-9989-d9e793056993",
@@ -456,7 +456,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2865053166
         },
-        {
+        "sequence_file/4927cc7d-e23c-4c58-91c7-7af793f35f07": {
             "sha1": "e157509dd6a35540b2b94acc11da0193a1ea892c",
             "name": "MantonBM5_HiSeq_5_S5_L002_R1_001.fastq.gz",
             "uuid": "4927cc7d-e23c-4c58-91c7-7af793f35f07",
@@ -468,7 +468,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1335705855
         },
-        {
+        "sequence_file/2df110bc-9016-4bf6-a622-e4fab70b82ca": {
             "sha1": "69d21f8373a1e8c6f37def499dfa6af3fd6dc60a",
             "name": "MantonBM7_HiSeq_4_S19_L006_I1_001.fastq.gz",
             "uuid": "2df110bc-9016-4bf6-a622-e4fab70b82ca",
@@ -480,7 +480,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 398860587
         },
-        {
+        "sequence_file/7ded5e63-c50e-4854-9be7-1cb206fa3d7f": {
             "sha1": "da4c7abbe7959cdfab2a97daa2960100118f2845",
             "name": "MantonBM5_HiSeq_2_S2_L001_R2_001.fastq.gz",
             "uuid": "7ded5e63-c50e-4854-9be7-1cb206fa3d7f",
@@ -492,7 +492,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3847682243
         },
-        {
+        "sequence_file/09d8668c-bf1a-4ee5-9f9d-c5c17dc97509": {
             "sha1": "42cde5b661ec41eb5e7cb5c6c6e1b7d67d3717b6",
             "name": "MantonBM5_HiSeq_4_S4_L002_R2_001.fastq.gz",
             "uuid": "09d8668c-bf1a-4ee5-9f9d-c5c17dc97509",
@@ -504,7 +504,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3766676445
         },
-        {
+        "sequence_file/5483a55b-cd36-4477-adcf-37172a856bfc": {
             "sha1": "ac620a767f8f09e50891c9b99693d8f080091305",
             "name": "MantonBM5_HiSeq_3_S3_L002_R2_001.fastq.gz",
             "uuid": "5483a55b-cd36-4477-adcf-37172a856bfc",
@@ -516,7 +516,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3935000873
         },
-        {
+        "sequence_file/d7bbc88d-ea41-483f-940a-332989f6dd75": {
             "sha1": "8544b887151fc5a0b5718a80e509ce578a3a3b62",
             "name": "MantonBM8_HiSeq_3_S26_L007_R2_001.fastq.gz",
             "uuid": "d7bbc88d-ea41-483f-940a-332989f6dd75",
@@ -528,7 +528,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3016393123
         },
-        {
+        "sequence_file/b1d872b0-620d-4965-b6e8-aba6ea4d104d": {
             "sha1": "9e42ff12ccda5862a499f745b12311ff02460b14",
             "name": "MantonBM6_HiSeq_4_S11_L004_I1_001.fastq.gz",
             "uuid": "b1d872b0-620d-4965-b6e8-aba6ea4d104d",
@@ -540,7 +540,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 457871003
         },
-        {
+        "sequence_file/f762562b-2408-4e17-ba4a-493cdb8e0e3f": {
             "sha1": "68271405cb3b0a7d4ba35f1a6e5fa79dcc9954c8",
             "name": "MantonBM6_HiSeq_1_S9_L003_R1_001.fastq.gz",
             "uuid": "f762562b-2408-4e17-ba4a-493cdb8e0e3f",
@@ -552,7 +552,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1371915564
         },
-        {
+        "sequence_file/2a6cf1cd-1599-44ef-86e5-511a18e23262": {
             "sha1": "ac23ac94d4a1cd48be062f3f7439c431139f000d",
             "name": "MantonBM5_HiSeq_1_S1_L001_R1_001.fastq.gz",
             "uuid": "2a6cf1cd-1599-44ef-86e5-511a18e23262",
@@ -564,7 +564,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1279456120
         },
-        {
+        "sequence_file/93e242a1-3d4b-491b-9d5f-02e038e212cb": {
             "sha1": "443c2311d71ab967c44af9a3088c1e38dcd9d44e",
             "name": "MantonBM8_HiSeq_8_S31_L008_I1_001.fastq.gz",
             "uuid": "93e242a1-3d4b-491b-9d5f-02e038e212cb",
@@ -576,7 +576,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 289917610
         },
-        {
+        "sequence_file/9ab7ac35-d262-49cb-9994-f5da5f94b342": {
             "sha1": "000aae6b7d464a8335b5e8916a24eb60f44e44bd",
             "name": "MantonBM5_HiSeq_6_S6_L001_I1_001.fastq.gz",
             "uuid": "9ab7ac35-d262-49cb-9994-f5da5f94b342",
@@ -588,7 +588,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 434097395
         },
-        {
+        "sequence_file/1780aa95-bd16-4cb9-814e-d3900d4787d7": {
             "sha1": "7fef3e5574fa25c974b7709282d0e3877a586621",
             "name": "MantonBM7_HiSeq_6_S21_L005_I1_001.fastq.gz",
             "uuid": "1780aa95-bd16-4cb9-814e-d3900d4787d7",
@@ -600,7 +600,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 275332227
         },
-        {
+        "sequence_file/a26ee1d9-5dbf-46f8-a047-00d74b1b628a": {
             "sha1": "2f3cf70ab5d79c66f94733954690109b783cd447",
             "name": "MantonBM5_HiSeq_6_S6_L001_R2_001.fastq.gz",
             "uuid": "a26ee1d9-5dbf-46f8-a047-00d74b1b628a",
@@ -612,7 +612,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3705304970
         },
-        {
+        "sequence_file/8ad83172-07ee-4726-85b0-fe19b885a169": {
             "sha1": "b8f7a4521d66076402c270b733f44257fd20a225",
             "name": "MantonBM6_HiSeq_5_S12_L003_R1_001.fastq.gz",
             "uuid": "8ad83172-07ee-4726-85b0-fe19b885a169",
@@ -624,7 +624,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1393779135
         },
-        {
+        "sequence_file/245b8d93-3fc9-4ad6-b000-55046061a119": {
             "sha1": "1a356da3b6ff5832571f7145acd8a46b0ee19047",
             "name": "MantonBM5_HiSeq_7_S7_L001_R2_001.fastq.gz",
             "uuid": "245b8d93-3fc9-4ad6-b000-55046061a119",
@@ -636,7 +636,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2837058758
         },
-        {
+        "sequence_file/7422fc7e-ed66-49a2-a207-30d72c93d0a1": {
             "sha1": "0307c69afd8ae73ccab44149f84f2e074f148327",
             "name": "MantonBM6_HiSeq_5_S12_L003_I1_001.fastq.gz",
             "uuid": "7422fc7e-ed66-49a2-a207-30d72c93d0a1",
@@ -648,7 +648,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 459300005
         },
-        {
+        "sequence_file/0954f798-7318-4612-bad7-cd3f9b181d3a": {
             "sha1": "7cf3ea8430c9e5cb4d9701f94ff45a62bd61a6e5",
             "name": "MantonBM6_HiSeq_1_S9_L003_R2_001.fastq.gz",
             "uuid": "0954f798-7318-4612-bad7-cd3f9b181d3a",
@@ -660,7 +660,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4017696816
         },
-        {
+        "sequence_file/86d25b68-ffb0-4fd4-bf48-10f6c3c184a5": {
             "sha1": "5fd6b9bcf2afc7a3da7a8bf92a1608ea504ee786",
             "name": "MantonBM8_HiSeq_7_S30_L007_R2_001.fastq.gz",
             "uuid": "86d25b68-ffb0-4fd4-bf48-10f6c3c184a5",
@@ -672,7 +672,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3049501318
         },
-        {
+        "sequence_file/be263698-8ffb-4263-902a-5dea68d18df5": {
             "sha1": "e73fd418dc52977d5e8d5eda6dab2829dd78c939",
             "name": "MantonBM7_HiSeq_4_S19_L005_R1_001.fastq.gz",
             "uuid": "be263698-8ffb-4263-902a-5dea68d18df5",
@@ -684,7 +684,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1087760255
         },
-        {
+        "sequence_file/9e8a07ac-ad93-4a5e-90d8-c0e478e18342": {
             "sha1": "bd0100e46736745a051f04804e1ee58123973649",
             "name": "MantonBM5_HiSeq_7_S7_L002_I1_001.fastq.gz",
             "uuid": "9e8a07ac-ad93-4a5e-90d8-c0e478e18342",
@@ -696,7 +696,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 319524227
         },
-        {
+        "sequence_file/31ad52e7-70e8-4e3e-9cd7-0d8d8b1b4331": {
             "sha1": "1c3979becd1da06e518aba2177e4f6cbe725eb53",
             "name": "MantonBM8_HiSeq_7_S30_L008_R2_001.fastq.gz",
             "uuid": "31ad52e7-70e8-4e3e-9cd7-0d8d8b1b4331",
@@ -708,7 +708,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2900509710
         },
-        {
+        "sequence_file/01842746-1644-436e-a1e5-aa3b59e2b8d6": {
             "sha1": "754a0b63234fda0d6b5ed476419914bcbb5b09e8",
             "name": "MantonBM7_HiSeq_5_S20_L005_R2_001.fastq.gz",
             "uuid": "01842746-1644-436e-a1e5-aa3b59e2b8d6",
@@ -720,7 +720,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2424410895
         },
-        {
+        "sequence_file/39351ee0-89c3-499d-a820-5bece48704d5": {
             "sha1": "fc016b9021812630a550477352821391d85d2d1e",
             "name": "MantonBM5_HiSeq_1_S1_L001_I1_001.fastq.gz",
             "uuid": "39351ee0-89c3-499d-a820-5bece48704d5",
@@ -732,7 +732,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 435833838
         },
-        {
+        "sequence_file/33be88bb-3b38-4076-b9e1-1d73b48954b8": {
             "sha1": "31716d153b3ba36da04c5e342d3f63a5a1296212",
             "name": "MantonBM5_HiSeq_4_S4_L001_R1_001.fastq.gz",
             "uuid": "33be88bb-3b38-4076-b9e1-1d73b48954b8",
@@ -744,7 +744,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1285247308
         },
-        {
+        "sequence_file/da84551f-0859-46fd-aaa2-4797cd373991": {
             "sha1": "ad1f3b92c3a5dae50b685e6724764f000d38f0f2",
             "name": "MantonBM8_HiSeq_6_S29_L008_R2_001.fastq.gz",
             "uuid": "da84551f-0859-46fd-aaa2-4797cd373991",
@@ -756,7 +756,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3006708838
         },
-        {
+        "sequence_file/af34f522-9a30-48b3-ba70-7600401a871b": {
             "sha1": "7f2fb52ad4500ce4b150e8cd29c1861206e2fb0c",
             "name": "MantonBM6_HiSeq_8_S15_L004_I1_001.fastq.gz",
             "uuid": "af34f522-9a30-48b3-ba70-7600401a871b",
@@ -768,7 +768,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 466050642
         },
-        {
+        "sequence_file/abb46e44-0aba-4814-a7f4-b9b62fb5f6ad": {
             "sha1": "726a0fdc8b3e50e97ab5161959267c05b3ffbca2",
             "name": "MantonBM8_HiSeq_6_S29_L007_R1_001.fastq.gz",
             "uuid": "abb46e44-0aba-4814-a7f4-b9b62fb5f6ad",
@@ -780,7 +780,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1074242114
         },
-        {
+        "sequence_file/9b34f6ca-9952-4fbd-b55b-e06e44094463": {
             "sha1": "7b780ca87985c2556c2bd05409e0445361661933",
             "name": "MantonBM8_HiSeq_4_S27_L007_I1_001.fastq.gz",
             "uuid": "9b34f6ca-9952-4fbd-b55b-e06e44094463",
@@ -792,7 +792,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 375951507
         },
-        {
+        "sequence_file/c9ad441e-28a2-47b8-998e-48d48936ed64": {
             "sha1": "36cb761af70c7ccd5b17badc6c91f891194727e4",
             "name": "MantonBM7_HiSeq_5_S20_L005_R1_001.fastq.gz",
             "uuid": "c9ad441e-28a2-47b8-998e-48d48936ed64",
@@ -804,7 +804,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 831563901
         },
-        {
+        "sequence_file/f2edefd2-c29c-470d-8879-3d480a6c55f9": {
             "sha1": "99499545aed42e9810993536ed05c24ae4bb0a03",
             "name": "MantonBM8_HiSeq_1_S24_L008_I1_001.fastq.gz",
             "uuid": "f2edefd2-c29c-470d-8879-3d480a6c55f9",
@@ -816,7 +816,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 351664422
         },
-        {
+        "sequence_file/c000533a-432f-4733-bc22-16e4bb89382b": {
             "sha1": "129201e108bf5943a20997ff3a9e27f8032d01f0",
             "name": "MantonBM5_HiSeq_2_S2_L002_I1_001.fastq.gz",
             "uuid": "c000533a-432f-4733-bc22-16e4bb89382b",
@@ -828,7 +828,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 421226755
         },
-        {
+        "sequence_file/9f2d4e6d-3f38-44f6-b16c-100cfce72797": {
             "sha1": "b2f090ff7881402e16237e8aef738d813068a525",
             "name": "MantonBM6_HiSeq_7_S14_L004_I1_001.fastq.gz",
             "uuid": "9f2d4e6d-3f38-44f6-b16c-100cfce72797",
@@ -840,7 +840,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 434994933
         },
-        {
+        "sequence_file/487e2d7f-320d-4d75-9d34-3a0fb791c553": {
             "sha1": "3f1b51f33338167d3d6009936d1a6f2c97986d82",
             "name": "MantonBM8_HiSeq_7_S30_L008_R1_001.fastq.gz",
             "uuid": "487e2d7f-320d-4d75-9d34-3a0fb791c553",
@@ -852,7 +852,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 977921734
         },
-        {
+        "sequence_file/719f581d-3481-4fe5-a3c5-2eb9054d07ec": {
             "sha1": "c74f21e64bedf8d5fdcc72fe21a85f8f157d3301",
             "name": "MantonBM5_HiSeq_1_S1_L002_R2_001.fastq.gz",
             "uuid": "719f581d-3481-4fe5-a3c5-2eb9054d07ec",
@@ -864,7 +864,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3754462172
         },
-        {
+        "sequence_file/b4295e23-f872-4b5f-ac4e-0da6a53e39b8": {
             "sha1": "b387775a7b1c4cc677ad61af06b0510f8b241803",
             "name": "MantonBM5_HiSeq_7_S7_L001_R1_001.fastq.gz",
             "uuid": "b4295e23-f872-4b5f-ac4e-0da6a53e39b8",
@@ -876,7 +876,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 987901344
         },
-        {
+        "sequence_file/139d2d79-11a0-4092-babd-2b27a6b42027": {
             "sha1": "05d002d319cc5c76c3cf5421e6e692ed5e17b20a",
             "name": "MantonBM5_HiSeq_4_S4_L001_R2_001.fastq.gz",
             "uuid": "139d2d79-11a0-4092-babd-2b27a6b42027",
@@ -888,7 +888,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3743904580
         },
-        {
+        "sequence_file/cd7ee2a1-6c69-4714-8306-a347a4f28616": {
             "sha1": "ab8cb349b5c95fb2c791a8b3f3f00dcb06ce9743",
             "name": "MantonBM8_HiSeq_1_S24_L007_R2_001.fastq.gz",
             "uuid": "cd7ee2a1-6c69-4714-8306-a347a4f28616",
@@ -900,7 +900,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3360791819
         },
-        {
+        "sequence_file/1acc5ab3-c91c-4095-8713-18299a0b02d2": {
             "sha1": "85f7e23cbc2faeae9251247356e53f6e6d61d800",
             "name": "MantonBM6_HiSeq_4_S11_L003_I1_001.fastq.gz",
             "uuid": "1acc5ab3-c91c-4095-8713-18299a0b02d2",
@@ -912,7 +912,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 457869449
         },
-        {
+        "sequence_file/bad6ed96-930c-47a9-b851-d527af7136e3": {
             "sha1": "c227ae96d401ee25bd93501ae7c838f7cd96ec8a",
             "name": "MantonBM7_HiSeq_8_S23_L006_R2_001.fastq.gz",
             "uuid": "bad6ed96-930c-47a9-b851-d527af7136e3",
@@ -924,7 +924,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2935656559
         },
-        {
+        "sequence_file/c17745c1-7217-4771-aaac-d5bf35072343": {
             "sha1": "50ad86d452cc07de058e1c78203b10024d1fda3c",
             "name": "MantonBM7_HiSeq_5_S20_L006_I1_001.fastq.gz",
             "uuid": "c17745c1-7217-4771-aaac-d5bf35072343",
@@ -936,7 +936,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 317526124
         },
-        {
+        "sequence_file/4d2ec95d-d00b-44a7-9119-a53b5db1b181": {
             "sha1": "253c86e47aaf59049b70b786dd0db1c574bd325c",
             "name": "MantonBM7_HiSeq_1_S16_L005_I1_001.fastq.gz",
             "uuid": "4d2ec95d-d00b-44a7-9119-a53b5db1b181",
@@ -948,7 +948,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 262263083
         },
-        {
+        "sequence_file/8f9c317e-74ec-4262-b401-3e2a047d81f3": {
             "sha1": "82ea21a2f608a8becf82296f1f81128a8e1d40ac",
             "name": "MantonBM6_HiSeq_1_S9_L004_I1_001.fastq.gz",
             "uuid": "8f9c317e-74ec-4262-b401-3e2a047d81f3",
@@ -960,7 +960,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 440416111
         },
-        {
+        "sequence_file/00424825-4dfe-4afc-a8a8-c5bffdaada00": {
             "sha1": "efb32dbe174817ab733fefa45dd2c0def9f1aec9",
             "name": "MantonBM7_HiSeq_4_S19_L005_R2_001.fastq.gz",
             "uuid": "00424825-4dfe-4afc-a8a8-c5bffdaada00",
@@ -972,7 +972,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3151963403
         },
-        {
+        "sequence_file/40713b36-fcfe-4a1a-ad21-9e8b118b91e9": {
             "sha1": "bf2d1340d9ee03473e9e080382adb4afcccb28dd",
             "name": "MantonBM6_HiSeq_6_S13_L003_R2_001.fastq.gz",
             "uuid": "40713b36-fcfe-4a1a-ad21-9e8b118b91e9",
@@ -984,7 +984,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4450218668
         },
-        {
+        "sequence_file/ea993f83-3268-4dc6-8612-cd9a3ccfc475": {
             "sha1": "5ca8745222c1b5d825c8c43d1604cf236d8b0cb7",
             "name": "MantonBM7_HiSeq_8_S23_L006_R1_001.fastq.gz",
             "uuid": "ea993f83-3268-4dc6-8612-cd9a3ccfc475",
@@ -996,7 +996,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1009763575
         },
-        {
+        "sequence_file/124dc699-f389-4462-9c29-41a091d5cc04": {
             "sha1": "050c20e5c955088f76efdc3dd73129c4f5d1e743",
             "name": "MantonBM8_HiSeq_6_S29_L007_I1_001.fastq.gz",
             "uuid": "124dc699-f389-4462-9c29-41a091d5cc04",
@@ -1008,7 +1008,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 361610319
         },
-        {
+        "sequence_file/17f2c348-02af-42be-baa3-d227925a1cbc": {
             "sha1": "b05659acc35d902285192c5d1d8f0e6f52badf74",
             "name": "MantonBM6_HiSeq_8_S15_L004_R2_001.fastq.gz",
             "uuid": "17f2c348-02af-42be-baa3-d227925a1cbc",
@@ -1020,7 +1020,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4216372660
         },
-        {
+        "sequence_file/afbfe990-11a2-4836-94b3-980e11ca1c2a": {
             "sha1": "13beb389efb543fd56beae4eeabea8846aea36da",
             "name": "MantonBM7_HiSeq_4_S19_L006_R2_001.fastq.gz",
             "uuid": "afbfe990-11a2-4836-94b3-980e11ca1c2a",
@@ -1032,7 +1032,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3660141465
         },
-        {
+        "sequence_file/49e389b3-3570-45dc-b825-050e2805a1b5": {
             "sha1": "2b6f8a6e6124b0263d5c4e60122678ce89e1ad37",
             "name": "MantonBM5_HiSeq_5_S5_L002_I1_001.fastq.gz",
             "uuid": "49e389b3-3570-45dc-b825-050e2805a1b5",
@@ -1044,7 +1044,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 438779815
         },
-        {
+        "sequence_file/65bd1790-6d5e-4f3f-ab78-ce5471d58e98": {
             "sha1": "b2ab811e1c37665df3aafcafd44e654f95917660",
             "name": "MantonBM5_HiSeq_5_S5_L002_R2_001.fastq.gz",
             "uuid": "65bd1790-6d5e-4f3f-ab78-ce5471d58e98",
@@ -1056,7 +1056,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3851572754
         },
-        {
+        "sequence_file/662e721c-1272-46b4-9863-a0cbae53d78b": {
             "sha1": "8795b73cd4998fdfac0b0fb35a66b46cd5a0c18e",
             "name": "MantonBM5_HiSeq_8_S8_L002_I1_001.fastq.gz",
             "uuid": "662e721c-1272-46b4-9863-a0cbae53d78b",
@@ -1068,7 +1068,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 390981495
         },
-        {
+        "sequence_file/9ea35e5e-27ac-4925-9961-fffebe01e5e9": {
             "sha1": "d09e5819789c7630efbe41fcc7946737d666551c",
             "name": "MantonBM7_HiSeq_7_S22_L005_R2_001.fastq.gz",
             "uuid": "9ea35e5e-27ac-4925-9961-fffebe01e5e9",
@@ -1080,7 +1080,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2198253064
         },
-        {
+        "sequence_file/f4106c25-5ea5-4feb-b40b-072056ff954f": {
             "sha1": "839d3ad3248c7683955a1691b0d69bbc749fc219",
             "name": "MantonBM5_HiSeq_7_S7_L002_R1_001.fastq.gz",
             "uuid": "f4106c25-5ea5-4feb-b40b-072056ff954f",
@@ -1092,7 +1092,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 991115579
         },
-        {
+        "sequence_file/5eb311a4-19c8-429d-b36e-409fb80e31b0": {
             "sha1": "dad7d55e1344e51e7ef5bc1a0eb8f42c3b3b9456",
             "name": "MantonBM7_HiSeq_4_S19_L005_I1_001.fastq.gz",
             "uuid": "5eb311a4-19c8-429d-b36e-409fb80e31b0",
@@ -1104,7 +1104,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 344954829
         },
-        {
+        "sequence_file/6857550d-8c86-40c1-988a-b48cb70759f2": {
             "sha1": "71fc1b4c8bf707135b89893c6d966f3a2b9c43b3",
             "name": "MantonBM6_HiSeq_7_S14_L003_R2_001.fastq.gz",
             "uuid": "6857550d-8c86-40c1-988a-b48cb70759f2",
@@ -1116,7 +1116,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3977061384
         },
-        {
+        "sequence_file/9f72f529-b2cb-4830-9ff4-e1c03ec449c2": {
             "sha1": "b0f01a0915e915c1f7e273e445d7a9b408eba327",
             "name": "MantonBM7_HiSeq_2_S17_L005_R1_001.fastq.gz",
             "uuid": "9f72f529-b2cb-4830-9ff4-e1c03ec449c2",
@@ -1128,7 +1128,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 896815573
         },
-        {
+        "sequence_file/006a7618-8d55-48b3-a37e-7de0a9e70ef7": {
             "sha1": "d045d529f52caf8e6bdcbbb8a03c6e4f9dfa8974",
             "name": "MantonBM6_HiSeq_1_S9_L003_I1_001.fastq.gz",
             "uuid": "006a7618-8d55-48b3-a37e-7de0a9e70ef7",
@@ -1140,7 +1140,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 439377163
         },
-        {
+        "sequence_file/312522d0-f218-4304-8376-d6f1feeb7553": {
             "sha1": "68f0d844ed0512069c842f3458a295c197bb3acc",
             "name": "MantonBM8_HiSeq_5_S28_L008_R1_001.fastq.gz",
             "uuid": "312522d0-f218-4304-8376-d6f1feeb7553",
@@ -1152,7 +1152,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 988383266
         },
-        {
+        "sequence_file/11cbfa24-c882-473d-95b6-076c3f1fd559": {
             "sha1": "421e2ca5fcc18e215c5b7b59cdd7668d869cc1a9",
             "name": "MantonBM6_HiSeq_4_S11_L004_R1_001.fastq.gz",
             "uuid": "11cbfa24-c882-473d-95b6-076c3f1fd559",
@@ -1164,7 +1164,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1396982248
         },
-        {
+        "sequence_file/7149194f-3bc9-4aa2-8407-e89bad2dd77b": {
             "sha1": "c8731e073b24fc3f5e422a739b1fb6aef9cc8894",
             "name": "MantonBM8_HiSeq_2_S25_L007_I1_001.fastq.gz",
             "uuid": "7149194f-3bc9-4aa2-8407-e89bad2dd77b",
@@ -1176,7 +1176,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 346304892
         },
-        {
+        "sequence_file/8bea9251-da22-4f68-91a4-1e60c4af956f": {
             "sha1": "5385c23a4af0deb63ff72f432595afa16406ca89",
             "name": "MantonBM8_HiSeq_7_S30_L008_I1_001.fastq.gz",
             "uuid": "8bea9251-da22-4f68-91a4-1e60c4af956f",
@@ -1188,7 +1188,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 330694688
         },
-        {
+        "sequence_file/7e602220-a242-4d9a-9e1e-1487f7880b41": {
             "sha1": "5ed64e6076c37c4bb392a5756078dcbdc3c4ba05",
             "name": "MantonBM7_HiSeq_2_S17_L006_R2_001.fastq.gz",
             "uuid": "7e602220-a242-4d9a-9e1e-1487f7880b41",
@@ -1200,7 +1200,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3062543261
         },
-        {
+        "sequence_file/b63d119a-2496-4d92-9bab-e67e85914708": {
             "sha1": "40f8a2bba624eb80040f60cdacf4b21f31e8854b",
             "name": "MantonBM8_HiSeq_7_S30_L007_I1_001.fastq.gz",
             "uuid": "b63d119a-2496-4d92-9bab-e67e85914708",
@@ -1212,7 +1212,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 345403414
         },
-        {
+        "sequence_file/5a3f8e5f-cf78-4761-ada6-b910f6fc0b9f": {
             "sha1": "fdee1ebfd40d47355052ab67e0f5b53474e119a4",
             "name": "MantonBM5_HiSeq_6_S6_L002_I1_001.fastq.gz",
             "uuid": "5a3f8e5f-cf78-4761-ada6-b910f6fc0b9f",
@@ -1224,7 +1224,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 415617696
         },
-        {
+        "sequence_file/bfdeb7e3-f242-48ae-9222-6428b5168ccd": {
             "sha1": "8d4d8f9cb63ba5402de8814f399d74d1bb64d0ad",
             "name": "MantonBM5_HiSeq_3_S3_L001_R1_001.fastq.gz",
             "uuid": "bfdeb7e3-f242-48ae-9222-6428b5168ccd",
@@ -1236,7 +1236,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1339942766
         },
-        {
+        "sequence_file/b41c8971-bcd3-42ba-b8f8-f685cba0f923": {
             "sha1": "2a21d8e9a6764882f3eb148e81a81b67309aea22",
             "name": "MantonBM6_HiSeq_8_S15_L003_I1_001.fastq.gz",
             "uuid": "b41c8971-bcd3-42ba-b8f8-f685cba0f923",
@@ -1248,7 +1248,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 464507015
         },
-        {
+        "sequence_file/b8cae58c-fa89-480e-8c51-88115619bf8e": {
             "sha1": "29e161efe1b359cb7d1718e72e25d4d5b6d2031a",
             "name": "MantonBM7_HiSeq_6_S21_L006_R2_001.fastq.gz",
             "uuid": "b8cae58c-fa89-480e-8c51-88115619bf8e",
@@ -1260,7 +1260,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2779980675
         },
-        {
+        "sequence_file/4a7fd685-04b4-4436-9aed-e692030dfa76": {
             "sha1": "30f3d4102d11456f0c10a0150b66d659c19796f9",
             "name": "MantonBM6_HiSeq_8_S15_L003_R1_001.fastq.gz",
             "uuid": "4a7fd685-04b4-4436-9aed-e692030dfa76",
@@ -1272,7 +1272,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1445015158
         },
-        {
+        "sequence_file/6517b6c3-3fab-45e9-a494-ae81ccc500f0": {
             "sha1": "c2c576e906a6432124ac503f8ccee2db0d7256ba",
             "name": "MantonBM5_HiSeq_1_S1_L002_I1_001.fastq.gz",
             "uuid": "6517b6c3-3fab-45e9-a494-ae81ccc500f0",
@@ -1284,7 +1284,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 418613271
         },
-        {
+        "sequence_file/bc218df5-d4d5-4aa0-baaa-4fbf36541315": {
             "sha1": "c33341a72958173a506e45f1e238409f4340daf3",
             "name": "MantonBM5_HiSeq_6_S6_L002_R1_001.fastq.gz",
             "uuid": "bc218df5-d4d5-4aa0-baaa-4fbf36541315",
@@ -1296,7 +1296,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1290999702
         },
-        {
+        "sequence_file/04e36cfe-a12a-4f5a-91cc-3574bdf427f4": {
             "sha1": "a955ae53c641fa281f892627c33d6bbc5b79e67c",
             "name": "MantonBM5_HiSeq_5_S5_L001_R1_001.fastq.gz",
             "uuid": "04e36cfe-a12a-4f5a-91cc-3574bdf427f4",
@@ -1308,7 +1308,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1323605823
         },
-        {
+        "sequence_file/8526cbf2-881e-4499-9992-43009425c4ae": {
             "sha1": "427ecd25f8cee9aa778b95f6fb1ec18a34515db1",
             "name": "MantonBM6_HiSeq_6_S13_L003_R1_001.fastq.gz",
             "uuid": "8526cbf2-881e-4499-9992-43009425c4ae",
@@ -1320,7 +1320,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1525455562
         },
-        {
+        "sequence_file/381c733e-3dba-4ca7-ab05-541dbfc03e04": {
             "sha1": "2806255315e6bf7e96c1886e60bb7ff6206ea4ee",
             "name": "MantonBM6_HiSeq_6_S13_L003_I1_001.fastq.gz",
             "uuid": "381c733e-3dba-4ca7-ab05-541dbfc03e04",
@@ -1332,7 +1332,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 521291049
         },
-        {
+        "sequence_file/f1a89f64-9e0b-479b-a294-8de7151a1a9d": {
             "sha1": "5c871b0a8d1b18e2c4e81917098e082b15a08550",
             "name": "MantonBM5_HiSeq_5_S5_L001_I1_001.fastq.gz",
             "uuid": "f1a89f64-9e0b-479b-a294-8de7151a1a9d",
@@ -1344,7 +1344,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 454973663
         },
-        {
+        "sequence_file/df7935c8-d1be-4dcf-a583-60a24636944d": {
             "sha1": "238d19876de3bedfd1473851a918c0ba509c25bf",
             "name": "MantonBM7_HiSeq_2_S17_L005_R2_001.fastq.gz",
             "uuid": "df7935c8-d1be-4dcf-a583-60a24636944d",
@@ -1356,7 +1356,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2613112622
         },
-        {
+        "sequence_file/6c66cacf-5914-40dd-b512-c946fdc14424": {
             "sha1": "a1174eed40bd352a00c144b5e60647c4e19d021e",
             "name": "MantonBM6_HiSeq_2_S10_L003_R2_001.fastq.gz",
             "uuid": "6c66cacf-5914-40dd-b512-c946fdc14424",
@@ -1368,7 +1368,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4205879763
         },
-        {
+        "sequence_file/49125797-64a8-4fbe-b2a9-914252f768fe": {
             "sha1": "53a91376ecbf5b8e2fa12d818cad7e23e4db5cea",
             "name": "MantonBM6_HiSeq_7_S14_L004_R1_001.fastq.gz",
             "uuid": "49125797-64a8-4fbe-b2a9-914252f768fe",
@@ -1380,7 +1380,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1377883746
         },
-        {
+        "sequence_file/40542240-2e11-48cf-955c-4527e963be80": {
             "sha1": "04a834f972c454c1065d0271cfeda20c034834d5",
             "name": "MantonBM6_HiSeq_4_S11_L003_R2_001.fastq.gz",
             "uuid": "40542240-2e11-48cf-955c-4527e963be80",
@@ -1392,7 +1392,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4024803050
         },
-        {
+        "sequence_file/709da3b4-e8a0-431d-b082-8530ffae33f8": {
             "sha1": "15457a7ff077123ecc0dd84fb053fd82eaf59668",
             "name": "MantonBM8_HiSeq_8_S31_L008_R1_001.fastq.gz",
             "uuid": "709da3b4-e8a0-431d-b082-8530ffae33f8",
@@ -1404,7 +1404,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 887298264
         },
-        {
+        "sequence_file/ec15bc6b-2b71-4f78-ac5d-892b639a7fb6": {
             "sha1": "0fdc0b8209d3ff11f77e46daeefd6e6641078bf1",
             "name": "MantonBM5_HiSeq_3_S3_L002_I1_001.fastq.gz",
             "uuid": "ec15bc6b-2b71-4f78-ac5d-892b639a7fb6",
@@ -1416,7 +1416,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 444127728
         },
-        {
+        "sequence_file/38cef0ea-3ef8-45cd-aadc-5e8e64319cf0": {
             "sha1": "425bfc1a85aad38818e791b21633d1f893c1a917",
             "name": "MantonBM8_HiSeq_5_S28_L007_R2_001.fastq.gz",
             "uuid": "38cef0ea-3ef8-45cd-aadc-5e8e64319cf0",
@@ -1428,7 +1428,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3089725334
         },
-        {
+        "sequence_file/32e070e3-574d-4676-add4-359dd4c64ae7": {
             "sha1": "7993c73d39bff89800d8448949dbd0317d4ce75b",
             "name": "MantonBM7_HiSeq_8_S23_L006_I1_001.fastq.gz",
             "uuid": "32e070e3-574d-4676-add4-359dd4c64ae7",
@@ -1440,7 +1440,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 328038269
         },
-        {
+        "sequence_file/656fa889-f831-4a3a-84cf-0a1f5e148f5e": {
             "sha1": "2b22b8d48c2cf4cf3e195675628e4c71adeafc89",
             "name": "MantonBM5_HiSeq_2_S2_L001_I1_001.fastq.gz",
             "uuid": "656fa889-f831-4a3a-84cf-0a1f5e148f5e",
@@ -1452,7 +1452,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 440009026
         },
-        {
+        "sequence_file/29b8c167-5542-47bd-85a8-926645d7846a": {
             "sha1": "89bed87ba17255ee3ecf1d3cbbc18ee48a6c6457",
             "name": "MantonBM8_HiSeq_5_S28_L008_I1_001.fastq.gz",
             "uuid": "29b8c167-5542-47bd-85a8-926645d7846a",
@@ -1464,7 +1464,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 332536312
         },
-        {
+        "sequence_file/6e76f2d5-1b5d-4799-8b41-45faad9d6e11": {
             "sha1": "1761b575612aadc4a0848921d0fa0baa94eb69ba",
             "name": "MantonBM7_HiSeq_2_S17_L005_I1_001.fastq.gz",
             "uuid": "6e76f2d5-1b5d-4799-8b41-45faad9d6e11",
@@ -1476,7 +1476,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 305645765
         },
-        {
+        "sequence_file/9e7ac38d-b196-4e80-a59c-0d630d725745": {
             "sha1": "f73a8c45d114c16a8bb6ea9daa379e8ea7fa40fc",
             "name": "MantonBM8_HiSeq_8_S31_L007_R2_001.fastq.gz",
             "uuid": "9e7ac38d-b196-4e80-a59c-0d630d725745",
@@ -1488,7 +1488,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2772645353
         },
-        {
+        "sequence_file/687c63b3-2eb3-4aac-ab54-aa5d02128f1c": {
             "sha1": "28712ca4baa23700d446528744c5bd8fd8b9812a",
             "name": "MantonBM5_HiSeq_2_S2_L001_R1_001.fastq.gz",
             "uuid": "687c63b3-2eb3-4aac-ab54-aa5d02128f1c",
@@ -1500,7 +1500,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1316636610
         },
-        {
+        "sequence_file/8f4e5133-7aa0-468d-b13c-6fa23cdaf407": {
             "sha1": "56cb2f0914ed6dbce3bd6583480868dc3f294b2f",
             "name": "MantonBM8_HiSeq_6_S29_L007_R2_001.fastq.gz",
             "uuid": "8f4e5133-7aa0-468d-b13c-6fa23cdaf407",
@@ -1512,7 +1512,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3164888029
         },
-        {
+        "sequence_file/c9a2b54f-1316-4463-8f0b-9061bb4b51cd": {
             "sha1": "54122ea975474cc8fdd24da784d26a3c017f11ab",
             "name": "MantonBM8_HiSeq_5_S28_L007_I1_001.fastq.gz",
             "uuid": "c9a2b54f-1316-4463-8f0b-9061bb4b51cd",
@@ -1524,7 +1524,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 347522068
         },
-        {
+        "sequence_file/e4e33817-0d2c-4e42-8d10-17cba4b3c1d8": {
             "sha1": "e0d052b2cd62133c87beb4bc257467f308d1b448",
             "name": "MantonBM8_HiSeq_3_S26_L008_R1_001.fastq.gz",
             "uuid": "e4e33817-0d2c-4e42-8d10-17cba4b3c1d8",
@@ -1536,7 +1536,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 961947818
         },
-        {
+        "sequence_file/d8e59dbd-2add-4514-ae3e-9fac8ae902f5": {
             "sha1": "48f76d73e69178f042d0701fb9f2984dc571d233",
             "name": "MantonBM8_HiSeq_6_S29_L008_I1_001.fastq.gz",
             "uuid": "d8e59dbd-2add-4514-ae3e-9fac8ae902f5",
@@ -1548,7 +1548,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 345617607
         },
-        {
+        "sequence_file/a3f0a66b-1ebe-47dc-8efc-cacfface111d": {
             "sha1": "42c976288e479dfdb073bae6601ab723428db8ef",
             "name": "MantonBM7_HiSeq_3_S18_L006_R2_001.fastq.gz",
             "uuid": "a3f0a66b-1ebe-47dc-8efc-cacfface111d",
@@ -1560,7 +1560,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3080538404
         },
-        {
+        "sequence_file/6d2d1bda-e128-497e-8569-1e004c556b38": {
             "sha1": "b345f05fe6bda393a722b4d79c28b447100bac2b",
             "name": "MantonBM7_HiSeq_8_S23_L005_I1_001.fastq.gz",
             "uuid": "6d2d1bda-e128-497e-8569-1e004c556b38",
@@ -1572,7 +1572,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 282129607
         },
-        {
+        "sequence_file/4d7b8243-f099-4eab-a5a4-1e6c359f999d": {
             "sha1": "a3d7f3381ea419e7502a0824a7f772baf8b3de4a",
             "name": "MantonBM8_HiSeq_3_S26_L007_I1_001.fastq.gz",
             "uuid": "4d7b8243-f099-4eab-a5a4-1e6c359f999d",
@@ -1584,7 +1584,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 337607021
         },
-        {
+        "sequence_file/f8b537c4-73e2-4df5-a5ee-8aff3cccc3c7": {
             "sha1": "474ba94d2a4df3ff3de90ca6ddf8e906eceaf3a0",
             "name": "MantonBM5_HiSeq_5_S5_L001_R2_001.fastq.gz",
             "uuid": "f8b537c4-73e2-4df5-a5ee-8aff3cccc3c7",
@@ -1596,7 +1596,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3817186740
         },
-        {
+        "sequence_file/8162a395-0409-45c3-8652-918983bb1da0": {
             "sha1": "570fb892b5bae69f1dd2100ab74352411e3416a7",
             "name": "MantonBM5_HiSeq_1_S1_L002_R1_001.fastq.gz",
             "uuid": "8162a395-0409-45c3-8652-918983bb1da0",
@@ -1608,7 +1608,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1289286437
         },
-        {
+        "sequence_file/3fed1e54-3bf7-46fc-829a-f538a092d774": {
             "sha1": "3fbb83039b6ec32ce2514cad1034f456000d9027",
             "name": "MantonBM8_HiSeq_8_S31_L007_I1_001.fastq.gz",
             "uuid": "3fed1e54-3bf7-46fc-829a-f538a092d774",
@@ -1620,7 +1620,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 304103159
         },
-        {
+        "sequence_file/fd5c1b07-3fb7-4faa-ba3b-d1c82e6c7ffb": {
             "sha1": "774277f36b11ee0fdbea593d083233cd04ef2819",
             "name": "MantonBM6_HiSeq_2_S10_L003_R1_001.fastq.gz",
             "uuid": "fd5c1b07-3fb7-4faa-ba3b-d1c82e6c7ffb",
@@ -1632,7 +1632,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1445412681
         },
-        {
+        "sequence_file/26fc3171-166d-4145-b786-c5a7397a1ade": {
             "sha1": "08fd0b2b2a3c1ed7d9ee9afc41ccb972998de29c",
             "name": "MantonBM7_HiSeq_2_S17_L006_R1_001.fastq.gz",
             "uuid": "26fc3171-166d-4145-b786-c5a7397a1ade",
@@ -1644,7 +1644,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1052011467
         },
-        {
+        "sequence_file/f0b940a1-de2c-461e-a40d-7a5b0c11ca40": {
             "sha1": "1db8866f31b9b9e85745ce5aeda31411caa27a98",
             "name": "MantonBM8_HiSeq_2_S25_L007_R2_001.fastq.gz",
             "uuid": "f0b940a1-de2c-461e-a40d-7a5b0c11ca40",
@@ -1656,7 +1656,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3061260206
         },
-        {
+        "sequence_file/dd31fdba-26a2-4ccb-aa62-c43521de953e": {
             "sha1": "e90b58a4d231f7b036a8ba10e6ba03e4b1249880",
             "name": "MantonBM6_HiSeq_8_S15_L003_R2_001.fastq.gz",
             "uuid": "dd31fdba-26a2-4ccb-aa62-c43521de953e",
@@ -1668,7 +1668,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4201874769
         },
-        {
+        "sequence_file/b46fa14b-caf4-479d-9205-d3c108bee4e2": {
             "sha1": "1d0f27f5778d962aacf818f3a3d65852724c2ee4",
             "name": "MantonBM5_HiSeq_6_S6_L002_R2_001.fastq.gz",
             "uuid": "b46fa14b-caf4-479d-9205-d3c108bee4e2",
@@ -1680,7 +1680,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3734453313
         },
-        {
+        "sequence_file/eb21d839-7f51-4781-bf46-886fc6d82a11": {
             "sha1": "8ef0f920151f907430a435c3067202252bc52964",
             "name": "MantonBM8_HiSeq_4_S27_L007_R1_001.fastq.gz",
             "uuid": "eb21d839-7f51-4781-bf46-886fc6d82a11",
@@ -1692,7 +1692,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1113800384
         },
-        {
+        "sequence_file/bde680ab-9ae1-4392-b8b5-1187860111e5": {
             "sha1": "9a8e9170ec6af396b60845d3b1466d58762b5777",
             "name": "MantonBM7_HiSeq_2_S17_L006_I1_001.fastq.gz",
             "uuid": "bde680ab-9ae1-4392-b8b5-1187860111e5",
@@ -1704,7 +1704,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 356066382
         },
-        {
+        "sequence_file/f1a91911-8f85-4d68-8243-8466b1e2dce6": {
             "sha1": "d47fa7c448cf20a36d130ecd3a1f005cdb576301",
             "name": "MantonBM6_HiSeq_7_S14_L004_R2_001.fastq.gz",
             "uuid": "f1a91911-8f85-4d68-8243-8466b1e2dce6",
@@ -1716,7 +1716,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3988423324
         },
-        {
+        "sequence_file/6f042830-9bc8-4dd5-97a3-505f2db57d79": {
             "sha1": "979119ab4180dff52aa680a3b8063a4b2b719823",
             "name": "MantonBM5_HiSeq_3_S3_L002_R1_001.fastq.gz",
             "uuid": "6f042830-9bc8-4dd5-97a3-505f2db57d79",
@@ -1728,7 +1728,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1349973231
         },
-        {
+        "sequence_file/b692d3f7-0e85-4e18-9373-214300cc0293": {
             "sha1": "f7986b4d93959ba76fcadd77fae7d51dca5bd8e9",
             "name": "MantonBM8_HiSeq_4_S27_L008_R2_001.fastq.gz",
             "uuid": "b692d3f7-0e85-4e18-9373-214300cc0293",
@@ -1740,7 +1740,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3123953559
         },
-        {
+        "sequence_file/d0fffcc4-7282-48b0-a476-5afa1ce36829": {
             "sha1": "a1dbba6e8315baa3f1b208a5b091bff3eb074ca9",
             "name": "MantonBM5_HiSeq_8_S8_L002_R2_001.fastq.gz",
             "uuid": "d0fffcc4-7282-48b0-a476-5afa1ce36829",
@@ -1752,7 +1752,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3421588354
         },
-        {
+        "sequence_file/0428ddc2-ea8a-4c79-b994-60990a869c77": {
             "sha1": "7a463f36480d1fec423a88b97ad150bb22dc1fe5",
             "name": "MantonBM5_HiSeq_4_S4_L001_I1_001.fastq.gz",
             "uuid": "0428ddc2-ea8a-4c79-b994-60990a869c77",
@@ -1764,7 +1764,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 439861167
         },
-        {
+        "sequence_file/44d1289c-9a27-4d11-b903-5cdde4738f20": {
             "sha1": "13ac26c88b22fb45beed9ecae28f29790667a7b3",
             "name": "MantonBM5_HiSeq_8_S8_L001_R1_001.fastq.gz",
             "uuid": "44d1289c-9a27-4d11-b903-5cdde4738f20",
@@ -1776,7 +1776,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1171088138
         },
-        {
+        "sequence_file/e9bd1cf1-b0e6-4b05-9d85-afe6659d001d": {
             "sha1": "65e686bbd8a0d8b268a3f4143a2f8f780c2de860",
             "name": "MantonBM8_HiSeq_1_S24_L008_R1_001.fastq.gz",
             "uuid": "e9bd1cf1-b0e6-4b05-9d85-afe6659d001d",
@@ -1788,7 +1788,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1070869908
         },
-        {
+        "sequence_file/a2ba4d08-a9a9-4ceb-8dfd-70546b22dda0": {
             "sha1": "55add6317120525b942495b09c9ae00256ee9624",
             "name": "MantonBM7_HiSeq_4_S19_L006_R1_001.fastq.gz",
             "uuid": "a2ba4d08-a9a9-4ceb-8dfd-70546b22dda0",
@@ -1800,7 +1800,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1265277314
         },
-        {
+        "sequence_file/bd256dda-501a-4287-8e44-79fa7dcc43c6": {
             "sha1": "cbc3ae382961a2cd463db229231747856f4f72fc",
             "name": "MantonBM5_HiSeq_2_S2_L002_R1_001.fastq.gz",
             "uuid": "bd256dda-501a-4287-8e44-79fa7dcc43c6",
@@ -1812,7 +1812,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1327008069
         },
-        {
+        "sequence_file/3eff86f6-cff5-43a6-9024-be9a9893f867": {
             "sha1": "6d0710d023c4323ad00c0a57bb9ff14e6fe101a8",
             "name": "MantonBM7_HiSeq_1_S16_L006_I1_001.fastq.gz",
             "uuid": "3eff86f6-cff5-43a6-9024-be9a9893f867",
@@ -1824,7 +1824,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 302965864
         },
-        {
+        "sequence_file/7b567fc7-5b53-4f94-a88d-24a1286d846c": {
             "sha1": "f7b19573929167370ef78c28a5f858e9ff9657a1",
             "name": "MantonBM6_HiSeq_2_S10_L003_I1_001.fastq.gz",
             "uuid": "7b567fc7-5b53-4f94-a88d-24a1286d846c",
@@ -1836,7 +1836,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 473047277
         },
-        {
+        "sequence_file/f9bb33ad-03e8-400f-a77d-6c92464bdbec": {
             "sha1": "fbc2cc543ded560c9347049263b28fff07ad3519",
             "name": "MantonBM6_HiSeq_2_S10_L004_R2_001.fastq.gz",
             "uuid": "f9bb33ad-03e8-400f-a77d-6c92464bdbec",
@@ -1848,7 +1848,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4219650457
         },
-        {
+        "sequence_file/022d172e-1e82-418c-a821-133de6a9efe2": {
             "sha1": "499d1f2093190abee57372ed5a346996f238dc06",
             "name": "MantonBM5_HiSeq_4_S4_L002_I1_001.fastq.gz",
             "uuid": "022d172e-1e82-418c-a821-133de6a9efe2",
@@ -1860,7 +1860,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 424212496
         },
-        {
+        "sequence_file/0bb11e93-d9c6-411e-a614-e38252775d75": {
             "sha1": "538c798d472b2c70f97a508b01882a2f1b26e7ee",
             "name": "MantonBM8_HiSeq_4_S27_L007_R2_001.fastq.gz",
             "uuid": "0bb11e93-d9c6-411e-a614-e38252775d75",
@@ -1872,7 +1872,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3280154103
         },
-        {
+        "sequence_file/4d5c056b-5b1b-4fe7-a763-621cb7fa17c7": {
             "sha1": "126defb01665e4fc984f0cdf8d8a5afcade0b615",
             "name": "MantonBM7_HiSeq_3_S18_L005_R1_001.fastq.gz",
             "uuid": "4d5c056b-5b1b-4fe7-a763-621cb7fa17c7",
@@ -1884,7 +1884,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 908372922
         },
-        {
+        "sequence_file/6c11e561-ec37-4fb9-8661-a402d5268091": {
             "sha1": "d2d981bc8cde0edbb7e6731a2a1b41c6b5cc4aaa",
             "name": "MantonBM7_HiSeq_7_S22_L006_R2_001.fastq.gz",
             "uuid": "6c11e561-ec37-4fb9-8661-a402d5268091",
@@ -1896,7 +1896,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2583209592
         },
-        {
+        "sequence_file/15656b3d-1c2e-48e6-b0f1-bf4402890c3e": {
             "sha1": "e4543c83d835769feecbe0e913ffc6c17f17fa21",
             "name": "MantonBM6_HiSeq_4_S11_L004_R2_001.fastq.gz",
             "uuid": "15656b3d-1c2e-48e6-b0f1-bf4402890c3e",
@@ -1908,7 +1908,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4033087679
         },
-        {
+        "sequence_file/62b17e40-2c0b-4e37-8859-9290d1513ef9": {
             "sha1": "5f40ba2a373a970e05595ac7a6bf3a5230e01349",
             "name": "MantonBM7_HiSeq_3_S18_L006_I1_001.fastq.gz",
             "uuid": "62b17e40-2c0b-4e37-8859-9290d1513ef9",
@@ -1920,7 +1920,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 351321167
         },
-        {
+        "sequence_file/b8a56d3f-9910-44a0-a9c0-bb7d51705792": {
             "sha1": "8f1fd4eb1488270ded71bc57790a39361d1f67b1",
             "name": "MantonBM8_HiSeq_8_S31_L008_R2_001.fastq.gz",
             "uuid": "b8a56d3f-9910-44a0-a9c0-bb7d51705792",
@@ -1932,7 +1932,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2635109668
         },
-        {
+        "sequence_file/2cf69609-5b35-4cd7-8b38-d53378de7ee2": {
             "sha1": "03f09c1a911f7df582e7d92f329f4aa838e5cbb1",
             "name": "MantonBM7_HiSeq_3_S18_L005_I1_001.fastq.gz",
             "uuid": "2cf69609-5b35-4cd7-8b38-d53378de7ee2",
@@ -1944,7 +1944,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 306112106
         },
-        {
+        "sequence_file/db4f1861-38ea-4800-92c5-0c03f63f8b2f": {
             "sha1": "2e36af4f7a72dd2d400a382e45075b04b1c7d035",
             "name": "MantonBM5_HiSeq_7_S7_L002_R2_001.fastq.gz",
             "uuid": "db4f1861-38ea-4800-92c5-0c03f63f8b2f",
@@ -1956,7 +1956,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2844947977
         },
-        {
+        "sequence_file/fc6e45ac-5ba8-4a55-9901-3fa5ea480d28": {
             "sha1": "8bef3e0cdf160d67c0f4c67b68febc39078f1971",
             "name": "MantonBM5_HiSeq_4_S4_L002_R1_001.fastq.gz",
             "uuid": "fc6e45ac-5ba8-4a55-9901-3fa5ea480d28",
@@ -1968,7 +1968,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1293307246
         },
-        {
+        "sequence_file/c340fbe2-dc1c-4455-a29f-c698244982f8": {
             "sha1": "7a8f3dcd8b5d34a3be8b04fe9bdda3f6e10edf3e",
             "name": "MantonBM6_HiSeq_5_S12_L004_R2_001.fastq.gz",
             "uuid": "c340fbe2-dc1c-4455-a29f-c698244982f8",
@@ -1980,7 +1980,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 4046230002
         },
-        {
+        "sequence_file/4fa725fa-23c0-4b9b-9c0d-92b82aa75919": {
             "sha1": "a5f163093bf040c7eb7a9b64a6d84a692b13672c",
             "name": "MantonBM8_HiSeq_6_S29_L008_R1_001.fastq.gz",
             "uuid": "4fa725fa-23c0-4b9b-9c0d-92b82aa75919",
@@ -1992,7 +1992,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1013398951
         },
-        {
+        "sequence_file/d889a2da-2b28-4553-9045-fe9c958b4616": {
             "sha1": "b9001b15ca0e74714dd1c79202406126b4565214",
             "name": "MantonBM8_HiSeq_2_S25_L008_R2_001.fastq.gz",
             "uuid": "d889a2da-2b28-4553-9045-fe9c958b4616",
@@ -2004,7 +2004,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2905511422
         },
-        {
+        "sequence_file/383bb59e-9082-494a-91b2-804a72830475": {
             "sha1": "374c2f3b7c578a8be6e1123cd7304dae490410bc",
             "name": "MantonBM8_HiSeq_1_S24_L008_R2_001.fastq.gz",
             "uuid": "383bb59e-9082-494a-91b2-804a72830475",
@@ -2016,7 +2016,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3195572624
         },
-        {
+        "sequence_file/5952c0d9-09c9-4459-a606-515d8a497bd8": {
             "sha1": "038be38cd2acc5238a24e5f0e49b918e7d7a9c06",
             "name": "MantonBM7_HiSeq_1_S16_L006_R2_001.fastq.gz",
             "uuid": "5952c0d9-09c9-4459-a606-515d8a497bd8",
@@ -2028,7 +2028,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2741685346
         },
-        {
+        "sequence_file/b64bdbba-d2e8-4ec7-a17e-6ca9d872c77e": {
             "sha1": "7318f8890631cbebf6de0c99fc5420a69c4da475",
             "name": "MantonBM8_HiSeq_2_S25_L007_R1_001.fastq.gz",
             "uuid": "b64bdbba-d2e8-4ec7-a17e-6ca9d872c77e",
@@ -2040,7 +2040,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1029907246
         },
-        {
+        "sequence_file/d1ae69e7-f838-42d1-a207-e50f5b53a788": {
             "sha1": "afdb307e2f89123d8d081fbe9bae456e3a1213b2",
             "name": "MantonBM6_HiSeq_1_S9_L004_R1_001.fastq.gz",
             "uuid": "d1ae69e7-f838-42d1-a207-e50f5b53a788",
@@ -2052,7 +2052,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1380086262
         },
-        {
+        "sequence_file/7bf9a41d-d9e5-4321-b6a0-b77cc85fddc0": {
             "sha1": "18b04f10136f457dce4264be3be0492aebf39f10",
             "name": "MantonBM7_HiSeq_7_S22_L005_I1_001.fastq.gz",
             "uuid": "7bf9a41d-d9e5-4321-b6a0-b77cc85fddc0",
@@ -2064,7 +2064,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 254919046
         },
-        {
+        "sequence_file/ed89b525-725a-4e6d-aee9-3b36e78803a8": {
             "sha1": "8c06b4bd00537133942378dfcbcbda754561fd78",
             "name": "MantonBM5_HiSeq_2_S2_L002_R2_001.fastq.gz",
             "uuid": "ed89b525-725a-4e6d-aee9-3b36e78803a8",
@@ -2076,7 +2076,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3877148407
         },
-        {
+        "sequence_file/8d3d8579-4d9f-4442-9141-653287e9418b": {
             "sha1": "4feefcb361c7082bdda9a223edde8041ad883169",
             "name": "MantonBM7_HiSeq_1_S16_L005_R1_001.fastq.gz",
             "uuid": "8d3d8579-4d9f-4442-9141-653287e9418b",
@@ -2088,7 +2088,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 805892570
         },
-        {
+        "sequence_file/bcdae4a6-ae9b-4f2a-ad95-b4cfa3ad2a7c": {
             "sha1": "358fc667d079265c433fd6e0ba6ff5c956511f01",
             "name": "MantonBM7_HiSeq_8_S23_L005_R2_001.fastq.gz",
             "uuid": "bcdae4a6-ae9b-4f2a-ad95-b4cfa3ad2a7c",
@@ -2100,7 +2100,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2513243900
         },
-        {
+        "sequence_file/4eb20891-5ee7-49fe-aa32-52201434772c": {
             "sha1": "9751d113857c68f2a0cd471bfe288347191c6ccb",
             "name": "MantonBM7_HiSeq_7_S22_L006_R1_001.fastq.gz",
             "uuid": "4eb20891-5ee7-49fe-aa32-52201434772c",
@@ -2112,7 +2112,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 885299907
         },
-        {
+        "sequence_file/8ad4c436-01a2-4d07-8b09-33e86a1d759a": {
             "sha1": "1d758a82b3568fc0385ccd7de5457ddab1a1790f",
             "name": "MantonBM5_HiSeq_3_S3_L001_R2_001.fastq.gz",
             "uuid": "8ad4c436-01a2-4d07-8b09-33e86a1d759a",
@@ -2124,7 +2124,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 3906634461
         },
-        {
+        "sequence_file/5675b050-9c66-4c34-803f-3e6e0ea0af3f": {
             "sha1": "759cd0dd273035475e17aa1c1f6b9415992fbe2a",
             "name": "MantonBM8_HiSeq_2_S25_L008_R1_001.fastq.gz",
             "uuid": "5675b050-9c66-4c34-803f-3e6e0ea0af3f",
@@ -2136,7 +2136,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 970830668
         },
-        {
+        "sequence_file/09cce819-9467-4dd8-b91a-ef6b450c4b33": {
             "sha1": "665c5fe6df86e4017179be35919ecf1213b23764",
             "name": "MantonBM7_HiSeq_8_S23_L005_R1_001.fastq.gz",
             "uuid": "09cce819-9467-4dd8-b91a-ef6b450c4b33",
@@ -2148,7 +2148,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 863760829
         },
-        {
+        "sequence_file/ae61c169-016b-40dc-9e95-b7dc1fd0b346": {
             "sha1": "eadde9d09edc97ddab74f513de3841b086899181",
             "name": "MantonBM6_HiSeq_4_S11_L003_R1_001.fastq.gz",
             "uuid": "ae61c169-016b-40dc-9e95-b7dc1fd0b346",
@@ -2160,7 +2160,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1390515067
         },
-        {
+        "sequence_file/1f650fa2-e91a-4cde-8ff5-ad2738f0d3cc": {
             "sha1": "c67307cd65f0f9c677a05aa4acec32c2d62e1304",
             "name": "MantonBM8_HiSeq_4_S27_L008_R1_001.fastq.gz",
             "uuid": "1f650fa2-e91a-4cde-8ff5-ad2738f0d3cc",
@@ -2172,7 +2172,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1053151114
         },
-        {
+        "sequence_file/9b371ad5-94a8-4cbb-a792-45ac8bdff35d": {
             "sha1": "7ef009e510bb0c3b4b55386089b799f056cef0fa",
             "name": "MantonBM5_HiSeq_8_S8_L002_R1_001.fastq.gz",
             "uuid": "9b371ad5-94a8-4cbb-a792-45ac8bdff35d",
@@ -2184,7 +2184,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1178862002
         },
-        {
+        "sequence_file/becb6174-be03-40fa-85c2-4fa3b9308ef5": {
             "sha1": "0282c24be5c0fed3856ebd1eab3a00201eb6d9b9",
             "name": "MantonBM7_HiSeq_6_S21_L005_R2_001.fastq.gz",
             "uuid": "becb6174-be03-40fa-85c2-4fa3b9308ef5",
@@ -2196,7 +2196,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 2358285121
         },
-        {
+        "sequence_file/30e7db70-fec3-48f1-bf7b-71adf9e8d7f1": {
             "sha1": "2f3294a1b07d9b768a063efcbede8fa8a25f4b84",
             "name": "MantonBM7_HiSeq_6_S21_L005_R1_001.fastq.gz",
             "uuid": "30e7db70-fec3-48f1-bf7b-71adf9e8d7f1",
@@ -2208,7 +2208,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 805964176
         },
-        {
+        "sequence_file/87e595d8-7285-4067-a73f-e80944ffae3c": {
             "sha1": "5e1f5912b09a898e1cc788c45149fc0428114af6",
             "name": "MantonBM8_HiSeq_5_S28_L007_R1_001.fastq.gz",
             "uuid": "87e595d8-7285-4067-a73f-e80944ffae3c",
@@ -2220,7 +2220,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 1047009312
         },
-        {
+        "sequence_file/e44d2d64-df79-4a74-b88b-093102e4e799": {
             "sha1": "e5d801cd1008e6d685060d314a93f35339a65786",
             "name": "MantonBM7_HiSeq_6_S21_L006_R1_001.fastq.gz",
             "uuid": "e44d2d64-df79-4a74-b88b-093102e4e799",
@@ -2232,7 +2232,7 @@
             "content-type": "application/gzip; dcp-type=data",
             "size": 949973774
         }
-    ],
+    },
     "metadata": {
         "project/6504d48c-1610-43aa-8cf8-214a960e110c": {
             "content": {
