@@ -24,6 +24,10 @@ from typing import (
 )
 import zoneinfo
 
+from azul import (
+    require,
+)
+
 tz = zoneinfo.ZoneInfo('America/Los_Angeles')
 
 log = logging.getLogger('azul.github.schedule')
@@ -150,8 +154,11 @@ class IssueTemplate:
         title = self.properties['title'] + ' ' + str(title_date)
         flags = []
         repository = self.properties.get('_repository')
-        if repository is not None:
+        requirement_message = 'The defined front-matter keys must be explicitly set'
+        if repository:
             flags.append(f'--repo={repository}')
+        else:
+            require(repository is None, requirement_message, '_repository')
         command = [
             'gh', 'issue', 'list',
             *flags,
@@ -167,21 +174,38 @@ class IssueTemplate:
         if issues:
             log.info('At least one matching issue already exists: %r', issues)
         else:
-            assignees = self.properties.get('assignees')
-            if assignees is not None:
-                flags.append(f'--assignee={assignees}')
             command = [
                 'gh', 'issue', 'create',
                 *flags,
                 f'--title={title}',
-                f'--label={self.properties["labels"]}',
                 f'--body={self.body}'
             ]
+            edit_command, flags = ['gh', 'issue', 'edit', *flags], []
+
+            def accumulate_edit_command_flags(option, target):
+                flag = f'--add-{option}={target}'
+                if target:
+                    flags.append(flag)
+                else:
+                    require(target is None, requirement_message, f'{option}s')
+
+            accumulate_edit_command_flags('assignee', self.properties.get('assignees'))
+            accumulate_edit_command_flags('label', self.properties.get('labels'))
+
             if self.dry_run:
                 log.info('Would run %r', command)
+                for cmd in [edit_command + ['#ISSUE', f] for f in flags]:
+                    log.info('Followed by %r', cmd)
             else:
                 log.info('Running %r', command)
-                subprocess.run(command, check=True)
+                issue_number = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+                issue_number = issue_number.stdout.decode().strip()
+                print(issue_number)
+                issue_number = issue_number.rsplit('/', 1)[1]
+                for flag in flags:
+                    command = edit_command + [issue_number, flag]
+                    log.info('Running %r', command)
+                    subprocess.run(command, check=True, stderr=subprocess.PIPE, text=True)
 
 
 def main(args):
