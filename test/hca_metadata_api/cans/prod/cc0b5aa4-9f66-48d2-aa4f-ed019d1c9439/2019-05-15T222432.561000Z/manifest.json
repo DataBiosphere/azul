@@ -144,18 +144,6 @@
         "version": "2019-05-16T015324.490566Z"
     },
     {
-        "content-type": "application/gzip; dcp-type=data",
-        "crc32c": "56a9e200",
-        "indexed": false,
-        "name": "21784_6#51_2.fastq.gz",
-        "s3_etag": "86b0f2604a0aa1dbe3bd72d316f077f3",
-        "sha1": "d138b7a22c6fd4834f03564921a6436ebed5076e",
-        "sha256": "6a95e7f0792fe70dfcf174ee585c6900f2ed5fb401c5c8d0d15bef5e95271726",
-        "size": 7553715,
-        "uuid": "60f17b79-74d9-49b5-a6da-48580a67f11f",
-        "version": "2019-05-16T015324.739985Z"
-    },
-    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "847325b6",
         "indexed": false,
@@ -178,17 +166,5 @@
         "size": 29230,
         "uuid": "cd8e02d1-d0f9-4094-9a31-329931df60dc",
         "version": "2019-05-16T015325.251968Z"
-    },
-    {
-        "content-type": "application/pdf; dcp-type=data",
-        "crc32c": "3658ec51",
-        "indexed": false,
-        "name": "SmartSeq2_sequencing_protocol.pdf",
-        "s3_etag": "2742e1e78f6d4663bf41d3080396695c",
-        "sha1": "9ec6ee2b6e2093681c1fed694b3a8c78a2aa3438",
-        "sha256": "9c93a354a8636c041a31ba6f3fb00ef20352e1b853d8080d63a654221cb35673",
-        "size": 61134,
-        "uuid": "bf92ef4a-c422-44fb-bfc1-c2f86528b86b",
-        "version": "2019-05-16T015325.498431Z"
     }
 ]

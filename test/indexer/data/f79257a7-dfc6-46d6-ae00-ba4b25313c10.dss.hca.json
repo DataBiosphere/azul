@@ -230,18 +230,6 @@
         },
         {
             "content-type": "application/gzip; dcp-type=data",
-            "crc32c": "180453cc",
-            "indexed": false,
-            "name": "22030_5#300_1.fastq.gz",
-            "s3_etag": "e00937999e7f6e6df279c7501c846a04",
-            "sha1": "1ade3a1627214dba42db59b0f7cd138f25f096a4",
-            "sha256": "1125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582",
-            "size": 64718465,
-            "uuid": "12b6c6f0-8d25-4aae-b255-1974cc110cfe",
-            "version": "1018-09-14T12:33:43.720332Z"
-        },
-        {
-            "content-type": "application/gzip; dcp-type=data",
             "crc32c": "d2417d49",
             "indexed": false,
             "name": "22028_5#300_2.fastq.gz",
