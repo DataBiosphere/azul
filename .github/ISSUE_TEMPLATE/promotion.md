@@ -1,6 +1,6 @@
 ---
 name: Promotion pull request
-about: 'Issue template for promoting changes to stable deployments'
+about: Issue template for promoting changes to stable deployments
 title: Promotion
 labels: -,infra,no demo,operator,orange,task
 _start: 2024-02-27T09:00

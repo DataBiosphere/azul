@@ -1,6 +1,6 @@
 ---
 name: Annual review of the rule set for audited events
-about: 'Issue template for annual review of the rule set for audited events'
+about: Issue template for annual review of the rule set for audited events
 title: Review rule set for audited events
 labels: -,compliance,doc,no demo,orange,task
 assignees: nolunwa-ucsc,bvizzier-ucsc
