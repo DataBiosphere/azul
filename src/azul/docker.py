@@ -617,6 +617,13 @@ def resolve_docker_image_for_pull(alias: str
     log.info('Resolving image %r %r …', alias, ref)
     gist = get_docker_image_gist(ref)
     ref = TagImageRef.parse(config.docker_registry + str(ref))
-    digest = gist['mirror_digest' if ref.is_mirrored else 'digest']
+    # For multi-arch images, we need to use the digest of the mirrored image, if
+    # we're pulling from a mirror.  For single-arch images, the digest is the
+    # same between the upstream and mirror registries.
+    digest = gist[
+        'mirror_digest'
+        if 'parts' in gist and ref.is_mirrored else
+        'digest'
+    ]
     ref = ref.with_digest(digest)
     return ref, gist
