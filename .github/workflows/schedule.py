@@ -153,12 +153,18 @@ class IssueTemplate:
     def create_issue(self, title_date: date) -> None:
         title = self.properties['title'] + ' ' + str(title_date)
         flags = []
-        repository = self.properties.get('_repository')
-        requirement_message = 'The defined front-matter keys must be explicitly set'
-        if repository:
-            flags.append(f'--repo={repository}')
-        else:
-            require(repository is None, requirement_message, '_repository')
+
+        def accumulate_command_flags(option, value):
+            if option != 'repo':
+                option = f'add-{option}'
+            flag = f'--{option}={value}'
+            if value:
+                flags.append(flag)
+            else:
+                msg = 'The defined front-matter keys must be explicitly set'
+                require(value is None, msg, f'{flag}')
+
+        accumulate_command_flags('repo', self.properties.get('_repository'))
         command = [
             'gh', 'issue', 'list',
             *flags,
@@ -181,29 +187,26 @@ class IssueTemplate:
                 f'--body={self.body}'
             ]
             edit_command, flags = ['gh', 'issue', 'edit', *flags], []
+            accumulate_command_flags('assignee', self.properties.get('assignees'))
+            accumulate_command_flags('label', self.properties.get('labels'))
 
-            def accumulate_edit_command_flags(option, target):
-                flag = f'--add-{option}={target}'
-                if target:
-                    flags.append(flag)
+            def get_issue_number() -> str:
+                if self.dry_run:
+                    log.info('Would run %r', command)
+                    issue = '0123'
                 else:
-                    require(target is None, requirement_message, f'{option}s')
+                    log.info('Running %r', command)
+                    issue = subprocess.run(command, check=True, stdout=subprocess.PIPE).stdout
+                    issue = issue.decode().strip()
+                    print(issue)
+                    issue = issue.rsplit('/', 1)[1]
+                return issue
 
-            accumulate_edit_command_flags('assignee', self.properties.get('assignees'))
-            accumulate_edit_command_flags('label', self.properties.get('labels'))
-
-            if self.dry_run:
-                log.info('Would run %r', command)
-                for cmd in [edit_command + ['#ISSUE', f] for f in flags]:
-                    log.info('Followed by %r', cmd)
-            else:
-                log.info('Running %r', command)
-                issue_number = subprocess.run(command, check=True, stdout=subprocess.PIPE)
-                issue_number = issue_number.stdout.decode().strip()
-                print(issue_number)
-                issue_number = issue_number.rsplit('/', 1)[1]
-                for flag in flags:
-                    command = edit_command + [issue_number, flag]
+            issue_number = get_issue_number()
+            for command in [edit_command + [issue_number, flag] for flag in flags]:
+                if self.dry_run:
+                    log.info('Would run %r', command)
+                else:
                     log.info('Running %r', command)
                     subprocess.run(command, check=True, stderr=subprocess.PIPE, text=True)
 
