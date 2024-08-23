@@ -10,7 +10,7 @@ docker: check_docker
 	docker build \
 	       --platform linux/amd64 \
 	       --build-arg azul_docker_registry=$(azul_docker_registry) \
-	       --build-arg azul_docker_image=$$(python -m azul "config.docker_images['docker']['ref']") \
+	       --build-arg azul_docker_image=$$(AZUL_DEBUG=0 python -m azul 'docker.resolve_docker_image_for_pull("docker")[0]') \
 	       --tag $(image) .
 
 .PHONY:
