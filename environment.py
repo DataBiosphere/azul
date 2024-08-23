@@ -70,15 +70,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The first catalog listed is the default catalog.
         #
-        # A source represents a TDR dataset, TDR snapshot, or canned staging
-        # area to index. Each source is a string matching the following EBNF
-        # grammar:
+        # A source represents a TDR snapshot or canned staging area to index.
+        # Each source is a string matching the following EBNF grammar:
         #
         # source = TDR source | canned source ;
         #
         # TDR source = 'tdr:', Google Cloud project name,
-        #              ':', ( 'dataset' | 'snapshot' ),
-        #              '/', TDR dataset or snapshot name,
+        #              ':', TDR dataset or snapshot name,
         #              ':', [ prefix ],
         #              '/', partition prefix length ;
         #
@@ -116,8 +114,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # Examples:
         #
-        # tdr:broad-jade-dev-data:snapshot/hca_mvp:/1
-        # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1
+        # tdr:broad-jade-dev-data:hca_mvp:/1
         # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:2
         #
         # This variable tends to be large. If you get `Argument list too long`
@@ -265,7 +262,7 @@ def env() -> Mapping[str, Optional[str]]:
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
-        'azul_terraform_version': '1.9.3',
+        'azul_terraform_version': '1.9.4',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -286,17 +283,17 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.4-28',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.1.6-30',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.22-23',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.23-24',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-8',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-9',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
@@ -307,7 +304,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:17.2.1-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:17.2.2-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {

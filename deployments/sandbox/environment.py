@@ -40,8 +40,10 @@ def mksrc(google_project,
         prefix = common_prefix(subgraphs)
     source = None if flags & pop else ':'.join([
         'tdr',
+        'bigquery',
+        'gcp',
         google_project,
-        'snapshot/' + snapshot,
+        snapshot,
         prefix + '/0'
     ])
     return project, source
