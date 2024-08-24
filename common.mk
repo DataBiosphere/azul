@@ -28,9 +28,11 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; \
-		             sys.exit(0 if '.'.join(map(str, sys.version_info[:3])) == '${azul_python_version}' else 1)"; then \
-		echo -e "\nLooks like Python ${azul_python_version} is not installed or active in the current virtualenv\n"; \
+	@if ! python -c "import sys, os; \
+		             p = lambda v: tuple(map(int, v.split('.'))); \
+		             v = os.environ['azul_python_version']; \
+		             sys.exit(0 if sys.version_info[:3] == p(v) else 1)"; then \
+		echo -e "\nLooks like Python ${azul_python_version} is not installed\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; \
