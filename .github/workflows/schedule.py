@@ -29,12 +29,12 @@ tz = zoneinfo.ZoneInfo('America/Los_Angeles')
 log = logging.getLogger('azul.github.schedule')
 
 
-class FrontMatter(TypedDict):
+class FrontMatter(TypedDict, total=False):
     name: str
     about: str
     title: str
-    labels: str
-    assignees: str
+    labels: list[str]
+    assignees: list[str]
     _repository: str
     _start: str
     _period: str
@@ -66,7 +66,10 @@ class IssueTemplate:
                         break
                     else:
                         k, _, v = line.partition(':')
-                        front_matter[k.strip()] = v.strip()
+                        k, v = k.strip(), v.strip()
+                        if k in ('assignees', 'labels'):
+                            v = v.split(',')
+                        front_matter[k] = v
             else:
                 f.seek(0)
             self.body = f.read()
@@ -167,16 +170,18 @@ class IssueTemplate:
         if issues:
             log.info('At least one matching issue already exists: %r', issues)
         else:
-            assignees = self.properties.get('assignees')
-            if assignees is not None:
-                flags.append(f'--assignee={assignees}')
             command = [
                 'gh', 'issue', 'create',
                 *flags,
                 f'--title={title}',
-                f'--label={self.properties["labels"]}',
                 f'--body={self.body}'
             ]
+            assignees = self.properties.get('assignees', [])
+            if assignees:
+                command.append('--assignee=' + ','.join(assignees))
+            labels = self.properties.get('labels', [])
+            if labels:
+                command.append('--label=' + ','.join(labels))
             if self.dry_run:
                 log.info('Would run %r', command)
             else:
