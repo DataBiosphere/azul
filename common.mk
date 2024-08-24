@@ -39,14 +39,14 @@ check_python: check_venv
 		false; \
 	fi
 	@if ! python -c "import sys, wheel as w; \
-		             from pkg_resources import parse_version as p; \
+		             p = lambda v: tuple(map(int, v.split('.'))); \
 		             sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
 		echo -e "\nLooks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; \
                      from chalice import chalice_version as v; \
-		             from pkg_resources import parse_version as p; \
+		             p = lambda v: tuple(map(int, v.split('.'))); \
 		             sys.exit(0 if p(v) == p('1.30.0') else 1)"; then \
 		echo -e "\nLooks like chalice is out of date. Please run 'make requirements'\n"; \
 		false; \
