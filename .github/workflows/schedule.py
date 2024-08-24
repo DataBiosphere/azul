@@ -22,6 +22,7 @@ import sys
 from typing import (
     TypedDict,
 )
+import urllib.parse
 import zoneinfo
 
 tz = zoneinfo.ZoneInfo('America/Los_Angeles')
@@ -184,9 +185,41 @@ class IssueTemplate:
                 command.append('--label=' + ','.join(labels))
             if self.dry_run:
                 log.info('Would run %r', command)
+                url = f'https://github.com/{repository}/issues/1234'
             else:
-                log.info('Running %r', command)
-                subprocess.run(command, check=True)
+                log.info('Running %r …', command)
+                process = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+                url = process.stdout.decode().strip().splitlines()[-1]
+            # If the current token lacks the necessary permissions, the GitHub
+            # CLI silently fails to apply the requested labels or assignees. We
+            # therefore need to verify those.
+            log.info('… created %r, verifying labels and assignees …', url)
+            path = urllib.parse.urlparse(url).path.removeprefix('/')
+            actual_repository, dir, issue_number = path.rsplit('/', maxsplit=2)
+            assert dir == 'issues'
+            if repository is not None:
+                assert repository == actual_repository, (repository, actual_repository)
+            command = [
+                'gh', 'issue', 'view',
+                *flags,
+                '--json=labels,assignees',
+                issue_number
+            ]
+            if self.dry_run:
+                log.info('Would run %r', command)
+                issue = {
+                    'assignees': [{'login': assignee} for assignee in assignees],
+                    'labels': [{'name': label} for label in labels]
+                }
+            else:
+                log.info('Running %r …', command)
+                process = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+                issue = json.loads(process.stdout)
+            actual_assignees = set(map(itemgetter('login'), issue['assignees']))
+            assert set(assignees) == actual_assignees, (assignees, actual_assignees)
+            actual_labels = set(map(itemgetter('name'), issue['labels']))
+            assert set(labels) <= actual_labels, (labels, actual_labels)
+            log.info('Successfully created and verfied issue #%s', issue_number)
 
 
 def main(args):
