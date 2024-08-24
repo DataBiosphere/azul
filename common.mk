@@ -78,10 +78,13 @@ check_docker:
 .PHONY: check_aws
 check_aws: check_python
 	@if ! python -c "import os, sys, boto3 as b; \
-		sys.exit(0 if os.environ.get('TRAVIS') == 'true' or \
-		         b.client('sts').get_caller_identity()['Account'] == os.environ['AZUL_AWS_ACCOUNT_ID'] else 1)"; then \
-		echo -e "\nLooks like there is a mismatch between AZUL_AWS_ACCOUNT_ID and the currently active AWS credentials. \
-		         \nCheck the output from 'aws sts get-caller-identity' against the value of that environment variable.\n"; \
+		             expected = os.environ['AZUL_AWS_ACCOUNT_ID']; \
+		             actual = b.client('sts').get_caller_identity()['Account']; \
+		             sys.exit(0 if actual == expected else 1)"; then \
+		echo Looks like there is a mismatch between AZUL_AWS_ACCOUNT_ID \
+		     and the currently active AWS credentials. ; \
+		echo Check the output from \'aws sts get-caller-identity\' against the \
+             value of that environment variable. ; \
 		false; \
 	fi
 
