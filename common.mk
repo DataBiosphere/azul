@@ -28,17 +28,19 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; sys.exit(0 if '.'.join(map(str, sys.version_info[:3])) == '${azul_python_version}' else 1)"; then \
+	@if ! python -c "import sys; \
+		             sys.exit(0 if '.'.join(map(str, sys.version_info[:3])) == '${azul_python_version}' else 1)"; then \
 		echo -e "\nLooks like Python ${azul_python_version} is not installed or active in the current virtualenv\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
+	@if ! python -c "import sys; \
+		             exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
 		echo -e "\nLooks like some requirements are missing. Please run 'make requirements'\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys, wheel as w; \
-		           from pkg_resources import parse_version as p; \
-		           sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
+		             from pkg_resources import parse_version as p; \
+		             sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
 		echo -e "\nLooks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.\n"; \
 		false; \
 	fi
