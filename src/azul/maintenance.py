@@ -58,7 +58,7 @@ class MaintenanceImpact:
     affected_catalogs: list[CatalogName]
 
     @classmethod
-    def from_json(cls, impact: JSON):
+    def from_json(cls, impact: JSON) -> Self:
         return cls(kind=MaintenanceImpactKind[impact['kind']],
                    affected_catalogs=impact['affected_catalogs'])
 
@@ -137,7 +137,7 @@ class MaintenanceSchedule:
     events: list[MaintenanceEvent]
 
     @classmethod
-    def from_json(cls, schedule: JSON):
+    def from_json(cls, schedule: JSON) -> Self:
         return cls(events=list(map(MaintenanceEvent.from_json, schedule['events'])))
 
     def to_json(self) -> JSON:
@@ -168,8 +168,7 @@ class MaintenanceSchedule:
         schedule. The modifications will be reflected in ``self.events`` but the
         caller is responsible for ensuring they don't invalidate this schedule.
         """
-        events = enumerate(self.events)
-        for i, e in events:
+        for i, e in enumerate(self.events):
             if e.actual_start is None:
                 return self.events[i:]
         return []
@@ -209,7 +208,7 @@ class MaintenanceSchedule:
             self.events = events
             raise
 
-    def adjust_event(self, additional_duration: timedelta):
+    def adjust_event(self, additional_duration: timedelta) -> MaintenanceEvent:
         event = self.active_event()
         reject(event is None, 'No active event')
         event.planned_duration += additional_duration
@@ -283,13 +282,13 @@ class MaintenanceService:
 
     def put_schedule(self, schedule: MaintenanceSchedule):
         schedule = schedule.to_json()
-        return self.client.put_object(Bucket=self.bucket,
-                                      Key=self.object_key,
-                                      Body=json.dumps({
-                                          "maintenance": {
-                                              "schedule": schedule
-                                          }
-                                      }).encode())
+        self.client.put_object(Bucket=self.bucket,
+                               Key=self.object_key,
+                               Body=json.dumps({
+                                   "maintenance": {
+                                       "schedule": schedule
+                                   }
+                               }).encode())
 
     def provision_event(self,
                         planned_start: str,
@@ -299,7 +298,7 @@ class MaintenanceService:
                         degraded: list[str] | None = None,
                         unavailable: list[str] | None = None) -> MaintenanceEvent:
         """
-        Uses the given inmput parametes to provision a new MaintenanceEvent.
+        Uses the given input parameters to provision a new MaintenanceEvent.
         This new MaintenanceEvent object can then be added as an event to an
         existing schedule. It is primarily used by `add_event` to create and add
         events to the maintenance schedule.

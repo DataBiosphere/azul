@@ -74,39 +74,39 @@ def parse_duration(duration: str) -> timedelta:
 def main(args: list[str]):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=AzulArgumentHelpFormatter)
-    subparsers = parser.add_subparsers(dest="command")
-    list_parser = subparsers.add_parser("list", help="List events in JSON form")
-    list_parser.add_argument("--all", action="store_true",
-                             help="Include completed events")
-    add_parser = subparsers.add_parser("add", help="Schedule an event")
-    add_parser.add_argument("--start", required=True,
-                            help="Event start time (ISO format)")
-    add_parser.add_argument("--duration", required=True,
-                            help="Event duration (e.g., '1h30m', '2d')")
-    add_parser.add_argument("--description", required=True,
-                            help="Event description")
-    add_parser.add_argument("--partial-responses", nargs="+",
-                            help="Catalog names for partial responses")
-    add_parser.add_argument("--degraded-performance", nargs="+",
-                            help="Catalog names for degraded performance")
-    add_parser.add_argument("--service-unavailable", nargs="+",
-                            help="Catalog names for service unavailability")
-    cancel_parser = subparsers.add_parser("cancel",
-                                          help="Cancel a pending event")
-    cancel_parser.add_argument("--index", type=int, required=True,
-                               help="Index of the event to cancel")
-    subparsers.add_parser("start", help="Activate a pending event")
-    subparsers.add_parser("end", help="Complete the active event")
-    adjust_parser = subparsers.add_parser("adjust",
-                                          help="Modify the active event")
-    adjust_parser.add_argument("--duration", required=True,
-                               help="New event duration (e.g., '1h30m', '2d')")
+    subparsers = parser.add_subparsers(dest='command')
+    list_parser = subparsers.add_parser('list', help='List events in JSON form')
+    list_parser.add_argument('--all', action='store_true',
+                             help='Include completed events')
+    add_parser = subparsers.add_parser('add', help='Schedule an event')
+    add_parser.add_argument('--start', required=True,
+                            help='Event start time (ISO format)')
+    add_parser.add_argument('--duration', required=True,
+                            help='Event duration (e.g., "1h30m", "2d")')
+    add_parser.add_argument('--description', required=True,
+                            help='Event description')
+    add_parser.add_argument('--partial-responses', nargs='+',
+                            help='Catalog names for partial responses')
+    add_parser.add_argument('--degraded-performance', nargs='+',
+                            help='Catalog names for degraded performance')
+    add_parser.add_argument('--service-unavailable', nargs='+',
+                            help='Catalog names for service unavailability')
+    cancel_parser = subparsers.add_parser('cancel',
+                                          help='Cancel a pending event')
+    cancel_parser.add_argument('--index', type=int, required=True,
+                               help='Index of the event to cancel')
+    subparsers.add_parser('start', help='Activate a pending event')
+    subparsers.add_parser('end', help='Complete the active event')
+    adjust_parser = subparsers.add_parser('adjust',
+                                          help='Modify the active event')
+    adjust_parser.add_argument('--duration', required=True,
+                               help='New event duration (e.g., "1h30m", "2d")')
 
     args = parser.parse_args(args)
 
     service = MaintenanceService()
 
-    if args.command == "list":
+    if args.command == 'list':
         events = service.get_schedule
         if args.all:
             events = events.to_json()
@@ -114,9 +114,9 @@ def main(args: list[str]):
             active = events.active_event()
             active = {} if active is None else {'active': active.to_json()}
             pending = events.pending_events()
-            pending = {'pending': list(pe.to_json() for pe in pending)}
+            pending = {'pending': [pe.to_json() for pe in pending]}
             events = active | pending
-    elif args.command == "add":
+    elif args.command == 'add':
         duration = int(parse_duration(args.duration).total_seconds())
         events = service.provision_event(planned_start=args.start,
                                          planned_duration=duration,
@@ -125,18 +125,18 @@ def main(args: list[str]):
                                          degraded=args.degraded_performance,
                                          unavailable=args.service_unavailable)
         events = service.add_event(events)
-    elif args.command == "cancel":
+    elif args.command == 'cancel':
         events = service.cancel_event(args.index)
-    elif args.command == "start":
+    elif args.command == 'start':
         events = service.start_event()
-    elif args.command == "end":
+    elif args.command == 'end':
         events = service.end_event()
-    elif args.command == "adjust":
+    elif args.command == 'adjust':
         events = service.adjust_event(parse_duration(args.duration))
     else:
-        assert False, 'Invalid command'
+        raise argparse.ArgumentError(subparsers, 'Invalid command')
     print(json.dumps(events, indent=4))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.argv[1:])
