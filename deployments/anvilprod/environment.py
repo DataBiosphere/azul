@@ -22,7 +22,11 @@ ma = 1  # managed access
 pop = 2  # remove snapshot
 
 
-def mksrc(google_project, snapshot, subgraphs, flags: int = 0) -> tuple[str, str]:
+def mksrc(google_project,
+          snapshot,
+          subgraphs,
+          flags: int = 0
+          ) -> tuple[str, str | None]:
     project = '_'.join(snapshot.split('_')[1:-3])
     assert flags <= ma | pop
     source = None if flags & pop else ':'.join([

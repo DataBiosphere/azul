@@ -33,7 +33,7 @@ def mksrc(google_project,
           flags: int = 0,
           /,
           prefix: Optional[str] = None
-          ) -> tuple[str, str]:
+          ) -> tuple[str, str | None]:
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= ma | pop
     if prefix is None:
