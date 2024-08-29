@@ -25,7 +25,6 @@ emit({
     "manage_iam_role": False,
     "iam_role_arn": "${aws_iam_role.%s.arn}" % app_name,
     "environment_variables": config.lambda_env,
-    "minimum_compression_size": config.minimum_compression_size,
     "lambda_timeout": config.api_gateway_lambda_timeout,
     "lambda_memory_size": 128,
     **chalice.vpc_lambda_config(app_name),
