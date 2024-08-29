@@ -58,7 +58,10 @@ class TerraValidator:
         result = [
             catalog.name
             for catalog in config.catalogs.values()
-            if config.is_tdr_enabled(catalog.name)
+            if (
+                config.is_tdr_enabled(catalog.name)
+                and catalog.name not in config.integration_test_catalogs
+            )
         ]
         assert result, config.catalogs
         return result
@@ -93,9 +96,15 @@ class TerraValidator:
         plugin = self.repository_plugin(catalog)
         ref = plugin.resolve_source(str(source_spec))
         log.info('TDR client is authorized for API access to %s.', source_spec)
-        subgraph_count = sum(plugin.list_partitions(ref).values())
-        require(subgraph_count > 0,
-                'Source spec is empty (bad prefix?)', source_spec)
+        ref = plugin.partition_source(catalog, ref)
+        prefix = ref.spec.prefix
+        if config.deployment.is_main:
+            require(prefix.common == '', source_spec)
+            self.tdr.check_bigquery_access(source_spec)
+        else:
+            subgraph_count = len(plugin.list_bundles(ref, prefix.common))
+            require(subgraph_count > 0, 'Common prefix is too long', ref.spec)
+            require(subgraph_count <= 512, 'Common prefix is too short', ref.spec)
 
     def verify_source_access(self) -> None:
         public_snapshots = self.public_tdr.snapshot_ids()

@@ -43,6 +43,7 @@ from azul.http import (
     HasCachedHttpClient,
 )
 from azul.indexer import (
+    SOURCE_SPEC,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -161,6 +162,10 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                                                             Path(tmpdir),
                                                             ref)
             return factory.load_staging_area(path)
+
+    def _count_subgraphs(self, source: SOURCE_SPEC) -> int:
+        staging_area = self.staging_area(source.spec.name)
+        return len(staging_area.links)
 
     def list_bundles(self,
                      source: CannedSourceRef,

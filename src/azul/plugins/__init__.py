@@ -38,6 +38,7 @@ from azul.indexer import (
     BUNDLE,
     BUNDLE_FQID,
     Bundle,
+    Prefix,
     SOURCE_REF,
     SOURCE_SPEC,
     SourceJSON,
@@ -510,7 +511,21 @@ class RepositoryPlugin(Plugin[BUNDLE],
         raise NotImplementedError
 
     def _assert_source(self, source: SOURCE_REF):
-        assert source.spec in self.sources, (self.sources, source)
+        """
+        Assert that the given source is present in the plugin configuration.
+        """
+        assert source.spec.prefix is not None, source
+        for configured_spec in self.sources:
+            if configured_spec == source.spec:
+                break
+            # Most configured sources lack an explicit prefix
+            elif configured_spec.eq_ignoring_prefix(source.spec):
+                assert configured_spec.prefix is None, (configured_spec, source)
+                break
+            else:
+                continue
+        else:
+            assert False, (self.sources, source)
 
     @abstractmethod
     def list_sources(self,
@@ -596,6 +611,35 @@ class RepositoryPlugin(Plugin[BUNDLE],
         return self._bundle_fqid_cls.from_json(fqid)
 
     @abstractmethod
+    def _count_subgraphs(self, source: SOURCE_SPEC) -> int:
+        """
+        The total number of subgraphs in the given source, ignoring its prefix.
+        """
+        raise NotImplementedError
+
+    def partition_source(self,
+                         catalog: CatalogName,
+                         source: SOURCE_REF
+                         ) -> SOURCE_REF:
+        """
+        If the source already has a prefix, return the source. Otherwise, return
+        an updated copy of the source with a heuristically computed prefix that
+        should be appropriate for indexing in the given catalog.
+        """
+        if source.spec.prefix is None:
+            count = self._count_subgraphs(source.spec)
+            is_main = config.deployment.is_main
+            is_it = catalog in config.integration_test_catalogs
+            # We use the "lesser" heuristic during IT to avoid indexing an
+            # excessive number of bundles
+            if is_main and not is_it:
+                prefix = Prefix.for_main_deployment(count)
+            else:
+                prefix = Prefix.for_lesser_deployment(count)
+            source = attr.evolve(source, spec=attr.evolve(source.spec, prefix=prefix))
+        return source
+
+    @abstractmethod
     def list_bundles(self,
                      source: SOURCE_REF,
                      prefix: str
@@ -612,22 +656,6 @@ class RepositoryPlugin(Plugin[BUNDLE],
         """
 
         raise NotImplementedError
-
-    def list_partitions(self, source: SOURCE_REF) -> Mapping[str, int] | None:
-        """
-        Return the number of bundles in each non-empty partition of the given
-        source, or return None if that information cannot be retrieved
-        inexpensively. Each key in the returned mapping is the full prefix of a
-        partition, including the common prefix if one is configured.
-
-        Subclasses may optionally implement this method to facilitate
-        integration test coverage of the partition sizes of their sources.
-
-        :param source: The source to be listed. Note that the given source may
-                       not necessarily be a member of the :py:meth:`sources`
-                       configured for this plugin.
-        """
-        return None
 
     @abstractmethod
     def fetch_bundle(self, bundle_fqid: BUNDLE_FQID) -> BUNDLE:

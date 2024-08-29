@@ -118,6 +118,9 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
     def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
 
+    def _count_subgraphs(self, source: SimpleSourceSpec) -> NoReturn:
+        assert False, 'DSS is EOL'
+
     def list_sources(self,
                      authentication: Authentication | None
                      ) -> list[DSSSourceRef]:

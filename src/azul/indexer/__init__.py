@@ -140,6 +140,71 @@ class Prefix:
         validate_uuid_prefix(entry)
         return cls(common=entry, partition=partition)
 
+    @classmethod
+    def for_main_deployment(cls, num_subgraphs: int) -> Self:
+        """
+        A prefix that is expected to rarely exceed 8192 subgraphs per partition
+
+        >>> str(Prefix.for_main_deployment(0))
+        Traceback (most recent call last):
+        ...
+        ValueError: math domain error
+
+        >>> str(Prefix.for_main_deployment(1))
+        '/0'
+
+        >>> cases = [-1, 0, 1, 2]
+
+        >>> n = 8192
+        >>> [str(Prefix.for_main_deployment(n + i)) for i in cases]
+        ['/0', '/0', '/1', '/1']
+
+        Sources with this many bundles are very rare, so we have a generous
+        margin of error surrounding this cutoff point
+
+        >>> n = 8192 * 16
+        >>> [str(Prefix.for_main_deployment(n + i)) for i in cases]
+        ['/1', '/1', '/2', '/2']
+        """
+        partition = cls._prefix_length(num_subgraphs, 8192)
+        return cls(common='', partition=partition)
+
+    @classmethod
+    def for_lesser_deployment(cls, num_subgraphs: int) -> Self:
+        """
+        A prefix that yields an average of approximately 24 subgraphs per
+        source, using an experimentally derived heuristic formula designed to
+        minimize manual adjustment of the computed common prefixes. The
+        partition prefix length is always 1, even though some partitions may be
+        empty, to provide test coverage for handling multiple partitions.
+
+        >>> str(Prefix.for_lesser_deployment(0))
+        Traceback (most recent call last):
+        ...
+        ValueError: math domain error
+
+        >>> str(Prefix.for_lesser_deployment(1))
+        '/1'
+
+        >>> cases = [-1, 0, 1, 2]
+
+        >>> n = 64
+        >>> [str(Prefix.for_lesser_deployment(n + i)) for i in cases]
+        ['/1', '/1', '0/1', '1/1']
+
+        >>> n = 64 * 16
+        >>> [str(Prefix.for_lesser_deployment(n + i)) for i in cases]
+        ['e/1', 'f/1', '00/1', '10/1']
+        """
+        digits = f'{num_subgraphs - 1:x}'[::-1]
+        length = cls._prefix_length(num_subgraphs, 64)
+        assert length < len(digits), num_subgraphs
+        return cls(common=digits[:length], partition=1)
+
+    @classmethod
+    def _prefix_length(cls, n, m) -> int:
+        return max(0, math.ceil(math.log(n / m, len(cls.digits))))
+
     def partition_prefixes(self) -> Iterator[str]:
         """
         >>> list(Prefix.parse('/0').partition_prefixes())
@@ -204,7 +269,7 @@ class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
     have simple unstructured names may want to use :class:`SimpleSourceSpec`.
     """
 
-    prefix: Prefix
+    prefix: Prefix | None
 
     @classmethod
     @abstractmethod
@@ -212,11 +277,15 @@ class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    def _parse(cls, spec: str) -> tuple[str, Prefix]:
+    def _parse(cls, spec: str) -> tuple[str, Prefix | None]:
         rest, sep, prefix = spec.rpartition(':')
         reject(sep == '', 'Invalid source specification', spec)
-        prefix = Prefix.parse(prefix)
+        prefix = Prefix.parse(prefix) if prefix else None
         return rest, prefix
+
+    @property
+    def _prefix_str(self) -> str:
+        return '' if self.prefix is None else str(self.prefix)
 
     @abstractmethod
     def __str__(self) -> str:
@@ -284,7 +353,7 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         >>> s == str(SimpleSourceSpec.parse(s))
         True
         """
-        return f'{self.name}:{self.prefix}'
+        return f'{self.name}:{self._prefix_str}'
 
 
 class SourceJSON(TypedDict):

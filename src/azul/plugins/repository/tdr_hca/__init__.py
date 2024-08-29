@@ -16,7 +16,6 @@ from typing import (
     Any,
     ClassVar,
     Iterable,
-    Mapping,
     cast,
 )
 
@@ -276,22 +275,12 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
 
 class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
 
-    def list_partitions(self,
-                        source: TDRSourceRef
-                        ) -> Mapping[str, int]:
-        prefix = source.spec.prefix
+    def _count_subgraphs(self, source: TDRSourceSpec) -> int:
         rows = self._run_sql(f'''
-            SELECT prefix, COUNT(*) AS subgraph_count
-            FROM (
-                SELECT SUBSTR(links_id, 1, {len(prefix)}) AS prefix
-                FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            )
-            WHERE STARTS_WITH(prefix, {prefix.common!r})
-            GROUP BY prefix
+            SELECT COUNT(*) AS count
+            FROM {backtick(self._full_table_name(source, 'links'))}
         ''')
-        partitions = {row['prefix']: row['subgraph_count'] for row in rows}
-        assert all(v > 0 for v in partitions.values())
-        return partitions
+        return one(rows)['count']
 
     def _list_bundles(self,
                       source: TDRSourceRef,

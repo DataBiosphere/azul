@@ -9,21 +9,6 @@ from typing import (
 
 is_sandbox = True
 
-
-def common_prefix(n: int) -> str:
-    """
-    For a given number of subgraphs, return a common prefix that yields around
-    16 subgraphs.
-
-    >>> [common_prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
-    ['', '', '', '', '1', 'f', '01', '11']
-    """
-    hex_digits = '0123456789abcdef'
-    m = len(hex_digits)
-    # Double threshold to lower probability that no subgraphs match the prefix
-    return hex_digits[n % m] + common_prefix(n // m) if n > 2 * m else ''
-
-
 ma = 1  # managed access
 pop = 2  # remove snapshot
 
@@ -31,22 +16,19 @@ pop = 2  # remove snapshot
 def mksrc(source_type: Literal['bigquery', 'parquet'],
           google_project,
           snapshot,
-          subgraphs,
           flags: int = 0,
           /,
-          prefix: Optional[str] = None
+          prefix: str = ''
           ) -> tuple[str, str | None]:
     project = '_'.join(snapshot.split('_')[1:-3])
     assert flags <= ma | pop
-    if prefix is None:
-        prefix = common_prefix(subgraphs)
     source = None if flags & pop else ':'.join([
         'tdr',
         source_type,
         'gcp',
         google_project,
         snapshot,
-        prefix + '/0'
+        prefix
     ])
     return project, source
 
@@ -73,9 +55,9 @@ def mkdict(previous_catalog: dict[str, str],
 
 
 anvil_sources = mkdict({}, 3, mkdelta([
-    mksrc('bigquery', 'datarepo-dev-e53e74aa', 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 6804),
-    mksrc('bigquery', 'datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 28),
-    mksrc('bigquery', 'datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25)
+    mksrc('bigquery', 'datarepo-dev-e53e74aa', 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'),
+    mksrc('bigquery', 'datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520'),
+    mksrc('bigquery', 'datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509')
 ]))
 
 

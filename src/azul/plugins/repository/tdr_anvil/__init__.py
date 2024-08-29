@@ -183,6 +183,17 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
     datarepo_row_uuid_version = 4
     bundle_uuid_version = 10
 
+    def _count_subgraphs(self, source: TDRSourceSpec) -> int:
+        rows = self._run_sql(f'''
+            SELECT COUNT(*) AS count
+            FROM {backtick(self._full_table_name(source, BundleEntityType.primary.value))}
+            UNION ALL
+            SELECT COUNT(*) AS count
+            FROM {backtick(self._full_table_name(source, BundleEntityType.supplementary.value))}
+            WHERE is_supplementary
+        ''')
+        return sum(row['count'] for row in rows)
+
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
@@ -235,30 +246,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 entity_type=BundleEntityType(row['entity_type'])
             ))
         return bundles
-
-    def list_partitions(self,
-                        source: TDRSourceRef
-                        ) -> Mapping[str, int]:
-        prefix = source.spec.prefix
-        primary = BundleEntityType.primary.value
-        supplementary = BundleEntityType.supplementary.value
-        rows = self._run_sql(f'''
-            SELECT prefix, COUNT(*) AS subgraph_count
-            FROM (
-                SELECT SUBSTR(datarepo_row_id, 1, {len(prefix)}) AS prefix
-                FROM (
-                    SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, primary))}
-                    UNION ALL
-                    SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, supplementary))}
-                    WHERE is_supplementary
-                )
-            )
-            WHERE STARTS_WITH(prefix, {prefix.common!r})
-            GROUP BY prefix
-        ''')
-        partitions = {row['prefix']: row['subgraph_count'] for row in rows}
-        assert all(v > 0 for v in partitions.values())
-        return partitions
 
     def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
         if 'entity_type' not in fqid:

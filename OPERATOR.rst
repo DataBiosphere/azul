@@ -440,9 +440,14 @@ Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When adding a new snapshot to ``dev``, ``anvildev``, the operator should also
-add the snapshot to ``sandbox`` or ``anvilbox``, respectively. To determine the
-subgraph counts and any explicit prefixes that are needed, use the
-``update_subgraph_counts.py`` script.
+add the snapshot to ``sandbox`` or ``anvilbox``, respectively.
+
+The ``post_deploy_tdr.py`` script will fail if the computed common prefix
+contains an unacceptable number of subgraphs. If the script reports that the
+common prefix is too long, truncate it by 1 character. If it's too short, append
+1 arbitrary hexadecimal character. Pass the updated prefix as a keyword argument
+to the ``mksrc`` function for the affected source(s), including a partition
+prefix length of 1. Then refresh the environment and re-attempt the deployment.
 
 Adding snapshots to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

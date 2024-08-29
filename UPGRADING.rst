@@ -19,6 +19,17 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#6531 Eliminate RepositoryPlugin.list_partitions
+================================================
+
+The subgraph counts of indexed sources are no longer tracked in the source tree.
+For each of your personal deployments, in ``environment.py``: update the
+``mksrc`` function, remove the ``subgraphs`` parameter from all of its call
+sites, update the ``prefix`` parameter where is passed, and remove any functions
+used to construct prefixes, e.g. ``common_prefix()``. Be careful to preserve any
+flags such as ``ma`` or ``pop``. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
 
 #6570 Upgrade dependencies 2024-09-16
 =====================================
