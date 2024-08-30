@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6355 Explicitly configure source type in environment files
+===========================================================
+
+The ``mksrc`` function in ``environment.py`` has been updated. For each of your
+personal deployments, update the function and insert the string ``'biqguery'``
+as its first argument at all call sites. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
+
 #6446 Base image of Azul image is not pinned to digest
 ======================================================
 
