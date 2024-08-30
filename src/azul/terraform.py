@@ -793,6 +793,20 @@ class Chalice:
         del deployment['lifecycle']
         deployment['triggers'] = {'redeployment': deployment.pop('stage_description')}
 
+        # Using Terraform to specify the REST API minimum compression size
+        # proved to be problematic as it would first make an UpdateRestApi call
+        # to set the property, followed by a PutRestApi call with mode=overwrite
+        # which would reset the property back to its default value (disabled).
+        # Setting this property using AWS API Gateway extensions to the OpenAPI
+        # specification works around this issue.
+        #
+        rest_api = resources['aws_api_gateway_rest_api'][app_name]
+        assert 'minimum_compression_size' not in rest_api, rest_api
+        openapi_spec = json.loads(locals[app_name])
+        key = 'x-amazon-apigateway-minimum-compression-size'
+        openapi_spec[key] = config.minimum_compression_size
+        locals[app_name] = json.dumps(openapi_spec)
+
         return {
             'resource': resources,
             'data': data,
