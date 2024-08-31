@@ -607,9 +607,8 @@ class RepositoryPlugin(Plugin[BUNDLE],
         :param source: a reference to the repository source that contains the
                        bundles to list
 
-        :param prefix: appended to the common prefix of the provided source's
-                       spec to produce a string that should be no more than
-                       eight lower-case hexadecimal characters
+        :param prefix: a string that should be no more than eight lower-case
+                       hexadecimal characters
         """
 
         raise NotImplementedError

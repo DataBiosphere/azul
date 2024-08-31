@@ -65,9 +65,6 @@ from azul.types import (
     JSONs,
     is_optional,
 )
-from azul.uuids import (
-    validate_uuid_prefix,
-)
 
 log = logging.getLogger(__name__)
 
@@ -300,12 +297,10 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                       source: TDRSourceRef,
                       prefix: str
                       ) -> list[TDRBundleFQID]:
-        source_prefix = source.spec.prefix.common
-        validate_uuid_prefix(source_prefix + prefix)
         current_bundles = self._query_unique_sorted(f'''
             SELECT links_id, version
             FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
+            WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [
             TDRBundleFQID(source=source,

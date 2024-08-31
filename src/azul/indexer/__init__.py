@@ -113,7 +113,7 @@ class Prefix:
                                 Prefix(common='8f538f53', partition=1))
 
         >>> list(Prefix.parse('8f538f53/0').partition_prefixes())
-        ['']
+        ['8f538f53']
 
         >>> Prefix.parse('aa/bb')
         Traceback (most recent call last):
@@ -145,17 +145,16 @@ class Prefix:
         >>> list(Prefix.parse('/0').partition_prefixes())
         ['']
 
-        >>> list(Prefix.parse('/1').partition_prefixes())
-        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+        >>> list(Prefix.parse('a/1').partition_prefixes())
+        ['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'aa', 'ab', 'ac', 'ad', 'ae', 'af']
 
         >>> len(list(Prefix.parse('/2').partition_prefixes()))
         256
         """
-        partition_prefixes = map(''.join, product(self.digits,
-                                                  repeat=self.partition))
-        for partition_prefix in partition_prefixes:
-            validate_uuid_prefix(self.common + partition_prefix)
-            yield partition_prefix
+        for partition_prefix_digits in product(self.digits, repeat=self.partition):
+            complete_prefix = ''.join((self.common, *partition_prefix_digits))
+            validate_uuid_prefix(complete_prefix)
+            yield complete_prefix
 
     @property
     def num_partitions(self) -> int:

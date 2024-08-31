@@ -63,7 +63,6 @@ from azul.types import (
 )
 from azul.uuids import (
     change_version,
-    validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
@@ -189,20 +188,17 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       prefix: str
                       ) -> list[TDRAnvilBundleFQID]:
         spec = source.spec
-        common_prefix = spec.prefix.common
-        complete_prefix = common_prefix + prefix
-        validate_uuid_prefix(complete_prefix)
         primary = BundleEntityType.primary.value
         supplementary = BundleEntityType.supplementary.value
         duos = BundleEntityType.duos.value
         rows = list(self._run_sql(f'''
             SELECT datarepo_row_id, {primary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, primary))}
-            WHERE STARTS_WITH(datarepo_row_id, '{complete_prefix}')
+            WHERE STARTS_WITH(datarepo_row_id, '{prefix}')
             UNION ALL
             SELECT datarepo_row_id, {supplementary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
-            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{complete_prefix}')
+            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{prefix}')
         ''' + (
             ''
             if config.duos_service_url is None else
@@ -230,7 +226,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 duos_count += 1
                 # Ensure that one partition will always contain the DUOS bundle
                 # regardless of the choice of common prefix
-                if not bundle_uuid[len(common_prefix):].startswith(prefix):
+                if not bundle_uuid.startswith(prefix):
                     continue
             bundles.append(TDRAnvilBundleFQID(
                 source=source,

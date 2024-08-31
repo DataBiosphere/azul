@@ -299,17 +299,16 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         prefix = source.spec.prefix
         partition_prefixes = list(prefix.partition_prefixes())
         partition_prefix = self.random.choice(partition_prefixes)
-        effective_prefix = prefix.common + partition_prefix
         fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
         num_bundles = len(fqids)
-        partition = f'Partition {effective_prefix!r} of source {source.spec}'
+        partition = f'Partition {partition_prefix!r} of source {source.spec}'
         if not config.deployment.is_sandbox_or_personal:
             # For sources that use partitioning, 512 is the desired partition
             # size. In practice, we observe the reindex succeeding with sizes
             # >700 without the partition size becoming a limiting factor. From
             # this we project 1024 as a reasonable upper bound to enforce.
             upper = 1024
-            if effective_prefix:
+            if partition_prefix:
                 lower = 512 // 16
                 if len(fqids) < lower:
                     # If bundle UUIDs were uniformly distributed by prefix, we
@@ -401,11 +400,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 )
             )
             bundle_fqid = self.random.choice(bundle_fqids)
-            # FIXME: We shouldn't need to include the common prefix
-            #        https://github.com/DataBiosphere/azul/issues/3579
-            common = source.spec.prefix.common
-            prefix = bundle_fqid.uuid[len(common):8]
-            assert prefix != '', prefix
+            prefix = bundle_fqid.uuid[:8]
             new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
             yield source, prefix, new_fqids
 
