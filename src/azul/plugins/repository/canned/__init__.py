@@ -162,9 +162,6 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                                                             ref)
             return factory.load_staging_area(path)
 
-    def _assert_source(self, source: CannedSourceRef):
-        assert source.spec in self.sources, (source, self.sources)
-
     def list_bundles(self,
                      source: CannedSourceRef,
                      prefix: str
