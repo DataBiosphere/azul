@@ -203,28 +203,6 @@ class TDRSourceSpec(SourceSpec):
     def qualify_table(self, table_name: str) -> str:
         return '.'.join((self.subdomain, self.name, table_name))
 
-    def contains(self, other: 'SourceSpec') -> bool:
-        """
-        >>> p = TDRSourceSpec.parse
-
-        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:foo:bar:/0'))
-        True
-
-        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:bar:bar:/0'))
-        False
-
-        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:foo:baz:/0'))
-        False
-        """
-        return (
-            isinstance(other, TDRSourceSpec)
-            and super().contains(other)
-            and self.type == other.type
-            and self.domain == other.domain
-            and self.subdomain == other.subdomain
-            and self.name == other.name
-        )
-
 
 class TDRSourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
     pass

@@ -223,27 +223,17 @@ class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
     def __str__(self) -> str:
         raise NotImplementedError
 
-    def contains(self, other: 'SourceSpec') -> bool:
+    def eq_ignoring_prefix(self, other: Self) -> bool:
         """
         >>> p = SimpleSourceSpec.parse
 
-        >>> p('foo:4/0').contains(p('foo:42/0'))
+        >>> p('foo:4/0').eq_ignoring_prefix(p('foo:42/0'))
         True
 
-        >>> p('foo:42/0').contains(p('foo:4/0'))
-        False
-
-        >>> p('foo:42/0').contains(p('foo:42/0'))
-        True
-
-        >>> p('foo:42/0').contains(p('foo:42/1'))
-        True
-
-        >>> p('foo:1/0').contains(p('foo:2/0'))
+        >>> p('foo:4/0').eq_ignoring_prefix(p('bar:4/0'))
         False
         """
-        assert isinstance(other, SourceSpec), (self, other)
-        return other.prefix.common.startswith(self.prefix.common)
+        return self == attrs.evolve(other, prefix=self.prefix)
 
 
 @attrs.frozen(kw_only=True)
@@ -296,22 +286,6 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         True
         """
         return f'{self.name}:{self.prefix}'
-
-    def contains(self, other: 'SourceSpec') -> bool:
-        """
-        >>> p = SimpleSourceSpec.parse
-
-        >>> p('foo:/0').contains(p('foo:/0'))
-        True
-
-        >>> p('foo:/0').contains(p('bar:/0'))
-        False
-        """
-        return (
-            isinstance(other, SimpleSourceSpec)
-            and super().contains(other)
-            and self.name == other.name
-        )
 
 
 class SourceJSON(TypedDict):
