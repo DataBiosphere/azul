@@ -115,8 +115,7 @@ class TDRSourceSpec(SourceSpec):
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{type}{domain}{subdomain}:{name}:{prefix}' ending with an optional
-        '/{partition_prefix_length}'.
+        'tdr:{type}:{domain}:{subdomain}:{name}:{common_prefix}/{partition_prefix}'.
 
         >>> s = TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:/0')
         >>> s # doctest: +NORMALIZE_WHITESPACE
@@ -138,6 +137,22 @@ class TDRSourceSpec(SourceSpec):
         Traceback (most recent call last):
         ...
         ValueError: 'eggs' is not a valid TDRSourceSpec.Domain
+
+        >>> # If any :'s are missing, the last part will be interpreted as the prefix
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar')
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Missing partition prefix length', 'bar')
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: Cannot parse an empty prefix source
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:aaa')
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Missing partition prefix length', 'aaa')
 
         >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:n32/0')
         Traceback (most recent call last):
