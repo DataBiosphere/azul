@@ -336,7 +336,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         bundle = self._load_canned_bundle(SourcedBundleFQID(source=self.source,
                                                             uuid=downstream_uuid,
                                                             version='2020-08-10T21:24:26.174274Z'))
-        assert any(e['is_stitched'] for e in bundle.manifest)
+        assert len(bundle.stitched) > 0
         with self.assertLogs(plugin_log, level=logging.DEBUG) as cm:
             self._test_fetch_bundle(bundle, load_tables=True)
         record = one(r for r in cm.records if 'Stitched 2 bundle(s): ' in r.message)
@@ -356,7 +356,8 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         assert isinstance(emulated_bundle, TDRHCABundle)
         # Manifest and metadata should both be sorted by entity UUID
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
-        self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
+        self.assertEqual(test_bundle.metadata, emulated_bundle.metadata)
+        self.assertEqual(test_bundle.links, emulated_bundle.links)
 
 
 class TestTDRSourceList(AzulUnitTestCase):

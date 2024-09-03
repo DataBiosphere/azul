@@ -15,7 +15,6 @@ from azul.indexer import (
 from azul.types import (
     JSON,
     MutableJSON,
-    MutableJSONs,
 )
 
 log = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ log = logging.getLogger(__name__)
 
 @attrs.define(kw_only=True)
 class HCABundle(Bundle[BUNDLE_FQID], ABC):
-    manifest: MutableJSONs
+    manifest: MutableJSON
     """
     Each item of the `manifest` attribute's value has this shape:
     {
@@ -39,22 +38,35 @@ class HCABundle(Bundle[BUNDLE_FQID], ABC):
         'version': '2019-05-16T162155.020000Z'
     }
     """
-    metadata_files: MutableJSON
+    metadata: MutableJSON
+    links: MutableJSON
+    stitched: set[str] = attrs.field(factory=set)
 
     def reject_joiner(self, catalog: CatalogName):
         self._reject_joiner(self.manifest)
-        self._reject_joiner(self.metadata_files)
+        self._reject_joiner(self.metadata)
+        self._reject_joiner(self.links)
 
     def to_json(self) -> MutableJSON:
         return {
             'manifest': self.manifest,
-            'metadata': self.metadata_files
+            'metadata': self.metadata,
+            'links': self.links,
+            'stitched': sorted(self.stitched)
         }
 
     @classmethod
     def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> 'Bundle':
         manifest = json_['manifest']
         metadata = json_['metadata']
-        assert isinstance(manifest, list), manifest
+        links = json_['links']
+        stitched = json_['stitched']
+        assert isinstance(manifest, dict), manifest
         assert isinstance(metadata, dict), metadata
-        return cls(fqid=fqid, manifest=manifest, metadata_files=metadata)
+        assert isinstance(links, dict), links
+        assert isinstance(stitched, list), stitched
+        return cls(fqid=fqid,
+                   manifest=manifest,
+                   metadata=metadata,
+                   links=links,
+                   stitched=set(stitched))

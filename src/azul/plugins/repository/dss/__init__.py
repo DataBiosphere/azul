@@ -140,7 +140,7 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
     def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> DSSBundle:
         assert False, 'DSS is EOL'
         # noinspection PyUnreachableCode
-        return DSSBundle(fqid=bundle_fqid, manifest=[], metadata_files={})
+        return DSSBundle(fqid=bundle_fqid, manifest={}, metadata={}, links={})
 
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {

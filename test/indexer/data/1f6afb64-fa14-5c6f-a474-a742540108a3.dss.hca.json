@@ -1,78 +1,6 @@
 {
-    "manifest": [
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "project_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 4353,
-            "uuid": "90bf705c-d891-5ce2-aa54-094488b445c6",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "process_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 388,
-            "uuid": "1f6afb64-fa14-5c6f-a474-a742540108a3",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "process_1.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 388,
-            "uuid": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "process_2.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 388,
-            "uuid": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "imaged_specimen_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 509,
-            "uuid": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "analysis_file_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 566,
-            "uuid": "2645ed0a-a291-5fe2-a262-7b796b05d647",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
+    "manifest": {
+        "analysis_file/2645ed0a-a291-5fe2-a262-7b796b05d647": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "3c9d7a23",
             "indexed": false,
@@ -83,162 +11,10 @@
             "size": 21,
             "uuid": "b706259c-7429-5f2f-8142-2b8e9a48db1f",
             "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "analysis_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 1109,
-            "uuid": "5e1fa49c-f0e9-5c2c-be16-386ccd60dfd7",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "library_preparation_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 1289,
-            "uuid": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "specimen_from_organism_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 770,
-            "uuid": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "imaging_preparation_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 639,
-            "uuid": "7cd840db-f395-5a61-bd17-72c2b2319c23",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "donor_organism_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 879,
-            "uuid": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
-            "version": "2021-01-01T00:00:00.000000Z"
-        },
-        {
-            "content-type": "application/json;",
-            "crc32c": "00000000",
-            "indexed": true,
-            "name": "collection_protocol_0.json",
-            "s3_etag": null,
-            "sha1": null,
-            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-            "size": 2167,
-            "uuid": "c5752f73-3511-55e1-95af-040ab3924bce",
-            "version": "2021-01-01T00:00:00.000000Z"
         }
-    ],
+    },
     "metadata": {
-        "links.json": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.1.0/links",
-            "links": [
-                {
-                    "inputs": [
-                        {
-                            "input_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
-                            "input_type": "imaged_specimen"
-                        }
-                    ],
-                    "link_type": "process_link",
-                    "outputs": [
-                        {
-                            "output_id": "2645ed0a-a291-5fe2-a262-7b796b05d647",
-                            "output_type": "analysis_file"
-                        }
-                    ],
-                    "process_id": "1f6afb64-fa14-5c6f-a474-a742540108a3",
-                    "process_type": "process",
-                    "protocols": [
-                        {
-                            "protocol_id": "5e1fa49c-f0e9-5c2c-be16-386ccd60dfd7",
-                            "protocol_type": "analysis_protocol"
-                        },
-                        {
-                            "protocol_id": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
-                            "protocol_type": "library_preparation_protocol"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "input_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
-                            "input_type": "specimen_from_organism"
-                        }
-                    ],
-                    "link_type": "process_link",
-                    "outputs": [
-                        {
-                            "output_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
-                            "output_type": "imaged_specimen"
-                        }
-                    ],
-                    "process_id": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
-                    "process_type": "process",
-                    "protocols": [
-                        {
-                            "protocol_id": "7cd840db-f395-5a61-bd17-72c2b2319c23",
-                            "protocol_type": "imaging_preparation_protocol"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "input_id": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
-                            "input_type": "donor_organism"
-                        }
-                    ],
-                    "link_type": "process_link",
-                    "outputs": [
-                        {
-                            "output_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
-                            "output_type": "specimen_from_organism"
-                        }
-                    ],
-                    "process_id": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
-                    "process_type": "process",
-                    "protocols": [
-                        {
-                            "protocol_id": "c5752f73-3511-55e1-95af-040ab3924bce",
-                            "protocol_type": "collection_protocol"
-                        }
-                    ]
-                }
-            ],
-            "schema_type": "links",
-            "schema_version": "3.1.0"
-        },
-        "project_0.json": {
+        "project/90bf705c-d891-5ce2-aa54-094488b445c6": {
             "array_express_accessions": [
                 "E-MTAB-10026"
             ],
@@ -355,7 +131,7 @@
             ],
             "schema_type": "project"
         },
-        "process_0.json": {
+        "process/1f6afb64-fa14-5c6f-a474-a742540108a3": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
@@ -369,7 +145,7 @@
             },
             "schema_type": "process"
         },
-        "process_1.json": {
+        "process/ae8529dc-3bc9-5061-828a-3c5dfacded64": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
@@ -383,7 +159,7 @@
             },
             "schema_type": "process"
         },
-        "process_2.json": {
+        "process/c6b932ff-69f1-58b1-a6e6-30319f04541b": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
@@ -397,7 +173,7 @@
             },
             "schema_type": "process"
         },
-        "imaged_specimen_0.json": {
+        "imaged_specimen/0bf91a05-85df-5d7d-bcc0-a625c5921de2": {
             "biomaterial_core": {
                 "biomaterial_id": "AP3_imagedspecimen",
                 "biomaterial_name": "AP3_imagedspecimen",
@@ -416,7 +192,7 @@
             "schema_type": "biomaterial",
             "slice_thickness": 10.0
         },
-        "analysis_file_0.json": {
+        "analysis_file/2645ed0a-a291-5fe2-a262-7b796b05d647": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.5.0/analysis_file",
             "file_core": {
                 "content_description": [
@@ -439,7 +215,7 @@
             },
             "schema_type": "file"
         },
-        "analysis_protocol_0.json": {
+        "analysis_protocol/5e1fa49c-f0e9-5c2c-be16-386ccd60dfd7": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/10.0.0/analysis_protocol",
             "protocol_core": {
                 "protocol_description": "10x Genomics Visium spatial sequencing samples were aligned to the human transcriptome GRCh38-3.0.0 reference (consistently with single-cell RNA-seq samples) using 10x Genomics SpaceRanger v.1.2.1 and exonic reads were used to produce mRNA count matrices for each sample. 10x Genomics SpaceRanger was also used to align paired histology images with mRNA capture spot positions in the Visium slide. The paired image was used to determine the average number of nuclei per Visium location in the tissue and used as a hyperparameter in the spatial mapping of cell type",
@@ -459,7 +235,7 @@
                 "text": "spatial analysis"
             }
         },
-        "library_preparation_protocol_0.json": {
+        "library_preparation_protocol/83f14748-af1c-57aa-9088-6cb1cdd4bba4": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
             "end_bias": "3 prime end bias",
             "input_nucleic_acid_molecule": {
@@ -499,7 +275,7 @@
                 "barcode_read": "Read 1"
             }
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/9a0bb729-552a-5f6e-9ed6-1f988c259531": {
             "biomaterial_core": {
                 "biomaterial_id": "AP3_specimen",
                 "biomaterial_name": "AP2_specimen",
@@ -536,7 +312,7 @@
             },
             "schema_type": "biomaterial"
         },
-        "imaging_preparation_protocol_0.json": {
+        "imaging_preparation_protocol/7cd840db-f395-5a61-bd17-72c2b2319c23": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/2.3.0/imaging_preparation_protocol",
             "protocol_core": {
                 "protocol_description": "All tissues were sectioned using the Leica CX3050S cryostat and were cut at 10um. Tissue optimization was performed to obtain permeabilization time for fetal tissue (12 min).",
@@ -551,7 +327,7 @@
             },
             "schema_type": "protocol"
         },
-        "donor_organism_0.json": {
+        "donor_organism/2d7b50d8-cd06-5408-9fde-1faed01c9ab2": {
             "biomaterial_core": {
                 "biomaterial_id": "AP3",
                 "biomaterial_name": "Sanger_AP3",
@@ -594,7 +370,7 @@
             "schema_type": "biomaterial",
             "sex": "unknown"
         },
-        "collection_protocol_0.json": {
+        "collection_protocol/c5752f73-3511-55e1-95af-040ab3924bce": {
             "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
             "method": {
                 "ontology": "EFO:0009121",
@@ -614,5 +390,86 @@
             },
             "schema_type": "protocol"
         }
-    }
+    },
+    "links": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.1.0/links",
+        "links": [
+            {
+                "inputs": [
+                    {
+                        "input_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
+                        "input_type": "imaged_specimen"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "2645ed0a-a291-5fe2-a262-7b796b05d647",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "1f6afb64-fa14-5c6f-a474-a742540108a3",
+                "process_type": "process",
+                "protocols": [
+                    {
+                        "protocol_id": "5e1fa49c-f0e9-5c2c-be16-386ccd60dfd7",
+                        "protocol_type": "analysis_protocol"
+                    },
+                    {
+                        "protocol_id": "83f14748-af1c-57aa-9088-6cb1cdd4bba4",
+                        "protocol_type": "library_preparation_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
+                        "input_type": "specimen_from_organism"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
+                        "output_type": "imaged_specimen"
+                    }
+                ],
+                "process_id": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
+                "process_type": "process",
+                "protocols": [
+                    {
+                        "protocol_id": "7cd840db-f395-5a61-bd17-72c2b2319c23",
+                        "protocol_type": "imaging_preparation_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
+                        "input_type": "donor_organism"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
+                        "output_type": "specimen_from_organism"
+                    }
+                ],
+                "process_id": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
+                "process_type": "process",
+                "protocols": [
+                    {
+                        "protocol_id": "c5752f73-3511-55e1-95af-040ab3924bce",
+                        "protocol_type": "collection_protocol"
+                    }
+                ]
+            }
+        ],
+        "schema_type": "links",
+        "schema_version": "3.1.0"
+    },
+    "stitched": []
 }
