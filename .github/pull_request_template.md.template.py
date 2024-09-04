@@ -457,7 +457,7 @@ def emit(t: T, target_branch: str):
                 *iif(target_branch == 'develop', [
                     {
                         'type': 'cli',
-                        'content': 'Ran `make image_manifests.json` and committed the resulting changes',
+                        'content': 'Ran `make docker_images.json` and committed the resulting changes',
                         'alt': 'or this PR does not modify `azul_docker_images`, '
                                'or any other variables referenced in the definition of that variable'
                     },
@@ -480,7 +480,7 @@ def emit(t: T, target_branch: str):
                 {
                     'type': 'cli',
                     'content': 'This PR is labeled `deploy:shared`',
-                    'alt': 'or does not modify `image_manifests.json`, and does not '
+                    'alt': 'or does not modify `docker_images.json`, and does not '
                            'require deploying the `shared` component for any other reason'
                 },
                 {

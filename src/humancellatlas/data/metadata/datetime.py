@@ -4,12 +4,9 @@ from datetime import (
     timezone,
 )
 import re
-from typing import (
-    Optional,
-)
 
 
-def parse_jsonschema_date_time(s: str) -> Optional[datetime]:
+def parse_jsonschema_date_time(s: str) -> datetime | None:
     """
     Convert a string in JSONSchema `date-time` format
 

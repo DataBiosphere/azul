@@ -188,7 +188,7 @@ class DCP1IndexerTestCase(DCP1CannedBundleTestCase, IndexerTestCase):
     def _write_transforms(cls, bundle: HCABundle) -> Tallies:
         bundle = attr.evolve(bundle,
                              manifest=deepcopy(bundle.manifest),
-                             metadata_files=deepcopy(bundle.metadata_files))
+                             metadata=deepcopy(bundle.metadata))
         transforms = cls.index_service.transform(cls.catalog, bundle, delete=False)
         contributions, replicas = transforms
         cls.index_service.replicate(cls.catalog, replicas)
@@ -243,15 +243,12 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                     entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
                                     replicas.append(entity_id)
                                     if entity_id == bundle.uuid:
-                                        expected = bundle.metadata_files['links.json']
+                                        expected = bundle.links
                                     else:
                                         expected = one(
-                                            m
-                                            for m in bundle.metadata_files.values()
-                                            if (
-                                                m['schema_type'] != 'link_bundle'
-                                                and m['provenance']['document_id'] == entity_id
-                                            )
+                                            v
+                                            for k, v in bundle.metadata.items()
+                                            if EntityReference.parse(k).entity_id == entity_id
                                         )
                                     # Replica contents should match the entity
                                     # metadata as supplied by the repository
@@ -292,7 +289,8 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                 bundle = self._load_canned_bundle(bundle_fqid)
                 bundle = DSSBundle(fqid=bundle_fqid,
                                    manifest=bundle.manifest,
-                                   metadata_files=bundle.metadata_files)
+                                   metadata=bundle.metadata,
+                                   links=bundle.links)
                 self.index_service.create_indices(self.catalog)
                 try:
                     self._index_bundle(bundle)
@@ -398,9 +396,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         entity = next(e for e in tallies_1.keys() if e.entity_type != 'bundles')
         tallies_1.pop(entity)
 
-        entity_contents = bundle.metadata_files[
-            one(m for m in bundle.manifest if m['uuid'] == entity.entity_id)['name']
-        ]
+        entity_contents = one(
+            metadata
+            for ref, metadata in bundle.metadata.items()
+            if EntityReference.parse(ref).entity_id == entity.entity_id
+        )
         coordinates = [
             ContributionCoordinates(
                 entity=entity,
@@ -583,7 +583,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         new_file_uuid = str(uuid4())
         bundle.manifest = deepcopy(bundle.manifest)
         file_name = '21935_7#154_2.fastq.gz'
-        for file in bundle.manifest:
+        for file in bundle.manifest.values():
             if file['name'] == file_name:
                 old_file_uuid = file['uuid']
                 file['uuid'] = new_file_uuid
@@ -601,7 +601,8 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
             else:
                 assert False, f'Cannot handle values of type {type(v)}'
 
-        bundle.metadata_files = _walkthrough(bundle.metadata_files)
+        bundle.metadata = _walkthrough(bundle.metadata)
+        bundle.links = _walkthrough(bundle.links)
         return old_file_uuid
 
     def _num_docs_by_index(self, hits) -> Mapping[tuple[str, DocumentType], int]:
@@ -1464,9 +1465,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.assertEqual(4, len(file_uuids))
         for bundle_fqid in bundles:
             bundle = self._load_canned_bundle(bundle_fqid)
-            files: JSONs = bundle.metadata_files['file.json']['files']
-            for file in files:
-                file_document_ids.add(file['hca_ingest']['document_id'])
+            for doc in bundle.metadata.values():
+                if doc['content']['schema_type'] == 'file':
+                    file_document_ids.add(doc['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 
     def test_indexing_matrix_related_files(self):
@@ -1844,9 +1845,11 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         # We patch the project entity to ensure that the project aggregate gets
         # cell suspensions from both bundles.
         #
-        target_metadata = has_cells_bundle.metadata_files
-        source_metadata = no_cells_bundle.metadata_files
-        target_metadata['project_0.json'] = source_metadata['project_0.json']
+        target_metadata = has_cells_bundle.metadata
+        source_metadata = no_cells_bundle.metadata
+        target_project = 'project/ed79221b-9713-44cd-94af-183f88c348cd'
+        source_project = 'project/6615efae-fca8-4dd2-a223-9cfcf30fe94d'
+        target_metadata[target_project] = source_metadata[source_project]
         self._index_bundle(has_cells_bundle)
         expected = {
             'total_estimated_cells': 10000,
@@ -2102,7 +2105,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         # The bundles that motivated this test case lack `estimated_cell_count`,
         # so we inject it here to avoid nulls in the index.
-        for document in bundle.metadata_files.values():
+        for document in bundle.metadata.values():
             if document['describedBy'].endswith('/cell_suspension'):
                 document['estimated_cell_count'] = expected_cell_count
 
@@ -2172,7 +2175,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
                                        version='2019-10-03T10:55:24.911627Z')
         bundle = self._load_canned_bundle(bundle_fqid)
-        project = bundle.metadata_files['project_0.json']
+        project = bundle.metadata['project/116965f3-f094-4769-9d28-ae675c1b569c']
         contributor = project['contributors'][0]
         assert contributor['institution'] == 'Lund University'
         contributor['institution'] += ' || LabMED'

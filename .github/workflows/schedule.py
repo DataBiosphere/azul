@@ -22,6 +22,7 @@ import sys
 from typing import (
     TypedDict,
 )
+import urllib.parse
 import zoneinfo
 
 tz = zoneinfo.ZoneInfo('America/Los_Angeles')
@@ -29,12 +30,12 @@ tz = zoneinfo.ZoneInfo('America/Los_Angeles')
 log = logging.getLogger('azul.github.schedule')
 
 
-class FrontMatter(TypedDict):
+class FrontMatter(TypedDict, total=False):
     name: str
     about: str
     title: str
-    labels: str
-    assignees: str
+    labels: list[str]
+    assignees: list[str]
     _repository: str
     _start: str
     _period: str
@@ -66,7 +67,10 @@ class IssueTemplate:
                         break
                     else:
                         k, _, v = line.partition(':')
-                        front_matter[k.strip()] = v.strip()
+                        k, v = k.strip(), v.strip()
+                        if k in ('assignees', 'labels'):
+                            v = v.split(',')
+                        front_matter[k] = v
             else:
                 f.seek(0)
             self.body = f.read()
@@ -167,21 +171,55 @@ class IssueTemplate:
         if issues:
             log.info('At least one matching issue already exists: %r', issues)
         else:
-            assignees = self.properties.get('assignees')
-            if assignees is not None:
-                flags.append(f'--assignee={assignees}')
             command = [
                 'gh', 'issue', 'create',
                 *flags,
                 f'--title={title}',
-                f'--label={self.properties["labels"]}',
                 f'--body={self.body}'
+            ]
+            assignees = self.properties.get('assignees', [])
+            if assignees:
+                command.append('--assignee=' + ','.join(assignees))
+            labels = self.properties.get('labels', [])
+            if labels:
+                command.append('--label=' + ','.join(labels))
+            if self.dry_run:
+                log.info('Would run %r', command)
+                url = f'https://github.com/{repository}/issues/1234'
+            else:
+                log.info('Running %r …', command)
+                process = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+                url = process.stdout.decode().strip().splitlines()[-1]
+            # If the current token lacks the necessary permissions, the GitHub
+            # CLI silently fails to apply the requested labels or assignees. We
+            # therefore need to verify those.
+            log.info('… created %r, verifying labels and assignees …', url)
+            path = urllib.parse.urlparse(url).path.removeprefix('/')
+            actual_repository, dir, issue_number = path.rsplit('/', maxsplit=2)
+            assert dir == 'issues'
+            if repository is not None:
+                assert repository == actual_repository, (repository, actual_repository)
+            command = [
+                'gh', 'issue', 'view',
+                *flags,
+                '--json=labels,assignees',
+                issue_number
             ]
             if self.dry_run:
                 log.info('Would run %r', command)
+                issue = {
+                    'assignees': [{'login': assignee} for assignee in assignees],
+                    'labels': [{'name': label} for label in labels]
+                }
             else:
-                log.info('Running %r', command)
-                subprocess.run(command, check=True)
+                log.info('Running %r …', command)
+                process = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+                issue = json.loads(process.stdout)
+            actual_assignees = set(map(itemgetter('login'), issue['assignees']))
+            assert set(assignees) == actual_assignees, (assignees, actual_assignees)
+            actual_labels = set(map(itemgetter('name'), issue['labels']))
+            assert set(labels) <= actual_labels, (labels, actual_labels)
+            log.info('Successfully created and verfied issue #%s', issue_number)
 
 
 def main(args):

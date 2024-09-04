@@ -120,32 +120,37 @@ class AsyncManifestService:
         execution_arn = self.execution_arn(execution_name)
         # The input contains the verbatim manifest key as JSON while the ARN
         # contains the encoded hash of the key so this log line is useful for
-        # associating the hash with the key for diagnostic purposes
+        # associating the hash with the key for diagnostic purposes.
         log.info('Starting execution %r for input %r', execution_arn, input)
         token = Token.first(execution_id)
-        input = json.dumps(input)
         try:
             # If there already is an execution of the given name, and if that
             # execution is still ongoing and was given the same input as what we
-            # pass here, `start_execution` will succeed idempotently
+            # pass here, `start_execution` will succeed idempotently.
             execution = self._sfn.start_execution(stateMachineArn=self.machine_arn,
                                                   name=execution_name,
-                                                  input=input)
+                                                  input=json.dumps(input))
         except self._sfn.exceptions.ExecutionAlreadyExists:
             # This exception indicates that there is already an execution with
             # the given name but that it has ended, or that its input differs
-            # from what we were passing now. The latter case is unexpected and
-            # therefore constitues an error. In the former case we return the
-            # token so that the client has to make another request to actually
-            # obtain the resulting manifest. Strictly speaking, we could return
-            # the manifest here, but it keeps the control flow simpler. This
-            # benevolent race is rare enough to not worry about optimizing.
+            # from what we were passing just now. The latter case is unexpected
+            # because any part of the input that affects the output is covered
+            # in the manifest hash and therefore the execution name. Any part of
+            # the input not affecting the output is constant and can only change
+            # with the source code which would have resulted in a different
+            # execution name.
+            #
+            # In the former case we return the token so that the client has to
+            # make another request to actually obtain the resulting manifest.
+            # Strictly speaking, we could return the manifest here, but it keeps
+            # the control flow simpler. This benevolent race is not probable
+            # enough to warrant an optimization.
             execution = self._sfn.describe_execution(executionArn=execution_arn)
-            if execution['input'] != input:
-                raise InvalidGeneration(token)
-            else:
+            if input == json.loads(execution['input']):
                 log.info('A completed execution %r already exists', execution_arn)
                 return token
+            else:
+                raise InvalidGeneration(token)
         else:
             assert execution_arn == execution['executionArn'], execution
             log.info('Started execution %r or it was already running', execution_arn)
