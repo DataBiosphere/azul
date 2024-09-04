@@ -4,6 +4,9 @@ from collections.abc import (
 )
 import json
 import logging
+from math import (
+    ceil,
+)
 from typing import (
     Optional,
     TYPE_CHECKING,
@@ -263,7 +266,7 @@ class RepositoryController(SourceController):
                     pass
                 elif wait == '1':
                     time_slept = self.server_side_sleep(float(retry_after))
-                    retry_after = round(retry_after - time_slept)
+                    retry_after = ceil(retry_after - time_slept)
                 else:
                     assert False, wait
                 query_params['wait'] = wait
