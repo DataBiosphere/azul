@@ -97,7 +97,7 @@ title is `Fix: ` followed by the issue title
 - [ ] A comment to this PR details the completed security design review
 - [ ] PR title is appropriate as title of merge commit
 - [ ] `N reviews` label is accurate
-- [ ] Moved ticket to *Approved* column
+- [ ] Moved connected issues to *Approved* column
 - [ ] PR is assigned to only the operator
 
 

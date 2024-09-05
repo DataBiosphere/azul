@@ -637,7 +637,7 @@ def emit(t: T, target_branch: str):
             }),
             {
                 'type': 'cli',
-                'content': 'Moved ticket to *Approved* column'
+                'content': f'Moved connected {t.issues} to *Approved* column'
             },
             {
                 'type': 'cli',
