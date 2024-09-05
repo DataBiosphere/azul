@@ -144,6 +144,7 @@ title is `Fix: ` followed by the issue title
 - [ ] Added PR # reference to merge commit title
 - [ ] Collected commit title tags in merge commit title <sub>but only included `p` if the PR is also labeled `partial`</sub>
 - [ ] Moved connected issues to *Merged lower* column in ZenHub
+- [ ] Moved blocked issues to *Triage* <sub>or no issues are blocked on the connected issues</sub>
 - [ ] Pushed merge commit to GitHub
 
 
