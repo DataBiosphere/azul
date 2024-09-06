@@ -1536,7 +1536,12 @@ class Config:
 
     @property
     def docker_registry(self) -> str:
-        return self.environ['azul_docker_registry']
+        name = 'azul_docker_registry'
+        value = self.environ[name]
+        if len(value) > 0:
+            require(value[-1] == '/', 'Variable %r must be empty or end in /', name)
+            value = value[:-1]
+        return value
 
     @property
     def terraform_version(self) -> str:
@@ -1566,8 +1571,8 @@ class Config:
     ]
 
     @property
-    def docker_image_manifests_path(self) -> Path:
-        return Path(config.project_root) / 'image_manifests.json'
+    def docker_image_gists_path(self) -> Path:
+        return Path(config.project_root) / 'docker_images.json'
 
     blocked_v4_ips_term = 'blocked_v4_ips'
 

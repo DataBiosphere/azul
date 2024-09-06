@@ -28,6 +28,12 @@ jobs:
           _link dev
           _refresh
 
+          make virtualenv
+          source .venv/bin/activate
+          make requirements
+
+          make environment.boot
+
           # FIXME: The default Azul registry is hosted privately on ECR, so we'd
           #        have to provide credentials to use it. For now, it's
           #        sufficient to pull 3rd party images directly from their
@@ -40,10 +46,6 @@ jobs:
           #
           export azul_docker_registry=""
           
-          make virtualenv
-          source .venv/bin/activate
-          make requirements
-
           # Hack: The use of chrgp compensates for a quirk of Docker. The
           # PyCharm image used by make format sets up a user called `developer`
           # and assigns it UID 1000. Actions is running as UID 1001. An
@@ -53,7 +55,6 @@ jobs:
           #
           chmod -R g+w . && sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
           make -C lambdas openapi
-          make environment.boot
           make -C .github
           make anvil_schema
           make check_clean
