@@ -22,7 +22,7 @@ click==8.1.7
 colorama==0.4.4
 configargparse==1.7
 coverage==6.5.0
-cryptography==43.0.0
+cryptography==43.0.1
 deprecated==1.2.13
 docker==7.1.0
 docutils==0.16
