@@ -18,10 +18,10 @@ from azul.terraform import (
 
 log = logging.getLogger(__name__)
 
+resource = 'aws_securityhub_standards_control'
 renamed: dict[str, Optional[str]] = {
-    # FIXME: Remove the following entry
-    #        https://github.com/DataBiosphere/azul/pull/6285
-    'opensearch_cluster_settings.index': None
+    f'{resource}.best_practices_macie_{num}': f'{resource}.nist_control_macie_{num}'
+    for num in [1, 2]
 }
 
 

@@ -28,23 +28,27 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; sys.exit(0 if '.'.join(map(str, sys.version_info[:3])) == '${azul_python_version}' else 1)"; then \
-		echo -e "\nLooks like Python ${azul_python_version} is not installed or active in the current virtualenv\n"; \
+	@if ! python -c "import sys, os; \
+		             p = lambda v: tuple(map(int, v.split('.'))); \
+		             v = os.environ['azul_python_version']; \
+		             sys.exit(0 if sys.version_info[:3] == p(v) else 1)"; then \
+		echo -e "\nLooks like Python ${azul_python_version} is not installed\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
+	@if ! python -c "import sys; \
+		             exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
 		echo -e "\nLooks like some requirements are missing. Please run 'make requirements'\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys, wheel as w; \
-		           from pkg_resources import parse_version as p; \
-		           sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
+		             p = lambda v: tuple(map(int, v.split('.'))); \
+		             sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
 		echo -e "\nLooks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; \
                      from chalice import chalice_version as v; \
-		             from pkg_resources import parse_version as p; \
+		             p = lambda v: tuple(map(int, v.split('.'))); \
 		             sys.exit(0 if p(v) == p('1.30.0') else 1)"; then \
 		echo -e "\nLooks like chalice is out of date. Please run 'make requirements'\n"; \
 		false; \
@@ -74,10 +78,13 @@ check_docker:
 .PHONY: check_aws
 check_aws: check_python
 	@if ! python -c "import os, sys, boto3 as b; \
-		sys.exit(0 if os.environ.get('TRAVIS') == 'true' or \
-		         b.client('sts').get_caller_identity()['Account'] == os.environ['AZUL_AWS_ACCOUNT_ID'] else 1)"; then \
-		echo -e "\nLooks like there is a mismatch between AZUL_AWS_ACCOUNT_ID and the currently active AWS credentials. \
-		         \nCheck the output from 'aws sts get-caller-identity' against the value of that environment variable.\n"; \
+		             expected = os.environ['AZUL_AWS_ACCOUNT_ID']; \
+		             actual = b.client('sts').get_caller_identity()['Account']; \
+		             sys.exit(0 if actual == expected else 1)"; then \
+		echo Looks like there is a mismatch between AZUL_AWS_ACCOUNT_ID \
+		     and the currently active AWS credentials. ; \
+		echo Check the output from \'aws sts get-caller-identity\' against the \
+             value of that environment variable. ; \
 		false; \
 	fi
 

@@ -154,22 +154,32 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
     @mock.patch.object(AsyncManifestService, '_sfn')
     @mock.patch.object(ManifestService, 'get_manifest')
     @mock.patch.object(ManifestService, 'get_cached_manifest')
-    def test(self, get_cached_manifest, get_manifest, _sfn):
+    @mock.patch.object(ManifestService, 'verify_manifest_key')
+    @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
+    def test(self,
+             get_cached_manifest_with_key,
+             verify_manifest_key,
+             get_cached_manifest,
+             get_manifest,
+             _sfn):
         with responses.RequestsMock() as helper:
             helper.add_passthru(str(self.base_url))
             for fetch in (True, False):
                 with self.subTest(fetch=fetch):
                     format = ManifestFormat.compact
-                    filters = Filters(explicit={'organ': {'is': ['lymph node']}},
-                                      source_ids={self.source.id})
+                    filters = {'organ': {'is': ['lymph node']}, 'fileFormat': {'is': ['txt']}}
+                    filters = Filters(explicit=filters, source_ids={self.source.id})
                     params = {
                         'catalog': self.catalog,
                         'format': format.value,
                         'filters': json.dumps(filters.explicit)
                     }
                     path = '/manifest/files'
-                    object_url = 'https://url.to.manifest?foo=bar'
-                    file_name = 'some_file_name'
+
+                    initial_url = self.base_url.set(path=path, args=params)
+                    if fetch:
+                        initial_url.path.segments.insert(0, 'fetch')
+
                     manifest_key = ManifestKey(catalog=self.catalog,
                                                format=format,
                                                manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
@@ -180,14 +190,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
                     manifest_url = self.base_url.set(path=path)
                     manifest_url.path.segments.append(signed_manifest_key.encode())
+
+                    object_url = 'https://url.to.manifest?foo=bar'
+                    file_name = 'some_file_name'
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format=format,
                                         manifest_key=manifest_key,
                                         file_name=file_name)
-                    url = self.base_url.set(path=path, args=params)
-                    if fetch:
-                        url.path.segments.insert(0, 'fetch')
 
                     partitions = (
                         ManifestPartition(index=0,
@@ -209,6 +219,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                           is_last_page=False,
                                           search_after=('foo', 'doc#bar'))
                     )
+                    input: ManifestGenerationState = dict(filters=filters.to_json(),
+                                                          manifest_key=manifest_key.to_json(),
+                                                          partition=partitions[0].to_json())
                     service: AsyncManifestService
                     service = self.app_module.app.manifest_controller.async_service
                     execution_id = manifest_key.hash
@@ -219,6 +232,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         'executionArn': execution_arn,
                         'startDate': 123
                     }
+                    url = initial_url
                     for i, expected_status in enumerate(3 * [301] + [302]):
                         response = requests.request(method='PUT' if i == 0 else 'GET',
                                                     url=str(url),
@@ -235,17 +249,16 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                             self.assertGreaterEqual(int(headers['Retry-After']), 0)
                         url = furl(headers['Location'])
                         if i == 0:
-                            state: ManifestGenerationState = dict(filters=filters.to_json(),
-                                                                  manifest_key=manifest_key.to_json(),
-                                                                  partition=partitions[0].to_json())
+                            state: ManifestGenerationState = input
                             _sfn.start_execution.assert_called_once_with(
                                 stateMachineArn=machine_arn,
                                 name=execution_name,
-                                input=json.dumps(state)
+                                input=json.dumps(input)
                             )
                             _sfn.describe_execution.assert_not_called()
                             _sfn.reset_mock()
                             _sfn.describe_execution.return_value = {'status': 'RUNNING'}
+                            token_url = url
                         elif i == 1:
                             get_manifest.return_value = partitions[1]
                             state = self.app_module.generate_manifest(state, None)
@@ -271,6 +284,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                             _sfn.reset_mock()
                             _sfn.describe_execution.return_value = {
                                 'status': 'SUCCEEDED',
+                                'input': json.dumps(input),
                                 'output': json.dumps(
                                     self.app_module.generate_manifest(state, None)
                                 )
@@ -290,34 +304,53 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     expected_url = str(manifest_url) if expect_redirect else object_url
                     self.assertEqual(expected_url, str(url))
                     _sfn.reset_mock()
-            mock_effects = [
-                manifest,
-                CachedManifestNotFound(manifest_key)
-            ]
-            with (
-                mock.patch.object(ManifestService,
-                                  'get_cached_manifest_with_key',
-                                  side_effect=mock_effects),
-                mock.patch.object(ManifestService,
-                                  'verify_manifest_key',
-                                  return_value=manifest_key)
-            ):
-                for mock_effect in mock_effects:
-                    with self.subTest(mock_effect=mock_effect):
-                        assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
-                        response = requests.get(str(manifest_url), allow_redirects=False)
-                        if isinstance(mock_effect, Manifest):
-                            self.assertEqual(302, response.status_code)
-                            self.assertEqual(object_url, response.headers['Location'])
-                        elif isinstance(mock_effect, CachedManifestNotFound):
-                            self.assertEqual(410, response.status_code)
-                            expected_response = {
-                                'Code': 'GoneError',
-                                'Message': 'The requested manifest has expired, please request a new one'
-                            }
-                            self.assertEqual(expected_response, response.json())
-                        else:
-                            assert False, mock_effect
+
+                    # Repeat the initial request while continuing to mock the
+                    # absence of the manifest. The SFN execution is complete so
+                    # this simulates an expired manifest. To satisfy the
+                    # request, a new generation has to be started, and the
+                    # response should be 301 redirect for the new generation.
+                    exception = self._mock_sfn_exception(_sfn,
+                                                         operation_name='StartExecution',
+                                                         error_code='ExecutionAlreadyExists')
+                    _sfn.start_execution.side_effect = exception
+
+                    # Introduce an insignificant difference in the SFN input by
+                    # reordering the `filters` dictionary entries. The repeated
+                    # request should be considered valid and matching the completed
+                    # step function execution.
+                    url = initial_url.copy()
+                    filters = json.loads(url.args['filters'])
+                    url.args['filters'] = json.dumps(dict(reversed(filters.items())))
+
+                    response = requests.put(url=str(url), allow_redirects=False)
+                    _sfn.reset_mock(side_effect=True)
+                    if fetch:
+                        self.assertEqual(200, response.status_code)
+                        self.assertEqual(301, response.json()['Status'])
+                    else:
+                        self.assertEqual(301, response.status_code)
+                    # FIXME: 404 from S3 when re-requesting manifest after it expired
+                    #        https://github.com/DataBiosphere/azul/issues/6441
+                    if False:
+                        self.assertNotEqual(token_url, response.json()['Location'])
+
+            assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
+            assert verify_manifest_key.not_called
+            verify_manifest_key.return_value = manifest_key
+            assert get_cached_manifest_with_key.not_called
+            get_cached_manifest_with_key.return_value = manifest
+            response = requests.get(str(manifest_url), allow_redirects=False)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(object_url, response.headers['Location'])
+            get_cached_manifest_with_key.side_effect = CachedManifestNotFound(manifest_key)
+            response = requests.get(str(manifest_url), allow_redirects=False)
+            self.assertEqual(410, response.status_code)
+            expected_response = {
+                'Code': 'GoneError',
+                'Message': 'The requested manifest has expired, please request a new one'
+            }
+            self.assertEqual(expected_response, response.json())
 
     token = Token.first(execution_id).encode()
 
@@ -328,18 +361,28 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
     @contextmanager
     def _mock_error(self, error_code: str) -> ContextManager:
-        exception_cls = type(error_code, (ClientError,), {})
         with patch.object(AsyncManifestService, '_sfn') as _sfn:
-            setattr(_sfn.exceptions, error_code, exception_cls)
-            error_response = {
-                'Error': {
-                    'Code': error_code
-                }
-            }
-            exception = exception_cls(operation_name='DescribeExecution',
-                                      error_response=error_response)
+            exception = self._mock_sfn_exception(_sfn,
+                                                 operation_name='DescribeExecution',
+                                                 error_code=error_code)
             _sfn.describe_execution.side_effect = exception
             yield
+
+    def _mock_sfn_exception(self,
+                            _sfn: mock.MagicMock,
+                            operation_name: str,
+                            error_code: str
+                            ) -> Exception:
+        exception_cls = type(error_code, (ClientError,), {})
+        setattr(_sfn.exceptions, error_code, exception_cls)
+        error_response = {
+            'Error': {
+                'Code': error_code
+            }
+        }
+        exception = exception_cls(operation_name=operation_name,
+                                  error_response=error_response)
+        return exception
 
     def test_execution_not_found(self):
         """
