@@ -73,23 +73,23 @@
         "id": "sha256:0880f9d5a98bcda40350f36f9bd356bc161f9f1c3abc27de0ef8a0df2e7b247e",
         "platform": "linux/amd64"
     },
-    "docker.io/gitlab/gitlab-ce:17.3.0-ce.0": {
-        "digest": "sha256:5c8940316d67e0f1a8536b527f8a9d9aa6733bb6d3f98132c010cdff8e73916e",
-        "id": "sha256:34e8bede49a5782aa8d196d6ff076b6f1f3acc9f1fcb2c049232b150b436911a",
+    "docker.io/gitlab/gitlab-ce:17.3.1-ce.0": {
+        "digest": "sha256:6f2ab9c42cef6b8058ef45042ce33a4505a0a9ac1a8d9ed85016ceca743dd01d",
+        "id": "sha256:b3c3467dc55c9e34380e6802d7c6c0b5af0088a738795553b1ba7ec5d78f0f79",
         "platform": "linux/amd64"
     },
-    "docker.io/gitlab/gitlab-runner:ubuntu-v17.3.0": {
-        "digest": "sha256:77414ff4869267e403169c7430387b1c10aa7e26f8050f0762ae178b4633219d",
-        "mirror_digest": "sha256:806b6732e93b2b29d934f4e4a58bf60a789ca5d4df0a4100252b3de7473d5535",
+    "docker.io/gitlab/gitlab-runner:ubuntu-v17.3.1": {
+        "digest": "sha256:b1b483cf467f00aeb6850a8429a0677efa4704c166ac6f664ff5f8c7c65f1c8d",
+        "mirror_digest": "sha256:7680823e6395a2ad675367dfbaf700a8f5061ac6ab28d49c640c3d5f297f8e84",
         "parts": {
             "linux/amd64": {
-                "digest": "sha256:2f6589a4f8fe85b4c2b01956fce0a0d60803579cdeb2c444d7435a6403badecf",
-                "id": "sha256:0e754b01aefcacc37fb5591319388a708c2d434fa133debc2970583d7a15d9fa",
+                "digest": "sha256:7b5f24aee1dd860c50a252c434e05d22ae9cad68aef7716057cafcba3c060619",
+                "id": "sha256:14c2e911668b68b2bb91d59187946db8470753dc7ab5b55af9e5c943ec8b15e9",
                 "platform": "linux/amd64"
             },
             "linux/arm64": {
-                "digest": "sha256:be0d80f108d461fd193635649b28ccca339b3fc5841d48beb66033e1f4c358d3",
-                "id": "sha256:b2c1dd1c49d1ee49936bcb94e89b4b2ff1a8186e65c9adf3d54d23f1f54ec9ce",
+                "digest": "sha256:3ea3b12d26abd64e84e8fdf2f51f9cabaa738ad975bb22b4413d16a84c85f4f6",
+                "id": "sha256:cdf573092dc574986e59900371f6d50b5b15d7c36cb9ff0653153719b10cec75",
                 "platform": "linux/arm64"
             }
         }
