@@ -261,7 +261,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make environment.boot` and
         # committing the resulting changes.
         #
-        'azul_terraform_version': '1.9.4',
+        'azul_terraform_version': '1.9.5',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
