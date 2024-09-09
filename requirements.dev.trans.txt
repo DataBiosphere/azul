@@ -51,7 +51,7 @@ roundrobin==0.0.4
 smmap==5.0.1
 toml==0.10.2
 tqdm==4.66.5
-types-awscrt==0.21.4
+types-awscrt==0.21.5
 types-s3transfer==0.10.2
 types-toml==0.10.8.20240310
 uritemplate==4.1.1
