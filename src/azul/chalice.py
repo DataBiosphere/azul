@@ -194,8 +194,8 @@ class AzulChaliceApp(Chalice):
         Add headers to the response
         """
         response = get_response(event)
-        seconds = 60 * 60 * 24 * 365
-        response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains'
+        seconds = 60 * 60 * 24 * 365 * 2
+        response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains; preload'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         view_function = self.routes[event.path][event.method].view_function

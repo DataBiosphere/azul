@@ -105,7 +105,7 @@ class TestAppLogging(AzulUnitTestCase):
                         self.assertEqual(
                             azul_log.output[2],
                             'DEBUG:azul.chalice:Returning 500 response with headers {"Content-Type": "text/plain", '
-                            '"Strict-Transport-Security": "max-age=31536000; includeSubDomains", '
+                            '"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload", '
                             '"X-Content-Type-Options": "nosniff", '
                             '"X-Frame-Options": "DENY", '
                             '"Cache-Control": "no-store"}. '

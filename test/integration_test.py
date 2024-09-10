@@ -2043,7 +2043,7 @@ class ResponseHeadersTest(AzulTestCase):
             '/health/basic': {'Cache-Control': 'no-store'}
         }
         global_headers = {
-            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+            'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
             'X-Content-Type-Options': 'nosniff',
             'X-Frame-Options': 'DENY',
         }
