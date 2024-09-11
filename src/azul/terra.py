@@ -211,7 +211,7 @@ class TDRSourceSpec(SourceSpec):
         )
 
 
-class SourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
+class TDRSourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
     pass
 
 
@@ -421,7 +421,7 @@ class TDRClient(SAMClient):
                               id=source['id'],
                               location=storage['region'])
 
-    def _retrieve_source(self, source: SourceRef) -> MutableJSON:
+    def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
         response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
@@ -439,7 +439,7 @@ class TDRClient(SAMClient):
             raise self._insufficient_access(str(endpoint))
         elif total == 1:
             source_id = one(response['items'])['id']
-            return self._retrieve_source(SourceRef(id=source_id, spec=source))
+            return self._retrieve_source(TDRSourceRef(id=source_id, spec=source))
         else:
             raise TerraNameConflictException(endpoint, source.name, response)
 
@@ -632,7 +632,7 @@ class TDRClient(SAMClient):
     def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
 
-    def get_duos(self, source: SourceRef) -> Optional[MutableJSON]:
+    def get_duos(self, source: TDRSourceRef) -> Optional[MutableJSON]:
         response = self._retrieve_source(source)
         try:
             duos_id = response['duosFirecloudGroup']['duosId']

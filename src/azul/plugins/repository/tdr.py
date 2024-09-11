@@ -53,8 +53,8 @@ from azul.strings import (
     longest_common_prefix,
 )
 from azul.terra import (
-    SourceRef as TDRSourceRef,
     TDRClient,
+    TDRSourceRef,
     TDRSourceSpec,
 )
 from azul.time import (

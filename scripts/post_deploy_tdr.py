@@ -24,8 +24,8 @@ from azul.plugins.repository.tdr import (
     TDRPlugin,
 )
 from azul.terra import (
-    SourceRef as TDRSourceRef,
     TDRClient,
+    TDRSourceRef,
     TDRSourceSpec,
 )
 

@@ -73,13 +73,11 @@ from azul.plugins.metadata.hca import (
 from azul.plugins.metadata.hca.service.response import (
     HCASearchResponseStage,
 )
-from azul.plugins.repository.tdr import (
-    TDRSourceRef,
-)
 from azul.service.elasticsearch_service import (
     ResponsePagination,
 )
 from azul.terra import (
+    TDRSourceRef,
     TDRSourceSpec,
 )
 from azul.types import (
