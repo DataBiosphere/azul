@@ -412,10 +412,9 @@ class TDRClient(SAMClient):
     def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
         source = self._lookup_source(source_spec)
         storage = one(
-            storage
-            for dataset in (s['dataset'] for s in source['source'])
-            for storage in dataset['storage']
-            if storage['cloudResource'] == 'bigquery'
+            resource
+            for resource in source['storage']
+            if resource['cloudResource'] == 'bigquery'
         )
         return self.TDRSource(project=source['dataProject'],
                               id=source['id'],
@@ -438,8 +437,7 @@ class TDRClient(SAMClient):
         if total == 0:
             raise self._insufficient_access(str(endpoint))
         elif total == 1:
-            source_id = one(response['items'])['id']
-            return self._retrieve_source(TDRSourceRef(id=source_id, spec=source))
+            return one(response['items'])
         else:
             raise TerraNameConflictException(endpoint, source.name, response)
 
