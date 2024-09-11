@@ -25,7 +25,6 @@ from azul.plugins.repository.tdr import (
 )
 from azul.terra import (
     TDRClient,
-    TDRSourceRef,
     TDRSourceSpec,
 )
 
@@ -91,20 +90,9 @@ class TerraValidator:
                       catalog: CatalogName,
                       source_spec: TDRSourceSpec
                       ) -> None:
-        source = self.tdr.lookup_source(source_spec)
-        log.info('TDR client is authorized for API access to %s.', source_spec)
-        require(source.project == source_spec.subdomain,
-                'Actual Google project of TDR source differs from configured one',
-                source.project, source_spec.subdomain)
-        # Uppercase is standard for multi-regions in the documentation but TDR
-        # returns 'us' in lowercase
-        require(source.location.lower() == config.tdr_source_location.lower(),
-                'Actual storage location of TDR source differs from configured one',
-                source.location, config.tdr_source_location)
-        # FIXME: Eliminate azul.terra.TDRClient.TDRSource
-        #        https://github.com/DataBiosphere/azul/issues/5524
-        ref = TDRSourceRef(id=source.id, spec=source_spec)
         plugin = self.repository_plugin(catalog)
+        ref = plugin.resolve_source(str(source_spec))
+        log.info('TDR client is authorized for API access to %s.', source_spec)
         subgraph_count = sum(plugin.list_partitions(ref).values())
         require(subgraph_count > 0,
                 'Source spec is empty (bad prefix?)', source_spec)

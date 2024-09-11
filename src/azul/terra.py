@@ -400,25 +400,30 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
-    # FIXME: Eliminate azul.terra.TDRClient.TDRSource
-    #        https://github.com/DataBiosphere/azul/issues/5524
-    @attrs.frozen(kw_only=True)
-    class TDRSource:
-        project: str
-        id: str
-        location: str
-
     @cache
-    def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
+    def lookup_source(self, source_spec: TDRSourceSpec) -> str:
+        """
+        Validate that the repository's reported values for the snapshot's Google
+        project name and storage location match our expectations, and return the
+        snapshot's UUID.
+        """
         source = self._lookup_source(source_spec)
+        actual_project = source['dataProject']
+        require(actual_project == source_spec.subdomain,
+                'Actual Google project of TDR source differs from configured one',
+                actual_project, source_spec.subdomain)
         storage = one(
             resource
             for resource in source['storage']
             if resource['cloudResource'] == 'bigquery'
         )
-        return self.TDRSource(project=source['dataProject'],
-                              id=source['id'],
-                              location=storage['region'])
+        actual_location = storage['region']
+        # Uppercase is standard for multi-regions in the documentation but TDR
+        # returns 'us' in lowercase
+        require(actual_location.lower() == config.tdr_source_location.lower(),
+                'Actual storage location of TDR source differs from configured one',
+                actual_location, config.tdr_source_location)
+        return source['id']
 
     def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
