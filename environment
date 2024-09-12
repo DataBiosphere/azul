@@ -279,13 +279,7 @@ _clone() {
 		git worktree add "../azul.${deployment}" "${branch}"
 		cd "../azul.${deployment}"
 		(cd terraform/gitlab/vpn && git submodule update --init easy-rsa)
-		rsync -rvlm \
-			-f '+ */' \
-			-f '+ environment.local.py' \
-			-f '+ /deployments/*.local/environment*.py' \
-			-f '- *' \
-			../azul/ \
-			.
+		_update_clone
 		source environment
 		_link "${deployment}"
 		_refresh
@@ -314,6 +308,16 @@ _clone() {
 		echo "project directory, and run 'git worktree prune'"
 		echo ""
 	)
+}
+
+_update_clone() {
+	rsync -rvlm \
+		-f '+ */' \
+		-f '+ environment.local.py' \
+		-f '+ /deployments/*.local/environment*.py' \
+		-f '- *' \
+		../azul/ \
+		.
 }
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports

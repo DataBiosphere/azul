@@ -1931,21 +1931,23 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
 
             metadata_plugin_name = catalog.plugins['metadata'].name
             if metadata_plugin_name == 'hca':
-                self.assertEqual({'manifest', 'metadata'}, bundle_json.keys())
-                manifest, metadata = bundle_json['manifest'], bundle_json['metadata']
-                self.assertIsInstance(manifest, list)
+                self.assertEqual({'manifest',
+                                  'metadata',
+                                  'links',
+                                  'stitched'}, bundle_json.keys())
+                manifest = bundle_json['manifest']
+                metadata = bundle_json['metadata']
+                links = bundle_json['links']
+                stitched = bundle_json['stitched']
+                self.assertIsInstance(manifest, dict)
                 self.assertIsInstance(metadata, dict)
-                manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
-                metadata_files = sorted(metadata.keys())
-
-                if catalog.plugins['repository'].name == 'canned':
-                    # FIXME: Manifest entry not generated for links.json by
-                    #        StagingArea.get_bundle
-                    #        https://github.com/DataBiosphere/hca-metadata-api/issues/52
-                    assert 'links.json' not in manifest_files
-                    metadata_files.remove('links.json')
-
-                self.assertListEqual(manifest_files, metadata_files)
+                self.assertIsInstance(links, dict)
+                self.assertIsInstance(stitched, list)
+                metadata_ids = {
+                    EntityReference.parse(ref).entity_id
+                    for ref in metadata.keys()
+                }
+                self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
                 self.assertEqual({'entities', 'links'}, bundle_json.keys())
                 entities, links = bundle_json['entities'], bundle_json['links']

@@ -11,7 +11,6 @@ from typing import (
     Mapping,
     Self,
     Sequence,
-    Set,
     TypeVar,
 )
 from uuid import (
@@ -26,13 +25,19 @@ from furl import (
 
 import git
 
-from humancellatlas.data.metadata.api import (
-    Bundle,
-    JSON,
-)
-from humancellatlas.data.metadata.helpers.exception import (
+from azul import (
     reject,
     require,
+)
+from azul.indexer.document import (
+    EntityReference,
+)
+from azul.types import (
+    JSON,
+    MutableJSON,
+)
+from humancellatlas.data.metadata.api import (
+    Bundle,
 )
 from humancellatlas.data.metadata.helpers.schema_validation import (
     SchemaValidator,
@@ -49,14 +54,14 @@ class JsonFile:
     uuid: str
     version: str
     name: str
-    content: JSON
+    content: MutableJSON
     _validator: ClassVar[SchemaValidator] = SchemaValidator()
 
     def __attrs_post_init__(self):
         self._validator.validate_json(self.content, self.name)
 
     @classmethod
-    def from_json(cls, file_name: str, content: JSON) -> 'JsonFile':
+    def from_json(cls, file_name: str, content: MutableJSON) -> 'JsonFile':
         def parse_file_name(file_name: str) -> Sequence[str]:
             suffix = '.json'
             assert file_name.endswith(suffix), file_name
@@ -138,49 +143,36 @@ class StagingArea:
         """
         Return a bundle from the staging area
         """
-        version, manifest, metadata = self.get_bundle_parts(subgraph_id)
-        return Bundle(subgraph_id, version, manifest, metadata)
+        version, manifest, metadata, links = self.get_bundle_parts(subgraph_id)
+        return Bundle(subgraph_id, version, manifest, metadata, links)
 
-    def get_bundle_parts(self, subgraph_id: str) -> tuple[str, list[JSON], JSON]:
+    def get_bundle_parts(self,
+                         subgraph_id: str
+                         ) -> tuple[str, MutableJSON, MutableJSON, MutableJSON]:
         """
         Return the components to create a bundle from the staging area
         """
         links_file = self.links[subgraph_id]
-        manifest = []
-        metadata = {
-            'links.json': links_file.content
-        }
+        manifest = {}
+        metadata = {}
         entity_ids_by_type = self._entity_ids_by_type(subgraph_id)
         for entity_type, entity_ids in entity_ids_by_type.items():
             # Sort entity_ids to produce the same ordering on multiple runs
-            for i, entity_id in enumerate(sorted(entity_ids)):
-                json_file_name = f'{entity_type}_{i}.json'
+            for entity_id in sorted(entity_ids):
                 metadata_file = self.metadata[entity_id]
                 json_content = metadata_file.content
-                metadata[json_file_name] = json_content
-                file_manifest = {
-                    'content-type': 'application/json;',
-                    'crc32c': '0' * 8,
-                    'indexed': True,
-                    'name': json_file_name,
-                    's3_etag': None,
-                    'sha1': None,
-                    'sha256': '0' * 64,
-                    'size': len(json.dumps(json_content)),
-                    'uuid': metadata_file.uuid,
-                    'version': metadata_file.version
-                }
-                manifest.append(file_manifest)
+                key = str(EntityReference(entity_type=entity_type, entity_id=entity_id))
+                metadata[key] = json_content
                 if entity_type.endswith('_file'):
                     file_manifest = self.descriptors[entity_id].manifest_entry
-                    manifest.append(file_manifest)
+                    manifest[key] = file_manifest
                 else:
                     pass
-        return links_file.version, manifest, metadata
+        return links_file.version, manifest, metadata, links_file.content
 
     def _entity_ids_by_type(self,
                             subgraph_id: str
-                            ) -> dict[str, Set[str]]:
+                            ) -> dict[str, set[str]]:
         """
         Return a mapping of entity types (e.g. 'analysis_file',
         'cell_suspension') to a set of entity IDs

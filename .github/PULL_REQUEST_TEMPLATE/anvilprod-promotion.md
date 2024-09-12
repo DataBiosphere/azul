@@ -37,7 +37,7 @@ Connected issue: #0000
 
 - [ ] Actually approved the PR
 - [ ] Decided if PR can be labeled `no sandbox`
-- [ ] Moved ticket to *Approved* column
+- [ ] Moved connected issue to *Approved* column
 - [ ] PR is assigned to only the operator
 
 

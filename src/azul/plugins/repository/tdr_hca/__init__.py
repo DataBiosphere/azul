@@ -184,39 +184,29 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
 
     def add_entity(self,
                    *,
-                   entity_key: str,
-                   entity_type: EntityType,
-                   entity_row: BigQueryRow,
+                   entity: EntityReference,
+                   row: BigQueryRow,
                    is_stitched: bool
                    ) -> None:
-        entity_id = entity_row[entity_type + '_id']
-        self._add_manifest_entry(name=entity_key,
-                                 uuid=entity_id,
-                                 version=TDRPlugin.format_version(entity_row['version']),
-                                 size=entity_row['content_size'],
-                                 content_type='application/json',
-                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"',
-                                 is_stitched=is_stitched)
-        if entity_type.endswith('_file'):
-            descriptor = json.loads(entity_row['descriptor'])
-            self._add_manifest_entry(name=entity_row['file_name'],
+        if is_stitched:
+            self.stitched.add(entity.entity_id)
+        if entity.entity_type.endswith('_file'):
+            descriptor = json.loads(row['descriptor'])
+            self._add_manifest_entry(entity,
+                                     name=row['file_name'],
                                      uuid=descriptor['file_id'],
                                      version=descriptor['file_version'],
                                      size=descriptor['size'],
                                      content_type=descriptor['content_type'],
                                      dcp_type='data',
-                                     is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
-                                     drs_uri=self._parse_drs_uri(entity_row['file_id'], descriptor))
-        content = entity_row['content']
-        self.metadata_files[entity_key] = (json.loads(content)
-                                           if isinstance(content, str)
-                                           else content)
+                                     drs_uri=self._parse_drs_uri(row['file_id'], descriptor))
+        content = row['content']
+        self.metadata[str(entity)] = (json.loads(content)
+                                      if isinstance(content, str)
+                                      else content)
 
     metadata_columns: ClassVar[set[str]] = {
-        'version',
-        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
-        'BYTE_LENGTH(content) AS content_size',
         'content'
     }
 
@@ -235,6 +225,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
     _suffix = 'tdr.'
 
     def _add_manifest_entry(self,
+                            entity: EntityReference,
                             *,
                             name: str,
                             uuid: str,
@@ -242,21 +233,14 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             size: int,
                             content_type: str,
                             dcp_type: str,
-                            is_stitched: bool,
                             checksums: Optional[Checksums] = None,
                             drs_uri: Optional[str] = None) -> None:
-        # These requirements prevent mismatches in the DRS domain, and ensure
-        # that changes to the column syntax don't go undetected.
-        if drs_uri is not None:
-            parsed = RegularDRSURI.parse(drs_uri)
-            require(parsed.uri.netloc == config.tdr_service_url.netloc)
-        self.manifest.append({
+        self.manifest[str(entity)] = {
             'name': name,
             'uuid': uuid,
             'version': version,
             'content-type': f'{content_type}; dcp-type={dcp_type}',
             'size': size,
-            'is_stitched': is_stitched,
             **(
                 {
                     'indexed': True,
@@ -268,7 +252,7 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                     **checksums.to_json()
                 }
             )
-        })
+        }
 
     def _parse_drs_uri(self,
                        file_id: Optional[str],
@@ -288,6 +272,10 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                     external_drs_uri = None
                 return external_drs_uri
         else:
+            # This requirement prevent mismatches in the DRS domain, and ensures
+            # that changes to the column syntax don't go undetected.
+            parsed = RegularDRSURI.parse(file_id)
+            require(parsed.uri.netloc == config.tdr_service_url.netloc)
             return file_id
 
 
@@ -340,13 +328,11 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
 
     def _emulate_bundle(self, bundle_fqid: TDRBundleFQID) -> TDRHCABundle:
         bundle = TDRHCABundle(fqid=bundle_fqid,
-                              manifest=[],
-                              metadata_files={})
+                              manifest={},
+                              metadata={},
+                              links={})
         entities, root_entities, links_jsons = self._stitch_bundles(bundle)
-        bundle.add_entity(entity_key='links.json',
-                          entity_type='links',
-                          entity_row=self._merge_links(links_jsons),
-                          is_stitched=False)
+        bundle.links = self._merge_links(links_jsons)
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
@@ -362,18 +348,16 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                     rows = future.result()
                     pk_column = entity_type + '_id'
                     rows.sort(key=itemgetter(pk_column))
-                    for i, row in enumerate(rows):
-                        is_stitched = EntityReference(entity_id=row[pk_column],
-                                                      entity_type=entity_type) not in root_entities
-                        bundle.add_entity(entity_key=f'{entity_type}_{i}.json',
-                                          entity_type=entity_type,
-                                          entity_row=row,
+                    for row in rows:
+                        entity = EntityReference(entity_id=row[pk_column], entity_type=entity_type)
+                        is_stitched = entity not in root_entities
+                        bundle.add_entity(entity=entity,
+                                          row=row,
                                           is_stitched=is_stitched)
                 else:
                     log.error('TDR worker failed to retrieve entities of type %r',
                               entity_type, exc_info=e)
                     raise e
-        bundle.manifest.sort(key=itemgetter('uuid'))
         return bundle
 
     def _stitch_bundles(self,
@@ -470,7 +454,6 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
             else TDRHCABundle.data_columns if entity_type.endswith('_file')
             else TDRHCABundle.metadata_columns
         )
-        assert version_column in non_pk_columns
         table_name = backtick(self._full_table_name(source, entity_type))
         entity_id_type = one(set(map(type, entity_ids)))
 
@@ -555,12 +538,6 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
         """
         root, *stitched = links_jsons
         if stitched:
-            merged = {
-                'links_id': root['links_id'],
-                'version': root['version']
-            }
-            for common_key in ('project_id', 'schema_type'):
-                merged[common_key] = one({row[common_key] for row in links_jsons})
             source_contents = [row['content'] for row in links_jsons]
             # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
             #        https://github.com/DataBiosphere/azul/issues/3215
@@ -574,14 +551,9 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
                 'describedBy': str(schema_url),
                 'links': sum((sc['links'] for sc in source_contents), start=[])
             }
-            merged['content'] = merged_content  # Keep result of parsed JSON for reuse
-            merged['content_size'] = len(json.dumps(merged_content))
-            assert merged.keys() == one({
-                frozenset(row.keys()) for row in links_jsons
-            }), merged
             assert merged_content.keys() == one({
                 frozenset(sc.keys()) for sc in source_contents
             }), merged_content
-            return merged
+            return merged_content
         else:
-            return root
+            return root['content']

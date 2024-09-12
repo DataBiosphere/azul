@@ -1,9 +1,6 @@
 from dataclasses import (
     dataclass,
 )
-from typing import (
-    Optional,
-)
 
 
 @dataclass(frozen=True)
@@ -89,7 +86,7 @@ class AgeRange:
             else:
                 raise fail() from e1
 
-        def cvt(value: str, default: float) -> Optional[float]:
+        def cvt(value: str, default: float) -> float | None:
             assert isinstance(default, float)
             try:
                 return factor * float(value) if value else default
