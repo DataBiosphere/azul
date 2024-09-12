@@ -32,7 +32,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'zone': '{AZUL_DOMAIN_NAME}',
                 'domain': '{AZUL_DOMAIN_NAME}',
                 'project': 'ucsc/data-browser',
-                'branch': 'main',
+                'branch': 'ucsc/anvil/anvildev',
                 'tarball_name': 'anvil',
                 'tarball_path': 'out',
                 'real_path': ''
