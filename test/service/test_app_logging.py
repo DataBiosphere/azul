@@ -15,6 +15,9 @@ from azul.chalice import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.strings import (
+    single_quote as sq,
+)
 from indexer import (
     DCP1CannedBundleTestCase,
 )
@@ -66,9 +69,12 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                             'Returning 200 response with headers {"Access-Control-Allow-Origin": '
                             '"*", "Access-Control-Allow-Headers": '
                             '"Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key", '
+                            f'"Content-Security-Policy": "default-src {sq("self")}", '
+                            '"Referrer-Policy": "strict-origin-when-cross-origin", '
                             '"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload", '
                             '"X-Content-Type-Options": "nosniff", '
                             '"X-Frame-Options": "DENY", '
+                            '"X-XSS-Protection": "1; mode=block", '
                             '"Cache-Control": "no-store"}. '
                             'See next line for the first 1024 characters of the body.\n'
                             '{"up": true}'

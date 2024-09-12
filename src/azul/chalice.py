@@ -63,6 +63,7 @@ from azul.json import (
 )
 from azul.strings import (
     join_words as jw,
+    single_quote as sq,
 )
 from azul.types import (
     JSON,
@@ -198,11 +199,14 @@ class AzulChaliceApp(Chalice):
     # addresses known security vulnerabilities.
     #
     security_headers = {
+        'Content-Security-Policy': jw('default-src', sq('self')),
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
         'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
                                         'includeSubDomains;',
                                         'preload'),
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block'
     }
 
     def _security_headers_middleware(self, event, get_response):
@@ -211,6 +215,8 @@ class AzulChaliceApp(Chalice):
         """
         response = get_response(event)
         response.headers.update(self.security_headers)
+        if response.headers.get('Content-Type') == 'text/html':
+            del response.headers['Content-Security-Policy']
         view_function = self.routes[event.path][event.method].view_function
         cache_control = getattr(view_function, 'cache_control')
         response.headers['Cache-Control'] = cache_control
