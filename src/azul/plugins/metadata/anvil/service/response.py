@@ -139,6 +139,9 @@ class AnvilSearchResponseStage(SearchResponseStage):
     def _make_hit(self, es_hit: JSON) -> MutableJSON:
         return {
             'entryId': es_hit['entity_id'],
+            # Note that there is a brittle coupling that must be maintained
+            # between the `sources` and `bundles` field paths here and the
+            # renamed fields in `Plugin.manifest_config`.
             'sources': list(map(self._make_source, es_hit['sources'])),
             'bundles': list(map(self._make_bundle, es_hit['bundles'])),
             **self._make_contents(es_hit['contents'])
