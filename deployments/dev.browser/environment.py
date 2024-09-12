@@ -28,15 +28,14 @@ def env() -> Mapping[str, Optional[str]]:
     return {
         'azul_terraform_component': 'browser',
         'azul_browser_sites': json.dumps({
-            'ucsc/data-browser': {
-                'ucsc/hca/dev': {
-                    'hca': {
-                        'domain': 'explore.{AZUL_DOMAIN_NAME}',
-                        'bucket': 'browser',
-                        'tarball_path': 'out',
-                        'real_path': ''
-                    }
-                }
+            'browser': {
+                'zone': '{AZUL_DOMAIN_NAME}',
+                'domain': 'explore.{AZUL_DOMAIN_NAME}',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/hca/dev',
+                'tarball_name': 'hca',
+                'tarball_path': 'out',
+                'real_path': ''
             }
         })
     }
