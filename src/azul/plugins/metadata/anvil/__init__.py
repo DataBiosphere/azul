@@ -222,7 +222,9 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                         ]
                     },
                     # These field names are hard-coded in the implementation of
-                    # the repository service/controller.
+                    # the repository service/controller. Also, these field paths
+                    # have a brittle coupling that must be maintained to the
+                    # field lookups in `self.manifest_config`.
                     **{
                         # Not in schema
                         'version': 'fileVersion',
@@ -273,6 +275,13 @@ class Plugin(MetadataPlugin[AnvilBundle]):
     def manifest_config(self) -> ManifestConfig:
         result = defaultdict(dict)
 
+        # Note that there is a brittle coupling that must be maintained between
+        # the fields listed here and those used in `self._field_mapping`.
+        fields_to_omit_from_manifest = [
+            ('contents', 'files', 'uuid'),
+            ('contents', 'files', 'version'),
+        ]
+
         def recurse(mapping: MetadataPlugin._FieldMapping, path: FieldPath):
             for path_element, name_or_type in mapping.items():
                 new_path = (*path, path_element)
@@ -281,20 +290,20 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                 elif isinstance(name_or_type, str):
                     if new_path == ('entity_id',):
                         pass
-                    elif new_path == ('contents', 'files', 'uuid'):
-                        # Request the injection of a file URL …
-                        result[path]['file_url'] = 'files.file_url'
-                        # … but suppress the columns for the fields …
+                    elif new_path in fields_to_omit_from_manifest:
                         result[path][path_element] = None
-                    elif new_path == ('contents', 'files', 'version'):
-                        # … only used by that injection.
-                        result[path][path_element] = None
+                        fields_to_omit_from_manifest.remove(new_path)
                     else:
                         result[path][path_element] = name_or_type
                 else:
                     assert False, (path, path_element, name_or_type)
 
         recurse(self._field_mapping, ())
+        assert len(fields_to_omit_from_manifest) == 0, fields_to_omit_from_manifest
+        # The file URL is synthesized from the `uuid` and `version` fields.
+        # Above, we already configured these two fields to be omitted from the
+        # manifest since they are not informative to the user.
+        result[('contents', 'files')]['file_url'] = 'files.file_url'
         return result
 
     def verbatim_pfb_schema(self,
