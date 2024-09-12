@@ -40,7 +40,7 @@ Connected issue: #0000
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] A comment to this PR details the completed security design review
 - [ ] PR title is appropriate as title of merge commit
-- [ ] Moved ticket to *Approved* column
+- [ ] Moved connected issue to *Approved* column
 - [ ] PR is assigned to only the operator
 
 

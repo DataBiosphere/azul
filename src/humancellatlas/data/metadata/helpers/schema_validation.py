@@ -11,11 +11,11 @@ from jsonschema import (
 )
 import requests
 
-from humancellatlas.data.metadata.api import (
-    JSON,
-)
-from humancellatlas.data.metadata.helpers.exception import (
+from azul import (
     RequirementError,
+)
+from azul.types import (
+    JSON,
 )
 
 log = logging.getLogger(__name__)

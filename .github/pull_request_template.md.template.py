@@ -637,7 +637,7 @@ def emit(t: T, target_branch: str):
             }),
             {
                 'type': 'cli',
-                'content': 'Moved ticket to *Approved* column'
+                'content': f'Moved connected {t.issues} to *Approved* column'
             },
             {
                 'type': 'cli',
@@ -811,6 +811,11 @@ def emit(t: T, target_branch: str):
                 'content': iif(t is t.hotfix,
                                'Moved connected issue to *Merged stable* column in ZenHub',
                                f'Moved connected {t.issues} to *Merged lower* column in ZenHub')
+            }),
+            iif(target_branch == 'develop' and t is not T.backport, {
+                'type': 'cli',
+                'content': 'Moved blocked issues to *Triage*',
+                'alt': f'or no issues are blocked on the connected {t.issues}'
             }),
             iif(t is T.upgrade,
                 {

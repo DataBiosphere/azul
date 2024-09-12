@@ -1,546 +1,7 @@
 {
-    "manifest": [
-        {
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "crc32c": "83068841",
-            "indexed": true,
-            "name": "cell_suspension_0.json",
-            "s3_etag": "ec82cb9b85492d24cefd6e504ba5cf4d",
-            "sha1": "3c815b6fa22248721cdabdd27944def9904f8024",
-            "sha256": "e891e656423d16ee86209a472bcbfa8a4412a43c1b3d88b5c5480c003e4a62e8",
-            "size": 918,
-            "uuid": "13b00a71-4916-441c-a863-0204b40ba127",
-            "version": "2018-09-06T18:57:19.864777Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "crc32c": "2f01c82e",
-            "indexed": true,
-            "name": "specimen_from_organism_0.json",
-            "s3_etag": "636381bddda598e5dc42f1ada4c1f62e",
-            "sha1": "344af19effe0da69966fc71f678a8257b82308a3",
-            "sha256": "6a1bc7bb4f15ba0f20035212388fa44be41809c83349dae36853ca49c18a691a",
-            "size": 825,
-            "uuid": "131f2ca9-0a3e-4794-a6f6-0170884de3bf",
-            "version": "2018-09-06T18:57:20.268820Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
-            "crc32c": "f34ac08a",
-            "indexed": true,
-            "name": "donor_organism_0.json",
-            "s3_etag": "26abd0107e044734bfde963d1c7a00f0",
-            "sha1": "501fffcf4efc7a4edd86c5a29b735a27821b6c16",
-            "sha256": "2bb9be39cc5f12a91b33ed5c02d17f38bcec6e2b2a68874e1673a18546ccc37f",
-            "size": 637,
-            "uuid": "651a2e3a-80a6-4e3a-99d0-63224ee2ef02",
-            "version": "2018-09-06T18:57:20.435057Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "67ad5eeb",
-            "indexed": true,
-            "name": "analysis_file_0.json",
-            "s3_etag": "55e52f25be1fec827701bb4b9c94d322",
-            "sha1": "ed7174fc86c8e83f3c740d2cacebbda9a6a5b6cc",
-            "sha256": "1d78efebd63efc0c1a4f714d17e09a02d571fe1917aca1bd0cb6fe7c2bd0559b",
-            "size": 467,
-            "uuid": "84d27b0a-348e-4af2-82cb-c37973a9fe17",
-            "version": "2018-09-06T18:57:20.658394Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "bc04e203",
-            "indexed": true,
-            "name": "analysis_file_1.json",
-            "s3_etag": "db52e69a1d0cafcf33a023ec44022d05",
-            "sha1": "5552abdaa1d9414557c370db32c92b0e999fdd2f",
-            "sha256": "b0d17ebef4acffc1265a20b49c27189fdbbb81a11e03880e14694dee3008158f",
-            "size": 475,
-            "uuid": "36671cf7-ab85-409f-a28b-27c489e2ab51",
-            "version": "2018-09-06T18:57:20.986853Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "7e9e2d7f",
-            "indexed": true,
-            "name": "analysis_file_2.json",
-            "s3_etag": "342495a58f58c02e7222ddb003b63ebc",
-            "sha1": "55b4bf19076b34a257ce6813d8f1d23aa3ddeca4",
-            "sha256": "c108e163ee4a1c18578c38102f8b928f5c6057efcbd433712cd00c65e76bf134",
-            "size": 474,
-            "uuid": "4ba5d8f9-2d1c-432d-9fa5-7e22eff732f1",
-            "version": "2018-09-06T18:57:21.230091Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "6a555d0b",
-            "indexed": true,
-            "name": "analysis_file_3.json",
-            "s3_etag": "969a6c7991862c5b23c424c4d60ceee7",
-            "sha1": "ad38bdb4a8fb6b4e26c44fd7dafaac5050103e54",
-            "sha256": "a710547a4ee2b808850592789c1de661b7f7af65b17af1137a377325b9adb1de",
-            "size": 475,
-            "uuid": "f71ca185-a4d4-42ec-b6f0-dbb140cb2f23",
-            "version": "2018-09-06T18:57:21.625379Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "4fb12adf",
-            "indexed": true,
-            "name": "analysis_file_4.json",
-            "s3_etag": "75f6dbfc5b1d792c9d9db11f9904b67a",
-            "sha1": "ca4918a3dd1a842e8df5b987e51c29738429c7e9",
-            "sha256": "683171923f163408a3315737e6f0e89c4cac5528789368df33606e0ebf5f7009",
-            "size": 476,
-            "uuid": "a0521704-08fa-4594-90da-0b29ee40dc0a",
-            "version": "2018-09-06T18:57:21.958345Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "3abcc78f",
-            "indexed": true,
-            "name": "analysis_file_5.json",
-            "s3_etag": "dc6913a65dc13258906fa2d8bfdb938b",
-            "sha1": "c476cd34a70bcb7fb34fad5623d1b110fc414df5",
-            "sha256": "e1e47dab1b2d4c2421c3d71634d56e65036206560c7c61a4be92f8299c445c7a",
-            "size": 484,
-            "uuid": "8dfb781a-9fa1-488d-9ddc-e8272bef5fe0",
-            "version": "2018-09-06T18:57:22.904511Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "5cd278a9",
-            "indexed": true,
-            "name": "analysis_file_6.json",
-            "s3_etag": "8b78e11092eb8195ab71aa467539b16e",
-            "sha1": "7f1ac76c962c59c1b632db59c2c1c429c46ef3fb",
-            "sha256": "fb4ed64b7ada6cd2d8be760377afbf24663c2b3e828c07a326110080c27245f9",
-            "size": 471,
-            "uuid": "e80fdd63-3c87-45f9-b1f7-9d7b7122dfdf",
-            "version": "2018-09-06T18:57:23.335931Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "a832e4b8",
-            "indexed": true,
-            "name": "analysis_file_7.json",
-            "s3_etag": "053f7e5707531a13076e10bd7bde69bb",
-            "sha1": "3f995a62acfebce5fe1a5ccf6b8f373b5b2a7433",
-            "sha256": "c8270fe81050c67b485c1bff48793a98d623bf20ea9b1a58a5c5492e45b0518d",
-            "size": 472,
-            "uuid": "29164286-43cf-43ca-b3b9-ad61f2e7a1c8",
-            "version": "2018-09-06T18:57:23.739232Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "0b8d264a",
-            "indexed": true,
-            "name": "analysis_file_8.json",
-            "s3_etag": "c9b74af381d99ec0d3695e2cfe3b717b",
-            "sha1": "c364708d0cf7c3300189cffc4d09354491b23030",
-            "sha256": "717a13c0ea6f8f903cdc6104b2f6f5aceca289f0dc218b82a31682ad93d59b14",
-            "size": 457,
-            "uuid": "46dc4f0d-11c0-4000-b6e9-710553a2a9cc",
-            "version": "2018-09-06T18:57:24.028070Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "ad7f6477",
-            "indexed": true,
-            "name": "analysis_file_9.json",
-            "s3_etag": "af6f375f22bbd78e3af53e8a014381a5",
-            "sha1": "3004f7cf716ff85a07d3061f804ef214f11cfe28",
-            "sha256": "04a738d4bdad1800870e30063896e6808939bdf591ddb927b6f9c32f15086b17",
-            "size": 473,
-            "uuid": "b78926da-4a2c-4af9-8cd8-4ae337336ccc",
-            "version": "2018-09-06T18:57:24.977559Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "d6867776",
-            "indexed": true,
-            "name": "analysis_file_10.json",
-            "s3_etag": "4d35c6d87f1b734c72dcb3079f9a465a",
-            "sha1": "2e013be3b156d50e6eb58bc49b87f6493e7bb8b7",
-            "sha256": "807578624f3bf637666e8f9d60e200b8f1f978d43bc0b6b0a0ddc008f45aaff0",
-            "size": 471,
-            "uuid": "a002691d-8568-40a3-9fd2-bae403916e08",
-            "version": "2018-09-06T18:57:25.358168Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "6b906cbd",
-            "indexed": true,
-            "name": "analysis_file_11.json",
-            "s3_etag": "d8ff4c812c74a00986138d93efa911af",
-            "sha1": "d5401619ae2fe29c338c09c9fc57811791109ff9",
-            "sha256": "0f5d0641e68f5313e5ed588cd5d222fc7022177f0ef67513c7f9dc372205f061",
-            "size": 469,
-            "uuid": "0963c920-cd31-45bd-8844-ff0200ff1667",
-            "version": "2018-09-06T18:57:25.791109Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "c2a244de",
-            "indexed": true,
-            "name": "analysis_file_12.json",
-            "s3_etag": "82f427ee1afddf59ab05bf5eef054023",
-            "sha1": "baf6b68036760fb8c276eae5ba649642c231e9fc",
-            "sha256": "9b2fdafdf9c0da9215267c00f29ab4d82b3d9c04291ffea053b413c5221cb9d0",
-            "size": 476,
-            "uuid": "fff7c188-ff07-4014-83a5-3f90dfafc09a",
-            "version": "2018-09-06T18:57:26.020492Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "29ad0393",
-            "indexed": true,
-            "name": "analysis_file_13.json",
-            "s3_etag": "8fbc68704cf722648d4a4975af5ed9af",
-            "sha1": "ad9fe77c0cd801939819d49e20685ed95249983e",
-            "sha256": "8f5a2401ebc0a9e699aa293dee8bd79ac35a7e7ea6f627910f6bfd49841ac587",
-            "size": 466,
-            "uuid": "cf4782d0-79e1-43dc-8313-93447a35620b",
-            "version": "2018-09-06T18:57:26.250231Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "4c32477a",
-            "indexed": true,
-            "name": "analysis_file_14.json",
-            "s3_etag": "780157ed9775cf0c4d5c9d8a68e41182",
-            "sha1": "7d3248c132e9faa645eb80277fb65f627e1001b5",
-            "sha256": "50b06283e558cf078c8af18da07406c34ec216924398ccad22774201799c13db",
-            "size": 474,
-            "uuid": "63cb3d77-fded-4235-87a2-50e5f756826b",
-            "version": "2018-09-06T18:57:26.547655Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "0baad1ba",
-            "indexed": true,
-            "name": "analysis_file_15.json",
-            "s3_etag": "00a7ced19c64091d5832ef61f385e390",
-            "sha1": "563d91c8bb946730bcde6c4e21ecaca493c8c674",
-            "sha256": "201ecff6b4d77aac896cdcdd5d6d45d755c693d9d46513ecc4853c745f9d31bd",
-            "size": 470,
-            "uuid": "140c27ca-12de-4425-953b-b1d4c2c918fc",
-            "version": "2018-09-06T18:57:27.261304Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "2a96317f",
-            "indexed": true,
-            "name": "analysis_file_16.json",
-            "s3_etag": "b88dc4a9f191285a35bbbcaa218a5022",
-            "sha1": "14ded68e52b7296bff7db20ec640c386b46f6b35",
-            "sha256": "b1b14223d3cbd2f6bb41deba50996aca811258e7f9c1f189c4cc76f74b74f03e",
-            "size": 478,
-            "uuid": "38c67a5f-db0c-4d5f-839b-b061709d8be9",
-            "version": "2018-09-06T18:57:27.574875Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "e5185037",
-            "indexed": true,
-            "name": "analysis_file_17.json",
-            "s3_etag": "be11d9e6df98ef83a5afc5e9854cb0c5",
-            "sha1": "36240bfc011467307d2f84d00662d3feab446a9f",
-            "sha256": "a6a5fa5a59042e85f722fc2ea9814de005b6e7ced5fab8647a48d2d912a5efa0",
-            "size": 462,
-            "uuid": "9efb3c26-4fd8-4986-8a72-1507880e6ab7",
-            "version": "2018-09-06T18:57:28.805601Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "7524917c",
-            "indexed": true,
-            "name": "analysis_file_18.json",
-            "s3_etag": "b5ba4e132fc3fdf115055a522657f603",
-            "sha1": "5863487f15adde9fe92b7930ba8f3cd392b36999",
-            "sha256": "568b49bfa003987a49d7c8a34341643c78e1aa2bed3bd873efea59939970fd9f",
-            "size": 461,
-            "uuid": "fff934f7-4a3e-442b-99b2-3479762db53c",
-            "version": "2018-09-06T18:57:29.172066Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "25a9863f",
-            "indexed": true,
-            "name": "analysis_file_19.json",
-            "s3_etag": "eec310b344174e6b849de431d00f6c89",
-            "sha1": "a32371da5fb53b7ae1e2a4f009d4116551c1cf7b",
-            "sha256": "5de27731c0abf0c88dd082f7e924a0cd532dba52bd447b82e095063c5e222092",
-            "size": 449,
-            "uuid": "3268e4bf-591a-4ca3-b7ad-440f61460610",
-            "version": "2018-09-06T18:57:29.513180Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "c42923cc",
-            "indexed": true,
-            "name": "analysis_file_20.json",
-            "s3_etag": "66adcda873b3d608d68d8cd18197708b",
-            "sha1": "3a63d6657094598521ef686f097a89c180a65a59",
-            "sha256": "cff1ca8cc3ecff8187772b37cce4639511aecb4dc1e453f7d2f20f676631ade7",
-            "size": 460,
-            "uuid": "68b243fc-c128-40ac-8e51-0383b4860c29",
-            "version": "2018-09-06T18:57:29.860881Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "fadd3f97",
-            "indexed": true,
-            "name": "analysis_file_21.json",
-            "s3_etag": "a36eead91712ee68d21fbabae381c684",
-            "sha1": "fe84563a2cb9a91535d2d6b55a5b9cccfd4d5af2",
-            "sha256": "e3dab2b555be27d5665966873bf66408e9e58b655b955df710a9673481fbd942",
-            "size": 449,
-            "uuid": "4448df34-27c1-413d-bfc1-a508f238e2ed",
-            "version": "2018-09-06T18:57:30.141297Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "387ab618",
-            "indexed": true,
-            "name": "analysis_file_22.json",
-            "s3_etag": "e62a7d27b7b45b2adb88f66b3e3665b3",
-            "sha1": "b6a66ec0649e9ffd55cb1fdcba8f5c16c364e0e7",
-            "sha256": "9ab95ea20e3a6203e427ba6da4e52322848e46a86f66289cc9c5b7f3713e64ec",
-            "size": 451,
-            "uuid": "c2c8aec7-489b-4c2b-9b79-dc9f9a6d2d1d",
-            "version": "2018-09-06T18:57:30.372057Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "8a96bb42",
-            "indexed": true,
-            "name": "analysis_file_23.json",
-            "s3_etag": "dd9ee1e95d220d61e164d045c1a69c8b",
-            "sha1": "95ce8378b45c374342527b425b607a5c18e97fa1",
-            "sha256": "b1fa35248889d39cd673f468e629664eddc6abacc6210cd50c2af69fed193d51",
-            "size": 462,
-            "uuid": "b4b3e436-19f2-4b56-b30c-dd22682e94fe",
-            "version": "2018-09-06T18:57:30.735503Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "e71be041",
-            "indexed": true,
-            "name": "analysis_file_24.json",
-            "s3_etag": "e8e0dc2a1bdb5b0d993046c9d0a64187",
-            "sha1": "b230b28e4b1864acb5c66f77bd97469dcb72a6c4",
-            "sha256": "c927ca903a7b5553d420777a11b2b254d0a737589a68fa1377650a15c02d35e8",
-            "size": 451,
-            "uuid": "477b3e82-552d-47dc-a27b-22d242298362",
-            "version": "2018-09-06T18:57:31.232124Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "2bc045f6",
-            "indexed": true,
-            "name": "analysis_file_25.json",
-            "s3_etag": "4d622ff816dc6a8df1ff769d5f78b5c8",
-            "sha1": "96a11333164a5c8e82e782d2f6d7a6d7dd1d7579",
-            "sha256": "812e422ef6aca6859df293f412ed8c375f60ed57de6bd2fee76eece72e01fd3b",
-            "size": 465,
-            "uuid": "e274e132-3fe1-44e9-879b-d6bc22cba2ab",
-            "version": "2018-09-06T18:57:31.501295Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "6a32264c",
-            "indexed": true,
-            "name": "analysis_file_26.json",
-            "s3_etag": "70440a9e940e1c35910db056eac44555",
-            "sha1": "13f8449417d16f150285a807727eae6addaf28bc",
-            "sha256": "d9bbe28f85a84c7c5309a35d5508571b8c7aa9fae83b5e790f4132d7f9f4d4fb",
-            "size": 468,
-            "uuid": "2c11a11d-840c-4a3d-b811-e0e03c2e0976",
-            "version": "2018-09-06T18:57:32.040750Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "1485d99b",
-            "indexed": true,
-            "name": "analysis_file_27.json",
-            "s3_etag": "e06434268a43e38ddc09c053e0870639",
-            "sha1": "7ef35d568ebdae7276374e9e9798268e941640bc",
-            "sha256": "3e8af5e72dd25cb2d4a877d0928ee487a6bf26f25e030aae1840ead86e453ff3",
-            "size": 451,
-            "uuid": "f3ca70e5-f530-4890-be95-e3635dcf164a",
-            "version": "2018-09-06T18:57:32.310810Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "8b18b0b6",
-            "indexed": true,
-            "name": "analysis_file_28.json",
-            "s3_etag": "3b58ecad7ec9fb0f4bdd3e60d899f871",
-            "sha1": "7110ae345286a3b278d3c7660c63af7fd4b5dfe1",
-            "sha256": "f9c434d8b64ed9c9420730c3353a9f51ff7299c503d6fb78e79ad4987408ba39",
-            "size": 455,
-            "uuid": "12bcb6de-0f5b-4581-8d02-4ed3c59c13ab",
-            "version": "2018-09-06T18:57:32.727293Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "93fc172d",
-            "indexed": true,
-            "name": "analysis_file_29.json",
-            "s3_etag": "4d3eeccf7ccd379bf2762eda8a2c0f6e",
-            "sha1": "3f42b7ad7735d10c8a520d67c7c4155b5cecf417",
-            "sha256": "25a21fc9465a29ab5de924d4d548440358e9dea6b9001152084dc635605cd084",
-            "size": 455,
-            "uuid": "e3a50ba8-8e82-4b7f-89de-b6f512037e3d",
-            "version": "2018-09-06T18:57:33.302775Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "7a328fac",
-            "indexed": true,
-            "name": "analysis_file_30.json",
-            "s3_etag": "45668837c2a29fccf00bec773b2d9a20",
-            "sha1": "a817997a49ab8a385d68f4beb00a323de07242ef",
-            "sha256": "633168df500a54eb58149ff08f912468ced39123ef81fd7e39480208d00742df",
-            "size": 453,
-            "uuid": "cf3a255f-e731-4912-a7b1-cbec1b0d5239",
-            "version": "2018-09-06T18:57:33.570238Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "4aca1117",
-            "indexed": true,
-            "name": "sequence_file_0.json",
-            "s3_etag": "795552da5f9c7687f6726cf3d9dd3366",
-            "sha1": "dc718663800cda8419294501f8d983d710ba1371",
-            "sha256": "c1c625fcc557201661efe2e7e5030f0ffaa7e2dad4855be7546a50f142995330",
-            "size": 459,
-            "uuid": "c5d76832-f738-43a0-afe7-f62aa53a7824",
-            "version": "2018-09-06T18:57:33.940734Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "5d69bd83",
-            "indexed": true,
-            "name": "sequence_file_1.json",
-            "s3_etag": "2afef526e39b259ccaaa60acff961463",
-            "sha1": "b137e0f7125e611a275f91d63d3bfd4b856f73b6",
-            "sha256": "fc08cf7a18b4988af3e5d9b9a4833b68264b06b9d8d028680c7a7e408effb276",
-            "size": 459,
-            "uuid": "be1f1c69-5ad5-4d2c-a86f-c43f1f003210",
-            "version": "2018-09-06T18:57:36.022316Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/project\"",
-            "crc32c": "b75282d3",
-            "indexed": true,
-            "name": "project_0.json",
-            "s3_etag": "804da434bf0fd770bbcb138e6256b9ee",
-            "sha1": "77611c414ac9a783c736f03edfe5699c7cfdb3aa",
-            "sha256": "9963bb67848a7a2f021f72af3aa25ee7e9c471ab2937d5becef9c624f60f6bb0",
-            "size": 1277,
-            "uuid": "26f1d58f-b247-4e0b-a4a9-402e029e5ac8",
-            "version": "2018-09-06T18:57:37.015401Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "crc32c": "5191954d",
-            "indexed": true,
-            "name": "library_preparation_protocol_0.json",
-            "s3_etag": "954db4a57065d485f444de70e710dfe7",
-            "sha1": "0d66651827c567fee76232616a42fe01063f2893",
-            "sha256": "160802e4b34ec019f2e97fd2c6674ef10bdf7d99bc5e205e674916493dfce62d",
-            "size": 890,
-            "uuid": "237048e6-dbd9-4a0b-b0cc-8085513c2944",
-            "version": "2018-09-06T18:57:37.641588Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "crc32c": "b1f0c27f",
-            "indexed": true,
-            "name": "sequencing_protocol_0.json",
-            "s3_etag": "f0726060c0592999a6010079950efd74",
-            "sha1": "b7d9e43a6dc8490ccde3ad32b9b8be5afc4a1e0a",
-            "sha256": "e88b39ce0e267b70237fa201f1ff20d259ffc87f6a393b83507a1eccaa4e035a",
-            "size": 693,
-            "uuid": "f6527c69-b8bb-467a-af22-32a1b7863c65",
-            "version": "2018-09-06T18:57:38.218098Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/protocol\"",
-            "crc32c": "780caf6f",
-            "indexed": true,
-            "name": "dissociation_protocol_0.json",
-            "s3_etag": "3a74ebf6012a9c8052f1dca705d221a7",
-            "sha1": "63385e4bb0fb42decfe748336e5416f137c197cd",
-            "sha256": "6b772cefa44668dcf2a3bb354bef433f8f0b699dcf9cb378f106f80d2f73677e",
-            "size": 556,
-            "uuid": "babc8692-6932-4c29-b33d-4d7b4deebe54",
-            "version": "2018-09-06T18:57:38.471615Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "crc32c": "85e98717",
-            "indexed": true,
-            "name": "analysis_process_0.json",
-            "s3_etag": "8bc7c7463194bfe0a9510bf5e8e92b02",
-            "sha1": "2c169b9f3b54f1dac089c5d3e170c8e092a7c95c",
-            "sha256": "dff6ceed166983555864971225a699f7c165cc7bd32659ae32442e941d1ecaaf",
-            "size": 21697,
-            "uuid": "2a4e1440-dab6-4b0b-8204-ebb270613cc1",
-            "version": "2018-09-06T18:57:38.912971Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "crc32c": "b8f7dae9",
-            "indexed": true,
-            "name": "process_0.json",
-            "s3_etag": "288e089cc62c373b5ef1472ac65b438d",
-            "sha1": "89dc98bd099ec7e6bdbc70b76646def33935d7ae",
-            "sha256": "76bc09e326ff2eb46e1b535d45166ee83ce9170348f42db72a4e3eeb518118a2",
-            "size": 392,
-            "uuid": "c8ac10c7-fa3a-4fbc-a9bd-55e767444773",
-            "version": "2018-09-06T18:57:39.722112Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "crc32c": "52b5470a",
-            "indexed": true,
-            "name": "process_1.json",
-            "s3_etag": "21df0d2428adaa0394cf8ce423e78992",
-            "sha1": "314b8ce04eba6bc4fe414cb93ce19116a2aa6580",
-            "sha256": "741570b1b569b4059ada5c20ced218c34ea926f0606740de63119bc1796d89bc",
-            "size": 394,
-            "uuid": "94510a2b-edc8-4f14-ab1e-494732ccf80a",
-            "version": "2018-09-06T18:57:40.281627Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/process\"",
-            "crc32c": "b86058e3",
-            "indexed": true,
-            "name": "process_2.json",
-            "s3_etag": "f4598d70c65d7779172b02c3059020ac",
-            "sha1": "be05192359c83da2081bea6ca1add4452c868c22",
-            "sha256": "a0877c0dee808a0bd8dbcdcfd1187fa67d3ac6c52825f466374cb5f4a0d6e371",
-            "size": 392,
-            "uuid": "44edcce5-152d-401c-ba29-ed73cd9ec57f",
-            "version": "2018-09-06T18:57:40.546407Z"
-        },
-        {
-            "content-type": "application/json; dcp-type=\"metadata/links\"",
-            "crc32c": "9f74bbaf",
-            "indexed": true,
-            "name": "links.json",
-            "s3_etag": "f686b75d62d09a84479046f497db0831",
-            "sha1": "bc9ee2d73c5228a3b56a4f40442b86e09ac8696a",
-            "sha256": "0900e839b6924ad0ba3a4f1f0266761989d0901358f7d6f7819d809ead8980c2",
-            "size": 5783,
-            "uuid": "77a7b5fd-01e1-40a9-a87a-d7c146c35c75",
-            "version": "2018-09-06T18:57:41.197346Z"
-        },
-        {
+    "manifest": {
+        "analysis_file/84d27b0a-348e-4af2-82cb-c37973a9fe17": {
+
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "7171048d",
             "indexed": false,
@@ -552,7 +13,7 @@
             "uuid": "8206df81-4e3a-4db9-b3b5-5aa4b6dfc3a4",
             "version": "2018-09-06T18:57:41.428997Z"
         },
-        {
+        "analysis_file/36671cf7-ab85-409f-a28b-27c489e2ab51": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "02a4d655",
             "indexed": false,
@@ -564,7 +25,7 @@
             "uuid": "460eba58-b2c3-472d-876b-d9834ec539a5",
             "version": "2018-09-06T18:57:42.154511Z"
         },
-        {
+        "analysis_file/4ba5d8f9-2d1c-432d-9fa5-7e22eff732f1": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "618ae98a",
             "indexed": false,
@@ -576,7 +37,7 @@
             "uuid": "362696a2-ecd4-4cca-9150-e3201392108b",
             "version": "2018-09-06T18:57:42.621655Z"
         },
-        {
+        "analysis_file/f71ca185-a4d4-42ec-b6f0-dbb140cb2f23": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "75c571b6",
             "indexed": false,
@@ -588,7 +49,7 @@
             "uuid": "d998bfa6-ac23-4211-885f-91e72a2d2f89",
             "version": "2018-09-06T18:57:42.939509Z"
         },
-        {
+        "analysis_file/a0521704-08fa-4594-90da-0b29ee40dc0a": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "4bdf84c1",
             "indexed": false,
@@ -600,7 +61,7 @@
             "uuid": "15bf35b5-4d06-4443-89c0-2a2d17aac62a",
             "version": "2018-09-06T18:57:43.285121Z"
         },
-        {
+        "analysis_file/8dfb781a-9fa1-488d-9ddc-e8272bef5fe0": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "49b17cd3",
             "indexed": false,
@@ -612,7 +73,7 @@
             "uuid": "373337f2-54eb-41ab-97ec-94801cfd26c4",
             "version": "2018-09-06T18:57:43.796420Z"
         },
-        {
+        "analysis_file/e80fdd63-3c87-45f9-b1f7-9d7b7122dfdf": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "faf51a99",
             "indexed": false,
@@ -624,7 +85,7 @@
             "uuid": "c4a34f85-2d7d-4a54-b519-88bfcc9d17ed",
             "version": "2018-09-06T18:57:44.147629Z"
         },
-        {
+        "analysis_file/29164286-43cf-43ca-b3b9-ad61f2e7a1c8": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "7dd5fc10",
             "indexed": false,
@@ -636,7 +97,7 @@
             "uuid": "4df968bf-3688-457e-a7f6-4e153ec1e489",
             "version": "2018-09-06T18:57:44.575566Z"
         },
-        {
+        "analysis_file/46dc4f0d-11c0-4000-b6e9-710553a2a9cc": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "bd717f27",
             "indexed": false,
@@ -648,7 +109,7 @@
             "uuid": "43aef3ac-aec7-4b84-afcc-cb2a0d82cee3",
             "version": "2018-09-06T18:57:44.951809Z"
         },
-        {
+        "analysis_file/b78926da-4a2c-4af9-8cd8-4ae337336ccc": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "32754f99",
             "indexed": false,
@@ -660,7 +121,7 @@
             "uuid": "5ec31a75-91c7-4241-8d5c-8682f02c0059",
             "version": "2018-09-06T18:57:45.320623Z"
         },
-        {
+        "analysis_file/a002691d-8568-40a3-9fd2-bae403916e08": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "35f41e6e",
             "indexed": false,
@@ -672,7 +133,7 @@
             "uuid": "9185340d-dcae-40e2-b76b-4f45eda95486",
             "version": "2018-09-06T18:57:45.653327Z"
         },
-        {
+        "analysis_file/0963c920-cd31-45bd-8844-ff0200ff1667": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "50412a1a",
             "indexed": false,
@@ -684,7 +145,7 @@
             "uuid": "cbef3cec-75ab-4cd5-90f0-1d32602d9176",
             "version": "2018-09-06T18:57:46.559751Z"
         },
-        {
+        "analysis_file/fff7c188-ff07-4014-83a5-3f90dfafc09a": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "f559ea99",
             "indexed": false,
@@ -696,7 +157,7 @@
             "uuid": "16dcefba-f947-41dd-bb14-b6fc77dfb1a8",
             "version": "2018-09-06T18:57:47.181102Z"
         },
-        {
+        "analysis_file/cf4782d0-79e1-43dc-8313-93447a35620b": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "ee63fc32",
             "indexed": false,
@@ -708,7 +169,7 @@
             "uuid": "420fa634-b60b-4b13-8e20-91cdffb1779a",
             "version": "2018-09-06T18:57:49.831713Z"
         },
-        {
+        "analysis_file/63cb3d77-fded-4235-87a2-50e5f756826b": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "1deb97f8",
             "indexed": false,
@@ -720,7 +181,7 @@
             "uuid": "1a2f8bc9-0314-4b11-9667-d98dd25f6356",
             "version": "2018-09-06T18:57:51.209724Z"
         },
-        {
+        "analysis_file/140c27ca-12de-4425-953b-b1d4c2c918fc": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "9ab095d7",
             "indexed": false,
@@ -732,7 +193,7 @@
             "uuid": "87a2d38c-5b38-4322-bbba-cbe668385b78",
             "version": "2018-09-06T18:57:52.560692Z"
         },
-        {
+        "analysis_file/38c67a5f-db0c-4d5f-839b-b061709d8be9": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "11777958",
             "indexed": false,
@@ -744,7 +205,7 @@
             "uuid": "df9b02ce-8f7f-4bdb-9e04-8ea0763734f8",
             "version": "2018-09-06T18:57:52.970974Z"
         },
-        {
+        "analysis_file/9efb3c26-4fd8-4986-8a72-1507880e6ab7": {
             "content-type": "application/pdf; dcp-type=data",
             "crc32c": "24adcee3",
             "indexed": false,
@@ -756,7 +217,7 @@
             "uuid": "b1d24d26-fcf8-4c16-a509-bc6bb59b1eb7",
             "version": "2018-09-06T18:57:53.355719Z"
         },
-        {
+        "analysis_file/fff934f7-4a3e-442b-99b2-3479762db53c": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "f5cd552d",
             "indexed": false,
@@ -768,7 +229,7 @@
             "uuid": "a80975e3-1463-4135-bc4a-9c5763f6bdd6",
             "version": "2018-09-06T18:57:53.670823Z"
         },
-        {
+        "analysis_file/3268e4bf-591a-4ca3-b7ad-440f61460610": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "8c9b2f5f",
             "indexed": false,
@@ -780,7 +241,7 @@
             "uuid": "6752851d-b55d-4387-82f7-e34ffd7ff05c",
             "version": "2018-09-06T18:57:54.127138Z"
         },
-        {
+        "analysis_file/68b243fc-c128-40ac-8e51-0383b4860c29": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "d8032370",
             "indexed": false,
@@ -792,7 +253,7 @@
             "uuid": "d9f81d5a-cf86-454a-b708-2522183521b3",
             "version": "2018-09-06T18:57:54.366094Z"
         },
-        {
+        "analysis_file/4448df34-27c1-413d-bfc1-a508f238e2ed": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "612947c2",
             "indexed": false,
@@ -804,7 +265,7 @@
             "uuid": "3659a48e-fbcb-4639-bfc8-16da76f0300d",
             "version": "2018-09-06T18:57:54.707345Z"
         },
-        {
+        "analysis_file/c2c8aec7-489b-4c2b-9b79-dc9f9a6d2d1d": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "a2359780",
             "indexed": false,
@@ -816,7 +277,7 @@
             "uuid": "a824e6d7-e28e-4bd0-a1ca-e96382d16cb4",
             "version": "2018-09-06T18:57:55.004613Z"
         },
-        {
+        "analysis_file/b4b3e436-19f2-4b56-b30c-dd22682e94fe": {
             "content-type": "text/plain; dcp-type=data",
             "crc32c": "25033e43",
             "indexed": false,
@@ -828,7 +289,7 @@
             "uuid": "6b199c79-18e7-453a-bf34-7453aa8d4058",
             "version": "2018-09-06T18:57:55.244962Z"
         },
-        {
+        "analysis_file/477b3e82-552d-47dc-a27b-22d242298362": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "a47b964a",
             "indexed": false,
@@ -840,7 +301,7 @@
             "uuid": "783bfe7a-dc47-44ac-b19e-4e3dd3f09129",
             "version": "2018-09-06T18:57:55.773304Z"
         },
-        {
+        "analysis_file/e274e132-3fe1-44e9-879b-d6bc22cba2ab": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "7062f2c5",
             "indexed": false,
@@ -852,7 +313,7 @@
             "uuid": "5931e486-e7f5-494d-b8b5-f4efab05c956",
             "version": "2018-09-06T18:57:56.210397Z"
         },
-        {
+        "analysis_file/2c11a11d-840c-4a3d-b811-e0e03c2e0976": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "de975d78",
             "indexed": false,
@@ -864,7 +325,7 @@
             "uuid": "05f1fe7b-4e71-4ca6-81e2-f2ccd8e89b89",
             "version": "2018-09-06T18:57:56.812784Z"
         },
-        {
+        "analysis_file/f3ca70e5-f530-4890-be95-e3635dcf164a": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "0f2e6a1c",
             "indexed": false,
@@ -876,7 +337,7 @@
             "uuid": "124ad630-ac99-4447-9114-8a383bcff077",
             "version": "2018-09-06T18:57:57.676451Z"
         },
-        {
+        "analysis_file/12bcb6de-0f5b-4581-8d02-4ed3c59c13ab": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "9a8ecacb",
             "indexed": false,
@@ -888,7 +349,7 @@
             "uuid": "cd228ff5-d05e-49af-91ab-57f6b8cea769",
             "version": "2018-09-06T18:57:57.964761Z"
         },
-        {
+        "analysis_file/e3a50ba8-8e82-4b7f-89de-b6f512037e3d": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "0d0c6dfb",
             "indexed": false,
@@ -900,7 +361,7 @@
             "uuid": "bb109a5e-525a-47ef-b20f-2bf4f37b3de3",
             "version": "2018-09-06T18:57:58.163443Z"
         },
-        {
+        "analysis_file/cf3a255f-e731-4912-a7b1-cbec1b0d5239": {
             "content-type": "application/octet-stream; dcp-type=data",
             "crc32c": "115ea372",
             "indexed": false,
@@ -912,7 +373,7 @@
             "uuid": "7a1cf419-f901-487f-994e-ff98ec7015da",
             "version": "2018-09-06T18:57:58.621633Z"
         },
-        {
+        "sequence_file/c5d76832-f738-43a0-afe7-f62aa53a7824": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "cfa3d5df",
             "indexed": false,
@@ -924,7 +385,7 @@
             "uuid": "4cb61abf-25eb-4779-a9fd-16ce3371d83f",
             "version": "2018-09-06T18:03:20.549271Z"
         },
-        {
+        "sequence_file/be1f1c69-5ad5-4d2c-a86f-c43f1f003210": {
             "content-type": "application/gzip; dcp-type=data",
             "crc32c": "d1c4cd35",
             "indexed": false,
@@ -936,9 +397,9 @@
             "uuid": "abced4f5-1949-4d83-8b28-254753582378",
             "version": "2018-09-06T18:03:20.906445Z"
         }
-    ],
+    },
     "metadata": {
-        "cell_suspension_0.json": {
+        "cell_suspension/13b00a71-4916-441c-a863-0204b40ba127": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -971,7 +432,7 @@
                 "update_date": "2018-09-06T17:43:49.418Z"
             }
         },
-        "specimen_from_organism_0.json": {
+        "specimen_from_organism/131f2ca9-0a3e-4794-a6f6-0170884de3bf": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -1001,7 +462,7 @@
                 "update_date": "2018-09-06T17:43:40.640Z"
             }
         },
-        "donor_organism_0.json": {
+        "donor_organism/651a2e3a-80a6-4e3a-99d0-63224ee2ef02": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
@@ -1024,7 +485,7 @@
                 "update_date": "2018-09-06T17:43:29.851Z"
             }
         },
-        "analysis_file_0.json": {
+        "analysis_file/84d27b0a-348e-4af2-82cb-c37973a9fe17": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1037,7 +498,7 @@
                 "update_date": "2018-09-06T18:51:18.929Z"
             }
         },
-        "analysis_file_1.json": {
+        "analysis_file/36671cf7-ab85-409f-a28b-27c489e2ab51": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1050,7 +511,7 @@
                 "update_date": "2018-09-06T18:51:15.720Z"
             }
         },
-        "analysis_file_2.json": {
+        "analysis_file/4ba5d8f9-2d1c-432d-9fa5-7e22eff732f1": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1063,7 +524,7 @@
                 "update_date": "2018-09-06T18:51:18.800Z"
             }
         },
-        "analysis_file_3.json": {
+        "analysis_file/f71ca185-a4d4-42ec-b6f0-dbb140cb2f23": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1076,7 +537,7 @@
                 "update_date": "2018-09-06T18:51:21.934Z"
             }
         },
-        "analysis_file_4.json": {
+        "analysis_file/a0521704-08fa-4594-90da-0b29ee40dc0a": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1089,7 +550,7 @@
                 "update_date": "2018-09-06T18:51:18.835Z"
             }
         },
-        "analysis_file_5.json": {
+        "analysis_file/8dfb781a-9fa1-488d-9ddc-e8272bef5fe0": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1102,7 +563,7 @@
                 "update_date": "2018-09-06T18:51:18.753Z"
             }
         },
-        "analysis_file_6.json": {
+        "analysis_file/e80fdd63-3c87-45f9-b1f7-9d7b7122dfdf": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1115,7 +576,7 @@
                 "update_date": "2018-09-06T18:51:19.110Z"
             }
         },
-        "analysis_file_7.json": {
+        "analysis_file/29164286-43cf-43ca-b3b9-ad61f2e7a1c8": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1128,7 +589,7 @@
                 "update_date": "2018-09-06T18:51:27.808Z"
             }
         },
-        "analysis_file_8.json": {
+        "analysis_file/46dc4f0d-11c0-4000-b6e9-710553a2a9cc": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1141,7 +602,7 @@
                 "update_date": "2018-09-06T18:51:21.984Z"
             }
         },
-        "analysis_file_9.json": {
+        "analysis_file/b78926da-4a2c-4af9-8cd8-4ae337336ccc": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1154,7 +615,7 @@
                 "update_date": "2018-09-06T18:51:22.213Z"
             }
         },
-        "analysis_file_10.json": {
+        "analysis_file/a002691d-8568-40a3-9fd2-bae403916e08": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1167,7 +628,7 @@
                 "update_date": "2018-09-06T18:51:24.731Z"
             }
         },
-        "analysis_file_11.json": {
+        "analysis_file/0963c920-cd31-45bd-8844-ff0200ff1667": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1180,7 +641,7 @@
                 "update_date": "2018-09-06T18:51:24.951Z"
             }
         },
-        "analysis_file_12.json": {
+        "analysis_file/fff7c188-ff07-4014-83a5-3f90dfafc09a": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1193,7 +654,7 @@
                 "update_date": "2018-09-06T18:51:27.830Z"
             }
         },
-        "analysis_file_13.json": {
+        "analysis_file/cf4782d0-79e1-43dc-8313-93447a35620b": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1206,7 +667,7 @@
                 "update_date": "2018-09-06T18:51:30.824Z"
             }
         },
-        "analysis_file_14.json": {
+        "analysis_file/63cb3d77-fded-4235-87a2-50e5f756826b": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1219,7 +680,7 @@
                 "update_date": "2018-09-06T18:51:27.727Z"
             }
         },
-        "analysis_file_15.json": {
+        "analysis_file/140c27ca-12de-4425-953b-b1d4c2c918fc": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1232,7 +693,7 @@
                 "update_date": "2018-09-06T18:51:30.804Z"
             }
         },
-        "analysis_file_16.json": {
+        "analysis_file/38c67a5f-db0c-4d5f-839b-b061709d8be9": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1245,7 +706,7 @@
                 "update_date": "2018-09-06T18:51:30.712Z"
             }
         },
-        "analysis_file_17.json": {
+        "analysis_file/9efb3c26-4fd8-4986-8a72-1507880e6ab7": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1258,7 +719,7 @@
                 "update_date": "2018-09-06T18:51:33.849Z"
             }
         },
-        "analysis_file_18.json": {
+        "analysis_file/fff934f7-4a3e-442b-99b2-3479762db53c": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1271,7 +732,7 @@
                 "update_date": "2018-09-06T18:51:33.768Z"
             }
         },
-        "analysis_file_19.json": {
+        "analysis_file/3268e4bf-591a-4ca3-b7ad-440f61460610": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1284,7 +745,7 @@
                 "update_date": "2018-09-06T18:51:27.818Z"
             }
         },
-        "analysis_file_20.json": {
+        "analysis_file/68b243fc-c128-40ac-8e51-0383b4860c29": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1297,7 +758,7 @@
                 "update_date": "2018-09-06T18:51:27.703Z"
             }
         },
-        "analysis_file_21.json": {
+        "analysis_file/4448df34-27c1-413d-bfc1-a508f238e2ed": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1310,7 +771,7 @@
                 "update_date": "2018-09-06T18:51:24.861Z"
             }
         },
-        "analysis_file_22.json": {
+        "analysis_file/c2c8aec7-489b-4c2b-9b79-dc9f9a6d2d1d": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1323,7 +784,7 @@
                 "update_date": "2018-09-06T18:51:48.751Z"
             }
         },
-        "analysis_file_23.json": {
+        "analysis_file/b4b3e436-19f2-4b56-b30c-dd22682e94fe": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1336,7 +797,7 @@
                 "update_date": "2018-09-06T18:51:39.778Z"
             }
         },
-        "analysis_file_24.json": {
+        "analysis_file/477b3e82-552d-47dc-a27b-22d242298362": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1349,7 +810,7 @@
                 "update_date": "2018-09-06T18:51:39.839Z"
             }
         },
-        "analysis_file_25.json": {
+        "analysis_file/e274e132-3fe1-44e9-879b-d6bc22cba2ab": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1362,7 +823,7 @@
                 "update_date": "2018-09-06T18:51:42.713Z"
             }
         },
-        "analysis_file_26.json": {
+        "analysis_file/2c11a11d-840c-4a3d-b811-e0e03c2e0976": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1375,7 +836,7 @@
                 "update_date": "2018-09-06T18:51:48.696Z"
             }
         },
-        "analysis_file_27.json": {
+        "analysis_file/f3ca70e5-f530-4890-be95-e3635dcf164a": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1388,7 +849,7 @@
                 "update_date": "2018-09-06T18:51:42.746Z"
             }
         },
-        "analysis_file_28.json": {
+        "analysis_file/12bcb6de-0f5b-4581-8d02-4ed3c59c13ab": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1401,7 +862,7 @@
                 "update_date": "2018-09-06T18:51:45.770Z"
             }
         },
-        "analysis_file_29.json": {
+        "analysis_file/e3a50ba8-8e82-4b7f-89de-b6f512037e3d": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1414,7 +875,7 @@
                 "update_date": "2018-09-06T18:51:45.736Z"
             }
         },
-        "analysis_file_30.json": {
+        "analysis_file/cf3a255f-e731-4912-a7b1-cbec1b0d5239": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/5.2.1/analysis_file",
             "schema_type": "file",
             "file_core": {
@@ -1427,7 +888,7 @@
                 "update_date": "2018-09-06T18:51:48.711Z"
             }
         },
-        "sequence_file_0.json": {
+        "sequence_file/c5d76832-f738-43a0-afe7-f62aa53a7824": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -1441,7 +902,7 @@
                 "update_date": "2018-09-06T18:43:35.669Z"
             }
         },
-        "sequence_file_1.json": {
+        "sequence_file/be1f1c69-5ad5-4d2c-a86f-c43f1f003210": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
@@ -1455,7 +916,7 @@
                 "update_date": "2018-09-06T18:43:35.937Z"
             }
         },
-        "project_0.json": {
+        "project/26f1d58f-b247-4e0b-a4a9-402e029e5ac8": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/project/9.0.2/project",
             "schema_type": "project",
             "project_core": {
@@ -1482,7 +943,7 @@
                 "update_date": "2018-09-06T17:43:29.771Z"
             }
         },
-        "library_preparation_protocol_0.json": {
+        "library_preparation_protocol/237048e6-dbd9-4a0b-b0cc-8085513c2944": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1511,7 +972,7 @@
                 "update_date": "2018-09-06T17:43:20.063Z"
             }
         },
-        "sequencing_protocol_0.json": {
+        "sequencing_protocol/f6527c69-b8bb-467a-af22-32a1b7863c65": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1532,7 +993,7 @@
                 "update_date": "2018-09-06T17:43:20.475Z"
             }
         },
-        "dissociation_protocol_0.json": {
+        "dissociation_protocol/babc8692-6932-4c29-b33d-4d7b4deebe54": {
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
@@ -1548,7 +1009,7 @@
                 "update_date": "2018-09-06T17:43:19.766Z"
             }
         },
-        "analysis_process_0.json": {
+        "analysis_process/2a4e1440-dab6-4b0b-8204-ebb270613cc1": {
             "analysis_run_type": "run",
             "describedBy": "http://schema.integration.data.humancellatlas.org/type/process/analysis/8.0.0/analysis_process",
             "input_bundles": [
@@ -1991,7 +1452,7 @@
                 "update_date": "2018-09-06T18:43:37.650Z"
             }
         },
-        "process_0.json": {
+        "process/c8ac10c7-fa3a-4fbc-a9bd-55e767444773": {
             "process_core": {
                 "process_id": "seq_proc_187"
             },
@@ -2003,7 +1464,7 @@
                 "update_date": "2018-09-06T17:44:11.383Z"
             }
         },
-        "process_1.json": {
+        "process/94510a2b-edc8-4f14-ab1e-494732ccf80a": {
             "process_core": {
                 "process_id": "process_id_189"
             },
@@ -2015,7 +1476,7 @@
                 "update_date": "2018-09-06T17:43:58.660Z"
             }
         },
-        "process_2.json": {
+        "process/44edcce5-152d-401c-ba29-ed73cd9ec57f": {
             "process_core": {
                 "process_id": "process_id_1"
             },
@@ -2026,158 +1487,159 @@
                 "submission_date": "2018-09-06T17:43:15.801Z",
                 "update_date": "2018-09-06T17:43:54.690Z"
             }
-        },
-        "links.json": {
-            "describedBy": "http://schema.integration.data.humancellatlas.org/system/1.1.1/links",
-            "schema_type": "link_bundle",
-            "schema_version": "1.1.1",
-            "links": [
-                {
-                    "process": "2a4e1440-dab6-4b0b-8204-ebb270613cc1",
-                    "inputs": [
-                        "c5d76832-f738-43a0-afe7-f62aa53a7824",
-                        "be1f1c69-5ad5-4d2c-a86f-c43f1f003210"
-                    ],
-                    "input_type": "file",
-                    "outputs": [
-                        "84d27b0a-348e-4af2-82cb-c37973a9fe17",
-                        "36671cf7-ab85-409f-a28b-27c489e2ab51",
-                        "4ba5d8f9-2d1c-432d-9fa5-7e22eff732f1",
-                        "f71ca185-a4d4-42ec-b6f0-dbb140cb2f23",
-                        "a0521704-08fa-4594-90da-0b29ee40dc0a",
-                        "8dfb781a-9fa1-488d-9ddc-e8272bef5fe0",
-                        "e80fdd63-3c87-45f9-b1f7-9d7b7122dfdf",
-                        "29164286-43cf-43ca-b3b9-ad61f2e7a1c8",
-                        "46dc4f0d-11c0-4000-b6e9-710553a2a9cc",
-                        "b78926da-4a2c-4af9-8cd8-4ae337336ccc",
-                        "a002691d-8568-40a3-9fd2-bae403916e08",
-                        "0963c920-cd31-45bd-8844-ff0200ff1667",
-                        "fff7c188-ff07-4014-83a5-3f90dfafc09a",
-                        "cf4782d0-79e1-43dc-8313-93447a35620b",
-                        "63cb3d77-fded-4235-87a2-50e5f756826b",
-                        "140c27ca-12de-4425-953b-b1d4c2c918fc",
-                        "38c67a5f-db0c-4d5f-839b-b061709d8be9",
-                        "9efb3c26-4fd8-4986-8a72-1507880e6ab7",
-                        "fff934f7-4a3e-442b-99b2-3479762db53c",
-                        "3268e4bf-591a-4ca3-b7ad-440f61460610",
-                        "68b243fc-c128-40ac-8e51-0383b4860c29",
-                        "4448df34-27c1-413d-bfc1-a508f238e2ed",
-                        "c2c8aec7-489b-4c2b-9b79-dc9f9a6d2d1d",
-                        "b4b3e436-19f2-4b56-b30c-dd22682e94fe",
-                        "477b3e82-552d-47dc-a27b-22d242298362",
-                        "e274e132-3fe1-44e9-879b-d6bc22cba2ab",
-                        "2c11a11d-840c-4a3d-b811-e0e03c2e0976",
-                        "f3ca70e5-f530-4890-be95-e3635dcf164a",
-                        "12bcb6de-0f5b-4581-8d02-4ed3c59c13ab",
-                        "e3a50ba8-8e82-4b7f-89de-b6f512037e3d",
-                        "cf3a255f-e731-4912-a7b1-cbec1b0d5239"
-                    ],
-                    "output_type": "file",
-                    "protocols": []
-                },
-                {
-                    "process": "c8ac10c7-fa3a-4fbc-a9bd-55e767444773",
-                    "inputs": [
-                        "13b00a71-4916-441c-a863-0204b40ba127"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "c5d76832-f738-43a0-afe7-f62aa53a7824",
-                        "be1f1c69-5ad5-4d2c-a86f-c43f1f003210"
-                    ],
-                    "output_type": "file",
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "237048e6-dbd9-4a0b-b0cc-8085513c2944"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "f6527c69-b8bb-467a-af22-32a1b7863c65"
-                        }
-                    ]
-                },
-                {
-                    "process": "94510a2b-edc8-4f14-ab1e-494732ccf80a",
-                    "inputs": [
-                        "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "13b00a71-4916-441c-a863-0204b40ba127"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "babc8692-6932-4c29-b33d-4d7b4deebe54"
-                        }
-                    ]
-                },
-                {
-                    "process": "44edcce5-152d-401c-ba29-ed73cd9ec57f",
-                    "inputs": [
-                        "651a2e3a-80a6-4e3a-99d0-63224ee2ef02"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": []
-                },
-                {
-                    "process": "c8ac10c7-fa3a-4fbc-a9bd-55e767444773",
-                    "inputs": [
-                        "13b00a71-4916-441c-a863-0204b40ba127"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "c5d76832-f738-43a0-afe7-f62aa53a7824",
-                        "be1f1c69-5ad5-4d2c-a86f-c43f1f003210"
-                    ],
-                    "output_type": "file",
-                    "protocols": [
-                        {
-                            "protocol_type": "library_preparation_protocol",
-                            "protocol_id": "237048e6-dbd9-4a0b-b0cc-8085513c2944"
-                        },
-                        {
-                            "protocol_type": "sequencing_protocol",
-                            "protocol_id": "f6527c69-b8bb-467a-af22-32a1b7863c65"
-                        }
-                    ]
-                },
-                {
-                    "process": "94510a2b-edc8-4f14-ab1e-494732ccf80a",
-                    "inputs": [
-                        "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "13b00a71-4916-441c-a863-0204b40ba127"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": [
-                        {
-                            "protocol_type": "dissociation_protocol",
-                            "protocol_id": "babc8692-6932-4c29-b33d-4d7b4deebe54"
-                        }
-                    ]
-                },
-                {
-                    "process": "44edcce5-152d-401c-ba29-ed73cd9ec57f",
-                    "inputs": [
-                        "651a2e3a-80a6-4e3a-99d0-63224ee2ef02"
-                    ],
-                    "input_type": "biomaterial",
-                    "outputs": [
-                        "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
-                    ],
-                    "output_type": "biomaterial",
-                    "protocols": []
-                }
-            ]
         }
-    }
+    },
+    "links": {
+        "describedBy": "http://schema.integration.data.humancellatlas.org/system/1.1.1/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.1",
+        "links": [
+            {
+                "process": "2a4e1440-dab6-4b0b-8204-ebb270613cc1",
+                "inputs": [
+                    "c5d76832-f738-43a0-afe7-f62aa53a7824",
+                    "be1f1c69-5ad5-4d2c-a86f-c43f1f003210"
+                ],
+                "input_type": "file",
+                "outputs": [
+                    "84d27b0a-348e-4af2-82cb-c37973a9fe17",
+                    "36671cf7-ab85-409f-a28b-27c489e2ab51",
+                    "4ba5d8f9-2d1c-432d-9fa5-7e22eff732f1",
+                    "f71ca185-a4d4-42ec-b6f0-dbb140cb2f23",
+                    "a0521704-08fa-4594-90da-0b29ee40dc0a",
+                    "8dfb781a-9fa1-488d-9ddc-e8272bef5fe0",
+                    "e80fdd63-3c87-45f9-b1f7-9d7b7122dfdf",
+                    "29164286-43cf-43ca-b3b9-ad61f2e7a1c8",
+                    "46dc4f0d-11c0-4000-b6e9-710553a2a9cc",
+                    "b78926da-4a2c-4af9-8cd8-4ae337336ccc",
+                    "a002691d-8568-40a3-9fd2-bae403916e08",
+                    "0963c920-cd31-45bd-8844-ff0200ff1667",
+                    "fff7c188-ff07-4014-83a5-3f90dfafc09a",
+                    "cf4782d0-79e1-43dc-8313-93447a35620b",
+                    "63cb3d77-fded-4235-87a2-50e5f756826b",
+                    "140c27ca-12de-4425-953b-b1d4c2c918fc",
+                    "38c67a5f-db0c-4d5f-839b-b061709d8be9",
+                    "9efb3c26-4fd8-4986-8a72-1507880e6ab7",
+                    "fff934f7-4a3e-442b-99b2-3479762db53c",
+                    "3268e4bf-591a-4ca3-b7ad-440f61460610",
+                    "68b243fc-c128-40ac-8e51-0383b4860c29",
+                    "4448df34-27c1-413d-bfc1-a508f238e2ed",
+                    "c2c8aec7-489b-4c2b-9b79-dc9f9a6d2d1d",
+                    "b4b3e436-19f2-4b56-b30c-dd22682e94fe",
+                    "477b3e82-552d-47dc-a27b-22d242298362",
+                    "e274e132-3fe1-44e9-879b-d6bc22cba2ab",
+                    "2c11a11d-840c-4a3d-b811-e0e03c2e0976",
+                    "f3ca70e5-f530-4890-be95-e3635dcf164a",
+                    "12bcb6de-0f5b-4581-8d02-4ed3c59c13ab",
+                    "e3a50ba8-8e82-4b7f-89de-b6f512037e3d",
+                    "cf3a255f-e731-4912-a7b1-cbec1b0d5239"
+                ],
+                "output_type": "file",
+                "protocols": []
+            },
+            {
+                "process": "c8ac10c7-fa3a-4fbc-a9bd-55e767444773",
+                "inputs": [
+                    "13b00a71-4916-441c-a863-0204b40ba127"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c5d76832-f738-43a0-afe7-f62aa53a7824",
+                    "be1f1c69-5ad5-4d2c-a86f-c43f1f003210"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "237048e6-dbd9-4a0b-b0cc-8085513c2944"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "f6527c69-b8bb-467a-af22-32a1b7863c65"
+                    }
+                ]
+            },
+            {
+                "process": "94510a2b-edc8-4f14-ab1e-494732ccf80a",
+                "inputs": [
+                    "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "13b00a71-4916-441c-a863-0204b40ba127"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "babc8692-6932-4c29-b33d-4d7b4deebe54"
+                    }
+                ]
+            },
+            {
+                "process": "44edcce5-152d-401c-ba29-ed73cd9ec57f",
+                "inputs": [
+                    "651a2e3a-80a6-4e3a-99d0-63224ee2ef02"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "c8ac10c7-fa3a-4fbc-a9bd-55e767444773",
+                "inputs": [
+                    "13b00a71-4916-441c-a863-0204b40ba127"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c5d76832-f738-43a0-afe7-f62aa53a7824",
+                    "be1f1c69-5ad5-4d2c-a86f-c43f1f003210"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "237048e6-dbd9-4a0b-b0cc-8085513c2944"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "f6527c69-b8bb-467a-af22-32a1b7863c65"
+                    }
+                ]
+            },
+            {
+                "process": "94510a2b-edc8-4f14-ab1e-494732ccf80a",
+                "inputs": [
+                    "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "13b00a71-4916-441c-a863-0204b40ba127"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "babc8692-6932-4c29-b33d-4d7b4deebe54"
+                    }
+                ]
+            },
+            {
+                "process": "44edcce5-152d-401c-ba29-ed73cd9ec57f",
+                "inputs": [
+                    "651a2e3a-80a6-4e3a-99d0-63224ee2ef02"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "131f2ca9-0a3e-4794-a6f6-0170884de3bf"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    },
+    "stitched": []
 }

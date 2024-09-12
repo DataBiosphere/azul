@@ -504,8 +504,8 @@
         "sequence_file": {
             "rows": [
                 {
-                    "sequence_file_id": "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
-                    "version": "2019-09-20T13:51:28.379000Z",
+                    "sequence_file_id": "5f68ea73-350b-4d37-a341-3004139fb699",
+                    "version": "2019-09-20T13:50:35.660000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -590,8 +590,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
-                    "version": "2019-09-20T13:50:35.338000Z",
+                    "sequence_file_id": "3c3d882a-cc38-4eea-ac53-0885f906852e",
+                    "version": "2019-09-20T13:52:19.666000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -676,8 +676,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "3c3d882a-cc38-4eea-ac53-0885f906852e",
-                    "version": "2019-09-20T13:52:19.666000Z",
+                    "sequence_file_id": "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
+                    "version": "2019-09-20T13:50:59.836000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -719,8 +719,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "3dffc456-caaf-4823-9f65-fc0db7abacbc",
-                    "version": "2019-09-20T13:49:42.771000Z",
+                    "sequence_file_id": "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
+                    "version": "2019-09-20T13:52:17.560000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -762,8 +762,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "5f68ea73-350b-4d37-a341-3004139fb699",
-                    "version": "2019-09-20T13:50:35.660000Z",
+                    "sequence_file_id": "3dffc456-caaf-4823-9f65-fc0db7abacbc",
+                    "version": "2019-09-20T13:49:42.771000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -805,8 +805,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
-                    "version": "2019-09-20T13:50:59.836000Z",
+                    "sequence_file_id": "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
+                    "version": "2019-09-20T13:50:08.492000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -848,8 +848,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
-                    "version": "2019-09-20T13:52:17.560000Z",
+                    "sequence_file_id": "98ee0901-d34c-48a5-915a-0511bac325ec",
+                    "version": "2019-09-20T13:53:16.941000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -891,8 +891,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "98ee0901-d34c-48a5-915a-0511bac325ec",
-                    "version": "2019-09-20T13:53:16.941000Z",
+                    "sequence_file_id": "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
+                    "version": "2019-09-20T13:50:35.338000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -934,8 +934,8 @@
                     }
                 },
                 {
-                    "sequence_file_id": "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
-                    "version": "2019-09-20T13:50:08.492000Z",
+                    "sequence_file_id": "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
+                    "version": "2019-09-20T13:51:28.379000Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
                         "schema_type": "file",
@@ -1527,8 +1527,8 @@
                     }
                 },
                 {
-                    "process_id": "c5cf9180-535a-4d1c-bdee-4f6ce7845b1e",
-                    "version": "2019-09-20T13:43:52.368000Z",
+                    "process_id": "df5114c9-9f52-451b-afde-3673392fc864",
+                    "version": "2019-09-20T13:43:52.607000Z",
                     "content": {
                         "process_core": {
                             "process_id": "process_id_1"
@@ -1545,8 +1545,8 @@
                     }
                 },
                 {
-                    "process_id": "df5114c9-9f52-451b-afde-3673392fc864",
-                    "version": "2019-09-20T13:43:52.607000Z",
+                    "process_id": "c5cf9180-535a-4d1c-bdee-4f6ce7845b1e",
+                    "version": "2019-09-20T13:43:52.368000Z",
                     "content": {
                         "process_core": {
                             "process_id": "process_id_3"
