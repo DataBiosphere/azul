@@ -386,7 +386,7 @@
             }
         },
         "project/2d846095-8a33-4f3c-97d4-585bafac13b4": {
-            "describedBy": "https://schema.humancellatlas.org/type/project/15.0.0/project",
+            "describedBy": "https://schema.humancellatlas.org/type/project/19.0.0/project",
             "schema_type": "project",
             "project_core": {
                 "project_short_name": "InfiltratingNeoplasticCellsHumanGlioblastoma",
@@ -396,6 +396,7 @@
             "supplementary_links": [
                 "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE84nnn/GSE84465/suppl/GSE84465_GBM_All_data.csv.gz,ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE84nnn/GSE84465/suppl/GSE84465_RAW.tar"
             ],
+            "data_use_restriction": "NRES",
             "insdc_project_accessions": [
                 "SRP079058"
             ],

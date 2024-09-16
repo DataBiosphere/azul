@@ -323,7 +323,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "matrices": [],
@@ -571,7 +572,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "dates": [
@@ -814,7 +816,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "dates": [
@@ -1082,7 +1085,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "dates": [
@@ -1350,7 +1354,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "matrices": [],
@@ -1669,7 +1674,8 @@
                         "is_tissue_atlas_project": [0],
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": ["~null"]
                     }
                 ],
                 "matrices": [],
@@ -1973,7 +1979,8 @@
                         "is_tissue_atlas_project": [0],
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": ["~null"]
                     }
                 ],
                 "dates": [
@@ -2275,7 +2282,8 @@
                         "is_tissue_atlas_project": [0],
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": ["~null"]
                     }
                 ],
                 "dates": [
@@ -2537,7 +2545,8 @@
                         "is_tissue_atlas_project": [0],
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": ["~null"]
                     }
                 ],
                 "dates": [
@@ -2862,7 +2871,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "matrices": [],
@@ -3139,7 +3149,8 @@
                         "is_tissue_atlas_project": 0,
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": "~null"
                     }
                 ],
                 "dates": [
@@ -3420,7 +3431,8 @@
                         "is_tissue_atlas_project": [0],
                         "tissue_atlas": [],
                         "estimated_cell_count": 9223372036854774784,
-                        "estimated_cell_count_": null
+                        "estimated_cell_count_": null,
+                        "data_use_restriction": ["~null"]
                     }
                 ],
                 "dates": [

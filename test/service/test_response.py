@@ -259,6 +259,7 @@ class TestIndexResponse(IndexResponseTestCase):
                         "isTissueAtlasProject": [False],
                         "tissueAtlas": [],
                         "estimatedCellCount": None,
+                        "dataUseRestriction": [None],
                     }
                 ],
                 "protocols": [
@@ -590,7 +591,8 @@ class TestIndexResponse(IndexResponseTestCase):
                             "bionetworkName": [None],
                             "tissueAtlas": [],
                             "isTissueAtlasProject": False,
-                            "accessions": []
+                            "accessions": [],
+                            "dataUseRestriction": None,
                         }
                     ],
                     "protocols": [
@@ -854,6 +856,7 @@ class TestIndexResponse(IndexResponseTestCase):
                             {"namespace": "insdc_project", "accession": "SRP000001"},
                             {"namespace": "insdc_study", "accession": "PRJNA000000"},
                         ],
+                        "dataUseRestriction": None,
                     }
                 ],
                 "protocols": [
@@ -3505,6 +3508,28 @@ class TestResponseFields(IndexResponseTestCase):
             for entry in tissue_atlas['terms']
         }
         self.assertEqual({None: 2, 'Lung': 1, 'Retina': 1, 'Blood': 1}, terms)
+
+    def test_data_use_restriction(self):
+        field, value = 'dataUseRestriction', 'NRES'
+        params = {
+            'catalog': self.catalog,
+            'sort': field,
+            'filters': json.dumps({field: {'is': [value]}})
+        }
+        plugin = self.index_service.metadata_plugin(self.catalog)
+        for entity_type in plugin.exposed_indices:
+            url = self.base_url.set(path=('index', entity_type), args=params)
+            response = requests.get(url)
+            response.raise_for_status()
+            response = response.json()
+            facets = response['termFacets']
+            terms = {term['term'] for term in facets[field]['terms']}
+            self.assertEqual({None, value}, terms)
+            hits = response['hits']
+            self.assertGreater(len(hits), 0)
+            expected = value if entity_type == 'projects' else [value]
+            for hit in hits:
+                self.assertEqual(expected, one(hit['projects'])[field])
 
 
 class TestUnpopulatedIndexResponse(IndexResponseTestCase):
