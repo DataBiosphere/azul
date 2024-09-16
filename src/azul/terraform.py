@@ -710,6 +710,10 @@ class Chalice:
         for resource in resources['aws_lambda_function'].values():
             assert 'layers' not in resource
             resource['layers'] = ['${aws_lambda_layer_version.dependencies.arn}']
+            # Publishing the Lambda function as a new version prevents a race
+            # condition when there's a dependency between updates to the
+            # function's configuration and its code.
+            resource['publish'] = True
             env = config.es_endpoint_env(
                 es_endpoint=(
                     aws.es_endpoint

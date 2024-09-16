@@ -17,12 +17,12 @@ init: initable
 	terraform init -reconfigure -lockfile=readonly
 
 .PHONY: check_schema
-check_schema: init
+check_schema: init check_python
 	python $(project_root)/scripts/terraform_schema.py check \
 	|| (echo "Schema is stale. Run 'make update_schema' and commit." ; false)
 
 .PHONY: update_schema
-update_schema: init
+update_schema: init check_python
 	python $(project_root)/scripts/terraform_schema.py update
 
 .PHONY: config
@@ -33,7 +33,7 @@ validate: config
 	terraform validate
 
 .PHONY: rename_resources
-rename_resources: validate
+rename_resources: validate check_python
 	python $(project_root)/scripts/rename_resources.py
 
 .PHONY: import_resources
@@ -43,8 +43,12 @@ import_resources: rename_resources
 plan: import_resources
 	terraform plan
 
+.PHONY: delete_published_function_versions
+delete_published_function_versions: import_resources check_python
+	python $(project_root)/scripts/delete_published_function_versions.py
+
 .PHONY: apply
-apply: import_resources
+apply: delete_published_function_versions
 ifeq ($(AZUL_PRIVATE_API),1)
 	# For private API we need the VPC endpoints to be created first so that the
 	# aws_lb_target_group_attachment can iterate over the network_interface_ids.
@@ -53,7 +57,7 @@ endif
 	terraform apply
 
 .PHONY: auto_apply
-auto_apply: import_resources
+auto_apply: delete_published_function_versions
 ifeq ($(AZUL_PRIVATE_API),1)
 	# See `apply` above
 	terraform apply -auto-approve -target aws_vpc_endpoint.indexer -target aws_vpc_endpoint.service

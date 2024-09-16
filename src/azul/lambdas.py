@@ -31,6 +31,7 @@ class Lambda:
     name: str
     role: str
     slot_location: Optional[str]
+    version: str
 
     @property
     def is_contribution_lambda(self) -> bool:
@@ -74,13 +75,15 @@ class Lambda:
     def from_response(cls, response: JSON) -> 'Lambda':
         name = response['FunctionName']
         role = response['Role']
+        version = response['Version']
         try:
             slot_location = response['Environment']['Variables']['AZUL_TDR_SOURCE_LOCATION']
         except KeyError:
             slot_location = None
         return cls(name=name,
                    role=role,
-                   slot_location=slot_location)
+                   slot_location=slot_location,
+                   version=version)
 
     def __attrs_post_init__(self):
         if self.slot_location is None:
@@ -97,21 +100,41 @@ class Lambdas:
     def _lambda(self):
         return aws.lambda_
 
-    def list_lambdas(self) -> list[Lambda]:
+    def list_lambdas(self,
+                     deployment: str | None = None,
+                     all_versions: bool = False
+                     ) -> list[Lambda]:
+        """
+        Return a list of all AWS Lambda functions (or function versions) in the
+        current account, or the given deployment.
+
+        :param deployment: Limit output to the specified deployment stage. If
+                           `None`, functions from all deployments will be
+                           returned.
+
+        :param all_versions: If `True`, return all versions of each AWS Lambda
+                             function (including '$LATEST'). If `False`, return
+                             only the latest version of each function.
+        """
+        paginator = self._lambda.get_paginator('list_functions')
+        lambda_prefixes = None if deployment is None else [
+            config.qualified_resource_name(lambda_name, stage=deployment)
+            for lambda_name in config.lambda_names()
+        ]
+        params = {'FunctionVersion': 'ALL'} if all_versions else {}
         return [
             Lambda.from_response(function)
-            for response in self._lambda.get_paginator('list_functions').paginate()
+            for response in paginator.paginate(**params)
             for function in response['Functions']
+            if lambda_prefixes is None or any(
+                function['FunctionName'].startswith(prefix)
+                for prefix in lambda_prefixes
+            )
         ]
 
     def manage_lambdas(self, enabled: bool):
-        paginator = self._lambda.get_paginator('list_functions')
-        lambda_prefixes = [config.qualified_resource_name(lambda_infix) for lambda_infix in config.lambda_names()]
-        assert all(lambda_prefixes)
-        for lambda_page in paginator.paginate(FunctionVersion='ALL', MaxItems=500):
-            for lambda_name in [metadata['FunctionName'] for metadata in lambda_page['Functions']]:
-                if any(lambda_name.startswith(prefix) for prefix in lambda_prefixes):
-                    self.manage_lambda(lambda_name, enabled)
+        for function in self.list_lambdas(deployment=config.deployment_stage):
+            self.manage_lambda(function.name, enabled)
 
     def manage_lambda(self, lambda_name: str, enable: bool):
         lambda_settings = self._lambda.get_function(FunctionName=lambda_name)
@@ -178,3 +201,18 @@ class Lambdas:
                             time.sleep(1)
                         else:
                             break
+
+    def delete_published_function_versions(self):
+        """
+        Delete the published versions of every AWS Lambda function in the
+        current deployment.
+        """
+        log.info('Deleting stale versions of AWS Lambda functions')
+        for function in self.list_lambdas(deployment=config.deployment_stage,
+                                          all_versions=True):
+            if function.version == '$LATEST':
+                log.info('Skipping the unpublished version of %r', function.name)
+            else:
+                log.info('Deleting published version %r of %r', function.version, function.name)
+                self._lambda.delete_function(FunctionName=function.name,
+                                             Qualifier=function.version)
