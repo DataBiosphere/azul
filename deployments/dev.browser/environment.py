@@ -30,10 +30,10 @@ def env() -> Mapping[str, Optional[str]]:
         'azul_browser_sites': json.dumps({
             'browser': {
                 'zone': '{AZUL_DOMAIN_NAME}',
-                'domain': '{AZUL_DOMAIN_NAME}',
+                'domain': 'explore.{AZUL_DOMAIN_NAME}',
                 'project': 'ucsc/data-browser',
-                'branch': 'ucsc/anvil/anvilprod',
-                'tarball_name': 'anvil',
+                'branch': 'ucsc/hca/dev',
+                'tarball_name': 'hca',
                 'tarball_path': 'out',
                 'real_path': ''
             }

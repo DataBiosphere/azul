@@ -806,38 +806,44 @@ def env() -> Mapping[str, Optional[str]]:
         # managed by the `browser` TF component of the current Azul deployment.
         #
         # {
-        #     'ucsc/data-browser': {  // The path of the GitLab project hosting
-        #                             // the source code for the site. The
-        #                             // project must exist on the GitLab
-        #                             // instance managing the current Azul
-        #                             // deployment.
+        #     'browser': { // The TF resource name of per-site resources in the
+        #                  // `browser` component and unqualified name of the
+        #                  // S3 bucket hosting the site
         #
-        #         'main': {  // The name of the branch (in that project) from
-        #                    // which the site's content tarball was built
+        #         'domain': '{AZUL_DOMAIN_NAME}',  // The domain name of the
+        #                                          // site
         #
-        #             'anvil': {  // The site name. Typically corresponds to an
-        #                         // Azul atlas as defined in the AZUL_CATALOGS
-        #                         // and a child directory of
-        #                         // .gitlab/sites/$AZUL_DEPLOYMENT_STAGE in the
-        #                         // source of the project referenced by the
-        #                         // top-level key in this structure.
+        #         'zone': '{AZUL_DOMAIN_NAME}', // The name of the Route53
+        #                                       // hosted zone containing the
+        #                                       // A record for the domain name
+        #                                       // of the site. The zone must
+        #                                       // already exist before the
         #
-        #                 'domain': '{AZUL_DOMAIN_NAME}',  // The domain name of
-        #                                                  // the site
+        #         'project': 'ucsc/data-browser', // The path of the GitLab
+        #                                         // project hosting the source
+        #                                         // code for the site. The
+        #                                         // project must exist on the
+        #                                         // GitLab instance managing
+        #                                         // the current Azul
+        #                                         // deployment.
         #
-        #                 'bucket': 'browser',  // The TF resource name (in the
-        #                                       // `browser` component) of the
-        #                                       // S3 bucket hosting the site
-        #                                       // ('portal' or 'browser')
+        #         'branch': 'main', // The name of the branch (in that project)
+        #                           // from which the site's content tarball was
+        #                           // built
         #
-        #                 'tarball_path': 'explore',  // The path to the site's
-        #                                             // content in the tarball
+        #         'tarball_name': 'anvil' // Typically corresponds to an Azul
+        #                                 // atlas as defined in AZUL_CATALOGS
+        #                                 // and a child directory of
+        #                                 // .gitlab/sites/$AZUL_DEPLOYMENT_STAGE
+        #                                 // in the source of the project
+        #                                 // referenced by the top-level key in
+        #                                 // this structure.
         #
-        #                 'real_path': 'explore/anvil-cmg'  // The path of that
-        #                                                   // same content in
-        #                                                   // the bucket
-        #             }
-        #         }
+        #         'tarball_path': 'explore',  // The path to the site's content
+        #                                     // in the tarball
+        #
+        #         'real_path': 'explore/anvil-cmg'  // The path of that same
+        #                                           // content in the bucket
         #     }
         # }
         #
