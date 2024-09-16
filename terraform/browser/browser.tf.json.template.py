@@ -153,15 +153,12 @@ def emit():
                         'ssl_support_method': 'sni-only'
                     },
                     'origin': [
-                        *(
-                            {
-                                'origin_id': bucket_origin_id(name),
-                                'domain_name': bucket_regional_domain_name(name),
-                                'origin_access_control_id':
-                                    '${aws_cloudfront_origin_access_control.%s.id}' % name
-                            }
-                            for name in sites.keys()
-                        ),
+                        {
+                            'origin_id': bucket_origin_id(name),
+                            'domain_name': bucket_regional_domain_name(name),
+                            'origin_access_control_id':
+                                '${aws_cloudfront_origin_access_control.%s.id}' % name
+                        },
                         *iif(provision_custom_search, [google_search_origin()])
                     ],
                     'custom_error_response': [
