@@ -234,7 +234,7 @@ def env() -> Mapping[str, Optional[str]]:
         # `gitlab` components, as well as building and pushing the executor
         # image (see terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '27.1.2',
+        'azul_docker_version': '27.2.0',
 
         # The version of Python used throughout the system.
         #
@@ -261,7 +261,7 @@ def env() -> Mapping[str, Optional[str]]:
         # Modifying this variable requires running `make environment.boot` and
         # committing the resulting changes.
         #
-        'azul_terraform_version': '1.9.4',
+        'azul_terraform_version': '1.9.5',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -282,32 +282,32 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.2-31',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.2.1-32',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.23-25',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.23-26',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-10',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-11',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.4.0-1',
+                'ref': 'docker.io/clamav/clamav:1.4.1-4',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:17.3.0-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:17.3.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.3.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.3.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
@@ -806,38 +806,44 @@ def env() -> Mapping[str, Optional[str]]:
         # managed by the `browser` TF component of the current Azul deployment.
         #
         # {
-        #     'ucsc/data-browser': {  // The path of the GitLab project hosting
-        #                             // the source code for the site. The
-        #                             // project must exist on the GitLab
-        #                             // instance managing the current Azul
-        #                             // deployment.
+        #     'browser': { // The TF resource name of per-site resources in the
+        #                  // `browser` component and unqualified name of the
+        #                  // S3 bucket hosting the site
         #
-        #         'main': {  // The name of the branch (in that project) from
-        #                    // which the site's content tarball was built
+        #         'domain': '{AZUL_DOMAIN_NAME}',  // The domain name of the
+        #                                          // site
         #
-        #             'anvil': {  // The site name. Typically corresponds to an
-        #                         // Azul atlas as defined in the AZUL_CATALOGS
-        #                         // and a child directory of
-        #                         // .gitlab/sites/$AZUL_DEPLOYMENT_STAGE in the
-        #                         // source of the project referenced by the
-        #                         // top-level key in this structure.
+        #         'zone': '{AZUL_DOMAIN_NAME}', // The name of the Route53
+        #                                       // hosted zone containing the
+        #                                       // A record for the domain name
+        #                                       // of the site. The zone must
+        #                                       // already exist before the
         #
-        #                 'domain': '{AZUL_DOMAIN_NAME}',  // The domain name of
-        #                                                  // the site
+        #         'project': 'ucsc/data-browser', // The path of the GitLab
+        #                                         // project hosting the source
+        #                                         // code for the site. The
+        #                                         // project must exist on the
+        #                                         // GitLab instance managing
+        #                                         // the current Azul
+        #                                         // deployment.
         #
-        #                 'bucket': 'browser',  // The TF resource name (in the
-        #                                       // `browser` component) of the
-        #                                       // S3 bucket hosting the site
-        #                                       // ('portal' or 'browser')
+        #         'branch': 'main', // The name of the branch (in that project)
+        #                           // from which the site's content tarball was
+        #                           // built
         #
-        #                 'tarball_path': 'explore',  // The path to the site's
-        #                                             // content in the tarball
+        #         'tarball_name': 'anvil' // Typically corresponds to an Azul
+        #                                 // atlas as defined in AZUL_CATALOGS
+        #                                 // and a child directory of
+        #                                 // .gitlab/sites/$AZUL_DEPLOYMENT_STAGE
+        #                                 // in the source of the project
+        #                                 // referenced by the top-level key in
+        #                                 // this structure.
         #
-        #                 'real_path': 'explore/anvil-cmg'  // The path of that
-        #                                                   // same content in
-        #                                                   // the bucket
-        #             }
-        #         }
+        #         'tarball_path': 'explore',  // The path to the site's content
+        #                                     // in the tarball
+        #
+        #         'real_path': 'explore/anvil-cmg'  // The path of that same
+        #                                           // content in the bucket
         #     }
         # }
         #

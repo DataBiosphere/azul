@@ -1,6 +1,5 @@
 import argparse
 import logging
-import subprocess
 import sys
 from typing import (
     Optional,
@@ -25,19 +24,6 @@ renamed: dict[str, Optional[str]] = {
 }
 
 
-def terraform_state_list() -> list[str]:
-    try:
-        output = terraform.run('state', 'list')
-    except subprocess.CalledProcessError as e:
-        if e.returncode == 1 and 'No state file was found' in e.stderr:
-            log.info('No state file was found, assuming empty list of resources.')
-            return []
-        else:
-            raise
-    else:
-        return output.splitlines()
-
-
 def main(argv: list[str]):
     configure_script_logging(log)
     parser = argparse.ArgumentParser(description=__doc__,
@@ -49,7 +35,7 @@ def main(argv: list[str]):
     args = parser.parse_args(argv)
 
     if renamed:
-        current_names = terraform_state_list()
+        current_names = terraform.run_state_list()
         for current_name in current_names:
             try:
                 new_name = renamed[current_name]
