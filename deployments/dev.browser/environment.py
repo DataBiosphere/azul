@@ -36,6 +36,15 @@ def env() -> Mapping[str, Optional[str]]:
                 'tarball_name': 'hca',
                 'tarball_path': 'out',
                 'real_path': ''
+            },
+            'lungmap': {
+                'zone': 'dev.data-browser.lungmap.net',
+                'domain': 'dev.data-browser.lungmap.net',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/lungmap/dev',
+                'tarball_name': 'lungmap',
+                'tarball_path': 'out',
+                'real_path': ''
             }
         })
     }
