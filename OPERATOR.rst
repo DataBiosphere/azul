@@ -569,6 +569,40 @@ backport PR first. The new PR will include the changes from the old one.
 
 .. _#team-boardwalk Slack channel: https://ucsc-gi.slack.com/archives/C705Y6G9Z
 
+
+Deploying the Data Browser
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Data Browser is deployed two steps. The first step is building the
+``ucsc/data-browser`` project on GitLab. This is initiated by pushing a branch
+whose name matches ``ucsc/*/*`` to one of our GitLab instances. The resulting
+pipeline produces a tarball stored in the package registry on that GitLab
+instance. The second step is running the ``deploy_browser`` job of the
+``ucsc/azul`` project pipeline on that same instance. This job creates or
+updates the necessary cloud infrastructure (CloudFront, S3, ACM, Route 53),
+downloads the tarball from the package registry and unpacks that tarball to the
+S3 bucket backing the Data Browser's CloudFront distribution.
+
+Typically, CC requests the deployment of a Data Browser instance on Slack,
+specifying the commit they wish to be deployed. After the system administrator
+approves that request, the operator merges the specified commit into one of the
+``ucsc/{atlas}/{deployment}`` branches and then pushes that branch to the
+``DataBiosphere/data-browser`` project on GitHub, and the ``ucsc/data-browser``
+project on the GitLab instance for the Azul ``{deployment}`` that backs the Data
+Browser instance to be deployed. For the merge commit title, SmartGit's default
+can be used, as long as the title reflects the commit (branch, tag, or sha1)
+specified by CC.
+
+The ``{atlas}`` placeholder can be ``hca``, ``anvil`` or ``lungmap``. Not all
+combinations of ``{atlas}`` and ``{deployment}`` are valid. Valid combinations
+are ``ucsc/anvil/anvildev``, ``ucsc/anvil/anvilprod``, ``ucsc/hca/dev``,
+``ucsc/hca/prod``, ``ucsc/lungmap/dev`` or ``ucsc/lungmap/prod``, for example.
+The ``ucsc/data-browser`` pipeline on GitLab blindly builds any branch, but
+Azul's ``deploy_browser`` job is configured to only use the tarball from exactly
+one branch (see ``deployments/*.browser/environment.py``) and it will always use
+the tarball from the most recent pipeline on that branch.
+
+
 Troubleshooting
 ---------------
 

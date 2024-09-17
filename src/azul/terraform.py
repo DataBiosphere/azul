@@ -96,15 +96,17 @@ class Terraform:
                              **kwargs)
         return cmd.stdout
 
-    def run_state_list(self):
+    def run_state_list(self) -> list[str]:
         try:
             stdout = self.run('state', 'list', stderr=subprocess.PIPE)
-            return stdout.splitlines()
         except subprocess.CalledProcessError as e:
-            if 'No state file was found!' in e.stderr:
+            if e.returncode == 1 and 'No state file was found' in e.stderr:
+                log.info('No state file was found, assuming empty list of resources.')
                 return []
             else:
                 raise
+        else:
+            return stdout.splitlines()
 
     schema_path = Path(config.project_root) / 'terraform' / '_schema.json.gz'
 

@@ -26,6 +26,7 @@ from azul import (
 )
 from azul.collections import (
     adict,
+    dict_merge,
 )
 from azul.deployment import (
     aws,
@@ -37,12 +38,7 @@ from azul.terraform import (
     set_empty_s3_bucket_lifecycle_config,
 )
 
-buckets = {
-    site['bucket']: aws.qualified_bucket_name(site['bucket'])
-    for project, branches in config.browser_sites.items()
-    for branch, sites in branches.items()
-    for site_name, site in sites.items()
-}
+sites = config.browser_sites
 
 #: Whether to emit a Google custom search instance and a CF origin for it
 provision_custom_search = False
@@ -71,36 +67,37 @@ def emit():
                 }
             },
             'aws_route53_zone': {
-                'browser': {
-                    'name': config.domain_name + '.',
+                name: {
+                    'name': site['zone'] + '.',
                     'private_zone': False
                 }
+                for name, site in sites.items()
             }
         },
         'resource': {
             'aws_s3_bucket': {
-                bucket: {
-                    'bucket': name,
+                name: {
+                    'bucket': aws.qualified_bucket_name(name),
                     'force_destroy': True,
                     'lifecycle': {
                         'prevent_destroy': False
                     }
                 }
-                for bucket, name in buckets.items()
+                for name in sites.keys()
             },
             'aws_s3_bucket_logging': {
-                bucket: {
-                    'bucket': '${aws_s3_bucket.%s.id}' % bucket,
+                name: {
+                    'bucket': '${aws_s3_bucket.%s.id}' % name,
                     'target_bucket': '${data.aws_s3_bucket.logs.id}',
                     # Other S3 log deliveries, like ELB, implicitly put a slash
                     # after the prefix. S3 doesn't, so we add one explicitly.
-                    'target_prefix': config.s3_access_log_path_prefix(bucket) + '/'
+                    'target_prefix': config.s3_access_log_path_prefix(name) + '/'
                 }
-                for bucket in buckets
+                for name in sites.keys()
             },
             'aws_s3_bucket_policy': {
-                bucket: {
-                    'bucket': '${aws_s3_bucket.%s.id}' % bucket,
+                name: {
+                    'bucket': '${aws_s3_bucket.%s.id}' % name,
                     'policy': json.dumps({
                         'Version': '2008-10-17',
                         'Id': 'PolicyForCloudFrontPrivateContent',
@@ -116,22 +113,22 @@ def emit():
                                     's3:ListBucket'
                                 ],
                                 'Resource': [
-                                    '${aws_s3_bucket.%s.arn}' % bucket,
-                                    '${aws_s3_bucket.%s.arn}/*' % bucket
+                                    '${aws_s3_bucket.%s.arn}' % name,
+                                    '${aws_s3_bucket.%s.arn}/*' % name
                                 ],
                                 'Condition': {
                                     'StringEquals': {
-                                        'AWS:SourceArn': '${aws_cloudfront_distribution.browser.arn}'
+                                        'AWS:SourceArn': '${aws_cloudfront_distribution.%s.arn}' % name
                                     }
                                 }
                             }
                         ]
                     })
                 }
-                for bucket in buckets
+                for name in sites.keys()
             },
             'aws_cloudfront_distribution': {
-                'browser': {
+                name: {
                     'enabled': True,
                     'restrictions': {
                         'geo_restriction': {
@@ -140,30 +137,28 @@ def emit():
                         }
                     },
                     'price_class': 'PriceClass_100',
-                    'aliases': [config.domain_name],
+                    'aliases': [site['domain']],
                     'default_root_object': 'index.html',
                     'is_ipv6_enabled': True,
                     'ordered_cache_behavior': [
                         *iif(provision_custom_search, [google_search_behavior()])
                     ],
                     'default_cache_behavior':
-                        bucket_behaviour('browser',
+                        bucket_behaviour(name,
                                          bucket_path_mapper=True,
                                          add_response_headers=False),
                     'viewer_certificate': {
-                        'acm_certificate_arn': '${aws_acm_certificate.browser.arn}',
+                        'acm_certificate_arn': '${aws_acm_certificate.%s.arn}' % name,
                         'minimum_protocol_version': 'TLSv1.2_2021',
                         'ssl_support_method': 'sni-only'
                     },
                     'origin': [
-                        *(
-                            {
-                                'origin_id': bucket_origin_id(bucket),
-                                'domain_name': bucket_regional_domain_name(bucket),
-                                'origin_access_control_id': '${aws_cloudfront_origin_access_control.%s.id}' % bucket
-                            }
-                            for bucket in buckets
-                        ),
+                        {
+                            'origin_id': bucket_origin_id(name),
+                            'domain_name': bucket_regional_domain_name(name),
+                            'origin_access_control_id':
+                                '${aws_cloudfront_origin_access_control.%s.id}' % name
+                        },
                         *iif(provision_custom_search, [google_search_origin()])
                     ],
                     'custom_error_response': [
@@ -176,24 +171,25 @@ def emit():
                         for error_code in [403, 404]
                     ]
                 }
+                for name, site in sites.items()
             },
             'aws_cloudfront_origin_access_control': {
-                bucket: {
-                    'name': bucket_origin_id(bucket),
+                name: {
+                    'name': bucket_origin_id(name),
                     'description': '',  # becomes 'Managed by Terraform' if omitted
                     'origin_access_control_origin_type': 's3',
                     'signing_behavior': 'always',
                     'signing_protocol': 'sigv4'
                 }
-                for bucket in buckets
+                for name in sites.keys()
             },
             'aws_cloudfront_function': {
                 script.stem: cloudfront_function(script)
                 for script in Path(__file__).parent.glob('*.js')
             },
             'aws_cloudfront_response_headers_policy': {
-                'browser': {
-                    'name': 'browser',
+                name: {
+                    'name': name,
                     'security_headers_config': {
                         'content_security_policy': {
                             'override': True,
@@ -224,47 +220,53 @@ def emit():
                         }
                     }
                 }
+                for name in sites.keys()
             },
             'aws_acm_certificate': {
-                'browser': {
-                    'domain_name': config.domain_name,
+                name: {
+                    'domain_name': site['domain'],
                     'validation_method': 'DNS',
                     'lifecycle': {
                         'create_before_destroy': True
                     }
                 }
+                for name, site in sites.items()
             },
             'aws_acm_certificate_validation': {
-                'browser': {
-                    'certificate_arn': '${aws_acm_certificate.browser.arn}',
-                    'validation_record_fqdns': '${[for r in aws_route53_record.browser_validation : r.fqdn]}',
+                name: {
+                    'certificate_arn': '${aws_acm_certificate.%s.arn}' % name,
+                    'validation_record_fqdns': '${[for r in aws_route53_record.%s_validation : r.fqdn]}' % name,
                 }
+                for name in sites.keys()
             },
-            'aws_route53_record': {
-                'browser': {
-                    'zone_id': '${data.aws_route53_zone.browser.id}',
-                    'name': config.domain_name,
-                    'type': 'A',
-                    'alias': {
-                        'name': '${aws_cloudfront_distribution.browser.domain_name}',
-                        'zone_id': '${aws_cloudfront_distribution.browser.hosted_zone_id}',
-                        'evaluate_target_health': False
+            'aws_route53_record': dict_merge(
+                {
+                    name: {
+                        'zone_id': '${data.aws_route53_zone.%s.id}' % name,
+                        'name': site['domain'],
+                        'type': 'A',
+                        'alias': {
+                            'name': '${aws_cloudfront_distribution.%s.domain_name}' % name,
+                            'zone_id': '${aws_cloudfront_distribution.%s.hosted_zone_id}' % name,
+                            'evaluate_target_health': False
+                        }
+                    },
+                    name + '_validation': {
+                        'for_each': '${{'
+                                    'for o in aws_acm_certificate.%s.domain_validation_options : '
+                                    'o.domain_name => o'
+                                    '}}' % name,
+                        'name': '${each.value.resource_record_name}',
+                        'type': '${each.value.resource_record_type}',
+                        'zone_id': '${data.aws_route53_zone.%s.id}' % name,
+                        'records': [
+                            '${each.value.resource_record_value}',
+                        ],
+                        'ttl': 60
                     }
-                },
-                'browser_validation': {
-                    'for_each': '${{'
-                                'for o in aws_acm_certificate.browser.domain_validation_options : '
-                                'o.domain_name => o'
-                                '}}',
-                    'name': '${each.value.resource_record_name}',
-                    'type': '${each.value.resource_record_type}',
-                    'zone_id': '${data.aws_route53_zone.browser.id}',
-                    'records': [
-                        '${each.value.resource_record_value}',
-                    ],
-                    'ttl': 60
                 }
-            },
+                for name, site in sites.items()
+            ),
             **iif(provision_custom_search, {
                 'aws_cloudfront_origin_request_policy': {
                     'google_search': {
@@ -334,22 +336,22 @@ def emit():
                 # object, or rather its `etag` attribute (some hash of the content)
                 # then serves as a stand-in for a bucket identifier which we can
                 # then use to trigger site deployment and CloudFront invalidation.
-                bucket + '_bucket_id': {
-                    'bucket': '${aws_s3_bucket.%s.id}' % bucket,
+                name + '_bucket_id': {
+                    'bucket': '${aws_s3_bucket.%s.id}' % name,
                     'key': bucket_id_key,
                     'content': str(uuid.uuid4()),
                     'lifecycle': {
                         'ignore_changes': ['content']
                     }
                 }
-                for bucket in buckets
+                for name in sites.keys()
             },
             'null_resource': {
                 **{
-                    f'deploy_site_{i}': {
+                    f'deploy_site_{name}': {
                         'triggers': {
-                            'tarball_hash': gitlab_helper.tarball_hash(project, branch, site_name),
-                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % site['bucket'],
+                            'tarball_hash': gitlab_helper.tarball_hash(site),
+                            'bucket_id': '${aws_s3_object.%s_bucket_id.etag}' % name,
                             'tarball_path': site['tarball_path'],
                             'real_path': site['real_path']
                         },
@@ -360,15 +362,15 @@ def emit():
                                 'command': ' && '.join([
                                     # TF uses concurrent workers so we need to keep the directories
                                     # separate between the null_resource resources.
-                                    f'rm -rf out_{i}',
-                                    f'mkdir out_{i}',
+                                    f'rm -rf out_{name}',
+                                    f'mkdir out_{name}',
                                     ' | '.join([
                                         ' '.join([
                                             'curl',
                                             '--fail',
                                             '--silent',
                                             gitlab_helper.curl_auth_flags(),
-                                            quote(gitlab_helper.tarball_url(project, branch, site_name))
+                                            quote(gitlab_helper.tarball_url(site))
                                         ]),
                                         ' '.join([
                                             # --transform is specific to GNU Tar, which, on macOS must be installed
@@ -377,46 +379,45 @@ def emit():
                                             '-xvjf -',
                                             f'--transform s#^{site["tarball_path"]}/#{site["real_path"]}/#',
                                             '--show-transformed-names',
-                                            f'-C out_{i}'
+                                            f'-C out_{name}'
                                         ])
                                     ]),
                                     ' '.join([
                                         'aws', 's3', 'sync',
                                         '--exclude', bucket_id_key,
                                         '--delete',
-                                        f'out_{i}/',
-                                        's3://${aws_s3_bucket.%s.id}/' % site['bucket']
+                                        f'out_{name}/',
+                                        's3://${aws_s3_bucket.%s.id}/' % name
                                     ]),
-                                    f'rm -rf out_{i}',
+                                    f'rm -rf out_{name}',
                                 ])
                             }
                         }
                     }
-                    for i, (project, branches) in enumerate(config.browser_sites.items())
-                    for branch, sites in branches.items()
-                    for site_name, site in sites.items()
+                    for name, site in sites.items()
                 },
-                'invalidate_cloudfront': {
-                    'depends_on': [
-                        f'null_resource.deploy_site_{i}'
-                        for i, _ in enumerate(config.browser_sites)
-                    ],
-                    'triggers': {
-                        f'{trigger}_{i}': '${null_resource.deploy_site_%i.triggers.%s}' % (i, trigger)
-                        for i, _ in enumerate(config.browser_sites)
-                        for trigger in ['tarball_hash', 'bucket_id']
-                    },
-                    'provisioner': {
-                        'local-exec': {
-                            'when': 'create',
-                            'command': ' '.join([
-                                'aws',
-                                'cloudfront create-invalidation',
-                                '--distribution-id ${aws_cloudfront_distribution.browser.id}',
-                                '--paths "/*"'
-                            ])
+                **{
+                    'invalidate_cloudfront_' + name: {
+                        'depends_on': [
+                            f'null_resource.deploy_site_{name}'
+                        ],
+                        'triggers': {
+                            f'{trigger}_{name}': '${null_resource.deploy_site_%s.triggers.%s}' % (name, trigger)
+                            for trigger in ['tarball_hash', 'bucket_id']
+                        },
+                        'provisioner': {
+                            'local-exec': {
+                                'when': 'create',
+                                'command': ' '.join([
+                                    'aws',
+                                    'cloudfront create-invalidation',
+                                    '--distribution-id ${aws_cloudfront_distribution.%s.id}' % name,
+                                    '--paths "/*"'
+                                ])
+                            }
                         }
                     }
+                    for name in sites.keys()
                 }
             }
         }
@@ -434,7 +435,7 @@ def bucket_behaviour(origin, *, path_pattern: str = None, **functions: bool) -> 
         cached_methods=['GET', 'HEAD'],
         cache_policy_id='${data.aws_cloudfront_cache_policy.caching_optimized.id}',
         response_headers_policy_id=(
-            '${aws_cloudfront_response_headers_policy.browser.id}'
+            '${aws_cloudfront_response_headers_policy.%s.id}' % origin
         ),
         viewer_protocol_policy='redirect-to-https',
         target_origin_id=bucket_origin_id(origin),
@@ -461,7 +462,7 @@ def bucket_regional_domain_name(bucket):
         # FIXME: Remove workaround for
         #        https://github.com/hashicorp/terraform-provider-aws/issues/15102
         #        https://github.com/DataBiosphere/azul/issues/5257
-        return buckets[bucket] + '.s3.us-east-1.amazonaws.com'
+        return aws.qualified_bucket_name(bucket) + '.s3.us-east-1.amazonaws.com'
 
 
 def cloudfront_function(script: Path):
@@ -615,34 +616,34 @@ class GitLabHelper:
         header = quote(f'{token_type}-TOKEN: {token}')
         return '--header ' + header
 
-    def tarball_hash(self, project_path: str, branch: str, site_name: str) -> str:
-        project = self.client.projects.get(project_path, lazy=True)
+    def tarball_hash(self, site: config.BrowserSite) -> str:
+        project = self.client.projects.get(site['project'], lazy=True)
         packages = project.packages.list(iterator=True, package_type='generic')
-        version = self.tarball_version(branch)
+        version = self.tarball_version(site['branch'])
         package = one(p for p in packages if p.version == version)
         package_files = (
             pf
             for pf in package.package_files.list(iterator=True)
-            if pf.file_name == self.tarball_file_name(project_path, site_name)
+            if pf.file_name == self.tarball_file_name(site)
         )
         package_file = max(package_files, key=attrgetter('created_at'))
         return package_file.file_sha256
 
-    def tarball_url(self, project_path: str, branch: str, site_name: str) -> str:
+    def tarball_url(self, site: config.BrowserSite) -> str:
         # GET /projects/:id/packages/generic/:package_name/:package_version/:file_name
         return str(furl(self.gitlab_url,
                         path=[
-                            'api', 'v4', 'projects', project_path,
+                            'api', 'v4', 'projects', site['project'],
                             'packages', 'generic', 'tarball',
-                            self.tarball_version(branch),
-                            self.tarball_file_name(project_path, site_name)
+                            self.tarball_version(site['branch']),
+                            self.tarball_file_name(site)
                         ]))
 
-    def tarball_file_name(self, project_path: str, site_name: str) -> str:
+    def tarball_file_name(self, site: config.BrowserSite) -> str:
         return '_'.join([
-            project_path.split('/')[-1],  # just the project name
+            site['project'].split('/')[-1],  # just the project name
             config.deployment_stage,
-            site_name,
+            site['tarball_name'],
             'distribution',
         ]) + '.tar.bz2'
 

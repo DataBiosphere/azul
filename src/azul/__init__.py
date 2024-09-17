@@ -1111,14 +1111,16 @@ class Config:
             return None if branch is None else deployments.get(None)
 
     class BrowserSite(TypedDict):
+        zone: str
         domain: str
-        bucket: str
+        project: str
+        branch: str
+        tarball_name: str
         tarball_path: str
         real_path: str
 
     @property
-    def browser_sites(self
-                      ) -> Mapping[str, Mapping[str, Mapping[str, BrowserSite]]]:
+    def browser_sites(self) -> Mapping[str, BrowserSite]:
         import json
         return json.loads(self.environ['azul_browser_sites'])
 
