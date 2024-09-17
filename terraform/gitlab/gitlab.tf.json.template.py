@@ -1088,13 +1088,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                       to_port=4)  # Fragmentation required DF-flag set
                 ],
                 'ingress': [
-                    vpc.security_rule(description='Any traffic from the '
-                                                  f"{'VPC' if split_tunnel else 'internet'}",
-                                      cidr_blocks=[
-                                          '${aws_vpc.gitlab.cidr_block}'
-                                          if split_tunnel else
-                                          all_ipv4
-                                      ],
+                    vpc.security_rule(description='Any traffic from the VPC',
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                       protocol=-1,
                                       from_port=0,
                                       to_port=0),

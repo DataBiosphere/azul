@@ -320,6 +320,36 @@ _update_clone() {
 		.
 }
 
+# Destroy the most expensive resources in a main deployment and its components.
+# Compared to complete destruction, hibernation has the advantage of needing
+# less time to come back from, and not requiring incrementing the incarnation
+# counter or adding service accounts to Terra groups. This function was written
+# from memory. The `terraform` commands were tested individually but the
+# function as a whole was not.
+#
+_hibernate() {
+	# shellcheck disable=SC2154
+	if test -z "$azul_terraform_component"; then
+		make -C lambdas && {
+			cd terraform &&
+			make validate
+			terraform destroy -target aws_elasticsearch_domain.index && {
+				cd gitlab &&
+				_select "$AZUL_DEPLOYMENT_STAGE.gitlab" &&
+				make validate &&
+				terraform destroy \
+					-target aws_ec2_client_vpn_endpoint.gitlab \
+					-target aws_instance.gitlab \
+					-target aws_nat_gateway.gitlab_0 \
+					-target aws_nat_gateway.gitlab_1
+				}
+			}
+	else
+		echo "Must have main component selected"
+		return 1
+	fi
+}
+
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
 # `export_environment.py`, too. We could also pass -S to `python3` but that
 # causes problems on Travis (`importlib.util` failing to import `contextlib`).
