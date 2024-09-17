@@ -53,8 +53,8 @@ from azul.strings import (
     longest_common_prefix,
 )
 from azul.terra import (
-    SourceRef as TDRSourceRef,
     TDRClient,
+    TDRSourceRef,
     TDRSourceSpec,
 )
 from azul.time import (
@@ -193,7 +193,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
         return cls._user_authenticated_tdr(authentication).drs_client()
 
     def _lookup_source_id(self, spec: TDRSourceSpec) -> str:
-        return self.tdr.lookup_source(spec).id
+        return self.tdr.lookup_source(spec)
 
     def list_bundles(self,
                      source: TDRSourceRef,

@@ -45,8 +45,8 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.terra import (
-    SourceRef as TDRSourceRef,
     TDRClient,
+    TDRSourceRef,
 )
 
 environment = load_module(module_name='environment',
