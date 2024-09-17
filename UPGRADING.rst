@@ -20,6 +20,13 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#6570 Upgrade dependencies 2024-09-16
+=====================================
+
+Update Python on your developer machines to version 3.11.10. In your working
+copy, run ``make virtualenv`` and ``make requirements envhook``.
+
+
 #6355 Explicitly configure source type in environment files
 ===========================================================
 
