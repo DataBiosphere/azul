@@ -1,6 +1,6 @@
 blessed==1.20.0
 blinker==1.8.2
-botocore-stubs==1.35.15
+botocore-stubs==1.35.21
 brotli==1.1.0
 click==8.1.7
 colorama==0.4.4
@@ -13,7 +13,7 @@ flask-cors==5.0.0
 geventhttpclient==2.3.1
 gitdb==4.0.11
 google-auth-httplib2==0.2.0
-greenlet==3.0.3
+greenlet==3.1.0
 httplib2==0.22.0
 importlib-resources==5.13.0
 inquirer==2.10.1
