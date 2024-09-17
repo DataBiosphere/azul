@@ -68,9 +68,9 @@
         "id": "sha256:930b511738bf092007f4627197dc7ae4cd325246c197856475f63d1f817bb581",
         "platform": "linux/amd64"
     },
-    "docker.io/clamav/clamav:1.4.1-4": {
-        "digest": "sha256:e8543b5cf5bd2d4bea49f00473707f4ffdd7704ed2d4b98b75c6f9b7e26efa05",
-        "id": "sha256:5269a125399d5f8957fd3deba01f5aa69f1f02e1025bdbbc01f88c7298ac56a3",
+    "docker.io/clamav/clamav:1.4.1-5": {
+        "digest": "sha256:09ed837cb10f1f3e3175ccd6c749861c76fbf5ca3de45ec91711c8e75fe80bea",
+        "id": "sha256:e15968788d10f750f4d7486900c4e9f5ba24eb9cd0920d1f09bfa3981ce00517",
         "platform": "linux/amd64"
     },
     "docker.io/gitlab/gitlab-ce:17.3.3-ce.0": {
