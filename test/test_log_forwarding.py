@@ -154,7 +154,7 @@ class TestLogForwarding(S3TestCase):
             '52',
             dq('-'),
             dq('Boto3/1.24.94 Python/3.12.6 Linux/4.14.255-301-238.520.amzn2.x86_64',
-               'exec-env/AWS_Lambda_python3.12 aws-chalice/1.30.0 Botocore/1.27.94'),
+               'exec-env/AWS_Lambda_python3.12 aws-chalice/1.31.2 Botocore/1.27.94'),
             '-',
             'jcmyLMRqqJ7dT4ovtY21rtgwmuTC3qs24vgAtLAkcad9sRV92zC90gf2zGvCkxxsLSaKm48AMjo=',
             'SigV4',
@@ -194,7 +194,7 @@ class TestLogForwarding(S3TestCase):
             'total_time': '85',
             'turn_around_time': '52',
             'user_agent': 'Boto3/1.24.94 Python/3.12.6 Linux/4.14.255-301-238.520.amzn2.x86_64 '
-                          'exec-env/AWS_Lambda_python3.12 aws-chalice/1.30.0 Botocore/1.27.94',
+                          'exec-env/AWS_Lambda_python3.12 aws-chalice/1.31.2 Botocore/1.27.94',
             'version_id': '-',
         }]
         self._test(self.controller.forward_s3_access_logs, input, expected_output)
