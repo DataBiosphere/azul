@@ -16,7 +16,6 @@ from time import (
 )
 from typing import (
     ClassVar,
-    Optional,
 )
 
 import attrs
@@ -557,7 +556,7 @@ class TDRClient(SAMClient):
 
     def snapshot_names_by_id(self,
                              *,
-                             filter: Optional[str] = None
+                             filter: str | None = None
                              ) -> dict[str, str]:
         """
         List the TDR snapshots accessible to the current credentials.
@@ -635,7 +634,7 @@ class TDRClient(SAMClient):
     def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
 
-    def get_duos(self, source: TDRSourceRef) -> Optional[MutableJSON]:
+    def get_duos(self, source: TDRSourceRef) -> MutableJSON | None:
         response = self._retrieve_source(source)
         try:
             duos_id = response['duosFirecloudGroup']['duosId']
