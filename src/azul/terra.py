@@ -16,7 +16,6 @@ from time import (
 )
 from typing import (
     ClassVar,
-    Optional,
 )
 
 import attrs
@@ -39,9 +38,15 @@ from google.cloud import (
     bigquery,
 )
 from google.cloud.bigquery import (
+    Dataset,
+    DatasetReference,
+    LoadJobConfig,
+    ParquetOptions,
     QueryJob,
     QueryJobConfig,
     QueryPriority,
+    SourceFormat,
+    WriteDisposition,
 )
 from more_itertools import (
     one,
@@ -149,7 +154,6 @@ class TDRSourceSpec(SourceSpec):
         service, type, domain, subdomain, name = rest.split(':')
         assert service == 'tdr', service
         type = cls.Type(type)
-        reject(type == cls.Type.parquet, 'Parquet sources are not yet supported')
         domain = cls.Domain(domain)
         reject(domain == cls.Domain.azure, 'Azure sources are not yet supported')
         self = cls(prefix=prefix,
@@ -256,7 +260,7 @@ class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider
         return [
             *super().oauth2_scopes(),
             'https://www.googleapis.com/auth/devstorage.read_only',
-            'https://www.googleapis.com/auth/bigquery.readonly'
+            'https://www.googleapis.com/auth/bigquery'
         ]
 
 
@@ -409,21 +413,25 @@ class TDRClient(SAMClient):
         """
         source = self._lookup_source(source_spec)
         actual_project = source['dataProject']
-        require(actual_project == source_spec.subdomain,
-                'Actual Google project of TDR source differs from configured one',
-                actual_project, source_spec.subdomain)
-        storage = one(
-            resource
-            for resource in source['storage']
-            if resource['cloudResource'] == 'bigquery'
-        )
-        actual_location = storage['region']
+        if source_spec.subdomain != config.google_project():
+            require(actual_project == source_spec.subdomain,
+                    'Actual Google project of TDR source differs from configured one',
+                    actual_project, source_spec.subdomain)
+        actual_location = self._get_region(source, 'bigquery')
         # Uppercase is standard for multi-regions in the documentation but TDR
         # returns 'us' in lowercase
         require(actual_location.lower() == config.tdr_source_location.lower(),
                 'Actual storage location of TDR source differs from configured one',
                 actual_location, config.tdr_source_location)
         return source['id']
+
+    def _get_region(self, source: JSON, resource_type: str) -> str:
+        storage = one(
+            resource
+            for resource in source['storage']
+            if resource['cloudResource'] == resource_type
+        )
+        return storage['region']
 
     def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
@@ -534,7 +542,8 @@ class TDRClient(SAMClient):
                         endpoint: furl,
                         response: urllib3.HTTPResponse
                         ) -> MutableJSON:
-        if response.status == 200:
+        # 202 is observed while waiting for the Parquet export
+        if response.status in (200, 202):
             return json.loads(response.data)
         # FIXME: Azul sometimes conflates 401 and 403
         #        https://github.com/DataBiosphere/azul/issues/4463
@@ -557,7 +566,7 @@ class TDRClient(SAMClient):
 
     def snapshot_names_by_id(self,
                              *,
-                             filter: Optional[str] = None
+                             filter: str | None = None
                              ) -> dict[str, str]:
         """
         List the TDR snapshots accessible to the current credentials.
@@ -635,7 +644,7 @@ class TDRClient(SAMClient):
     def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
 
-    def get_duos(self, source: TDRSourceRef) -> Optional[MutableJSON]:
+    def get_duos(self, source: TDRSourceRef) -> MutableJSON | None:
         response = self._retrieve_source(source)
         try:
             duos_id = response['duosFirecloudGroup']['duosId']
@@ -651,3 +660,137 @@ class TDRClient(SAMClient):
                 return None
             else:
                 return self._check_response(url, response)
+
+    def create_dataset(self, dataset_name: str):
+        """
+        Create a BigQuery dataset in the GCP project associated with the current
+        credentials and the GCP region configured for the current deployment.
+
+        :param dataset_name: Unqualified name of the dataset to create.
+                             `google.cloud.exceptions.Conflict` will be raised
+                             if a dataset with the same name already exists.
+        """
+        bigquery = self._bigquery(self.credentials.project_id)
+        ref = DatasetReference(bigquery.project, dataset_name)
+        location = config.tdr_source_location
+        # We get a false warning from PyCharm here, probably because of
+        #
+        # https://youtrack.jetbrains.com/issue/PY-23400/regression-PEP484-type-annotations-in-docstrings-nearly-completely-broken
+        #
+        # Google uses the docstring syntax to annotate types in its BQ client.
+        #
+        # noinspection PyTypeChecker
+        dataset = Dataset(ref)
+        dataset.location = location
+        log.info('Creating BigQuery dataset %r in region %r',
+                 dataset.dataset_id, dataset.location)
+        actual_dataset = bigquery.create_dataset(dataset)
+        require(actual_dataset.reference == ref)
+        require(actual_dataset.project == self.credentials.project_id)
+        require(actual_dataset.location == location)
+
+    def create_table(self,
+                     dataset_name: str,
+                     table_name: str,
+                     import_uris: Sequence[furl],
+                     *,
+                     overwrite: bool,
+                     clustering_fields: Sequence[str] | None = None):
+        """
+        Create a BigQuery table in the project and region configured for the
+        current deployment.
+
+        :param dataset_name: Unqualified name of the dataset to contain the new
+                             table
+
+        :param table_name: Unqualified name of the new table
+
+        :param import_uris: URIs of Parquet file(s) to populate the table. The
+                            URI scheme must `gs://` and the GCS bucket's region
+                            must be compatible with the target dataset's. See
+                            https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-parquet#limitations
+
+        :param overwrite: Overwrite existing table with the same ID as the table
+                          we're trying to create (true) or raise an exception if
+                          such a table exists (false)
+
+        :param clustering_fields: Fields defining clustering for the table. See
+                                  https://cloud.google.com/bigquery/docs/clustered-tables
+        """
+        for uri in import_uris:
+            require(uri.scheme == 'gs', 'Expected gs:// URI', uri)
+        table_id = f'{dataset_name}.{table_name}'
+        bigquery = self._bigquery(self.credentials.project_id)
+        write_disposition = (
+            WriteDisposition.WRITE_TRUNCATE if overwrite else WriteDisposition.WRITE_EMPTY
+        )
+        job_config = LoadJobConfig(
+            write_disposition=write_disposition,
+            clustering_fields=clustering_fields,
+            source_format=SourceFormat.PARQUET,
+            # With this option, array columns such as `anvil_diagnosis.disease`
+            # are created with the type `ARRAY<STRING>`, as desired. Without it,
+            # they're given convoluted types like
+            # `STRUCT<list ARRAY<STRUCT<element STRING>>>`.
+            parquet_options=ParquetOptions.from_api_repr(dict(enable_list_inference=True))
+        )
+        table_ref = f'{bigquery.project}.{dataset_name}.{table_name}'
+        log.info('Creating BigQuery table %r', table_ref)
+        load_job = bigquery.load_table_from_uri(source_uris=list(map(str, import_uris)),
+                                                destination=table_id,
+                                                job_config=job_config)
+        load_job.result()
+        log.info('Table %r created successfully', table_ref)
+
+    def export_parquet_urls(self,
+                            snapshot_id: str
+                            ) -> dict[str, list[mutable_furl]] | None:
+        """
+        Obtain URLs of Parquet files for the data tables of the specified
+        snapshot. This is a time-consuming operation that usually takes on the
+        order of one minute to complete.
+
+        :param snapshot_id: The UUID of the snapshot
+
+        :return: A mapping of table names to lists of Parquet file download
+                 URLs, or `None` if if no Parquet downloads are available for
+                 the specified snapshot. The URLs are typically expiring signed
+                 URLs pointing to a cloud storage service such as GCS or Azure.
+        """
+        url = self._repository_endpoint('snapshots', snapshot_id, 'export')
+        # Required for Azure-backed snapshots
+        url.args.add('validatePrimaryKeyUniqueness', False)
+        delays = [10, 20, 40, 80]
+        for delay in [*delays, None]:
+            response = self._request('GET', url)
+            response_body = self._check_response(url, response)
+            jobs_status = response_body['job_status']
+            job_id = response_body['id']
+            if jobs_status == 'running':
+                url = self._repository_endpoint('jobs', job_id)
+                log.info('Waiting for job %r ...', job_id)
+                if delay is None:
+                    raise RuntimeError(f'TDR export job {job_id} timed out after {sum(delays)}s')
+                else:
+                    sleep(delay)
+                    continue
+            elif jobs_status == 'succeeded':
+                break
+            else:
+                raise TerraStatusException(url, response)
+        else:
+            assert False
+        url = self._repository_endpoint('jobs', job_id, 'result')
+        response = self._request('GET', url)
+        response_body = self._check_response(url, response)
+        parquet = response_body['format'].get('parquet')
+        if parquet is not None:
+            dataset = one(response_body['snapshot']['source'])['dataset']
+            region = self._get_region(dataset, 'bucket')
+            require(config.tdr_source_location == region,
+                    config.tdr_source_location, region)
+            parquet = {
+                table['name']: list(map(furl, table['paths']))
+                for table in parquet['location']['tables']
+            }
+        return parquet

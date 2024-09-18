@@ -10,7 +10,7 @@ blinker==1.8.2
 boto3==1.28.63
 boto3-stubs==1.28.63
 botocore==1.31.63
-botocore-stubs==1.35.15
+botocore-stubs==1.35.22
 brotli==1.1.0
 cachetools==5.5.0
 certifi==2024.8.30
@@ -50,13 +50,13 @@ google-cloud-storage==2.12.0
 google-crc32c==1.6.0
 google-resumable-media==2.7.2
 googleapis-common-protos==1.65.0
-greenlet==3.0.3
+greenlet==3.1.0
 grpcio==1.66.1
 grpcio-status==1.62.3
 http-message-signatures==0.4.4
 http_sfv==0.9.9
 httplib2==0.22.0
-idna==3.8
+idna==3.10
 importlib-resources==5.13.0
 inquirer==2.10.1
 itsdangerous==2.2.0
@@ -94,8 +94,8 @@ proto-plus==1.24.0
 protobuf==4.25.4
 psutil==6.0.0
 py-partiql-parser==0.3.3
-pyasn1==0.6.0
-pyasn1_modules==0.4.0
+pyasn1==0.6.1
+pyasn1_modules==0.4.1
 pycodestyle==2.9.1
 pycparser==2.22
 pyflakes==2.5.0
@@ -109,7 +109,7 @@ python-dateutil==2.9.0.post0
 python-dxf==11.4.0
 python-editor==1.0.4
 python-gitlab==3.13.0
-pytz==2024.1
+pytz==2024.2
 pyyaml==6.0.1
 pyzmq==26.2.0
 readchar==4.2.0

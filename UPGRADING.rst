@@ -19,6 +19,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#6355 Parquet to BigQuery import for GCP-backed AnVIL snapshots
+===============================================================
+
+For all personal deployments colocated with ``anvilbox``, update
+``environment.py`` to use source type "parquet" and Google project
+"platform-anvil-dev" for snapshot
+"ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732".
+
 
 #6355 Explicitly configure source type in environment files
 ===========================================================
