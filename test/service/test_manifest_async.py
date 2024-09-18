@@ -336,9 +336,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         self.assertNotEqual(token_url, response.json()['Location'])
 
             assert signed_manifest_key.encode() == manifest_url.path.segments[-1]
-            assert verify_manifest_key.not_called
+            assert not verify_manifest_key.called
             verify_manifest_key.return_value = manifest_key
-            assert get_cached_manifest_with_key.not_called
+            assert not get_cached_manifest_with_key.called
             get_cached_manifest_with_key.return_value = manifest
             response = requests.get(str(manifest_url), allow_redirects=False)
             self.assertEqual(302, response.status_code)
