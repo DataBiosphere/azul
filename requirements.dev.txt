@@ -13,7 +13,7 @@ jq==1.8.0
 locust==2.12.2
 moto[s3,sqs,sns,dynamodb,iam]==4.1.13  # match the extras with the backends listed in AzulUnitTestCase._reset_moto
 boto3-stubs[s3,sqs,lambda,dynamodb,iam,ecr,stepfunctions,kms]==1.28.63  # match this with the version of the `boto3` runtime dependency
-openapi-spec-validator==0.5.1
+openapi-spec-validator==0.7.1
 openpyxl==3.0.6
 posix_ipc==1.1.1
 pygithub==1.56
