@@ -53,6 +53,7 @@ from azul.indexer.document import (
     EntityReference,
     EntityType,
     FieldTypes,
+    Replica,
     null_bool,
     null_int,
     null_str,
@@ -60,7 +61,6 @@ from azul.indexer.document import (
     pass_thru_json,
 )
 from azul.indexer.transform import (
-    Transform,
     Transformer,
 )
 from azul.plugins.metadata.anvil.bundle import (
@@ -133,9 +133,6 @@ class LinkedEntities:
 class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: AnvilBundle
 
-    def replica_type(self, entity: EntityReference) -> str:
-        return f'anvil_{entity.entity_type}'
-
     @classmethod
     def field_types(cls) -> FieldTypes:
         return {
@@ -167,32 +164,24 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def estimate(self, partition: BundlePartition) -> int:
         return sum(map(partial(self._contains, partition), self.bundle.entities))
 
-    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
-        return (
-            self._transform(entity)
-            for entity in self._list_entities()
-            if self._contains(partition, entity)
-        )
+    def transform(self,
+                  partition: BundlePartition
+                  ) -> Iterable[Contribution | Replica]:
+        for entity in self._list_entities():
+            if self._contains(partition, entity):
+                yield from self._transform(entity)
 
     def _list_entities(self) -> Iterable[EntityReference]:
         return self.bundle.entities
 
     @abstractmethod
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
         raise NotImplementedError
 
-    def _add_replica(self,
-                     contribution: JSON | None,
-                     entity: EntityReference,
-                     hub_ids: list[EntityID]
-                     ) -> Transform:
-        no_replica = not config.enable_replicas or self.entity_type() == 'bundles'
-        return (
-            None if contribution is None else self._contribution(contribution, entity),
-            None if no_replica else self._replica(self.bundle.entities[entity],
-                                                  entity,
-                                                  hub_ids)
-        )
+    def _replicate(self, entity: EntityReference) -> tuple[str, JSON]:
+        return f'anvil_{entity.entity_type}', self.bundle.entities[entity]
 
     def _pluralize(self, entity_type: str) -> str:
         if entity_type == 'diagnosis':
@@ -333,19 +322,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             }
             for field_prefix in field_prefixes
         }
-
-    def _contribution(self,
-                      contents: JSON,
-                      entity: EntityReference,
-                      ) -> Contribution:
-        # The entity type is used to determine the index name.
-        # All activities go into the same index, regardless of their polymorphic type.
-        # Index names use plural forms.
-        entity_type = pluralize('activity'
-                                if entity.entity_type.endswith('activity') else
-                                entity.entity_type)
-        entity = attr.evolve(entity, entity_type=entity_type)
-        return super()._contribution(contents, entity)
 
     def _entity(self,
                 entity: EntityReference,
@@ -523,7 +499,9 @@ class ActivityTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'activities'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
         files = linked['file']
         contents = dict(
@@ -534,8 +512,10 @@ class ActivityTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, files),
         )
-        hub_ids = [f.entity_id for f in files]
-        return self._add_replica(contents, entity, hub_ids)
+        yield self._contribution(contents, entity.entity_id)
+        if config.enable_replicas:
+            hub_ids = [f.entity_id for f in files]
+            yield self._replica(entity, hub_ids)
 
 
 class BiosampleTransformer(BaseTransformer):
@@ -544,7 +524,9 @@ class BiosampleTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'biosamples'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
         files = linked['file']
         contents = dict(
@@ -558,16 +540,19 @@ class BiosampleTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=self._entities(self._file, files),
         )
-        hub_ids = [f.entity_id for f in files]
-        return self._add_replica(contents, entity, hub_ids)
+        yield self._contribution(contents, entity.entity_id)
+        if config.enable_replicas:
+            hub_ids = [f.entity_id for f in files]
+            yield self._replica(entity, hub_ids)
 
 
 class DiagnosisTransformer(BaseTransformer):
 
-    def _transform(self, entity: EntityReference) -> Transform:
-        files = self._linked_entities(entity)['file']
-        hub_ids = [f.entity_id for f in files]
-        return self._add_replica(None, entity, hub_ids)
+    def _transform(self, entity: EntityReference) -> Iterable[Replica]:
+        if config.enable_replicas:
+            files = self._linked_entities(entity)['file']
+            hub_ids = [f.entity_id for f in files]
+            yield self._replica(entity, hub_ids)
 
     @classmethod
     def entity_type(cls) -> EntityType:
@@ -584,10 +569,9 @@ class BundleTransformer(SingletonTransformer):
         return EntityReference(entity_type='bundle',
                                entity_id=self.bundle.uuid)
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         contents = self._contents()
-        hub_ids = [f.entity_id for f in self._entities_by_type['file']]
-        return self._add_replica(contents, entity, hub_ids)
+        yield self._contribution(contents, entity.entity_id)
 
 
 class DatasetTransformer(SingletonTransformer):
@@ -599,17 +583,21 @@ class DatasetTransformer(SingletonTransformer):
     def _singleton(self) -> EntityReference:
         return self._only_dataset()
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
         contents = self._contents()
-        # Every file in a snapshot is linked to that snapshot's singular
-        # dataset, making an explicit list of hub IDs for the dataset both
-        # redundant and impractically large (we observe that for large
-        # snapshots, trying to track this many files in a single data structure
-        # causes a prohibitively high rate of conflicts during replica updates).
-        # Therefore, we leave the hub IDs field empty for datasets and rely on
-        # the tenet that every file is an implicit hub of its parent dataset.
-        hub_ids = []
-        return self._add_replica(contents, entity, hub_ids)
+        yield self._contribution(contents, entity.entity_id)
+        if config.enable_replicas:
+            # Every file in a snapshot is linked to that snapshot's singular
+            # dataset, making an explicit list of hub IDs for the dataset both
+            # redundant and impractically large (we observe that for large
+            # snapshots, trying to track this many files in a single data structure
+            # causes a prohibitively high rate of conflicts during replica updates).
+            # Therefore, we leave the hub IDs field empty for datasets and rely on
+            # the tenet that every file is an implicit hub of its parent dataset.
+            hub_ids = []
+            yield self._replica(entity, hub_ids)
 
 
 class DonorTransformer(BaseTransformer):
@@ -618,7 +606,9 @@ class DonorTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'donors'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
         files = linked['file']
         contents = dict(
@@ -632,8 +622,10 @@ class DonorTransformer(BaseTransformer):
             donors=[self._donor(entity)],
             files=self._entities(self._file, files),
         )
-        hub_ids = [f.entity_id for f in files]
-        return self._add_replica(contents, entity, hub_ids)
+        yield self._contribution(contents, entity.entity_id)
+        if config.enable_replicas:
+            hub_ids = [f.entity_id for f in files]
+            yield self._replica(entity, hub_ids)
 
 
 class FileTransformer(BaseTransformer):
@@ -642,7 +634,9 @@ class FileTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'files'
 
-    def _transform(self, entity: EntityReference) -> Transform:
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
@@ -655,8 +649,10 @@ class FileTransformer(BaseTransformer):
             donors=self._entities(self._donor, linked['donor']),
             files=[self._file(entity)],
         )
-        # The result of the link traversal does not include the starting entity,
-        # so without this step the file itself wouldn't be included in its hubs
-        files = (entity, *linked['file'])
-        hub_ids = [f.entity_id for f in files]
-        return self._add_replica(contents, entity, hub_ids)
+        yield self._contribution(contents, entity.entity_id)
+        if config.enable_replicas:
+            # The result of the link traversal does not include the starting entity,
+            # so without this step the file itself wouldn't be included in its hubs
+            files = (entity, *linked['file'])
+            hub_ids = [f.entity_id for f in files]
+            yield self._replica(entity, hub_ids)

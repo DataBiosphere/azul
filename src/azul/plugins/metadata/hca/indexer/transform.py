@@ -69,6 +69,7 @@ from azul.indexer.document import (
     Nested,
     NullableString,
     PassThrough,
+    Replica,
     null_bool,
     null_datetime,
     null_int,
@@ -78,7 +79,6 @@ from azul.indexer.document import (
     pass_thru_json,
 )
 from azul.indexer.transform import (
-    Transform,
     Transformer,
 )
 from azul.iterators import (
@@ -457,9 +457,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     bundle: HCABundle
     api_bundle: api.Bundle
 
-    def replica_type(self, entity: EntityReference) -> str:
-        return entity.entity_type
-
     @classmethod
     def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
         if entity_type == 'files':
@@ -496,22 +493,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             return SimpleAggregator()
 
-    def _add_replica(self,
-                     contribution: JSON,
-                     entity: api.Entity | DatedEntity,
-                     hub_ids: list[EntityID]
-                     ) -> Transform:
-        contrib_ref = EntityReference(entity_id=str(entity.document_id),
-                                      entity_type=self.entity_type())
-        if not config.enable_replicas:
-            replica = None
-        elif self.entity_type() == 'bundles':
-            links = self.bundle.links
-            replica = self._replica(links, self.api_bundle.ref, hub_ids)
+    def _replicate(self, entity: EntityReference) -> tuple[str, JSON]:
+        if entity == self.api_bundle.ref:
+            content = self.bundle.links
         else:
-            assert isinstance(entity, api.Entity), entity
-            replica = self._replica(entity.json, entity.ref, hub_ids)
-        return self._contribution(contribution, contrib_ref), replica
+            api_entity = self.api_bundle.entities[UUID(entity.entity_id)]
+            content = api_entity.json
+        return entity.entity_type, content
 
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,
@@ -1396,7 +1384,9 @@ ENTITY = TypeVar('ENTITY', bound=api.Entity)
 class PartitionedTransformer(BaseTransformer, Generic[ENTITY]):
 
     @abstractmethod
-    def _transform(self, entities: Iterable[ENTITY]) -> Iterable[Transform]:
+    def _transform(self,
+                   entities: Iterable[ENTITY]
+                   ) -> Iterable[Contribution | Replica]:
         """
         Transform the given outer entities into contributions.
         """
@@ -1415,7 +1405,9 @@ class PartitionedTransformer(BaseTransformer, Generic[ENTITY]):
     def estimate(self, partition: BundlePartition) -> int:
         return ilen(self._entities_in(partition))
 
-    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
+    def transform(self,
+                  partition: BundlePartition
+                  ) -> Iterable[Contribution | Replica]:
         return self._transform(generable(self._entities_in, partition))
 
 
@@ -1428,7 +1420,9 @@ class FileTransformer(PartitionedTransformer[api.File]):
     def _entities(self) -> Iterable[api.File]:
         return self.api_bundle.not_stitched(self.api_bundle.files)
 
-    def _transform(self, files: Iterable[api.File]) -> Iterable[Contribution]:
+    def _transform(self,
+                   files: Iterable[api.File]
+                   ) -> Iterable[Contribution | Replica]:
         zarr_stores: Mapping[str, list[api.File]] = self.group_zarrs(files)
         for file in files:
             file_name = file.manifest_entry.name
@@ -1468,8 +1462,10 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         additional_contents = self.matrix_stratification_values(file)
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
-                hub_ids = list(map(str, visitor.files))
-                yield self._add_replica(contents, file, hub_ids)
+                yield self._contribution(contents, file.ref.entity_id)
+                if config.enable_replicas:
+                    hub_ids = list(map(str, visitor.files))
+                    yield self._replica(file.ref, hub_ids)
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
@@ -1541,7 +1537,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
 
     def _transform(self,
                    cell_suspensions: Iterable[api.CellSuspension]
-                   ) -> Iterable[Contribution]:
+                   ) -> Iterable[Contribution | Replica]:
         for cell_suspension in cell_suspensions:
             samples: dict[str, Sample] = dict()
             self._find_ancestor_samples(cell_suspension, samples)
@@ -1564,8 +1560,10 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
-            hub_ids = list(map(str, visitor.files))
-            yield self._add_replica(contents, cell_suspension, hub_ids)
+            yield self._contribution(contents, cell_suspension.ref.entity_id)
+            if config.enable_replicas:
+                hub_ids = list(map(str, visitor.files))
+                yield self._replica(cell_suspension.ref, hub_ids)
 
 
 class SampleTransformer(PartitionedTransformer):
@@ -1589,7 +1587,9 @@ class SampleTransformer(PartitionedTransformer):
             self._find_ancestor_samples(file, samples)
         return samples.values()
 
-    def _transform(self, samples: Iterable[Sample]) -> Iterable[Contribution]:
+    def _transform(self,
+                   samples: Iterable[Sample]
+                   ) -> Iterable[Contribution | Replica]:
         for sample in samples:
             visitor = TransformerVisitor()
             sample.accept(visitor)
@@ -1610,8 +1610,10 @@ class SampleTransformer(PartitionedTransformer):
                             ),
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
-            hub_ids = list(map(str, visitor.files))
-            yield self._add_replica(contents, sample, hub_ids)
+            yield self._contribution(contents, sample.ref.entity_id)
+            if config.enable_replicas:
+                hub_ids = list(map(str, visitor.files))
+                yield self._replica(sample.ref, hub_ids)
 
 
 class BundleAsEntity(DatedEntity):
@@ -1647,11 +1649,13 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
     def estimate(self, partition: BundlePartition) -> int:
         return int(partition.contains(self._singleton_id))
 
-    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
+    def transform(self,
+                  partition: BundlePartition
+                  ) -> Iterable[Contribution | Replica]:
         if partition.contains(self._singleton_id):
-            yield self._transform()
+            yield from self._transform()
 
-    def _transform(self) -> Transform:
+    def _transform(self) -> Iterable[Contribution | Replica]:
         # Project entities are not explicitly linked in the graph. The mere
         # presence of project metadata in a bundle indicates that all other
         # entities in that bundle belong to that project. Because of that we
@@ -1709,11 +1713,17 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],
                         projects=[self._project(self._api_project)])
-        hub_ids = self._hub_ids(visitor)
-        return self._add_replica(contents, self._singleton_entity(), hub_ids)
+        yield self._contribution(contents, str(self._singleton_id))
+        if config.enable_replicas:
+            hub_ids = self._hub_ids(visitor)
+            yield self._replica(self._entity_ref(), hub_ids)
 
     @abstractmethod
     def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _entity_ref(self) -> EntityReference:
         raise NotImplementedError
 
 
@@ -1734,6 +1744,9 @@ class ProjectTransformer(SingletonTransformer):
         # implicit hub of its parent project.
         return []
 
+    def _entity_ref(self) -> EntityReference:
+        return self._api_project.ref
+
 
 class BundleTransformer(SingletonTransformer):
 
@@ -1753,3 +1766,6 @@ class BundleTransformer(SingletonTransformer):
 
     def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
         return list(map(str, visitor.files))
+
+    def _entity_ref(self) -> EntityReference:
+        return self.api_bundle.ref
