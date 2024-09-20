@@ -498,7 +498,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return SimpleAggregator()
 
     def _add_replica(self,
-                     contribution: MutableJSON,
+                     contribution: JSON,
                      entity: api.Entity | DatedEntity,
                      hub_ids: list[EntityID]
                      ) -> Transform:

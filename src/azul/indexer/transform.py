@@ -34,7 +34,6 @@ from azul.json import (
 )
 from azul.types import (
     JSON,
-    MutableJSON,
 )
 
 Transform = tuple[Optional[Contribution], Optional[Replica]]
@@ -114,7 +113,7 @@ class Transformer(metaclass=ABCMeta):
         raise NotImplementedError
 
     def _contribution(self,
-                      contents: MutableJSON,
+                      contents: JSON,
                       entity: EntityReference
                       ) -> Contribution:
         coordinates = ContributionCoordinates(entity=entity,
@@ -126,7 +125,7 @@ class Transformer(metaclass=ABCMeta):
                             contents=contents)
 
     def _replica(self,
-                 contents: MutableJSON,
+                 contents: JSON,
                  entity: EntityReference,
                  hub_ids: list[EntityID]
                  ) -> Replica:

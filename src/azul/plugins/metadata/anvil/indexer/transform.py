@@ -182,7 +182,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _add_replica(self,
-                     contribution: MutableJSON | None,
+                     contribution: JSON | None,
                      entity: EntityReference,
                      hub_ids: list[EntityID]
                      ) -> Transform:
@@ -335,7 +335,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _contribution(self,
-                      contents: MutableJSON,
+                      contents: JSON,
                       entity: EntityReference,
                       ) -> Contribution:
         # The entity type is used to determine the index name.
