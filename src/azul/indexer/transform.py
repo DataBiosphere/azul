@@ -11,6 +11,9 @@ from typing import (
 
 import attr
 
+from azul.collections import (
+    alist,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -129,7 +132,8 @@ class Transformer(metaclass=ABCMeta):
 
     def _replica(self,
                  entity: EntityReference,
-                 hub_ids: list[EntityID]
+                 *,
+                 file_hub: EntityID | None,
                  ) -> Replica:
         replica_type, contents = self._replicate(entity)
         coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
@@ -138,7 +142,9 @@ class Transformer(metaclass=ABCMeta):
                        version=None,
                        replica_type=replica_type,
                        contents=contents,
-                       hub_ids=hub_ids)
+                       # The other hubs will be added when the indexer
+                       # consolidates duplicate replicas.
+                       hub_ids=alist(file_hub))
 
     @classmethod
     @abstractmethod

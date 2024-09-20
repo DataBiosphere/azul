@@ -1377,6 +1377,13 @@ class TransformerVisitor(api.EntityVisitor):
             if not is_zarr or sub_name.endswith('.zattrs'):
                 self.files[entity.document_id] = entity
 
+    @property
+    def entities(self) -> Iterable[EntityReference]:
+        for entity_dict in vars(self).values():
+            for entity in entity_dict.values():
+                yield EntityReference(entity_type=entity.schema_name,
+                                      entity_id=str(entity.document_id))
+
 
 ENTITY = TypeVar('ENTITY', bound=api.Entity)
 
@@ -1462,10 +1469,18 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         additional_contents = self.matrix_stratification_values(file)
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
-                yield self._contribution(contents, file.ref.entity_id)
+                file_id = file.ref.entity_id
+                yield self._contribution(contents, file_id)
                 if config.enable_replicas:
-                    hub_ids = list(map(str, visitor.files))
-                    yield self._replica(file.ref, hub_ids)
+                    yield self._replica(self.api_bundle.ref, file_hub=file_id)
+                    # Projects are linked to every file in their snapshot,
+                    # making an explicit list of hub IDs for the project both
+                    # redundant and impractically large. Therefore, we leave the
+                    # hub IDs field empty for projects and rely on the tenet
+                    # that every file is an implicit hub of its parent project.
+                    yield self._replica(self._api_project.ref, file_hub=None)
+                    for linked_entity in visitor.entities:
+                        yield self._replica(linked_entity, file_hub=file_id)
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
@@ -1537,7 +1552,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
 
     def _transform(self,
                    cell_suspensions: Iterable[api.CellSuspension]
-                   ) -> Iterable[Contribution | Replica]:
+                   ) -> Iterable[Contribution]:
         for cell_suspension in cell_suspensions:
             samples: dict[str, Sample] = dict()
             self._find_ancestor_samples(cell_suspension, samples)
@@ -1561,9 +1576,6 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
             yield self._contribution(contents, cell_suspension.ref.entity_id)
-            if config.enable_replicas:
-                hub_ids = list(map(str, visitor.files))
-                yield self._replica(cell_suspension.ref, hub_ids)
 
 
 class SampleTransformer(PartitionedTransformer):
@@ -1587,9 +1599,7 @@ class SampleTransformer(PartitionedTransformer):
             self._find_ancestor_samples(file, samples)
         return samples.values()
 
-    def _transform(self,
-                   samples: Iterable[Sample]
-                   ) -> Iterable[Contribution | Replica]:
+    def _transform(self, samples: Iterable[Sample]) -> Iterable[Contribution]:
         for sample in samples:
             visitor = TransformerVisitor()
             sample.accept(visitor)
@@ -1611,9 +1621,6 @@ class SampleTransformer(PartitionedTransformer):
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
             yield self._contribution(contents, sample.ref.entity_id)
-            if config.enable_replicas:
-                hub_ids = list(map(str, visitor.files))
-                yield self._replica(sample.ref, hub_ids)
 
 
 class BundleAsEntity(DatedEntity):
@@ -1649,13 +1656,11 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
     def estimate(self, partition: BundlePartition) -> int:
         return int(partition.contains(self._singleton_id))
 
-    def transform(self,
-                  partition: BundlePartition
-                  ) -> Iterable[Contribution | Replica]:
+    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
         if partition.contains(self._singleton_id):
-            yield from self._transform()
+            yield self._transform()
 
-    def _transform(self) -> Iterable[Contribution | Replica]:
+    def _transform(self) -> Contribution:
         # Project entities are not explicitly linked in the graph. The mere
         # presence of project metadata in a bundle indicates that all other
         # entities in that bundle belong to that project. Because of that we
@@ -1713,18 +1718,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],
                         projects=[self._project(self._api_project)])
-        yield self._contribution(contents, str(self._singleton_id))
-        if config.enable_replicas:
-            hub_ids = self._hub_ids(visitor)
-            yield self._replica(self._entity_ref(), hub_ids)
-
-    @abstractmethod
-    def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def _entity_ref(self) -> EntityReference:
-        raise NotImplementedError
+        return self._contribution(contents, str(self._singleton_id))
 
 
 class ProjectTransformer(SingletonTransformer):
@@ -1735,17 +1729,6 @@ class ProjectTransformer(SingletonTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'projects'
-
-    def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
-        # Every file in a snapshot is linked to that snapshot's singular
-        # project, making an explicit list of hub IDs for the project both
-        # redundant and impractically large. Therefore, we leave the hub IDs
-        # field empty for projects and rely on the tenet that every file is an
-        # implicit hub of its parent project.
-        return []
-
-    def _entity_ref(self) -> EntityReference:
-        return self._api_project.ref
 
 
 class BundleTransformer(SingletonTransformer):
@@ -1763,9 +1746,3 @@ class BundleTransformer(SingletonTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'bundles'
-
-    def _hub_ids(self, visitor: TransformerVisitor) -> list[str]:
-        return list(map(str, visitor.files))
-
-    def _entity_ref(self) -> EntityReference:
-        return self.api_bundle.ref

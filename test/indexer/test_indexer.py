@@ -216,13 +216,13 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                     if self._parse_index_name(h)[1] is not DocumentType.replica
                                 ]
                             self.assertElasticEqual(expected_hits, hits)
-                            contributions = []
-                            replicas = []
+                            contributions = set()
+                            replicas = set()
                             for hit in hits:
                                 qualifier, doc_type = self._parse_index_name(hit)
                                 if doc_type is DocumentType.replica:
                                     entity_id = ReplicaCoordinates.from_hit(hit).entity.entity_id
-                                    replicas.append(entity_id)
+                                    replicas.add(entity_id)
                                     if entity_id == bundle.uuid:
                                         expected = bundle.links
                                     else:
@@ -238,11 +238,15 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                                     self.assertEqual(expected, actual)
                                 elif doc_type is DocumentType.contribution:
                                     entity_id = ContributionCoordinates.from_hit(hit).entity.entity_id
-                                    contributions.append(entity_id)
-                            contributions.sort()
-                            replicas.sort()
-                            # Every contribution should be replicated
-                            self.assertEqual(contributions if enable_replicas else [], replicas)
+                                    contributions.add(entity_id)
+                            # Every contribution should be replicated, but many
+                            # replicated entities never manifest as outer
+                            # entities in the index and thus have no
+                            # corresponding contribution.
+                            if enable_replicas:
+                                self.assertIsSubset(contributions, replicas)
+                            else:
+                                self.assertEqual(set(), replicas)
                         finally:
                             self.index_service.delete_indices(self.catalog)
 
@@ -252,21 +256,21 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
         """
         # Ensure that we have a bundle whose documents are written individually
         # and another one that's written in bulk.
-        bundle_sizes = {
-            self.new_bundle: 6,
-            self.bundle_fqid(uuid='2a87dc5c-0c3c-4d91-a348-5d784ab48b92',
-                             version='2018-03-29T10:39:45.437487Z'): 258
-        }
+        bundle_sizes = [
+            (self.new_bundle, 6, 10),
+            (self.bundle_fqid(uuid='2a87dc5c-0c3c-4d91-a348-5d784ab48b92',
+                              version='2018-03-29T10:39:45.437487Z'), 258, 263)
+        ]
         self.assertTrue(
-            min(bundle_sizes.values())
+            bundle_sizes[0][1]
             < IndexWriter.bulk_threshold
-            < max(bundle_sizes.values())
+            < bundle_sizes[1][1]
         )
 
         field_types = self.index_service.catalogued_field_types()
         aggregate_cls = self.metadata_plugin.aggregate_class()
-        for bundle_fqid, size in bundle_sizes.items():
-            with self.subTest(size=size):
+        for bundle_fqid, num_contribs, num_replicas in bundle_sizes:
+            with self.subTest(num_contribs=num_contribs):
                 bundle = self._load_canned_bundle(bundle_fqid)
                 bundle = DSSBundle(fqid=bundle_fqid,
                                    manifest=bundle.manifest,
@@ -276,8 +280,6 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                 try:
                     self._index_bundle(bundle)
                     hits = self._get_all_hits()
-                    num_contribs = size
-                    num_replicas = size
                     self._assert_hit_counts(hits, num_contribs, num_replicas)
                     for hit in hits:
                         qualifier, doc_type = self._parse_index_name(hit)
@@ -482,7 +484,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         num_contribs = num_addition_contribs + num_deletion_contribs
         # These deletion markers do not affect the number of replicas because we
         # don't support deleting replicas.
-        num_replicas = 0 if just_deletion else num_addition_contribs
+        num_replicas = 0 if just_deletion else 10
         self._assert_hit_counts(hits,
                                 num_contribs=num_contribs,
                                 num_aggs=0,
@@ -1118,7 +1120,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         num_files = 33
         num_expected = dict(files=num_files, samples=1, cell_suspensions=1, projects=1, bundles=1)
         num_contribs = sum(num_expected.values())
-        num_replicas = num_contribs
+        num_replicas = 41
         self._assert_hit_counts(hits, num_contribs, num_replicas)
         num_contribs, num_aggregates = Counter(), Counter()
         for hit in hits:
@@ -1191,7 +1193,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         # Expect the old version's contributions
         num_aggs = num_new_contribs
         # Expect a replica for each entity in the old version
-        num_replicas = num_new_contribs
+        num_replicas = 10
         if expect_new_version in (True, None):
             # New and old replicas for `links.json` are identical
             num_replicas += num_replicas - 1
@@ -1274,7 +1276,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         num_old_contribs = 6
         num_contribs = num_old_contribs
         num_aggs = num_old_contribs
-        num_replicas = num_old_contribs
+        num_replicas = 10
 
         if expect_old_version:
             # Expect an updated contribution for each entity in the old version
@@ -1383,14 +1385,14 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         # Two files, a project, a cell suspension, a sample, and a bundle
         num_contribs = 6
         # Two bundles
-        num_contribs += num_contribs
+        num_contribs = num_contribs * 2
         # Both bundles share the same sample and the project, so they get
         # aggregated only once
         num_aggs = num_contribs - 2
         # The sample contributions from each bundle are identical and yield a
         # single replica, but the project contributions have different schema
         # versions and thus yield two.
-        num_replicas = num_contribs - 1
+        num_replicas = 14
         self._assert_hit_counts(hits,
                                 num_contribs=num_contribs,
                                 num_aggs=num_aggs,
@@ -2140,7 +2142,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     self._index_canned_bundle(bundle_fqid)
 
                 hits = self._get_all_hits()
-                self._assert_hit_counts(hits, num_contribs=21, num_replicas=21)
+                self._assert_hit_counts(hits, num_contribs=21, num_replicas=28)
 
     def test_disallow_manifest_column_joiner(self):
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',

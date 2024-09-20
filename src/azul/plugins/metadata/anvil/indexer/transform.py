@@ -97,6 +97,12 @@ class LinkedEntities:
     def __getitem__(self, item: EntityType) -> set[EntityReference]:
         return self.ancestors[item] | self.descendants[item]
 
+    def __iter__(self) -> Iterable[EntityReference]:
+        for entities in self.ancestors.values():
+            yield from entities
+        for entities in self.descendants.values():
+            yield from entities
+
     @classmethod
     def from_links(cls,
                    origin: EntityReference,
@@ -449,8 +455,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
 class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
 
-    def _contents(self) -> MutableJSON:
-        return dict(
+    def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
+        contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 self._entities_by_type[activity_type]
                 for activity_type in self._activity_polymorphic_types
@@ -461,6 +467,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
             donors=self._entities(self._donor, self._entities_by_type['donor']),
             files=self._entities(self._file, self._entities_by_type['file'])
         )
+        yield self._contribution(contents, entity.entity_id)
 
     @classmethod
     def field_types(cls) -> FieldTypes:
@@ -479,8 +486,11 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
     def _duos(self, dataset: EntityReference) -> MutableJSON:
         return self._entity(dataset, self._duos_types())
 
+    def _is_duos(self, dataset: EntityReference) -> bool:
+        return 'description' in self.bundle.entities[dataset]
+
     def _dataset(self, dataset: EntityReference) -> MutableJSON:
-        if 'description' in self.bundle.entities[dataset]:
+        if self._is_duos(dataset):
             return self._duos(dataset)
         else:
             return super()._dataset(dataset)
@@ -499,23 +509,17 @@ class ActivityTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'activities'
 
-    def _transform(self,
-                   entity: EntityReference
-                   ) -> Iterable[Contribution | Replica]:
+    def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         linked = self._linked_entities(entity)
-        files = linked['file']
         contents = dict(
             activities=[self._activity(entity)],
             biosamples=self._entities(self._biosample, linked['biosample']),
             datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
-            files=self._entities(self._file, files),
+            files=self._entities(self._file, linked['file'])
         )
         yield self._contribution(contents, entity.entity_id)
-        if config.enable_replicas:
-            hub_ids = [f.entity_id for f in files]
-            yield self._replica(entity, hub_ids)
 
 
 class BiosampleTransformer(BaseTransformer):
@@ -524,11 +528,8 @@ class BiosampleTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'biosamples'
 
-    def _transform(self,
-                   entity: EntityReference
-                   ) -> Iterable[Contribution | Replica]:
+    def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         linked = self._linked_entities(entity)
-        files = linked['file']
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -538,25 +539,9 @@ class BiosampleTransformer(BaseTransformer):
             datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
-            files=self._entities(self._file, files),
+            files=self._entities(self._file, linked['file']),
         )
         yield self._contribution(contents, entity.entity_id)
-        if config.enable_replicas:
-            hub_ids = [f.entity_id for f in files]
-            yield self._replica(entity, hub_ids)
-
-
-class DiagnosisTransformer(BaseTransformer):
-
-    def _transform(self, entity: EntityReference) -> Iterable[Replica]:
-        if config.enable_replicas:
-            files = self._linked_entities(entity)['file']
-            hub_ids = [f.entity_id for f in files]
-            yield self._replica(entity, hub_ids)
-
-    @classmethod
-    def entity_type(cls) -> EntityType:
-        return 'diagnoses'
 
 
 class BundleTransformer(SingletonTransformer):
@@ -568,10 +553,6 @@ class BundleTransformer(SingletonTransformer):
     def _singleton(self) -> EntityReference:
         return EntityReference(entity_type='bundle',
                                entity_id=self.bundle.uuid)
-
-    def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        contents = self._contents()
-        yield self._contribution(contents, entity.entity_id)
 
 
 class DatasetTransformer(SingletonTransformer):
@@ -586,18 +567,9 @@ class DatasetTransformer(SingletonTransformer):
     def _transform(self,
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
-        contents = self._contents()
-        yield self._contribution(contents, entity.entity_id)
-        if config.enable_replicas:
-            # Every file in a snapshot is linked to that snapshot's singular
-            # dataset, making an explicit list of hub IDs for the dataset both
-            # redundant and impractically large (we observe that for large
-            # snapshots, trying to track this many files in a single data structure
-            # causes a prohibitively high rate of conflicts during replica updates).
-            # Therefore, we leave the hub IDs field empty for datasets and rely on
-            # the tenet that every file is an implicit hub of its parent dataset.
-            hub_ids = []
-            yield self._replica(entity, hub_ids)
+        yield from super()._transform(entity)
+        if self._is_duos(entity):
+            yield self._replica(entity, file_hub=None)
 
 
 class DonorTransformer(BaseTransformer):
@@ -606,11 +578,8 @@ class DonorTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'donors'
 
-    def _transform(self,
-                   entity: EntityReference
-                   ) -> Iterable[Contribution | Replica]:
+    def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         linked = self._linked_entities(entity)
-        files = linked['file']
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -620,12 +589,9 @@ class DonorTransformer(BaseTransformer):
             datasets=[self._dataset(self._only_dataset())],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=[self._donor(entity)],
-            files=self._entities(self._file, files),
+            files=self._entities(self._file, linked['file']),
         )
         yield self._contribution(contents, entity.entity_id)
-        if config.enable_replicas:
-            hub_ids = [f.entity_id for f in files]
-            yield self._replica(entity, hub_ids)
 
 
 class FileTransformer(BaseTransformer):
@@ -651,8 +617,14 @@ class FileTransformer(BaseTransformer):
         )
         yield self._contribution(contents, entity.entity_id)
         if config.enable_replicas:
-            # The result of the link traversal does not include the starting entity,
-            # so without this step the file itself wouldn't be included in its hubs
-            files = (entity, *linked['file'])
-            hub_ids = [f.entity_id for f in files]
-            yield self._replica(entity, hub_ids)
+            yield self._replica(entity, file_hub=entity.entity_id)
+            for linked_entity in linked:
+                yield self._replica(
+                    linked_entity,
+                    # Datasets are linked to every file in their snapshot,
+                    # making an explicit list of hub IDs for the dataset both
+                    # redundant and impractically large. Therefore, we leave the
+                    # hub IDs field empty for datasets and rely on the tenet
+                    # that every file is an implicit hub of its parent dataset.
+                    file_hub=None if linked_entity.entity_type == 'dataset' else entity.entity_id,
+                )

@@ -14,7 +14,28 @@
                 },
                 {
                     "links": [],
+                    "name": "donor_organism",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "library_preparation_protocol",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
                     "name": "links",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "process",
                     "ontology_reference": "",
                     "properties": [],
                     "values": {}
@@ -29,6 +50,13 @@
                 {
                     "links": [],
                     "name": "sequence_file",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
+                },
+                {
+                    "links": [],
+                    "name": "sequencing_protocol",
                     "ontology_reference": "",
                     "properties": [],
                     "values": {}
@@ -117,6 +145,140 @@
             },
             "schema_type": "biomaterial",
             "total_estimated_cells": 1
+        },
+        "relations": []
+    },
+    {
+        "id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+        "name": "sequencing_protocol",
+        "object": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/9.0.3/sequencing_protocol",
+            "instrument_manufacturer_model": {
+                "ontology": "EFO:0008566",
+                "ontology_label": "Illumina NextSeq 500",
+                "text": "Illumina NextSeq 500"
+            },
+            "paired_end": true,
+            "protocol_core": {
+                "protocol_id": "sequencing_protocol_1"
+            },
+            "provenance": {
+                "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                "submission_date": "2018-11-02T10:05:05.555Z",
+                "update_date": "2018-11-02T10:05:10.376Z"
+            },
+            "schema_type": "protocol",
+            "sequencing_approach": {
+                "ontology": "EFO:0008896",
+                "ontology_label": "RNA-Seq",
+                "text": "RNA-Seq"
+            }
+        },
+        "relations": []
+    },
+    {
+        "id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+        "name": "process",
+        "object": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+            "process_core": {
+                "process_id": "SRR3562915"
+            },
+            "provenance": {
+                "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                "submission_date": "2018-11-02T10:06:37.087Z",
+                "update_date": "2018-11-02T10:13:43.197Z"
+            },
+            "schema_type": "process"
+        },
+        "relations": []
+    },
+    {
+        "id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+        "name": "donor_organism",
+        "object": {
+            "biomaterial_core": {
+                "biomaterial_id": "DID_scRSq06",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "death": {
+                "cause_of_death": "stroke"
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+            "diseases": [
+                {
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal",
+                    "text": "normal"
+                }
+            ],
+            "genus_species": [
+                {
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Australopithecus",
+                    "text": "Australopithecus"
+                }
+            ],
+            "human_specific": {
+                "body_mass_index": 29.5,
+                "ethnicity": [
+                    {
+                        "ontology": "hancestro:0005",
+                        "ontology_label": "European",
+                        "text": "European"
+                    }
+                ]
+            },
+            "is_living": "no",
+            "organism_age": "38",
+            "organism_age_unit": {
+                "ontology": "UO:0000036",
+                "ontology_label": "year",
+                "text": "year"
+            },
+            "provenance": {
+                "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                "submission_date": "2018-11-02T10:02:12.191Z",
+                "update_date": "2018-11-02T10:07:39.622Z"
+            },
+            "schema_type": "biomaterial",
+            "sex": "female"
+        },
+        "relations": []
+    },
+    {
+        "id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+        "name": "library_preparation_protocol",
+        "object": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+            "end_bias": "full length",
+            "input_nucleic_acid_molecule": {
+                "ontology": "OBI:0000869",
+                "text": "polyA RNA"
+            },
+            "library_construction_approach": {
+                "ontology": "EFO:0008931",
+                "ontology_label": "Smart-seq2",
+                "text": "Smart-seq2"
+            },
+            "library_construction_kit": {
+                "manufacturer": "Illumina",
+                "retail_name": "Nextera XT kit"
+            },
+            "nucleic_acid_source": "single cell",
+            "primer": "poly-dT",
+            "protocol_core": {
+                "protocol_id": "library_preparation_protocol_1"
+            },
+            "provenance": {
+                "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                "submission_date": "2018-11-02T10:05:05.547Z",
+                "update_date": "2018-11-02T10:05:10.360Z"
+            },
+            "schema_type": "protocol",
+            "strand": "unstranded"
         },
         "relations": []
     },

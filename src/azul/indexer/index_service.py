@@ -302,16 +302,21 @@ class IndexService(DocumentService):
             log.info('Transforming %i entities in partition %s of bundle %s, version %s.',
                      num_entities, partition, bundle.uuid, bundle.version)
             contributions = []
-            replicas = []
+            replicas_by_coords = {}
             for transformer in transformers:
                 for document in transformer.transform(partition):
                     if isinstance(document, Contribution):
                         contributions.append(document)
                     elif isinstance(document, Replica):
-                        replicas.append(document)
+                        try:
+                            dup = replicas_by_coords[document.coordinates]
+                        except KeyError:
+                            replicas_by_coords[document.coordinates] = document
+                        else:
+                            dup.hub_ids.extend(document.hub_ids)
                     else:
                         assert False, document
-            return contributions, replicas
+            return contributions, list(replicas_by_coords.values())
 
     def create_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
