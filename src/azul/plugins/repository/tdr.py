@@ -4,12 +4,12 @@ from abc import (
 )
 from collections.abc import (
     Sequence,
-    Set,
 )
 import datetime
 import logging
 import time
 from typing import (
+    AbstractSet,
     Callable,
     Optional,
     Type,
@@ -89,7 +89,7 @@ TDR_BUNDLE = TypeVar('TDR_BUNDLE', bound=TDRBundle)
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQID]):
-    _sources: Set[TDRSourceSpec]
+    _sources: AbstractSet[TDRSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
@@ -99,7 +99,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
         )
 
     @property
-    def sources(self) -> Set[TDRSourceSpec]:
+    def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
 
     def _auth_fallback(self,

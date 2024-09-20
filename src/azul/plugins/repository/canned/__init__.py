@@ -9,7 +9,6 @@ files in the canned staging area.
 """
 from collections.abc import (
     Sequence,
-    Set,
 )
 from dataclasses import (
     dataclass,
@@ -23,6 +22,7 @@ from tempfile import (
 )
 import time
 from typing import (
+    AbstractSet,
     Optional,
     Type,
 )
@@ -96,7 +96,7 @@ class CannedBundle(HCABundle[CannedBundleFQID]):
 @dataclass(frozen=True)
 class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, CannedBundleFQID],
              HasCachedHttpClient):
-    _sources: Set[SimpleSourceSpec]
+    _sources: AbstractSet[SimpleSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -108,7 +108,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         )
 
     @property
-    def sources(self) -> Set[SimpleSourceSpec]:
+    def sources(self) -> AbstractSet[SimpleSourceSpec]:
         return self._sources
 
     def list_sources(self,

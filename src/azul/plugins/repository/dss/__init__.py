@@ -1,10 +1,10 @@
 from collections.abc import (
     Sequence,
-    Set,
 )
 import logging
 import time
 from typing import (
+    AbstractSet,
     Optional,
     Type,
 )
@@ -112,7 +112,7 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
         return cls()
 
     @property
-    def sources(self) -> Set[SimpleSourceSpec]:
+    def sources(self) -> AbstractSet[SimpleSourceSpec]:
         assert config.dss_source is not None
         return {
             SimpleSourceSpec.parse(config.dss_source)

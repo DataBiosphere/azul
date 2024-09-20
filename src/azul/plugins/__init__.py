@@ -6,7 +6,6 @@ from collections.abc import (
     Iterable,
     Mapping,
     Sequence,
-    Set,
 )
 from enum import (
     Enum,
@@ -16,6 +15,7 @@ from inspect import (
     isabstract,
 )
 from typing import (
+    AbstractSet,
     ClassVar,
     Generic,
     Optional,
@@ -508,7 +508,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
 
     @property
     @abstractmethod
-    def sources(self) -> Set[SOURCE_SPEC]:
+    def sources(self) -> AbstractSet[SOURCE_SPEC]:
         """
         The names of the sources the plugin is configured to read metadata from.
         """
