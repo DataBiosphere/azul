@@ -341,7 +341,9 @@ _hibernate() {
 					-target aws_ec2_client_vpn_endpoint.gitlab \
 					-target aws_instance.gitlab \
 					-target aws_nat_gateway.gitlab_0 \
-					-target aws_nat_gateway.gitlab_1
+					-target aws_nat_gateway.gitlab_1 \
+					-target aws_lb.gitlab_nlb \
+					-target aws_lb.gitlab_alb
 				}
 			}
 	else
