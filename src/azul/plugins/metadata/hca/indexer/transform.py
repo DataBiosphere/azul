@@ -1651,8 +1651,6 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
     def transform(self, partition: BundlePartition) -> Iterable[Transform]:
         if partition.contains(self._singleton_id):
             yield self._transform()
-        else:
-            return ()
 
     def _transform(self) -> Transform:
         # Project entities are not explicitly linked in the graph. The mere
