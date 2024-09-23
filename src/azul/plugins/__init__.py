@@ -17,7 +17,6 @@ from typing import (
     Mapping,
     Sequence,
     TYPE_CHECKING,
-    Type,
     TypeVar,
     TypedDict,
 )
@@ -155,7 +154,7 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
     """
 
     @classmethod
-    def load(cls: Type[T], catalog: CatalogName) -> Type[T]:
+    def load(cls: type[T], catalog: CatalogName) -> type[T]:
         """
         Load and return one of the concrete subclasses of the class this method
         is called on. Which concrete class is returned depends on how the
@@ -171,11 +170,11 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
         return cls._load(plugin_type_name, plugin_package_name)
 
     @classmethod
-    def types(cls) -> Sequence[Type['Plugin']]:
+    def types(cls) -> Sequence[type['Plugin']]:
         return cls.__subclasses__()
 
     @classmethod
-    def type_for_name(cls, plugin_type_name: str) -> Type[T]:
+    def type_for_name(cls, plugin_type_name: str) -> type[T]:
         """
         Return the plugin type for the given name.
 
@@ -201,7 +200,7 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
     @classmethod
     def bundle_cls(cls,
                    plugin_package_name: str
-                   ) -> Type[BUNDLE]:
+                   ) -> type[BUNDLE]:
         plugin_type_name = cls._plugin_type_name()
         plugin_cls = cls._load(plugin_type_name, plugin_package_name)
         bundle_cls = get_generic_type_params(plugin_cls)[0]
@@ -216,7 +215,7 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
         return plugin_type_name
 
     @classmethod
-    def _load(cls, plugin_type_name: str, plugin_package_name: str) -> Type[T]:
+    def _load(cls, plugin_type_name: str, plugin_package_name: str) -> type[T]:
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = getattr(plugin_module, 'Plugin')
@@ -238,7 +237,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         return cls()
 
     @abstractmethod
-    def transformer_types(self) -> Iterable[Type[Transformer]]:
+    def transformer_types(self) -> Iterable[type[Transformer]]:
         raise NotImplementedError
 
     @abstractmethod
@@ -256,7 +255,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         """
         raise NotImplementedError
 
-    def aggregate_class(self) -> Type[Aggregate]:
+    def aggregate_class(self) -> type[Aggregate]:
         """
         Returns the concrete class to use for representing aggregate documents
         in the indexer.
@@ -463,27 +462,27 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def summary_response_stage(self) -> 'Type[SummaryResponseStage]':
+    def summary_response_stage(self) -> 'type[SummaryResponseStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def search_response_stage(self) -> 'Type[SearchResponseStage]':
+    def search_response_stage(self) -> 'type[SearchResponseStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def summary_aggregation_stage(self) -> 'Type[AggregationStage]':
+    def summary_aggregation_stage(self) -> 'type[AggregationStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def aggregation_stage(self) -> 'Type[AggregationStage]':
+    def aggregation_stage(self) -> 'type[AggregationStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def filter_stage(self) -> 'Type[FilterStage]':
+    def filter_stage(self) -> 'type[FilterStage]':
         raise NotImplementedError
 
 
@@ -553,7 +552,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
         return bundle_cls, spec_cls, ref_cls, fqid_cls
 
     @property
-    def _source_ref_cls(self) -> Type[SOURCE_REF]:
+    def _source_ref_cls(self) -> type[SOURCE_REF]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return ref_cls
 
@@ -565,12 +564,12 @@ class RepositoryPlugin(Plugin[BUNDLE],
         return self._source_ref_cls.from_json(ref)
 
     @property
-    def _bundle_fqid_cls(self) -> Type[BUNDLE_FQID]:
+    def _bundle_fqid_cls(self) -> type[BUNDLE_FQID]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return fqid_cls
 
     @property
-    def _bundle_cls(self) -> Type[BUNDLE]:
+    def _bundle_cls(self) -> type[BUNDLE]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return bundle_cls
 
@@ -660,7 +659,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
         raise NotImplementedError
 
     @abstractmethod
-    def file_download_class(self) -> Type['RepositoryFileDownload']:
+    def file_download_class(self) -> type['RepositoryFileDownload']:
         raise NotImplementedError
 
     @abstractmethod

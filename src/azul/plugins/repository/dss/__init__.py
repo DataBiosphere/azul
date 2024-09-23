@@ -3,7 +3,6 @@ import time
 from typing import (
     AbstractSet,
     Sequence,
-    Type,
 )
 import urllib
 from urllib.parse import (
@@ -412,7 +411,7 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
         assert authentication is None, type(authentication)
         return DRSClient(http_client=self._http_client)
 
-    def file_download_class(self) -> Type[RepositoryFileDownload]:
+    def file_download_class(self) -> type[RepositoryFileDownload]:
         return DSSFileDownload
 
     def validate_version(self, version: str) -> None:

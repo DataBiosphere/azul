@@ -9,7 +9,6 @@ from typing import (
     AbstractSet,
     Callable,
     Sequence,
-    Type,
     TypeVar,
 )
 
@@ -240,7 +239,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
                    ) -> DRSClient:
         return self._drs_client(authentication)
 
-    def file_download_class(self) -> Type[RepositoryFileDownload]:
+    def file_download_class(self) -> type[RepositoryFileDownload]:
         return TDRFileDownload
 
     def validate_version(self, version: str) -> None:

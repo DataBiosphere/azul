@@ -21,7 +21,6 @@ import time
 from typing import (
     AbstractSet,
     Sequence,
-    Type,
 )
 
 from furl import (
@@ -259,7 +258,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                         found_version = actual_file_version
         return found_url
 
-    def file_download_class(self) -> Type[RepositoryFileDownload]:
+    def file_download_class(self) -> type[RepositoryFileDownload]:
         return CannedFileDownload
 
     def drs_client(self,

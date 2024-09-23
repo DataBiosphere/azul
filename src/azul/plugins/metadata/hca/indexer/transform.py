@@ -22,7 +22,6 @@ from typing import (
     Mapping,
     Protocol,
     Self,
-    Type,
     TypeVar,
     get_args,
 )
@@ -1084,7 +1083,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     class Sample:
         entity_type: str
-        api_class: Type[api.Biomaterial]
+        api_class: type[api.Biomaterial]
 
         @classmethod
         def to_dict(cls, sample: api.Biomaterial) -> MutableJSON:
@@ -1140,7 +1139,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'effective_organ': specimen.organ,
             }
 
-    sample_types: Mapping[Callable, Type[Sample]] = {
+    sample_types: Mapping[Callable, type[Sample]] = {
         _cell_line: SampleCellLine,
         _organoid: SampleOrganoid,
         _specimen: SampleSpecimen

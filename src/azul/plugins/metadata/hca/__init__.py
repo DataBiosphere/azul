@@ -2,7 +2,6 @@ from typing import (
     Iterable,
     Sequence,
     TYPE_CHECKING,
-    Type,
 )
 
 from azul import (
@@ -60,7 +59,7 @@ from humancellatlas.data.metadata import (
 
 class Plugin(MetadataPlugin[HCABundle]):
 
-    def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
+    def transformer_types(self) -> Iterable[type[BaseTransformer]]:
         return (
             FileTransformer,
             CellSuspensionTransformer,
@@ -89,7 +88,7 @@ class Plugin(MetadataPlugin[HCABundle]):
 
         return list(transformers())
 
-    def aggregate_class(self) -> Type[Aggregate]:
+    def aggregate_class(self) -> type[Aggregate]:
         return HCAAggregate
 
     def mapping(self, index_name: IndexName) -> MutableJSON:
@@ -430,21 +429,21 @@ class Plugin(MetadataPlugin[HCABundle]):
             return DocumentSlice(excludes=['bundles'])
 
     @property
-    def summary_response_stage(self) -> Type[HCASummaryResponseStage]:
+    def summary_response_stage(self) -> type[HCASummaryResponseStage]:
         return HCASummaryResponseStage
 
     @property
-    def search_response_stage(self) -> Type[HCASearchResponseStage]:
+    def search_response_stage(self) -> type[HCASearchResponseStage]:
         return HCASearchResponseStage
 
     @property
-    def summary_aggregation_stage(self) -> Type[HCASummaryAggregationStage]:
+    def summary_aggregation_stage(self) -> type[HCASummaryAggregationStage]:
         return HCASummaryAggregationStage
 
     @property
-    def aggregation_stage(self) -> Type[HCAAggregationStage]:
+    def aggregation_stage(self) -> type[HCAAggregationStage]:
         return HCAAggregationStage
 
     @property
-    def filter_stage(self) -> Type[HCAFilterStage]:
+    def filter_stage(self) -> type[HCAFilterStage]:
         return HCAFilterStage

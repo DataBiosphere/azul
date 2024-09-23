@@ -15,7 +15,6 @@ from typing import (
     Generic,
     Iterator,
     Self,
-    Type,
     TypeVar,
     TypedDict,
 )
@@ -353,10 +352,10 @@ class SourceRef(SupportsLessAndGreaterThan, Generic[SOURCE_SPEC, SOURCE_REF]):
     id: str = attrs.field(order=str.lower)
     spec: SOURCE_SPEC = attrs.field(order=False)
 
-    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
+    _lookup: ClassVar[dict[tuple[type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
-    def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
+    def __new__(cls: type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
         """
         Interns instances by their ID and ensures that names are unambiguous
         for any given ID. Two different sources may still use the same name.
@@ -409,7 +408,7 @@ class SourceRef(SupportsLessAndGreaterThan, Generic[SOURCE_SPEC, SOURCE_REF]):
         return cls(id=ref['id'], spec=cls.spec_cls().parse(ref['spec']))
 
     @classmethod
-    def spec_cls(cls) -> Type[SourceSpec]:
+    def spec_cls(cls) -> type[SourceSpec]:
         spec_cls, ref_cls = get_generic_type_params(cls, SourceSpec, SourceRef)
         return spec_cls
 
@@ -442,7 +441,7 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     source: SOURCE_REF
 
     @classmethod
-    def source_ref_cls(cls) -> Type[SOURCE_REF]:
+    def source_ref_cls(cls) -> type[SOURCE_REF]:
         ref_cls, = get_generic_type_params(cls, SourceRef)
         return ref_cls
 
