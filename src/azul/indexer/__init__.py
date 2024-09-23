@@ -14,7 +14,6 @@ from typing import (
     ClassVar,
     Generic,
     Iterator,
-    Optional,
     Self,
     Type,
     TypeVar,
@@ -475,7 +474,7 @@ class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
         return self.fqid.version
 
     @abstractmethod
-    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_uri(self, manifest_entry: JSON) -> str | None:
         """
         Return the DRS URI to a data file in this bundle, or None if the data
         file is not accessible via DRS.

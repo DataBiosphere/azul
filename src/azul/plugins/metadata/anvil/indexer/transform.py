@@ -22,7 +22,6 @@ from typing import (
     Callable,
     Collection,
     Iterable,
-    Optional,
 )
 from uuid import (
     UUID,
@@ -111,7 +110,7 @@ class LinkedEntities:
     def _search(cls,
                 entity_ref: EntityReference,
                 links: Collection[Link[EntityReference]],
-                entities: Optional[EntityRefsByType] = None,
+                entities: EntityRefsByType | None = None,
                 *,
                 from_: str,
                 to: str
@@ -183,7 +182,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _add_replica(self,
-                     contribution: Optional[MutableJSON],
+                     contribution: MutableJSON | None,
                      entity: EntityReference,
                      hub_ids: list[EntityID]
                      ) -> Transform:
@@ -323,7 +322,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _range(self, entity: EntityReference, *field_prefixes: str) -> MutableJSON:
         metadata = self.bundle.entities[entity]
 
-        def get_bound(field_name: str) -> Optional[float]:
+        def get_bound(field_name: str) -> float | None:
             val = metadata[field_name]
             return None if val is None else float(val)
 

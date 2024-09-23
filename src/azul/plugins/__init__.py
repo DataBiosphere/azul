@@ -15,7 +15,6 @@ from typing import (
     Generic,
     Iterable,
     Mapping,
-    Optional,
     Sequence,
     TYPE_CHECKING,
     Type,
@@ -460,7 +459,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         return replicas, replica_types, pfb_schema
 
     @abstractmethod
-    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+    def document_slice(self, entity_type: str) -> DocumentSlice | None:
         raise NotImplementedError
 
     @property
@@ -517,7 +516,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
 
     @abstractmethod
     def list_sources(self,
-                     authentication: Optional[Authentication]
+                     authentication: Authentication | None
                      ) -> Iterable[SOURCE_REF]:
         """
         The sources the plugin is configured to read metadata from that are
@@ -529,7 +528,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
         raise NotImplementedError
 
     def list_source_ids(self,
-                        authentication: Optional[Authentication]
+                        authentication: Authentication | None
                         ) -> set[str]:
         """
         List source IDs in the underlying repository that are accessible using
@@ -617,7 +616,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
 
         raise NotImplementedError
 
-    def list_partitions(self, source: SOURCE_REF) -> Optional[Mapping[str, int]]:
+    def list_partitions(self, source: SOURCE_REF) -> Mapping[str, int] | None:
         """
         Return the number of bundles in each non-empty partition of the given
         source, or return None if that information cannot be retrieved
@@ -652,7 +651,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
 
     @abstractmethod
     def drs_client(self,
-                   authentication: Optional[Authentication] = None
+                   authentication: Authentication | None = None
                    ) -> DRSClient:
         """
         Returns a DRS client that uses the given authentication with requests to
@@ -682,7 +681,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     file_name: str
 
     #: Optional version of the file. Defaults to the most recent version.
-    file_version: Optional[str]
+    file_version: str | None
 
     #: The DRS URI of the file in the repository from which to download the
     #: file.
@@ -692,7 +691,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     #: Repository plugins that populate the DRS URI (``azul.indexer.Bundle.
     #: drs_uri``) usually require this to be set. Plugins that don't will
     #: ignore this.
-    drs_uri: Optional[str]
+    drs_uri: str | None
 
     #: True if the download of a file requires its DRS URI
     needs_drs_uri: ClassVar[bool] = False
@@ -700,16 +699,16 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     #: The name of the replica to download the file from. Defaults to the name
     #: of the default replica. The set of valid replica names depends on the
     #: repository, but each repository must support the default replica.
-    replica: Optional[str]
+    replica: str | None
 
     #: A token to capture download state in. Should be `None` when the download
     #: is first requested.
-    token: Optional[str]
+    token: str | None
 
     @abstractmethod
     def update(self,
                plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
+               authentication: Authentication | None
                ) -> None:
         """
         Initiate the preparation of a URL from which the file can be downloaded.
@@ -728,7 +727,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         """
         The final URL from which the file contents can be downloaded.
         """
@@ -736,7 +735,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def retry_after(self) -> Optional[int]:
+    def retry_after(self) -> int | None:
         """
         A number of seconds to wait before calling `update` again.
         """

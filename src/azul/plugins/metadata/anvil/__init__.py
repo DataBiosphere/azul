@@ -6,7 +6,6 @@ from operator import (
 )
 from typing import (
     Iterable,
-    Optional,
     Sequence,
     Type,
 )
@@ -378,7 +377,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             'type': type_,
         }
 
-    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+    def document_slice(self, entity_type: str) -> DocumentSlice | None:
         return None
 
     @property

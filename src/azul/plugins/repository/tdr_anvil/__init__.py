@@ -13,7 +13,6 @@ from typing import (
     AbstractSet,
     Callable,
     Mapping,
-    Optional,
 )
 
 import attrs
@@ -161,7 +160,7 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
         def key_ref_to_entity_ref(key_ref: KeyReference) -> EntityReference:
             return entities_by_key[key_ref]
 
-        def optional_key_ref_to_entity_ref(key_ref: Optional[KeyReference]) -> Optional[EntityReference]:
+        def optional_key_ref_to_entity_ref(key_ref: KeyReference | None) -> EntityReference | None:
             return None if key_ref is None else key_ref_to_entity_ref(key_ref)
 
         self.links.update(

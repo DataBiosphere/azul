@@ -6,7 +6,6 @@ import logging
 from typing import (
     Callable,
     Mapping,
-    Optional,
     Sequence,
     TypeVar,
     TypedDict,
@@ -79,13 +78,13 @@ class FileTypeSummary(TypedDict):
 
 
 class FileTypeSummaryForHit(FileTypeSummary):
-    fileSource: list[Optional[str]]
+    fileSource: list[str | None]
     isIntermediate: bool
-    contentDescription: list[Optional[str]]
+    contentDescription: list[str | None]
 
 
 class OrganCellCountSummary(TypedDict):
-    organType: list[Optional[str]]
+    organType: list[str | None]
     countOfDocsWithOrganType: int
     totalCellCountByOrgan: float
 

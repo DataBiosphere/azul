@@ -17,7 +17,6 @@ from typing import (
     ClassVar,
     Iterable,
     Mapping,
-    Optional,
     Union,
     cast,
 )
@@ -141,9 +140,9 @@ class Links:
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Checksums:
     crc32c: str
-    sha1: Optional[str] = None
+    sha1: str | None = None
     sha256: str
-    s3_etag: Optional[str] = None
+    s3_etag: str | None = None
 
     def to_json(self) -> dict[str, str]:
         """
@@ -233,8 +232,8 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             size: int,
                             content_type: str,
                             dcp_type: str,
-                            checksums: Optional[Checksums] = None,
-                            drs_uri: Optional[str] = None) -> None:
+                            checksums: Checksums | None = None,
+                            drs_uri: str | None = None) -> None:
         self.manifest[str(entity)] = {
             'name': name,
             'uuid': uuid,
@@ -255,9 +254,9 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
         }
 
     def _parse_drs_uri(self,
-                       file_id: Optional[str],
+                       file_id: str | None,
                        descriptor: JSON
-                       ) -> Optional[str]:
+                       ) -> str | None:
         if file_id is None:
             try:
                 external_drs_uri = descriptor['drs_uri']

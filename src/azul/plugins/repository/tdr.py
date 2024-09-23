@@ -8,7 +8,6 @@ import time
 from typing import (
     AbstractSet,
     Callable,
-    Optional,
     Sequence,
     Type,
     TypeVar,
@@ -76,7 +75,7 @@ class TDRBundle(Bundle[TDRBundleFQID], ABC):
     def canning_qualifier(cls):
         return 'tdr'
 
-    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_uri(self, manifest_entry: JSON) -> str | None:
         return manifest_entry.get('drs_uri')
 
 
@@ -101,7 +100,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
         return self._sources
 
     def _auth_fallback(self,
-                       authentication: Optional[Authentication],
+                       authentication: Authentication | None,
                        tdr_callback: Callable[[TDRClient], T]
                        ) -> T:
         # The line below raises UnauthorizedError for invalid tokens. We don't
@@ -119,7 +118,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
                 return tdr_callback(tdr)
 
     def list_sources(self,
-                     authentication: Optional[Authentication]
+                     authentication: Authentication | None
                      ) -> list[TDRSourceRef]:
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
         # Filter by prefix of snapshot names in an attempt to speed up the
@@ -142,7 +141,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
         ]
 
     def list_source_ids(self,
-                        authentication: Optional[Authentication]
+                        authentication: Authentication | None
                         ) -> set[str]:
         return self._auth_fallback(authentication,
                                    lambda tdr: tdr.snapshot_ids())
@@ -172,7 +171,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
     @classmethod
     @cache_per_thread
     def _user_authenticated_tdr(cls,
-                                authentication: Optional[Authentication]
+                                authentication: Authentication | None
                                 ) -> TDRClient:
         if authentication is None:
             tdr = TDRClient.for_anonymous_user()
@@ -186,7 +185,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
     @classmethod
     @cache_per_thread
     def _drs_client(cls,
-                    authentication: Optional[Authentication] = None
+                    authentication: Authentication | None = None
                     ) -> DRSClient:
         return cls._user_authenticated_tdr(authentication).drs_client()
 
@@ -237,7 +236,7 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
         raise NotImplementedError
 
     def drs_client(self,
-                   authentication: Optional[Authentication] = None
+                   authentication: Authentication | None = None
                    ) -> DRSClient:
         return self._drs_client(authentication)
 
@@ -249,13 +248,13 @@ class TDRPlugin(RepositoryPlugin[TDR_BUNDLE, SOURCE_SPEC, SOURCE_REF, BUNDLE_FQI
 
 
 class TDRFileDownload(RepositoryFileDownload):
-    _location: Optional[str] = None
+    _location: str | None = None
 
     needs_drs_uri = True
 
     def update(self,
                plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
+               authentication: Authentication | None
                ) -> None:
         require(self.replica is None or self.replica == 'gcp')
         if self.drs_uri is None:
@@ -273,9 +272,9 @@ class TDRFileDownload(RepositoryFileDownload):
             self._location = signed_url
 
     @property
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         return self._location
 
     @property
-    def retry_after(self) -> Optional[int]:
+    def retry_after(self) -> int | None:
         return None

@@ -1,6 +1,5 @@
 from typing import (
     Iterable,
-    Optional,
     Sequence,
     TYPE_CHECKING,
     Type,
@@ -424,7 +423,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             }
         }
 
-    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+    def document_slice(self, entity_type: str) -> DocumentSlice | None:
         if entity_type in ('files', 'bundles'):
             return None
         else:

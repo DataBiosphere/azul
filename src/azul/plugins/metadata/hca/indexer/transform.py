@@ -20,7 +20,6 @@ from typing import (
     Iterable,
     Iterator,
     Mapping,
-    Optional,
     Protocol,
     Self,
     Type,
@@ -133,7 +132,7 @@ assert get_args(Sample) == sample_types  # since we can't use * in generic types
 pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(str, es_type='keyword')
 
 
-def _format_dcp2_datetime(d: Optional[datetime]) -> Optional[str]:
+def _format_dcp2_datetime(d: datetime | None) -> str | None:
     return None if d is None else format_dcp2_datetime(d)
 
 
@@ -142,7 +141,7 @@ class ValueAndUnit(FieldType[JSON, str]):
     #        https://github.com/DataBiosphere/azul/issues/2621
     es_type = 'keyword'
 
-    def to_index(self, value_unit: Optional[JSON]) -> str:
+    def to_index(self, value_unit: JSON | None) -> str:
         """
         >>> a = ValueAndUnit(JSON, str)
         >>> a.to_index({'value': '20', 'unit': 'year'})
@@ -230,7 +229,7 @@ class ValueAndUnit(FieldType[JSON, str]):
                     reject(' ' in unit, 'The `unit` entry must not contain space characters')
                     return f'{value} {unit}'
 
-    def from_index(self, value: str) -> Optional[JSON]:
+    def from_index(self, value: str) -> JSON | None:
         """
         >>> a = ValueAndUnit(JSON, str)
         >>> a.from_index('20 year')
@@ -280,7 +279,7 @@ class ValueAndUnit(FieldType[JSON, str]):
             assert unit is None or unit, unit
             return {'value': value, 'unit': unit}
 
-    def to_tsv(self, value: Optional[JSON]) -> str:
+    def to_tsv(self, value: JSON | None) -> str:
         return '' if value is None else self.to_index(value)
 
     @property
@@ -396,14 +395,14 @@ class Submitter(SubmitterBase, Enum):
         self.by_id[id] = self
 
     @classmethod
-    def for_id(cls, submitter_id: str) -> Optional[Self]:
+    def for_id(cls, submitter_id: str) -> Self | None:
         try:
             return cls.by_id[submitter_id]
         except KeyError:
             return None
 
     @classmethod
-    def for_file(cls, file: api.File) -> Optional[Self]:
+    def for_file(cls, file: api.File) -> Self | None:
         if file.file_source is None:
             if (
                 # The DCP/2 system design specification mistakenly required that
@@ -433,12 +432,12 @@ class Submitter(SubmitterBase, Enum):
         return self
 
     @classmethod
-    def title_for_file(cls, file: api.File) -> Optional[str]:
+    def title_for_file(cls, file: api.File) -> str | None:
         self = cls.for_file(file)
         return None if self is None else self.title
 
     @classmethod
-    def category_for_file(cls, file: api.File) -> Optional[SubmitterCategory]:
+    def category_for_file(cls, file: api.File) -> SubmitterCategory | None:
         self = cls.for_file(file)
         if self is None:
             return None
@@ -465,7 +464,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return api_entity.schema_name
 
     @classmethod
-    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
         if entity_type == 'files':
             return FileAggregator()
         elif entity_type in SampleTransformer.inner_entity_types():
@@ -881,7 +880,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'model_organ_part': organoid.model_organ_part
         }
 
-    def _is_intermediate_matrix(self, file: api.File) -> Optional[bool]:
+    def _is_intermediate_matrix(self, file: api.File) -> bool | None:
         if file.is_matrix:
             if isinstance(file, api.SupplementaryFile):
                 # Non-organic CGM
@@ -1313,7 +1312,7 @@ BaseTransformer.validate_class()
 
 
 def _parse_zarr_file_name(file_name: str
-                          ) -> tuple[bool, Optional[str], Optional[str]]:
+                          ) -> tuple[bool, str | None, str | None]:
     file_name = file_name.split('.zarr/')
     if len(file_name) == 1:
         return False, None, None
@@ -1749,7 +1748,7 @@ class BundleTransformer(SingletonTransformer):
         return 'links'
 
     @classmethod
-    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
         if entity_type == 'files':
             return None
         else:
