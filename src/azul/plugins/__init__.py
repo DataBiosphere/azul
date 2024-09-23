@@ -20,7 +20,6 @@ from typing import (
     Type,
     TypeVar,
     TypedDict,
-    Union,
 )
 
 import attr
@@ -91,7 +90,7 @@ DottedFieldPath = str
 FieldGlobs = list[DottedFieldPath]
 
 
-def dotted(path_or_element: Union[FieldPathElement, FieldPath],
+def dotted(path_or_element: FieldPathElement | FieldPath,
            *elements: FieldPathElement
            ) -> DottedFieldPath:
     dot = '.'
@@ -366,8 +365,8 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     #: See :meth:`_field_mapping`
     _FieldMapping2 = Mapping[FieldPathElement, FieldName]
-    _FieldMapping1 = Mapping[FieldPathElement, Union[FieldName, _FieldMapping2]]
-    _FieldMapping = Mapping[FieldPathElement, Union[FieldName, _FieldMapping1]]
+    _FieldMapping1 = Mapping[FieldPathElement, FieldName | _FieldMapping2]
+    _FieldMapping = Mapping[FieldPathElement, FieldName | _FieldMapping1]
 
     @cached_property
     def field_mapping(self) -> FieldMapping:

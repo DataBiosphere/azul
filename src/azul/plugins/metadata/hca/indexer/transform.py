@@ -24,7 +24,6 @@ from typing import (
     Self,
     Type,
     TypeVar,
-    Union,
     get_args,
 )
 from uuid import (
@@ -125,7 +124,7 @@ from humancellatlas.data.metadata import (
 
 log = logging.getLogger(__name__)
 
-Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
+Sample = api.CellLine | api.Organoid | api.SpecimenFromOrganism
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
@@ -501,7 +500,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _add_replica(self,
                      contribution: MutableJSON,
-                     entity: Union[api.Entity, DatedEntity],
+                     entity: api.Entity | DatedEntity,
                      hub_ids: list[EntityID]
                      ) -> Transform:
         entity_ref = EntityReference(entity_id=str(entity.document_id),

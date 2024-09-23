@@ -17,7 +17,6 @@ from typing import (
     ClassVar,
     Iterable,
     Mapping,
-    Union,
     cast,
 )
 
@@ -434,7 +433,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
     def _retrieve_entities(self,
                            source: TDRSourceSpec,
                            entity_type: EntityType,
-                           entity_ids: Union[set[EntityID], set[BundleFQID]],
+                           entity_ids: set[EntityID] | set[BundleFQID],
                            ) -> list[BigQueryRow]:
         """
         Efficiently retrieve multiple entities from BigQuery in a single query.

@@ -6,7 +6,6 @@ from typing import (
     Generic,
     Iterable,
     TypeVar,
-    Union,
 )
 
 import attrs
@@ -44,7 +43,7 @@ class KeyReference:
     entity_type: EntityType
 
 
-ENTITY_REF = TypeVar('ENTITY_REF', bound=Union[EntityReference, KeyReference])
+ENTITY_REF = TypeVar('ENTITY_REF', bound=EntityReference | KeyReference)
 
 
 @attrs.frozen(kw_only=True, order=False)

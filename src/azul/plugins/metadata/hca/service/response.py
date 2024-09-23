@@ -9,7 +9,6 @@ from typing import (
     Sequence,
     TypeVar,
     TypedDict,
-    Union,
     cast,
 )
 
@@ -55,7 +54,7 @@ class ValueAndUnit(TypedDict):
 
 class Term(TypedDict):
     count: int
-    term: Union[str, ValueAndUnit, None]
+    term: str | ValueAndUnit | None
 
 
 class ProjectTerm(Term):
@@ -113,7 +112,7 @@ class SummarizedHit(Hit):
 
 
 class SearchResponse(TypedDict):
-    hits: list[Union[SummarizedHit, CompleteHit]]
+    hits: list[SummarizedHit | CompleteHit]
     pagination: ResponsePagination
     termFacets: dict[str, Terms]
 
